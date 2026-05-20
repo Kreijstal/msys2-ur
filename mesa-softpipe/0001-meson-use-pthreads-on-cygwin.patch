@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: MSYS2 packaging <packaging@msys2.org>
+Date: Wed, 20 May 2026 12:00:00 +0000
+Subject: [PATCH] meson: use pthreads on Cygwin
+
+Meson reports MSYS/Cygwin as a Windows host, but the POSIX pthread
+interfaces are the native thread API there.  Avoid selecting the Win32
+C11 thread implementation and use the ordinary Meson threads dependency.
+---
+ meson.build               | 2 +-
+ src/c11/impl/meson.build  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 1111111..2222222 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1721,7 +1721,7 @@ elif with_shader_cache
+   error('Shader Cache requires compression')
+ endif
+ 
+-if host_machine.system() == 'windows'
++if host_machine.system() == 'windows' and cc.get_define('__CYGWIN__') == ''
+   # For MSVC and MinGW we aren't using pthreads, and dependency('threads') will add linkage
+   # to pthread for MinGW, so leave the dependency null_dep for Windows. For Windows linking to
+   # kernel32 is enough for c11/threads.h and it's already linked by meson by default
+diff --git a/src/c11/impl/meson.build b/src/c11/impl/meson.build
+index 1111111..2222222 100644
+--- a/src/c11/impl/meson.build
++++ b/src/c11/impl/meson.build
+@@ -9,7 +9,7 @@ files_mesa_util_c11 = files(
+ 
+ if with_c11_threads
+   # no need implement c11 threads
+-elif host_machine.system() == 'windows'
++elif host_machine.system() == 'windows' and cc.get_define('__CYGWIN__') == ''
+   files_mesa_util_c11 += 'threads_win32.c'
+   files_mesa_util_c11 += 'threads_win32_tls_callback.cpp'
+ else
+-- 
+2.51.0

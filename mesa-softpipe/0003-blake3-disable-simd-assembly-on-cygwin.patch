@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: MSYS2 packaging <packaging@msys2.org>
+Date: Wed, 20 May 2026 12:00:00 +0000
+Subject: [PATCH] blake3: disable SIMD assembly on Cygwin
+
+Cygwin is neither ordinary Unix nor MinGW for the bundled BLAKE3 assembly
+selection.  The Unix assembly uses directives not accepted by the Cygwin
+assembler, while using the Windows GNU assembly from a native Cygwin Meson
+configuration is not selected.  Use the portable C implementation instead.
+---
+ src/util/blake3/meson.build | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/util/blake3/meson.build b/src/util/blake3/meson.build
+index 1111111..2222222 100644
+--- a/src/util/blake3/meson.build
++++ b/src/util/blake3/meson.build
+@@ -15,6 +15,8 @@ if cpu_family == 'x86_64'
+       files_blake3 += ['blake3_sse2_x86-64_windows_gnu.S', 'blake3_sse41_x86-64_windows_gnu.S', 'blake3_avx2_x86-64_windows_gnu.S', 'blake3_avx512_x86-64_windows_gnu.S']
+     endif
++  elif cc.get_define('__CYGWIN__') != ''
++    blake3_defs += blake3_x86_no_simd_defs
+   # Disable blake assembly for x32, x86-64 with 32-bit pointers.
+   # GNU triplet is x86_64-linux-gnux32
+   elif cc.sizeof('void *') == 4
+     blake3_defs += blake3_x86_no_simd_defs
+-- 
+2.51.0

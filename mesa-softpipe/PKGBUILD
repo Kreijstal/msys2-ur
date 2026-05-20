@@ -1,0 +1,99 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=mesa-softpipe
+pkgver=26.1.0
+pkgrel=1
+pkgdesc="Mesa software OpenGL library for MSYS Xlib GLX"
+arch=('x86_64')
+url="https://www.mesa3d.org/"
+license=('spdx:MIT')
+depends=('expat'
+         'libelf'
+         'libx11'
+         'libxcb'
+         'libxext'
+         'zlib')
+makedepends=('bison'
+             'flex'
+             'gcc'
+             'khronos-opengl-registry'
+             'mesa-opengl-headers'
+             'meson'
+             'mingw-w64-ucrt-x86_64-python-yaml'
+             'ninja'
+             'pkgconf'
+             'python')
+provides=('libgl'
+          'mesa')
+conflicts=('mesa')
+source=("https://mesa.freedesktop.org/archive/mesa-${pkgver}.tar.xz"
+        "0001-meson-use-pthreads-on-cygwin.patch"
+        "0002-meson-fix-cygwin-flex-cpp-scanner.patch"
+        "0003-blake3-disable-simd-assembly-on-cygwin.patch")
+noextract=("mesa-${pkgver}.tar.xz")
+sha256sums=('a5095e6dc2986c78f0cef4c5555dc803e93b6bfe5670e991f9e8bd49395bae19'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  rm -rf "mesa-${pkgver}"
+  tar -xf "${srcdir}/mesa-${pkgver}.tar.xz"
+
+  cd "mesa-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-meson-use-pthreads-on-cygwin.patch"
+  patch -Np1 -i "${srcdir}/0002-meson-fix-cygwin-flex-cpp-scanner.patch"
+  patch -Np1 -i "${srcdir}/0003-blake3-disable-simd-assembly-on-cygwin.patch"
+}
+
+build() {
+  cd "mesa-${pkgver}"
+
+  PATH="/ucrt64/bin:${PATH}" \
+  CC=/usr/bin/gcc \
+  CXX=/usr/bin/g++ \
+  PKG_CONFIG=/usr/bin/pkg-config \
+  MSYS2_ARG_CONV_EXCL="--prefix=;-Dbuildtype=;-Dgallium-drivers=;-Dvulkan-drivers=;-Dllvm=;-Dshared-llvm=;-Degl=;-Dgles1=;-Dgles2=;-Dgbm=;-Dglx=;-Dplatforms=;-Dvideo-codecs=;-Dbuild-tests=" \
+    /usr/bin/meson setup build \
+      --prefix=/usr \
+      -Dbuildtype=release \
+      -Dgallium-drivers=softpipe \
+      -Dvulkan-drivers=[] \
+      -Dllvm=disabled \
+      -Dshared-llvm=disabled \
+      -Degl=disabled \
+      -Dgles1=disabled \
+      -Dgles2=disabled \
+      -Dgbm=disabled \
+      -Dglx=xlib \
+      -Dplatforms=x11 \
+      -Dvideo-codecs=[] \
+      -Dbuild-tests=false
+
+  /usr/bin/ninja -C build src/gallium/targets/libgl-xlib/msys-GL-1.dll
+}
+
+package() {
+  cd "mesa-${pkgver}"
+
+  install -Dm755 build/src/gallium/targets/libgl-xlib/msys-GL-1.dll \
+    "${pkgdir}/usr/bin/msys-GL-1.dll"
+  install -Dm644 build/src/gallium/targets/libgl-xlib/libGL.dll.a \
+    "${pkgdir}/usr/lib/libGL.dll.a"
+
+  install -d "${pkgdir}/usr/lib/pkgconfig"
+  cat > "${pkgdir}/usr/lib/pkgconfig/gl.pc" <<EOF
+prefix=/usr
+exec_prefix=\${prefix}
+libdir=\${exec_prefix}/lib
+includedir=\${prefix}/include
+
+Name: gl
+Description: Mesa OpenGL library
+Version: ${pkgver}
+Libs: -L\${libdir} -lGL
+Cflags: -I\${includedir}
+EOF
+
+  install -Dm644 docs/license.rst "${pkgdir}/usr/share/licenses/${pkgname}/license.rst"
+}
