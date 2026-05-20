@@ -1,0 +1,37 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-util-renderutil
+pkgver=0.3.10
+pkgrel=1
+pkgdesc="XCB render extension convenience library"
+arch=('x86_64')
+url="https://xcb.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libxcb')
+makedepends=('gcc'
+             'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/xcb/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('3e15d4f0e22d8ddbfbb9f5d77db43eacd7a304029bf25a6166cc63caa96d04ba')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

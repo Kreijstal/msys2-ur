@@ -1,0 +1,40 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=fontconfig
+pkgver=2.15.0
+pkgrel=1
+pkgdesc="Library for configuring and customizing font access"
+arch=('i686' 'x86_64')
+url="https://www.freedesktop.org/software/fontconfig/"
+license=('LGPL2.1+' 'MIT')
+depends=('expat' 'freetype')
+makedepends=('git' 'gperf' 'meson' 'glib2' 'libexpat-devel')
+
+source=(https://www.freedesktop.org/software/fontconfig/release/${pkgname}-${pkgver}.tar.xz)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches here
+  meson setup build --prefix=/usr
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson compile -C build
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Install the package to the system
+  meson install -C build --destdir="${pkgdir}"
+}

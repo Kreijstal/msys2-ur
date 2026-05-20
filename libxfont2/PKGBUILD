@@ -1,0 +1,43 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxfont2
+_realname=libXfont2
+pkgver=2.0.7
+pkgrel=1
+pkgdesc="X11 font rasterisation library"
+arch=('x86_64')
+url="https://xorg.freedesktop.org/"
+license=('spdx:MIT')
+depends=('bzip2'
+         'freetype'
+         'libfontenc'
+         'xtrans'
+         'zlib')
+makedepends=('gcc'
+             'pkgconf'
+             'xorgproto')
+source=("https://xorg.freedesktop.org/releases/individual/lib/${_realname}-${pkgver}.tar.xz")
+sha256sums=('8b7b82fdeba48769b69433e8e3fbb984a5f6bf368b0d5f47abeec49de3e58efb')
+
+build() {
+  cd "${_realname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${_realname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${_realname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

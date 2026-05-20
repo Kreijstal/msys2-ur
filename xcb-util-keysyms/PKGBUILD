@@ -1,0 +1,37 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-util-keysyms
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="Standard X key constants and conversion to/from keycodes for XCB"
+arch=('x86_64')
+url="https://xcb.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libxcb')
+makedepends=('gcc'
+             'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/xcb/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('7c260a5294412aed429df1da2f8afd3bd07b7cba3fec772fba15a613a6d5c638')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

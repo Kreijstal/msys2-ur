@@ -1,0 +1,79 @@
+--- origsrc/gobject-introspection-1.82.0/tests/meson.build	2024-09-13 22:08:54.000000000 +0900
++++ src/gobject-introspection-1.82.0/tests/meson.build	2025-02-24 21:43:48.638287400 +0900
+@@ -124,6 +132,7 @@ test_typelibs = []
+ if (glib_dep.type_name() == 'pkgconfig' and
+     test_girscanner.found() and
+     get_option('build_introspection_data') == true)
++  if host_machine.system() != 'cygwin'
+   test_gir_files += [custom_target('gir-everything',
+     input: test_everything_sources + test_everything_headers,
+     output: 'Everything-1.0.gir',
+@@ -149,6 +158,7 @@ if (glib_dep.type_name() == 'pkgconfig'
+       '@INPUT@',
+     ]
+   )]
++  endif
+ 
+   test_gir_files += [custom_target('gir-gimarshallingtests',
+     input: test_marshalling_sources + test_marshalling_headers,
+--- origsrc/gobject-introspection-1.82.0/tests/offsets/meson.build	2024-09-13 22:08:54.000000000 +0900
++++ src/gobject-introspection-1.82.0/tests/offsets/meson.build	2025-02-24 21:35:37.089302300 +0900
+@@ -12,7 +12,7 @@ test_offsets_lib = shared_library('offse
+ )
+ 
+ if glib_dep.type_name() == 'pkgconfig'
+-
++  if host_machine.system() != 'cygwin'
+   test_offsets_gir = custom_target('gir-offsets',
+     input: test_offsets_sources + test_offsets_headers,
+     output: 'Offsets-1.0.gir',
+@@ -50,6 +50,7 @@ if glib_dep.type_name() == 'pkgconfig'
+               '--includedir', meson.current_build_dir()
+     ],
+   )
++  endif
+ 
+   gitestoffsets_exe = executable('gitestoffsets',
+     'gitestoffsets.c', 
+@@ -64,12 +65,13 @@ if glib_dep.type_name() == 'pkgconfig'
+     test_offsets_env.prepend('PATH', join_paths(build_root, 'girepository'))
+   endif
+ 
++  if host_machine.system() != 'cygwin'
+   test('test_offsets.py',
+     python, 
+     args: files('test_offsets.py'),
+     env: test_offsets_env,
+     depends: [gitestoffsets_exe, test_offsets_typelib],
+   )
+-
++  endif
+ endif
+ 
+--- origsrc/gobject-introspection-1.82.0/tests/scanner/meson.build	2024-09-13 22:08:54.000000000 +0900
++++ src/gobject-introspection-1.82.0/tests/scanner/meson.build	2025-02-24 21:56:05.207263700 +0900
+@@ -315,6 +315,7 @@ if (glib_dep.type_name() == 'pkgconfig'
+     command: gircompiler_command,
+   )
+ 
++  if host_machine.system() != 'cygwin'
+   gtkfrob_gir = custom_target('gir-gtkfrob',
+     input: ['gtkfrob.c', 'gtkfrob.h'],
+     output: 'GtkFrob-1.0.gir',
+@@ -353,6 +354,7 @@ if (glib_dep.type_name() == 'pkgconfig'
+     depends: [gobject_gir],
+     command: gircompiler_command,
+   )
++  endif
+ 
+   gettype_gir = custom_target('gir-gettype',
+     input: ['gettype.c', 'gettype.h'],
+@@ -532,7 +534,7 @@ if (glib_dep.type_name() == 'pkgconfig'
+   )
+   test_typelibs += regress_typelib
+ 
+-  if host_system != 'windows'
++  if host_system != 'windows' and host_machine.system() != 'cygwin'
+     regress_unix_gir = custom_target('gir-regress-unix',
+       input: [
+         '../../gobject-introspection-tests/regress-unix.c',

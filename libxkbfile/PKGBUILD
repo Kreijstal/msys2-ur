@@ -1,0 +1,34 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxkbfile
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="X11 keyboard file manipulation library"
+arch=('x86_64')
+url="https://xorg.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libx11')
+makedepends=('gcc'
+             'meson'
+             'ninja'
+             'pkgconf'
+             'xorg-util-macros'
+             'xorgproto')
+source=("https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('7f71884e5faf56fb0e823f3848599cf9b5a9afce51c90982baeb64f635233ebf')
+
+build() {
+  meson setup "${pkgname}-${pkgver}" "build-${CHOST}" \
+    --prefix=/usr \
+    --buildtype=plain
+  meson compile -C "build-${CHOST}"
+}
+
+check() {
+  meson test -C "build-${CHOST}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

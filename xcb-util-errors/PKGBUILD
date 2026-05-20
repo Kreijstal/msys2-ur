@@ -1,0 +1,41 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-util-errors
+pkgver=1.0.1
+pkgrel=1
+pkgdesc="XCB errors utility library"
+arch=('i686' 'x86_64')
+url="http://xcb.sourceforge.net/"
+license=('MIT')
+depends=('libxcb')
+makedepends=('libxcb' 'xorg-util-macros' 'xcb-proto' 'gcc' 'make' 'sh')
+source=(https://xorg.freedesktop.org/archive/individual/lib/${pkgname}-${pkgver}.tar.xz)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches here
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  export PKG_CONFIG_SYSROOT_DIR=''
+  ./configure --prefix=/usr
+  make
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Install the library and headers to the package directory
+  make DESTDIR=${pkgdir} install
+}
+

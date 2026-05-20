@@ -1,0 +1,39 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libpthread-stubs
+pkgver=0.5
+pkgrel=1
+pkgdesc="This library provides weak aliases for pthread functions not provided in libc or otherwise available by default."
+arch=('i686' 'x86_64')
+url="https://xcb.freedesktop.org/"
+license=('MIT')
+depends=()
+makedepends=('gcc' 'make')
+source=(https://xcb.freedesktop.org/dist/${pkgname}-${pkgver}.tar.xz)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches here
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  ./configure --prefix=/usr
+
+  make
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  make DESTDIR=${pkgdir} install
+}

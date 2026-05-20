@@ -1,0 +1,46 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxcb
+pkgver=1.16
+pkgrel=1
+pkgdesc="X Protocol C-Language Bindings"
+arch=('i686' 'x86_64')
+url="https://xcb.sourceforge.net/"
+license=('MIT')
+depends=()
+makedepends=('xorg-util-macros' 'xcb-proto' 'libxau' 'libxdmcp' 'libpthread-stubs'
+'libxslt-devel')
+source=(https://xcb.freedesktop.org/dist/${pkgname}-${pkgver}.tar.xz
+       1.16-no-pthread-stubs.patch)
+sha256sums=('SKIP'  # Replace SKIP with the actual checksum
+           'SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+ cd ${srcdir}/
+
+ # Apply the patch
+ patch -Np1 -i "${srcdir}/../1.16-no-pthread-stubs.patch"
+ cd ${pkgname}-${pkgver}
+ autoreconf -vif
+}
+
+build() {
+ cd ${srcdir}/${pkgname}-${pkgver}
+
+ CYGCONF_ARGS="--enable-composite --enable-damage --enable-dbe --enable-dpms --enable-dri2 --enable-glx --enable-randr --enable-record --enable-render --enable-res --enable-screensaver --enable-shape --enable-shm --enable-sync --enable-xfixes --enable-xinerama --enable-xinput --enable-xkb --enable-xtest --enable-present --enable-shared"
+sh autogen.sh
+ ./configure --prefix=/usr ${CYGCONF_ARGS}
+ make
+}
+
+check() {
+ cd ${srcdir}/${pkgname}-${pkgver}
+
+ # Add any check commands here
+}
+
+package() {
+ 
+ cd ${srcdir}/${pkgname}-${pkgver}
+ make DESTDIR=${pkgdir} install
+}

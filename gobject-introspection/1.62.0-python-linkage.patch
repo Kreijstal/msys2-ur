@@ -1,0 +1,11 @@
+--- origsrc/gobject-introspection-1.62.0/giscanner/meson.build	2025-01-05 20:27:13.679459400 +0000
++++ src/gobject-introspection-1.62.0/giscanner/meson.build	2025-01-05 21:03:13.093453100 +0000
+@@ -92,7 +92,7 @@ giscanner_lib = static_library('giscanne
+ )
+ 
+ # https://github.com/mesonbuild/meson/issues/4117
+-if host_machine.system() == 'windows'
++if host_machine.system() == 'windows' or host_machine.system() == 'cygwin'
+   python_ext_dep = python.dependency()
+ else
+   python_ext_dep = python.dependency().partial_dependency(compile_args: true)

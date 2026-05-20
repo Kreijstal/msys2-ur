@@ -1,0 +1,20 @@
+--- origsrc/gobject-introspection-1.42.0/tests/scanner/Makefile.am	2015-01-01 20:32:34.542523200 -0600
++++ src/gobject-introspection-1.42.0/tests/scanner/Makefile.am	2015-01-01 20:35:48.056096300 -0600
+@@ -148,7 +148,7 @@ Typedefs_1_0_gir_SCANNERFLAGS = --c-incl
+ GIRS += Typedefs-1.0.gir
+ 
+ if !OS_WIN32
+-EXTRA_PROGRAMS = barapp
++EXTRA_PROGRAMS = barapp$(EXEEXT)
+ CLEANFILES += $(EXTRA_PROGRAMS)
+ 
+ barapp_SOURCES = $(srcdir)/barapp.c $(srcdir)/barapp.h
+@@ -157,7 +157,7 @@ barapp_LDFLAGS = -export-dynamic
+ 
+ Bar-1.0.gir: barapp
+ Bar_1_0_gir_PACKAGES = gobject-2.0
+-Bar_1_0_gir_PROGRAM = ./barapp
++Bar_1_0_gir_PROGRAM = ./barapp$(EXEEXT)
+ Bar_1_0_gir_CFLAGS = $(GI_SCANNER_CFLAGS)
+ Bar_1_0_gir_INCLUDES = GObject-2.0
+ Bar_1_0_gir_FILES = $(barapp_SOURCES)

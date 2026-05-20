@@ -1,0 +1,55 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libsm
+urlpkgname=libSM
+pkgver=1.2.4
+pkgrel=1
+pkgdesc="X11 Session Management library"
+arch=('i686' 'x86_64')
+url="https://www.x.org/"
+license=('MIT')
+depends=('libice')
+makedepends=('xorg-util-macros' 'xorgproto' 'xtrans' 'autoconf' 'automake' 'libtool' 'gcc' 'ccache')
+
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+source=(https://www.x.org/archive/individual/lib/${urlpkgname}-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  autoreconf -vif
+}
+
+build() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  local _host="x86_64-pc-msys"
+
+  ./configure --prefix=/usr \
+    --libdir=/usr/lib \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --datadir=/usr/share \
+    --mandir=/usr/share/man \
+    --infodir=/usr/share/info \
+    --build=${_host} \
+    --host=${_host} \
+    --enable-shared \
+    --enable-static
+
+  make
+}
+
+check() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  make check
+}
+
+package() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  # Install the package to the system
+  make DESTDIR=${pkgdir} install
+}

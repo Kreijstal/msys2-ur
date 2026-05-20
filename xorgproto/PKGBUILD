@@ -1,0 +1,45 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xorgproto
+pkgver=2023.2
+pkgrel=1
+pkgdesc="X.Org X11 protocol headers"
+arch=('noarch')
+url="https://www.x.org/"
+license=('MIT')
+depends=()
+makedepends=('meson' 'ninja' 'gcc' 'ccache')
+
+# Set default value for XORG_SRC_COMPRESSION if not already set
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+
+source=(https://www.x.org/archive/individual/proto/${pkgname}-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches here
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson setup build \
+    --datadir=/usr/lib 
+
+  ninja -C build
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Install the headers, documentation, and man pages to the package directory
+   DESTDIR=${pkgdir} ninja -C build install
+}

@@ -1,0 +1,25 @@
+From 442f16cb1f8aa2c4bb4889f1438588d777f57d87 Mon Sep 17 00:00:00 2001
+From: "Kreijstal (aider)" <rainb@tfwno.gf>
+Date: Sun, 25 Aug 2024 21:10:23 +0200
+Subject: [PATCH 2/3] fix: Add missing ax_compare_version.m4 file and update
+ configure.ac
+
+---
+ configure.ac | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/configure.ac b/configure.ac
+index 0186f04..60e8956 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -11,6 +11,7 @@ AC_CONFIG_AUX_DIR(build-aux)
+ AC_CONFIG_MACRO_DIR([m4])
+ 
+ # Import additional Autoconf macros
++m4_pattern_allow([AX_COMPARE_VERSION])
+ m4_include([m4/ax_compare_version.m4])
+ 
+ AM_INIT_AUTOMAKE(dist-xz no-dist-gzip)
+-- 
+2.46.0
+

@@ -1,0 +1,13 @@
+diff --git a/configure.ac b/configure.ac
+index c2a6665..ff8fe93 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -25,7 +25,7 @@ AC_CHECK_FUNC([fork],[], AC_DEFINE(NO_ZPIPE))
+ 
+ # Obtain compiler/linker options for dependencies
+ PKG_CHECK_MODULES(XPM, xproto x11)
+-PKG_CHECK_MODULES(SXPM, [x11 xt xext xextproto xproto >= 7.0.17],
++PKG_CHECK_MODULES(SXPM, [xdmcp xau xcb x11 xt xext xextproto xproto >= 7.0.17 sm ice],
+                   [build_sxpm=true], [build_sxpm=false])
+ AM_CONDITIONAL(BUILD_SXPM, test x$build_sxpm = xtrue)
+ 

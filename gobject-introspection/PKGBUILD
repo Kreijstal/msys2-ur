@@ -1,0 +1,85 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+# Upgraded to modern version with Meson build system for bootstrapping.
+
+pkgname=gobject-introspection
+_major_ver=1.84
+pkgver=1.84.0
+pkgrel=1
+pkgdesc="Introspection system for GObject-based libraries (bootstrap)"
+arch=('any')
+url="https://gi.readthedocs.io/en/latest/"
+license=('GPL2+' 'LGPL2+' 'MIT')
+# cairo dependency is removed for the bootstrap build.
+# glib2 is a hard, non-optional dependency for the core library.
+depends=('glib2' 'libffi' 'python')
+makedepends=(
+  'meson'
+  'pkg-config'
+  'flex'
+  'bison'
+  'gtk-doc'
+  'python-mako'
+  'python-markdown'
+  # glib2-devel is required to build against the glib2 C library.
+  'glib2-devel'
+  'libffi-devel'
+)
+
+source=(
+  "https://download.gnome.org/sources/${pkgname}/${_major_ver}/${pkgname}-${pkgver}.tar.xz"
+  # Patches from cygwin package, necessary for MSYS2 builds
+  '1.62.0-cygwin-fixes.patch'
+  '1.62.0-python-linkage.patch'
+  '1.60.2-shlib-tests.patch'
+  'fix-cairo-library-name.patch'
+  'drop-unbuildable-gir-tests.patch'
+  'install-girepository-GLib2.0.patch'
+)
+
+sha256sums=('945b57da7ec262e5c266b89e091d14be800cc424277d82a02872b7d794a84779'
+            '71938b21edb35bc5e5834764fdb8397ba20666b0b0647d79a6e4a8c5e2a5ffb5'
+            '09d7495fb4437ffe89d78f75f9ecea6436051a8d502b18f4df193d039b90d4de'
+            '8749311041881ec2541857149a2cef66e6f871de1713775715cef061a8a1c446'
+            '2993c377ebea3cb12c44bf0512be739919c28ef071788263e8cee8d030ad25bc'
+            'f03a7f06f59a8346635790ecfd0b136cc777e16885ca8eb25ca083582a79940a'
+            'e83138977b7f624f39e956e3a7cb691edd5b70f36818b73bf1ec8d1f98178788')
+
+prepare() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  # Apply patches required for successful build on MSYS2/Cygwin
+  patch -p1 -i "${srcdir}/1.62.0-cygwin-fixes.patch"
+  patch -p2 -i "${srcdir}/1.62.0-python-linkage.patch"
+  patch -p2 -i "${srcdir}/1.60.2-shlib-tests.patch"
+  patch -p2 -i "${srcdir}/fix-cairo-library-name.patch"
+  patch -p2 -i "${srcdir}/drop-unbuildable-gir-tests.patch"
+  patch -p2 -i "${srcdir}/install-girepository-GLib2.0.patch"
+}
+
+build() {
+  # MSYS2 requires LDFLAGS to avoid undefined symbols during linking
+  export LDFLAGS="-Wl,-no-undefined"
+
+  # Configure the project using Meson in a separate build directory
+  # The 'cairo' option is disabled to break the circular dependency for bootstrapping.
+  meson setup "${srcdir}/${pkgname}-${pkgver}" build \
+    --prefix=/usr \
+    --buildtype=plain \
+    --wrap-mode=nodownload \
+    -Dcairo=disabled \
+    -Ddoctool=enabled \
+    -Dgtk_doc=true 
+
+  # Compile the source code
+  meson compile -C build
+}
+
+check() {
+  # Run the test suite
+  meson test -C build --print-errorlogs
+}
+
+package() {
+  # Install the files into the package directory
+  meson install -C build --destdir "${pkgdir}"
+}

@@ -1,0 +1,78 @@
+From a6e392e504353c4c987b6ff56eb36cf090d2b7f5 Mon Sep 17 00:00:00 2001
+From: Jon Turney <jon.turney@dronecode.org.uk>
+Date: Thu, 2 Jan 2025 19:30:21 +0000
+Subject: [PATCH] Cygwin patch
+
+---
+ girepository/girepository.c |  2 +-
+ giscanner/ccompiler.py      |  4 ++++
+ giscanner/shlibs.py         | 11 +++++++++++
+ giscanner/utils.py          |  2 +-
+ 4 files changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/girepository/girepository.c b/girepository/girepository.c
+index 08149da8..86f43d92 100644
+--- a/girepository/girepository.c
++++ b/girepository/girepository.c
+@@ -85,7 +85,7 @@ struct _GIRepositoryPrivate
+ 
+ G_DEFINE_TYPE_WITH_CODE (GIRepository, g_irepository, G_TYPE_OBJECT, G_ADD_PRIVATE (GIRepository));
+ 
+-#ifdef G_PLATFORM_WIN32
++#ifdef G_OS_WIN32
+ 
+ #include <windows.h>
+ 
+diff --git a/giscanner/ccompiler.py b/giscanner/ccompiler.py
+index 35549da2..81022dac 100644
+--- a/giscanner/ccompiler.py
++++ b/giscanner/ccompiler.py
+@@ -183,6 +183,10 @@ class CCompiler(object):
+ 
+         if os.name == 'nt':
+             runtime_path_envvar = ['LIB', 'PATH']
++        elif os.name == 'nt' or sys.platform == 'cygwin':
++            runtime_path_envvar = ['PATH']
++            # Search the current directory first
++            args.append('-L.')
+         else:
+             runtime_path_envvar = ['LD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH']
+             # Search the current directory first
+diff --git a/giscanner/shlibs.py b/giscanner/shlibs.py
+index e6de7bb6..34ca4d4d 100644
+--- a/giscanner/shlibs.py
++++ b/giscanner/shlibs.py
+@@ -46,6 +46,18 @@ def _resolve_libtool(options, binary, libraries):
+ # We say that if something in the output looks like libpangoft2<blah>
+ # then the *first* such in the output is the soname.
+ def _ldd_library_pattern(library_name):
++    if platform.platform().startswith(('CYGWIN', 'MSYS')):
++        dll_prefix = 'cyg' if platform.platform().startswith('CYGWIN') else 'msys-'
++        return re.compile(r"""^
++        # Require trailing slash to avoid matching liblibfoo when looking for libfoo.
++        (.*[/])?
++        %s%s
++        # Prohibit library name characters to avoid matching libpangoft2 when looking for libpango.
++        [^/A-Za-z0-9_]
++        # Anything but the path separator to avoid matching directories.
++        [^/]*
++        $""" % (dll_prefix, re.escape(library_name)), re.VERBOSE)
++
+     return re.compile(r"""^
+     # Require trailing slash to avoid matching liblibfoo when looking for libfoo.
+     (.*[/])?
+diff --git a/giscanner/utils.py b/giscanner/utils.py
+index 25160c3e..3c91ae27 100644
+--- a/giscanner/utils.py
++++ b/giscanner/utils.py
+@@ -78,7 +78,7 @@ def to_underscores_noprefix(name):
+     return name
+ 
+ 
+-_libtool_pat = re.compile("dlname='([A-z0-9\\.\\-\\+]+)'\n")
++_libtool_pat = re.compile("dlname='([A-z0-9/\\.\\-\\+]+)'\n")
+ 
+ 
+ def _extract_dlname_field(la_file):
+-- 
+2.45.1

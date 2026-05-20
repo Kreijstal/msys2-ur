@@ -1,0 +1,93 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=imagemagick
+_basever=7.1.2
+_rc=-22
+pkgver=${_basever}${_rc//-/.}
+pkgrel=1
+pkgdesc="An image viewing/manipulation program"
+arch=('x86_64')
+url="https://www.imagemagick.org/"
+license=("spdx:ImageMagick")
+depends=('bzip2'
+         'fontconfig'
+         'freetype'
+         'libiconv'
+         'libjpeg-turbo'
+         'libpng'
+         'libxml2'
+         'xz'
+         'zlib')
+makedepends=('autotools'
+             'gcc'
+             'pkgconf')
+optdepends=('ghostscript: for Ghostscript support'
+            'librsvg: for SVG support')
+options=('libtool')
+source=("https://imagemagick.org/archive/releases/ImageMagick-${_basever}${_rc}.tar.xz")
+sha256sums=('e67397821a8f0884ef1f7494157d2f6c798c6cb8ea2320acd2f032ff0a063e32')
+
+build() {
+  export lt_cv_deplibs_check_method='pass_all'
+
+  mkdir -p "build-${CHOST}" && cd "build-${CHOST}"
+
+  "../ImageMagick-${_basever}${_rc}/configure" \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-deprecated \
+    --enable-hdri \
+    --enable-legacy-support \
+    --with-bzlib \
+    --with-fontconfig \
+    --with-freetype \
+    --with-jpeg \
+    --with-ltdl \
+    --with-modules \
+    --with-png \
+    --with-xml \
+    --with-zlib \
+    --without-autotrace \
+    --without-djvu \
+    --without-dps \
+    --without-fftw \
+    --without-flif \
+    --without-fpx \
+    --without-gslib \
+    --without-gvc \
+    --without-heic \
+    --without-jbig \
+    --without-jxl \
+    --without-lcms \
+    --without-lqr \
+    --without-magick-plus-plus \
+    --without-openexr \
+    --without-openjp2 \
+    --without-perl \
+    --without-raqm \
+    --without-rsvg \
+    --without-tiff \
+    --without-zstd \
+    --without-uhdr \
+    --without-webp \
+    --without-wmf \
+    --without-x
+
+  make
+}
+
+check() {
+  cd "build-${CHOST}"
+  make check
+}
+
+package() {
+  cd "build-${CHOST}"
+  make -j1 DESTDIR="${pkgdir}" install
+
+  install -Dm644 "${srcdir}/ImageMagick-${_basever}${_rc}/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${srcdir}/ImageMagick-${_basever}${_rc}/NOTICE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/NOTICE"
+}

@@ -1,0 +1,54 @@
+From 2b1cce1f8e4db70c81c22af3073ef17ec22aacf7 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Mon, 1 Apr 2024 09:32:07 +0200
+Subject: [PATCH 1/2] export all symbols
+
+Otherwise it will not compile, try it for yourself
+---
+ pixman/meson.build | 1 +
+ test/meson.build   | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/pixman/meson.build b/pixman/meson.build
+index 62ec66b..db76733 100644
+--- a/pixman/meson.build
++++ b/pixman/meson.build
+@@ -127,6 +127,7 @@ libpixman = library(
+   include_directories : cpu_features_inc,
+   version : meson.project_version(),
+   install : true,
++  link_args : ['-Wl,--export-all-symbols'],
+ )
+ 
+ inc_pixman = include_directories('.')
+diff --git a/test/meson.build b/test/meson.build
+index 47dd33c..a991bf7 100644
+--- a/test/meson.build
++++ b/test/meson.build
+@@ -66,7 +66,6 @@ progs = [
+   'scaling-bench',
+   'affine-bench',
+ ]
+-
+ foreach t : tests
+   test(
+     t,
+@@ -74,6 +73,7 @@ foreach t : tests
+       t,
+       [t + '.c', config_h],
+       dependencies : [idep_pixman, libtestutils_dep, dep_threads, dep_openmp, dep_png],
++      c_args : ['-DPIXMAN_API=__declspec(dllimport)'],
+     ),
+     timeout : 120,
+     is_parallel : true,
+@@ -85,6 +85,7 @@ foreach p : progs
+     p,
+     p + '.c',
+     dependencies : [idep_pixman, libtestutils_dep, dep_openmp],
++    c_args : ['-DPIXMAN_API=__declspec(dllimport)'],
+   )
+ endforeach
+ 
+-- 
+2.44.0
+

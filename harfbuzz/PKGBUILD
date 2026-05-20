@@ -1,0 +1,57 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=harfbuzz
+pkgver=8.4.0
+pkgrel=1
+pkgdesc="OpenType text shaping engine"
+arch=(x86_64)
+url="https://www.freedesktop.org/wiki/Software/HarfBuzz/"
+license=('MIT')
+depends=(
+  cairo
+  freetype
+#  graphite2
+  icu
+)
+makedepends=(
+  'meson'
+)
+source=(
+  "https://github.com/harfbuzz/harfbuzz/releases/download/${pkgver}/${pkgname}-${pkgver}.tar.xz"
+  "7.3.0-sincosf.patch"
+)
+sha256sums=('af4ea73e25ab748c8c063b78c2f88e48833db9b2ac369e29bd115702e789755e'
+            'ef9241598dd282af9dcefcc758736e73db6b078f6dc21a269ae2358fa6ae345a')
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply the patch
+  patch -p2 -i ${srcdir}/7.3.0-sincosf.patch
+
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson setup \
+    --prefix=/usr \
+    --buildtype=release \
+    --libdir=lib \
+  build
+
+  meson compile -C build
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+  #meson test -C build
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson install -C build --destdir=${pkgdir}
+}

@@ -1,0 +1,46 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libelf
+pkgver=0.8.13
+pkgrel=3
+pkgdesc="ELF object file access library"
+arch=(x86_64)
+url="http://www.mr511.de/software/"
+license=('BSD-2-Clause')
+depends=()
+makedepends=(
+  'autoconf'
+  'automake'
+  'libtool'
+  'git'
+'gettext-devel'
+)
+source=(
+  "git+https://github.com/Distrotech/libelf.git"
+)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}
+  cp /usr/share/automake-1.16/config.guess .
+}
+
+build() {
+  cd ${srcdir}/${pkgname}
+
+  ./configure --prefix=/usr LIBINTL="-lintl"
+
+  make
+}
+
+check() {
+  cd ${srcdir}/${pkgname}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}
+
+  make DESTDIR=${pkgdir} install
+}

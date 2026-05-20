@@ -1,0 +1,364 @@
+From 35d84207665706921cdd5eb4f3a49e20ff9c1e4d Mon Sep 17 00:00:00 2001
+From: kreijstal <rainb@tfwno.gf>
+Date: Thu, 12 Jun 2025 10:51:18 +0200
+Subject: [PATCH] attempt to make it work
+
+---
+ giscanner/ccompiler.py      | 230 ++++++++++++++++++++++++++----------
+ giscanner/dumper.py         |  12 +-
+ giscanner/utils.py          |   1 +
+ tools/g-ir-tool-template.in |   3 +-
+ 4 files changed, 180 insertions(+), 66 deletions(-)
+
+diff --git a/giscanner/ccompiler.py b/giscanner/ccompiler.py
+index b7a252b..4d3386c 100644
+--- a/giscanner/ccompiler.py
++++ b/giscanner/ccompiler.py
+@@ -24,12 +24,37 @@ import subprocess
+ import tempfile
+ 
+ import sys
+-import distutils
+-
+-from distutils.msvccompiler import MSVCCompiler
+-from distutils.unixccompiler import UnixCCompiler
+-from distutils.cygwinccompiler import Mingw32CCompiler
+-from distutils.sysconfig import customize_compiler
++import subprocess
++import sysconfig # New import
++import shutil # New import for which
++
++# --- Reimplementing distutils.msvccompiler.MSVCCompiler (minimal) ---
++try:
++    # Try to import distutils if it still exists (e.g., Python < 3.12)
++    from distutils.msvccompiler import MSVCCompiler as RealMSVCCompiler
++except ImportError:
++    # Fallback if distutils is removed
++    class RealMSVCCompiler:
++        def _is_msvc(self, compiler_name):
++            return 'msvc' in compiler_name
++        # Add other methods that might be called later if needed
++        def preprocess(self, source, output_file, macros, include_dirs, extra_postargs):
++            # This is a simplification; a full implementation would call 'cl.exe /E'
++            raise NotImplementedError("MSVC preprocess not fully reimplemented without distutils")
++        def compile(self, sources, macros, include_dirs, extra_postargs, output_dir):
++            # This is a simplification; a full implementation would call 'cl.exe /c'
++            raise NotImplementedError("MSVC compile not fully reimplemented without distutils")
++
++# --- Simple mock classes for isinstance checks (to avoid distutils dependencies) ---
++# These are only used for isinstance() checks, not for actual compilation logic.
++class UnixCCompiler:
++    pass
++class Mingw32CCompiler:
++    pass
++
++# --- We don't need distutils.sysconfig.customize_compiler anymore ---
++# We'll handle this manually.
++# from distutils.sysconfig import customize_compiler # REMOVE THIS
+ 
+ from . import utils
+ 
+@@ -37,7 +62,7 @@ from . import utils
+ class CCompiler(object):
+ 
+     compiler_cmd = ''
+-    compiler = None
++    compiler = None # This will now be our custom compiler proxy
+     _cflags_no_deprecation_warnings = ''
+ 
+     def __init__(self,
+@@ -45,47 +70,31 @@ class CCompiler(object):
+                  osname=os.name,
+                  compiler_name=None):
+ 
+-        if osname == 'nt':
+-            # The compiler used here on Windows may well not be
+-            # the same compiler that was used to build Python,
+-            # as the official Python binaries are built with
+-            # Visual Studio
+-            if compiler_name is None:
+-                if environ.get('MSYSTEM') == 'MINGW32' or environ.get('MSYSTEM') == 'MINGW64':
+-                    compiler_name = 'mingw32'
+-                else:
+-                    compiler_name = distutils.ccompiler.get_default_compiler()
+-            if compiler_name != 'msvc' and \
+-               compiler_name != 'mingw32':
+-                raise SystemExit('Specified Compiler \'%s\' is unsupported.' % compiler_name)
+-        else:
+-            # XXX: Is it common practice to use a non-Unix compiler
+-            #      class instance on non-Windows on platforms g-i supports?
+-            compiler_name = distutils.ccompiler.get_default_compiler()
+-
+-        # Now, create the distutils ccompiler instance based on the info we have.
+-        if compiler_name == 'msvc':
+-            # For MSVC, we need to create a instance of a subclass of distutil's
+-            # MSVC9Compiler class, as it does not provide a preprocess()
+-            # implementation
+-            from . import msvccompiler
+-            self.compiler = msvccompiler.get_msvc_compiler()
++        # Determine the compiler based on OS and MSYS2 environment
++        is_msvc = False
++        compiler_to_use = None
+ 
++        if osname == 'nt':
++            if environ.get('MSYSTEM') == 'MINGW32' or environ.get('MSYSTEM') == 'MINGW64':
++                # MinGW-w64 GCC from MSYS2
++                compiler_to_use = 'gcc'
++            elif environ.get('MSYSTEM') == 'UCRT64' or environ.get('MSYSTEM') == 'CLANG64':
++                # UCRT64/CLANG64 GCC/Clang from MSYS2
++                compiler_to_use = 'gcc' # Assume gcc/clang for now, actual cmd will be found by shutil.which
++            else:
++                # Default to MSVC on native Windows if no MSYSTEM
++                compiler_to_use = 'msvc'
++                is_msvc = True
+         else:
+-            self.compiler = distutils.ccompiler.new_compiler(compiler=compiler_name)
+-        customize_compiler(self.compiler)
+-
+-        # customize_compiler() from distutils only does customization
+-        # for 'unix' compiler type.  Also, avoid linking to msvcrxx.dll
+-        # for MinGW builds as the dumper binary does not link to the
+-        # Python DLL, but link to msvcrt.dll if necessary.
+-        if isinstance(self.compiler, Mingw32CCompiler):
+-            if self.compiler.dll_libraries != ['msvcrt']:
+-                self.compiler.dll_libraries = []
+-            if self.compiler.preprocessor is None:
+-                self.compiler.preprocessor = self.compiler.compiler + ['-E']
++            # Default to GCC on Unix-like systems (including MSYS environment itself)
++            compiler_to_use = 'gcc'
+ 
+-        if self.check_is_msvc():
++        # Find the actual compiler command executable
++        if is_msvc:
++            self.compiler_cmd = 'cl.exe'
++            # For MSVC, we instantiate our custom RealMSVCCompiler
++            from . import msvccompiler # This import is still needed for msvccompiler.get_msvc_compiler
++            self.compiler = msvccompiler.get_msvc_compiler()
+             # We trick distutils to believe that we are (always) using a
+             # compiler supplied by a Windows SDK, so that we avoid launching
+             # a new build environment to detect the compiler that is used to
+@@ -97,16 +106,112 @@ class CCompiler(object):
+                     os.environ['MSSdk'] = os.environ.get('WindowsSDKDir')
+                 elif os.environ.get('VCInstallDir'):
+                     os.environ['MSSdk'] = os.environ.get('VCInstallDir')
+-
+-            self.compiler_cmd = 'cl.exe'
+-
++        else:
++            # For GCC/Clang, find the executable
++            actual_compiler_path = shutil.which(compiler_to_use)
++            if not actual_compiler_path:
++                raise SystemExit(f"ERROR: Could not find compiler '{compiler_to_use}' in PATH")
++            self.compiler_cmd = actual_compiler_path
++
++            # Create a simple compiler proxy that calls subprocess
++            # This replaces distutils.ccompiler.new_compiler
++            class GenericCompilerProxy:
++                def __init__(self, cmd):
++                    self.compiler = [cmd] # Store the actual command
++                    self.preprocessor = [cmd, '-E'] # Default preprocessor command
++                    self.exe_extension = '.exe' if os.name == 'nt' else ''
++
++                def preprocess(self, source, output_file, macros, include_dirs, extra_postargs):
++                    cmd = self.preprocessor + [source, '-o', output_file]
++                    for name, value in macros:
++                        if value is None:
++                            cmd.append(f'-D{name}')
++                        else:
++                            cmd.append(f'-D{name}={value}')
++                    for d in include_dirs:
++                        cmd.append(f'-I{d}')
++                    cmd.extend(extra_postargs)
++                    subprocess.run(cmd, check=True) # Use check=True to raise an error on non-zero exit
++
++                def compile(self, sources, macros, include_dirs, extra_postargs, output_dir):
++                    objects = []
++                    for source_file in sources:
++                        output_file = os.path.join(output_dir, os.path.basename(source_file).replace('.c', '.o'))
++                        cmd = self.compiler + ['-c', source_file, '-o', output_file]
++                        for name, value in macros:
++                            if value is None:
++                                cmd.append(f'-D{name}')
++                            else:
++                                cmd.append(f'-D{name}={value}')
++                        for d in include_dirs:
++                            cmd.append(f'-I{d}')
++                        cmd.extend(extra_postargs)
++                        subprocess.run(cmd, check=True)
++                        objects.append(output_file)
++                    return objects
++
++                def link_executable(self, objects, output_prog,
++                                    libraries=None, library_dirs=None,
++                                    runtime_library_dirs=None,
++                                    extra_postargs=None,
++                                    target_lang=None):
++                    cmd = self.compiler + ['-o', output_prog]
++                    cmd.extend(objects)
++                    
++                    # Add library search paths
++                    if library_dirs:
++                        for d in library_dirs:
++                            cmd.append(f'-L{d}')
++                    
++                    # Add libraries to link against
++                    if libraries:
++                        for l in libraries:
++                            cmd.append(f'-l{l}')
++                    
++                    # Set runtime library paths
++                    if runtime_library_dirs:
++                        for d in runtime_library_dirs:
++                            cmd.append(f'-Wl,-rpath,{d}')
++                    
++                    # Add any extra arguments
++                    if extra_postargs:
++                        cmd.extend(extra_postargs)
++                    
++                    # Run the linker
++                    subprocess.run(cmd, check=True)
++                    
++                    # On Windows/MSYS2, copy required DLLs to output directory
++                    if os.name == 'nt':
++                        dlls_to_copy = []
++                        # Find all DLLs the executable depends on
++                        try:
++                            proc = subprocess.run(['ldd', output_prog],
++                                                capture_output=True, text=True)
++                            for line in proc.stdout.splitlines():
++                                if '=>' in line:
++                                    dll_path = line.split('=>')[1].split('(')[0].strip()
++                                    if dll_path and os.path.exists(dll_path):
++                                        dlls_to_copy.append(dll_path)
++                        except:
++                            pass
++                        
++                        # Copy DLLs to executable's directory
++                        for dll in dlls_to_copy:
++                            try:
++                                shutil.copy2(dll, os.path.dirname(output_prog))
++                            except:
++                                pass
++
++                # Mimic the Mingw32CCompiler specific attribute for isinstance check
++                dll_libraries = []
++
++            self.compiler = GenericCompilerProxy(self.compiler_cmd)
++            # No customize_compiler call needed for our custom proxy
++
++        # Common flags after compiler detection
++        if is_msvc:
+             self._cflags_no_deprecation_warnings = "-wd4996"
+         else:
+-            if (isinstance(self.compiler, Mingw32CCompiler)):
+-                self.compiler_cmd = self.compiler.compiler[0]
+-            else:
+-                self.compiler_cmd = ' '.join(self.compiler.compiler)
+-
+             self._cflags_no_deprecation_warnings = "-Wno-deprecated-declarations"
+ 
+     def get_internal_link_flags(self, args, libtool, libraries, extra_libraries, libpaths):
+@@ -216,8 +321,12 @@ class CCompiler(object):
+     def compile(self, pkg_config_cflags, cpp_includes, source, init_sections):
+         extra_postargs = []
+         includes = []
+-        source_str = ''.join(source)
+-        tmpdir_idx = source_str.rfind(os.sep, 0, source_str.rfind(os.sep))
++        
++        # Get output directory from first source file
++        if not source:
++            raise ValueError("No source files provided to compile")
++        output_dir = os.path.dirname(os.path.abspath(source[0]))
++
+         (include_paths, macros, extra_args) = \
+             self._set_cpp_options(pkg_config_cflags)
+ 
+@@ -252,7 +361,7 @@ class CCompiler(object):
+                                      macros=macros,
+                                      include_dirs=includes,
+                                      extra_postargs=extra_postargs,
+-                                     output_dir=os.path.abspath(os.sep))
++                                     output_dir=output_dir)
+ 
+     def resolve_windows_libs(self, libraries, options):
+         args = []
+@@ -359,10 +468,11 @@ class CCompiler(object):
+         return shlibs
+ 
+     def check_is_msvc(self):
+-        if isinstance(self.compiler, MSVCCompiler):
+-            return True
+-        else:
+-            return False
++        # We need to distinguish between our custom RealMSVCCompiler and others.
++        # Note: If RealMSVCCompiler was successfully imported from distutils,
++        # it *is* distutils.msvccompiler.MSVCCompiler.
++        # If it was our mock, it's still a specific class.
++        return isinstance(self.compiler, RealMSVCCompiler)
+ 
+     # Private APIs
+     def _set_cpp_options(self, options):
+diff --git a/giscanner/dumper.py b/giscanner/dumper.py
+index 7f77bd2..3cb2e23 100644
+--- a/giscanner/dumper.py
++++ b/giscanner/dumper.py
+@@ -167,15 +167,17 @@ class DumpCompiler(object):
+         try:
+             introspection_obj = self._compile(c_path)
+         except CompilerError as e:
+-            if not utils.have_debug_flag('save-temps'):
+-                shutil.rmtree(tmpdir)
++            #if not utils.have_debug_flag('save-temps'):
++            #    shutil.rmtree(tmpdir)
++            print("DEBUG: Temporary directory left at:", tmpdir)
+             raise SystemExit('compilation of temporary binary failed:' + str(e))
+ 
+         try:
+             self._link(bin_path, introspection_obj)
+         except LinkerError as e:
+-            if not utils.have_debug_flag('save-temps'):
+-                shutil.rmtree(tmpdir)
++            #if not utils.have_debug_flag('save-temps'):
++            #    shutil.rmtree(tmpdir)
++            print("DEBUG: Temporary directory left at:", tmpdir)
+             raise SystemExit('linking of temporary binary failed: ' + str(e))
+ 
+         return IntrospectionBinary([bin_path], tmpdir)
+@@ -284,7 +286,7 @@ class DumpCompiler(object):
+             with os.fdopen(tf, 'wb') as f:
+                 shellcontents = ' '.join([x.replace('\\', '/') for x in args])
+                 fcontents = '#!/bin/sh\nunset PWD\n{}\n'.format(shellcontents)
+-                f.write(fcontents)
++                f.write(fcontents.encode('utf-8'))
+             shell = utils.which(shell)
+             args = [shell, tf_name.replace('\\', '/')]
+         try:
+diff --git a/giscanner/utils.py b/giscanner/utils.py
+index 76a43c0..a1adb47 100644
+--- a/giscanner/utils.py
++++ b/giscanner/utils.py
+@@ -141,6 +141,7 @@ def extract_libtool(la_file):
+ 
+ # Returns arguments for invoking libtool, if applicable, otherwise None
+ def get_libtool_command(options):
++    return None
+     libtool_infection = not options.nolibtool
+     if not libtool_infection:
+         return None
+diff --git a/tools/g-ir-tool-template.in b/tools/g-ir-tool-template.in
+index edc68a4..bc79fb9 100644
+--- a/tools/g-ir-tool-template.in
++++ b/tools/g-ir-tool-template.in
+@@ -25,7 +25,8 @@ from __future__ import unicode_literals
+ 
+ import os
+ import sys
+-
++_root_dir = os.path.dirname(__file__)
++sys.path.insert(0, os.path.join(_root_dir, '.libs'))
+ if sys.version_info.major < 3:
+     import __builtin__ as builtins
+ else:
+-- 
+2.49.0
+

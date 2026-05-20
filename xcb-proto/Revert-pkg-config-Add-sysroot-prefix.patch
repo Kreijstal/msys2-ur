@@ -1,0 +1,29 @@
+From ed308a9403f06f0f8eb408f55886695ab8c5f9bd Mon Sep 17 00:00:00 2001
+From: Jon Turney <jon.turney@dronecode.org.uk>
+Date: Wed, 14 Dec 2022 16:04:26 +0000
+Subject: [PATCH xcb-proto] Revert "pkg-config: Add sysroot prefix"
+
+This reverts commit bd7a481a3bee9283277badda95730f52185127bc.
+---
+ xcb-proto.pc.in | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/xcb-proto.pc.in b/xcb-proto.pc.in
+index 0822b18..8de18af 100644
+--- a/xcb-proto.pc.in
++++ b/xcb-proto.pc.in
+@@ -2,9 +2,9 @@ prefix=@prefix@
+ exec_prefix=@exec_prefix@
+ datarootdir=@datarootdir@
+ datadir=@datadir@
+-xcbincludedir=${pc_sysrootdir}@xcbincludedir@
++xcbincludedir=@xcbincludedir@
+ PYTHON_PREFIX=@PYTHON_PREFIX@
+-pythondir=${pc_sysrootdir}@pythondir@
++pythondir=@pythondir@
+ 
+ Name: XCB Proto
+ Description: X protocol descriptions for XCB
+-- 
+2.39.0
+

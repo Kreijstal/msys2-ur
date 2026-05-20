@@ -1,0 +1,46 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-proto
+pkgver=1.16.0
+pkgrel=1
+pkgdesc="X Protocol C-Language Binding protocol descriptions"
+arch=('noarch')
+url="https://xcb.freedesktop.org/"
+license=('MIT')
+depends=()
+makedepends=('gcc' 'make' 'sh' 'python3' 'autoconf' 'automake' 'libtool')
+source=(https://xorg.freedesktop.org/archive/individual/proto/xcb-proto-${pkgver}.tar.xz
+        Revert-pkg-config-Add-sysroot-prefix.patch)
+sha256sums=('SKIP'
+            'SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply the patch
+  patch -Np1 -i "${srcdir}/Revert-pkg-config-Add-sysroot-prefix.patch"
+
+  # Run autogen.sh to generate the configure script
+  ./autogen.sh
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Run configure and make
+  ./configure
+  make
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Install the files to the package directory
+  make DESTDIR=${pkgdir} install
+}

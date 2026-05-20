@@ -1,0 +1,50 @@
+--- a/include/os.h
++++ b/include/os.h
+@@ -309,7 +309,7 @@
+ 
+ #include <signal.h>
+ 
+-#if defined(WIN32)
++#if defined(WIN32) && !defined(__CYGWIN__)
+ typedef _sigset_t sigset_t;
+ #endif
+ 
+--- a/hw/xwin/InitOutput.c
++++ b/hw/xwin/InitOutput.c
+@@ -32,14 +32,15 @@
+ #include <xwin-config.h>
+ #endif
+ 
+-#include "win.h"
+-
+ #include "dix/dix_priv.h"
+ #include "dix/screenint_priv.h"
+ #include "miext/extinit_priv.h"
+ #include "os/ddx_priv.h"
+ #include "os/log_priv.h"
+ #include "os/osdep.h"
++
++#include "win.h"
++
+ #include "xkb/xkbsrv_priv.h"
+ 
+ #include "winmsg.h"
+
+--- a/hw/xwin/winauth.c
++++ b/hw/xwin/winauth.c
+@@ -32,12 +32,14 @@
+ #include <xwin-config.h>
+ #endif
+ 
++/* osdep.h includes winsock on Cygwin; keep it before xcb headers. */
++#include "os/osdep.h"
++
+ #include "winauth.h"
+ #include "winmsg.h"
+ 
+ /* Includes for authorization */
+ #include "securitysrv.h"
+-#include "os/osdep.h"
+ #include "os/mitauth.h"
+ 
+ #include <xcb/xcb.h>

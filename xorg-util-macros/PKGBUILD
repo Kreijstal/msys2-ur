@@ -1,0 +1,40 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xorg-util-macros
+pkgver=1.20.0
+pkgrel=1
+pkgdesc="X.Org aclocal macros"
+arch=('noarch')
+url="https://www.x.org/"
+license=('MIT')
+depends=()
+makedepends=('gcc' 'make' 'sh' 'xorg-util-macros')
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+source=(https://www.x.org/releases/individual/util/util-macros-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/util-macros-${pkgver}
+
+  # Apply any necessary patches here
+}
+
+build() {
+  cd ${srcdir}/util-macros-${pkgver}
+
+  ./configure --prefix=/usr
+
+  make
+}
+
+check() {
+  cd ${srcdir}/util-macros-${pkgver}
+#make test
+
+}
+
+package() {
+  cd ${srcdir}/util-macros-${pkgver}
+
+  make DESTDIR=${pkgdir} install
+}

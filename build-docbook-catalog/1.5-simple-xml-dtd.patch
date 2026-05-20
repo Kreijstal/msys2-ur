@@ -1,0 +1,58 @@
+--- origsrc/build-docbook-catalog-*	2009-10-26 22:12:01.062129200 -0500
++++ src/build-docbook-catalog-*	2009-10-26 22:11:51.892116600 -0500
+@@ -41,13 +41,16 @@ main() {
+ 
+ 	# Clean out old dtds from catalog
+ 	verb "Cleaning out old DocBook XML versions from ${CATALOG} and ${ROOTCATALOG}"
+-	clean_catalog "${DOCBOOKDIR}/xml-dtd-[^/\"']*/[^/\"']*" ${CATALOG}
+-	clean_catalog "${DOCBOOKDIR}/xml-dtd-[^/\"']*/[^/\"']*" ${ROOTCATALOG}
++	clean_catalog "${DOCBOOKDIR}/xml\(-simple\)*-dtd-[^/\"']*/[^/\"']*" ${CATALOG}
++	clean_catalog "${DOCBOOKDIR}/xml\(-simple\)*-dtd-[^/\"']*/[^/\"']*" ${ROOTCATALOG}
+ 
+ 	if set_dtds; then
+ 		for d in ${DTDS}; do
+ 			populate_dtd ${d}
+ 		done
++		for d in ${SIMPLE_DTDS}; do
++			populate_simple_dtd ${d}
++		done
+ 		populate_entities
+ 	fi
+ 
+@@ -66,6 +69,7 @@ verb() {
+ # 
+ set_dtds() {
+ 	DTDS=$(find ${DOCBOOKDIR} -path '*/xml-dtd-*/docbookx.dtd')
++	SIMPLE_DTDS=$(find ${DOCBOOKDIR} -path '*/xml-simple-dtd-*/sdocbook.dtd')
+ 	if [[ -z ${DTDS} ]]; then
+ 		echo "No installed DocBook XML DTDs found"
+ 		return 1
+@@ -177,6 +181,28 @@ populate_dtd() {
+ 	fi
+ }
+ 
++# 
++# populate a specific simple dtd version into the docbook catalog
++# $1 == /path/to/sdocbook.dtd
++#
++populate_simple_dtd() {
++	typeset dtd=$1 docbookdir=${1%/*}
++	typeset v=${docbookdir##*-}
++
++	# sanity check
++	if [[ ${dtd} != */xml-simple-dtd-*/* ]]; then
++		echo "Warning: I don't understand \"${dtd}\"" >&2
++		return
++	fi
++	echo "Found Simplified DocBook XML ${v} in ${docbookdir}"
++
++	# Populate the docbook catalog with this version
++	verb "  Populating ${CATALOG} based on ${docbookdir}"
++	xmlcatalog --noout --add "public" "-//OASIS//DTD Simplified DocBook XML V${v}//EN" "file://${docbookdir}/sdocbook.dtd" ${CATALOG}
++	xmlcatalog --noout --add "rewriteSystem" "http://www.oasis-open.org/docbook/xml/simple/${v}" "file://${docbookdir}" ${CATALOG}
++	xmlcatalog --noout --add "rewriteURI" "http://www.oasis-open.org/docbook/xml/simple/${v}" "file://${docbookdir}" ${CATALOG}
++}
++
+ #
+ # populate ISO DocBook entities from the most recent DTD
+ #

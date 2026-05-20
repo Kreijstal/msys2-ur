@@ -1,0 +1,59 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxt
+urlpkgname=libXt
+pkgver=1.3.0
+pkgrel=1
+pkgdesc="X11 toolkit intrinsics library"
+arch=('i686' 'x86_64')
+url="https://www.x.org/"
+license=('MIT')
+depends=('libsm' 'libx11')
+makedepends=('xorg-util-macros' 'autoconf' 'automake' 'libtool' 'gcc' 'ccache')
+
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+source=(https://www.x.org/archive/individual/lib/${urlpkgname}-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  autoreconf -vif
+  sed -i \
+    -e 's/static Boolean true = True;/static Boolean true_value = True;/' \
+    -e 's/(&true)/(\&true_value)/' \
+    src/Shell.c
+}
+
+build() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  local _host="x86_64-pc-msys"
+
+  ./configure --prefix=/usr \
+    --libdir=/usr/lib \
+    --sysconfdir=/etc \
+    --localstatedir=/var \
+    --datadir=/usr/share \
+    --mandir=/usr/share/man \
+    --infodir=/usr/share/info \
+    --build=${_host} \
+    --host=${_host} \
+    --enable-shared \
+    --enable-static
+
+  make
+}
+
+check() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  make check
+}
+
+package() {
+  cd ${srcdir}/${urlpkgname}-${pkgver}
+
+  # Install the package to the system
+  make DESTDIR=${pkgdir} install
+}

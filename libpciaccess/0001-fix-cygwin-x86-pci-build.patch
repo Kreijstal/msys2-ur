@@ -1,0 +1,45 @@
+--- a/src/x86_pci.c
++++ b/src/x86_pci.c
+@@ -83,7 +83,6 @@
+ #include <windows.h>
+ 
+ /* WinIo declarations */
+-typedef BYTE bool;
+ typedef struct tagPhysStruct {
+     DWORD64 dwPhysMemSizeInBytes;
+     DWORD64 pvPhysAddress;
+@@ -94,12 +93,12 @@
+     DWORD64 pvPhysSection;
+ } tagPhysStruct;
+ 
+-typedef bool  (_stdcall* INITIALIZEWINIO)(void);
++typedef BOOL  (_stdcall* INITIALIZEWINIO)(void);
+ typedef void  (_stdcall* SHUTDOWNWINIO)(void);
+-typedef bool  (_stdcall* GETPORTVAL)(WORD,PDWORD,BYTE);
+-typedef bool  (_stdcall* SETPORTVAL)(WORD,DWORD,BYTE);
++typedef BOOL  (_stdcall* GETPORTVAL)(WORD,PDWORD,BYTE);
++typedef BOOL  (_stdcall* SETPORTVAL)(WORD,DWORD,BYTE);
+ typedef PBYTE (_stdcall* MAPPHYSTOLIN)(tagPhysStruct*);
+-typedef bool  (_stdcall* UNMAPPHYSMEM)(tagPhysStruct*);
++typedef BOOL  (_stdcall* UNMAPPHYSMEM)(tagPhysStruct*);
+ 
+ SHUTDOWNWINIO ShutdownWinIo;
+ GETPORTVAL GetPortVal;
+@@ -107,7 +106,7 @@
+ MAPPHYSTOLIN MapPhysToLin;
+ UNMAPPHYSMEM UnmapPhysicalMemory;
+ 
+-static int
++int
+ x86_enable_io(void)
+ {
+     HMODULE lib = NULL;
+@@ -151,7 +150,7 @@
+     return 0;
+ }
+ 
+-static int
++int
+ x86_disable_io(void)
+ {
+     ShutdownWinIo();

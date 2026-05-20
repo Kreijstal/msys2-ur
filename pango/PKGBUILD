@@ -1,0 +1,57 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=pango
+pkgver=1.52.2
+pkgrel=1
+pkgdesc="A library for laying out and rendering of text"
+arch=('i686' 'x86_64')
+url="https://www.pango.org/"
+license=('LGPL')
+depends=('glib2' 'harfbuzz' 'cairo' 'fontconfig')
+makedepends=('meson' 'ninja' 'gcc')
+options=('!introspection')
+source=("https://download.gnome.org/sources/pango/1.52/pango-${pkgver}.tar.xz")
+sha256sums=('SKIP') # Replace 'SKIP' with the actual sha256 checksum after downloading
+
+prepare() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  # Apply any necessary patches here
+# Use sed to replace the content
+sed -i '/pango_view = executable(/,/)/c\
+pango_view = executable('\''pango-view'\'', pango_view_sources,\
+                        dependencies: pango_view_deps,\
+                        include_directories: [ root_inc ],\
+                        install: true,\
+                        c_args: common_cflags + pango_debug_cflags + [\
+                          '\''-DPACKAGE_NAME="@0@"'\''.format(meson.project_name()),\
+                          '\''-DPACKAGE_VERSION="@0@"'\''.format(meson.project_version())\
+                        ],\
+                        link_args: ['\''-Wl,--start-group'\'', '\''-lcairo'\'', '\''-Wl,--end-group'\''])'  "utils/meson.build"
+}
+
+build() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+
+  meson setup _build \
+    --prefix=/usr \
+    --buildtype=release \
+    --libdir=/usr/lib \
+    -Dgtk_doc=false \
+    -Dintrospection=disabled
+
+  meson compile -C _build
+}
+
+check() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  meson test -C _build
+}
+
+package() {
+  cd "${srcdir}/${pkgname}-${pkgver}"
+  DESTDIR="${pkgdir}" meson install -C _build
+
+  # Install the license
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

@@ -1,0 +1,32 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=khronos-opengl-registry
+pkgver=r1089.a30033d
+pkgrel=1
+pkgdesc="Khronos OpenGL API registry"
+arch=('any')
+url="https://github.com/KhronosGroup/OpenGL-Registry"
+license=('spdx:Apache-2.0')
+makedepends=('git')
+source=("git+https://github.com/KhronosGroup/OpenGL-Registry.git#commit=a30033d3e812c9bf10094f1010374a6b15e192eb")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd OpenGL-Registry
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+package() {
+  local specdir="${pkgdir}/usr/share/OpenGL-Registry/xml"
+
+  install -dm755 "${specdir}" "${pkgdir}/usr/lib/pkgconfig"
+  install -m644 OpenGL-Registry/xml/{gl,glx,wgl}.xml "${specdir}/"
+  install -m644 OpenGL-Registry/xml/reg.py "${specdir}/"
+
+  cat > "${pkgdir}/usr/lib/pkgconfig/khronos-opengl-registry.pc" <<'EOF'
+Name: Khronos OpenGL Registry
+Description: Khronos OpenGL API registry XML files
+Version: 1
+specdir=/usr/share/OpenGL-Registry/xml
+EOF
+}

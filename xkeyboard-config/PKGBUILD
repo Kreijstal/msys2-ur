@@ -1,0 +1,66 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xkeyboard-config
+pkgver=2.47
+pkgrel=1
+pkgdesc="X keyboard configuration files"
+arch=('any')
+url="https://www.freedesktop.org/wiki/Software/XKeyboardConfig/"
+license=('spdx:MIT')
+depends=('xkbcomp')
+makedepends=('meson' 'ninja' 'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/data/${pkgname}/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('e59984416a72d58b46a52bfec1b1361aa7d84354628227ee2783626c7a6db6b6')
+noextract=("${pkgname}-${pkgver}.tar.xz")
+
+prepare() {
+  local -A symlinks=(
+    [caps]=capslock
+    [esperanto]=epo
+    [grp]=group
+    [japan]=jp
+    [korean]=kr
+    [lv2]=level2
+    [lv3]=level3
+    [lv5]=level5
+  )
+
+  local link target
+  local -a exclude_args=()
+  for link in "${!symlinks[@]}"; do
+    exclude_args+=("--exclude=${pkgname}-${pkgver}/symbols/${link}")
+  done
+
+  rm -rf "${pkgname}-${pkgver}"
+  bsdtar -xf "${pkgname}-${pkgver}.tar.xz" "${exclude_args[@]}"
+
+  for link in "${!symlinks[@]}"; do
+    target="${symlinks[$link]}"
+    cp "${pkgname}-${pkgver}/symbols/${target}" "${pkgname}-${pkgver}/symbols/${link}"
+  done
+}
+
+build() {
+  meson setup "${pkgname}-${pkgver}" "build-${CHOST}" \
+    -Dprefix=/usr
+  meson compile -C "build-${CHOST}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  if [[ ! -e "${pkgdir}/usr/share/X11/xkb" ]]; then
+    mkdir -p "${pkgdir}/usr/share/X11"
+    cp -a "${pkgdir}/usr/share/xkeyboard-config-2" "${pkgdir}/usr/share/X11/xkb"
+  fi
+  if [[ ! -e "${pkgdir}/usr/share/pkgconfig/xkeyboard-config.pc" ]]; then
+    cp "${pkgdir}/usr/share/pkgconfig/xkeyboard-config-2.pc" \
+      "${pkgdir}/usr/share/pkgconfig/xkeyboard-config.pc"
+  fi
+  if [[ ! -e "${pkgdir}/usr/share/man/man7/xkeyboard-config.7" ]]; then
+    cp "${pkgdir}/usr/share/man/man7/xkeyboard-config-2.7" \
+      "${pkgdir}/usr/share/man/man7/xkeyboard-config.7"
+  fi
+
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

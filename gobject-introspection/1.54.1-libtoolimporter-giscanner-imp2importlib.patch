@@ -1,0 +1,45 @@
+diff --git a/giscanner/libtoolimporter.py b/giscanner/libtoolimporter.py
+index 0135bb8..b61184b 100644
+--- a/giscanner/libtoolimporter.py
++++ b/giscanner/libtoolimporter.py
+@@ -23,9 +23,10 @@ from __future__ import division
+ from __future__ import print_function
+ from __future__ import unicode_literals
+ 
+-import imp
+ import os
+ import sys
++import importlib.util
++import importlib.machinery
+ 
+ from .utils import extract_libtool
+ 
+@@ -59,14 +60,17 @@ class LibtoolImporter(object):
+     def load_module(self, name):
+         realpath = extract_libtool(self.path)
+ 
+-        # The first item of the suffix tuple (which can be, depending on platform,
+-        # one or more valid filename extensions used to name c extension modules)
+-        # is ignored by imp.load_module(). Thus, there is no use in pretending it
+-        # is important and we set it to an empty string.
+-        suffix = ('', 'rb', imp.C_EXTENSION)
++        # We're not using the suffix, but we'll keep a similar structure
++        # to maintain compatibility with the original interface
++        suffix = ('', 'rb', importlib.machinery.EXTENSION_SUFFIXES[0])
++
++        spec = importlib.util.spec_from_file_location(name, realpath)
++        mod = importlib.util.module_from_spec(spec)
++        spec.loader.exec_module(mod)
+ 
+-        mod = imp.load_module(name, open(realpath), realpath, suffix)
+         mod.__loader__ = self
++        mod.__file__ = realpath
++
+         return mod
+ 
+     @classmethod
+@@ -76,3 +80,4 @@ class LibtoolImporter(object):
+     @classmethod
+     def __exit__(cls, exc_type, exc_val, exc_tb):
+         sys.meta_path.remove(cls)
++

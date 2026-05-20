@@ -1,0 +1,138 @@
+--- origsrc/gobject-introspection-1.60.2/tests/scanner/test_shlibs.py	2019-03-25 20:17:44.000000000 +0000
++++ src/gobject-introspection-1.60.2/tests/scanner/test_shlibs.py	2025-01-06 18:09:53.452858600 +0000
+@@ -4,33 +4,42 @@ import os
+ 
+ from giscanner.shlibs import resolve_from_ldd_output, sanitize_shlib_path
+ 
++# XXX: maybe we should also accept 'lib' as a prefix in _ldd_library_pattern to
++# avoid having to change all these tests? and add some cygwin specific ones?
++if os.uname()[0].startswith('CYGWIN'):
++    libprefix='cyg'
++elif os.uname()[0].startswith('MSYS'):
++    libprefix='msys-'
++else:
++    libprefix='lib'
++
+ 
+ class TestLddParser(unittest.TestCase):
+ 
+     def test_resolve_from_ldd_output(self):
+         output = '''\
+-            libglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007fbe12d68000)
+-            libgtk-3.so.0 => /usr/lib/x86_64-linux-gnu/libgtk-3.so.0 (0x00007fbe12462000)
+-            libgdk-3.so.0 => /usr/lib/x86_64-linux-gnu/libgdk-3.so.0 (0x00007fbe1216c000)
+-            libpango-1.0.so.0 => /usr/lib/x86_64-linux-gnu/libpango-1.0.so.0 (0x00007fbe11d1a000)
+-            libatk-1.0.so.0 => /usr/lib/x86_64-linux-gnu/libatk-1.0.so.0 (0x00007fbe11af4000)'''
++            {0}glib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/{0}glib-2.0.so.0 (0x00007fbe12d68000)
++            {0}gtk-3.so.0 => /usr/lib/x86_64-linux-gnu/{0}gtk-3.so.0 (0x00007fbe12462000)
++            {0}gdk-3.so.0 => /usr/lib/x86_64-linux-gnu/{0}gdk-3.so.0 (0x00007fbe1216c000)
++            {0}pango-1.0.so.0 => /usr/lib/x86_64-linux-gnu/{0}pango-1.0.so.0 (0x00007fbe11d1a000)
++            {0}atk-1.0.so.0 => /usr/lib/x86_64-linux-gnu/{0}atk-1.0.so.0 (0x00007fbe11af4000)'''.format(libprefix)
+         libraries = ['glib-2.0', 'gtk-3', 'pango-1.0']
+ 
+         self.assertEqual(
+-            ['libglib-2.0.so.0', 'libgtk-3.so.0', 'libpango-1.0.so.0'],
++            ['{0}glib-2.0.so.0'.format(libprefix), '{0}gtk-3.so.0'.format(libprefix), '{0}pango-1.0.so.0'.format(libprefix)],
+             resolve_from_ldd_output(libraries, output))
+ 
+     @unittest.skipUnless(os.name == "posix", "posix only")
+     def test_resolve_from_ldd_output_macos_rpath(self):
+         output = '''\
+-            @rpath/libbarapp-1.0.dylib (compatibility version 0.0.0, current version 0.0.0)
+-            /foo/libgio-2.0.0.dylib (compatibility version 5801.0.0, current version 5801.3.0)
+-            /foo/libgmodule-2.0.0.dylib (compatibility version 5801.0.0, current version 5801.3.0)'''
++            @rpath/{0}barapp-1.0.dylib (compatibility version 0.0.0, current version 0.0.0)
++            /foo/{0}gio-2.0.0.dylib (compatibility version 5801.0.0, current version 5801.3.0)
++            /foo/{0}gmodule-2.0.0.dylib (compatibility version 5801.0.0, current version 5801.3.0)'''.format(libprefix)
+ 
+         libraries = ['barapp-1.0']
+         shlibs = resolve_from_ldd_output(libraries, output)
+-        self.assertEqual(shlibs, ['@rpath/libbarapp-1.0.dylib'])
+-        self.assertEqual(sanitize_shlib_path(shlibs[0]), 'libbarapp-1.0.dylib')
++        self.assertEqual(shlibs, ['@rpath/{0}barapp-1.0.dylib'.format(libprefix)])
++        self.assertEqual(sanitize_shlib_path(shlibs[0]), '{0}barapp-1.0.dylib'.format(libprefix))
+ 
+     @unittest.skipUnless(os.name == "posix", "posix only")
+     def test_sanitize_shlib_path(self):
+@@ -51,34 +58,34 @@ class TestLddParser(unittest.TestCase):
+ 
+     def test_prefixed_library_name(self):
+         output = '''\
+-           /usr/lib/liblibX.so
+-           /usr/lib/libX.so'''
++           /usr/lib/{0}{0}X.so
++           /usr/lib/{0}X.so'''.format(libprefix)
+ 
+         self.assertEqual(
+-            ['/usr/lib/libX.so'],
++            ['/usr/lib/{0}X.so'.format(libprefix)],
+             resolve_from_ldd_output(['X'], output))
+         self.assertEqual(
+-            ['/usr/lib/liblibX.so'],
+-            resolve_from_ldd_output(['libX'], output))
++            ['/usr/lib/{0}{0}X.so'.format(libprefix)],
++            resolve_from_ldd_output(['{0}X'.format(libprefix)], output))
+ 
+     def test_suffixed_library_name(self):
+         output = '''\
+-            libpangocairo.so.0 => /usr/lib/x86_64-linux-gnu/libpangocairo.so.0 (0x00)
+-            libpangoft2.so.0 => /usr/lib/x86_64-linux-gnu/libpangoft2.so.0 (0x00)
+-            libpango.so.0 => /usr/lib/x86_64-linux-gnu/libpango.so.0 (0x00)'''
++            {0}pangocairo.so.0 => /usr/lib/x86_64-linux-gnu/{0}pangocairo.so.0 (0x00)
++            {0}pangoft2.so.0 => /usr/lib/x86_64-linux-gnu/{0}pangoft2.so.0 (0x00)
++            {0}pango.so.0 => /usr/lib/x86_64-linux-gnu/{0}pango.so.0 (0x00)'''.format(libprefix)
+         libraries = ['pango']
+ 
+         self.assertEqual(
+-            ['libpango.so.0'],
++            ['{0}pango.so.0'.format(libprefix)],
+             resolve_from_ldd_output(libraries, output))
+ 
+     def test_header_is_ignored(self):
+         output = '''/tmp-introspection/libfoo.so.999:
+-            0000000000000000 0000000000000000 rlib  0    3   0      /usr/local/lib/libfoo.so.1'''
++            0000000000000000 0000000000000000 rlib  0    3   0      /usr/local/lib/{}foo.so.1'''.format(libprefix)
+         libraries = ['foo']
+ 
+         self.assertEqual(
+-            ['/usr/local/lib/libfoo.so.1'],
++            ['/usr/local/lib/{}foo.so.1'.format(libprefix)],
+             resolve_from_ldd_output(libraries, output))
+ 
+     def test_executable_path_includes_library_name(self):
+@@ -88,29 +95,29 @@ class TestLddParser(unittest.TestCase):
+         output = '''/usr/ports/pobj/libgepub-0.6.0/build-amd64/tmp-introspectnxmyodg1/Gepub-0.6:
+             Start            End              Type  Open Ref GrpRef Name
+             00001066c8400000 00001066c8605000 exe   2    0   0      /usr/ports/pobj/libgepub-0.6.0/build-amd64/tmp-introspectnxmyodg1/Gepub-0.6
+-            000010690019c000 00001069003a8000 rlib  0    1   0      /usr/local/lib/libgepub-0.6.so.0.0'''
++            000010690019c000 00001069003a8000 rlib  0    1   0      /usr/local/lib/{0}gepub-0.6.so.0.0'''.format(libprefix)
+         libraries = ['gepub-0.6']
+ 
+         self.assertEqual(
+-            ['/usr/local/lib/libgepub-0.6.so.0.0'],
++            ['/usr/local/lib/{0}gepub-0.6.so.0.0'.format(libprefix)],
+             resolve_from_ldd_output(libraries, output))
+ 
+     def test_library_path_includes_library_name(self):
+         output = '''/usr/ports/pobj/gnome-music-3.28.1/build-amd64/tmp-introspectuz5xaun3/Gd-1.0:
+             Start            End              Type  Open Ref GrpRef Name
+             0000070e40f00000 0000070e41105000 exe   2    0   0      /usr/ports/pobj/gnome-music-3.28.1/build-amd64/tmp-introspectuz5xaun3/Gd-1.0
+-            00000710f9b39000 00000710f9d51000 rlib  0    1   0      /usr/ports/pobj/gnome-music-3.28.1/build-amd64/subprojects/libgd/libgd/libgd.so'''
++            00000710f9b39000 00000710f9d51000 rlib  0    1   0      /usr/ports/pobj/gnome-music-3.28.1/build-amd64/subprojects/libgd/libgd/{0}gd.so'''.format(libprefix)
+         libraries = ['gd']
+ 
+         self.assertEqual(
+-            ['/usr/ports/pobj/gnome-music-3.28.1/build-amd64/subprojects/libgd/libgd/libgd.so'],
++            ['/usr/ports/pobj/gnome-music-3.28.1/build-amd64/subprojects/libgd/libgd/{0}gd.so'.format(libprefix)],
+             resolve_from_ldd_output(libraries, output))
+ 
+     def test_basename(self):
+-        output = '''/usr/lib/libfoo.so'''
++        output = '''/usr/lib/{0}foo.so'''.format(libprefix)
+ 
+         self.assertEqual(
+-            ['/usr/lib/libfoo.so'],
++            ['/usr/lib/{0}foo.so'.format(libprefix)],
+             resolve_from_ldd_output(['foo'], output))
+ 
+ 

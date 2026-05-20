@@ -1,0 +1,39 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libfontenc
+pkgver=1.1.9
+pkgrel=1
+pkgdesc="X11 font encoding library"
+arch=('x86_64')
+url="https://xorg.freedesktop.org/"
+license=('spdx:MIT')
+depends=('zlib')
+makedepends=('gcc'
+             'pkgconf'
+             'xorg-util-macros'
+             'xorgproto')
+source=("https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('9d8392705cb10803d5fe1d27d236cbab3f664e26841ce01916bbbe430cf273e2')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

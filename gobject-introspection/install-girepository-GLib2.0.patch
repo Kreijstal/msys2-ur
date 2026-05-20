@@ -1,0 +1,55 @@
+--- origsrc/gobject-introspection-1.83.2/gir/meson.build	2025-04-10 22:02:01.109433200 +0900
++++ src/gobject-introspection-1.83.2/gir/meson.build	2025-04-10 22:11:42.666422200 +0900
+@@ -257,7 +257,9 @@ glib_gir = custom_target('gir-glib',
+     '-DGETTEXT_PACKAGE=Dummy',
+     '--cflags-end',
+     '@INPUT@',
+-  ]
++  ],
++  install: true,
++  install_dir: girdir,
+ )
+ 
+ uninstalled_gir_files += glib_gir
+@@ -323,7 +325,9 @@ gobject_gir = custom_target('gir-gobject
+     '-DGOBJECT_COMPILATION',
+     '--cflags-end',
+     '@INPUT@',
+-  ]
++  ],
++  install: true,
++  install_dir: girdir,
+ )
+ 
+ uninstalled_gir_files += gobject_gir
+@@ -374,7 +378,9 @@ uninstalled_gir_files += custom_target('
+     '-DGMODULE_COMPILATION',
+     '--cflags-end',
+     '@INPUT@',
+-  ]
++  ],
++  install: true,
++  install_dir: girdir,
+ )
+ 
+ ## Gio
+@@ -470,7 +476,9 @@ gio_gir = custom_target('gir-gio',
+     '-DG_SETTINGS_ENABLE_BACKEND',
+     '--cflags-end',
+     '@INPUT@',
+-  ]
++  ],
++  install: true,
++  install_dir: girdir,
+ )
+ 
+ uninstalled_gir_files += gio_gir
+@@ -543,6 +551,8 @@ foreach gir: uninstalled_gir_files
+     output: '@BASENAME@.typelib',
+     depends: [gobject_gir, gircompiler, ],
+     command: gircompiler_command,
++    install: true,
++    install_dir: typelibdir
+   )
+ endforeach
+ 

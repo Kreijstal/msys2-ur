@@ -1,0 +1,13 @@
+diff --git a/giscanner/giscannermodule.c b/giscanner/giscannermodule.c
+index 4c1f00f..cca9c2a 100644
+--- a/giscanner/giscannermodule.c
++++ b/giscanner/giscannermodule.c
+@@ -65,7 +65,7 @@ PyTypeObject Py##cname##_Type = {             \
+ }
+ 
+ #define REGISTER_TYPE(d, name, type)	      \
+-    Py_TYPE(&type) = &PyType_Type;             \
++    Py_SET_TYPE(&type, &PyType_Type);             \
+     type.tp_alloc = PyType_GenericAlloc;      \
+     type.tp_new = PyType_GenericNew;          \
+     type.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE; \

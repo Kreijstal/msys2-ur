@@ -1,0 +1,13 @@
+diff --git a/tools/Makefile.am b/tools/Makefile.am
+index 992530b..a1ee935 100644
+--- a/tools/Makefile.am
++++ b/tools/Makefile.am
+@@ -11,7 +11,7 @@ OLD_PROG_NAME=trietool-0.2
+ 
+ install-data-hook:
+ 	rm -f $(DESTDIR)$(bindir)/$(OLD_PROG_NAME)
+-	$(LN_S) trietool $(DESTDIR)$(bindir)/$(OLD_PROG_NAME)
++	$(LN_S) ./.libs/trietool.exe $(DESTDIR)$(bindir)/$(OLD_PROG_NAME).exe
+ 
+ uninstall-hook:
+ 	rm -f $(DESTDIR)$(bindir)/$(OLD_PROG_NAME)

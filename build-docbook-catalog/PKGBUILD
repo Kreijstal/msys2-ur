@@ -1,0 +1,38 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=build-docbook-catalog
+pkgver=2.4
+pkgrel=1
+pkgdesc="DocBook XML DTD registration script"
+arch=('noarch')
+url="https://docbook.org/"
+license=('MIT')
+depends=('coreutils' 'findutils' 'grep' 'libxml2' 'util-linux')
+source=(https://gitweb.gentoo.org/proj/build-docbook-catalog.git/snapshot/${pkgname}-${pkgver}.tar.bz2)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+prepare() {
+  cd ${srcdir}
+
+  # Apply the patches
+  #patch -Np1 -i "${srcdir}/../1.5-simple-xml-dtd.patch"
+  #patch -Np1 -i "${srcdir}/../1.5-mkdir-etc-xml.patch"
+}
+
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # No build step is necessary
+  :
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Add any check commands here
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+  make DESTDIR=${pkgdir} install
+}

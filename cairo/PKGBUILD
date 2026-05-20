@@ -1,0 +1,81 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=cairo
+pkgver=1.17.4
+#pkgver=1.18.0
+pkgrel=1
+pkgdesc="Cross-device vector graphics library"
+arch=(x86_64)
+url="http://cairographics.org/"
+license=('LGPL-2.1+' 'MPL-1.1')
+depends=(
+  fontconfig
+  freetype
+  libpng
+  libx11
+  libxcb
+  libxext
+  libxrender
+  lzo
+  pixman
+  zlib
+)
+makedepends=(
+  'glib2'
+  'meson'
+#  'libelf' tried with 1.18.0
+)
+LDFLAGS+=" -lxau -lxdmcp"
+source=(
+#"https://cairographics.org/releases/cairo-${pkgver}.tar.xz"
+  "http://cairographics.org/snapshots/cairo-${pkgver}.tar.xz"
+)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches here
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  local -a _meson_options
+  _meson_options=(
+    --prefix=/usr
+    --buildtype=plain
+    #--wrap-mode=nofallback
+    #-Dauto_features=enabled
+    -Dtests=disabled
+    #-Ddwrite=enabled
+    -Dfontconfig=enabled
+    -Dfreetype=enabled
+    -Dpng=enabled
+    #-Dtee=enabled
+    -Dzlib=enabled
+    -Dxlib=disabled
+    -Dxcb=enabled
+    -Dspectre=disabled
+    #-Dsymbol-lookup=disabled
+  )
+
+  CFLAGS+=" ${_static_flags[@]}"
+  CXXFLAGS+=" ${_static_flags[@]}"
+  meson setup \
+    "${_meson_options[@]}" 
+
+  meson compile -C build-static
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # meson test -C build
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  meson install -C build-static --destdir=${pkgdir}
+}

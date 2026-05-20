@@ -1,0 +1,44 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxdmcp
+pkgver=1.1.4
+pkgrel=1
+pkgdesc="X.Org Display Manager Control Protocol library"
+arch=('i686' 'x86_64')
+url="https://www.x.org/"
+license=('MIT')
+depends=()
+makedepends=('xorgproto' 'xmlto' 'gcc' 'make' 'sh' 'xorg-util-macros')
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+source=(https://www.x.org/pub/individual/lib/libXdmcp-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+prepare() {
+  cd ${srcdir}/libXdmcp-${pkgver}
+
+  # Apply any necessary patches here
+  autoreconf -vif
+}
+
+build() {
+  cd ${srcdir}/libXdmcp-${pkgver}
+
+  ./configure --prefix=/usr --enable-shared
+  make
+}
+
+check() {
+  cd ${srcdir}/libXdmcp-${pkgver}
+
+  make check
+}
+
+package() {
+  cd ${srcdir}/libXdmcp-${pkgver}
+
+  # Install the library and headers to the package directory
+  make DESTDIR=${pkgdir} install
+
+  # Remove unnecessary files
+  find ${pkgdir} -name '*.la' -delete
+}

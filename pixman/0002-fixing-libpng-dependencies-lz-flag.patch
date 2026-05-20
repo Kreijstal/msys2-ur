@@ -1,0 +1,68 @@
+From 03e367f6579f57529a2c410db2d04dc10178117d Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Mon, 1 Apr 2024 10:00:11 +0200
+Subject: [PATCH 2/2] fixing libpng dependencies -lz flag
+
+---
+ meson.build      | 10 ++++++++++
+ test/meson.build |  2 ++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 3dd3b12..7bbb42f 100644
+--- a/meson.build
++++ b/meson.build
+@@ -451,6 +451,8 @@ dep_gtk = dependency('gtk+-3.0', required : get_option('gtk').enabled() and get_
+ dep_glib = dependency('glib-2.0', required : get_option('gtk').enabled() and get_option('demos').enabled())
+ 
+ dep_png = null_dep
++libpng_link_args = []
++
+ if not get_option('libpng').disabled()
+   dep_png = dependency('libpng', required : false)
+ 
+@@ -460,6 +462,10 @@ if not get_option('libpng').disabled()
+     if not dep_png.found()
+       dep_png = cc.find_library('libpng@0@'.format(png_ver), has_headers : ['png.h'], required : false)
+     endif
++    if dep_png.found()
++      libpng_link_args += ['-lpng', '-lz']
++      break
++    endif
+   endforeach
+ 
+   if get_option('libpng').enabled() and not dep_png.found()
+@@ -467,6 +473,10 @@ if not get_option('libpng').disabled()
+   endif
+ endif
+ 
++# Example of linking an executable with the found libpng and its dependencies
++#my_exe = executable('my_program', 'main.c', link_args : libpng_link_args, dependencies : [dep_png])
++
++
+ if dep_png.found()
+   config.set('HAVE_LIBPNG', 1)
+ endif
+diff --git a/test/meson.build b/test/meson.build
+index a991bf7..50b991f 100644
+--- a/test/meson.build
++++ b/test/meson.build
+@@ -74,6 +74,7 @@ foreach t : tests
+       [t + '.c', config_h],
+       dependencies : [idep_pixman, libtestutils_dep, dep_threads, dep_openmp, dep_png],
+       c_args : ['-DPIXMAN_API=__declspec(dllimport)'],
++      link_args : libpng_link_args,
+     ),
+     timeout : 120,
+     is_parallel : true,
+@@ -86,6 +87,7 @@ foreach p : progs
+     p + '.c',
+     dependencies : [idep_pixman, libtestutils_dep, dep_openmp],
+     c_args : ['-DPIXMAN_API=__declspec(dllimport)'],
++    link_args : libpng_link_args
+   )
+ endforeach
+ 
+-- 
+2.44.0
+

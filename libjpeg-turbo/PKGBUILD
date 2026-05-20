@@ -1,0 +1,39 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libjpeg-turbo
+pkgver=3.0.3
+pkgrel=1
+pkgdesc='JPEG library with SIMD acceleration'
+url='https://libjpeg-turbo.org/'
+license=('IJG' 'BSD-3-Clause' 'Zlib')
+arch=('x86_64')
+depends=()
+makedepends=('cmake' 'ninja' 'nasm')
+source=("https://github.com/libjpeg-turbo/libjpeg-turbo/archive/${pkgver}.tar.gz")
+sha256sums=('SKIP') # For production, generate a real checksum
+
+build() {
+  cd "libjpeg-turbo-${pkgver}"
+
+  cmake -B build \
+    -G Ninja \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_SHARED_LIBS=ON \
+    -DENABLE_STATIC=OFF \
+    -DWITH_JPEG8=ON \
+    -DWITH_JAVA=OFF # Explicitly disable the Java dependency
+
+  cmake --build build
+}
+
+package() {
+  cd "libjpeg-turbo-${pkgver}"
+
+  # This installs the library into the package staging directory, respecting the prefix
+  DESTDIR="${pkgdir}" cmake --install build
+
+  # Manually place license and documentation in the correct FHS locations
+  install -vDm 644 LICENSE.md "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.md"
+  install -vDm 644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}

@@ -1,0 +1,221 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgbase=xorg-server
+pkgname=('xorg-server' 'xorg-server-common' 'xorg-server-extra' 'xorg-server-devel' 'xorg-server-xorg' 'xwinclip')
+pkgver=21.1.21
+pkgrel=1
+pkgdesc="X.Org X server"
+arch=('x86_64')
+url="https://x.cygwin.com/"
+license=('spdx:MIT')
+depends=('bash'
+         'libx11'
+         'libxau'
+         'libxdmcp'
+         'libxext'
+         'libxfixes'
+         'libxi'
+         'libxinerama'
+         'libxmu'
+         'libxpm'
+         'libxrender'
+         'libxt'
+         'openssl'
+         'pixman'
+         'xorgproto'
+         'xtrans')
+makedepends=('bison'
+             'flex'
+             'gcc'
+             'imagemagick'
+             'meson'
+             'ninja'
+             'pkgconf'
+             'python'
+             'python-lxml')
+source=("https://gitlab.freedesktop.org/jturney/xserver/-/archive/xserver-cygwin-${pkgver//./-}-${pkgrel}/xserver-xserver-cygwin-${pkgver//./-}-${pkgrel}.tar.bz2"
+        'xorg-backtrace'
+        'xvfb-run'
+        'xvfb-run.1')
+sha256sums=('9dc7d51b768aea85c403618509a8550d28a14b2e77d636ad5f397be7e3abc3fb'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+_srcdir="xserver-xserver-cygwin-${pkgver//./-}-${pkgrel}"
+
+build() {
+  CFLAGS+=" -Wno-error=array-bounds -Wno-error=stringop-truncation"
+
+  local -a meson_options=(
+    -Dprefix=/usr
+    -Dpciaccess=false
+    -Dint10=false
+    -Dsystemd_logind=false
+    -Dxephyr=false
+    -Dxnest=true
+    -Dxvfb=true
+    -Dxwin=true
+    -Dxorg=true
+    -Dglx=false
+    -Dsecure-rpc=false
+    -Dhal=false
+    -Dudev=false
+    -Ddri1=false
+    -Ddri2=false
+    -Ddri3=false
+    -Dxf86bigfont=true
+    -Dxv=false
+    -Dxvmc=false
+    -Dglamor=false
+    -Dsha1=CryptoAPI
+    -Dlog_dir=/var/log/xwin
+    -Ddefault_font_path=catalogue:/etc/X11/fontpath.d,built-ins
+    -Dxkb_default_rules=base
+    -Dxkb_output_dir=/var/lib/xkb
+    -Dbuilder_addr=msys2@msys2.org
+    "-Dbuilder_string=Package: version ${pkgver}-${pkgrel} built $(date +%Y-%m-%d)"
+    "-Dvendor_name=The MSYS2 Project"
+    "-Dvendor_name_short=MSYS2"
+    "-Dvendor_web=https://www.msys2.org/"
+  )
+
+  unix2dos "${_srcdir}/hw/xwin/man/XWin.man"
+
+  meson setup "${_srcdir}" "build-${CHOST}" "${meson_options[@]}"
+  meson compile -C "build-${CHOST}"
+}
+
+package_xorg-server() {
+  pkgdesc="Cygwin/XWin X server for MSYS2"
+  depends=('bash' 'xorg-server-common')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/usr/include
+  rm -rf "${pkgdir}"/usr/lib
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xephyr*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xnest*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xorg*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xvfb*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xvfb-run*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 \
+    ! -name X \
+    ! -name XWin.exe \
+    ! -name cygnativeGLthunk.dll \
+    -exec rm -f {} +
+
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xorg-server-common() {
+  pkgdesc="X.Org X server common data"
+  depends=('bash' 'xkbcomp' 'xkeyboard-config')
+
+  install -Dm755 "${srcdir}/xorg-backtrace" "${pkgdir}/usr/bin/xorg-backtrace"
+  install -dm755 "${pkgdir}/var/log/xwin"
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/doc/xorg-server/COPYING"
+  install -Dm644 "${srcdir}/${_srcdir}/README.md" "${pkgdir}/usr/share/doc/xorg-server/README.md"
+  install -Dm644 "${srcdir}/${_srcdir}/dix/protocol.txt" "${pkgdir}/usr/lib/xorg/protocol.txt"
+  install -Dm644 "${srcdir}/build-${CHOST}/Xserver.1" "${pkgdir}/usr/share/man/man1/Xserver.1"
+}
+
+package_xorg-server-extra() {
+  pkgdesc="X.Org Xephyr, Xnest and Xvfb servers"
+  depends=('bash' 'xorg-server-common')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 \
+    ! -name Xephyr.exe \
+    ! -name Xnest.exe \
+    ! -name Xvfb.exe \
+    -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/include
+  rm -rf "${pkgdir}"/usr/lib
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/XWin*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xorg*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+
+  install -Dm755 "${srcdir}/xvfb-run" "${pkgdir}/usr/bin/xvfb-run"
+  install -Dm644 "${srcdir}/xvfb-run.1" "${pkgdir}/usr/share/man/man1/xvfb-run.1"
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xorg-server-devel() {
+  pkgdesc="X.Org SDK for developing drivers and extensions for the Xorg X server"
+  depends=('xorg-server-xorg' 'xorgproto')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  rm -rf "${pkgdir}"/usr/bin
+  rm -rf "${pkgdir}"/usr/lib/xorg/protocol.txt
+  find "${pkgdir}"/usr/lib -name '*.dll' -delete
+  rm -rf "${pkgdir}"/usr/share/doc
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xorg-server-xorg() {
+  pkgdesc="X.Org modular X server"
+  depends=('xorg-server-common')
+  provides=('xserver-video-abi25')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 ! -name Xorg.exe -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/include
+  rm -f "${pkgdir}"/usr/lib/libXorg.exe.a
+  rm -rf "${pkgdir}"/usr/lib/pkgconfig
+  rm -rf "${pkgdir}"/usr/lib/xorg/protocol.txt
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/doc
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/XWin*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xephyr*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xnest*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xvfb*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xvfb-run*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man5/XWinrc*
+  find "${pkgdir}"/usr/lib/xorg/modules -name '*.a' -delete
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xwinclip() {
+  pkgdesc="Windows clipboard integration tool for the X.Org X server"
+  depends=('libx11' 'libxfixes')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  find "${pkgdir}" -mindepth 1 -maxdepth 1 ! -name usr -exec rm -rf {} +
+  find "${pkgdir}"/usr -mindepth 1 -maxdepth 1 ! -name bin ! -name share -exec rm -rf {} +
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 ! -name xwinclip.exe -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/doc
+  find "${pkgdir}"/usr/share/man/man1 -mindepth 1 -maxdepth 1 ! -name 'xwinclip*' -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

@@ -1,0 +1,11 @@
+--- origsrc/gobject-introspection-1.62.0/gir/meson.build	2019-09-09 20:22:10.000000000 +0100
++++ src/gobject-introspection-1.62.0/gir/meson.build	2025-01-07 13:56:17.722556800 +0000
+@@ -7,6 +7,8 @@ elif host_machine.system() == 'windows'
+   else
+     cairo_library_name = 'libcairo-gobject-2.dll'
+   endif
++elif host_machine.system() == 'cygwin'
++  cairo_library_name = 'cygcairo-gobject-2.dll'
+ elif host_machine.system() == 'darwin'
+   cairo_library_name = 'libcairo-gobject.2.dylib'
+ else

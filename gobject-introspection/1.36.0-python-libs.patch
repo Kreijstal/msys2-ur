@@ -1,0 +1,15 @@
+At least with 2.7 and 3.2, each argument is output on a separate line;
+the results are identical, and the resulting newline messes up the
+AC_SUBST.
+
+--- origsrc/gobject-introspection-1.36.0/m4/python.m4	2012-12-18 10:27:16.000000000 -0600
++++ src/gobject-introspection-1.36.0/m4/python.m4	2013-08-04 22:06:23.578220400 -0500
+@@ -64,7 +64,7 @@ AC_DEFUN([AM_CHECK_PYTHON_LIBS],
+ AC_MSG_CHECKING(for libraries required to link against libpython)
+ dnl deduce PYTHON_LIBS
+ if test "x$PYTHON_LIBS" = x; then
+-	PYTHON_LIBS=`$PYTHON-config --ldflags --libs`
++	PYTHON_LIBS=`$PYTHON-config --libs`
+ fi
+ AC_SUBST(PYTHON_LIBS)
+ dnl check if libpython exist:

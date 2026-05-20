@@ -1,0 +1,29 @@
+# PKGBUILD for fribidi
+
+pkgname=fribidi
+pkgver=1.0.14
+pkgrel=1
+pkgdesc="Implementation of the Unicode Bidirectional Algorithm"
+arch=('any')
+url="https://www.fribidi.org/"
+license=('LGPL2.1')
+makedepends=('meson' 'python')
+
+source=("https://github.com/fribidi/fribidi/releases/download/v${pkgver}/fribidi-${pkgver}.tar.xz")
+sha256sums=('SKIP')
+
+build() {
+  cd "${srcdir}/fribidi-${pkgver}"
+  meson setup -Dprefix=/usr build
+  meson compile -C build
+}
+
+check() {
+  cd "${srcdir}/fribidi-${pkgver}"
+  meson test -C build
+}
+
+package() {
+  cd "${srcdir}/fribidi-${pkgver}"
+  meson install -C build --destdir "$pkgdir"
+}

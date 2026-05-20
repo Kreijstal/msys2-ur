@@ -1,0 +1,12 @@
+xmlcatalog --create fails if destination directory is not present
+
+--- origsrc/build-docbook-catalog-*	2010-08-09 12:38:47.679935400 -0500
++++ src/build-docbook-catalog-*	2010-08-09 12:42:13.289695600 -0500
+@@ -84,6 +84,7 @@ set_dtds() {
+ create_catalogs() {
+ 	if [[ ! -r ${ROOTCATALOG} ]] ; then
+ 		echo "Creating XML Catalog root ${ROOTCATALOG}"
++		[[ ! -d ${ROOTCATALOG%/*} ]] && mkdir -p ${ROOTCATALOG%/*}
+ 		/usr/bin/xmlcatalog --noout --create ${ROOTCATALOG}
+ 		if [[ ! -r ${ROOTCATALOG} ]] ; then
+ 			echo "Failed creating ${ROOTCATALOG}, aborting" >&2

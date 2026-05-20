@@ -1,0 +1,31 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxcvt
+pkgver=0.1.3
+pkgrel=1
+pkgdesc="VESA CVT standard timing modelines generator"
+arch=('x86_64')
+url="https://xorg.freedesktop.org/"
+license=('spdx:MIT')
+makedepends=('gcc'
+             'meson'
+             'ninja'
+             'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('a929998a8767de7dfa36d6da4751cdbeef34ed630714f2f4a767b351f2442e01')
+
+build() {
+  meson setup "${pkgname}-${pkgver}" "build-${CHOST}" \
+    --prefix=/usr \
+    --buildtype=plain
+  meson compile -C "build-${CHOST}"
+}
+
+check() {
+  meson test -C "build-${CHOST}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

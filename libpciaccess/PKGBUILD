@@ -1,0 +1,30 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libpciaccess
+pkgver=0.18.1
+pkgrel=1
+pkgdesc="X11 PCI access library"
+arch=('x86_64')
+url="https://gitlab.freedesktop.org/xorg/lib/libpciaccess"
+license=('spdx:MIT')
+depends=('zlib')
+makedepends=('meson' 'ninja' 'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz"
+        '0001-fix-cygwin-x86-pci-build.patch')
+sha256sums=('4af43444b38adb5545d0ed1c2ce46d9608cc47b31c2387fc5181656765a6fa76'
+            '3ce34b9827c9b03f2a1405e02d689496e56269979e0f2eaed64ba5a6108d6520')
+
+prepare() {
+  patch -d "${pkgname}-${pkgver}" -Np1 -i "${srcdir}/0001-fix-cygwin-x86-pci-build.patch"
+}
+
+build() {
+  meson setup "${pkgname}-${pkgver}" "build-${CHOST}" \
+    -Dprefix=/usr
+  meson compile -C "build-${CHOST}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

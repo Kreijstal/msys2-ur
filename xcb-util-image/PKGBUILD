@@ -1,0 +1,38 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-util-image
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="Port of Xlib's XImage and XShmImage functions to XCB"
+arch=('x86_64')
+url="https://xcb.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libxcb'
+         'xcb-util')
+makedepends=('gcc'
+             'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/xcb/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('ccad8ee5dadb1271fd4727ad14d9bd77a64e505608766c4e98267d9aede40d3d')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

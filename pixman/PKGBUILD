@@ -1,0 +1,48 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=pixman
+pkgver=0.43.4
+pkgrel=1
+pkgdesc="The pixel-manipulation library for X and cairo"
+arch=(x86_64)
+url="https://cgit.freedesktop.org/pixman/"
+license=('MIT')
+makedepends=('meson' 'libpng')
+source=(
+  https://xorg.freedesktop.org/releases/individual/lib/${pkgname}-${pkgver}.tar.xz
+0001-export-all-symbols.patch
+0002-fixing-libpng-dependencies-lz-flag.patch
+)
+sha256sums=('48d8539f35488d694a2fef3ce17394d1153ed4e71c05d1e621904d574be5df19'
+            'b43271457c84e71ac7b80ddd68b3e5dc55c9608d4e283956ff3f29924db3bcb3'
+            '65b8466a75f8bf1cd5b5c6ae32475a309ea0f9cd4127f43a93eda70b8e7691a2')
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply any necessary patches
+  patch -p1 -i "${srcdir}/0001-export-all-symbols.patch"
+  patch -p1 -i "${srcdir}/0002-fixing-libpng-dependencies-lz-flag.patch"
+
+  # Run meson setup
+  meson setup build --prefix=/usr
+}
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}/build
+
+  meson compile
+}
+
+check() {
+  cd ${srcdir}/${pkgname}-${pkgver}/build
+
+  meson test
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}/build
+
+  # Install the package to the system
+  meson install --destdir="${pkgdir}"
+}

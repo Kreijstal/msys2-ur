@@ -1,0 +1,66 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libdatrie
+pkgver=0.2.13
+pkgrel=1
+pkgdesc="Double-array digital search tree library"
+arch=('i686' 'x86_64')
+url="https://linux.thai.net/"
+license=('LGPL-2.1-or-later')
+makedepends=('gcc' 'make' 'libiconv-devel' 'autoconf' 'automake' 'libtool')
+source=(http://linux.thai.net/pub/thailinux/software/libthai/libdatrie-${pkgver}.tar.xz
+        0001-fix-Import-AX_COMPARE_VERSION-macro-in-configure.ac.patch
+        0002-fix-Add-missing-ax_compare_version.m4-file-and-updat.patch
+trietool.patch
+ https://raw.githubusercontent.com/autoconf-archive/autoconf-archive/master/m4/ax_compare_version.m4)
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'  
+'SKIP')
+options=("strip")
+depends=('gcc-libs' 'libiconv')
+
+prepare() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  # Apply patches
+  patch -p1 -i ${srcdir}/0001-fix-Import-AX_COMPARE_VERSION-macro-in-configure.ac.patch
+  patch -p1 -i ${srcdir}/0002-fix-Add-missing-ax_compare_version.m4-file-and-updat.patch
+  patch -p1 -i ${srcdir}/trietool.patch
+
+  #patch -p1 -i ${srcdir}/0003-adding-things-to-m4-for-new-autotools.patch
+  cp ${srcdir}/ax_compare_version.m4 m4/
+  # Regenerate build system after patching
+  autoreconf -fiv
+  #fix cygwin bug
+  find . -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.h" -o -name "*.hpp" \) -exec sed -i 's/\bL"/U"/g' {} +
+  
+}
+
+build() {
+  # Create build directory
+  mkdir -p ${srcdir}/build
+  cd ${srcdir}/build
+
+  # Configure and build from the build directory
+  ${srcdir}/${pkgname}-${pkgver}/configure --prefix=/usr --enable-shared
+  make ${MAKEOPTS}
+}
+
+check() {
+  cd ${srcdir}/build
+
+  make check
+}
+
+package() {
+  cd ${srcdir}/build
+    # Create the man directory if it doesn't exist
+  mkdir -p man
+    # Copy the man page to the build directory
+  cp ${srcdir}/${pkgname}-${pkgver}/man/trietool.1 man/trietool.1
+
+  # Install the library and headers to the package directory
+  make install DESTDIR=${pkgdir}
+}

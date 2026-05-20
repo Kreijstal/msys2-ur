@@ -1,0 +1,37 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xcb-util
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="Utility libraries for X C Binding"
+arch=('x86_64')
+url="https://xcb.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libxcb')
+makedepends=('gcc'
+             'pkgconf')
+source=("https://xorg.freedesktop.org/releases/individual/xcb/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('5abe3bbbd8e54f0fa3ec945291b7e8fa8cfd3cccc43718f8758430f94126e512')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST} \
+    --disable-static
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

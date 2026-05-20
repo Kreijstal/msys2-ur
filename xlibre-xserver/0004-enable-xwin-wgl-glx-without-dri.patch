@@ -1,0 +1,152 @@
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/glx/glxext.c xserver-xlibre-xserver-25.0.0.22/glx/glxext.c
+--- xserver-xlibre-xserver-25.0.0.22.orig/glx/glxext.c	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/glx/glxext.c	2026-05-20 07:45:41.812140185 +0200
+@@ -272,7 +272,11 @@
+ 
+ /************************************************************************/
+ 
++#ifdef GLX_USE_DRI_PROVIDER
+ static __GLXprovider *__glXProviderStack = &__glXDRISWRastProvider;
++#else
++static __GLXprovider *__glXProviderStack = NULL;
++#endif
+ 
+ void
+ GlxPushProvider(__GLXprovider * provider)
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/glx/meson.build xserver-xlibre-xserver-25.0.0.22/glx/meson.build
+--- xserver-xlibre-xserver-25.0.0.22.orig/glx/meson.build	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/glx/meson.build	2026-05-20 07:45:54.657420846 +0200
+@@ -13,8 +13,6 @@
+     'glxcmds.c',
+     'glxcmdsswap.c',
+     'glxext.c',
+-    'glxdriswrast.c',
+-    'glxdricommon.c',
+     'glxscreens.c',
+     'render2.c',
+     'render2swap.c',
+@@ -30,23 +28,43 @@
+     'xfont.c',
+ ]
+ 
++glx_deps = [
++    common_dep,
++    dl_dep,
++    dependency('glproto', version: '>= 1.4.17'),
++]
++
++glx_c_args = [
++    glx_align64,
++    # XXX: generated code includes an unused function
++    '-Wno-unused-function',
++]
++
++gl_dep = dependency('gl', version: '>= 1.2', required: false)
++if gl_dep.found()
++    glx_deps += gl_dep
++endif
++
++if host_machine.system() == 'cygwin'
++    glx_deps += cc.find_library('opengl32', required: true)
++endif
++
++if dri_dep.found()
++    srcs_glx += [
++        'glxdriswrast.c',
++        'glxdricommon.c',
++    ]
++    glx_deps += dri_dep
++    glx_c_args += '-DGLX_USE_DRI_PROVIDER'
++endif
++
+ libxserver_glx = []
+ if build_glx
+     libxserver_glx = static_library('xserver_glx',
+         srcs_glx,
+         include_directories: inc,
+-        dependencies: [
+-            common_dep,
+-            dl_dep,
+-            dri_dep,
+-            dependency('glproto', version: '>= 1.4.17'),
+-            dependency('gl', version: '>= 1.2'),
+-        ],
+-        c_args: [
+-            glx_align64,
+-            # XXX: generated code includes an unused function
+-            '-Wno-unused-function',
+-        ]
++        dependencies: glx_deps,
++        c_args: glx_c_args,
+     )
+ endif
+ 
+@@ -71,12 +89,7 @@
+     libglxvnd = static_library('glxvnd',
+     srcs_vnd,
+     include_directories: inc,
+-        dependencies: [
+-            common_dep,
+-            dl_dep,
+-            dependency('glproto', version: '>= 1.4.17'),
+-            dependency('gl', version: '>= 1.2'),
+-        ],
++        dependencies: glx_deps,
+     )
+ 
+     if build_xorg
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/hw/xfree86/dixmods/meson.build xserver-xlibre-xserver-25.0.0.22/hw/xfree86/dixmods/meson.build
+--- xserver-xlibre-xserver-25.0.0.22.orig/hw/xfree86/dixmods/meson.build	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/hw/xfree86/dixmods/meson.build	2026-05-20 07:46:00.246542696 +0200
+@@ -27,13 +27,15 @@
+ )
+ 
+-if build_glx
++if build_glx and dri_dep.found()
++    glx_module_deps = glx_deps
++
+     shared_module(
+         'glx',
+         [ 'glxmodule.c', srcs_glxdri2 ],
+ 
+         include_directories: [ inc, xorg_inc, glx_inc ],
+         c_args: [ xorg_c_args, glx_align64 ],
+-        dependencies: [ common_dep, dl_dep, dri_dep ],
++        dependencies: glx_module_deps,
+         link_whole: libxserver_glx,
+         link_with: e,
+ 
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/include/glx_extinit.h xserver-xlibre-xserver-25.0.0.22/include/glx_extinit.h
+--- xserver-xlibre-xserver-25.0.0.22.orig/include/glx_extinit.h	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/include/glx_extinit.h	2026-05-20 07:45:41.811140163 +0200
+@@ -39,7 +39,9 @@
+     const char *name;
+     __GLXprovider *next;
+ };
++#ifdef GLX_USE_DRI_PROVIDER
+ extern __GLXprovider __glXDRISWRastProvider;
++#endif
+ 
+ void GlxPushProvider(__GLXprovider * provider);
+ Bool xorgGlxCreateVendor(void);
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/include/meson.build xserver-xlibre-xserver-25.0.0.22/include/meson.build
+--- xserver-xlibre-xserver-25.0.0.22.orig/include/meson.build	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/include/meson.build	2026-05-20 07:45:41.811140163 +0200
+@@ -6,7 +6,7 @@
+ # convert to the old-style 1.x.y version scheme used up to 1.20.x for backwards compatibility
+ release = 1 * 10000000 + major * 100000 + minor * 1000 + patch
+ 
+-dri_dep = dependency('dri', required: build_glx)
++dri_dep = dependency('dri', required: false)
+ 
+ conf_data = configuration_data()
+ conf_data.set('_DIX_CONFIG_H_', '1')
+@@ -231,7 +231,7 @@
+ conf_data.set('DRI2', build_dri2 ? '1' : false)
+ conf_data.set('DRI3', build_dri3 ? '1' : false)
+ if build_glx
+-    conf_data.set_quoted('DRI_DRIVER_PATH', dri_dep.get_variable(pkgconfig : 'dridriverdir'))
++    conf_data.set_quoted('DRI_DRIVER_PATH', dri_dep.found() ? dri_dep.get_variable(pkgconfig : 'dridriverdir') : '')
+ endif
+ conf_data.set('MITSHM', build_mitshm ? '1' : false)
+ 

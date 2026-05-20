@@ -1,0 +1,38 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xkbcomp
+pkgver=1.5.0
+pkgrel=1
+pkgdesc="X Keyboard description compiler"
+arch=('x86_64')
+url="https://xorg.freedesktop.org/"
+license=('spdx:MIT')
+depends=('libx11'
+         'libxkbfile')
+makedepends=('gcc'
+             'pkgconf'
+             'xorgproto')
+source=("https://xorg.freedesktop.org/releases/individual/app/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('2ac31f26600776db6d9cd79b3fcd272263faebac7eb85fb2f33c7141b8486060')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build=${CHOST} \
+    --host=${CHOST}
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

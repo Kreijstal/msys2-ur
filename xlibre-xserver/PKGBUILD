@@ -1,0 +1,270 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgbase=xlibre-xserver
+pkgname=('xlibre-xserver' 'xlibre-xserver-common' 'xlibre-xserver-extra' 'xlibre-xserver-devel' 'xlibre-xserver-xorg' 'xlibre-xwinclip')
+pkgver=25.0.0.22
+pkgrel=1
+pkgdesc="XLibre X server"
+arch=('x86_64')
+url="https://github.com/X11Libre/xserver"
+license=('spdx:MIT')
+depends=('bash'
+         'libx11'
+         'libxau'
+         'libxcb'
+         'libxdmcp'
+         'libxext'
+         'libxfixes'
+         'libxi'
+         'libxinerama'
+         'libxkbfile'
+         'libxmu'
+         'libxpm'
+         'libxrender'
+         'libxt'
+         'openssl'
+         'pixman'
+         'xcb-util'
+         'xcb-util-image'
+         'xcb-util-wm'
+         'xorgproto'
+         'xtrans')
+makedepends=('bison'
+             'flex'
+             'gcc'
+             'imagemagick'
+             'khronos-opengl-registry'
+             'mesa-opengl-headers'
+             'meson'
+             'ninja'
+             'pkgconf'
+             'python'
+             'python-lxml')
+source=("https://github.com/X11Libre/xserver/archive/refs/tags/xlibre-xserver-${pkgver}.tar.gz"
+        '0001-fix-non-pciaccess-vgaarbiter-stub.patch'
+        '0002-enable-posix-tty-on-cygwin.patch'
+        '0003-fix-cygwin-xwin-header-conflicts.patch'
+        '0004-enable-xwin-wgl-glx-without-dri.patch'
+        '0005-filter-xwin-gl-thunks-by-installed-headers.patch'
+        '0006-disable-vfb-glx-without-dri.patch'
+        'xorg-backtrace'
+        'xvfb-run'
+        'xvfb-run.1')
+sha256sums=('fb589c9c4fdd84871d14349658324c2e267f56aefb1790c17296be1af56d3101'
+            'dd8f0980808c3063513b4897a8019a861cbc1c0a26dd3d9ffeac61472a0b432c'
+            '53020a98ead1254d943f24b3e9ce00443502d5956dd7fda40989b3d8fb675719'
+            '94b1268dbc8ca1526a34397f7438506939d555a86340a6146f5cc63038b38564'
+            'd8bbedfb7eed144979effc25afb070e244529fd4e920f6ca067907de977c0a2d'
+            '59c2b02688c51358442e198fe1174d913273d05e338364da4e71cc016b175299'
+            '46038cf8b58202b4f17c0e2778381f3dc152372aea8857eff5b27113921ed6e1'
+            'cb841305fdab19ba2803155fe26f5cbb327eee009547632bdf7e079704bba0d6'
+            'c9a1366734926af8b4e1013f512dac1e06a3aea7f03b8f394e589be898aadcb0'
+            '9b2134eefb5babcbb40568b96f517afa497b1609275f03cf6ce6d33bf3ca506c')
+
+_srcdir="xserver-xlibre-xserver-${pkgver}"
+
+prepare() {
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0001-fix-non-pciaccess-vgaarbiter-stub.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0002-enable-posix-tty-on-cygwin.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0003-fix-cygwin-xwin-header-conflicts.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0004-enable-xwin-wgl-glx-without-dri.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0005-filter-xwin-gl-thunks-by-installed-headers.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0006-disable-vfb-glx-without-dri.patch"
+
+  # XLibre's XWin source still names the Windows server target Xming, while the
+  # resources, manpages, runtime strings and MSYS packaging all use XWin.
+  sed -i "s/server_name = 'Xming'/server_name = 'XWin'/" "${_srcdir}/hw/xwin/meson.build"
+}
+
+build() {
+  CFLAGS+=" -Wno-error=array-bounds -Wno-error=stringop-truncation"
+
+  local -a meson_options=(
+    -Dprefix=/usr
+    -Dpciaccess=false
+    -Dint10=false
+    -Dsystemd_logind=false
+    -Dsystemd_notify=false
+    -Dxephyr=false
+    -Dxnest=true
+    -Dxvfb=true
+    -Dxwin=true
+    -Dxorg=true
+    -Dglx=true
+    -Dhal=false
+    -Dudev=false
+    -Dudev_kms=false
+    -Ddri1=false
+    -Ddri2=false
+    -Ddri3=false
+    -Ddrm=false
+    -Dxf86bigfont=true
+    -Dvgahw=false
+    -Dxv=false
+    -Dxvmc=false
+    -Dglamor=false
+    -Dsha1=CryptoAPI
+    -Dtests=false
+    -Ddocs=false
+    -Ddevel-docs=false
+    -Ddocs-pdf=false
+    -Dlog_dir=/var/log/xwin
+    -Ddefault_font_path=catalogue:/etc/X11/fontpath.d,built-ins
+    -Dxkb_default_rules=base
+    -Dxkb_output_dir=/var/lib/xkb
+    -Dbuilder_addr=msys2@msys2.org
+    "-Dbuilder_string=Package: version ${pkgver}-${pkgrel} built $(date +%Y-%m-%d)"
+    "-Dvendor_name=The MSYS2 Project"
+    "-Dvendor_name_short=MSYS2"
+    "-Dvendor_web=https://www.msys2.org/"
+  )
+
+  unix2dos "${_srcdir}/hw/xwin/man/XWin.man"
+
+  meson setup "${_srcdir}" "build-${CHOST}" "${meson_options[@]}"
+  meson compile -C "build-${CHOST}"
+}
+
+package_xlibre-xserver() {
+  pkgdesc="XLibre XWin X server for MSYS2"
+  depends=('bash' 'xlibre-xserver-common')
+  provides=('xorg-server')
+  conflicts=('xorg-server')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/usr/include
+  rm -rf "${pkgdir}"/usr/lib
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xephyr*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xnest*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xorg*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xvfb*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xvfb-run*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 \
+    ! -name X \
+    ! -name XWin.exe \
+    ! -name msys-nativeGLthunk.dll \
+    -exec rm -f {} +
+
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xlibre-xserver-common() {
+  pkgdesc="XLibre X server common data"
+  depends=('bash' 'xkbcomp' 'xkeyboard-config')
+  provides=('xorg-server-common')
+  conflicts=('xorg-server-common')
+
+  install -Dm755 "${srcdir}/xorg-backtrace" "${pkgdir}/usr/bin/xorg-backtrace"
+  install -dm755 "${pkgdir}/var/log/xwin"
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/doc/${pkgbase}/COPYING"
+  install -Dm644 "${srcdir}/${_srcdir}/README.md" "${pkgdir}/usr/share/doc/${pkgbase}/README.md"
+  install -Dm644 "${srcdir}/${_srcdir}/dix/protocol.txt" "${pkgdir}/usr/lib/xorg/protocol.txt"
+  install -Dm644 "${srcdir}/build-${CHOST}/man/Xserver.1" "${pkgdir}/usr/share/man/man1/Xserver.1"
+}
+
+package_xlibre-xserver-extra() {
+  pkgdesc="XLibre Xnest and Xvfb servers"
+  depends=('bash' 'xlibre-xserver-common')
+  provides=('xorg-server-extra')
+  conflicts=('xorg-server-extra')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 \
+    ! -name Xnest.exe \
+    ! -name Xvfb.exe \
+    -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/include
+  rm -rf "${pkgdir}"/usr/lib
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/XWin*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xorg*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+
+  install -Dm755 "${srcdir}/xvfb-run" "${pkgdir}/usr/bin/xvfb-run"
+  install -Dm644 "${srcdir}/xvfb-run.1" "${pkgdir}/usr/share/man/man1/xvfb-run.1"
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xlibre-xserver-devel() {
+  pkgdesc="XLibre SDK for developing drivers and extensions for the Xorg X server"
+  depends=('xlibre-xserver-xorg' 'xorgproto')
+  provides=('xorg-server-devel')
+  conflicts=('xorg-server-devel')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  rm -rf "${pkgdir}"/usr/bin
+  rm -rf "${pkgdir}"/usr/lib/xorg/protocol.txt
+  find "${pkgdir}"/usr/lib -name '*.dll' -delete
+  rm -rf "${pkgdir}"/usr/share/doc
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xlibre-xserver-xorg() {
+  pkgdesc="XLibre modular X server"
+  depends=('xlibre-xserver-common')
+  provides=('xorg-server-xorg' 'xserver-video-abi28')
+  conflicts=('xorg-server-xorg')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  rm -rf "${pkgdir}"/etc
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 ! -name Xorg.exe -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/include
+  rm -f "${pkgdir}"/usr/lib/libXorg.exe.a
+  rm -f "${pkgdir}"/usr/lib/libnativeGLthunk.dll.a
+  rm -rf "${pkgdir}"/usr/lib/pkgconfig
+  rm -rf "${pkgdir}"/usr/lib/xorg/protocol.txt
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/doc
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/man/man1/XWin*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xnest*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xvfb*
+  rm -rf "${pkgdir}"/usr/share/man/man1/Xserver*
+  rm -rf "${pkgdir}"/usr/share/man/man1/gtf*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xvfb-run*
+  rm -rf "${pkgdir}"/usr/share/man/man1/xwinclip*
+  rm -rf "${pkgdir}"/usr/share/man/man5/XWinrc*
+  find "${pkgdir}"/usr/lib/xorg/modules -name '*.a' -delete
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
+
+package_xlibre-xwinclip() {
+  pkgdesc="Windows clipboard integration tool for the XLibre X server"
+  depends=('libxcb' 'xcb-util' 'xcb-util-wm')
+  provides=('xwinclip')
+  conflicts=('xwinclip')
+
+  DESTDIR="${pkgdir}" meson install -C "build-${CHOST}"
+
+  find "${pkgdir}" -mindepth 1 -maxdepth 1 ! -name usr -exec rm -rf {} +
+  find "${pkgdir}"/usr -mindepth 1 -maxdepth 1 ! -name bin ! -name share -exec rm -rf {} +
+  find "${pkgdir}"/usr/bin -mindepth 1 -maxdepth 1 ! -name xwinclip.exe -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/share/X11
+  rm -rf "${pkgdir}"/usr/share/aclocal
+  rm -rf "${pkgdir}"/usr/share/doc
+  find "${pkgdir}"/usr/share/man/man1 -mindepth 1 -maxdepth 1 ! -name 'xwinclip*' -exec rm -f {} +
+  rm -rf "${pkgdir}"/usr/share/man/man4
+  rm -rf "${pkgdir}"/usr/share/man/man5
+  install -Dm644 "${srcdir}/${_srcdir}/COPYING" "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}

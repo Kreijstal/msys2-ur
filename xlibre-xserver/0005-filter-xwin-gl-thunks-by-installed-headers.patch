@@ -1,0 +1,108 @@
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/hw/xwin/glx/gen_gl_wrappers.py xserver-xlibre-xserver-25.0.0.22/hw/xwin/glx/gen_gl_wrappers.py
+--- xserver-xlibre-xserver-25.0.0.22.orig/hw/xwin/glx/gen_gl_wrappers.py	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/hw/xwin/glx/gen_gl_wrappers.py	2026-05-20 07:32:48.790992776 +0200
+@@ -24,6 +24,8 @@
+ # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ # MATERIALS OR THE USE OR OTHER DEALINGS IN THE MATERIALS.
+ 
++import os
++import re
+ import sys
+ from reg import *
+ 
+@@ -42,6 +44,8 @@
+ thunkdefs=False
+ staticwrappers=False
+ nodebug=False
++headerFilenames=[]
++availableProcTypes=None
+ 
+ # list of WGL extension functions we use
+ used_wgl_ext_fns = {key: 1 for key in [
+@@ -89,6 +93,9 @@
+             i = i+1
+         elif (arg == '-nodebug'):
+             nodebug = True
++        elif (arg == '-header'):
++            headerFilenames.append(sys.argv[i])
++            i = i+1
+         elif (arg[0:1] == '-'):
+             print('Unrecognized argument:', arg, file=sys.stderr)
+             exit(1)
+@@ -153,6 +160,30 @@
+         plist.append((paramtype, paramname))
+     return plist
+ 
++def AvailableProcTypes():
++    global availableProcTypes
++
++    if availableProcTypes is not None:
++        return availableProcTypes
++
++    availableProcTypes = set()
++    for filename in headerFilenames:
++        try:
++            with open(filename, encoding='utf-8', errors='ignore') as header:
++                availableProcTypes.update(re.findall(r'\bPFN[A-Z0-9_]+PROC\b',
++                                                     header.read()))
++        except OSError:
++            print('warning: could not read OpenGL header %s' % filename,
++                  file=sys.stderr)
++
++    return availableProcTypes
++
++def HasProcType(name):
++    if not headerFilenames:
++        return True
++
++    return ('PFN' + name.upper() + 'PROC') in AvailableProcTypes()
++
+ class PreResolveOutputGenerator(OutputGenerator):
+     def __init__(self,
+                  errFile = sys.stderr,
+@@ -290,6 +321,9 @@
+     def genCmd(self, cmd, name):
+         OutputGenerator.genCmd(self, cmd, name)
+ 
++        if not self.OldVersion and not HasProcType(name):
++            return
++
+         rettype=ParseCmdRettype(cmd)
+         self.outFile.write("%s %sWrapper("%(rettype, name))
+         plist=ParseCmdParams(cmd)
+@@ -344,6 +378,7 @@
+         pass
+     def beginFeature(self, interface, emit):
+         OutputGenerator.beginFeature(self, interface, emit)
++        self.OldVersion = (self.featureName in ['GL_VERSION_1_0', 'GL_VERSION_1_1'])
+     def endFeature(self):
+         OutputGenerator.endFeature(self)
+     def genType(self, typeinfo, name):
+@@ -354,6 +389,9 @@
+         OutputGenerator.genCmd(self, cmd, name)
+ 
+         # export the wrapper function with the name of the function it wraps
++        if not self.OldVersion and not HasProcType(name):
++            return
++
+         self.outFile.write("%s = %sWrapper\n"%(name, name))
+ 
+ class ShimOutputGenerator(OutputGenerator):
+diff -urN xserver-xlibre-xserver-25.0.0.22.orig/hw/xwin/glx/meson.build xserver-xlibre-xserver-25.0.0.22/hw/xwin/glx/meson.build
+--- xserver-xlibre-xserver-25.0.0.22.orig/hw/xwin/glx/meson.build	2026-04-21 20:22:22.000000000 +0200
++++ xserver-xlibre-xserver-25.0.0.22/hw/xwin/glx/meson.build	2026-05-20 07:23:33.084475688 +0200
+@@ -7,8 +7,13 @@
+ endif
+ 
+ khronos_spec_dir = dependency('khronos-opengl-registry').get_variable(pkgconfig : 'specdir')
++gl_header_dir = dependency('mesa-opengl-headers').get_variable(pkgconfig : 'glincludedir')
+ 
+-gen_gl_wrappers_opts= ['-nodebug']
++gen_gl_wrappers_opts= [
++    '-nodebug',
++    '-header', join_paths(gl_header_dir, 'gl.h'),
++    '-header', join_paths(gl_header_dir, 'glext.h'),
++]
+ gen_gl_wrappers_cmd = ['env', 'PYTHONPATH=' + khronos_spec_dir, py3, files('./gen_gl_wrappers.py'), gen_gl_wrappers_opts]
+ 
+ wgl_wrappers = custom_target(

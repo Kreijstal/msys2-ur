@@ -1,0 +1,28 @@
+diff -Naur libpng-1.6.43.orig/contrib/pngminus/png2pnm.c libpng-1.6.43/contrib/pngminus/png2pnm.c
+--- libpng-1.6.43.orig/contrib/pngminus/png2pnm.c	2024-02-23 10:51:40.000000000 +0100
++++ libpng-1.6.43/contrib/pngminus/png2pnm.c	2024-03-29 09:22:02.273266300 +0100
+@@ -9,7 +9,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <fcntl.h>
+-
++#ifdef __MSYS__
++#include <io.h>
++#endif
+ #ifndef BOOL
+ #define BOOL unsigned char
+ #endif
+diff -Naur libpng-1.6.43.orig/contrib/pngminus/pnm2png.c libpng-1.6.43/contrib/pngminus/pnm2png.c
+--- libpng-1.6.43.orig/contrib/pngminus/pnm2png.c	2024-02-23 10:51:40.000000000 +0100
++++ libpng-1.6.43/contrib/pngminus/pnm2png.c	2024-03-29 09:21:52.930766300 +0100
+@@ -10,7 +10,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <fcntl.h>
+-
++#ifdef __MSYS__
++#include <io.h>
++#endif
+ #ifndef BOOL
+ #define BOOL unsigned char
+ #endif
