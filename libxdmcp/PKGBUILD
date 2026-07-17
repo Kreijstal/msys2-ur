@@ -16,28 +16,49 @@ sha256sums=('SKIP')  # Replace SKIP with the actual checksum
 prepare() {
   cd ${srcdir}/libXdmcp-${pkgver}
 
-  # Apply any necessary patches here
-  autoreconf -vif
+  # The release tarball ships a working ./configure. Do NOT autoreconf: it trips
+  # the host's broken autoconf split (automake-1.16 -> autom4te-2.71 whose perl
+  # modules are absent). Only regenerate if configure is genuinely missing.
+  if [ ! -x ./configure ]; then
+    autoreconf -vif
+  fi
 }
 
 build() {
   cd ${srcdir}/libXdmcp-${pkgver}
 
-  ./configure --prefix=/usr --enable-shared
-  make
+  # Force the Cygwin host triple. The guest's libtool has no msys case
+  # (deplibs_check_method=unknown, build_libtool_libs=no for host_os=msys), so a
+  # modern config.sub that canonicalises the host to *-msys yields a static-only
+  # build. x86_64-pc-cygwin gives host_os=cygwin, where libtool has full shared
+  # support. The compiler stays the msys gcc (CC=gcc), so the DLL still links
+  # msys-2.0.dll — only libtool's naming/behaviour follows the cygwin path, which
+  # we then re-prefix from cyg- to msys- below.
+  ./configure --prefix=/usr \
+    --build=x86_64-pc-cygwin \
+    --host=x86_64-pc-cygwin \
+    --enable-shared --enable-static
+
+  # Name the DLL msys-Xdmcp-6.dll to match the rest of the msys2 stack (the
+  # cygwin host path names it cygXdmcp-6.dll by default).
+  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
+
+  # Override the autotools-regeneration tools to ':' so a stale Makefile.in mtime
+  # cannot trigger a doomed automake re-run on the broken-autoconf guest.
+  make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
 
 check() {
   cd ${srcdir}/libXdmcp-${pkgver}
 
-  make check
+  make check AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
 
 package() {
   cd ${srcdir}/libXdmcp-${pkgver}
 
   # Install the library and headers to the package directory
-  make DESTDIR=${pkgdir} install
+  make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 
   # Remove unnecessary files
   find ${pkgdir} -name '*.la' -delete
