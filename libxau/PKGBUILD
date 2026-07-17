@@ -16,12 +16,21 @@ sha256sums=('SKIP')  # Replace SKIP with the actual checksum
 prepare() {
   cd ${srcdir}/libXau-${pkgver}
 
-  # Apply any necessary patches here
-  autoreconf -vif
+  # The upstream release tarball already ships a working ./configure, so we do
+  # NOT run autoreconf here: on the trimmed guest the default autoreconf resolves
+  # to 2.71 while only autoconf-2.72's perl modules are installed, which aborts
+  # with "Can't locate Autom4te/ChannelDefs.pm". Only regenerate if configure is
+  # actually missing (e.g. after patching configure.ac).
+  if [ ! -x ./configure ]; then
+    autoreconf -vif
+  fi
 }
 build() {
   cd ${srcdir}/libXau-${pkgver}
 
+  # --enable-shared is required or msys libtool emits a static archive only,
+  # leaving no msys-Xau-*.dll / libXau.dll.a for downstream -no-undefined libs
+  # (libxcb, libX11) to link against.
   ./configure --prefix=/usr \
     --libdir=/usr/lib \
     --sysconfdir=/etc \
@@ -30,9 +39,24 @@ build() {
     --mandir=/usr/share/man \
     --infodir=/usr/share/info \
     --build=${CHOST} \
-    --host=${CHOST}
+    --host=${CHOST} \
+    --enable-shared \
+    --enable-static
 
-  make
+  # libXau-1.0.11 bundles an older libtool that doesn't recognise the
+  # x86_64-pc-msys host and names the DLL cygXau-6.dll (Cygwin prefix). The rest
+  # of the msys2 stack (and the newer libX11 tarball) uses the msys- prefix, so
+  # rewrite the soname spec to match — otherwise we get an inconsistent
+  # cyg/msys mix across the X chain.
+  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
+
+  # Neutralize the autotools-regeneration recipes. The Makefile defines
+  # AUTOMAKE/AUTOCONF/etc. as `missing <tool>`; a stale Makefile.in mtime (the
+  # dist tarball ships Makefile.am newer than Makefile.in) would otherwise make
+  # `make` re-run automake-1.16, which dies on the guest's broken autoconf
+  # 2.71/2.72 module split. A command-line override wins over the Makefile's own
+  # assignment, so these become no-ops and the shipped Makefile.in is used as-is.
+  make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
 
 
@@ -44,5 +68,5 @@ check() {
 
 package() {
   cd ${srcdir}/libXau-${pkgver}
-make DESTDIR=${pkgdir} install
+make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
