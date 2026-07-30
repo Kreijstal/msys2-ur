@@ -18,10 +18,19 @@ sha256sums=('2ac31f26600776db6d9cd79b3fcd272263faebac7eb85fb2f33c7141b8486060')
 build() {
   cd "${pkgname}-${pkgver}"
 
+  # This X stack is built as static archives only.  pkgconf demotes a package
+  # named as an explicit root (x11) to the end of the link line, so
+  # PKG_CHECK_MODULES(XKBCOMP, [x11 xkbfile xproto]) yields
+  #     -lxcb -lXau -lXdmcp -lxkbfile -lX11
+  # and ld, being single-pass, discards libxcb before libX11 ever references
+  # it -> undefined xcb_connect/xcb_take_socket/...  Harmless with shared
+  # libs, fatal here.  Wrap the libs in a link group so symbol resolution no
+  # longer depends on pkgconf's emission order.
   ./configure \
     --prefix=/usr \
     --build=${CHOST} \
-    --host=${CHOST}
+    --host=${CHOST} \
+    XKBCOMP_LIBS="-Wl,--start-group $(pkg-config --libs x11 xkbfile xproto) -Wl,--end-group"
 
   make
 }

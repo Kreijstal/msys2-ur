@@ -16,11 +16,19 @@ sha256sums=('5abe3bbbd8e54f0fa3ec945291b7e8fa8cfd3cccc43718f8758430f94126e512')
 build() {
   cd "${pkgname}-${pkgver}"
 
+  # Force the Cygwin host triple, same reason as libxdmcp: the guest's libtool
+  # has no msys case, so canonicalising the host to *-msys yields a static-only
+  # build and no DLL for downstream -no-undefined libs to link against. The
+  # compiler stays the msys gcc, so the DLL still links msys-2.0.dll.
   ./configure \
     --prefix=/usr \
-    --build=${CHOST} \
-    --host=${CHOST} \
+    --build=x86_64-pc-cygwin \
+    --host=x86_64-pc-cygwin \
     --disable-static
+
+  # Name the DLL msys-* to match the rest of the stack (the cygwin host path
+  # would name it cyg*).
+  sed -i 's#s/\^lib/cyg#s/^lib/msys-#' libtool
 
   make
 }
