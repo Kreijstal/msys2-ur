@@ -47,6 +47,9 @@ source=("https://github.com/X11Libre/xserver/archive/refs/tags/xlibre-xserver-${
         '0004-enable-xwin-wgl-glx-without-dri.patch'
         '0005-filter-xwin-gl-thunks-by-installed-headers.patch'
         '0006-disable-vfb-glx-without-dri.patch'
+        '0007-fix-msys-xwin-runtime-linking.patch'
+        '0008-fix-xwin-block-handler-timeout.patch'
+        '0009-fix-xwin-multiwindow-layer-window.patch'
         'xorg-backtrace'
         'xvfb-run'
         'xvfb-run.1')
@@ -57,6 +60,9 @@ sha256sums=('fb589c9c4fdd84871d14349658324c2e267f56aefb1790c17296be1af56d3101'
             'd8bbedfb7eed144979effc25afb070e244529fd4e920f6ca067907de977c0a2d'
             '59c2b02688c51358442e198fe1174d913273d05e338364da4e71cc016b175299'
             '46038cf8b58202b4f17c0e2778381f3dc152372aea8857eff5b27113921ed6e1'
+            'e45952eda29b65f46dc22498edfd70270f78bb93cbdf16e64e06fb9e87e730ab'
+            '50d39338e6de58ba6bf707827093c9fb7e4c4a3e93a2d97e03279688f05543ed'
+            '1986183a01f61f469ac7dfbb178c91653ad6e16ac784d67f8edbb176e3c64d9a'
             'cb841305fdab19ba2803155fe26f5cbb327eee009547632bdf7e079704bba0d6'
             'c9a1366734926af8b4e1013f512dac1e06a3aea7f03b8f394e589be898aadcb0'
             '9b2134eefb5babcbb40568b96f517afa497b1609275f03cf6ce6d33bf3ca506c')
@@ -70,10 +76,15 @@ prepare() {
   patch -d "${_srcdir}" -Np1 -i "${srcdir}/0004-enable-xwin-wgl-glx-without-dri.patch"
   patch -d "${_srcdir}" -Np1 -i "${srcdir}/0005-filter-xwin-gl-thunks-by-installed-headers.patch"
   patch -d "${_srcdir}" -Np1 -i "${srcdir}/0006-disable-vfb-glx-without-dri.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0007-fix-msys-xwin-runtime-linking.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0008-fix-xwin-block-handler-timeout.patch"
+  patch -d "${_srcdir}" -Np1 -i "${srcdir}/0009-fix-xwin-multiwindow-layer-window.patch"
 
   # XLibre's XWin source still names the Windows server target Xming, while the
   # resources, manpages, runtime strings and MSYS packaging all use XWin.
   sed -i "s/server_name = 'Xming'/server_name = 'XWin'/" "${_srcdir}/hw/xwin/meson.build"
+  # reg.py was patched to use stdlib xml.etree in place of lxml
+  sed -i "s/import lxml;/import xml.etree.ElementTree;/" "${_srcdir}/hw/xwin/glx/meson.build"
 }
 
 build() {
@@ -86,7 +97,7 @@ build() {
     -Dsystemd_logind=false
     -Dsystemd_notify=false
     -Dxephyr=false
-    -Dxnest=true
+    -Dxnest=false
     -Dxvfb=true
     -Dxwin=true
     -Dxorg=true

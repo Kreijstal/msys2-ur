@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: kreijstal <kreijstal@hotmail.com>
+Date: Wed, 20 May 2026 23:10:00 +0200
+Subject: [PATCH] Fix MSYS XWin runtime linking
+
+Do not link XWin against native ws2_32.  The X server transport layer is
+compiled against MSYS/POSIX socket APIs; pulling in ws2_32 makes the final
+XWin.exe import socket/bind/listen from WS2_32.dll instead of msys-2.0.dll,
+which makes every Xtrans listener fail at runtime.
+
+Also load the MSYS-named native GL thunk DLL.
+---
+ hw/xwin/glx/glshim.c | 6 +++++-
+ hw/xwin/meson.build  | 2 +-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/hw/xwin/glx/glshim.c b/hw/xwin/glx/glshim.c
+index 3be35f3..a20ba1f 100644
+--- a/hw/xwin/glx/glshim.c
++++ b/hw/xwin/glx/glshim.c
+@@ -78,7 +78,11 @@ int glWinSelectImplementation(int native)
+     const char *dllname;
+ 
+     if (native) {
+-        dllname = "cygnativeGLthunk.dll";
++#ifdef __MSYS__
++        dllname = "msys-nativeGLthunk.dll";
++#else
++        dllname = "cygnativeGLthunk.dll";
++#endif
+     }
+     else {
+         dllname = "cygGL-1.dll";
+ 
+diff --git a/hw/xwin/meson.build b/hw/xwin/meson.build
+index b66fdc5..b51f0d1 100644
+--- a/hw/xwin/meson.build
++++ b/hw/xwin/meson.build
+@@ -11,1 +11,1 @@
+-xwin_sys_libs += ['-lpthread', '-lws2_32']
++xwin_sys_libs += ['-lpthread']

@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: kreijstal <kreijstal@hotmail.com>
+Date: Wed, 20 May 2026 23:20:00 +0200
+Subject: [PATCH] Fix XWin block handler timeout handling
+
+The server block handler timeout is an int pointer in current X server
+code, not a struct timeval pointer. Use AdjustWaitForDelay() instead of
+casting it to the older timeval-based ABI.
+---
+ hw/xwin/winblock.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+--- a/hw/xwin/winblock.c
++++ b/hw/xwin/winblock.c
+@@ -40,25 +40,19 @@
+ {
+     winScreenPriv(pScreen);
+ 
+-    struct timeval **tvp = pTimeout;
+-
+-    if (*tvp != NULL) {
+       if (GetQueueStatus(QS_ALLINPUT | QS_ALLPOSTMESSAGE) != 0) {
+         /* If there are still messages to process on the Windows message
+            queue, make sure select() just polls rather than blocking.
+         */
+-        (*tvp)->tv_sec = 0;
+-        (*tvp)->tv_usec = 0;
++        AdjustWaitForDelay(pTimeout, 0);
+       }
+       else {
+         /* Otherwise, lacking /dev/windows, we must wake up again in
+            a reasonable time to check the Windows message queue. without
+            noticeable delay.
+          */
+-        (*tvp)->tv_sec = 0;
+-        (*tvp)->tv_usec = 100;
++        AdjustWaitForDelay(pTimeout, 1);
+       }
+-    }
+ 
+     /* Signal threaded modules to begin */
+     if (pScreenPriv != NULL && !pScreenPriv->fServerStarted) {

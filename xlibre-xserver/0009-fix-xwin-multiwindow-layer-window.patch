@@ -1,0 +1,268 @@
+From ffe1a79f00922f0fde8c78e791fc9e0ea171699c Mon Sep 17 00:00:00 2001
+From: MSYS2 Builder <msys2@msys2.org>
+Date: Thu, 21 May 2026 06:00:35 +0200
+Subject: [PATCH] hw/xwin: handle clients below layer windows
+
+---
+ hw/xwin/winmultiwindowshape.c   | 53 ++++++++++++++++++++++++++-------
+ hw/xwin/winmultiwindowwindow.c  | 36 ++++++++++++++--------
+ hw/xwin/winmultiwindowwndproc.c | 20 +++++++++++++
+ 3 files changed, 86 insertions(+), 23 deletions(-)
+
+diff --git a/hw/xwin/winmultiwindowshape.c b/hw/xwin/winmultiwindowshape.c
+index cbc85f8..47e8722 100644
+--- a/hw/xwin/winmultiwindowshape.c
++++ b/hw/xwin/winmultiwindowshape.c
+@@ -37,6 +37,24 @@
+ 
+ #include "win.h"
+ 
++static WindowPtr
++winGetWindowsWindowForShape(WindowPtr pWin)
++{
++    WindowPtr pChild;
++
++    if (pWin->parent == NULL || pWin->parent->parent != NULL)
++        return pWin;
++
++    for (pChild = pWin->firstChild; pChild != NULL; pChild = pChild->nextSib) {
++        winPrivWinPtr pChildPriv = winGetWindowPriv(pChild);
++
++        if (pChildPriv != NULL && pChildPriv->hWnd != NULL)
++            return pChild;
++    }
++
++    return pWin;
++}
++
+ /*
+  * winSetShapeMultiWindow - See Porting Layer Definition - p. 42
+  */
+@@ -64,11 +82,16 @@ winSetShapeMultiWindow(WindowPtr pWin, int kind)
+ void
+ winUpdateRgnMultiWindow(WindowPtr pWin)
+ {
+-    SetWindowRgn(winGetWindowPriv(pWin)->hWnd,
+-                 winGetWindowPriv(pWin)->hRgn, TRUE);
++    WindowPtr pWindowsWin = winGetWindowsWindowForShape(pWin);
++    winPrivWinPtr pWinPriv = winGetWindowPriv(pWindowsWin);
++
++    if (pWinPriv == NULL || pWinPriv->hWnd == NULL)
++        return;
++
++    SetWindowRgn(pWinPriv->hWnd, pWinPriv->hRgn, TRUE);
+ 
+     /* The system now owns the region specified by the region handle and will delete it when it is no longer needed. */
+-    winGetWindowPriv(pWin)->hRgn = NULL;
++    pWinPriv->hRgn = NULL;
+ }
+ 
+ /*
+@@ -82,8 +105,9 @@ winReshapeMultiWindow(WindowPtr pWin)
+     RegionRec rrNewShape;
+     BoxPtr pShape, pRects, pEnd;
+     HRGN hRgn, hRgnRect;
+-
+-    winWindowPriv(pWin);
++    WindowPtr pShapeWin = pWin;
++    WindowPtr pWindowsWin;
++    winPrivWinPtr pWinPriv;
+ 
+ #if ENABLE_DEBUG
+     winDebug("winReshape ()\n");
+@@ -93,12 +117,19 @@ winReshapeMultiWindow(WindowPtr pWin)
+     if (pWin->parent == NULL)
+         return;
+ 
+-    /* Bail if the window is not top level */
+-    if (pWin->parent->parent != NULL)
++    /* Bail if the window is neither top level nor a client below a layer */
++    if (pWin->parent->parent != NULL &&
++        (pWin->parent->parent->parent != NULL))
+         return;
+ 
++    if (pWin->parent->parent != NULL && wBoundingShape(pWin->parent))
++        pShapeWin = pWin->parent;
++
++    pWindowsWin = winGetWindowsWindowForShape(pWin);
++    pWinPriv = winGetWindowPriv(pWindowsWin);
++
+     /* Bail if Windows window handle is invalid */
+-    if (pWinPriv->hWnd == NULL)
++    if (pWinPriv == NULL || pWinPriv->hWnd == NULL)
+         return;
+ 
+     /* Free any existing window region stored in the window privates */
+@@ -108,12 +139,12 @@ winReshapeMultiWindow(WindowPtr pWin)
+     }
+ 
+     /* Bail if the window has no bounding region defined */
+-    if (!wBoundingShape(pWin))
++    if (!wBoundingShape(pShapeWin))
+         return;
+ 
+     RegionNull(&rrNewShape);
+-    RegionCopy(&rrNewShape, wBoundingShape(pWin));
+-    RegionTranslate(&rrNewShape, pWin->borderWidth, pWin->borderWidth);
++    RegionCopy(&rrNewShape, wBoundingShape(pShapeWin));
++    RegionTranslate(&rrNewShape, pShapeWin->borderWidth, pShapeWin->borderWidth);
+ 
+     nRects = RegionNumRects(&rrNewShape);
+     pShape = RegionRects(&rrNewShape);
+diff --git a/hw/xwin/winmultiwindowwindow.c b/hw/xwin/winmultiwindowwindow.c
+index 616cf11..32badd2 100644
+--- a/hw/xwin/winmultiwindowwindow.c
++++ b/hw/xwin/winmultiwindowwindow.c
+@@ -431,6 +431,7 @@ winCreateWindowsWindow(WindowPtr pWin)
+ {
+     int iX, iY;
+     int iWidth;
++    WindowPtr pPlaceWin = pWin;
+     int iHeight;
+     HWND hWnd;
+     HWND hFore = NULL;
+@@ -443,14 +444,18 @@ winCreateWindowsWindow(WindowPtr pWin)
+ 
+     winInitMultiWindowClass();
+ 
++    if (pWin->parent != NULL && pWin->parent->parent != NULL &&
++        pWin->parent->parent->parent == NULL)
++        pPlaceWin = pWin->parent;
++
+     winDebug("winCreateWindowsTopLevelWindow - pWin:%p XID:0x%x \n", pWin,
+              (unsigned int)pWin->drawable.id);
+ 
+-    iX = pWin->drawable.x + GetSystemMetrics(SM_XVIRTUALSCREEN);
+-    iY = pWin->drawable.y + GetSystemMetrics(SM_YVIRTUALSCREEN);
++    iX = pPlaceWin->drawable.x + GetSystemMetrics(SM_XVIRTUALSCREEN);
++    iY = pPlaceWin->drawable.y + GetSystemMetrics(SM_YVIRTUALSCREEN);
+ 
+-    iWidth = pWin->drawable.width;
+-    iHeight = pWin->drawable.height;
++    iWidth = pPlaceWin->drawable.width;
++    iHeight = pPlaceWin->drawable.height;
+ 
+     /* If it's an InputOutput window, and so is going to end up being made visible,
+        make sure the window actually ends up somewhere where it will be visible
+@@ -544,7 +549,7 @@ winCreateWindowsWindow(WindowPtr pWin)
+                  SWP_NOACTIVATE);
+ 
+     /* Adjust the X window to match the window placement we actually got... */
+-    winAdjustXWindow(pWin, hWnd);
++    winAdjustXWindow(pPlaceWin, hWnd);
+ 
+     /* Make sure it gets the proper system menu for a WS_POPUP, too */
+     GetSystemMenu(hWnd, TRUE);
+@@ -630,7 +635,9 @@ winUpdateWindowsWindow(WindowPtr pWin)
+ #endif
+ 
+     /* Check if the Windows window's parents have been destroyed */
+-    if (pWin->parent != NULL && pWin->parent->parent == NULL && pWin->mapped) {
++    if (pWin->parent != NULL && pWin->mapped &&
++        (!pWin->drawable.pScreen->GetLayerWindow ||
++         pWin->drawable.pScreen->GetLayerWindow(pWin) == NULL)) {
+         /* Create the Windows window if it has been destroyed */
+         if (hWnd == NULL) {
+             winCreateWindowsWindow(pWin);
+@@ -777,6 +784,7 @@ winAdjustXWindow(WindowPtr pWin, HWND hwnd)
+ {
+     RECT rcDraw;                /* Rect made from pWin->drawable to be adjusted */
+     RECT rcWin;                 /* The source: WindowRect from hwnd */
++    WindowPtr pAdjustWin = pWin;
+     DrawablePtr pDraw;
+     XID vlist[4];
+     LONG dX, dY, dW, dH, x, y;
+@@ -789,6 +797,10 @@ winAdjustXWindow(WindowPtr pWin, HWND hwnd)
+     ErrorF("winAdjustXWindow\n");
+ #endif
+ 
++    if (pWin->parent != NULL && pWin->parent->parent != NULL &&
++        pWin->parent->parent->parent == NULL)
++        pAdjustWin = pWin->parent;
++
+     if (IsIconic(hwnd)) {
+ #if ENABLE_DEBUG
+         ErrorF("\timmediately return because the window is iconized\n");
+@@ -799,10 +811,10 @@ winAdjustXWindow(WindowPtr pWin, HWND hwnd)
+          */
+         vlist[0] = 0;
+         vlist[1] = 0;
+-        return ConfigureWindow(pWin, CWX | CWY, vlist, dixClientForWindow(pWin));
++        return ConfigureWindow(pAdjustWin, CWX | CWY, vlist, dixClientForWindow(pAdjustWin));
+     }
+ 
+-    pDraw = &pWin->drawable;
++    pDraw = &pAdjustWin->drawable;
+ 
+     /* Calculate the window rect from the drawable */
+     x = pDraw->x + GetSystemMetrics(SM_XVIRTUALSCREEN);
+@@ -851,8 +863,8 @@ winAdjustXWindow(WindowPtr pWin, HWND hwnd)
+      * ([2] and [3]) but currently we set all the parameters and leave
+      * the decision to ConfigureWindow.  The reason is code simplicity.
+      */
+-    vlist[0] = pDraw->x + dX - wBorderWidth(pWin);
+-    vlist[1] = pDraw->y + dY - wBorderWidth(pWin);
++    vlist[0] = pDraw->x + dX - wBorderWidth(pAdjustWin);
++    vlist[1] = pDraw->y + dY - wBorderWidth(pAdjustWin);
+     vlist[2] = pDraw->width + dW;
+     vlist[3] = pDraw->height + dH;
+ #if ENABLE_DEBUG
+@@ -860,8 +872,8 @@ winAdjustXWindow(WindowPtr pWin, HWND hwnd)
+            (unsigned int)vlist[0], (unsigned int)vlist[1],
+            (unsigned int)vlist[2], (unsigned int)vlist[3]);
+ #endif
+-    return ConfigureWindow(pWin, CWX | CWY | CWWidth | CWHeight,
+-                           vlist, dixClientForWindow(pWin));
++    return ConfigureWindow(pAdjustWin, CWX | CWY | CWWidth | CWHeight,
++                           vlist, dixClientForWindow(pAdjustWin));
+ 
+ #undef WIDTH
+ #undef HEIGHT
+diff --git a/hw/xwin/winmultiwindowwndproc.c b/hw/xwin/winmultiwindowwndproc.c
+index f480de0..327b927 100644
+--- a/hw/xwin/winmultiwindowwndproc.c
++++ b/hw/xwin/winmultiwindowwndproc.c
+@@ -59,6 +59,14 @@ extern void winUpdateWindowPosition(HWND hWnd, HWND * zstyle);
+ 
+ static UINT_PTR g_uipMousePollingTimerID = 0;
+ 
++static Bool
++winIsShapedMultiWindow(WindowPtr pWin)
++{
++    return pWin &&
++        (wBoundingShape(pWin) ||
++         (pWin->parent != NULL && wBoundingShape(pWin->parent)));
++}
++
+ /*
+  * Constant defines
+  */
+@@ -543,6 +551,9 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+         return 0;
+ 
+     case WM_SYSCOMMAND:
++        if ((wParam & 0xfff0) == SC_MAXIMIZE && winIsShapedMultiWindow(pWin))
++            return 0;
++
+         /*
+          * Any window menu items go through here
+          */
+@@ -1038,6 +1049,15 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+         return 0;
+ 
+     case WM_SIZING:
++        if (winIsShapedMultiWindow(pWin)) {
++            RECT rcWindow;
++
++            if (GetWindowRect(hwnd, &rcWindow)) {
++                *((LPRECT) lParam) = rcWindow;
++                return TRUE;
++            }
++        }
++
+         /* Need to legalize the size according to WM_NORMAL_HINTS */
+         /* for applications like xterm */
+         return ValidateSizing(hwnd, pWin, wParam, lParam);
+-- 
+2.43.0
+
