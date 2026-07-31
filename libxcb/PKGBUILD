@@ -8,8 +8,13 @@ arch=('i686' 'x86_64')
 url="https://xcb.sourceforge.net/"
 license=('MIT')
 depends=()
+# libxcb only runs the xsltproc *binary* -- configure.ac does a bare
+# AC_PATH_PROG(XSLTPROC, xsltproc, no) and nothing links against libxslt or
+# includes its headers. So the dependency is the runtime package 'libxslt'
+# (which ships /usr/bin/xsltproc), NOT the split 'libxslt-devel' headers
+# package, which isn't installed and would need network access to fetch.
 makedepends=('xorg-util-macros' 'xcb-proto' 'libxau' 'libxdmcp' 'libpthread-stubs'
-'libxslt-devel')
+'libxslt')
 source=(https://xcb.freedesktop.org/dist/${pkgname}-${pkgver}.tar.xz
        1.16-no-pthread-stubs.patch)
 sha256sums=('SKIP'  # Replace SKIP with the actual checksum
@@ -27,10 +32,31 @@ prepare() {
 build() {
  cd ${srcdir}/${pkgname}-${pkgver}
 
- CYGCONF_ARGS="--enable-composite --enable-damage --enable-dbe --enable-dpms --enable-dri2 --enable-glx --enable-randr --enable-record --enable-render --enable-res --enable-screensaver --enable-shape --enable-shm --enable-sync --enable-xfixes --enable-xinerama --enable-xinput --enable-xkb --enable-xtest --enable-present --enable-shared"
-sh autogen.sh
- ./configure --prefix=/usr ${CYGCONF_ARGS}
- make
+ CYGCONF_ARGS="--enable-composite --enable-damage --enable-dbe --enable-dpms --enable-dri2 --enable-glx --enable-randr --enable-record --enable-render --enable-res --enable-screensaver --enable-shape --enable-shm --enable-sync --enable-xfixes --enable-xinerama --enable-xinput --enable-xkb --enable-xtest --enable-present --enable-shared --enable-static"
+
+ # Force the Cygwin host triple. libtool has no msys case
+ # (deplibs_check_method=unknown, build_libtool_libs=no for host_os=msys), so
+ # letting config.sub canonicalise to *-msys yields a STATIC-ONLY libxcb - and
+ # since every X library above it links -no-undefined against -lxcb, libtool
+ # then silently degrades libX11, libXext, ... to static as well. That is
+ # useless to Wine: winex11.drv dlopens the shared libX11 at runtime.
+ # x86_64-pc-cygwin gives host_os=cygwin, where libtool has full shared support.
+ # --build is passed identically so autoconf does not consider this a cross
+ # build, and CC stays the msys gcc - only libtool's naming/behaviour follows
+ # the cygwin path. The 1.16-no-pthread-stubs.patch already exempts cygwin*
+ # from the pthread-stubs requirement, which this triple selects.
+ ./configure --prefix=/usr \
+   --build=x86_64-pc-cygwin \
+   --host=x86_64-pc-cygwin \
+   ${CYGCONF_ARGS}
+
+ # Name the DLLs msys-xcb*-1.dll to match the rest of the msys2 stack (the
+ # cygwin host path names them cygxcb*-1.dll by default).
+ sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
+
+ # Override the autotools-regeneration recipes so a stale Makefile.in mtime
+ # cannot trigger a doomed automake re-run on the guest's broken autoconf split.
+ make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
 
 check() {
@@ -40,7 +66,14 @@ check() {
 }
 
 package() {
- 
+
  cd ${srcdir}/${pkgname}-${pkgver}
- make DESTDIR=${pkgdir} install
+ make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
+
+ # Guard against a silent static-only build: without libxcb.dll.a every
+ # downstream -no-undefined X library degrades to static without any error.
+ if [ ! -f "${pkgdir}/usr/lib/libxcb.dll.a" ]; then
+   echo "ERROR: libxcb built static-only (no libxcb.dll.a) - refusing to package" >&2
+   return 1
+ fi
 }
