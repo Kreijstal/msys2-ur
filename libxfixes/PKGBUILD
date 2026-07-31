@@ -24,6 +24,17 @@ prepare() {
 build() {
   cd ${srcdir}/${urlpkgname}-${pkgver}
 
+  # Force the Cygwin host triple. libtool has no msys case: for an *-msys host
+  # it falls through to the default branch and sets build_libtool_libs=no with
+  # an empty library_names_spec, so it emits a STATIC ARCHIVE ONLY - silently,
+  # with configure still exiting 0. --enable-shared does not override this; the
+  # host triple is decisive. x86_64-pc-cygwin selects the branch that has full
+  # shared-library support. --build is passed identically so autoconf does not
+  # treat this as a cross build, and CC stays the msys gcc; only libtool's
+  # naming and behaviour follow the cygwin path.
+  #
+  # This is not cosmetic: winex11.drv dlopens SONAME_LIBXFIXES at runtime, so a static
+  # build satisfies Wine's configure and then fails to load with no diagnostic.
   ./configure --prefix=/usr \
     --libdir=/usr/lib \
     --sysconfdir=/etc \
@@ -31,10 +42,16 @@ build() {
     --datadir=/usr/share \
     --mandir=/usr/share/man \
     --infodir=/usr/share/info \
-    --build=${CHOST} \
-    --host=${CHOST}
+    --build=x86_64-pc-cygwin \
+    --host=x86_64-pc-cygwin \
+    --enable-shared \
+    --enable-static
 
-  make
+  # Name the DLL msys-* to match the rest of the stack (the cygwin host path
+  # would name it cyg*).
+  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
+
+  make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
 
 check() {
@@ -47,5 +64,12 @@ package() {
   cd ${srcdir}/${urlpkgname}-${pkgver}
 
   # Install the package to the system
-  make DESTDIR=${pkgdir} install
+  make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
+
+  # Guard against a silent static-only build: without the import library every
+  # downstream -no-undefined consumer degrades to static with no error at all.
+  if [ ! -f "${pkgdir}/usr/lib/libXfixes.dll.a" ]; then
+    echo "ERROR: libxfixes built static-only (no libXfixes.dll.a) - refusing to package" >&2
+    return 1
+  fi
 }
