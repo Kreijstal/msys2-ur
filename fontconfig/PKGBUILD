@@ -7,8 +7,14 @@ pkgdesc="Library for configuring and customizing font access"
 arch=('i686' 'x86_64')
 url="https://www.freedesktop.org/software/fontconfig/"
 license=('LGPL2.1+' 'MIT')
-depends=('expat' 'freetype')
-makedepends=('git' 'gperf' 'meson' 'glib2' 'libexpat-devel')
+# 'expat' is the Arch name; on MSYS2 the runtime library package is 'libexpat'
+# (with headers/import library split into libexpat-devel, below). Depending on
+# 'expat' makes makepkg abort with "Missing dependencies" before it ever builds.
+depends=('libexpat' 'freetype')
+# gperf is a real build-time requirement: fontconfig's meson build regenerates
+# fcobjshash.h with it. libexpat-devel supplies the import library and .pc that
+# the runtime libexpat package alone does not.
+makedepends=('git' 'gperf' 'meson' 'ninja' 'pkgconf' 'glib2' 'libexpat-devel')
 
 source=(https://www.freedesktop.org/software/fontconfig/release/${pkgname}-${pkgver}.tar.xz)
 sha256sums=('SKIP')  # Replace SKIP with the actual checksum
@@ -16,8 +22,26 @@ sha256sums=('SKIP')  # Replace SKIP with the actual checksum
 prepare() {
   cd ${srcdir}/${pkgname}-${pkgver}
 
-  # Apply any necessary patches here
-  meson setup build --prefix=/usr
+  # meson, not fontconfig's bundled autotools: libtool has no host_os=msys case
+  # and would emit a static archive only, silently. Wine dlopens
+  # SONAME_LIBFONTCONFIG at runtime, so a static build passes configure and then
+  # fails to load with no diagnostic.
+  #
+  # Tests are disabled: they need a populated font cache the guest does not have,
+  # and doc generation pulls in docbook tooling that is not installed.
+  #
+  # Wipe any previous build dir: meson setup refuses to configure into an
+  # existing one, so a rebuild over a surviving src/ would fail before it starts.
+  rm -rf build
+
+  meson setup build \
+    --prefix=/usr \
+    --libdir=/usr/lib \
+    --buildtype=release \
+    --wrap-mode=nodownload \
+    -Ddoc=disabled \
+    -Dtests=disabled \
+    -Dtools=enabled
 }
 
 build() {
@@ -37,4 +61,11 @@ package() {
 
   # Install the package to the system
   meson install -C build --destdir="${pkgdir}"
+
+  # Guard against a silent static-only build: winex11.drv dlopens this at
+  # runtime, so a missing DLL would only surface as a failed driver load.
+  if [ ! -f "${pkgdir}/usr/lib/libfontconfig.dll.a" ]; then
+    echo "ERROR: fontconfig built static-only (no libfontconfig.dll.a) - refusing to package" >&2
+    return 1
+  fi
 }

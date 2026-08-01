@@ -1,0 +1,66 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=libxkbcommon
+pkgver=1.7.0
+pkgrel=1
+pkgdesc="Keymap handling library for toolkits and window systems"
+arch=('i686' 'x86_64')
+url="https://xkbcommon.org/"
+license=('MIT')
+depends=('libx11' 'libxcb' 'xkeyboard-config')
+# libxml2-devel is not optional here: enable-xkbregistry pulls in libxml-2.0, and
+# meson hard-fails when it cannot find it. The runtime libxml2 package alone is
+# not enough - it ships no .pc file, so the dependency lookup still fails.
+makedepends=('meson' 'ninja' 'pkgconf' 'gcc' 'bison' 'python3' 'libxml2-devel')
+
+source=(https://xkbcommon.org/download/${pkgname}-${pkgver}.tar.xz)
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+build() {
+  # Out-of-tree build: meson refuses to configure into a dirty source dir.
+  mkdir -p "${srcdir}/build" && cd "${srcdir}/build"
+
+  # meson, unlike libtool, handles the msys host fine - it derives DLL naming
+  # from the compiler rather than from a host_os case statement, so no cygwin
+  # triple override is needed here. Shared is the default; state it explicitly
+  # so a future default change cannot silently produce a static-only package.
+  #
+  # Wine's winex11.drv dlopens SONAME_LIBXKBREGISTRY, which comes from the
+  # xkbregistry sub-library, so that must stay enabled.
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup \
+      --prefix=/usr \
+      --libdir=/usr/lib \
+      --buildtype=release \
+      --default-library=shared \
+      --wrap-mode=nodownload \
+      -Denable-xkbregistry=true \
+      -Denable-x11=true \
+      -Denable-wayland=false \
+      -Denable-docs=false \
+      -Denable-bash-completion=false \
+      "${srcdir}/${pkgname}-${pkgver}"
+
+  meson compile
+}
+
+check() {
+  cd "${srcdir}/build"
+
+  meson test --print-errorlogs
+}
+
+package() {
+  cd "${srcdir}/build"
+
+  DESTDIR="${pkgdir}" meson install
+
+  # Guard against a silent static-only build. Both sub-libraries matter:
+  # Wine dlopens xkbregistry, everything else links xkbcommon.
+  for l in libxkbcommon libxkbregistry; do
+    if [ ! -f "${pkgdir}/usr/lib/${l}.dll.a" ]; then
+      echo "ERROR: ${pkgname} built without ${l}.dll.a - refusing to package" >&2
+      return 1
+    fi
+  done
+}
