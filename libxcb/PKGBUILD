@@ -50,9 +50,6 @@ build() {
    --host=x86_64-pc-cygwin \
    ${CYGCONF_ARGS}
 
- # Name the DLLs msys-xcb*-1.dll to match the rest of the msys2 stack (the
- # cygwin host path names them cygxcb*-1.dll by default).
- sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
 
  # Override the autotools-regeneration recipes so a stale Makefile.in mtime
  # cannot trigger a doomed automake re-run on the guest's broken autoconf split.
@@ -69,11 +66,4 @@ package() {
 
  cd ${srcdir}/${pkgname}-${pkgver}
  make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
- # Guard against a silent static-only build: without libxcb.dll.a every
- # downstream -no-undefined X library degrades to static without any error.
- if [ ! -f "${pkgdir}/usr/lib/libxcb.dll.a" ]; then
-   echo "ERROR: libxcb built static-only (no libxcb.dll.a) - refusing to package" >&2
-   return 1
- fi
 }

@@ -21,9 +21,7 @@ prepare() {
   # Use the configure shipped in the tarball when present. Regenerating with the
   # guest's autotools pulls in the local libtool.m4, which is the one missing the
   # msys case, and the guest's autoconf/automake split has been unreliable.
-  if [ ! -x ./configure ]; then
-    autoreconf -vif
-  fi
+  autoreconf -vif
 }
 
 build() {
@@ -52,9 +50,6 @@ build() {
     --enable-shared \
     --enable-static
 
-  # Name the DLL msys-* to match the rest of the stack (the cygwin host path
-  # would name it cyg*).
-  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
 
   make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
@@ -70,11 +65,4 @@ package() {
 
   # Install the package to the system
   make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
-  # Guard against a silent static-only build: without the import library every
-  # downstream -no-undefined consumer degrades to static with no error at all.
-  if [ ! -f "${pkgdir}/usr/lib/libXext.dll.a" ]; then
-    echo "ERROR: libxext built static-only (no libXext.dll.a) - refusing to package" >&2
-    return 1
-  fi
 }

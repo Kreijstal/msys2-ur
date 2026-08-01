@@ -19,9 +19,28 @@ prepare() {
 
 build() {
   cd "$srcdir/$pkgname-$pkgver"
+
+  # Force the Cygwin host triple. libtool has no host_os=msys case: an *-msys
+  # host falls through to the default branch, sets build_libtool_libs=no and
+  # emits a STATIC ARCHIVE ONLY - silently, with configure still exiting 0. The
+  # host triple is decisive; --enable-shared cannot override it.
+  #
+  # (The previous `# --enable-shared` here was inert regardless: it followed a
+  # line-continuation backslash, so it collapsed onto the configure line and
+  # commented itself out.)
+  #
+  # freetype links libpng, and libtool degrades a -no-undefined library to
+  # static whenever a dependency lacks a .dll.a - so a static libpng would drag
+  # freetype down with it.
   ./configure \
     --prefix=/usr \
-    # --enable-shared
+    --libdir=/usr/lib \
+    --build=x86_64-pc-cygwin \
+    --host=x86_64-pc-cygwin \
+    --enable-shared \
+    --enable-static
+
+
   make
 }
 

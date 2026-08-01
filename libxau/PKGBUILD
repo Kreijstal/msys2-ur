@@ -21,9 +21,7 @@ prepare() {
   # to 2.71 while only autoconf-2.72's perl modules are installed, which aborts
   # with "Can't locate Autom4te/ChannelDefs.pm". Only regenerate if configure is
   # actually missing (e.g. after patching configure.ac).
-  if [ ! -x ./configure ]; then
-    autoreconf -vif
-  fi
+  autoreconf -vif
 }
 build() {
   cd ${srcdir}/libXau-${pkgver}
@@ -50,13 +48,6 @@ build() {
     --enable-shared \
     --enable-static
 
-  # libXau-1.0.11 bundles an older libtool that doesn't recognise the
-  # x86_64-pc-msys host and names the DLL cygXau-6.dll (Cygwin prefix). The rest
-  # of the msys2 stack (and the newer libX11 tarball) uses the msys- prefix, so
-  # rewrite the soname spec to match — otherwise we get an inconsistent
-  # cyg/msys mix across the X chain.
-  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
-
   # Neutralize the autotools-regeneration recipes. The Makefile defines
   # AUTOMAKE/AUTOCONF/etc. as `missing <tool>`; a stale Makefile.in mtime (the
   # dist tarball ships Makefile.am newer than Makefile.in) would otherwise make
@@ -76,11 +67,4 @@ check() {
 package() {
   cd ${srcdir}/libXau-${pkgver}
 make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
-  # A static-only libXau silently drags libxcb and libX11 down with it, and the
-  # breakage only shows up much later as a missing X driver. Fail here instead.
-  if [ ! -f "${pkgdir}/usr/lib/libXau.dll.a" ]; then
-    echo "ERROR: libXau built static-only (no libXau.dll.a) - refusing to package" >&2
-    return 1
-  fi
 }

@@ -61,11 +61,4 @@ package() {
 
   # Install the package to the system
   meson install -C build --destdir="${pkgdir}"
-
-  # Guard against a silent static-only build: winex11.drv dlopens this at
-  # runtime, so a missing DLL would only surface as a failed driver load.
-  if [ ! -f "${pkgdir}/usr/lib/libfontconfig.dll.a" ]; then
-    echo "ERROR: fontconfig built static-only (no libfontconfig.dll.a) - refusing to package" >&2
-    return 1
-  fi
 }

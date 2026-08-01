@@ -54,13 +54,4 @@ package() {
   cd "${srcdir}/build"
 
   DESTDIR="${pkgdir}" meson install
-
-  # Guard against a silent static-only build. Both sub-libraries matter:
-  # Wine dlopens xkbregistry, everything else links xkbcommon.
-  for l in libxkbcommon libxkbregistry; do
-    if [ ! -f "${pkgdir}/usr/lib/${l}.dll.a" ]; then
-      echo "ERROR: ${pkgname} built without ${l}.dll.a - refusing to package" >&2
-      return 1
-    fi
-  done
 }

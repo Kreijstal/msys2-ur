@@ -25,10 +25,18 @@ depends=("gcc-libs"
 if [ "${_with_harfbuzz}" == "yes" ]; then
   depends+=("harfbuzz")
 fi
+# The -devel halves are mandatory here, not optional: build() passes
+# --auto-features=enabled, which promotes bzip2/brotli/png/zlib from optional to
+# required. The runtime packages (brotli, libbz2) ship only DLLs - no import
+# library and no .pc - so meson fails at "C shared or static library 'bz2' not
+# found" unless these are installed.
 makedepends=("meson"
              "ninja"
              "pkgconf"
-             "gcc")
+             "gcc"
+             "libbz2-devel"
+             "brotli-devel"
+             "zlib-devel")
 source=(https://download-mirror.savannah.gnu.org/releases/freetype//freetype-${pkgver}.tar.xz #{,.sig}
         freetype-2.10.0-enable-valid.patch
         freetype-2.10.0-enable-spr.patch)
@@ -68,9 +76,18 @@ build() {
     extra_config+=("-Dharfbuzz=disabled")
   fi
 
+  # Build with meson, NOT freetype's bundled autotools. The autotools path runs
+  # libtool, which has no host_os=msys case and therefore emits a static archive
+  # only - silently, exiting 0. The freetype currently installed on the guest was
+  # built that way: it shipped usr/lib/libfreetype.a with no DLL, and the
+  # giveaway was usr/share/aclocal/freetype2.m4, which only the autotools build
+  # installs. meson derives DLL naming from the compiler instead of a host_os
+  # case, so it produces msys-freetype-6.dll correctly (same as pixman,
+  # libxkbfile and libxcvt on this guest).
   MSYS2_ARG_CONV_EXCL="--prefix=" \
     meson setup \
       --prefix="/usr" \
+      --libdir="/usr/lib" \
       --wrap-mode=nodownload \
       --auto-features=enabled \
       --default-library=both \

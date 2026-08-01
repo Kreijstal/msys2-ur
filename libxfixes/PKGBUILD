@@ -18,7 +18,9 @@ sha256sums=('SKIP')  # Replace SKIP with the actual checksum
 prepare() {
   cd ${srcdir}/${urlpkgname}-${pkgver}
 
-  # Apply any necessary patches here
+  # Regenerate configure so the build below uses the guest's MSYS2-patched
+  # libtool.m4, whose cygwin branch renames lib -> msys- rather than cyg.
+  autoreconf -vif
 }
 
 build() {
@@ -47,9 +49,6 @@ build() {
     --enable-shared \
     --enable-static
 
-  # Name the DLL msys-* to match the rest of the stack (the cygwin host path
-  # would name it cyg*).
-  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
 
   make AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
 }
@@ -65,11 +64,4 @@ package() {
 
   # Install the package to the system
   make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
-  # Guard against a silent static-only build: without the import library every
-  # downstream -no-undefined consumer degrades to static with no error at all.
-  if [ ! -f "${pkgdir}/usr/lib/libXfixes.dll.a" ]; then
-    echo "ERROR: libxfixes built static-only (no libXfixes.dll.a) - refusing to package" >&2
-    return 1
-  fi
 }

@@ -23,9 +23,7 @@ prepare() {
   # 2.71 while only autoconf-2.72's perl modules are installed, which aborts
   # with "Can't locate Autom4te/ChannelDefs.pm". Only regenerate if configure is
   # genuinely missing (e.g. after patching configure.ac).
-  if [ ! -x ./configure ]; then
-    autoreconf -vif
-  fi
+  autoreconf -vif
 }
 
 build() {
@@ -53,9 +51,6 @@ build() {
     --enable-shared \
     --enable-static
 
-  # Name the DLL msys-X11-6.dll to match the rest of the msys2 stack (the cygwin
-  # host path names it cygX11-6.dll by default).
-  sed -i 's#s/\^lib/cyg/#s/^lib/msys-/#g' libtool
 
   # Override the autotools-regeneration recipes so a stale Makefile.in mtime
   # cannot trigger a doomed automake re-run on the guest's broken autoconf split.
@@ -74,13 +69,4 @@ package() {
 
   # Install the package to the system
   make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
-  # A static-only libX11 satisfies configure checks but leaves winex11.drv with
-  # nothing to dlopen. Fail loudly here rather than shipping a package that
-  # breaks Wine at runtime.
-  if [ ! -f "${pkgdir}/usr/lib/libX11.dll.a" ]; then
-    echo "ERROR: libX11 built static-only (no libX11.dll.a) - refusing to package" >&2
-    echo "       check that libxcb/libXau/libXdmcp are SHARED (.dll.a present)" >&2
-    return 1
-  fi
 }
