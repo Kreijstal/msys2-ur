@@ -11,6 +11,14 @@ depends=('zlib')
 makedepends=('gcc'
              'pkgconf'
              'xorg-util-macros'
+             # configure.ac calls XORG_FONTROOTDIR, which lives in font-util's
+             # fontutil.m4. Without it the autoreconf below fails in aclocal
+             # ("must install X.Org font-util 1.1 or later"), configure is never
+             # regenerated, and the build silently falls back to the tarball's
+             # stock libtool - which names the DLL cygfontenc-1.dll instead of
+             # msys-fontenc-1.dll. That is not a naming nit: libXfont2 records
+             # the name in its import table.
+             'font-util'
              'xorgproto'
              'autoconf'
              'automake'
@@ -29,15 +37,18 @@ prepare() {
 build() {
   cd "${pkgname}-${pkgver}"
 
-  # libtool has no 'msys' case: its Windows branch matches only
-  # cygwin*|mingw*|windows*|pw32*|cegcc*, so an *-msys host (which is what CHOST
-  # is here) falls through to the default branch, which sets
-  # build_libtool_libs=no and an empty library_names_spec - a STATIC ARCHIVE
-  # ONLY, produced silently with configure still exiting 0. The host triple is
-  # what decides; x86_64-pc-cygwin selects the branch with full shared-library
-  # support. --build is passed identically so autoconf does not treat this as a
-  # cross build - CC stays the msys gcc, only libtool's behaviour changes.
-  local _host="x86_64-pc-cygwin"
+  # MSYS2's own /etc/makepkg.conf declares CHOST=x86_64-pc-cygwin for the MSYS
+  # environment: MSYS2 is a Cygwin fork, and its patched libtool.m4 renames
+  # lib -> msys- inside libtool's cygwin branch, so this is the supported path.
+  # Do NOT substitute config.guess's "x86_64-pc-msys" - stock libtool has no msys
+  # case (its Windows branch matches only cygwin*|mingw*|windows*|pw32*|cegcc*),
+  # so an *-msys host falls through to the default branch, which sets
+  # build_libtool_libs=no and an empty library_names_spec. That yields a STATIC
+  # ARCHIVE ONLY, produced silently with configure still exiting 0;
+  # --enable-shared does not override it, the triple decides. --build is passed
+  # identically so autoconf does not read this as a cross build: CC stays the
+  # msys gcc, only libtool's behaviour changes.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
 
   ./configure \
     --prefix=/usr \

@@ -1,0 +1,43 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=font-util
+pkgver=1.4.1
+pkgrel=1
+pkgdesc="X.Org font utilities and the aclocal macros font packages configure against"
+arch=('any')
+url="https://www.x.org/"
+license=('MIT')
+depends=()
+# Bootstrap note: this package exists to provide fontutil.m4, which defines
+# XORG_FONTROOTDIR. Without it, any font package that runs autoreconf dies in
+# aclocal with "must install X.Org font-util 1.1 or later before running
+# autoconf/autogen" - libfontenc did exactly that, so it never regenerated
+# configure and kept shipping a cyg*-named DLL from the tarball's stock libtool.
+makedepends=('gcc' 'make' 'pkgconf' 'xorg-util-macros' 'autoconf' 'automake')
+
+XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
+source=(https://www.x.org/releases/individual/font/${pkgname}-${pkgver}.tar.${XORG_SRC_COMPRESSION})
+sha256sums=('SKIP')  # Replace SKIP with the actual checksum
+
+build() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  ./configure --prefix=/usr \
+    --datadir=/usr/share \
+    --mandir=/usr/share/man
+
+  make
+}
+
+package() {
+  cd ${srcdir}/${pkgname}-${pkgver}
+
+  make DESTDIR=${pkgdir} install
+
+  # The macro file is the entire point of packaging this; if the install layout
+  # ever moves it, every dependent font package silently falls back to its
+  # tarball configure again rather than failing here.
+  [ -f "${pkgdir}/usr/share/aclocal/fontutil.m4" ] || {
+    echo "ERROR: fontutil.m4 not installed - dependents cannot autoreconf" >&2
+    return 1; }
+}
