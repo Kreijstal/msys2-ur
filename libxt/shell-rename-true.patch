@@ -1,0 +1,26 @@
+Rename the local variable 'true' in _XtShellAncestorSensitive.
+
+Shell.c declares a file-local `static Boolean true`, which was legal C when it
+was written. On MSYS2 the toolchain reaches this translation unit with
+<stdbool.h> already in effect (pulled in through the Windows/Cygwin headers),
+where `true` is a macro expanding to 1 - so the declaration becomes
+`static Boolean 1 = True;` and the file does not compile.
+
+Renaming the variable is the whole fix: nothing else refers to it, it has
+internal linkage, and the address handed back through value->addr is unchanged.
+
+--- a/src/Shell.c
++++ b/src/Shell.c
+@@ -1002,10 +1002,10 @@
+ static void
+ _XtShellAncestorSensitive(Widget widget, int closure, XrmValue *value)
+ {
+-    static Boolean true = True;
++    static Boolean true_value = True;
+ 
+     if (widget->core.parent == NULL)
+-        value->addr = (XPointer) (&true);
++        value->addr = (XPointer) (&true_value);
+     else
+         _XtCopyFromParent(widget, closure, value);
+ }

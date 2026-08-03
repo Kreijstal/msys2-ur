@@ -43,8 +43,28 @@ build() {
   mkdir -p ${srcdir}/build
   cd ${srcdir}/build
 
+  # libtool has no 'msys' case: its Windows branch matches only
+  # cygwin*|mingw*|windows*|pw32*|cegcc*, so an *-msys host (the default here)
+  # falls through to the default branch, which sets build_libtool_libs=no and an
+  # empty library_names_spec. The result is a STATIC ARCHIVE ONLY, produced
+  # silently with configure still exiting 0. Note that the --enable-shared that
+  # used to be on this line did NOT prevent that -- the host triple is what
+  # decides, and this package shipped only libdatrie.a because of it.
+  # x86_64-pc-cygwin selects the branch with full shared-library support, and
+  # --build is passed identically so autoconf does not treat this as a cross
+  # build - CC stays the msys gcc, only libtool's behaviour changes.
+  #
+  # The DLL still comes out named msys-* rather than cyg*, because prepare()
+  # regenerates the build system with autoreconf and so picks up MSYS2's patched
+  # libtool.m4, whose cygwin branch renames lib -> msys- instead of cyg.
+  local _host="x86_64-pc-cygwin"
+
   # Configure and build from the build directory
-  ${srcdir}/${pkgname}-${pkgver}/configure --prefix=/usr --enable-shared
+  ${srcdir}/${pkgname}-${pkgver}/configure --prefix=/usr \
+    --build=${_host} \
+    --host=${_host} \
+    --enable-shared \
+    --enable-static
   make ${MAKEOPTS}
 }
 
@@ -63,4 +83,15 @@ package() {
 
   # Install the library and headers to the package directory
   make install DESTDIR=${pkgdir}
+
+  # A libtool static-only degradation is silent: configure and make both still
+  # exit 0, so nothing above this line can fail on it. Assert on the artifacts
+  # instead, or a static-only regression ships unnoticed and every dependent
+  # package (libthai, and pango above it) quietly goes static along with it.
+  for _l in datrie; do
+    [ -f "${pkgdir}/usr/lib/lib${_l}.dll.a" ] || {
+      echo "ERROR: lib${_l} built static-only (no import library)" >&2; return 1; }
+    ls "${pkgdir}"/usr/bin/msys-${_l}-*.dll >/dev/null 2>&1 || {
+      echo "ERROR: lib${_l} built static-only (no DLL)" >&2; return 1; }
+  done
 }
