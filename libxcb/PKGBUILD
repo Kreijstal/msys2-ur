@@ -34,20 +34,27 @@ build() {
 
  CYGCONF_ARGS="--enable-composite --enable-damage --enable-dbe --enable-dpms --enable-dri2 --enable-glx --enable-randr --enable-record --enable-render --enable-res --enable-screensaver --enable-shape --enable-shm --enable-sync --enable-xfixes --enable-xinerama --enable-xinput --enable-xkb --enable-xtest --enable-present --enable-shared --enable-static"
 
- # Force the Cygwin host triple. libtool has no msys case
+ # Use MSYS2's declared host triple ($CHOST). libtool has no msys case
  # (deplibs_check_method=unknown, build_libtool_libs=no for host_os=msys), so
  # letting config.sub canonicalise to *-msys yields a STATIC-ONLY libxcb - and
  # since every X library above it links -no-undefined against -lxcb, libtool
  # then silently degrades libX11, libXext, ... to static as well. That is
  # useless to Wine: winex11.drv dlopens the shared libX11 at runtime.
- # x86_64-pc-cygwin gives host_os=cygwin, where libtool has full shared support.
+ # $CHOST gives host_os=cygwin, where libtool has full shared support.
  # --build is passed identically so autoconf does not consider this a cross
  # build, and CC stays the msys gcc - only libtool's naming/behaviour follows
  # the cygwin path. The 1.16-no-pthread-stubs.patch already exempts cygwin*
  # from the pthread-stubs requirement, which this triple selects.
+ # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+ # /etc/makepkg.conf (straight from the pacman package) sets
+ # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+ # file hardcoded x86_64-pc-msys, which is precisely what produced the
+ # static-only build described above.
+ local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
+
  ./configure --prefix=/usr \
-   --build=x86_64-pc-cygwin \
-   --host=x86_64-pc-cygwin \
+   --build=${_host} \
+   --host=${_host} \
    ${CYGCONF_ARGS}
 
 

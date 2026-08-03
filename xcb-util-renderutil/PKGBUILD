@@ -33,10 +33,15 @@ build() {
   # is here) falls through to the default branch, which sets
   # build_libtool_libs=no and an empty library_names_spec - a STATIC ARCHIVE
   # ONLY, produced silently with configure still exiting 0. The host triple is
-  # what decides; x86_64-pc-cygwin selects the branch with full shared-library
+  # what decides; $CHOST selects the branch with full shared-library
   # support. --build is passed identically so autoconf does not treat this as a
   # cross build - CC stays the msys gcc, only libtool's behaviour changes.
-  local _host="x86_64-pc-cygwin"
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
 
   ./configure \
     --prefix=/usr \

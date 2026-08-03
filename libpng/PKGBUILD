@@ -20,7 +20,7 @@ prepare() {
 build() {
   cd "$srcdir/$pkgname-$pkgver"
 
-  # Force the Cygwin host triple. libtool has no host_os=msys case: an *-msys
+  # Use MSYS2's declared host triple ($CHOST). libtool has no host_os=msys case: an *-msys
   # host falls through to the default branch, sets build_libtool_libs=no and
   # emits a STATIC ARCHIVE ONLY - silently, with configure still exiting 0. The
   # host triple is decisive; --enable-shared cannot override it.
@@ -32,11 +32,18 @@ build() {
   # freetype links libpng, and libtool degrades a -no-undefined library to
   # static whenever a dependency lacks a .dll.a - so a static libpng would drag
   # freetype down with it.
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
+
   ./configure \
     --prefix=/usr \
     --libdir=/usr/lib \
-    --build=x86_64-pc-cygwin \
-    --host=x86_64-pc-cygwin \
+    --build=${_host} \
+    --host=${_host} \
     --enable-shared \
     --enable-static
 

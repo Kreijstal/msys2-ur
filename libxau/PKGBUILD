@@ -26,16 +26,23 @@ prepare() {
 build() {
   cd ${srcdir}/libXau-${pkgver}
 
-  # Force the Cygwin host triple. --enable-shared alone is NOT enough: libtool
+  # Use MSYS2's declared host triple ($CHOST). --enable-shared alone is NOT enough: libtool
   # has no msys case, so for host_os=msys it sets build_libtool_libs=no,
   # library_names_spec="" and deplibs_check_method=unknown, and emits a static
   # archive only -- silently, with configure still exiting 0. Verified against
   # the real tarballs: msys triple + --enable-shared => build_libtool_libs=no;
-  # x86_64-pc-cygwin => build_libtool_libs=yes, library_names_spec=$libname.dll.a.
+  # $CHOST => build_libtool_libs=yes, library_names_spec=$libname.dll.a.
   # Without libXau.dll.a here, libxcb (which links -lXau with -no-undefined)
   # degrades to static too, and that cascades all the way to libX11.
   # --build matches --host so this is not treated as a cross build and CC stays
   # the msys gcc; only libtool's naming/behaviour follows the cygwin path.
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
+
   ./configure --prefix=/usr \
     --libdir=/usr/lib \
     --sysconfdir=/etc \
@@ -43,8 +50,8 @@ build() {
     --datadir=/usr/share \
     --mandir=/usr/share/man \
     --infodir=/usr/share/info \
-    --build=x86_64-pc-cygwin \
-    --host=x86_64-pc-cygwin \
+    --build=${_host} \
+    --host=${_host} \
     --enable-shared \
     --enable-static
 

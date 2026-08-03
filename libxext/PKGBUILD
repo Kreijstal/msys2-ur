@@ -27,17 +27,24 @@ prepare() {
 build() {
   cd ${srcdir}/${urlpkgname}-${pkgver}
 
-  # Force the Cygwin host triple. libtool has no msys case: for an *-msys host
+  # Use MSYS2's declared host triple ($CHOST). libtool has no msys case: for an *-msys host
   # it falls through to the default branch and sets build_libtool_libs=no with
   # an empty library_names_spec, so it emits a STATIC ARCHIVE ONLY - silently,
   # with configure still exiting 0. --enable-shared does not override this; the
-  # host triple is decisive. x86_64-pc-cygwin selects the branch that has full
+  # host triple is decisive. $CHOST selects the branch that has full
   # shared-library support. --build is passed identically so autoconf does not
   # treat this as a cross build, and CC stays the msys gcc; only libtool's
   # naming and behaviour follow the cygwin path.
   #
   # This is not cosmetic: winex11.drv dlopens SONAME_LIBXEXT at runtime, so a static
   # build satisfies Wine's configure and then fails to load with no diagnostic.
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
+
   ./configure --prefix=/usr \
     --libdir=/usr/lib \
     --sysconfdir=/etc \
@@ -45,8 +52,8 @@ build() {
     --datadir=/usr/share \
     --mandir=/usr/share/man \
     --infodir=/usr/share/info \
-    --build=x86_64-pc-cygwin \
-    --host=x86_64-pc-cygwin \
+    --build=${_host} \
+    --host=${_host} \
     --enable-shared \
     --enable-static
 

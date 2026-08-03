@@ -25,16 +25,23 @@ prepare() {
 build() {
   cd ${srcdir}/libXdmcp-${pkgver}
 
-  # Force the Cygwin host triple. The guest's libtool has no msys case
+  # Use MSYS2's declared host triple ($CHOST). The guest's libtool has no msys case
   # (deplibs_check_method=unknown, build_libtool_libs=no for host_os=msys), so a
   # modern config.sub that canonicalises the host to *-msys yields a static-only
-  # build. x86_64-pc-cygwin gives host_os=cygwin, where libtool has full shared
+  # build. $CHOST gives host_os=cygwin, where libtool has full shared
   # support. The compiler stays the msys gcc (CC=gcc), so the DLL still links
   # msys-2.0.dll — only libtool's naming/behaviour follows the cygwin path, which
   # we then re-prefix from cyg- to msys- below.
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
+
   ./configure --prefix=/usr \
-    --build=x86_64-pc-cygwin \
-    --host=x86_64-pc-cygwin \
+    --build=${_host} \
+    --host=${_host} \
     --enable-shared --enable-static
 
 

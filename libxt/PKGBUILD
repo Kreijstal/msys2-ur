@@ -35,7 +35,7 @@ build() {
   # default branch, which sets build_libtool_libs=no and an empty
   # library_names_spec. The result is a STATIC ARCHIVE ONLY, produced silently
   # with configure still exiting 0; --enable-shared does not override it, the
-  # host triple is what decides. x86_64-pc-cygwin selects the branch with full
+  # host triple is what decides. $CHOST selects the branch with full
   # shared-library support, and --build is passed identically so autoconf does
   # not treat this as a cross build - CC stays the msys gcc, only libtool's
   # behaviour changes.
@@ -43,7 +43,12 @@ build() {
   # The DLL still comes out named msys-* rather than cyg*, because prepare()
   # regenerates configure with autoreconf and so picks up MSYS2's patched
   # libtool.m4, whose cygwin branch renames lib -> msys- instead of cyg.
-  local _host="x86_64-pc-cygwin"
+  # The triple is $CHOST, MSYS2's own declaration for this environment: stock
+  # /etc/makepkg.conf (straight from the pacman package) sets
+  # CHOST=x86_64-pc-cygwin. Never hardcode one here - an earlier revision of this
+  # file hardcoded x86_64-pc-msys, which is precisely what produced the
+  # static-only build described above.
+  local _host="${CHOST:?CHOST unset - /etc/makepkg.conf was not sourced}"
 
   ./configure --prefix=/usr \
     --libdir=/usr/lib \
