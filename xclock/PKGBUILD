@@ -1,0 +1,44 @@
+# Maintainer: kreijstal <kreijstal@hotmail.com>
+
+pkgname=xclock
+pkgver=1.2.1
+pkgrel=1
+pkgdesc="Classic analog and digital clock for the X Window System"
+arch=('x86_64')
+url="https://gitlab.freedesktop.org/xorg/app/xclock"
+license=('spdx:MIT')
+depends=('libx11'
+         'libxaw'
+         'libxmu'
+         'libxt')
+makedepends=('gcc'
+             'make'
+             'pkgconf'
+             'xorg-util-macros'
+             'xorgproto')
+source=("https://xorg.freedesktop.org/archive/individual/app/${pkgname}-${pkgver}.tar.xz")
+sha256sums=('e326cac20f7ad2af5412b9c4b70b1c3d392e08cd3cc6246e0a77b7c3935a4851')
+
+build() {
+  cd "${pkgname}-${pkgver}"
+
+  ./configure \
+    --prefix=/usr \
+    --build="${CHOST}" \
+    --host="${CHOST}" \
+    --without-xft \
+    --without-xkb
+
+  make
+}
+
+check() {
+  cd "${pkgname}-${pkgver}"
+  make check
+}
+
+package() {
+  cd "${pkgname}-${pkgver}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 COPYING "${pkgdir}/usr/share/licenses/${pkgname}/COPYING"
+}
