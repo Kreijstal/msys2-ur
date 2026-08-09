@@ -24,6 +24,44 @@
 
 ---
 
+## Using the Binary Package Repository
+
+Prebuilt packages and the pacman database are published together in the
+[`x11-shared-20260731`](https://github.com/Kreijstal/msys2-ur/releases/tag/x11-shared-20260731)
+release. Add this repository to `/etc/pacman.conf`:
+
+```ini
+[msys2ur]
+SigLevel = Optional TrustAll
+Server = https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731
+```
+
+Refresh the package databases:
+
+```bash
+pacman -Sy
+```
+
+Install packages by their environment-specific names. For example, bchunk is
+available for MINGW64, UCRT64, and CLANG64:
+
+```bash
+# MINGW64
+pacman -S mingw-w64-x86_64-bchunk
+
+# UCRT64
+pacman -S mingw-w64-ucrt-x86_64-bchunk
+
+# CLANG64
+pacman -S mingw-w64-clang-x86_64-bchunk
+```
+
+The repository is currently unsigned, which is why the configuration uses
+`SigLevel = Optional TrustAll`. Review package recipes and release assets before
+installation.
+
+---
+
 ## Contributing
 
 1. **Fork the Repository**
