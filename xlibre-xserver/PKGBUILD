@@ -3,7 +3,7 @@
 pkgbase=xlibre-xserver
 pkgname=('xlibre-xserver' 'xlibre-xserver-common' 'xlibre-xserver-extra' 'xlibre-xserver-devel' 'xlibre-xserver-xorg' 'xlibre-xwinclip')
 pkgver=25.0.0.22
-pkgrel=1
+pkgrel=2
 pkgdesc="XLibre X server"
 arch=('x86_64')
 url="https://github.com/X11Libre/xserver"
@@ -138,7 +138,15 @@ build() {
 
 package_xlibre-xserver() {
   pkgdesc="XLibre XWin X server for MSYS2"
-  depends=('bash' 'xlibre-xserver-common')
+  # Every DLL the binaries import must be a declared runtime dependency, or
+  # the server dies at load exactly like the earlier libx11-without-libxcb bug
+  # ("msys-pixman-1-0.dll not found"). XWin.exe links shared xcb (core plus
+  # composite/xfixes from libxcb, util/image/ewmh/icccm from the xcb-util
+  # packages), libXfont2, libXau/libXdmcp, pixman and libgcc; X.exe adds
+  # libxcvt. libfontenc/zlib/bzip2/freetype come transitively via libxfont2.
+  depends=('bash' 'xlibre-xserver-common'
+           'gcc-libs' 'libxau' 'libxcb' 'libxcvt' 'libxdmcp' 'libxfont2'
+           'pixman' 'xcb-util' 'xcb-util-image' 'xcb-util-wm')
   provides=('xorg-server')
   conflicts=('xorg-server')
 
@@ -184,7 +192,10 @@ package_xlibre-xserver-common() {
 
 package_xlibre-xserver-extra() {
   pkgdesc="XLibre Xnest and Xvfb servers"
-  depends=('bash' 'xlibre-xserver-common')
+  # Xvfb.exe imports msys-Xau-6.dll, msys-Xdmcp-6.dll, msys-Xfont2-2.dll,
+  # msys-pixman-1-0.dll and msys-gcc_s-seh-1.dll (no xcb or libxcvt here).
+  depends=('bash' 'xlibre-xserver-common'
+           'gcc-libs' 'libxau' 'libxdmcp' 'libxfont2' 'pixman')
   provides=('xorg-server-extra')
   conflicts=('xorg-server-extra')
 
@@ -232,7 +243,11 @@ package_xlibre-xserver-devel() {
 
 package_xlibre-xserver-xorg() {
   pkgdesc="XLibre modular X server"
-  depends=('xlibre-xserver-common')
+  # Xorg.exe and its modules import msys-Xau-6.dll, msys-Xdmcp-6.dll,
+  # msys-Xfont2-2.dll, msys-pixman-1-0.dll, msys-xcvt-0.dll and
+  # msys-gcc_s-seh-1.dll.
+  depends=('xlibre-xserver-common'
+           'gcc-libs' 'libxau' 'libxcvt' 'libxdmcp' 'libxfont2' 'pixman')
   provides=('xorg-server-xorg' 'xserver-video-abi28')
   conflicts=('xorg-server-xorg')
 

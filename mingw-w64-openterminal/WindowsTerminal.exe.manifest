@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  WindowsTerminal.exe hosts its UI through XAML Islands. Windows.UI.Xaml.Hosting
+  gates that on the host process declaring a tested Windows version, and refuses
+  an undeclared one with E_UNEXPECTED and the message:
+
+    WindowsXamlManager and DesktopWindowXamlSource are supported for apps
+    targeting Windows version 10.0.18226.0 and later.  Please check either the
+    application manifest or package manifest and ensure the MaxTestedVersion
+    property is updated.
+
+  The bundled exe carries no embedded manifest of any kind, so this external one
+  supplies the declaration. Windows only consults <exe>.manifest when the binary
+  has no embedded RT_MANIFEST, which holds here, and it caches the activation
+  context against the exe's timestamp - so an already-run copy needs its exe
+  touched before a newly added manifest takes effect. On a fresh install both
+  files arrive together and that does not arise.
+
+  Upstream this belongs in the link step (`link /MANIFEST:EMBED
+  /MANIFESTINPUT:...`, as phase3/harness/xaml_probe.manifest already is);
+  this file only patches a bundle that is repackaged rather than relinked.
+-->
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+  <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">
+    <application>
+      <!-- Windows 10 -->
+      <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"/>
+      <maxversiontested Id="10.0.22621.0"/>
+    </application>
+  </compatibility>
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+    </windowsSettings>
+  </application>
+</assembly>

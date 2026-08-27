@@ -1,0 +1,107 @@
+# Maintainer: OpenTerminal MSYS2 packagers
+
+_realname=openterminal
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.1.0.r224.gc106ed9
+pkgrel=3
+_commit=c106ed9d3ccead9c4c44542617b2a3abfdf289cb
+_bundle="${_realname}-${_commit}-ucrt64.tar.zst"
+_release="x11-shared-20260731"
+# OpenTerminal's own XAML runtime (phase3/xamlcore), cross-compiled from the
+# same pinned commit with mingw-w64 GCC:
+#     python3 -B phase3/scripts/build_xamlcore.py --dll-only --no-xvfb
+_xamlcore="openxaml-${_commit}.dll"
+pkgdesc="Experimental open-toolchain Windows Terminal research deployment (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url="https://github.com/Kreijstal/openterminal"
+msys2_repository_url="${url}"
+license=('custom' 'Apache-2.0' 'BSD-2-Clause' 'BSD-3-Clause' 'CC-BY-ND-4.0' 'ICU' 'MIT' 'OFL-1.1' 'Unlicense')
+options=('!strip' '!debug')
+source=(
+  "${_realname}-${_commit}.tar.gz::${url}/archive/${_commit}/${_realname}-${_commit}.tar.gz"
+  "${_bundle}::https://github.com/Kreijstal/msys2-ur/releases/download/${_release}/${_bundle}"
+  "${_xamlcore}::https://github.com/Kreijstal/msys2-ur/releases/download/${_release}/${_xamlcore}"
+  'WindowsTerminal.exe.manifest'
+  'openterminal'
+  'openterminal.cmd'
+  'README.package.md'
+  '0001-declare-smoke-resource-scope.patch'
+)
+sha256sums=(
+  '05ac5aec43fb93c43a474821567bdec6d25fb59b4b6da4f915a87d2da50b6259'
+  '3984d9429744fe1367d9e4b8c24dbe1d8daaa49b9296c12b0af3e123916253ca'
+  '48f657b4c4aaedf711947e0b0c51724e433242108f45904e1a0d18b2b4e19be7'
+  '4fd2ada184a39aa70ba0de83c8476328b950583456df3beda6bd62dab63c1039'
+  'ff88c1c31a0f96437bc89d73bea58c9e92dc01193c9ad19f6ac00670915a9069'
+  '8949d57fba8f64cbd7b2bedd9b99d1ad926e72c4fdc74a92a5e8614b95dc1bf3'
+  'a9229d0c6a20a3d3cb38657833a88e93270573f47560d6dcf4f495b8f3d738ea'
+  '7ed406b31ee0824162a0d3bcc55146050a5bd93c28092d18eed4f45a70ed18f2'
+)
+
+prepare() {
+  patch -d "${srcdir}/${_realname}-${_commit}" -p1 \
+    < "${srcdir}/0001-declare-smoke-resource-scope.patch"
+}
+
+package() {
+  local bundle="${srcdir}/openterminal-bundle"
+  local appdir="${pkgdir}${MINGW_PREFIX}/lib/${_realname}"
+
+  if [[ ! -f "${bundle}/BUNDLE-MANIFEST.sha256" ]]; then
+    error "OpenTerminal bundle has no integrity manifest"
+    return 1
+  fi
+  if ! (cd "${bundle}" && sha256sum --check --quiet BUNDLE-MANIFEST.sha256); then
+    error "OpenTerminal bundle failed its integrity manifest"
+    return 1
+  fi
+
+  install -d "${appdir}"
+  local path
+  for path in "${bundle}"/*; do
+    cp -a "${path}" "${appdir}/"
+  done
+
+  # WindowsTerminal.exe activates nine Microsoft.UI.Xaml (WinUI 2) classes,
+  # starting with Microsoft.UI.Xaml.XamlTypeInfo.XamlControlsXamlMetaDataProvider.
+  # WinUI 2 is not an OS component, so an unpackaged process gets
+  # REGDB_E_CLASSNOTREG from RoGetActivationFactory and dies before its first
+  # window with 'winrt::hresult_class_not_registered'. C++/WinRT's fallback then
+  # trims the class name and LoadLibrary()s the namespace-named DLL, which is why
+  # this is installed under the lookup name rather than its own: the name is the
+  # activation key, not a claim of provenance. Registering openxaml.dll under its
+  # real name through a registration-free WinRT <activatableClass> manifest does
+  # not work here - an external WindowsTerminal.exe.manifest does not populate the
+  # WinRT activation context, and the exe carries no embedded manifest to put the
+  # entries in. Windows.UI.Xaml.* keeps resolving to the system implementation,
+  # since the fallback only runs for classes the OS could not resolve.
+  install -Dm755 "${srcdir}/${_xamlcore}" \
+    "${appdir}/Microsoft.UI.Xaml.dll"
+
+  # The exe carries no embedded RT_MANIFEST, and XAML Islands refuses to start
+  # for a host process that declares no maxversiontested: WindowsXamlManager
+  # ::InitializeForCurrentThread() fails E_UNEXPECTED with "supported for apps
+  # targeting Windows version 10.0.18226.0 and later". Windows reads
+  # <exe>.manifest only when there is no embedded one, which is the case here.
+  install -Dm644 "${srcdir}/WindowsTerminal.exe.manifest" \
+    "${appdir}/WindowsTerminal.exe.manifest"
+
+  install -Dm755 "${srcdir}/openterminal" \
+    "${pkgdir}${MINGW_PREFIX}/bin/openterminal"
+  install -Dm755 "${srcdir}/openterminal.cmd" \
+    "${pkgdir}${MINGW_PREFIX}/bin/openterminal.cmd"
+  install -Dm644 "${srcdir}/README.package.md" \
+    "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.package.md"
+  install -Dm644 "${srcdir}/${_realname}-${_commit}/README.md" \
+    "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.md"
+
+  if [[ ! -d "${bundle}/licenses" ]]; then
+    error "OpenTerminal bundle has no license directory"
+    return 1
+  fi
+  install -d "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+  install -m644 "${bundle}/licenses"/* \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/"
+}

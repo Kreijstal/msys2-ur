@@ -1,0 +1,13 @@
+diff --git a/phase2/CMakeLists.txt b/phase2/CMakeLists.txt
+index 209079b..bf86f1a 100644
+--- a/phase2/CMakeLists.txt
++++ b/phase2/CMakeLists.txt
+@@ -2275,6 +2275,8 @@ target_link_options(openterminal_terminal_control_projection_smoke PRIVATE
+ add_executable(openterminal_terminal_control_model_smoke
+     tests/terminal_control_model_smoke.cpp)
+ configure_terminal_target(openterminal_terminal_control_model_smoke)
++configure_terminal_resource_scope(openterminal_terminal_control_model_smoke
++    "OpenTerminal.Tests/Resources")
+ target_compile_definitions(openterminal_terminal_control_model_smoke PRIVATE
+     WINRT_LEAN_AND_MEAN)
+ target_compile_options(openterminal_terminal_control_model_smoke PRIVATE -mcx16)

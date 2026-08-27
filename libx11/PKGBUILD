@@ -3,12 +3,15 @@
 pkgname=libx11
 urlpkgname=libX11
 pkgver=1.8.8
-pkgrel=1
+pkgrel=2
 pkgdesc="X Window System client-side library"
 arch=('i686' 'x86_64')
 url="https://www.x.org/"
 license=('MIT')
-depends=()
+# msys-X11-6.dll imports msys-xcb-1.dll, so libxcb is a hard runtime
+# dependency; without it pacman installs libx11 alone and every X client
+# fails to load with "msys-xcb-1.dll not found".
+depends=('libxcb')
 makedepends=('xtrans' 'autoconf' 'automake' 'libtool' 'gcc' 'ccache')
 
 XORG_SRC_COMPRESSION=${XORG_SRC_COMPRESSION:-xz}
@@ -76,4 +79,15 @@ package() {
 
   # Install the package to the system
   make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
+
+  # A libtool static-only degradation is silent: configure and make both still
+  # exit 0, so nothing above this line can fail on it. Assert on the artifacts
+  # instead, or a static-only regression ships unnoticed and every dependent
+  # package quietly goes static along with it.
+  for _l in X11 X11-xcb; do
+    [ -f "${pkgdir}/usr/lib/lib${_l}.dll.a" ] || {
+      echo "ERROR: lib${_l} built static-only (no import library)" >&2; return 1; }
+    ls "${pkgdir}"/usr/bin/msys-${_l}-*.dll >/dev/null 2>&1 || {
+      echo "ERROR: lib${_l} built static-only (no DLL)" >&2; return 1; }
+  done
 }

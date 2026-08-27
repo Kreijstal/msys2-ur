@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+set -e
+
+appdir="${MINGW_PREFIX:-$(dirname "$0")/..}/lib/openterminal"
+appdir="$(cd "$appdir" && pwd)"
+cd "$appdir"
+exec ./WindowsTerminal.exe "$@"
