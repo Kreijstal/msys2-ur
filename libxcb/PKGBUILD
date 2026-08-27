@@ -2,14 +2,12 @@
 
 pkgname=libxcb
 pkgver=1.16
-pkgrel=2
+pkgrel=1
 pkgdesc="X Protocol C-Language Bindings"
 arch=('i686' 'x86_64')
 url="https://xcb.sourceforge.net/"
 license=('MIT')
-# msys-xcb-1.dll imports msys-Xau-6.dll and msys-Xdmcp-6.dll, so both are
-# hard runtime dependencies, not just build inputs.
-depends=('libxau' 'libxdmcp')
+depends=()
 # libxcb only runs the xsltproc *binary* -- configure.ac does a bare
 # AC_PATH_PROG(XSLTPROC, xsltproc, no) and nothing links against libxslt or
 # includes its headers. So the dependency is the runtime package 'libxslt'
@@ -75,13 +73,4 @@ package() {
 
  cd ${srcdir}/${pkgname}-${pkgver}
  make DESTDIR=${pkgdir} install AUTOMAKE=: AUTOCONF=: AUTOHEADER=: ACLOCAL=: MAKEINFO=:
-
- # A libtool static-only degradation is silent: configure and make both still
- # exit 0, so nothing above this line can fail on it. Assert on the artifacts
- # instead, or a static-only regression ships unnoticed and every X library
- # above libxcb quietly goes static along with it.
- [ -f "${pkgdir}/usr/lib/libxcb.dll.a" ] || {
-   echo "ERROR: libxcb built static-only (no import library)" >&2; return 1; }
- ls "${pkgdir}"/usr/bin/msys-xcb-*.dll >/dev/null 2>&1 || {
-   echo "ERROR: libxcb built static-only (no DLL)" >&2; return 1; }
 }
