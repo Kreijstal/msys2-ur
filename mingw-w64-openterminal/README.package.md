@@ -43,6 +43,11 @@ consults `<exe>.manifest` only when the binary carries no embedded one, which is
 what makes the external file work here; upstream the declaration belongs in the
 link step, as `phase3/harness/xaml_probe.manifest` already is for the probes.
 
+Windows system components are deliberately not bundled or replaced. In
+particular, the package does not ship `d2d1.dll`, `d3dcompiler_47.dll`,
+`Windows.UI.Xaml.dll`, or API-set forwarding DLLs; normal Windows resolves
+those components from the operating system.
+
 With both files in place the process gets through WinUI 2 activation and through
 XAML Islands initialization, and then stops in `App::InitializeComponent()`:
 `Application::LoadComponent` on `TerminalApp/App.xbf` fails `0x802B000A`. That is
