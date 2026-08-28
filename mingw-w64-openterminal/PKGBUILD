@@ -4,7 +4,7 @@ _realname=openterminal
 pkgbase=mingw-w64-${_realname}
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=0.1.0.r230.g3be31d6
-pkgrel=1
+pkgrel=2
 _commit=3be31d67b0d4a0f3067e28b3ce85b0751e3b4d29
 _bundle="${_realname}-${_commit}-ucrt64.tar.zst"
 _release="openterminal-windows-20260828"
@@ -20,6 +20,7 @@ url="https://github.com/Kreijstal/openterminal"
 msys2_repository_url="${url}"
 license=('custom' 'Apache-2.0' 'BSD-2-Clause' 'BSD-3-Clause' 'CC-BY-ND-4.0' 'ICU' 'MIT' 'OFL-1.1' 'Unlicense')
 options=('!strip' '!debug')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs")
 source=(
   "${_realname}-${_commit}.tar.gz::${url}/archive/${_commit}/${_realname}-${_commit}.tar.gz"
   "${_bundle}::https://github.com/Kreijstal/msys2-ur/releases/download/${_release}/${_bundle}"
@@ -33,8 +34,8 @@ sha256sums=(
   'd241720b40d1e386d00e904c30ba0ecdb948e94dacf0811ffd1658fa4a52e2eb'
   '7d6adac0e7ecb4203b5558daadb0ba2102033090683174d60a232fe8a9f265ba'
   'da7e7013a92039878af13e068f7bc3d02bb77c22fa1e1ade9714d1e43d29106e'
-  'ff88c1c31a0f96437bc89d73bea58c9e92dc01193c9ad19f6ac00670915a9069'
-  '8949d57fba8f64cbd7b2bedd9b99d1ad926e72c4fdc74a92a5e8614b95dc1bf3'
+  '119cc6954d75aebe775e8d616aeb263324d0c9d0ff034abfa1fda685ef046b55'
+  'dac3d423d35ce1ce891042490fba73245f69cae870bc26ab3d7adaf68382b510'
   'f6c21ce1e8de5acb6a7578ac26004808eef2317a1124c36fa7a32eca19ee4a24'
   '7ed406b31ee0824162a0d3bcc55146050a5bd93c28092d18eed4f45a70ed18f2'
 )
@@ -60,6 +61,9 @@ package() {
   install -d "${appdir}"
   local path
   for path in "${bundle}"/*; do
+    case "${path##*/}" in
+      libgcc_s_seh-1.dll|libstdc++-6.dll|libwinpthread-1.dll) continue ;;
+    esac
     cp -a "${path}" "${appdir}/"
   done
 

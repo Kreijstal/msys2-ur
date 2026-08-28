@@ -3,5 +3,7 @@ set -e
 
 appdir="${MINGW_PREFIX:-$(dirname "$0")/..}/lib/openterminal"
 appdir="$(cd "$appdir" && pwd)"
+PATH="${MINGW_PREFIX:-$(dirname "$0")/..}/bin:$PATH"
+export PATH
 cd "$appdir"
 exec ./WindowsTerminal.exe "$@"
