@@ -25,8 +25,8 @@ pinned source snapshot's native smoke-test build. The bundle integrity manifest
 binds every deployed file and path to the package checksum.
 
 Beside the bundle the package installs `Microsoft.UI.Xaml.dll`, which is
-OpenTerminal's own `phase3/xamlcore` runtime cross-compiled from the same pinned
-commit with mingw-w64 GCC. No Microsoft binary is redistributed. `WindowsTerminal.exe`
+OpenTerminal's own `phase3/xamlcore` runtime cross-compiled from the separately
+pinned `_xaml_commit` with mingw-w64 GCC. No Microsoft binary is redistributed. `WindowsTerminal.exe`
 activates nine WinUI 2 classes that are not part of Windows, so without this the
 process aborts before its first window with
 `winrt::hresult_class_not_registered`. The file carries the lookup name rather
