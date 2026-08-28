@@ -34,14 +34,12 @@ than its own because C++/WinRT finds an unregistered class by trimming the class
 name and loading the namespace-named DLL; `Windows.UI.Xaml.*` still resolves to
 the system implementation.
 
-The package also installs `WindowsTerminal.exe.manifest` beside the exe. The
-bundled exe has no embedded manifest of any kind, and XAML Islands refuses to
-start for a host process that declares no tested Windows version:
+The bundled `WindowsTerminal.exe` carries an embedded type-24 manifest. XAML
+Islands refuses to start for a host process that declares no tested Windows version:
 `WindowsXamlManager::InitializeForCurrentThread()` fails `E_UNEXPECTED` with
-"supported for apps targeting Windows version 10.0.18226.0 and later". Windows
-consults `<exe>.manifest` only when the binary carries no embedded one, which is
-what makes the external file work here; upstream the declaration belongs in the
-link step, as `phase3/harness/xaml_probe.manifest` already is for the probes.
+"supported for apps targeting Windows version 10.0.18226.0 and later". Embedding
+the Windows 10 and `maxversiontested` declarations in the link target avoids the
+sidecar-manifest activation-context cache that caused this failure on Windows 11.
 
 Windows system components are deliberately not bundled or replaced. In
 particular, the package does not ship `d2d1.dll`, `d3dcompiler_47.dll`,
