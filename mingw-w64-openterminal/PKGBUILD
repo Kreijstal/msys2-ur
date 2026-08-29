@@ -3,15 +3,15 @@
 _realname=openterminal
 pkgbase=mingw-w64-${_realname}
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
-pkgver=0.1.0.r235.g1b9b3c1
+pkgver=0.1.0.r237.gf7032ba
 pkgrel=1
 _commit=1b9b3c11e8d5b8049dd02acc6885728e5ca94eed
 _bundle="${_realname}-${_commit}-ucrt64.tar.zst"
 _release="openterminal-windows-20260828"
 # OpenTerminal's own XAML runtime (phase3/xamlcore), cross-compiled from the
-# same pinned commit with mingw-w64 GCC:
+# exact source commit below with mingw-w64 GCC:
 #     python3 -B phase3/scripts/build_xamlcore.py --dll-only --no-xvfb
-_xaml_commit=41a12a5c9fba89491b4ba1fffd98eb08ba0b3571
+_xaml_commit=f7032ba03f48ed01d21eb0182f9aeebd607a3012
 _xamlcore="openxaml-${_xaml_commit}.dll"
 pkgdesc="Experimental open-toolchain Windows Terminal research deployment (mingw-w64)"
 arch=('any')
@@ -33,7 +33,7 @@ source=(
 sha256sums=(
   'c1381a0eb286cf519e768d11e97c7d7a0cbcdac02595168afdd68c6aac30fcda'
   'd404a657a4ca584a361d13cc5e5e77e263c5ff531e4d6aebdf319a224d554e2d'
-  '0e7254ec19b308ca0d48becb280dfc12d7db6ffec8f6d270db141c9ad275bd3f'
+  '561199b16e5f791a6f209e36af3b042c0100f1981f681216df89d60be4ed000d'
   '119cc6954d75aebe775e8d616aeb263324d0c9d0ff034abfa1fda685ef046b55'
   'dac3d423d35ce1ce891042490fba73245f69cae870bc26ab3d7adaf68382b510'
   'f6c21ce1e8de5acb6a7578ac26004808eef2317a1124c36fa7a32eca19ee4a24'
