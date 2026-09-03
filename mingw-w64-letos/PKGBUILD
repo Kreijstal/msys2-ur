@@ -1,0 +1,126 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=letos
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=4.0.3
+pkgrel=1
+pkgdesc="SQLite database manager, formerly SQLiteStudio (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url='https://github.com/pawelsalawa/letos'
+msys2_repository_url='https://github.com/pawelsalawa/letos'
+msys2_changelog_url='https://github.com/pawelsalawa/letos/blob/master/ChangeLog.md'
+msys2_references=(
+  'archlinux: sqlitestudio'
+)
+# GPL-3.0-only plus the upstream OpenSSL linking exception, see LICENSE.
+license=('custom:GPL-3.0-only-with-OpenSSL-exception')
+depends=("${MINGW_PACKAGE_PREFIX}-qt6-base"
+         "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+         "${MINGW_PACKAGE_PREFIX}-qt6-tools"
+         "${MINGW_PACKAGE_PREFIX}-sqlite3"
+         "${MINGW_PACKAGE_PREFIX}-tcl")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python")
+optdepends=("${MINGW_PACKAGE_PREFIX}-qt6-imageformats: TIFF/TGA/WBMP support in the image cell editor"
+            "${MINGW_PACKAGE_PREFIX}-python: Python scripting plugin (the DLL is loaded at runtime)")
+source=("${_realname}-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('6d0e8d030dce90e1363ebd73399bc5970c079186bc72b6e83695b136ae6b385a')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+
+  # dirs.cmake flattens the install tree for *any* WIN32 build -- exe, DLLs and
+  # a plugins/ dir all land straight in ${CMAKE_INSTALL_PREFIX}. That is the
+  # portable-bundle layout; for a pacman package we want the same bin/lib/share
+  # split the non-portable branch already produces, so let WITH_PORTABLE alone
+  # decide. Everything else in that branch is keyed off the dirs it sets.
+  sed -i 's/^if(WITH_PORTABLE OR WIN32)$/if(WITH_PORTABLE)/' Letos/cmake/dirs.cmake
+  grep -q '^if(WITH_PORTABLE)$' Letos/cmake/dirs.cmake
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # WITH_PORTABLE defaults to ON on Windows. Besides the flattened layout it
+  # defines PORTABLE_CONFIG, which makes the app keep its config next to the
+  # executable and report itself as a portable install; OS_MANAGED is what a
+  # distro package wants. It also drags in the in-app updater by default.
+  local -a _cmake_common=(
+    -DWITH_PORTABLE=OFF
+    -DWITH_UPDATER=OFF
+    # Leave the icons and translations compiled into the binaries. Sharing them
+    # as loose files only pays off for a distro that dedups /usr/share.
+    -DWITH_SHARED_RES=OFF
+  )
+
+  # Baked into coreLetos as the plugin search path, so it has to be the native
+  # runtime path, not the MSYS view of it.
+  local _sys_plugins
+  _sys_plugins="$(cygpath -m "${MINGW_PREFIX}/lib/${_realname}")"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=;-DSYS_PLUGINS_DIR=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      "${_extra_config[@]}" \
+      "${_cmake_common[@]}" \
+      -DSYS_PLUGINS_DIR="${_sys_plugins}" \
+      -DBUILD_TESTING=OFF \
+      -S "${_realname}-${pkgver}/Letos" \
+      -B "build-${MSYSTEM}"
+
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "build-${MSYSTEM}"
+
+  # Plugins are a second, standalone CMake project. On Windows its shared
+  # objects link against coreLetos/guiLetos by plain name, so the linker needs
+  # an -L into the tree we just built. Native GCC cannot read the MSYS form of
+  # ${srcdir}, hence cygpath.
+  local _built
+  _built="$(cygpath -m "${srcdir}/build-${MSYSTEM}")"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    LDFLAGS="${LDFLAGS} -L${_built}/core -L${_built}/gui" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      "${_extra_config[@]}" \
+      "${_cmake_common[@]}" \
+      -DWITH_ALL_PLUGINS=ON \
+      -DWITH_DYNAMIC_PYTHON=ON \
+      -S "${_realname}-${pkgver}/Plugins" \
+      -B "build-plugins-${MSYSTEM}"
+
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "build-plugins-${MSYSTEM}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "build-${MSYSTEM}"
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "build-plugins-${MSYSTEM}"
+
+  # The two style plugins are ordinary Qt style plugins picked up through
+  # QStyleFactory, so they have to sit in a Qt library path; upstream's
+  # lib/letos/styles is only ever scanned when it happens to be the app dir.
+  local _styles="${pkgdir}${MINGW_PREFIX}/lib/${_realname}/styles"
+  if [[ -d ${_styles} ]]; then
+    install -d "${pkgdir}${MINGW_PREFIX}/share/qt6/plugins/styles"
+    mv "${_styles}"/*.dll "${pkgdir}${MINGW_PREFIX}/share/qt6/plugins/styles/"
+    rmdir "${_styles}"
+  fi
+
+  local _doc="${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/README.md" "${_doc}/README.md"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/ChangeLog.md" "${_doc}/ChangeLog.md"
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}
