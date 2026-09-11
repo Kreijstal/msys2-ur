@@ -1,0 +1,37 @@
+diff -Naur a/src/Base/UnitsApi.cpp b/src/Base/UnitsApi.cpp
+--- FreeCAD-1.1.1-orig/src/Base/UnitsApi.cpp	2026-09-11 13:35:58.429808385 +0200
++++ FreeCAD-1.1.1/src/Base/UnitsApi.cpp	2026-09-11 13:35:58.446808623 +0200
+@@ -36,6 +36,11 @@
+ using Base::UnitsSchema;
+ using Base::UnitsSchemas;
+ 
++std::unique_ptr<UnitsSchemas> UnitsApi::schemas
++    = std::make_unique<UnitsSchemas>(Base::UnitsSchemasData::unitSchemasDataPack);
++int UnitsApi::decimals = -1;
++int UnitsApi::denominator = -1;
++
+ std::vector<std::string> UnitsApi::getDescriptions()
+ {
+     return schemas->descriptions();
+diff -Naur a/src/Base/UnitsApi.h b/src/Base/UnitsApi.h
+--- FreeCAD-1.1.1-orig/src/Base/UnitsApi.h	2026-09-11 13:35:58.429808385 +0200
++++ FreeCAD-1.1.1/src/Base/UnitsApi.h	2026-09-11 13:36:15.422046364 +0200
+@@ -76,9 +76,15 @@
+     static PyMethodDef Methods[];
+ 
+ protected:
+-    static inline auto schemas = std::make_unique<UnitsSchemas>(UnitsSchemasData::unitSchemasDataPack);
+-    static inline int decimals {-1};
+-    static inline int denominator {-1};
++    // Defined in UnitsApi.cpp so the whole process shares one instance.
++    // As inline statics they were instantiated once per DLL on Windows/MinGW
++    // (inline variables are emitted in every module including this header,
++    // dllexport notwithstanding), so several UnitsSchemas objects were
++    // created and torn down during DLL unload, corrupting the heap at exit,
++    // and modules disagreed about the selected schema and decimals.
++    static std::unique_ptr<UnitsSchemas> schemas;
++    static int decimals;
++    static int denominator;
+ 
+     // the python API wrapper methods
+     static PyObject* sParseQuantity(PyObject* self, PyObject* args);
