@@ -1,0 +1,51 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=gotty
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.8.0
+pkgrel=1
+pkgdesc="Share your terminal as a web application (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url='https://github.com/sorenisanerd/gotty'
+msys2_repository_url='https://github.com/sorenisanerd/gotty'
+msys2_changelog_url='https://github.com/sorenisanerd/gotty/blob/master/NEWS.md'
+msys2_references=(
+  'archlinux: gotty'
+)
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-go"
+             'git')
+options=('!strip')
+source=("git+https://github.com/sorenisanerd/gotty.git#tag=v${pkgver}"
+        "0001-localcommand-add-windows-conpty-backend.patch")
+sha256sums=('SKIP'
+            'SKIP')
+
+prepare() {
+  cd "${_realname}"
+  # Upstream runs commands through creack/pty, which has no Windows support:
+  # use a ConPTY pseudo console there instead.
+  git apply "${srcdir}/0001-localcommand-add-windows-conpty-backend.patch"
+  go mod download
+}
+
+build() {
+  cd "${_realname}"
+  export CGO_ENABLED=0
+  export GOFLAGS="-trimpath -mod=readonly -modcacherw"
+  go build -ldflags "-s -w -X main.Version=${pkgver}" -o gotty.exe .
+}
+
+check() {
+  cd "${_realname}"
+  ./gotty.exe --version
+}
+
+package() {
+  cd "${_realname}"
+  install -Dm755 gotty.exe "${pkgdir}${MINGW_PREFIX}/bin/gotty.exe"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+  install -Dm644 README.md "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.md"
+}
