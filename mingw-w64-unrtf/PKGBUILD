@@ -1,0 +1,54 @@
+_realname=unrtf
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.21.10
+pkgrel=1
+pkgdesc="Command-line program which converts RTF documents to other formats (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url="https://www.gnu.org/software/unrtf/"
+msys2_references=(
+  'archlinux: unrtf'
+)
+license=('spdx:GPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-libiconv")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools")
+source=("https://ftp.gnu.org/gnu/${_realname}/${_realname}-${pkgver}.tar.gz"
+        0001-mingw-w64-support.patch)
+sha256sums=('b49f20211fa69fff97d42d6e782a62d7e2da670b064951f14bbff968c93734ae'
+            'bdf5ba88ce051549fdcc5178f20da81e219ec1bb8c150e1ba28ecc0170123e60')
+
+prepare() {
+  cd ${_realname}-${pkgver}
+  # Find the charmaps and output configs next to the executable, not at
+  # the configure-time path, and provide strcasestr/ntohl.
+  patch -p1 -i "${srcdir}/0001-mingw-w64-support.patch"
+  autoreconf -fiv
+}
+
+build() {
+  mkdir -p build-${MSYSTEM} && cd build-${MSYSTEM}
+  LIBS="-liconv" \
+  ../${_realname}-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --host=${MINGW_CHOST} \
+    --build=${MINGW_CHOST}
+  make
+}
+
+check() {
+  cd build-${MSYSTEM}
+  printf '{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}\\f0\\pard unrtf test caf\\'"'"'e9\\par}\n' > test.rtf
+  # Run from a staged install so the relocated data lookup is exercised.
+  rm -rf check-root && make DESTDIR="${PWD}/check-root" install
+  ./check-root${MINGW_PREFIX}/bin/unrtf.exe --nopict --html test.rtf | tee test.html
+  grep -q 'unrtf test caf' test.html
+  ./check-root${MINGW_PREFIX}/bin/unrtf.exe --text test.rtf | grep -q 'unrtf test'
+}
+
+package() {
+  cd build-${MSYSTEM}
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 ../${_realname}-${pkgver}/COPYING "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

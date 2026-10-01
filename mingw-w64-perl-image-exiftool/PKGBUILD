@@ -1,0 +1,40 @@
+_perlname=Image-ExifTool
+_realname="${_perlname,,}"
+pkgbase=mingw-w64-perl-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-perl-${_realname}")
+pkgver=13.55
+pkgrel=1
+pkgdesc="Reader and rewriter of EXIF information that supports raw files (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url="https://exiftool.org/"
+msys2_references=(
+  'purl: pkg:cpan/EXIFTOOL/Image-ExifTool'
+)
+license=('spdx:Artistic-1.0-Perl OR GPL-1.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-perl")
+makedepends=("${MINGW_PACKAGE_PREFIX}-make")
+options=('!strip')
+source=("https://cpan.metacpan.org/authors/id/E/EX/EXIFTOOL/${_perlname}-${pkgver}.tar.gz")
+sha256sums=('5f4c81d34ad406538c2871ad72dbfceb5d9b412b2f16cbbeb4d712d270846667')
+
+build() {
+  cp -r ${_perlname}-${pkgver} build-${MSYSTEM} && cd build-${MSYSTEM}
+  MSYS2_ARG_CONV_EXCL="PREFIX=" \
+  PERL_MM_USE_DEFAULT=1 \
+    perl Makefile.PL \
+    PREFIX=${MINGW_PREFIX}
+  mingw32-make
+}
+
+check() {
+  cd build-${MSYSTEM}
+  perl -Iblib/lib blib/script/exiftool -ver
+  perl -Iblib/lib blib/script/exiftool -s -ImageSize t/images/ExifTool.jpg | grep -q 'ImageSize'
+}
+
+package() {
+  cd build-${MSYSTEM}
+  mingw32-make DESTDIR="${pkgdir}/" install
+  install -Dm644 README "${pkgdir}${MINGW_PREFIX}/share/licenses/perl-${_realname}/README"
+}

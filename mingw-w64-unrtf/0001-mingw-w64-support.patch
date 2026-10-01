@@ -1,0 +1,122 @@
+diff --git a/src/Makefile.am b/src/Makefile.am
+index 83b1d34..7f36c47 100644
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -19,5 +19,6 @@ unrtf_SOURCES = attr.c attr.h         \
+ 		unicode.c unicode.h   \
+ 		user.c user.h         \
+ 		util.c util.h         \
+-		word.c word.h
++		word.c word.h \
++		win32.c
+ 
+diff --git a/src/defs.h b/src/defs.h
+index f3c17ac..953a3c3 100644
+--- a/src/defs.h
++++ b/src/defs.h
+@@ -82,4 +82,11 @@
+ #define FONTDECOR_STR	"ZapfChancery"
+ #define FONTTECH_STR	"Symbol"
+ 
++#ifdef _WIN32
++#include <stdint.h>
++char *strcasestr(const char *s, const char *find);
++unsigned int unrtf_ntohl(unsigned int in);
++char *unrtf_default_search_path(void);
++#endif
++
+ #endif /* _DEFS_H_INCLUDED_ */
+diff --git a/src/main.c b/src/main.c
+index c7e298f..a562e5a 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -149,7 +149,11 @@ main(int argc, char **argv)
+ 	int i;
+ 	nopict_mode = debug_mode = dump_mode = inline_mode = no_remap_mode = quiet = FALSE;
+ 	/* initialize search path to compiled-in value */
++#ifdef _WIN32
++	search_path = unrtf_default_search_path();
++#else
+ 	search_path = DEFAULT_UNRTF_SEARCH_PATH;
++#endif
+ 
+ 	if ((env_path_p = getenv("UNRTF_SEARCH_PATH")) != NULL)
+ 	{
+diff --git a/src/path.c b/src/path.c
+index 2c082ec..2aa1fc1 100644
+--- a/src/path.c
++++ b/src/path.c
+@@ -103,7 +103,12 @@ int check_dirs()
+ 	for (p = search_path; *p != '\0';)
+ 	{
+ 		dir_name = p;
++#ifdef _WIN32
++		/* ':' would split drive letters */
++		if ((colon = strchr(p, ';')) != NULL)
++#else
+ 		if ((colon = strchr(p, ':')) != NULL)
++#endif
+ 		{
+ 			p = colon;
+ 			*p++ = '\0';
+diff --git a/src/win32.c b/src/win32.c
+new file mode 100644
+index 0000000..0370776
+--- /dev/null
++++ b/src/win32.c
+@@ -0,0 +1,55 @@
++/* MinGW support: functions missing from the Windows C runtime, and
++   lookup of the data files relative to the executable. */
++#ifdef _WIN32
++#include <ctype.h>
++#include <string.h>
++#include <stdlib.h>
++#include <windows.h>
++
++#include "defs.h"
++
++char *strcasestr(const char *s, const char *find)
++{
++	size_t len = strlen(find);
++	for (; *s; s++)
++	{
++		if (strncasecmp(s, find, len) == 0)
++		{
++			return (char *)s;
++		}
++	}
++	return len == 0 ? (char *)s : NULL;
++}
++
++unsigned int unrtf_ntohl(unsigned int in)
++{
++	const unsigned char *f = (const unsigned char *)&in;
++	return ((unsigned int)f[3]) | ((unsigned int)f[2] << 8) |
++	       ((unsigned int)f[1] << 16) | ((unsigned int)f[0] << 24);
++}
++
++/* <exedir>/../share/unrtf/ , falling back to the configured directory. */
++char *unrtf_default_search_path(void)
++{
++	static char buf[MAX_PATH + 32];
++	char *p;
++	DWORD n = GetModuleFileNameA(NULL, buf, MAX_PATH);
++	if (n == 0 || n >= MAX_PATH)
++	{
++		return strdup(PKGDATADIR "/");
++	}
++	for (p = buf; *p; p++)
++	{
++		if (*p == '\\')
++		{
++			*p = '/';
++		}
++	}
++	if ((p = strrchr(buf, '/')) != NULL)
++	{
++		*p = '\0';
++	}
++	strcat(buf, "/../share/unrtf/");
++	return buf;
++}
++#endif

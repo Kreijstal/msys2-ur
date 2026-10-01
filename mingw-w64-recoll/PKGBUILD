@@ -1,0 +1,206 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=recoll
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.44.2
+pkgrel=2
+pkgdesc="Full-text desktop search tool based on Xapian (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.recoll.org'
+msys2_repository_url='https://framagit.org/medoc92/recoll'
+msys2_references=(
+  'archlinux: recoll'
+)
+license=('spdx:GPL-2.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-aspell"
+         "${MINGW_PACKAGE_PREFIX}-chmlib"
+         "${MINGW_PACKAGE_PREFIX}-file"
+         "${MINGW_PACKAGE_PREFIX}-jsoncpp"
+         "${MINGW_PACKAGE_PREFIX}-libiconv"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-libxslt"
+         "${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-qt6-base"
+         "${MINGW_PACKAGE_PREFIX}-qt6-webengine"
+         "${MINGW_PACKAGE_PREFIX}-xapian-core"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-make"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-qt6-tools"
+             'git')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-aspell-en"
+              "${MINGW_PACKAGE_PREFIX}-perl-image-exiftool"
+              "${MINGW_PACKAGE_PREFIX}-perl-json"
+              "${MINGW_PACKAGE_PREFIX}-python-icalendar"
+              "${MINGW_PACKAGE_PREFIX}-python-py7zr"
+              "${MINGW_PACKAGE_PREFIX}-unrtf"
+              'gzip')
+optdepends=("${MINGW_PACKAGE_PREFIX}-aspell-en: spelling suggestions for English (other aspell-* dictionaries work too)"
+            "${MINGW_PACKAGE_PREFIX}-poppler: PDF documents"
+            "${MINGW_PACKAGE_PREFIX}-tesseract-ocr: OCR of image-only PDFs"
+            "${MINGW_PACKAGE_PREFIX}-antiword: legacy MS Word documents"
+            "${MINGW_PACKAGE_PREFIX}-wv: legacy MS Word documents (fallback)"
+            "${MINGW_PACKAGE_PREFIX}-libwpd: WordPerfect documents"
+            "${MINGW_PACKAGE_PREFIX}-djvulibre: DjVu documents"
+            "${MINGW_PACKAGE_PREFIX}-python-mutagen: audio file tags"
+            "${MINGW_PACKAGE_PREFIX}-python-lxml: some XML-based formats"
+            "${MINGW_PACKAGE_PREFIX}-python-chardet: character set detection of text files"
+            "${MINGW_PACKAGE_PREFIX}-perl-image-exiftool: image metadata (EXIF, IPTC, XMP)"
+            "${MINGW_PACKAGE_PREFIX}-perl-json: image metadata (required by the rclimg filter with exiftool)"
+            "${MINGW_PACKAGE_PREFIX}-unrtf: RTF documents"
+            "${MINGW_PACKAGE_PREFIX}-python-py7zr: 7z archives"
+            "${MINGW_PACKAGE_PREFIX}-python-rarfile: RAR archives"
+            "${MINGW_PACKAGE_PREFIX}-python-icalendar: iCalendar files"
+            "${MINGW_PACKAGE_PREFIX}-python-yaml: Markdown front matter"
+            "${MINGW_PACKAGE_PREFIX}-recoll-pffexport: Outlook PST/OST mailboxes"
+            "${MINGW_PACKAGE_PREFIX}-ghostscript: PostScript documents"
+            "${MINGW_PACKAGE_PREFIX}-texlive-bin: TeX and DVI documents")
+# The release tarball leaves out src/windows/, which the Windows build needs, so
+# build from the commit that bumped the version to 1.44.2 (its src/ is
+# otherwise identical to recoll-1.44.2.tar.gz).
+_commit=503504d1757cdf0becaf0f819e9524f720b8a4f7
+source=("${_realname}::git+https://framagit.org/medoc92/recoll.git#commit=${_commit}"
+        "0001-build-with-mingw-w64.patch"
+        "0002-find-data-and-config-in-msys2-layout.patch"
+        "0003-qtgui-build-with-mingw-w64.patch"
+        "0004-run-script-filters-on-windows.patch")
+sha256sums=('SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  cd "${srcdir}/${_realname}"
+  test "$(cat src/RECOLL-VERSION.txt)" = "${pkgver}"
+
+  # meson sources, getopt/signal/header fixes for mingw-w64, and find
+  # share/recoll next to bin/ from the C++ side
+  patch -p1 -i "${srcdir}/0001-build-with-mingw-w64.patch"
+  # the same for the Python filters/extension; use the system aspell data
+  # (and read its CRLF answers);
+  # also honour ~/.recoll
+  patch -p1 -i "${srcdir}/0002-find-data-and-config-in-msys2-layout.patch"
+  # qmake: build the GUI through the meson-driven branch, with winschedtool
+  patch -p1 -i "${srcdir}/0003-qtgui-build-with-mingw-w64.patch"
+  # run the extensionless "#!" filters (sh/perl: rclimg, rclps, rcluncomp...)
+  # through their interpreter, with the MSYS /usr/bin as a PATH fallback for
+  # the tools they use; support py7zr >= 1.0 in rcl7z.py; build rclstartw and
+  # install the Windows mimeview, so "Open" uses the default application
+  patch -p1 -i "${srcdir}/0004-run-script-filters-on-windows.patch"
+
+  # filters/{rclconfig,conftree}.py are symlinks into python/recoll/recoll/;
+  # without symlink support git checks them out as text files holding the
+  # link target, which then breaks every Python filter.
+  local _l
+  git ls-files -s src | awk '$1 == "120000" {print $4}' | while read -r _l; do
+    if [ ! -L "${_l}" ]; then
+      cp --remove-destination "$(dirname "${_l}")/$(git cat-file -p "HEAD:${_l}")" "${_l}"
+    fi
+  done
+  head -c 100 src/filters/rclconfig.py | grep -q '^#'
+}
+
+build() {
+  # qtgui/qmkmk.sh runs qmake + make from a meson custom_target
+  export QMAKE=qmake6 MAKE=mingw32-make
+
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup \
+      --prefix="${MINGW_PREFIX}" \
+      --wrap-mode=nodownload \
+      --buildtype=plain \
+      -Dsystemd=false \
+      -Dx11mon=false \
+      -Dwebkit=false \
+      -Dwebengine=true \
+      -Drclgrep=true \
+      -Drecollq=true \
+      -Dxadump=true \
+      "${srcdir}/${_realname}/src" "build-${MSYSTEM}"
+
+  meson compile -C "build-${MSYSTEM}"
+}
+
+check() {
+  # Index a few documents from a staged install and query them through
+  # recollq, the GUI's text mode and the Python module. zip and eml go through
+  # the Python filters, so this also checks that they find share/recoll; png
+  # and gz go through "#!" perl and sh scripts.
+  local _root="${srcdir}/check-root"
+  rm -rf "${_root}" "${srcdir}/check"
+  DESTDIR="${_root}" meson install -C "build-${MSYSTEM}" --no-rebuild >/dev/null
+  local _pfx="${_root}${MINGW_PREFIX}"
+  local _bin="${_pfx}/bin"
+  local _docs="${srcdir}/check/docs" _conf="${srcdir}/check/conf"
+  mkdir -p "${_docs}" "${_conf}"
+
+  local _w=zanzibarquux
+  printf 'plain text %s %s-txt\n' ${_w} ${_w} > "${_docs}/a.txt"
+  printf '<html><body><p>html %s-html</p></body></html>\n' ${_w} > "${_docs}/b.html"
+  printf 'From: a@b\nSubject: s\n\nmail %s-mail\n' ${_w} > "${_docs}/c.eml"
+  "${MINGW_PREFIX}/bin/python" -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1],'w').writestr('in.txt','zipped ${_w}-zip')" "$(cygpath -m "${_docs}/d.zip")"
+  # handlers that need a helper: rclimg (perl #! script + ExifTool), unrtf,
+  # rcl7z.py (py7zr), rclics.py (icalendar), rcluncomp (sh #! script + gunzip)
+  "${MINGW_PREFIX}/bin/python" - "$(cygpath -m "${_docs}")" ${_w} <<'EOF'
+import os, struct, sys, zlib, py7zr
+d, w = sys.argv[1], sys.argv[2]
+def chunk(t, b):
+    return struct.pack(">I", len(b)) + t + b + struct.pack(">I", zlib.crc32(t + b))
+png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", 1, 1, 8, 0, 0, 0, 0)) \
+    + chunk(b"IDAT", zlib.compress(b"\0\0")) + chunk(b"IEND", b"")
+open(os.path.join(d, "e.png"), "wb").write(png)
+open(os.path.join(d, "f.rtf"), "w").write("{\\rtf1\\ansi rtf %s-rtf\\par}\n" % w)
+with py7zr.SevenZipFile(os.path.join(d, "g.7z"), "w") as z:
+    z.writestr("sevenzip %s-7z\n" % w, "in7z.txt")
+open(os.path.join(d, "h.ics"), "w", newline="\r\n").write(
+    "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//t//t//EN\nBEGIN:VEVENT\nUID:1@t\n"
+    "DTSTAMP:20260101T000000Z\nDTSTART:20260101T000000Z\nSUMMARY:ics %s-ics\n"
+    "END:VEVENT\nEND:VCALENDAR\n" % w)
+EOF
+  perl "${MINGW_PREFIX}/bin/site_perl/exiftool" -q -overwrite_original -XMP:Subject="${_w}-img" "$(cygpath -m "${_docs}/e.png")"
+  printf 'gzipped %s-gz\n' ${_w} | gzip > "${_docs}/i.txt.gz"
+  printf 'topdirs = %s\n' "$(cygpath -m "${_docs}")" > "${_conf}/recoll.conf"
+
+  local _c=$(cygpath -m "${_conf}")
+  # the Python helpers (aspell suggestions, joplin) import the staged extensions
+  local _site=$(find "${_pfx}/lib" -maxdepth 3 -type d -name site-packages | head -1)
+  export PYTHONPATH="$(cygpath -m "${_site}")"
+  PATH="${_bin}:${PATH}" "${_bin}/recollindex.exe" -c "${_c}"
+  # spelling dictionary built from the index with the system aspell
+  test -s "${_conf}/aspdict.en.rws"
+  # and used for suggestions: a misspelt query still finds the documents
+  PATH="${_bin}:${PATH}" "${_bin}/recollq.exe" -c "${_c}" --autospell -b zanzibarqux | grep -q "/a.txt"
+  local _k
+  for _k in txt html mail zip img rtf 7z ics gz; do
+    echo "checking ${_k}"
+    PATH="${_bin}:${PATH}" "${_bin}/recollq.exe" -c "${_c}" -b "${_w}-${_k}" | grep -q "/docs/"
+    PATH="${_bin}:${PATH}" "${_bin}/recoll.exe" -t -c "${_c}" -b "${_w}-${_k}" | grep -q "/docs/"
+  done
+
+  RECOLL_DATADIR="$(cygpath -m "${_pfx}/share/recoll")" \
+    "${MINGW_PREFIX}/bin/python" - "$(cygpath -m "${_bin}")" "$(cygpath -m "${_site}")" "${_c}" <<'EOF'
+import os, sys
+os.add_dll_directory(sys.argv[1])
+sys.path.insert(0, sys.argv[2])
+from recoll import recoll
+q = recoll.connect(confdir=sys.argv[3]).query()
+n = q.execute("zanzibarquux")
+names = sorted(os.path.basename(d.url) for d in q)
+print(n, names)
+assert names == ["a.txt", "b.html", "c.eml", "d.zip", "e.png", "f.rtf",
+                 "g.7z", "h.ics", "i.txt.gz"], names
+EOF
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${MSYSTEM}" --no-rebuild
+
+  install -Dm644 "${srcdir}/${_realname}/src/COPYING" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

@@ -1,0 +1,271 @@
+diff --git a/src/common/rclconfig.cpp b/src/common/rclconfig.cpp
+index cd7acc3..d64fbdb 100644
+--- a/src/common/rclconfig.cpp
++++ b/src/common/rclconfig.cpp
+@@ -2177,6 +2177,34 @@ bool RclConfig::processFilterCmd(std::vector<std::string>& cmd) const
+     } else if ("pl" == ext) {
+         it = cmd.insert(it, findFilter("perl"));
+         it++;
++    } else if (ext.empty()) {
++        // Scripts without an extension (rclps, rclimg, rcluncomp...): Windows can't execute
++        // them directly, run the interpreter named on the "#!" line (sh, perl...).
++        std::string script = findFilter(*it);
++        std::fstream input;
++        std::string line;
++        if (path_streamopen(script, std::ios::in | std::ios::binary, input) &&
++            std::getline(input, line) && line.compare(0, 2, "#!") == 0) {
++            trimstring(line, " \t\r");
++            std::vector<std::string> words;
++            stringToStrings(line.substr(2), words);
++            if (!words.empty() && path_getsimple(words[0]) == "env") {
++                words.erase(words.begin());
++            }
++            if (!words.empty()) {
++                std::string interp = path_getsimple(words[0]);
++                std::string interppath = findFilter(interp);
++                if (!path_isabsolute(interppath)) {
++                    std::string msys = path_cat(path_thisexecdir(), "../../usr/bin");
++                    msys = path_canon(path_cat(msys, interp + ".exe"));
++                    if (path_exists(msys))
++                        interppath = msys;
++                }
++                *it = script;
++                it = cmd.insert(it, interppath);
++                it++;
++            }
++        }
+     }
+ #endif
+     
+diff --git a/src/common/rclinit.cpp b/src/common/rclinit.cpp
+index 475187f..be9d71d 100644
+--- a/src/common/rclinit.cpp
++++ b/src/common/rclinit.cpp
+@@ -447,6 +447,21 @@ RclConfig *recollinit(
+     smallut_init_mt();
+     rclutil_init_mt();
+     
++#ifdef _WIN32
++    // MSYS2: the shell and perl filters and the Unix tools they run (sed, gunzip...)  are in
++    // the MSYS /usr/bin, which is not in the PATH of a natively started process. Add it after
++    // the native directories. Must be done before the ExecCmd PATH init below.
++    {
++        std::string usrbin = path_canon(path_cat(path_thisexecdir(), "../../usr/bin"));
++        const char *cp = getenv("PATH");
++        std::string npath = cp ? cp : "";
++        if (path_isdir(usrbin) && npath.find(usrbin) == std::string::npos) {
++            npath += std::string(";") + usrbin;
++            _putenv_s("PATH", npath.c_str());
++            SetEnvironmentVariableA("PATH", npath.c_str());
++        }
++    }
++#endif
+     // Init execmd.h static PATH and PATHELT splitting (windows only actually)
+     {string bogus;
+         ExecCmd::which("", bogus);
+diff --git a/src/filters/rcl7z.py b/src/filters/rcl7z.py
+index a573bbe..feef187 100755
+--- a/src/filters/rcl7z.py
++++ b/src/filters/rcl7z.py
+@@ -71,7 +71,16 @@ class SevenZipExtractor(ArchiveExtractor):
+             self.fp = open(filename, "rb")
+             self.sevenzip = Archive7z(self.fp)
+             if usingpy7zr:
+-                self.sevenzdic = self.sevenzip.readall()
++                if hasattr(self.sevenzip, "readall"):
++                    self.sevenzdic = self.sevenzip.readall()
++                else:
++                    # py7zr >= 1.0 removed readall(): extract to memory through a factory.
++                    from py7zr.io import BytesIOFactory
++                    factory = BytesIOFactory(sys.maxsize)
++                    self.sevenzip.extractall(factory=factory)
++                    self.sevenzdic = factory.products
++                    for data in self.sevenzdic.values():
++                        data.seek(0)
+                 self.names = [k[0] for k in self.sevenzdic.items()]
+                 self.namelistlen = len(self.names)
+             else:
+diff --git a/src/filters/rclexecm.py b/src/filters/rclexecm.py
+index 4a3a920..f3f9ab8 100644
+--- a/src/filters/rclexecm.py
++++ b/src/filters/rclexecm.py
+@@ -125,7 +125,9 @@ def which(program):
+ 
+     def ext_candidates(fpath):
+         yield fpath
+-        for ext in os.environ.get("PATHEXT", "").split(os.pathsep):
++        # PATHEXT can be missing from a minimal Windows environment
++        defext = ".COM;.EXE;.BAT;.CMD" if os.name == "nt" else ""
++        for ext in os.environ.get("PATHEXT", defext).split(os.pathsep):
+             yield fpath + ext
+ 
+     def path_candidates():
+diff --git a/src/filters/rclocrtesseract.py b/src/filters/rclocrtesseract.py
+index 71acb28..27d9c0b 100755
+--- a/src/filters/rclocrtesseract.py
++++ b/src/filters/rclocrtesseract.py
+@@ -103,9 +103,9 @@ def ocrpossible(config, path):
+         # pdftocairo.
+         global pdftoppmcmd, pdftocairocmd
+         if not pdftoppmcmd and not pdftocairocmd:
+-            pdftocairocmd = rclexecm.which(popplerdir + "pdftocairo")
++            pdftocairocmd = (rclexecm.which(popplerdir + "pdftocairo") or rclexecm.which("pdftocairo"))
+             if not pdftocairocmd:
+-                pdftoppmcmd = rclexecm.which(popplerdir + "pdftoppm")
++                pdftoppmcmd = (rclexecm.which(popplerdir + "pdftoppm") or rclexecm.which("pdftoppm"))
+         if pdftoppmcmd or pdftocairocmd:
+             return True
+ 
+diff --git a/src/filters/rclpdf.py b/src/filters/rclpdf.py
+index 057127e..50ac1e3 100755
+--- a/src/filters/rclpdf.py
++++ b/src/filters/rclpdf.py
+@@ -162,7 +162,7 @@ class PDFExtractor:
+         self.confdir = self.config.getConfDir()
+ 
+         # Avoid picking up a default version on Windows, we want ours
+-        self.pdftotext = rclexecm.which(popplerdir + "pdftotext")
++        self.pdftotext = (rclexecm.which(popplerdir + "pdftotext") or rclexecm.which("pdftotext"))
+         if not self.pdftotext:
+             # No need for anything else. openfile() will return an error at once
+             return
+@@ -175,7 +175,7 @@ class PDFExtractor:
+             self.needescape = True
+ 
+         # pdfinfo may be used to extract XML metadata and custom PDF properties
+-        self.pdfinfo = rclexecm.which(popplerdir + "pdfinfo")
++        self.pdfinfo = (rclexecm.which(popplerdir + "pdfinfo") or rclexecm.which("pdfinfo"))
+         if self.pdfinfo:
+             self.pdfinfoversion = self._popplerutilversion(self.pdfinfo)
+             # The user can set a list of meta tags to be extracted from the XMP metadata
+@@ -189,7 +189,7 @@ class PDFExtractor:
+         # Extracting the outline / bookmarks needs still another poppler command...
+         self.dooutline = self.config.getConfParam("pdfoutline")
+         if self.dooutline:
+-            self.pdftohtml = rclexecm.which(popplerdir + "pdftohtml")
++            self.pdftohtml = (rclexecm.which(popplerdir + "pdftohtml") or rclexecm.which("pdftohtml"))
+             if not self.pdftohtml:
+                 self.dooutline = False
+ 
+diff --git a/src/filters/rcltex b/src/filters/rcltex
+index c9a7e5f..36f7fdb 100755
+--- a/src/filters/rcltex
++++ b/src/filters/rcltex
+@@ -106,7 +106,7 @@ cleanup()
+ encoding=`egrep '\usepackage\[.*\]{inputenc}' "$infile" | \
+                 sed -e 's/.*\[//' -e 's/\].*//'`
+ if test "X$encoding" = Xutf8x ; then
+-    encoding=utf8
++    encoding=utf-8
+ fi
+ # Found no usepackage directive to specify encoding. Have the system have a guess at it:
+ if test "X$encoding" = X ; then
+@@ -117,7 +117,7 @@ if test "X$encoding" = X ; then
+         # expensive, but important, and a common case these days. Finally, default to
+         # extended latin1
+         if iconv -s -f utf-8 -t utf-8 < "$infile" > /dev/null; then
+-            encoding=utf8
++            encoding=utf-8
+         else
+             encoding=windows-1252
+         fi
+diff --git a/src/meson.build b/src/meson.build
+index 6cdf150..6cb529e 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -506,6 +506,18 @@ if get_option('recollq')
+     manfiles += 'doc/man/recollq.1'
+ endif
+ 
++############# rclstartw: Windows "open with the default application" helper, used by mimeview
++if host_machine.system() == 'windows' and get_option('qtgui')
++    rclstartw = executable(
++        'rclstartw',
++        'windows/rclstartw.cpp',
++        include_directories: librecoll_incdir,
++        link_with: librecoll,
++        win_subsystem: 'windows',
++        install: true,
++    )
++endif
++
+ ############# Xadump
+ if get_option('xadump')
+ 
+@@ -571,7 +583,7 @@ example_files = files(
+ 'sampleconf/fragment-buttons.xml',
+ 'sampleconf/mimeconf',
+ 'sampleconf/mimemap',
+-'sampleconf/mimeview',
++host_machine.system() == 'windows' ? 'windows/mimeview' : 'sampleconf/mimeview',
+ 'sampleconf/recoll-common.css',
+ 'sampleconf/recoll-common.qss',
+ 'sampleconf/recoll-dark.css',
+diff --git a/src/rclgrep/meson.build b/src/rclgrep/meson.build
+index 05a6517..587d00a 100644
+--- a/src/rclgrep/meson.build
++++ b/src/rclgrep/meson.build
+@@ -13,6 +13,7 @@ rclgrep_sources = [
+     '../common/rclinit.cpp',
+     '../common/rclutil.cpp',
+     '../common/textsplit.cpp',
++    '../common/unacpp.cpp',
+     '../common/kosplitter.cpp',
+     '../common/cjksplitter.cpp',
+     '../common/cnsplitter.cpp',
+@@ -49,7 +50,6 @@ rclgrep_sources = [
+     '../utils/conftree.cpp',
+     '../utils/copyfile.cpp',
+     '../utils/cpuconf.cpp',
+-    '../utils/execmd.cpp',
+     '../utils/fileudi.cpp',
+     '../utils/fstreewalk.cpp',
+     '../utils/idfile.cpp',
+@@ -58,8 +58,8 @@ rclgrep_sources = [
+     '../utils/md5ut.cpp',
+     '../utils/mimeparse.cpp',
+     '../utils/miniz.cpp',
+-    '../utils/netcon.cpp',
+     '../utils/pathut.cpp',
++    '../utils/powerstatus.cpp',
+     '../utils/pxattr.cpp',
+     '../utils/readfile.cpp',
+     '../utils/smallut.cpp',
+@@ -69,7 +69,18 @@ rclgrep_sources = [
+     '../utils/zlibut.cpp',
+ ]
+ 
+-rclgrep_deps = [libxml, libxslt, libz]
++rclgrep_deps = [libxml, libxslt, libz, dependency('iconv', method : 'auto')]
++if host_machine.system() == 'windows'
++    rclgrep_sources += [
++        '../windows/fnmatch.c',
++        '../windows/wincodepages.cpp',
++        '../windows/execmd_w.cpp',
++        '../windows/strptime.cpp',
++    ]
++    rclgrep_deps += [cc.find_library('shlwapi'), cc.find_library('regex')]
++else
++    rclgrep_sources += ['../utils/execmd.cpp', '../utils/netcon.cpp']
++endif
+ if get_option('libmagic')
+     rclgrep_deps += libmagic
+ endif
+diff --git a/src/utils/pathut.cpp b/src/utils/pathut.cpp
+index 5f2cb03..7a2706a 100644
+--- a/src/utils/pathut.cpp
++++ b/src/utils/pathut.cpp
+@@ -1473,6 +1473,13 @@ bool path_readable(const std::string& path)
+ }
+ bool path_access(const std::string& path, int mode)
+ {
++#ifdef _WIN32
++    // mingw-w64 defines X_OK as 1, which the UCRT _waccess() rejects with
++    // EINVAL. Execute permission has no meaning there: check readability.
++    if (mode & 1) {
++        mode = (mode & ~1) | R_OK;
++    }
++#endif
+     SYSPATH(path, syspath);
+     return ACCESS(syspath, mode) == 0;
+ }

@@ -1,0 +1,130 @@
+diff --git a/src/aspell/rclaspell.cpp b/src/aspell/rclaspell.cpp
+index 9198cfd..870afe2 100644
+--- a/src/aspell/rclaspell.cpp
++++ b/src/aspell/rclaspell.cpp
+@@ -91,6 +91,11 @@ bool Aspell::init(string &reason)
+ #ifdef _WIN32
+     m_data->m_datadir = path_cat(
+         path_rclpkgdatadir(), "filters/aspell-installed/mingw32/lib/aspell-0.60");
++    // Only the bundled installer layout has its own aspell; otherwise (e.g. MSYS2) let the
++    // system aspell use its compiled-in data directory.
++    if (!path_isdir(m_data->m_datadir)) {
++        m_data->m_datadir.clear();
++    }
+     if (m_data->m_addCreateParam.empty()) {
+         m_data->m_addCreateParam =
+             string("--local-data-dir=") + path_cat(m_config->getConfDir(), "aspell");
+@@ -129,13 +134,19 @@ bool Aspell::init(string &reason)
+         "rclaspell-sugg.py", 
+         string("--lang=") + m_lang,
+         "--encoding=utf-8",
+-#ifdef _WIN32
+-        string("--data-dir=") + m_data->m_datadir,
+-#endif
+         string("--master=") + dicPath(),
+         "--sug-mode=fast",
+-        "--mode=none",
+     };
++#ifdef _WIN32
++    if (!m_data->m_datadir.empty()) {
++        m_data->m_execspell.push_back(string("--data-dir=") + m_data->m_datadir);
++        m_data->m_execspell.push_back("--mode=none");
++    }
++    // else: the system aspell (MSYS2) splits its filter-path at the drive letter colon, so it
++    // can't find none.amf and an explicit --mode fails; its default mode only warns.
++#else
++    m_data->m_execspell.push_back("--mode=none");
++#endif
+     if (!m_data->m_addCreateParam.empty()) {
+         m_data->m_execspell.push_back(m_data->m_addCreateParam);
+     }
+@@ -227,7 +238,9 @@ bool Aspell::buildDict(Rcl::Db &db, string &reason)
+     args.push_back("--encoding=utf-8");
+     cmdstring += string(" ") + "--encoding=utf-8";
+ #ifdef _WIN32
+-    args.push_back(string("--data-dir=") + m_data->m_datadir);
++    if (!m_data->m_datadir.empty()) {
++        args.push_back(string("--data-dir=") + m_data->m_datadir);
++    }
+ #endif
+     if (!m_data->m_addCreateParam.empty()) {
+         args.push_back(m_data->m_addCreateParam);
+@@ -345,6 +358,8 @@ bool Aspell::suggest(
+         reason.append("Aspell error: ");
+         return false;
+     }
++    // The Python helper writes CRLF line ends on Windows: don't keep the CR in the last word
++    rtrimstring(line, "\r\n");
+     LOGDEB1("ASPELL: got answer: " << line << "\n");
+     string empty;
+     if (m_data->m_speller.getline(empty, 1) <= 0) {
+diff --git a/src/common/rclconfig.cpp b/src/common/rclconfig.cpp
+index 220bc7a..cd7acc3 100644
+--- a/src/common/rclconfig.cpp
++++ b/src/common/rclconfig.cpp
+@@ -508,7 +508,31 @@ RclConfig::RclConfig(const string *argcnf)
+             m->m_confdir = path_canon(cp);
+         } else {
+             autoconfdir = true;
+-            m->m_confdir=path_cat(path_homedata(), path_defaultrecollconfsubdir());
++#ifdef _WIN32
++            // On Windows, prefer a Unix-style ~/.recoll if it already exists
++            // (handy under MSYS/Cygwin), else fall back to %LOCALAPPDATA%/Recoll.
++            // Check $HOME first (set by MSYS/Cygwin to e.g. /home/user) then
++            // %USERPROFILE% (what path_home() returns on native Windows).
++            m->m_confdir.clear();
++            const char *envhome = getenv("HOME");
++            if (envhome && *envhome) {
++                std::string h = path_cat(path_canon(envhome), ".recoll");
++                if (path_isdir(h)) {
++                    m->m_confdir = h;
++                }
++            }
++            if (m->m_confdir.empty()) {
++                std::string h = path_cat(path_home(), ".recoll");
++                if (path_isdir(h)) {
++                    m->m_confdir = h;
++                }
++            }
++            if (m->m_confdir.empty()) {
++                m->m_confdir = path_cat(path_homedata(), path_defaultrecollconfsubdir());
++            }
++#else
++            m->m_confdir = path_cat(path_homedata(), path_defaultrecollconfsubdir());
++#endif
+         }
+     }
+ 
+diff --git a/src/python/recoll/recoll/rclconfig.py b/src/python/recoll/recoll/rclconfig.py
+index a0be634..79ca469 100644
+--- a/src/python/recoll/recoll/rclconfig.py
++++ b/src/python/recoll/recoll/rclconfig.py
+@@ -100,6 +100,28 @@ class RclConfig:
+                     if os.path.exists(os.path.join(dir, "Share")):
+                         self.datadir = os.path.join(dir, "Share")
+                         break
++                # MSYS2 (FHS-style) layout: <prefix>/share/recoll/{filters,examples}, reached
++                # either from a filter or, for the Python extension, from the interpreter prefix.
++                if self.datadir is None:
++                    for dir in (
++                        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
++                        os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), ".."),
++                        os.path.join(sys.prefix, "share", "recoll"),
++                    ):
++                        if os.path.exists(os.path.join(dir, "examples", "recoll.conf")):
++                            self.datadir = os.path.normpath(dir)
++                            break
++                # MSYS2 (FHS-style) layout: <prefix>/share/recoll/{filters,examples}, reached
++                # either from a filter or, for the Python extension, from the interpreter prefix.
++                if self.datadir is None:
++                    for dir in (
++                        os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."),
++                        os.path.join(os.path.dirname(os.path.abspath(sys.argv[0])), ".."),
++                        os.path.join(sys.prefix, "share", "recoll"),
++                    ):
++                        if os.path.exists(os.path.join(dir, "examples", "recoll.conf")):
++                            self.datadir = os.path.normpath(dir)
++                            break
+             elif platsys == "Darwin":
+                 # On Darwin things are simpler because we don't supply a Python package. We are
+                 # certainly loaded from filters/

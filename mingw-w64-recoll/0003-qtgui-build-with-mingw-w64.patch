@@ -1,0 +1,69 @@
+diff --git a/src/qtgui/meson.build b/src/qtgui/meson.build
+index cd93dca..e8c8f26 100644
+--- a/src/qtgui/meson.build
++++ b/src/qtgui/meson.build
+@@ -52,7 +52,7 @@ pro_file = configure_file(
+ qmkmk = find_program(meson.current_source_dir() / 'qmkmk.sh')
+ 
+ infile = pro_file
+-outfile = 'recoll'
++outfile = host_machine.system() == 'windows' ? 'recoll.exe' : 'recoll'
+ prefixoption = 'PREFIX=' + get_option('prefix')
+ recoll = custom_target(
+     'recoll',
+diff --git a/src/qtgui/recoll.pro.in b/src/qtgui/recoll.pro.in
+index 7b43d9d..7da4285 100644
+--- a/src/qtgui/recoll.pro.in
++++ b/src/qtgui/recoll.pro.in
+@@ -137,7 +137,7 @@ i18n/recoll_xx.ts \
+ i18n/recoll_zh_CN.ts \
+ i18n/recoll_zh.ts
+ 
+-windows {
++windows:!mingw {
+   # NOTE: Copy this file into recoll-win.pro before building
+ 
+   include(singleapplication.pri)
+@@ -408,7 +408,7 @@ macx:macxbundlebuild() {
+   QMAKE_BUNDLE_DATA = APP_EXAMPLES APP_EXAMPLES_MAC APP_FILTERS APP_IMAGES APP_DOC
+ }
+ 
+-unix:!macxbundlebuild() {
++unix|mingw:!macxbundlebuild() {
+ 
+ VPATH = @srcdir@
+ # For SingleApplication
+@@ -425,14 +425,25 @@ VPATH = @srcdir@
+ 
+ @QMAKE_ENABLE_GUIDEBUG@CONFIG += debug force_debug_info
+ 
+-  HEADERS += crontool.h \
+-             rtitool.h
+-
+-  SOURCES += crontool.cpp \
+-        rtitool.cpp
+-
+-  FORMS  += crontool.ui \
+-        rtitool.ui
++  mingw {
++    DEFINES += PSAPI_VERSION=1 __WIN32__ UNICODE
++    CONFIG -= debug_and_release debug_and_release_target
++    RC_FILE = @srcdir@/recoll.rc
++    HEADERS += winschedtool.h
++    SOURCES += winschedtool.cpp
++    FORMS += winschedtool.ui
++    INCLUDEPATH += @srcdir@/../windows
++    LIBS += -lrpcrt4 -lws2_32 -luser32 -lshell32 -lshlwapi -lpsapi -lkernel32
++  } else {
++    HEADERS += crontool.h \
++               rtitool.h
++
++    SOURCES += crontool.cpp \
++          rtitool.cpp
++
++    FORMS  += crontool.ui \
++          rtitool.ui
++  }
+ 
+   UI_DIR = .ui
+   MOC_DIR = .moc

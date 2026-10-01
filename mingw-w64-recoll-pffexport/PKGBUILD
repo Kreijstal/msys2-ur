@@ -1,0 +1,56 @@
+_realname=recoll-pffexport
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+_commit=f298d4854bd9e1062f546c6a0bedc92f186c334f
+pkgver=20200926
+pkgrel=1
+pkgdesc="libpff's pffexport with Recoll's streaming mode, for indexing Outlook PST/OST files (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url="https://framagit.org/medoc92/recoll-libpff"
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-gettext-tools"
+             "git")
+source=("${_realname}::git+https://framagit.org/medoc92/recoll-libpff.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+prepare() {
+  cd ${_realname}
+  autoreconf -fi
+}
+
+build() {
+  # libpff only supports in-tree builds (generated include/libpff/types.h is
+  # not on the include path otherwise), so build in a per-arch copy.
+  rm -rf build-${MSYSTEM}
+  cp -r ${_realname} build-${MSYSTEM}
+  cd build-${MSYSTEM}
+  # Static libpff: only the tools are shipped, so this cannot clash with a
+  # stock libpff package.
+  ./configure \
+    --prefix=${MINGW_PREFIX} \
+    --host=${MINGW_CHOST} \
+    --build=${MINGW_CHOST} \
+    --disable-shared \
+    --enable-static \
+    --enable-static-executables=no \
+    --disable-nls \
+    --enable-python=no
+  make
+}
+
+check() {
+  cd build-${MSYSTEM}
+  ./pfftools/pffexport.exe -V
+  ./pfftools/pffexport.exe -h | grep -q 'stream mode'
+}
+
+package() {
+  cd build-${MSYSTEM}
+  install -Dm755 pfftools/pffexport.exe "${pkgdir}${MINGW_PREFIX}/bin/pffexport.exe"
+  install -Dm755 pfftools/pffinfo.exe "${pkgdir}${MINGW_PREFIX}/bin/pffinfo.exe"
+  install -Dm644 COPYING "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

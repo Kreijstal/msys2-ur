@@ -1,0 +1,297 @@
+diff --git a/src/common/rclinit.cpp b/src/common/rclinit.cpp
+index b03774e..475187f 100644
+--- a/src/common/rclinit.cpp
++++ b/src/common/rclinit.cpp
+@@ -219,12 +219,12 @@ bool CreateInvisibleWindow()
+ 
+     wc.lpfnWndProc = (WNDPROC)MainWndProc;
+     wc.hInstance = GetModuleHandle(NULL);
+-    wc.hIcon = LoadIcon(GetModuleHandle(NULL), L"TestWClass");
+-    wc.lpszClassName = L"TestWClass";
++    wc.hIcon = LoadIcon(GetModuleHandle(NULL), TEXT("TestWClass"));
++    wc.lpszClassName = TEXT("TestWClass");
+     RegisterClass(&wc);
+ 
+     hwnd =
+-        CreateWindowEx(0, L"TestWClass", L"TestWClass", WS_OVERLAPPEDWINDOW,
++        CreateWindowEx(0, TEXT("TestWClass"), TEXT("TestWClass"), WS_OVERLAPPEDWINDOW,
+                        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                        CW_USEDEFAULT, (HWND) NULL, (HMENU) NULL,
+                        GetModuleHandle(NULL), (LPVOID) NULL);
+diff --git a/src/common/rclutil.cpp b/src/common/rclutil.cpp
+index fe1ad76..be52a86 100644
+--- a/src/common/rclutil.cpp
++++ b/src/common/rclutil.cpp
+@@ -34,7 +34,7 @@
+ #define WIN32_LEAN_AND_MEAN
+ #define NOGDI
+ #include <windows.h>
+-#include <Shlobj.h>
++#include <shlobj.h>
+ #include "safeunistd.h"
+ 
+ #else // !_WIN32 ->
+@@ -54,6 +54,7 @@
+ #include <unordered_map>
+ #include <vector>
+ #include <numeric>
++#include <list>
+ 
+ #include "cstr.h"
+ #include "damlev.h"
+diff --git a/src/meson.build b/src/meson.build
+index 2a30181..6cdf150 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -234,7 +234,10 @@ recoll_conf.set(
+     cpp.has_function('posix_fadvise', prefix: '#include <fcntl.h>'),
+ )
+ 
+-if (
++if host_machine.system() == 'windows'
++    # ReadDirectoryChangesW-based monitor (index/rclmonrcv_win32.cpp)
++    recoll_conf.set('RCL_MONITOR', true)
++elif (
+     get_option('inotify')
+     and cpp.has_function(
+         'inotify_add_watch',
+@@ -294,7 +297,6 @@ librecoll_sources = [
+     'common/unacpp.cpp',
+     'common/webstore.cpp',
+     'index/webqueuefetcher.cpp',
+-    'index/checkretryfailed.cpp',
+     'index/exefetcher.cpp',
+     'index/fetcher.cpp',
+     'index/fsfetcher.cpp',
+@@ -360,7 +362,7 @@ librecoll_sources = [
+     'utils/copyfile.cpp',
+     'utils/cpuconf.cpp',
+     'utils/ecrontab.cpp',
+-    'utils/execmd.cpp',
++    # 'utils/execmd.cpp', -- added conditionally below (execmd_w.cpp on Windows)
+     'utils/fileudi.cpp',
+     'utils/fstreewalk.cpp',
+     'utils/idfile.cpp',
+@@ -370,7 +372,7 @@ librecoll_sources = [
+     'utils/md5ut.cpp',
+     'utils/mimeparse.cpp',
+     'utils/miniz.cpp',
+-    'utils/netcon.cpp',
++    # 'utils/netcon.cpp', -- added conditionally below (POSIX only)
+     'utils/pathut.cpp',
+     'utils/powerstatus.cpp',
+     'utils/pxattr.cpp',
+@@ -388,6 +390,18 @@ librecoll_sources = [
+ if host_machine.system() == 'darwin'
+     librecoll_sources += 'internfile/finderxattr.cpp'
+ endif
++if host_machine.system() == 'windows'
++    librecoll_sources += [
++        'windows/fnmatch.c',
++        'windows/wincodepages.cpp',
++        'windows/execmd_w.cpp',
++        'windows/strptime.cpp',
++    ]
++    librecolldeps += cc.find_library('shlwapi')
++    librecolldeps += cc.find_library('regex')
++else
++    librecoll_sources += ['utils/execmd.cpp', 'utils/netcon.cpp']
++endif
+ librecoll_incdir = include_directories(
+     'aspell',
+     'bincimapmime',
+@@ -399,6 +413,7 @@ librecoll_incdir = include_directories(
+     'unac',
+     'utils',
+     'xaposix',
++    'windows',
+ )
+ 
+ if librecoll_needed
+@@ -443,6 +458,7 @@ if get_option('indexer')
+ 
+     recollindex_sources = [
+         'index/checkindexed.cpp',
++        'index/checkretryfailed.cpp',
+         'index/fsindexer.cpp',
+         'index/indexer.cpp',
+         'index/rclmonprc.cpp',
+diff --git a/src/query/xadump.cpp b/src/query/xadump.cpp
+index c5c139e..ab1735a 100644
+--- a/src/query/xadump.cpp
++++ b/src/query/xadump.cpp
+@@ -211,12 +211,16 @@ int main(int argc, char **argv)
+     Usage();
+ 
+     atexit(cleanup);
++#ifdef SIGHUP
+     if (signal(SIGHUP, SIG_IGN) != SIG_IGN)
+     signal(SIGHUP, sigcleanup);
++#endif
+     if (signal(SIGINT, SIG_IGN) != SIG_IGN)
+     signal(SIGINT, sigcleanup);
++#ifdef SIGQUIT
+     if (signal(SIGQUIT, SIG_IGN) != SIG_IGN)
+     signal(SIGQUIT, sigcleanup);
++#endif
+     if (signal(SIGTERM, SIG_IGN) != SIG_IGN)
+     signal(SIGTERM, sigcleanup);
+ 
+diff --git a/src/utils/log.cpp b/src/utils/log.cpp
+index 3cea926..a3a703f 100644
+--- a/src/utils/log.cpp
++++ b/src/utils/log.cpp
+@@ -21,7 +21,7 @@
+ #include <fstream>
+ #include <time.h>
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ #define localtime_r(A,B) localtime_s(B,A)
+ #endif
+ 
+diff --git a/src/utils/miniz.cpp b/src/utils/miniz.cpp
+index d4ca135..7abe523 100644
+--- a/src/utils/miniz.cpp
++++ b/src/utils/miniz.cpp
+@@ -2957,13 +2957,10 @@ static FILE *mz_freopen(const char *pPath, const char *pMode, FILE *pStream)
+ #ifndef MINIZ_NO_TIME
+ #include <sys/utime.h>
+ #endif
+-#if defined(__MINGW64__)
+-#define MZ_FOPENREAD mz_fopen
+-#define MZ_FOPEN mz_fopen
+-#else /*->msc*/
++/* MZ_FOPENREAD must accept wchar_t* on Windows (call site uses L"rb").
++ * mz_fopen is char-based, so always route MZ_FOPENREAD to _wfopen. */
+ #define MZ_FOPENREAD(f, m) _wfopen(f, m)
+ #define MZ_FOPEN(f, m) fopen(f, m)
+-#endif
+ #define MZ_FCLOSE fclose
+ #define MZ_FREAD fread
+ #define MZ_FWRITE fwrite
+diff --git a/src/utils/pathut.cpp b/src/utils/pathut.cpp
+index 9bc33b6..5f2cb03 100644
+--- a/src/utils/pathut.cpp
++++ b/src/utils/pathut.cpp
+@@ -64,15 +64,14 @@
+ #include <vector>
+ #include <fcntl.h>
+ 
+-// Listing directories: we include the normal dirent.h on Unix-derived
+-// systems, and on MinGW, where it comes with a supplemental wide char
+-// interface. When building with MSVC, we use our bundled msvc_dirent.h,
+-// which is equivalent to the one in MinGW
+-#ifdef _MSC_VER
++// Listing directories: we use our bundled msvc_dirent.h on Windows
++// (both MSVC and MinGW), because newer mingw-w64/UCRT dirent.h no longer
++// exposes a WIN32_FIND_DATAW `data` member on _WDIR.
++#ifdef _WIN32
+ #include "msvc_dirent.h"
+-#else // !_MSC_VER
++#else
+ #include <dirent.h>
+-#endif // _MSC_VER
++#endif
+ 
+ 
+ #ifdef _WIN32
+@@ -82,7 +81,6 @@
+ #define WINVER 0x0601
+ #undef _WIN32_WINNT
+ #define _WIN32_WINNT 0x0601
+-#define LOGFONTW void
+ #endif
+ 
+ #ifndef NOMINMAX
+@@ -92,9 +90,10 @@
+ #define NOGDI
+ #include <windows.h>
+ #include <io.h>
+-#include <Shlobj.h>
+-#include <Shlwapi.h>
+-#include <Stringapiset.h>
++#include <process.h>
++#include <shlobj.h>
++#include <shlwapi.h>
++#include <stringapiset.h>
+ 
+ #include <sys/utime.h>
+ #include <sys/stat.h>
+@@ -179,7 +178,7 @@ static time_t FileTimeToUnixTime(const FILETIME *ft)
+ 
+ // Populate our close-to-POSIX PathStat struct from Windows FIND_DATA, as returned from
+ // e.g. Find(First/Next)FileW()
+-void MapWinFindDataToStat(const WIN32_FIND_DATA *fd, struct PathStat *pstp)
++void MapWinFindDataToStat(const WIN32_FIND_DATAW *fd, struct PathStat *pstp)
+ {
+     memset(pstp, 0, sizeof(struct PathStat));
+     pstp->pst_size = ((unsigned __int64)fd->nFileSizeHigh << 32) | fd->nFileSizeLow;
+@@ -898,7 +897,18 @@ std::string path_pkgdatadir(
+     // But maybe we are the recoll python extension, and execpath is the python exe which could be
+     // anywhere. We try the fixed fallback paths. If this fails, the user will have to set the
+     // environment variable.
++    // Try, in order:
++    //   <exedir>/share                               (legacy in-tree layout)
++    //   <exedir>/share/<progname>                    (FHS-style, recoll inside e.g. /ucrt64/share/recoll)
++    //   <exedir>/../share/<progname>                 (Unix/MSYS install layout, e.g. /ucrt64/bin -> /ucrt64/share/recoll)
++    //   compiled-in path if non-empty                (e.g. RECOLL_DATADIR set at build time)
++    //   user-supplied alts (Program Files fallbacks for python)
+     std::vector<std::string> paths{path_cat(path_thisexecdir(), "share")};
++    paths.push_back(path_cat(path_thisexecdir(), {"share", progname}));
++    paths.push_back(path_cat(path_getfather(path_thisexecdir()), {"share", progname}));
++    if (!compiled.empty()) {
++        paths.push_back(compiled);
++    }
+     paths.insert(paths.end(), alts.begin(), alts.end());
+     for (const auto& path : paths) {
+         if (path_exists(path_cat(path, tstpath))) {
+diff --git a/src/utils/readfile.h b/src/utils/readfile.h
+index 46d6b66..5ea34ca 100644
+--- a/src/utils/readfile.h
++++ b/src/utils/readfile.h
+@@ -21,6 +21,7 @@
+ // and sending the data for processing by a sink object.
+ #include <sys/types.h>
+ 
++#include <cstdint>
+ #include <string>
+ #include <memory>
+ 
+diff --git a/src/windows/getopt.h b/src/windows/getopt.h
+index b9521f9..806d1f0 100644
+--- a/src/windows/getopt.h
++++ b/src/windows/getopt.h
+@@ -6,7 +6,10 @@
+   using it.
+ */
+ 
+-#ifndef GETOPT_H
++#ifdef __MINGW32__
++/* MinGW provides getopt_long() (with C linkage) in its runtime */
++#include_next <getopt.h>
++#elif !defined(GETOPT_H)
+ #define GETOPT_H
+ 
+ /* include files needed by this include file */
+diff --git a/src/xaposix/safeunistd.h b/src/xaposix/safeunistd.h
+index e0e67c2..f94199f 100644
+--- a/src/xaposix/safeunistd.h
++++ b/src/xaposix/safeunistd.h
+@@ -50,7 +50,7 @@
+ 
+ #endif
+ 
+-#ifdef __WIN32__
++#if defined(__WIN32__) && defined(_MSC_VER)
+ 
+ #ifndef _SSIZE_T_DEFINED
+ #ifdef  _WIN64
+@@ -70,6 +70,6 @@ inline ssize_t sys_write(int fd, const void* buf, size_t cnt)
+     return static_cast<ssize_t>(::write(fd, buf, static_cast<int>(cnt)));
+ }
+ 
+-#endif /* __WIN32__ */
++#endif /* __WIN32__ && _MSC_VER */
+ 
+ #endif /* XAPIAN_INCLUDED_SAFEUNISTD_H */
