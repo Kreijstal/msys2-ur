@@ -1,0 +1,16 @@
+Newer mingw-w64 headers declare _utime() with struct _utimbuf *, which is a
+distinct type from struct utimbuf (the CTYPE of CUtimbuf). Clang treats the
+mismatch in the capi wrapper as an error. The POSIX-named utime() takes
+struct utimbuf * and resolves to the same _utime64 import.
+
+--- a/libraries/ghc-internal/src/GHC/Internal/System/Posix/Internals.hs
++++ b/libraries/ghc-internal/src/GHC/Internal/System/Posix/Internals.hs
+@@ -729,7 +729,7 @@
+ foreign import capi unsafe "HsBase.h _unlink"
+    c_unlink :: CString -> IO CInt
+ 
+-foreign import capi unsafe "HsBase.h _utime"
++foreign import capi unsafe "HsBase.h utime"
+    c_utime :: CString -> Ptr CUtimbuf -> IO CInt
+ 
+ foreign import capi unsafe "HsBase.h _getpid"

@@ -1,0 +1,69 @@
+Query pkg-config versions in chunks
+
+readPkgConfigDb passes the names of all installed .pc files to a single
+`pkg-config --modversion` call. In MSYS2 (UCRT64 has over 2000 of them)
+that command line exceeds the Windows limit of 32767 characters, process
+creation fails with "does not exist", and cabal treats pkg-config as
+unavailable: the solver silently drops +pkg-config flags (e.g. zlib uses
+its bundled copy) or fails when a package requires a pkg-config library.
+
+--- a/cabal-install-solver/src/Distribution/Solver/Types/PkgConfigDb.hs
++++ b/cabal-install-solver/src/Distribution/Solver/Types/PkgConfigDb.hs
+@@ -95,12 +95,31 @@
+               $ pkgList
+         unless (null failedPkgNames) $
+           info verbosity ("Some pkg-config packages have names containing invalid unicode: " ++ intercalate ", " failedPkgNames)
++        -- Query the versions in chunks: with thousands of .pc files (as in
++        -- MSYS2) a single command line exceeds the length limit on Windows,
++        -- the process cannot even be started, and pkg-config would be
++        -- treated as unavailable.
++        Just . pkgConfigDbFromList . concat <$> mapM (getVersions pkgConfig) (chunksOf 256 pkgNames)
++  where
++    -- For when pkg-config invocation fails (possibly because of a
++    -- too long command line).
++    noPkgConfig extra = do
++        info verbosity ("Warning: Failed to query pkg-config, Cabal will backtrack "
++                        ++ "if a package from pkg-config is requested. Error message: "
++                        ++ extra)
++        return Nothing
++
++    ioErrorHandler :: IOException -> IO (Maybe PkgConfigDb)
++    ioErrorHandler e = noPkgConfig (show e)
++
++    getVersions :: ConfiguredProgram -> [String] -> IO [(String, String)]
++    getVersions pkgConfig names = do
+         (outs, _errs, exitCode) <-
+                      getProgramInvocationOutputAndErrors verbosity
+-                       (programInvocation pkgConfig ("--modversion" : pkgNames))
++                       (programInvocation pkgConfig ("--modversion" : names))
+         let pkgVersions = lines outs
+-        if exitCode == ExitSuccess && length pkgVersions == length pkgNames
+-          then (return . Just . pkgConfigDbFromList . zip pkgNames) pkgVersions
++        if exitCode == ExitSuccess && length pkgVersions == length names
++          then return (zip names pkgVersions)
+           else
+           -- if there's a single broken pc file the above fails, so we fall back
+           -- into calling it individually
+@@ -110,18 +129,11 @@
+           -- requested one, we fall back to querying one by one.
+           do
+             info verbosity "call to pkg-config --modversion on all packages failed. Falling back to querying pkg-config individually on each package"
+-            Just . pkgConfigDbFromList . catMaybes <$> mapM (getIndividualVersion pkgConfig) pkgNames
+-  where
+-    -- For when pkg-config invocation fails (possibly because of a
+-    -- too long command line).
+-    noPkgConfig extra = do
+-        info verbosity ("Warning: Failed to query pkg-config, Cabal will backtrack "
+-                        ++ "if a package from pkg-config is requested. Error message: "
+-                        ++ extra)
+-        return Nothing
++            catMaybes <$> mapM (getIndividualVersion pkgConfig) names
+ 
+-    ioErrorHandler :: IOException -> IO (Maybe PkgConfigDb)
+-    ioErrorHandler e = noPkgConfig (show e)
++    chunksOf :: Int -> [a] -> [[a]]
++    chunksOf _ [] = []
++    chunksOf n xs = let (ys, zs) = splitAt n xs in ys : chunksOf n zs
+ 
+     getIndividualVersion :: ConfiguredProgram -> String -> IO (Maybe (String, String))
+     getIndividualVersion pkgConfig pkg = do

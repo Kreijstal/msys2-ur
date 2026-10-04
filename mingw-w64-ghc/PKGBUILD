@@ -1,0 +1,168 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=ghc
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=9.14.1
+pkgrel=1
+pkgdesc="The Glorious Glasgow Haskell Compilation System (mingw-w64)"
+arch=('any')
+mingw_arch=('clang64' 'ucrt64')
+url='https://www.haskell.org/ghc/'
+msys2_repository_url='https://gitlab.haskell.org/ghc/ghc'
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-clang"
+         "${MINGW_PACKAGE_PREFIX}-lld"
+         "${MINGW_PACKAGE_PREFIX}-llvm")
+makedepends=("${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-python")
+options=('!strip' 'staticlibs')
+
+# Stage0: the only binary input. Hadrian's bootstrap plans cover 9.10/9.12
+# boot compilers, so use 9.12.2 and build Hadrian plus all of its Hackage
+# dependencies from source with hadrian/bootstrap/bootstrap.py (no cabal-install,
+# no network during build()).
+_bootver=9.12.2
+_hsarch=x86_64
+# name version revision src_sha256 cabal_sha256 (from plan-bootstrap-9_12_2.json)
+_hadrian_deps=(
+  'base16-bytestring 1.0.2.0 1 1d5a91143ef0e22157536093ec8e59d226a68220ec89378d5dcaeea86472c784 a694e88f9ec9fc79f0b03f233d3fea592b68f70a34aac2ddb5bcaecb6562e2fd'
+  'clock 0.8.4 0 6ae9898afe788a5e334cd5fad5d18a3c2e8e59fa09aaf7b957dbb38a4767df2e b938655b00cf204ce69abfff946021bed111d2609a9f7a9c22e28a1a202e9115'
+  'cryptohash-sha256 0.11.102.1 6 73a7dc7163871a80837495039a099967b11f5c4fe70a118277842f7a713c6bf6 0e9de2ccce261e7a5b027e842f6f47f50eb0e6059a0de98a5479f75aa8164107'
+  'extra 1.8 0 2fa4ce5eae50560bba80f1883913cf2ed52b3d87fd290dae27d838c94f5389a1 57d9200fbea2e88e05e0be35925511764827b1c86d3214106b0b610f331fc40c'
+  'filepattern 0.1.3 0 cc445d439ea2f65cac7604d3578aa2c3a62e5a91dc989f4ce5b3390db9e59636 372c1733d83b90045eb29da9f010fed79bfef8771ce65eb126a1d83ecc54a9a2'
+  'hashable 1.5.0.0 1 e58b3a8e18da5f6cd7e937e5fd683e500bb1f8276b3768269759119ca0cddb6a 2f23146cbe0325029927b221647695a4c7d6e97548ff731110979e34361f58ef'
+  'heaps 0.4.1 0 8763a4663a2d0b3c912400a547d66ae11b46a954403b6747272148e950aa0382 74ce60a23b8ef247b8bca71eeb38289e82b3b5e83b2383600b2c838a68218068'
+  'js-dgtable 0.5.2 0 e28dd65bee8083b17210134e22e01c6349dc33c3b7bd17705973cd014e9f20ac f75cb4fa53c88c65794becdd48eb0d3b2b8abd89a3d5c19e87af91f5225c15e4'
+  'js-flot 0.8.3 0 1ba2f2a6b8d85da76c41f526c98903cbb107f8642e506c072c1e7e3c20fe5e7a 4c1c447a9a2fba0adba6d30678302a30c32b9dfde9e7aa9e9156483e1545096d'
+  'js-jquery 3.3.1 0 e0e0681f0da1130ede4e03a051630ea439c458cb97216cdb01771ebdbe44069b 59ab6c79159549ef94b584abce8e6d3b336014c2cce1337b59a8f637e2856df5'
+  'primitive 0.9.0.0 2 696d4bd291c94d736142d6182117dca4258d3ef28bfefdb649ac8b5ecd0999c7 de20bf4eff1f972088854c8efda6eaca2d3147aff62232c3707f059152638759'
+  'splitmix 0.1.1 0 d678c41a603a62032cf7e5f8336bb8222c93990e4b59c8b291b7ca26c7eb12c7 8f92088f1c51c8d4569279a07565f8aa6b534a6735615b2295d2961dec8f1783'
+  'random 1.3.0 0 6b5067e65625d777e31f151f5fcec351091d9de832183ca2a2a864e1cfd4f1b1 e5b7016e43a8f4822ebcf8cacaaa737beb62d370b988b5c69e95105d9f0fd582'
+  'unordered-containers 0.2.20 4 d9cfb287cf00592d39dc9c3cac8b99627ea08f2c01798e70130fc39f7c90f11d 233cbcdda6c2698932bb391ce0935fb44f80c115621ee815a21ed33ac8ede422'
+  'utf8-string 1.0.2 0 ee48deada7600370728c4156cb002441de770d0121ae33a68139a9ed9c19b09a 79416292186feeaf1f60e49ac5a1ffae9bf1b120e040a74bf0e81ca7f1d31d3f'
+  'shake 0.19.8 0 6384e33a26a2590bf33719e88881076b899ac4b5340c1c9271e4caa37e9d6535 03c8f06de478e07ad6fde95984c9206920106d0d8432ecb7ab825ef108d45382'
+)
+
+source=("https://downloads.haskell.org/~ghc/${pkgver}/ghc-${pkgver}-src.tar.xz"
+        "https://downloads.haskell.org/~ghc/${_bootver}/ghc-${_bootver}-${_hsarch}-unknown-mingw32.tar.xz"
+        'launcher.c'
+        '0001-utime-mingw-utimbuf.patch'
+        '0002-rts-pe-import-name-types.patch')
+sha256sums=('2a83779c9af86554a3289f2787a38d6aa83d00d136aa9f920361dd693c101e77'
+            'eccd82af0c7d1d5316f30e0a6dd2d6ff608a4a2a99fbdf5ccb0786c49da59b1d'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+noextract=()
+for _dep in "${_hadrian_deps[@]}"; do
+  read -r _n _v _r _ssha _csha <<< "${_dep}"
+  source+=("${_n}-${_v}.tar.gz::https://hackage.haskell.org/package/${_n}-${_v}/${_n}-${_v}.tar.gz"
+           "${_n}-${_v}-r${_r}.cabal::https://hackage.haskell.org/package/${_n}-${_v}/revision/${_r}.cabal")
+  sha256sums+=("${_ssha}" "${_csha}")
+  noextract+=("${_n}-${_v}.tar.gz")
+done
+unset _dep _n _v _r _ssha _csha
+
+_bootghc() {
+  echo "${srcdir}/ghc-${_bootver}-${_hsarch}-unknown-mingw32/bin/ghc.exe"
+}
+
+prepare() {
+  cd "${srcdir}/ghc-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-utime-mingw-utimbuf.patch"
+  patch -Np1 -i "${srcdir}/0002-rts-pe-import-name-types.patch"
+
+  cd "${srcdir}/ghc-${pkgver}/hadrian/bootstrap"
+  rm -rf _build
+  mkdir -p _build/tarballs
+  local _dep _n _v _r _rest
+  for _dep in "${_hadrian_deps[@]}"; do
+    read -r _n _v _r _rest <<< "${_dep}"
+    cp "${srcdir}/${_n}-${_v}.tar.gz" _build/tarballs/
+    cp "${srcdir}/${_n}-${_v}-r${_r}.cabal" "_build/tarballs/${_n}.cabal"
+  done
+
+  # The shipped plans were generated on Linux and list unix as a GHC builtin;
+  # a Windows GHC ships Win32 instead, which Setup.hs picks up on its own.
+  python - <<PY
+import json
+plan = json.load(open("plan-bootstrap-${_bootver//./_}.json"))
+plan["builtin"] = [b for b in plan["builtin"] if b["package"] != "unix"]
+json.dump(plan, open("plan-bootstrap-windows.json", "w"), indent=2)
+PY
+}
+
+build() {
+  cd "${srcdir}/ghc-${pkgver}/hadrian/bootstrap"
+  msg2 "Bootstrapping Hadrian with GHC ${_bootver}"
+  python bootstrap.py --no-archive \
+    -w "$(cygpath -m "$(_bootghc)")" \
+    -d plan-bootstrap-windows.json
+
+  cd "${srcdir}/ghc-${pkgver}"
+  msg2 "Configuring GHC ${pkgver}"
+  # Same tool choices as upstream's bundled toolchain (m4/fp_setup_windows_toolchain.m4),
+  # which the distro-toolchain path does not apply. LLD's COFF driver has no -r,
+  # so object merging is disabled the same way. hadrian.exe is a native program
+  # and cannot spawn MSYS paths such as /usr/bin/sh, so pass those as Windows paths.
+  ./configure \
+    --prefix="${MINGW_PREFIX}" \
+    --build="${MINGW_CHOST}" \
+    --host="${MINGW_CHOST}" \
+    --target="${MINGW_CHOST}" \
+    --enable-distro-toolchain \
+    GHC="$(_bootghc)" \
+    CC=clang CXX=clang++ LD=ld.lld \
+    AR=llvm-ar NM=llvm-nm RANLIB=llvm-ranlib OBJDUMP=llvm-objdump \
+    DLLTOOL=llvm-dlltool WindresCmd=llvm-windres \
+    CONF_GCC_LINKER_OPTS_STAGE1="-fuse-ld=lld" \
+    CONF_GCC_LINKER_OPTS_STAGE2="-fuse-ld=lld" \
+    MergeObjsCmd="" MergeObjsArgs="" \
+    SH="$(cygpath -m /usr/bin/sh)" \
+    AutoreconfCmd="$(cygpath -m /usr/bin/autoreconf)" \
+    MAKEINFO="$(cygpath -m /usr/bin/makeinfo)" \
+    GIT="$(cygpath -m /usr/bin/git)"
+
+  msg2 "Building GHC ${pkgver}"
+  # binary-dist-dir unconditionally copies the bundled toolchain from _build/mingw
+  # on Windows and then deletes its .stamp; with a distro toolchain there is none.
+  mkdir -p _build/mingw
+  touch _build/mingw/.stamp
+  # ACLOCAL_PATH gets converted to a Windows path list on the way into the
+  # native hadrian.exe and comes back mangled for the MSYS aclocal it spawns
+  # (for distrib/configure.ac, which only needs MSYS's own macros).
+  # makepkg's CXX leaks into the in-tree GMP configure, whose libtool then sets
+  # up an MSVC-style C++ tag (GMP never checks for GNU C++ without --enable-cxx)
+  # and names the static library gmp.lib instead of libgmp.a.
+  env -u ACLOCAL_PATH -u CXX -u CXXFLAGS \
+  hadrian/bootstrap/_build/bin/hadrian.exe \
+    -j"$(nproc)" \
+    --flavour=release \
+    --docs=none \
+    binary-dist-dir
+}
+
+package() {
+  local _bindist="${srcdir}/ghc-${pkgver}/_build/bindist/ghc-${pkgver}-${MINGW_CHOST}"
+  local _dest="${pkgdir}${MINGW_PREFIX}/lib/ghc-${pkgver}"
+
+  mkdir -p "${_dest}"
+  cp -a "${_bindist}"/{bin,lib} "${_dest}/"
+  [[ -d "${_bindist}/doc" ]] && cp -a "${_bindist}/doc" "${_dest}/"
+  # ghcii.sh wrappers call the MinGW-bundled toolchain layout; not needed here.
+  rm -f "${_dest}"/bin/ghcii*.sh
+
+  # Launchers in ${MINGW_PREFIX}/bin forwarding to lib/ghc-${pkgver}/bin/<name>.
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/bin"
+  ${CC:-cc} -O2 -municode -DGHC_SUBDIR="L\"ghc-${pkgver}\"" \
+    -o "${srcdir}/ghc-launcher.exe" "${srcdir}/launcher.c"
+  local _exe
+  for _exe in "${_dest}"/bin/*.exe; do
+    install -m755 "${srcdir}/ghc-launcher.exe" \
+      "${pkgdir}${MINGW_PREFIX}/bin/$(basename "${_exe}")"
+  done
+
+  install -Dm644 "${srcdir}/ghc-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

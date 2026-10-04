@@ -1,0 +1,248 @@
+Fix loading of mingw-w64 CRT import libraries in the RTS linker, which
+broke GHCi, Template Haskell and runghc with mingw-w64 14:
+
+  libmingwex.a: unknown symbol `__imp___msvcrt_assert'
+
+mingw-w64 imports __msvcrt_assert from api-ms-win-crt-runtime-l1-1-0.dll,
+which exports it as _assert.
+
+ * Honour the short import name type (NO_PREFIX, UNDECORATE, EXPORTAS) as
+   described in the PE/COFF spec. llvm-dlltool emits EXPORTAS for renamed
+   imports such as __msvcrt_assert.
+ * binutils' dlltool emits a member defining __imp___msvcrt_assert with the
+   hint name _assert. Register the symbol name too, and look imports up in
+   the DLL by the hint name rather than by the symbol name.
+ * Resolve a reference to the IAT slot __imp_foo through the symbol table
+   when an import library already provided foo, instead of searching the
+   DLLs for an export named foo.
+ * checkAndLoadImportLibrary freed the buffer holding the symbol name (and
+   the DLL name) before inserting it into the symbol table, which keeps a
+   pointer to its key, so later lookups of import library symbols failed.
+ * lookupSymbol_PEi386 passed the caller's type pointer to the lookup of
+   the _head symbol of a BFD import, overwriting SYM_TYPE_CODE with
+   SYM_TYPE_DATA on the first lookup. A call to e.g. wcsncmp from
+   libucrt.a then went through a data jump island and crashed with
+   "Access violation in generated code when executing data" (any file
+   IO in GHCi on UCRT64).
+
+--- a/rts/linker/PEi386.c
++++ b/rts/linker/PEi386.c
+@@ -1148,6 +1148,42 @@
+     mbstowcs(dll, dllName, nameLen);
+     stgFree(dllName);
+ 
++    /* The name exported by the DLL is not always the symbol name; it depends
++       on the import name type (see the PE/COFF spec, "Import Name Type").
++       LLVM's dlltool emits IMPORT_OBJECT_NAME_EXPORTAS for renamed imports
++       such as mingw-w64's __msvcrt_assert -> _assert, where the export name
++       follows the DLL name. */
++    char* exportName = NULL;
++    switch (hdr.NameType) {
++    case 4: /* IMPORT_OBJECT_NAME_EXPORTAS */ {
++        size_t dllLen = strnlen(image + symLen, nameLen) + 1;
++        if ((size_t)nameLen > dllLen) {
++            const char* name = image + symLen + dllLen;
++            size_t len = strnlen(name, nameLen - dllLen);
++            exportName = stgMallocBytes(len + 1, "checkAndLoadImportLibrary(exportName)");
++            memcpy(exportName, name, len);
++            exportName[len] = '\0';
++        }
++        break;
++    }
++    case 2: /* IMPORT_OBJECT_NAME_NO_PREFIX */
++    case 3: /* IMPORT_OBJECT_NAME_UNDECORATE */ {
++        const char* name = symbol;
++        if (*name == '?' || *name == '@' || *name == '_')
++            name++;
++        size_t len = strlen(name);
++        exportName = stgMallocBytes(len + 1, "checkAndLoadImportLibrary(exportName)");
++        memcpy(exportName, name, len + 1);
++        if (hdr.NameType == 3) {
++            char* at = strchr(exportName, '@');
++            if (at) *at = '\0';
++        }
++        break;
++    }
++    default:
++        break;
++    }
++
+     IF_DEBUG(linker, debugBelch("loadArchive: read symbol %s from lib `%" PATH_FMT "'\n", symbol, dll));
+     // We must call `addDLL_PEi386` directly rather than `addDLL` because `addDLL`
+     // is now a wrapper around `loadNativeObj` which acquires a lock which we
+@@ -1155,41 +1191,51 @@
+     HINSTANCE instance;
+     const char* result = addDLL_PEi386(dll, &instance);
+ 
++    /* The symbol table keeps a pointer to its key, so the name must outlive
++       image. */
++    char* symName = stgMallocBytes(symLen, "checkAndLoadImportLibrary(symName)");
++    memcpy(symName, symbol, symLen);
+     stgFree(image);
+ 
+     if (result != NULL) {
+         errorBelch("Could not load `%" PATH_FMT "'. Reason: %s\n", dll, result);
+         load_dll_warn = true;
+ 
++        if (exportName)
++            stgFree(exportName);
++        stgFree(symName);
+         stgFree(dll);
+         fseek(f, -(n + sizeof_COFF_import_Header), SEEK_CUR);
+         return false;
+     }
+ 
+-    stgFree(dll);
+-
+     // See Note [Windows API Set]
+     // We must immediately tie the symbol to the shared library.  The easiest
+     // way is to load the symbol immediately. We already have all the
+     // information so might as well
+-    SymbolAddr* sym = lookupSymbolInDLL_PEi386 (symbol, instance, dll, NULL);
++    SymbolAddr* sym = lookupSymbolInDLL_PEi386 (exportName ? exportName : symName,
++                                                instance, dll, NULL);
++    if (exportName)
++        stgFree(exportName);
+ 
+     // Could be an import descriptor etc, skip if no symbol.
+-    if (!sym)
++    if (!sym) {
++      stgFree(symName);
++      stgFree(dll);
+       return true;
++    }
+ 
+     // The symbol must have been found, and we can add it to the RTS symbol table
+-    IF_DEBUG(linker, debugBelch("checkAndLoadImportLibrary: resolved symbol %s to %p\n", symbol, sym));
++    IF_DEBUG(linker, debugBelch("checkAndLoadImportLibrary: resolved symbol %s to %p\n", symName, sym));
+     // Because the symbol has been loaded before we actually need it, if a
+     // stronger reference wants to add a duplicate we should discard this
+     // one to preserve link order.
+     SymType symType = SYM_TYPE_DUP_DISCARD | SYM_TYPE_HIDDEN;
+     symType |= hdr.Type == IMPORT_OBJECT_CODE ? SYM_TYPE_CODE : SYM_TYPE_DATA;
+ 
+-    if (!ghciInsertSymbolTable(dll, symhash, symbol, sym, false, symType, NULL))
+-      return false;
+-
+-    return true;
++    bool ok = ghciInsertSymbolTable(dll, symhash, symName, sym, false, symType, NULL);
++    stgFree(dll);
++    return ok;
+ }
+ 
+ static void
+@@ -1984,9 +2030,16 @@
+                               sname, (char*)addr));
+           /* We're going to free the any data associated with the import
+              library without copying the sections.  So we have to duplicate
+-             the symbol name and values before the pointers become invalid.  */
++             the symbol name and values before the pointers become invalid.
++             The value holds the name of the _head symbol of the DLL followed
++             by the name exported by the DLL, see lookupSymbol_PEi386.  */
++          size_t headLen = strlen (addr) + 1;
++          char* headExport = stgMallocBytes (headLen + strlen (sname) + 1,
++                                             "ocGetNames_PEi386");
++          memcpy (headExport, addr, headLen);
++          strcpy (headExport + headLen, sname);
+           sname = strdup (sname);
+-          addr  = strdup (addr);
++          addr  = headExport;
+           type = has_code_section ? SYM_TYPE_CODE : SYM_TYPE_DATA;
+           type |= SYM_TYPE_DUP_DISCARD;
+           if (!ghciInsertSymbolTable(oc->fileName, symhash, sname,
+@@ -1998,6 +2051,40 @@
+           }
+           setImportSymbol (oc, sname);
+ 
++          /* The hint name is the name exported by the DLL, which for a
++             renamed import is not the symbol name: binutils' dlltool
++             builds mingw-w64's __msvcrt_assert (exported as _assert by
++             api-ms-win-crt-runtime-l1-1-0.dll) as a member defining
++             __imp___msvcrt_assert with the hint name _assert.  Register
++             the symbol name as well; references to its IAT slot are
++             resolved through it in lookupSymbol_PEi386.  */
++          for (unsigned int j = 0; j < (uint32_t)oc->n_symbols; j++) {
++              COFF_symbol* isym = &oc->info->symbols[j];
++              uint32_t isec = getSymSectionNumber (info, isym);
++              bool defined = getSymStorageClass (info, isym)
++                               == IMAGE_SYM_CLASS_EXTERNAL
++                             && isec != PE_SECTION_UNDEFINED
++                             && isec != PE_SECTION_ABSOLUTE
++                             && isec != PE_SECTION_DEBUG;
++              SymbolName* iname = get_sym_name (getSymShortName (info, isym), oc);
++              j += getSymNumberOfAuxSymbols (info, isym);
++              if (!defined || strncmp (iname, "__imp_", 6) != 0
++                  || strcmp (iname + 6, sname) == 0)
++                  continue;
++              iname = strdup (iname + 6);
++              IF_DEBUG(linker,
++                       debugBelch("addImportSymbol `%s' => `%s' exported as `%s'\n",
++                                  iname, (char*)addr, sname));
++              if (!ghciInsertSymbolTable(oc->fileName, symhash, iname,
++                                         addr, false, type, oc)) {
++                 releaseOcInfo (oc);
++                 stgFree (oc->image);
++                 oc->image = NULL;
++                 return false;
++              }
++              setImportSymbol (oc, iname);
++          }
++
+           /* Don't process this oc any further. Just exit.  */
+           oc->n_symbols = 0;
+           oc->symbols   = NULL;
+@@ -2493,6 +2580,24 @@
+             // us to determine the symbol type precisely.
+             *type = SYM_TYPE_CODE;
+         }
++        /* A reference to the IAT slot __imp_foo of a symbol foo that an
++           import library already resolved (e.g. one imported under a
++           different export name, see checkAndLoadImportLibrary): allocate
++           the slot here rather than guessing the export name in the DLLs. */
++        if (dependent && strncmp (lbl, "__imp_", 6) == 0
++            && ghciLookupSymbolInfo(symhash, lbl + 6, &pinfo)) {
++            SymbolAddr* target = lookupSymbol_PEi386(lbl + 6, dependent, NULL);
++            if (target) {
++                SymbolAddr** indirect = m32_alloc(dependent->rw_m32, sizeof(SymbolAddr*), 8);
++                if (indirect == NULL) {
++                    barf("lookupSymbol_PEi386: Failed to allocate indirection");
++                }
++                *indirect = target;
++                if (type) *type = SYM_TYPE_INDIRECT_DATA;
++                return (SymbolAddr*) indirect;
++            }
++        }
++
+         sym = lookupSymbolInDLLs(lbl, dependent);
+         return sym; // might be NULL if not found
+     } else {
+@@ -2501,7 +2606,10 @@
+         if (pinfo && pinfo->owner && isSymbolImport (pinfo->owner, lbl))
+         {
+             /* See Note [BFD import library].  */
+-            HINSTANCE dllInstance = (HINSTANCE)lookupDependentSymbol(pinfo->value, dependent, type);
++            /* Don't let the lookup of the _head symbol, which is data,
++               overwrite the type of the import itself: a call to a
++               function would otherwise go through a data indirection.  */
++            HINSTANCE dllInstance = (HINSTANCE)lookupDependentSymbol(pinfo->value, dependent, NULL);
+             if (!dllInstance && pinfo->value)
+                return pinfo->value;
+ 
+@@ -2511,10 +2619,14 @@
+                           "No _iname symbol.", lbl);
+                return NULL;
+             }
++            /* The value holds the _head symbol name followed by the name
++               exported by the DLL, see ocGetNames_PEi386.  */
++            const char* exportName = (char*)pinfo->value
++                                       + strlen ((char*)pinfo->value) + 1;
+             IF_DEBUG(linker,
+-               debugBelch("indexing import %s => %s using dll instance %p\n",
+-                   lbl, (char*)pinfo->value, dllInstance));
+-            pinfo->value = GetProcAddress((HMODULE)dllInstance, lbl);
++               debugBelch("indexing import %s => %s (export %s) using dll instance %p\n",
++                   lbl, (char*)pinfo->value, exportName, dllInstance));
++            pinfo->value = GetProcAddress((HMODULE)dllInstance, exportName);
+             clearImportSymbol (pinfo->owner, lbl);
+             return pinfo->value;
+         } else {
