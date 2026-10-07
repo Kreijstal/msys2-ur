@@ -1,0 +1,123 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 7/7] python: MinGW wheel packaging
+
+Package the GNU import libraries and lib-prefixed bundled DLLs, rely on
+the system OpenBLAS (also used for LAPACK), allow opt_einsum >= 3.3.0.
+---
+ python/requirements.txt |  2 +-
+ python/setup.py.in      | 35 +++++++++++++++++++++--------------
+ 2 files changed, 22 insertions(+), 15 deletions(-)
+
+diff --git a/python/requirements.txt b/python/requirements.txt
+index a239b16f..a92fa3d1 100644
+--- a/python/requirements.txt
++++ b/python/requirements.txt
+@@ -2,7 +2,7 @@ httpx
+ numpy>=1.21
+ protobuf>=3.20.2
+ Pillow
+-opt_einsum==3.3.0
++opt_einsum>=3.3.0
+ networkx
+ packaging
+ typing_extensions
+diff --git a/python/setup.py.in b/python/setup.py.in
+index 50df95a4..7104063e 100644
+--- a/python/setup.py.in
++++ b/python/setup.py.in
+@@ -13,6 +13,7 @@ import platform
+ import glob
+ import shlex
+ import ctypes
++import sysconfig
+ 
+ from contextlib import contextmanager
+ from pathlib import Path
+@@ -28,6 +29,9 @@ class BinaryDistribution(Distribution):
+ RC      = 0
+ 
+ ext_name = '.dll' if os.name == 'nt' else ('.dylib' if sys.platform == 'darwin' else '.so')
++# MinGW-w64 (MSYS2) build: GNU import libraries, lib-prefixed bundled DLLs,
++# BLAS/LAPACK from the system OpenBLAS.
++is_mingw = os.name == 'nt' and sysconfig.get_platform().startswith('mingw')
+ 
+ def git_commit() -> str:
+     try:
+@@ -1197,7 +1201,7 @@ if not '${WIN32}':
+ if os.name != 'nt':
+     package_data={'paddle.base': ['${FLUID_CORE_NAME}' + '.so']}
+ else:
+-    package_data={'paddle.base': ['${FLUID_CORE_NAME}' + '.pyd', '${FLUID_CORE_NAME}' + '.lib']}
++    package_data={'paddle.base': ['${FLUID_CORE_NAME}' + '.pyd', '${FLUID_CORE_NAME}' + ('.dll.a' if is_mingw else '.lib')]}
+ 
+ custom_device_dir = '${PADDLE_BINARY_DIR}/python/paddle/paddle_custom_device'
+ if os.path.isdir(custom_device_dir):
+@@ -1253,7 +1257,7 @@ if('${WITH_SHARED_PHI}' == 'ON'):
+             package_data['paddle.libs'] += [('libphi_gpu' if os.name != 'nt' else 'phi_gpu') + ext_name]
+             shutil.copy('${PHI_GPU_LIB}', libs_path)
+     if os.name == 'nt':
+-        package_data['paddle.libs'] += ['phi.lib']
++        package_data['paddle.libs'] += [os.path.basename('${PHI_LINK}')]
+         shutil.copy('${PHI_LINK}', libs_path)
+ 
+ if('${WITH_SHARED_IR}' == 'ON'):
+@@ -1261,26 +1265,27 @@ if('${WITH_SHARED_IR}' == 'ON'):
+     shutil.copy('${IR_LIB}', libs_path)
+ 
+ package_data['paddle.libs']+=[
+-    ('libwarpctc' if os.name != 'nt' else 'warpctc') + ext_name,
+-    ('libwarprnnt' if os.name != 'nt' else 'warprnnt') + ext_name,
++    os.path.basename('${WARPCTC_LIBRARIES}'),
++    os.path.basename('${WARPRNNT_LIBRARIES}'),
+ ]
+ package_data['paddle.libs']+=[
+     ('libcommon' if os.name != 'nt' else 'common') + ext_name,
+ ]
+ if os.name == 'nt':
+-    package_data['paddle.libs'] += ['common.lib']
++    package_data['paddle.libs'] += [os.path.basename('${COMMON_LINK}')]
+     shutil.copy('${COMMON_LINK}', libs_path)
+ shutil.copy('${COMMON_LIB}', libs_path)
+ shutil.copy('${WARPCTC_LIBRARIES}', libs_path)
+ shutil.copy('${WARPRNNT_LIBRARIES}', libs_path)
+ 
+-package_data['paddle.libs']+=[
+-    os.path.basename('${LAPACK_LIB}'),
+-    os.path.basename('${BLAS_LIB}'),
+-    os.path.basename('${GFORTRAN_LIB}')]
+-shutil.copy('${BLAS_LIB}', libs_path)
+-shutil.copy('${LAPACK_LIB}', libs_path)
+-shutil.copy('${GFORTRAN_LIB}', libs_path)
++if not is_mingw:
++    package_data['paddle.libs']+=[
++        os.path.basename('${LAPACK_LIB}'),
++        os.path.basename('${BLAS_LIB}'),
++        os.path.basename('${GFORTRAN_LIB}')]
++    shutil.copy('${BLAS_LIB}', libs_path)
++    shutil.copy('${LAPACK_LIB}', libs_path)
++    shutil.copy('${GFORTRAN_LIB}', libs_path)
+ if len('${GNU_RT_LIB_1}') > 1:
+     package_data['paddle.libs'] += [
+         os.path.basename('${GNU_RT_LIB_1}')]
+@@ -1290,7 +1295,7 @@ if('${WITH_MAGMA}' == 'ON'):
+         os.path.basename('${MAGMA_LIB}')]
+     shutil.copy('${MAGMA_LIB}', libs_path)
+ 
+-if not sys.platform.startswith("linux"):
++if not sys.platform.startswith("linux") and not is_mingw:
+     package_data['paddle.libs']+=[os.path.basename('${GNU_RT_LIB_2}')]
+     shutil.copy('${GNU_RT_LIB_2}', libs_path)
+ 
+@@ -1327,7 +1332,9 @@ elif '${WITH_HML}' == 'ON':
+     shutil.copy('${HML_LIB}', libs_path)
+     package_data['paddle.libs']+=['libhml_rt' + ext_name]
+ else:
+-    if os.name == 'nt':
++    if is_mingw:
++        pass  # system OpenBLAS (libopenblas.dll) from MSYS2
++    elif os.name == 'nt':
+         # copy the openblas.dll
+         shutil.copy('${OPENBLAS_SHARED_LIB}', libs_path)
+         package_data['paddle.libs'] += ['openblas' + ext_name]

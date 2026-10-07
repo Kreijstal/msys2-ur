@@ -1,0 +1,55 @@
+_realname=modelscope
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=1.40.1
+pkgrel=1
+pkgdesc="ModelScope: bring the notion of Model-as-a-Service to life (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/modelscope/modelscope'
+msys2_repository_url='https://github.com/modelscope/modelscope'
+msys2_references=(
+  'purl: pkg:pypi/modelscope'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-filelock"
+         "${MINGW_PACKAGE_PREFIX}-python-modelscope-hub"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-urllib3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel")
+source=("https://pypi.org/packages/source/m/modelscope/modelscope-${pkgver}.tar.gz")
+sha256sums=('7b46d74fc3905a0a34a60bdefe774677d709d9ee2ada8cf85401a50ea533f9ae')
+
+build() {
+  cp -r "modelscope-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import modelscope
+from modelscope import snapshot_download
+import modelscope.hub.errors
+print("modelscope", modelscope.__version__)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,43 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 2/7] cmake: fix mkdir races in execute_process pipelines
+
+execute_process() runs all COMMANDs concurrently as a pipeline; creating
+the output directory in the same call races with the generator writing
+into it.  Windows process start-up is slow enough to lose that race.
+---
+ paddle/fluid/operators/generator/CMakeLists.txt | 5 +++--
+ paddle/fluid/pir/dialect/CMakeLists.txt         | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/paddle/fluid/operators/generator/CMakeLists.txt b/paddle/fluid/operators/generator/CMakeLists.txt
+index d23a81e5..f502b0b8 100644
+--- a/paddle/fluid/operators/generator/CMakeLists.txt
++++ b/paddle/fluid/operators/generator/CMakeLists.txt
+@@ -89,8 +89,9 @@ set(generated_sparse_argument_mapping_path
+ )
+ execute_process(
+   WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/paddle/fluid/operators/generator
+-  COMMAND ${CMAKE_COMMAND} -E make_directory ${parsed_op_dir} RESULTS_VARIABLE
+-          _result)
++  COMMAND ${CMAKE_COMMAND} -E make_directory ${parsed_op_dir}
++          ${parsed_op_dir}/inconsistent ${parsed_op_dir}/legacy
++  RESULTS_VARIABLE _result)
+ if(${_result})
+   message(FATAL_ERROR "Failed to create folder for parsed op yamls, exiting.")
+ endif()
+diff --git a/paddle/fluid/pir/dialect/CMakeLists.txt b/paddle/fluid/pir/dialect/CMakeLists.txt
+index 77d3bf03..54ea5625 100644
+--- a/paddle/fluid/pir/dialect/CMakeLists.txt
++++ b/paddle/fluid/pir/dialect/CMakeLists.txt
+@@ -95,8 +95,8 @@ execute_process(
+   COMMAND ${PYTHON_EXECUTABLE} ${op_parse_file} --op_yaml_path
+           ${pir_op_bwd_src_yaml} --output_path ${pir_op_bwd_yaml} --backward)
+ 
++file(MAKE_DIRECTORY ${PIR_DIALECT_BINARY_DIR})
+ execute_process(
+-  COMMAND ${CMAKE_COMMAND} -E make_directory ${PIR_DIALECT_BINARY_DIR}
+   COMMAND
+     ${PYTHON_EXECUTABLE} ${op_gen_file} --op_yaml_files ${op_yaml_files}
+     --op_compat_yaml_file ${op_compat_yaml_file} --namespaces ${op_namespace}

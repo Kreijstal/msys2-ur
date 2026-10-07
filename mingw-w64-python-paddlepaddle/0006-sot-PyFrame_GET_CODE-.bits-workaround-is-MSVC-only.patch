@@ -1,0 +1,28 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 6/7] sot: PyFrame_GET_CODE .bits workaround is MSVC-only
+
+On Python 3.14 the raw f_executable.bits read is only needed for MSVC;
+use PyStackRef_AsPyObjectBorrow() with GCC.
+---
+ paddle/fluid/pybind/sot/macros.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/paddle/fluid/pybind/sot/macros.h b/paddle/fluid/pybind/sot/macros.h
+index ea55519b..0be2962f 100644
+--- a/paddle/fluid/pybind/sot/macros.h
++++ b/paddle/fluid/pybind/sot/macros.h
+@@ -35,10 +35,10 @@ extern "C" {
+ #define SOT_NOT_SUPPORTED_VERSION PY_3_15_0_HEX
+ #define SOT_IS_SUPPORTED (PY_VERSION_HEX < SOT_NOT_SUPPORTED_VERSION)
+ 
+-#if PY_3_14_PLUS && !defined(_WIN32)
++#if PY_3_14_PLUS && !defined(_MSC_VER)
+ #define PyFrame_GET_CODE(frame) \
+   ((PyCodeObject*)PyStackRef_AsPyObjectBorrow((frame)->f_executable))  // NOLINT
+-#elif PY_3_14_PLUS && defined(_WIN32)
++#elif PY_3_14_PLUS && defined(_MSC_VER)
+ #define PyFrame_GET_CODE(frame) \
+   ((PyCodeObject*)((frame)->f_executable.bits))  // NOLINT
+ #elif PY_3_13_PLUS

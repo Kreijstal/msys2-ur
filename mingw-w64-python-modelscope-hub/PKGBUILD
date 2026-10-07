@@ -1,0 +1,50 @@
+_realname=modelscope-hub
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.4.5
+pkgrel=1
+pkgdesc="ModelScope Hub client (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/modelscope/modelscope'
+msys2_repository_url='https://github.com/modelscope/modelscope'
+msys2_references=(
+  'purl: pkg:pypi/modelscope-hub'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-filelock"
+         "${MINGW_PACKAGE_PREFIX}-python-urllib3"
+         "${MINGW_PACKAGE_PREFIX}-python-cryptography")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/m/modelscope-hub/modelscope_hub-${pkgver}.tar.gz")
+sha256sums=('b8606176af5be9b6437e2dcb119bd3de9f25862b32e56ff71096af99e545aaaf')
+
+build() {
+  cp -r "modelscope_hub-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import modelscope_hub
+print("modelscope_hub ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,348 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 3/7] cmake: MinGW DLL exports and runtime libraries
+
+GCC does not reproduce MSVC's dllexport semantics for Paddle's PADDLE_API
+annotations (attributes on already-instantiated class templates are
+ignored, vtables are only emitted with the key function), and CMake's
+WINDOWS_EXPORT_ALL_SYMBOLS is MSVC-only.  Export all global symbols of
+common.dll/phi.dll's own objects through a generated .def file
+(tools/mingw_gen_def.py), but not the static archives linked into them
+(protobuf, glog, ...), which consumers link themselves as with MSVC.
+Also link dbghelp/ws2_32 (MSVC gets them via #pragma comment), use the
+linker's import library for libpaddle instead of dumpbin/lib, and do not
+copy a bundled openblas.dll next to the build-time code generators.
+---
+ cmake/generic.cmake                |  24 ++++-
+ paddle/common/CMakeLists.txt       |  12 ++-
+ paddle/fluid/pybind/CMakeLists.txt |   4 +-
+ paddle/phi/CMakeLists.txt          |  17 +++-
+ python/CMakeLists.txt              |   9 ++
+ tools/mingw_gen_def.py             | 149 +++++++++++++++++++++++++++++
+ 6 files changed, 207 insertions(+), 8 deletions(-)
+ create mode 100644 tools/mingw_gen_def.py
+
+diff --git a/cmake/generic.cmake b/cmake/generic.cmake
+index dd360fd6..be465ead 100644
+--- a/cmake/generic.cmake
++++ b/cmake/generic.cmake
+@@ -165,10 +165,28 @@ function(find_fluid_thirdparties TARGET_NAME)
+   endif()
+ endfunction()
+ 
++# MinGW: export every global symbol defined by the target's own objects
++# through a generated .def file (see tools/mingw_gen_def.py).
++function(mingw_export_objects TARGET_NAME)
++  set(_objs ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}_objects.txt)
++  set(_def ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.def)
++  file(
++    GENERATE
++    OUTPUT ${_objs}
++    CONTENT "$<JOIN:$<TARGET_OBJECTS:${TARGET_NAME}>,\n>\n")
++  add_custom_command(
++    TARGET ${TARGET_NAME}
++    PRE_LINK
++    COMMAND ${PYTHON_EXECUTABLE} ${PADDLE_SOURCE_DIR}/tools/mingw_gen_def.py
++            ${_objs} ${_def} $<TARGET_FILE_NAME:${TARGET_NAME}>
++    VERBATIM)
++  target_link_options(${TARGET_NAME} PRIVATE ${_def})
++endfunction()
++
+ function(create_static_lib TARGET_NAME)
+   set(libs ${ARGN})
+   list(REMOVE_DUPLICATES libs)
+-  if(WIN32)
++  if(MSVC)
+     set(dummy_index 1)
+     set(dummy_offset 1)
+     # the dummy target would be consisted of limit size libraries
+@@ -272,7 +290,7 @@ function(merge_static_libs TARGET_NAME)
+   endif()
+ 
+   # LINUX: use "ar" to extract objects and re-add to a common lib
+-  if(LINUX)
++  if(LINUX OR MINGW)
+     set(mri_file
+         ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}.mri
+         CACHE INTERNAL "phi_static.mri file")
+@@ -297,7 +315,7 @@ function(merge_static_libs TARGET_NAME)
+   endif()
+ 
+   # Windows do not support gcc/nvcc combined compiling. Use msvc 'lib.exe' to merge libs.
+-  if(WIN32)
++  if(MSVC)
+     foreach(lib ${libs})
+       set(libfiles ${libfiles} $<TARGET_FILE:${lib}>)
+     endforeach()
+diff --git a/paddle/common/CMakeLists.txt b/paddle/common/CMakeLists.txt
+index 16dcb8f5..59532dd3 100644
+--- a/paddle/common/CMakeLists.txt
++++ b/paddle/common/CMakeLists.txt
+@@ -18,8 +18,13 @@ set(COMMON_LIB
+     "${CMAKE_CURRENT_BINARY_DIR}/${COMMON_NAME}"
+     CACHE FILEPATH "COMMON Library" FORCE)
+ if(WIN32)
++  if(MINGW)
++    set(COMMON_IMPLIB_NAME libcommon.dll.a)
++  else()
++    set(COMMON_IMPLIB_NAME common.lib)
++  endif()
+   set(COMMON_LINK
+-      "${CMAKE_CURRENT_BINARY_DIR}/common.lib"
++      "${CMAKE_CURRENT_BINARY_DIR}/${COMMON_IMPLIB_NAME}"
+       CACHE FILEPATH "COMMON Import Library" FORCE)
+ endif()
+ 
+@@ -28,7 +33,10 @@ set(COMMON_BUILD_TYPE
+     CACHE INTERNAL "" FORCE)
+ 
+ cc_library(common ${COMMON_BUILD_TYPE} SRCS ${common_srcs})
+-if(WIN32)
++if(MINGW)
++  # WINDOWS_EXPORT_ALL_SYMBOLS is only implemented for MSVC-like toolchains.
++  mingw_export_objects(common)
++elseif(WIN32)
+   set_property(TARGET common PROPERTY WINDOWS_EXPORT_ALL_SYMBOLS ON)
+ endif()
+ # only used for libpaddle_inference.a
+diff --git a/paddle/fluid/pybind/CMakeLists.txt b/paddle/fluid/pybind/CMakeLists.txt
+index 41f4a746..88b2161d 100755
+--- a/paddle/fluid/pybind/CMakeLists.txt
++++ b/paddle/fluid/pybind/CMakeLists.txt
+@@ -352,7 +352,7 @@ if(WITH_PYTHON)
+                 ${eager_generator_path}
+         DEPENDS mklml)
+       list(APPEND EAGER_CODEGEN_DEPS ${eager_generator_path}/libiomp5md.dll)
+-    else()
++    elseif(${CBLAS_PROVIDER} STREQUAL EXTERN_OPENBLAS)
+       message("Copied openblas.dll for Eager AutoCodeGen")
+       add_custom_command(
+         OUTPUT ${eager_generator_path}/openblas.dll
+@@ -465,7 +465,7 @@ if(WITH_PYTHON)
+         DEPENDS mklml)
+       list(APPEND OP_IMPL_DEPS ${op_impl_path}/libiomp5md.dll)
+       list(APPEND EAGER_OP_IMPL_DEPS ${op_impl_path}/libiomp5md.dll)
+-    else()
++    elseif(${CBLAS_PROVIDER} STREQUAL EXTERN_OPENBLAS)
+       add_custom_command(
+         OUTPUT ${op_impl_path}/openblas.dll
+         COMMAND ${CMAKE_COMMAND} -E copy ${OPENBLAS_SHARED_LIB} ${op_impl_path}
+diff --git a/paddle/phi/CMakeLists.txt b/paddle/phi/CMakeLists.txt
+index 3a93f20a..18352160 100644
+--- a/paddle/phi/CMakeLists.txt
++++ b/paddle/phi/CMakeLists.txt
+@@ -297,6 +297,16 @@ endif()
+ if(WIN32)
+   target_link_libraries(phi shlwapi.lib)
+ endif()
++if(MINGW)
++  # MSVC pulls these in via #pragma comment(lib) / default libs.
++  target_link_libraries(phi dbghelp ws2_32)
++  # GCC ignores dllexport on explicit instantiations of class templates that
++  # were already implicitly instantiated (e.g. `template class PADDLE_API
++  # TypeInfoTraits<TensorBase, DenseTensor>`) and keeps vtables with the key
++  # function, so the MSVC export set is incomplete for MinGW consumers.
++  # Export everything phi itself defines, like the ELF build (~45k symbols).
++  mingw_export_objects(phi)
++endif()
+ 
+ if(WIN32)
+   if(WITH_SHARED_PHI)
+@@ -336,8 +346,13 @@ set(PHI_LIB
+     CACHE FILEPATH "PHI Dummy Library" FORCE)
+ 
+ if(WIN32)
++  if(MINGW)
++    set(PHI_IMPLIB_NAME libphi.dll.a)
++  else()
++    set(PHI_IMPLIB_NAME phi.lib)
++  endif()
+   set(PHI_LINK
+-      "${CMAKE_CURRENT_BINARY_DIR}/phi.lib"
++      "${CMAKE_CURRENT_BINARY_DIR}/${PHI_IMPLIB_NAME}"
+       CACHE FILEPATH "PHI Import Library" FORCE)
+ endif()
+ 
+diff --git a/python/CMakeLists.txt b/python/CMakeLists.txt
+index 214948ce..a79da0bb 100644
+--- a/python/CMakeLists.txt
++++ b/python/CMakeLists.txt
+@@ -39,6 +39,14 @@ if(WIN32)
+     COMMAND cmake -E copy $<TARGET_FILE:libpaddle> ${FLUID_CORE}
+     DEPENDS libpaddle
+     COMMENT "Copying ${TARGET_DIR}/${FLUID_CORE_NAME} to ${FLUID_CORE}")
++  if(MINGW)
++    # MinGW: the linker already produced an import library for libpaddle.
++    set(FLUID_CORE_LIB ${FLUID_DST_DIR}/${FLUID_CORE_NAME}.dll.a)
++    add_custom_command(
++      OUTPUT ${FLUID_CORE_LIB}
++      COMMAND cmake -E copy $<TARGET_LINKER_FILE:libpaddle> ${FLUID_CORE_LIB}
++      DEPENDS libpaddle)
++  else()
+   # generate new lib based on libpaddle.pyd
+   add_custom_command(
+     OUTPUT ${FLUID_CORE_LIB}
+@@ -62,6 +70,7 @@ if(WIN32)
+     COMMENT "Generate libpaddle.lib manually--->"
+     DEPENDS ${FLUID_CORE}
+     VERBATIM)
++  endif()
+ else()
+   set(FLUID_CORE ${FLUID_DST_DIR}/${FLUID_CORE_NAME}.so)
+   add_custom_command(
+diff --git a/tools/mingw_gen_def.py b/tools/mingw_gen_def.py
+new file mode 100644
+index 00000000..ad6a3c01
+--- /dev/null
++++ b/tools/mingw_gen_def.py
+@@ -0,0 +1,149 @@
++#!/usr/bin/env python3
++# Copyright (c) 2026 PaddlePaddle Authors. All Rights Reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++"""Write a module-definition (.def) file exporting the global symbols defined
++by a DLL's own object files (MinGW).
++
++GCC does not reproduce MSVC's export semantics for Paddle's PADDLE_API
++annotations (dllexport on already-instantiated class templates is ignored,
++vtables live with the key function), so the MinGW build exports every global
++symbol of the DLL's own objects, like the ELF build does.  Unlike
++--export-all-symbols this leaves out the static archives linked into the DLL
++(protobuf, glog, ...): consumers link their own copies of those (as with
++MSVC), and exporting them as well makes GNU ld/lld report duplicate
++definitions.
++
++usage: mingw_gen_def.py <object-list-file> <output.def> <dll-name>
++"""
++
++import struct
++import sys
++
++IMAGE_SCN_CNT_CODE = 0x20
++IMAGE_SCN_LNK_COMDAT = 0x1000
++BIGOBJ_CLSID = bytes.fromhex('c7a1bad1eebaa94baf20faf66aa4dcb8')
++
++# Leading namespaces of third-party code that is header-only or linked
++# statically into every consumer; never export those instantiations.
++FOREIGN_NAMESPACES = {
++    'std',
++    '__gnu_cxx',
++    '__cxxabiv1',
++    'Eigen',
++    'google',
++    'absl',
++    'YAML',
++    'nlohmann',
++    'pybind11',
++    'CryptoPP',
++    'fmt',
++    'pocketfft',
++    'dlpack',
++    'mpark',
++}
++STD_ABBREV = ('St', 'Sa', 'Sb', 'Ss', 'Si', 'So', 'Sd')
++
++
++def leading_namespace(name):
++    if not name.startswith('_Z'):
++        return None
++    s = name[2:]
++    for p in ('TV', 'TI', 'TS', 'TT', 'TH', 'TW', 'GV', 'GR'):
++        if s.startswith(p):
++            s = s[2:]
++            break
++    if s.startswith('L'):
++        s = s[1:]
++    if s.startswith('N'):
++        s = s[1:]
++        while s and s[0] in 'rVKRO':
++            s = s[1:]
++    if s.startswith(STD_ABBREV):
++        return 'std'
++    i = 0
++    while i < len(s) and s[i].isdigit():
++        i += 1
++    if i == 0:
++        return None
++    n = int(s[:i])
++    return s[i : i + n]
++
++
++def read_symbols(path):
++    with open(path, 'rb') as f:
++        data = f.read()
++    sig1, sig2 = struct.unpack_from('<HH', data, 0)
++    if sig1 == 0 and sig2 == 0xFFFF and data[12:28] == BIGOBJ_CLSID:
++        (nsect, symptr, nsyms) = struct.unpack_from('<III', data, 44)
++        sect_off = 56
++        symsize, secfmt = 20, '<8sIiHBB'
++    else:
++        (_machine, nsect, _ts, symptr, nsyms, optsize, _ch) = (
++            struct.unpack_from('<HHIIIHH', data, 0)
++        )
++        sect_off = 20 + optsize
++        symsize, secfmt = 18, '<8sIhHBB'
++    code_sections = set()
++    comdat_sections = set()
++    for i in range(nsect):
++        (ch,) = struct.unpack_from('<I', data, sect_off + 40 * i + 36)
++        if ch & IMAGE_SCN_CNT_CODE:
++            code_sections.add(i + 1)
++        if ch & IMAGE_SCN_LNK_COMDAT:
++            comdat_sections.add(i + 1)
++    strtab = symptr + nsyms * symsize
++    i = 0
++    while i < nsyms:
++        off = symptr + i * symsize
++        raw, _value, secnum, _typ, sclass, naux = struct.unpack_from(
++            secfmt, data, off
++        )
++        i += 1 + naux
++        if sclass != 2 or secnum <= 0:  # IMAGE_SYM_CLASS_EXTERNAL, defined
++            continue
++        if raw[:4] == b'\0\0\0\0':
++            (soff,) = struct.unpack_from('<I', raw, 4)
++            end = data.index(b'\0', strtab + soff)
++            name = data[strtab + soff : end].decode('latin-1')
++        else:
++            name = raw.rstrip(b'\0').decode('latin-1')
++        yield name, secnum in code_sections, secnum in comdat_sections
++
++
++def main():
++    objlist, out, dllname = sys.argv[1:4]
++    with open(objlist) as f:
++        objs = [l.strip() for l in f if l.strip()]
++    exports = {}
++    for obj in objs:
++        for name, is_code, is_comdat in read_symbols(obj):
++            if name.startswith(('.', '__imp_', '_GLOBAL__', '__real@', '_ZGV')):
++                continue
++            if name in ('DllMain', 'DllEntryPoint', 'DllMainCRTStartup'):
++                continue
++            # Header-instantiated third-party code (COMDAT) stays private;
++            # out-of-line definitions such as std::hash<DDim> are exported.
++            if is_comdat and leading_namespace(name) in FOREIGN_NAMESPACES:
++                continue
++            exports[name] = exports.get(name, False) or is_code
++    if len(exports) > 65535:
++        sys.exit(f'{dllname}: {len(exports)} exports exceed the PE limit')
++    with open(out, 'w') as f:
++        f.write(f'LIBRARY {dllname}\nEXPORTS\n')
++        for name in sorted(exports):
++            f.write(f'  {name}\n' if exports[name] else f'  {name} DATA\n')
++
++
++if __name__ == '__main__':
++    main()

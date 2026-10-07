@@ -1,0 +1,453 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 1/7] cmake: MinGW-w64 toolchain and third-party support
+
+Build Paddle with MinGW-w64 GCC instead of MSVC:
+- take the GNU flag paths (init/flags/configure) for MinGW, build C++ as
+  gnu++20 (strict ANSI hides M_PI & co. in the CRT headers), -Wa,-mbig-obj
+- keep the MSVC DLL names (common.dll, phi.dll, libpaddle.pyd) by dropping
+  the lib prefix, link with lld (resolves dllimport references to symbols
+  of the same image like MSVC's LNK4217 behaviour, which Paddle relies on)
+- MinGW library names for the bundled zlib/gflags/glog/xxhash/utf8proc/
+  warpctc/warprnnt/cryptopp/yaml-cpp/libuv; MSVC-only flags and dirent
+  only for MSVC; warpctc's MSVC-only /bigobj /MT; pocketfft has no
+  ::aligned_alloc in the Windows CRT (reuse the existing macOS patch)
+- LAPACK comes from the system OpenBLAS (no prebuilt download)
+- PADDLE_SKIP_SUBMODULE_UPDATE to build from pre-fetched submodules
+---
+ CMakeLists.txt                             | 20 +++++++++++++++++++-
+ cmake/configure.cmake                      |  2 +-
+ cmake/external/cryptopp.cmake              |  2 +-
+ cmake/external/eigen.cmake                 |  4 ++--
+ cmake/external/gflags.cmake                | 10 ++++++++--
+ cmake/external/glog.cmake                  |  8 +++++++-
+ cmake/external/lapack.cmake                | 10 ++++++++++
+ cmake/external/libuv.cmake                 |  2 +-
+ cmake/external/pocketfft.cmake             |  8 +++++++-
+ cmake/external/python.cmake                |  4 ++--
+ cmake/external/utf8proc.cmake              |  5 ++++-
+ cmake/external/warpctc.cmake               | 15 +++++++++++++--
+ cmake/external/warprnnt.cmake              |  8 ++++++--
+ cmake/external/xxhash.cmake                |  6 +++++-
+ cmake/external/yaml.cmake                  |  2 +-
+ cmake/external/zlib.cmake                  |  6 +++++-
+ cmake/flags.cmake                          |  8 ++++++--
+ cmake/init.cmake                           |  2 +-
+ cmake/third_party.cmake                    |  6 ++++--
+ patches/warpctc/CMakeLists.txt.mingw.patch | 13 +++++++++++++
+ 20 files changed, 116 insertions(+), 25 deletions(-)
+ create mode 100644 patches/warpctc/CMakeLists.txt.mingw.patch
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 86f0c31f..ad9fa1ac 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -158,7 +158,25 @@ if(APPLE AND WITH_ARM)
+   set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -target arm64-apple-darwin")
+ endif()
+ 
+-if(WIN32)
++if(WIN32 AND NOT MSVC)
++  # MinGW-w64 (GCC/Clang): GNU-style flags, shared CRT.
++  add_definitions(-DNOMINMAX -DWIN32_LEAN_AND_MEAN)
++  # Keep the MSVC DLL names (common.dll, phi.dll, pir.dll, libpaddle.pyd)
++  # that the Windows code paths in Paddle expect; import libs stay lib*.dll.a.
++  set(CMAKE_SHARED_LIBRARY_PREFIX "")
++  set(CMAKE_SHARED_MODULE_PREFIX "")
++  # lld resolves __imp_ references to symbols defined in the same image (the
++  # MSVC LNK4217 behaviour Paddle relies on: COMMON_IMPORT_FLAG etc. are
++  # dllimport even inside the defining DLL) and links the huge DLLs faster.
++  foreach(flag_var CMAKE_SHARED_LINKER_FLAGS CMAKE_EXE_LINKER_FLAGS
++                   CMAKE_MODULE_LINKER_FLAGS)
++    set(${flag_var} "${${flag_var}} -fuse-ld=lld")
++  endforeach()
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wa,-mbig-obj")
++  set(CMAKE_CXX_FLAGS
++      "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj -Wno-error=deprecated-declarations -Wno-deprecated-declarations"
++  )
++elseif(WIN32)
+   option(MSVC_STATIC_CRT "use static C Runtime library by default" ON)
+   message("Build static library of PHI")
+   # (Note xuxinyi04): If CMAKE_SUPPRESS_REGENERATION is OFF, which is default, then CMake adds a
+diff --git a/cmake/configure.cmake b/cmake/configure.cmake
+index 9a9919d1..e99a7a32 100644
+--- a/cmake/configure.cmake
++++ b/cmake/configure.cmake
+@@ -31,7 +31,7 @@ endif()
+ if(WITH_AVX AND AVX_FOUND)
+   set(SIMD_FLAG ${AVX_FLAG})
+   add_definitions(-DPADDLE_WITH_AVX)
+-elseif(SSE3_FOUND AND NOT WIN32)
++elseif(SSE3_FOUND AND NOT MSVC)
+   set(SIMD_FLAG ${SSE3_FLAG})
+ endif()
+ 
+diff --git a/cmake/external/cryptopp.cmake b/cmake/external/cryptopp.cmake
+index 2bb6f450..793c43fe 100644
+--- a/cmake/external/cryptopp.cmake
++++ b/cmake/external/cryptopp.cmake
+@@ -31,7 +31,7 @@ set(CRYPTOPP_PATCH_COMMAND
+     ${CMAKE_COMMAND} -E copy_if_different
+     "${PADDLE_SOURCE_DIR}/patches/cryptopp/CMakeLists.txt" "<SOURCE_DIR>/")
+ 
+-if(WIN32)
++if(MSVC)
+   set(CRYPTOPP_LIBRARIES
+       "${CRYPTOPP_INSTALL_DIR}/lib/cryptopp-static.lib"
+       CACHE FILEPATH "cryptopp library." FORCE)
+diff --git a/cmake/external/eigen.cmake b/cmake/external/eigen.cmake
+index 6790d961..c6028329 100644
+--- a/cmake/external/eigen.cmake
++++ b/cmake/external/eigen.cmake
+@@ -54,7 +54,7 @@ endif()
+ 
+ set(EIGEN_INCLUDE_DIR ${SOURCE_DIR})
+ include_directories(${EIGEN_INCLUDE_DIR})
+-if(NOT WIN32)
++if(NOT MSVC)
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized")
+@@ -63,7 +63,7 @@ if(NOT WIN32)
+     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=uninitialized")
+   endif()
+ endif()
+-if(NOT WIN32
++if(NOT MSVC
+    AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
+    AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 13.0)
+   message(STATUS "GCC version is >= 13.0, adding -Wno-error=stringop-overflow.")
+diff --git a/cmake/external/gflags.cmake b/cmake/external/gflags.cmake
+index c8152cd4..2befff0f 100755
+--- a/cmake/external/gflags.cmake
++++ b/cmake/external/gflags.cmake
+@@ -21,7 +21,13 @@ set(GFLAGS_INCLUDE_DIR
+     CACHE PATH "gflags include directory." FORCE)
+ set(GFLAGS_TAG "v2.2.2")
+ set(SOURCE_DIR ${PADDLE_SOURCE_DIR}/third_party/gflags)
+-if(WIN32)
++if(MINGW)
++  set(GFLAGS_LIBRARIES
++      "${GFLAGS_INSTALL_DIR}/lib/libgflags_static.a"
++      CACHE FILEPATH "GFLAGS_LIBRARIES" FORCE)
++  set(BUILD_COMMAND ${CMAKE_COMMAND} --build .)
++  set(INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install)
++elseif(WIN32)
+   set(GFLAGS_LIBRARIES
+       "${GFLAGS_INSTALL_DIR}/lib/gflags_static.lib"
+       CACHE FILEPATH "GFLAGS_LIBRARIES" FORCE)
+@@ -83,7 +89,7 @@ if(WIN32)
+   include(CheckIncludeFileCXX)
+   check_include_file_cxx("shlwapi.h" HAVE_SHLWAPI)
+   if(HAVE_SHLWAPI)
+-    set_property(GLOBAL PROPERTY OS_DEPENDENCY_MODULES shlwapi.lib)
++    set_property(GLOBAL PROPERTY OS_DEPENDENCY_MODULES shlwapi)
+   endif()
+ endif()
+ 
+diff --git a/cmake/external/glog.cmake b/cmake/external/glog.cmake
+index 6a394ef9..b1036394 100755
+--- a/cmake/external/glog.cmake
++++ b/cmake/external/glog.cmake
+@@ -23,7 +23,13 @@ set(GLOG_INCLUDE_DIR
+     CACHE PATH "glog include directory." FORCE)
+ set(GLOG_TAG v0.4.0)
+ set(SOURCE_DIR ${PADDLE_SOURCE_DIR}/third_party/glog)
+-if(WIN32)
++if(MINGW)
++  set(GLOG_LIBRARIES
++      "${GLOG_INSTALL_DIR}/lib/libglog.a"
++      CACHE FILEPATH "glog library." FORCE)
++  set(GLOG_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
++  add_definitions("-DGOOGLE_GLOG_DLL_DECL=")
++elseif(WIN32)
+   set(GLOG_LIBRARIES
+       "${GLOG_INSTALL_DIR}/lib/glog.lib"
+       CACHE FILEPATH "glog library." FORCE)
+diff --git a/cmake/external/lapack.cmake b/cmake/external/lapack.cmake
+index 64c71f03..0cafe8a3 100644
+--- a/cmake/external/lapack.cmake
++++ b/cmake/external/lapack.cmake
+@@ -14,6 +14,16 @@
+ 
+ include(ExternalProject)
+ 
++if(MINGW)
++  # MSYS2: LAPACK comes from the system OpenBLAS DLL (loaded at runtime by
++  # phi/backends/dynload), nothing to download or bundle.
++  add_custom_target(extern_lapack)
++  set(LAPACK_LIB "")
++  set(BLAS_LIB "")
++  set(GFORTRAN_LIB "")
++  return()
++endif()
++
+ set(LAPACK_PREFIX_DIR ${THIRD_PARTY_PATH}/lapack)
+ set(LAPACK_DOWNLOAD_DIR
+     ${PADDLE_SOURCE_DIR}/third_party/lapack/${CMAKE_SYSTEM_NAME})
+diff --git a/cmake/external/libuv.cmake b/cmake/external/libuv.cmake
+index 5896f83e..7c1d255a 100644
+--- a/cmake/external/libuv.cmake
++++ b/cmake/external/libuv.cmake
+@@ -18,7 +18,7 @@ set(LIBUV_SOURCE_DIR ${PADDLE_SOURCE_DIR}/third_party/libuv)
+ set(LIBUV_INSTALL_DIR ${THIRD_PARTY_PATH}/install/libuv)
+ set(LIBUV_PREFIX_DIR ${THIRD_PARTY_PATH}/libuv)
+ 
+-if(WIN32)
++if(MSVC)
+   set(LIBUV_LIBRARIES ${LIBUV_INSTALL_DIR}/lib/libuv.lib)
+   set(LIBUV_INCLUDE_DIR ${LIBUV_INSTALL_DIR}/include)
+ 
+diff --git a/cmake/external/pocketfft.cmake b/cmake/external/pocketfft.cmake
+index 102d288a..f65a5416 100644
+--- a/cmake/external/pocketfft.cmake
++++ b/cmake/external/pocketfft.cmake
+@@ -27,7 +27,13 @@ include_directories(${POCKETFFT_INCLUDE_DIR})
+ set(POCKETFFT_TAG release_for_eigen)
+ set(SOURCE_DIR ${PADDLE_SOURCE_DIR}/third_party/pocketfft)
+ 
+-if(APPLE)
++if(MINGW)
++  # The Windows CRT has no ::aligned_alloc; use pocketfft's portable path.
++  file(TO_NATIVE_PATH
++       ${PADDLE_SOURCE_DIR}/patches/pocketfft/pocketfft_hdronly.h.patch
++       native_dst)
++  set(POCKETFFT_PATCH_COMMAND git checkout -- . && git apply ${native_dst})
++elseif(APPLE)
+   file(TO_NATIVE_PATH
+        ${PADDLE_SOURCE_DIR}/patches/pocketfft/pocketfft_hdronly.h.patch
+        native_dst)
+diff --git a/cmake/external/python.cmake b/cmake/external/python.cmake
+index 488540b3..3674531a 100644
+--- a/cmake/external/python.cmake
++++ b/cmake/external/python.cmake
+@@ -20,7 +20,7 @@ check_py_version(${PY_VERSION})
+ find_package(PythonInterp ${PY_VERSION} REQUIRED)
+ find_package(PythonLibs ${PY_VERSION} REQUIRED)
+ 
+-if(WIN32)
++if(MSVC)
+   execute_process(
+     COMMAND
+       "${PYTHON_EXECUTABLE}" "-c"
+@@ -61,7 +61,7 @@ print(s.get_config_var('LDVERSION') or s.get_config_var('VERSION'));
+     message(FATAL_ERROR "Python libraries not found")
+   endif()
+   set(PYTHON_LIBRARIES "${PYTHON_LIBRARY}")
+-endif(WIN32)
++endif(MSVC)
+ 
+ # Fixme: Maybe find a static library. Get SHARED/STATIC by FIND_PACKAGE.
+ add_library(python SHARED IMPORTED GLOBAL)
+diff --git a/cmake/external/utf8proc.cmake b/cmake/external/utf8proc.cmake
+index 231dd9ba..a49f423b 100644
+--- a/cmake/external/utf8proc.cmake
++++ b/cmake/external/utf8proc.cmake
+@@ -19,7 +19,10 @@ set(UTF8PROC_INSTALL_DIR ${THIRD_PARTY_PATH}/install/utf8proc)
+ # As we add extra features for utf8proc, we use the non-official repo
+ set(UTF8PROC_TAG v2.6.1)
+ set(SOURCE_DIR ${PADDLE_SOURCE_DIR}/third_party/utf8proc)
+-if(WIN32)
++if(MINGW)
++  set(UTF8PROC_LIBRARIES "${UTF8PROC_INSTALL_DIR}/lib/libutf8proc.a")
++  add_definitions(-DUTF8PROC_STATIC)
++elseif(WIN32)
+   set(UTF8PROC_LIBRARIES "${UTF8PROC_INSTALL_DIR}/lib/utf8proc_static.lib")
+   add_definitions(-DUTF8PROC_STATIC)
+ else()
+diff --git a/cmake/external/warpctc.cmake b/cmake/external/warpctc.cmake
+index 02e48a1e..1c67e583 100644
+--- a/cmake/external/warpctc.cmake
++++ b/cmake/external/warpctc.cmake
+@@ -37,6 +37,13 @@ else()
+       ${PADDLE_SOURCE_DIR}/patches/warpctc/CMakeLists.txt.cuda.patch)
+ endif()
+ 
++if(MINGW)
++  # warp-ctc adds MSVC-only flags (/bigobj /MT) for every WIN32 build.
++  set(WARPCTC_PATCH_CUDA_COMMAND
++      ${WARPCTC_PATCH_CUDA_COMMAND} && git apply
++      ${PADDLE_SOURCE_DIR}/patches/warpctc/CMakeLists.txt.mingw.patch)
++endif()
++
+ if(NOT WIN32 AND WITH_GPU)
+   if(${CMAKE_CUDA_COMPILER_VERSION} LESS 12.0 AND ${CMAKE_CXX_COMPILER_VERSION}
+                                                   VERSION_GREATER 12.0)
+@@ -84,7 +91,11 @@ set(WARPCTC_LIB_DIR
+     "${WARPCTC_INSTALL_DIR}/lib"
+     CACHE PATH "Warp-ctc Library Directory" FORCE)
+ 
+-if(WIN32)
++if(MINGW)
++  set(WARPCTC_LIBRARIES
++      "${WARPCTC_INSTALL_DIR}/bin/libwarpctc${CMAKE_SHARED_LIBRARY_SUFFIX}"
++      CACHE FILEPATH "Warp Library" FORCE)
++elseif(WIN32)
+   set(WARPCTC_LIBRARIES
+       "${WARPCTC_INSTALL_DIR}/bin/warpctc${CMAKE_SHARED_LIBRARY_SUFFIX}"
+       CACHE FILEPATH "Warp-ctc Library" FORCE)
+@@ -102,7 +113,7 @@ else()
+   set(USE_OMP ON)
+ endif()
+ 
+-if(WIN32)
++if(MSVC)
+   set(WARPCTC_C_FLAGS $<FILTER:${CMAKE_C_FLAGS},EXCLUDE,/Zc:inline>)
+   set(WARPCTC_C_FLAGS_DEBUG $<FILTER:${CMAKE_C_FLAGS_DEBUG},EXCLUDE,/Zc:inline>)
+   set(WARPCTC_C_FLAGS_RELEASE
+diff --git a/cmake/external/warprnnt.cmake b/cmake/external/warprnnt.cmake
+index 2a4ce28a..6ff8ee98 100644
+--- a/cmake/external/warprnnt.cmake
++++ b/cmake/external/warprnnt.cmake
+@@ -85,7 +85,11 @@ set(WARPRNNT_LIB_DIR
+     "${WARPRNNT_INSTALL_DIR}/lib"
+     CACHE PATH "Warp-rnnt Library Directory" FORCE)
+ 
+-if(WIN32)
++if(MINGW)
++  set(WARPRNNT_LIBRARIES
++      "${WARPRNNT_INSTALL_DIR}/bin/libwarprnnt${CMAKE_SHARED_LIBRARY_SUFFIX}"
++      CACHE FILEPATH "Warp Library" FORCE)
++elseif(WIN32)
+   set(WARPRNNT_LIBRARIES
+       "${WARPRNNT_INSTALL_DIR}/bin/warprnnt${CMAKE_SHARED_LIBRARY_SUFFIX}"
+       CACHE FILEPATH "Warp-rnnt Library" FORCE)
+@@ -103,7 +107,7 @@ else()
+   set(USE_OMP ON)
+ endif()
+ 
+-if(WIN32)
++if(MSVC)
+   set(WARPRNNT_C_FLAGS $<FILTER:${CMAKE_C_FLAGS},EXCLUDE,/Zc:inline>)
+   set(WARPRNNT_C_FLAGS_DEBUG
+       $<FILTER:${CMAKE_C_FLAGS_DEBUG},EXCLUDE,/Zc:inline>)
+diff --git a/cmake/external/xxhash.cmake b/cmake/external/xxhash.cmake
+index 36e61967..5f58b818 100644
+--- a/cmake/external/xxhash.cmake
++++ b/cmake/external/xxhash.cmake
+@@ -33,7 +33,11 @@ endif()
+ 
+ include_directories(${XXHASH_INCLUDE_DIR})
+ 
+-if(WIN32)
++if(MINGW)
++  set(XXHASH_LIBRARIES "${XXHASH_INSTALL_DIR}/lib/libxxhash.a")
++  set(XXHASH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
++  set(XXHASH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
++elseif(WIN32)
+   set(XXHASH_LIBRARIES "${XXHASH_INSTALL_DIR}/lib/xxhash.lib")
+   set(XXHASH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4710 /wd4711")
+   set(XXHASH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4710 /wd4711")
+diff --git a/cmake/external/yaml.cmake b/cmake/external/yaml.cmake
+index 93ae4ba9..01c63dcb 100644
+--- a/cmake/external/yaml.cmake
++++ b/cmake/external/yaml.cmake
+@@ -34,7 +34,7 @@ set(YAML_BuildTests
+     CACHE INTERNAL "")
+ 
+ set(YAML_MSVC_SHARED_RT OFF)
+-if(WIN32)
++if(MSVC)
+   set(YAML_LIBRARIES
+       "${YAML_INSTALL_DIR}/lib/yaml-cpp${CMAKE_STATIC_LIBRARY_SUFFIX}"
+       CACHE FILEPATH "yaml library." FORCE)
+diff --git a/cmake/external/zlib.cmake b/cmake/external/zlib.cmake
+index 0f51b3d9..8993ac24 100644
+--- a/cmake/external/zlib.cmake
++++ b/cmake/external/zlib.cmake
+@@ -28,7 +28,11 @@ include_directories(${ZLIB_INCLUDE_DIR}
+ include_directories(${THIRD_PARTY_PATH}/install
+ )# For Paddle code to include zlib.h.
+ 
+-if(WIN32)
++if(MINGW)
++  set(ZLIB_LIBRARIES
++      "${ZLIB_INSTALL_DIR}/lib/libzlibstatic.a"
++      CACHE FILEPATH "zlib library." FORCE)
++elseif(WIN32)
+   set(ZLIB_LIBRARIES
+       "${ZLIB_INSTALL_DIR}/lib/zlibstatic.lib"
+       CACHE FILEPATH "zlib library." FORCE)
+diff --git a/cmake/flags.cmake b/cmake/flags.cmake
+index 8f624a28..a79ad58a 100644
+--- a/cmake/flags.cmake
++++ b/cmake/flags.cmake
+@@ -29,7 +29,11 @@ endfunction()
+ 
+ check_compiler_cxx_baseline_flag()
+ 
+-if(NOT WIN32)
++if(MINGW)
++  # gnu++20: like g++ on glibc (which predefines _GNU_SOURCE), keep the
++  # non-ANSI declarations (M_PI & co., POSIX names) visible in the CRT headers.
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++20")
++elseif(NOT MSVC)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
+ else()
+   # TODO(windows-cxx20): Keep Windows host C++ builds on C++17 until the CI
+@@ -139,7 +143,7 @@ endif()
+ # Do not care if this flag is support for gcc.
+ 
+ # https://github.com/PaddlePaddle/Paddle/issues/12773
+-if(NOT WIN32)
++if(NOT MSVC)
+   set(COMMON_FLAGS
+       -fPIC
+       -fno-omit-frame-pointer
+diff --git a/cmake/init.cmake b/cmake/init.cmake
+index 201f66be..688dd905 100644
+--- a/cmake/init.cmake
++++ b/cmake/init.cmake
+@@ -7,7 +7,7 @@
+ # RELWITHDEBINFO: default: "-O2 -g -DNDEBUG"
+ # MINSIZEREL: default: "-O2 -g -DNDEBUG"
+ 
+-if(NOT WIN32)
++if(NOT MSVC)
+   set(CMAKE_C_FLAGS_DEBUG "-g")
+   set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG")
+   set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
+diff --git a/cmake/third_party.cmake b/cmake/third_party.cmake
+index 67f50ff4..c56ed384 100755
+--- a/cmake/third_party.cmake
++++ b/cmake/third_party.cmake
+@@ -34,7 +34,9 @@ set(third_party_deps)
+ 
+ include(ProcessorCount)
+ ProcessorCount(NPROC)
+-if(NOT WITH_SETUP_INSTALL)
++option(PADDLE_SKIP_SUBMODULE_UPDATE
++       "Do not run git submodule sync/update at configure time" OFF)
++if(NOT WITH_SETUP_INSTALL AND NOT PADDLE_SKIP_SUBMODULE_UPDATE)
+   #NOTE(risemeup1):Initialize any submodules.
+   message(
+     STATUS
+@@ -567,7 +569,7 @@ if(WITH_POCKETFFT)
+   add_definitions(-DPADDLE_WITH_POCKETFFT)
+ endif()
+ 
+-if(WIN32)
++if(MSVC)
+   include(external/dirent)
+   list(APPEND third_party_deps extern_dirent)
+ endif()
+diff --git a/patches/warpctc/CMakeLists.txt.mingw.patch b/patches/warpctc/CMakeLists.txt.mingw.patch
+new file mode 100644
+index 00000000..bf309571
+--- /dev/null
++++ b/patches/warpctc/CMakeLists.txt.mingw.patch
+@@ -0,0 +1,13 @@
++diff --git a/CMakeLists.txt b/CMakeLists.txt
++index 95af6ec..14a5d88 100644
++--- a/CMakeLists.txt
+++++ b/CMakeLists.txt
++@@ -34,7 +34,7 @@ else(BUILD_SHARED)
++     set(WARPCTC_SHARED "STATIC")
++ endif(BUILD_SHARED)
++ 
++-if(WIN32)
+++if(MSVC)
++     set(CMAKE_STATIC_LIBRARY_PREFIX lib)
++     set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG} /bigobj /MTd")
++     set(CMAKE_C_FLAGS_RELEASE  "${CMAKE_C_FLAGS_RELEASE} /bigobj /MT")

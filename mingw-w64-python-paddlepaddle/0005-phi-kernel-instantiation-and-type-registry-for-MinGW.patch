@@ -1,0 +1,416 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 5/7] phi: kernel instantiation and type registry for MinGW
+
+- GCC must explicitly instantiate kernels in PD_REGISTER_* (as on Linux):
+  at -O3 the instances are otherwise never emitted for other TUs.
+- The MSVC-only exported instantiations (template PADDLE_API void
+  XKernel<...>) become dllexport explicit instantiation declarations on
+  MinGW (PD_WIN_KERNEL_INSTANTIATION) so the registration defines them.
+- TypeRegistry<Base> was instantiated per DLL from its header, so type
+  ids registered in phi.dll and libpaddle.pyd collided and
+  TypeInfoTraits::classof() misidentified tensors (crash in
+  Tensor.dtype); instantiate it once in phi.
+---
+ paddle/phi/core/kernel_registry.h             | 17 +++++-
+ paddle/phi/core/utils/type_info.cc            | 14 +++++
+ paddle/phi/core/utils/type_registry.h         | 20 ++++++
+ paddle/phi/kernels/assign_kernel.cc           |  2 +-
+ paddle/phi/kernels/cast_kernel.h              |  2 +-
+ paddle/phi/kernels/check_numerics_kernel.h    |  2 +-
+ paddle/phi/kernels/cpu/full_kernel.cc         |  8 +--
+ paddle/phi/kernels/cpu/isfinite_kernel.cc     | 61 ++++++++++---------
+ paddle/phi/kernels/elementwise_add_kernel.h   |  2 +-
+ paddle/phi/kernels/full_kernel.h              |  2 +-
+ paddle/phi/kernels/isfinite_kernel.h          |  6 +-
+ paddle/phi/kernels/reduce_any_kernel.h        |  2 +-
+ paddle/phi/kernels/scale_kernel.h             |  2 +-
+ paddle/phi/kernels/strided_copy_kernel.h      |  2 +-
+ .../strings/cpu/strings_copy_kernel.cc        |  2 +-
+ .../strings/cpu/strings_lower_upper_kernel.cc |  4 +-
+ paddle/phi/kernels/transpose_kernel.h         |  2 +-
+ 17 files changed, 98 insertions(+), 52 deletions(-)
+
+diff --git a/paddle/phi/core/kernel_registry.h b/paddle/phi/core/kernel_registry.h
+index f56189cd..3a029b8b 100644
+--- a/paddle/phi/core/kernel_registry.h
++++ b/paddle/phi/core/kernel_registry.h
+@@ -213,6 +213,17 @@ struct KernelRegistrar {
+   template decltype(__VA_ARGS__) __VA_ARGS__;
+ #endif
+ 
++// Windows: kernels that other DLLs call directly are exported with
++// `PD_WIN_KERNEL_INSTANTIATION PADDLE_API void Kernel<T, Ctx>(...)`.  MSVC's
++// PD_REGISTER_* macros do not instantiate, so there it is a definition.  GCC
++// (MinGW) instantiates in PD_REGISTER_* like on Linux, so make it a dllexport
++// explicit instantiation declaration that the registration then defines.
++#if defined(_WIN32) && !defined(_MSC_VER)
++#define PD_WIN_KERNEL_INSTANTIATION extern template
++#else
++#define PD_WIN_KERNEL_INSTANTIATION template
++#endif
++
+ // The macro for instantiating function kernel
+ #define FUNCTION_KERNEL_INSTANTIATION(meta_kernel_fn, cpp_dtype, context) \
+   PD_DECLTYPE_FUNCTION_TEMPLATE_INSTANTIATION(                            \
+@@ -390,7 +401,7 @@ struct KernelRegistrar {
+                                     variadic_kernel_unfold_marco,          \
+                                     __VA_ARGS__))
+ 
+-#ifndef _WIN32
++#ifndef _MSC_VER
+ #define _PD_REGISTER_2TA_KERNEL(reg_type,                                   \
+                                 kernel_name,                                \
+                                 backend,                                    \
+@@ -1404,7 +1415,7 @@ struct KernelRegistrar {
+   __PD_REGISTER_KERNEL_FOR_ALL_DTYPE(                                        \
+       reg_type, kernel_name, backend, layout, kernel_fn)
+ 
+-#ifndef _WIN32
++#ifndef _MSC_VER
+ #define __PD_REGISTER_KERNEL_FOR_ALL_DTYPE(                                    \
+     reg_type, kernel_name, backend, layout, kernel_fn)                         \
+   PD_DECLTYPE_FUNCTION_TEMPLATE_INSTANTIATION(kernel_fn)                       \
+@@ -1548,7 +1559,7 @@ struct KernelRegistrar {
+                 __PD_KERNEL_args_def_FN_##kernel_name##_##layout( \
+                     const ::phi::KernelKey& kernel_key UNUSED,    \
+                     ::phi::Kernel* kernel UNUSED))
+-#ifndef _WIN32
++#ifndef _MSC_VER
+ #define ___PD_REGISTER_KERNEL_FOR_ALL_BACKEND_DTYPE(                           \
+     reg_type, kernel_name, backend, layout, kernel_fn, args_def_fn)            \
+   PD_DECLTYPE_FUNCTION_TEMPLATE_INSTANTIATION(kernel_fn)                       \
+diff --git a/paddle/phi/core/utils/type_info.cc b/paddle/phi/core/utils/type_info.cc
+index 95a991e2..c747ca34 100644
+--- a/paddle/phi/core/utils/type_info.cc
++++ b/paddle/phi/core/utils/type_info.cc
+@@ -49,6 +49,20 @@ template <typename BaseT, typename DerivedT>
+ const TypeInfo<BaseT> TypeInfoTraits<BaseT, DerivedT>::kType =
+     RegisterStaticType<BaseT>(DerivedT::name());
+ 
++#if defined(_WIN32) && !defined(_MSC_VER)
++// Definitions for the explicit instantiation declarations in
++// type_registry.h: one type registry per base class for all DLLs.
++#define PD_MINGW_TYPE_REGISTRY(BaseT)                  \
++  template class TypeRegistry<BaseT>;                  \
++  template class TypeInfo<BaseT>;                      \
++  template TypeInfo<BaseT> RegisterStaticType<BaseT>( \
++      const std::string& type);
++PD_MINGW_TYPE_REGISTRY(phi::TensorBase)
++PD_MINGW_TYPE_REGISTRY(phi::DeviceContext)
++PD_MINGW_TYPE_REGISTRY(phi::StorageProperties)
++#undef PD_MINGW_TYPE_REGISTRY
++#endif
++
+ template class PADDLE_API TypeInfoTraits<phi::TensorBase, DenseTensor>;
+ template class PADDLE_API TypeInfoTraits<phi::TensorBase, SelectedRows>;
+ template class PADDLE_API TypeInfoTraits<phi::TensorBase, SparseCooTensor>;
+diff --git a/paddle/phi/core/utils/type_registry.h b/paddle/phi/core/utils/type_registry.h
+index ed1c9216..f44de9a3 100644
+--- a/paddle/phi/core/utils/type_registry.h
++++ b/paddle/phi/core/utils/type_registry.h
+@@ -84,4 +84,24 @@ template <typename BaseT>
+ const TypeInfo<BaseT> TypeInfo<BaseT>::kUnknownType =
+     RegisterStaticType<BaseT>("Unknown");
+ 
++#if defined(_WIN32) && !defined(_MSC_VER)
++// MinGW: without these explicit instantiation declarations every DLL
++// (phi.dll, libpaddle.pyd) instantiates its own TypeRegistry singleton from
++// this header, so type ids registered in different DLLs collide and
++// TypeInfoTraits::classof() gives wrong answers.  The single definitions
++// live in phi (paddle/phi/core/utils/type_info.cc).
++class TensorBase;
++class DeviceContext;
++struct StorageProperties;
++#define PD_MINGW_EXTERN_TYPE_REGISTRY(BaseT)                   \
++  extern template class TypeRegistry<BaseT>;                  \
++  extern template class TypeInfo<BaseT>;                      \
++  extern template TypeInfo<BaseT> RegisterStaticType<BaseT>( \
++      const std::string& type);
++PD_MINGW_EXTERN_TYPE_REGISTRY(TensorBase)
++PD_MINGW_EXTERN_TYPE_REGISTRY(DeviceContext)
++PD_MINGW_EXTERN_TYPE_REGISTRY(StorageProperties)
++#undef PD_MINGW_EXTERN_TYPE_REGISTRY
++#endif
++
+ }  // namespace phi
+diff --git a/paddle/phi/kernels/assign_kernel.cc b/paddle/phi/kernels/assign_kernel.cc
+index d67fdfc8..cd7efaf5 100644
+--- a/paddle/phi/kernels/assign_kernel.cc
++++ b/paddle/phi/kernels/assign_kernel.cc
+@@ -110,7 +110,7 @@ void AssignValueKernel(const Context& dev_ctx,
+ }
+ 
+ #ifdef _WIN32
+-template PADDLE_API void AssignKernel<CPUContext>(const CPUContext& dev_ctx,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void AssignKernel<CPUContext>(const CPUContext& dev_ctx,
+                                                   const DenseTensor& x,
+                                                   DenseTensor* out);
+ #endif
+diff --git a/paddle/phi/kernels/cast_kernel.h b/paddle/phi/kernels/cast_kernel.h
+index 627248c3..b5d385dd 100644
+--- a/paddle/phi/kernels/cast_kernel.h
++++ b/paddle/phi/kernels/cast_kernel.h
+@@ -38,7 +38,7 @@ DenseTensor Cast(const Context& dev_ctx,
+ 
+ #ifdef _WIN32
+ #define INSTANTIATE_CAST_KERNEL(type, context)        \
+-  template PADDLE_API void CastKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void CastKernel<type, context>( \
+       const context&, const DenseTensor&, DataType, DenseTensor*);
+ #endif
+ }  // namespace phi
+diff --git a/paddle/phi/kernels/check_numerics_kernel.h b/paddle/phi/kernels/check_numerics_kernel.h
+index c726f031..b3caf548 100644
+--- a/paddle/phi/kernels/check_numerics_kernel.h
++++ b/paddle/phi/kernels/check_numerics_kernel.h
+@@ -31,7 +31,7 @@ void CheckNumericsKernel(const Context& dev_ctx,
+ 
+ #ifdef _WIN32
+ #define INSTANTIATE_CHECKNUMBERICS_KERNEL(type, context)       \
+-  template PADDLE_API void CheckNumericsKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void CheckNumericsKernel<type, context>( \
+       const context&,                                          \
+       const DenseTensor&,                                      \
+       const std::string&,                                      \
+diff --git a/paddle/phi/kernels/cpu/full_kernel.cc b/paddle/phi/kernels/cpu/full_kernel.cc
+index bcf2590a..656e9bcf 100644
+--- a/paddle/phi/kernels/cpu/full_kernel.cc
++++ b/paddle/phi/kernels/cpu/full_kernel.cc
+@@ -113,22 +113,22 @@ void FullIntArrayKernel(const Context& dev_ctx,
+   }
+ }
+ #ifdef _WIN32
+-template PADDLE_API void FullKernel<int, CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void FullKernel<int, CPUContext>(const CPUContext&,
+                                                      const IntArray&,
+                                                      const Scalar&,
+                                                      DataType dtype UNUSED,
+                                                      DenseTensor*);
+-template PADDLE_API void FullKernel<int64_t, CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void FullKernel<int64_t, CPUContext>(const CPUContext&,
+                                                          const IntArray&,
+                                                          const Scalar&,
+                                                          DataType dtype UNUSED,
+                                                          DenseTensor*);
+-template PADDLE_API void FullKernel<float, CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void FullKernel<float, CPUContext>(const CPUContext&,
+                                                        const IntArray&,
+                                                        const Scalar&,
+                                                        DataType dtype UNUSED,
+                                                        DenseTensor*);
+-template PADDLE_API void FullKernel<double, CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void FullKernel<double, CPUContext>(const CPUContext&,
+                                                         const IntArray&,
+                                                         const Scalar&,
+                                                         DataType dtype UNUSED,
+diff --git a/paddle/phi/kernels/cpu/isfinite_kernel.cc b/paddle/phi/kernels/cpu/isfinite_kernel.cc
+index 29f030ee..83fcbdec 100644
+--- a/paddle/phi/kernels/cpu/isfinite_kernel.cc
++++ b/paddle/phi/kernels/cpu/isfinite_kernel.cc
+@@ -18,6 +18,37 @@
+ #include "paddle/phi/core/kernel_registry.h"
+ #include "paddle/phi/kernels/impl/isfinite_kernel_impl.h"
+ 
++#ifdef _WIN32
++namespace phi {
++INSTANTIATE_ISFINITE_KERNEL_Isnan(float, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(double, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(int, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(int64_t, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(float16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(bfloat16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(complex64, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isnan(complex128, CPUContext);
++
++INSTANTIATE_ISFINITE_KERNEL_Isinf(float, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(double, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(int, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(int64_t, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(float16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(bfloat16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(complex64, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isinf(complex128, CPUContext);
++
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(float, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(double, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(int, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(int64_t, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(float16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(bfloat16, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(complex64, CPUContext);
++INSTANTIATE_ISFINITE_KERNEL_Isfinite(complex128, CPUContext);
++}  // namespace phi
++#endif
++
+ PD_REGISTER_KERNEL(isinf,
+                    CPU,
+                    ALL_LAYOUT,
+@@ -66,33 +97,3 @@ PD_REGISTER_KERNEL(isfinite,
+   kernel->OutputAt(0).SetDataType(phi::DataType::BOOL);
+ }
+ 
+-#ifdef _WIN32
+-namespace phi {
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(float, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(double, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(int, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(int64_t, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(float16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(bfloat16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(complex64, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isnan(complex128, CPUContext);
+-
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(float, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(double, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(int, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(int64_t, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(float16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(bfloat16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(complex64, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isinf(complex128, CPUContext);
+-
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(float, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(double, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(int, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(int64_t, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(float16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(bfloat16, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(complex64, CPUContext);
+-INSTANTIATE_ISFINITE_KERNEL_Isfinite(complex128, CPUContext);
+-}  // namespace phi
+-#endif
+diff --git a/paddle/phi/kernels/elementwise_add_kernel.h b/paddle/phi/kernels/elementwise_add_kernel.h
+index 10eb0da9..82bb72a8 100644
+--- a/paddle/phi/kernels/elementwise_add_kernel.h
++++ b/paddle/phi/kernels/elementwise_add_kernel.h
+@@ -46,7 +46,7 @@ void Add(const Context& dev_ctx,
+ }
+ #ifdef _WIN32
+ #define INSTANTIATE_ADD_KERNEL(type, context)        \
+-  template PADDLE_API void AddKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void AddKernel<type, context>( \
+       const context&, const DenseTensor&, const DenseTensor&, DenseTensor*);
+ #endif
+ }  // namespace phi
+diff --git a/paddle/phi/kernels/full_kernel.h b/paddle/phi/kernels/full_kernel.h
+index 10b1f576..f82b6dbb 100644
+--- a/paddle/phi/kernels/full_kernel.h
++++ b/paddle/phi/kernels/full_kernel.h
+@@ -106,7 +106,7 @@ void FullIntArrayKernel(const Context& dev_ctx,
+                         DenseTensor* out);
+ #ifdef _WIN32
+ #define INSTANTIATE_FULL_KERNEL(type, context)        \
+-  template PADDLE_API void FullKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void FullKernel<type, context>( \
+       const context&, const IntArray&, const Scalar&, DataType, DenseTensor*);
+ #endif
+ }  // namespace phi
+diff --git a/paddle/phi/kernels/isfinite_kernel.h b/paddle/phi/kernels/isfinite_kernel.h
+index 6c0fdf41..251975f1 100644
+--- a/paddle/phi/kernels/isfinite_kernel.h
++++ b/paddle/phi/kernels/isfinite_kernel.h
+@@ -30,15 +30,15 @@ DEFINE_ISFINITE_KERNEL(IsfiniteKernel)
+ 
+ #ifdef _WIN32
+ #define INSTANTIATE_ISFINITE_KERNEL_Isinf(type, context) \
+-  template PADDLE_API void IsinfKernel<type, context>(   \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void IsinfKernel<type, context>(   \
+       const context&, const DenseTensor&, DenseTensor*)
+ 
+ #define INSTANTIATE_ISFINITE_KERNEL_Isnan(type, context) \
+-  template PADDLE_API void IsnanKernel<type, context>(   \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void IsnanKernel<type, context>(   \
+       const context&, const DenseTensor&, DenseTensor*)
+ 
+ #define INSTANTIATE_ISFINITE_KERNEL_Isfinite(type, context) \
+-  template PADDLE_API void IsfiniteKernel<type, context>(   \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void IsfiniteKernel<type, context>(   \
+       const context&, const DenseTensor&, DenseTensor*)
+ #endif
+ }  // namespace phi
+diff --git a/paddle/phi/kernels/reduce_any_kernel.h b/paddle/phi/kernels/reduce_any_kernel.h
+index 08a786dc..c6a044af 100644
+--- a/paddle/phi/kernels/reduce_any_kernel.h
++++ b/paddle/phi/kernels/reduce_any_kernel.h
+@@ -34,7 +34,7 @@ TEST_API void AnyKernel(const Context& dev_ctx,
+ 
+ #ifdef _WIN32
+ #define INSTANTIATE_ANY_KERNEL(type, context)        \
+-  template PADDLE_API void AnyKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void AnyKernel<type, context>( \
+       const context&,                                \
+       const DenseTensor&,                            \
+       const std::vector<int64_t>&,                   \
+diff --git a/paddle/phi/kernels/scale_kernel.h b/paddle/phi/kernels/scale_kernel.h
+index 2db94f77..7331e1f4 100644
+--- a/paddle/phi/kernels/scale_kernel.h
++++ b/paddle/phi/kernels/scale_kernel.h
+@@ -57,7 +57,7 @@ DenseTensor Scale(const Context& dev_ctx,
+ }
+ #ifdef _WIN32
+ #define INSTANCE_SCALAR_KERNEL(type, context)                                 \
+-  template PADDLE_API void ScaleKernel<type, context>(const context& dev_ctx, \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void ScaleKernel<type, context>(const context& dev_ctx, \
+                                                       const DenseTensor&,     \
+                                                       const Scalar&,          \
+                                                       const Scalar&,          \
+diff --git a/paddle/phi/kernels/strided_copy_kernel.h b/paddle/phi/kernels/strided_copy_kernel.h
+index 92c73031..e40a7eda 100644
+--- a/paddle/phi/kernels/strided_copy_kernel.h
++++ b/paddle/phi/kernels/strided_copy_kernel.h
+@@ -54,7 +54,7 @@ void StridedElementwiseCopyKernel(const Context& dev_ctx,
+ 
+ #ifdef _WIN32
+ #define INSTANTIATE_STRIDEDCOPY_KERNEL(type, context)        \
+-  template PADDLE_API void StridedCopyKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void StridedCopyKernel<type, context>( \
+       const context&,                                        \
+       const DenseTensor&,                                    \
+       const std::vector<int64_t>&,                           \
+diff --git a/paddle/phi/kernels/strings/cpu/strings_copy_kernel.cc b/paddle/phi/kernels/strings/cpu/strings_copy_kernel.cc
+index c9b403d4..f5bcb605 100644
+--- a/paddle/phi/kernels/strings/cpu/strings_copy_kernel.cc
++++ b/paddle/phi/kernels/strings/cpu/strings_copy_kernel.cc
+@@ -49,7 +49,7 @@ void Copy(const Context& dev_ctx,
+   }
+ }
+ #ifdef _WIN32
+-template PADDLE_API void Copy<CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void Copy<CPUContext>(const CPUContext&,
+                                           const StringTensor&,
+                                           bool,
+                                           StringTensor*);
+diff --git a/paddle/phi/kernels/strings/cpu/strings_lower_upper_kernel.cc b/paddle/phi/kernels/strings/cpu/strings_lower_upper_kernel.cc
+index bed543dd..754dbd9c 100644
+--- a/paddle/phi/kernels/strings/cpu/strings_lower_upper_kernel.cc
++++ b/paddle/phi/kernels/strings/cpu/strings_lower_upper_kernel.cc
+@@ -37,12 +37,12 @@ void StringUpperKernel(const ContextT& dev_ctx,
+                           ContextT>()(dev_ctx, x, use_utf8_encoding, out);
+ }
+ #ifdef _WIN32
+-template PADDLE_API void StringLowerKernel<CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void StringLowerKernel<CPUContext>(const CPUContext&,
+                                                        const StringTensor& x,
+                                                        bool,
+                                                        StringTensor*);
+ 
+-template PADDLE_API void StringUpperKernel<CPUContext>(const CPUContext&,
++PD_WIN_KERNEL_INSTANTIATION PADDLE_API void StringUpperKernel<CPUContext>(const CPUContext&,
+                                                        const StringTensor& x,
+                                                        bool,
+                                                        StringTensor*);
+diff --git a/paddle/phi/kernels/transpose_kernel.h b/paddle/phi/kernels/transpose_kernel.h
+index cfdb7d4e..c6afcc93 100644
+--- a/paddle/phi/kernels/transpose_kernel.h
++++ b/paddle/phi/kernels/transpose_kernel.h
+@@ -70,7 +70,7 @@ DenseTensor TransposeLast2Dim(const Context& dev_ctx, const DenseTensor& x) {
+ }
+ #ifdef _WIN32
+ #define INSTANTIATE_TRANSPOSE_KERNEL(type, context)        \
+-  template PADDLE_API void TransposeKernel<type, context>( \
++  PD_WIN_KERNEL_INSTANTIATION PADDLE_API void TransposeKernel<type, context>( \
+       const context&,                                      \
+       const DenseTensor&,                                  \
+       const std::vector<int>&,                             \

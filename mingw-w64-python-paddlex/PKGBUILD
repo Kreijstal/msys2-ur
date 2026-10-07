@@ -1,0 +1,82 @@
+_realname=paddlex
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.7.2
+pkgrel=1
+pkgdesc="PaddlePaddle low-code development toolkit and inference pipelines (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/PaddlePaddle/PaddleX'
+msys2_repository_url='https://github.com/PaddlePaddle/PaddleX'
+msys2_references=(
+  'purl: pkg:pypi/paddlex'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-aistudio-sdk"
+         "${MINGW_PACKAGE_PREFIX}-python-chardet"
+         "${MINGW_PACKAGE_PREFIX}-python-colorlog"
+         "${MINGW_PACKAGE_PREFIX}-python-filelock"
+         "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub"
+         "${MINGW_PACKAGE_PREFIX}-python-modelscope"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-pandas"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-prettytable"
+         "${MINGW_PACKAGE_PREFIX}-python-py-cpuinfo"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-ruamel-yaml"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions"
+         "${MINGW_PACKAGE_PREFIX}-python-ujson"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-paddlepaddle: local inference with PaddlePaddle"
+            "${MINGW_PACKAGE_PREFIX}-python-opencv: OCR and CV pipelines (ocr-core extra)"
+            "${MINGW_PACKAGE_PREFIX}-python-imagesize: OCR pipelines (ocr-core extra)"
+            "${MINGW_PACKAGE_PREFIX}-python-pyclipper: OCR pipelines (ocr-core extra)"
+            "${MINGW_PACKAGE_PREFIX}-python-pypdfium2: PDF input (ocr-core extra)"
+            "${MINGW_PACKAGE_PREFIX}-python-bidi: right-to-left text (ocr-core extra)"
+            "${MINGW_PACKAGE_PREFIX}-python-shapely: OCR pipelines (ocr-core extra)")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools-scm"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel")
+source=("https://pypi.org/packages/source/p/paddlex/paddlex-${pkgver}.tar.gz"
+        "0001-relax-pins-and-detect-system-opencv.patch")
+sha256sums=('6a60b4595e2d51460f7f51326672adca86b89ff9ecfd02ac348fb69739e0093c'
+            '946bbb5a0b464fdd69a0050dea132379767cb16a4678a38994a2e03dfa9ad4c7')
+
+prepare() {
+  cd "paddlex-${pkgver}"
+  # numpy<2.4 / PyYAML==6.0.2 / opencv-contrib-python==4.10.0.84 pins; MSYS2
+  # ships cv2 as python-opencv without opencv-contrib-python metadata
+  patch -Np1 -i "${srcdir}/0001-relax-pins-and-detect-system-opencv.patch"
+}
+
+build() {
+  cp -r "paddlex-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import paddlex
+from paddlex.utils.deps import is_dep_available
+print("paddlex", paddlex.__version__)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

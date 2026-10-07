@@ -1,0 +1,48 @@
+_realname=bce-python-sdk
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.9.79
+pkgrel=1
+pkgdesc="Baidu Cloud Engine (BCE) Python SDK (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/baidubce/bce-sdk-python'
+msys2_repository_url='https://github.com/baidubce/bce-sdk-python'
+msys2_references=(
+  'purl: pkg:pypi/bce-python-sdk'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-pycryptodome"
+         "${MINGW_PACKAGE_PREFIX}-python-future"
+         "${MINGW_PACKAGE_PREFIX}-python-six"
+         "${MINGW_PACKAGE_PREFIX}-python-crc32c")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/b/bce-python-sdk/bce_python_sdk-${pkgver}.tar.gz")
+sha256sums=('cd77476b43347ed28d0211d5ad557e524e1ec648bd093d57c6a6d3de075a7508')
+
+build() {
+  cp -r "bce_python_sdk-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import baidubce
+from baidubce.services.bos.bos_client import BosClient
+print("baidubce", baidubce.SDK_VERSION)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+}

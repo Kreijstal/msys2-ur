@@ -1,0 +1,39 @@
+diff -ru a/paddlex/utils/deps.py b/paddlex/utils/deps.py
+--- a/paddlex/utils/deps.py	2026-10-07 07:04:49.401410424 +0200
++++ b/paddlex/utils/deps.py	2026-10-07 07:04:49.411410576 +0200
+@@ -109,6 +109,10 @@
+         return importlib.util.find_spec("fastdeploy") is not None
+     elif dep == "onnxruntime":
+         return importlib.util.find_spec("onnxruntime") is not None
++    elif dep in ("opencv-contrib-python", "opencv-python"):
++        # Distributions (e.g. MSYS2) may ship cv2 without pip metadata.
++        if importlib.util.find_spec("cv2") is not None:
++            return True
+     version = get_dep_version(dep)
+     if version is None:
+         return False
+diff -ru a/setup.py b/setup.py
+--- a/setup.py	2026-10-07 07:04:49.382410134 +0200
++++ b/setup.py	2026-10-07 07:04:49.411410576 +0200
+@@ -55,10 +55,10 @@
+         '>= 1.28.0, < 1.29.2; python_version == "3.8"',
+         '>= 1.28.0; python_version >= "3.9"',
+     ],
+-    "numpy": ">= 1.24, < 2.4",
++    "numpy": ">= 1.24",
+     "openai": ">= 1.63",
+     "OpenCC": "",
+-    "opencv-contrib-python": "== 4.10.0.84",
++    "opencv-contrib-python": "",
+     "openpyxl": "",
+     "packaging": "",
+     "pandas": ">= 1.3",
+@@ -72,7 +72,7 @@
+     "pypdfium2": ">= 4",
+     "pypinyin": "",
+     "python-bidi": "",
+-    "PyYAML": "== 6.0.2",
++    "PyYAML": ">= 6.0",
+     "regex": "",
+     "requests": "",
+     "ruamel.yaml": "",

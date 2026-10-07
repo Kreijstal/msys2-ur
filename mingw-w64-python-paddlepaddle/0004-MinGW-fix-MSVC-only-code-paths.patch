@@ -1,0 +1,423 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 01:33:54 +0200
+Subject: [PATCH 4/7] MinGW: fix MSVC-only code paths
+
+_WIN32 code that really means MSVC (or the MSVC STL):
+- __declspec(align(x)) becomes an unknown, silently ignored attribute in
+  GCC: use __attribute__((aligned)) for PADDLE_ALIGN/ALIGN32
+- cpuid via <cpuid.h>, no gettimeofday/sleep/pid_t shims, no __m256
+  operator+=, Windows API path of CpuUtilization keyed on _WIN32
+- MinGW's dirent has no d_type; libstdc++ fstream takes const wchar_t*,
+  not std::wstring; do not stream wchar_t* into error messages
+- dynload: libwarpctc.dll/libwarprnnt.dll, LAPACK from libopenblas.dll
+- float16.h re-#defined __SSE2__ as empty, breaking GCC 16's
+  <bits/version.h>; missing <cstdint> includes
+---
+ paddle/common/backend_header.h                |  2 +-
+ paddle/fluid/eager/utils.cc                   |  2 ++
+ .../framework/io/save_paddle2cinn_varmap.h    |  2 ++
+ paddle/fluid/inference/api/helper.h           |  2 +-
+ paddle/fluid/pybind/pybind.cc                 |  6 ++---
+ paddle/phi/backends/cpu/cpu_info.h            |  4 +--
+ paddle/phi/backends/dynload/dynamic_loader.cc | 27 +++++++++++++++++++
+ paddle/phi/common/complex.h                   |  2 +-
+ paddle/phi/common/float16.h                   |  4 +--
+ paddle/phi/common/float8_e4m3fn.h             |  2 +-
+ paddle/phi/common/float8_e5m2.h               |  2 +-
+ paddle/phi/common/port.cc                     |  2 ++
+ paddle/phi/common/port.h                      |  6 +++++
+ .../core/platform/profiler/cpu_utilization.cc | 10 +++----
+ .../core/platform/profiler/cpu_utilization.h  |  4 +--
+ paddle/phi/core/platform/timer.h              |  4 ++-
+ .../kernels/funcs/detail/lstm_cpu_kernel.h    |  2 +-
+ 17 files changed, 62 insertions(+), 21 deletions(-)
+
+diff --git a/paddle/common/backend_header.h b/paddle/common/backend_header.h
+index 76e56f1d..0ccc2a2e 100644
+--- a/paddle/common/backend_header.h
++++ b/paddle/common/backend_header.h
+@@ -24,7 +24,7 @@
+ #endif
+ 
+ #ifndef PADDLE_WITH_HIP
+-#if !defined(_WIN32)
++#if !defined(_MSC_VER)
+ #define PADDLE_ALIGN(x) __attribute__((aligned(x)))
+ #else
+ #define PADDLE_ALIGN(x) __declspec(align(x))
+diff --git a/paddle/fluid/eager/utils.cc b/paddle/fluid/eager/utils.cc
+index bfa2f3d8..1e4cad6e 100644
+--- a/paddle/fluid/eager/utils.cc
++++ b/paddle/fluid/eager/utils.cc
+@@ -46,7 +46,9 @@ COMMON_DECLARE_int32(tensor_md5_checksum_precision);
+ COMMON_DECLARE_bool(tensor_md5_checksum_use_binary_format);
+ #ifdef _WIN32
+ #define getprocessid GetCurrentProcessId
++#ifdef _MSC_VER
+ typedef int pid_t;
++#endif
+ #else
+ #define getprocessid getpid
+ #endif
+diff --git a/paddle/fluid/framework/io/save_paddle2cinn_varmap.h b/paddle/fluid/framework/io/save_paddle2cinn_varmap.h
+index 9c7d0f8c..294f7565 100644
+--- a/paddle/fluid/framework/io/save_paddle2cinn_varmap.h
++++ b/paddle/fluid/framework/io/save_paddle2cinn_varmap.h
+@@ -10,7 +10,9 @@ See the License for the specific language governing permissions and
+ limitations under the License. */
+ #pragma once
+ 
++#include <cstdint>
+ #include <fstream>
++#include <string>
+ #include <unordered_map>
+ 
+ namespace paddle {
+diff --git a/paddle/fluid/inference/api/helper.h b/paddle/fluid/inference/api/helper.h
+index df2ddcd7..d1b0d22e 100644
+--- a/paddle/fluid/inference/api/helper.h
++++ b/paddle/fluid/inference/api/helper.h
+@@ -431,7 +431,7 @@ static bool IsFileExists(const std::string &path) {
+ #ifdef _WIN32
+   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+   std::wstring wpath = converter.from_bytes(path);
+-  std::ifstream file(wpath, std::ios::binary);
++  std::ifstream file(wpath.c_str(), std::ios::binary);
+ #else
+   std::ifstream file(path, std::ios::binary);
+ #endif
+diff --git a/paddle/fluid/pybind/pybind.cc b/paddle/fluid/pybind/pybind.cc
+index b2d5d6c6..ca2a3f9f 100644
+--- a/paddle/fluid/pybind/pybind.cc
++++ b/paddle/fluid/pybind/pybind.cc
+@@ -947,7 +947,7 @@ struct MmapStorage {
+ 
+       if (event_ == nullptr) {
+         PADDLE_THROW(common::errors::Unavailable(
+-            "Couldn't open shared event: <%s>.", eventname));
++            "Couldn't open shared event: <%s>.", eventname_));
+       }
+ 
+       if (flags_ & ALLOCATOR_MAPPED_EXCLUSIVE) {
+@@ -967,13 +967,13 @@ struct MmapStorage {
+ 
+       if (handle_ == nullptr) {
+         PADDLE_THROW(common::errors::Unavailable(
+-            "Couldn't open shared file mapping: <%s>.", eventname));
++            "Couldn't open shared file mapping: <%s>.", filename_));
+       }
+ 
+       base_ptr_ = MapViewOfFile(handle_, FILE_MAP_ALL_ACCESS, 0, 0, size);
+       if (!base_ptr_) {
+         PADDLE_THROW(common::errors::Unavailable(
+-            "Couldn't map view of shared file <%s>.", eventname));
++            "Couldn't map view of shared file <%s>.", filename_));
+       }
+ 
+     } else {
+diff --git a/paddle/phi/backends/cpu/cpu_info.h b/paddle/phi/backends/cpu/cpu_info.h
+index 2feb294a..73b4ad6d 100644
+--- a/paddle/phi/backends/cpu/cpu_info.h
++++ b/paddle/phi/backends/cpu/cpu_info.h
+@@ -28,7 +28,7 @@
+ #endif
+ #endif  // WIN32
+ 
+-#if defined(_WIN32)
++#if defined(_MSC_VER)
+ #define ALIGN32_BEG __declspec(align(32))
+ #define ALIGN32_END
+ #else
+@@ -37,7 +37,7 @@
+ #endif  // _WIN32
+ 
+ #ifndef PADDLE_WITH_XBYAK
+-#ifdef _WIN32
++#ifdef _MSC_VER
+ #define cpuid(reg, x) __cpuidex(reg, x, 0)
+ #else
+ #if !defined(WITH_NV_JETSON) && !defined(PADDLE_WITH_ARM) &&  \
+diff --git a/paddle/phi/backends/dynload/dynamic_loader.cc b/paddle/phi/backends/dynload/dynamic_loader.cc
+index 9b053506..dac6e51d 100644
+--- a/paddle/phi/backends/dynload/dynamic_loader.cc
++++ b/paddle/phi/backends/dynload/dynamic_loader.cc
+@@ -26,6 +26,9 @@ limitations under the License. */
+ #if defined(_WIN32)
+ #include <windows.h>
+ #endif
++#if defined(__MINGW32__)
++#include <sys/stat.h>
++#endif
+ 
+ // TODO(wilber): The phi computing library requires a component to manage flags
+ // (maybe not use gflags).
+@@ -273,12 +276,25 @@ static inline std::string FindLibAbsolutePath(const std::string& directory,
+ 
+   if (dir != nullptr) {
+     while ((ent = readdir(dir)) != nullptr) {
++#if defined(__MINGW32__)
++      // MinGW's dirent has no d_type; classify the entry with stat().
++      struct stat ent_st;
++      std::string ent_path = join(directory, ent->d_name);
++      bool ent_is_dir = stat(ent_path.c_str(), &ent_st) == 0 &&
++                        S_ISDIR(ent_st.st_mode);
++      if (!ent_is_dir) {
++#else
+       if (ent->d_type == DT_REG || ent->d_type == DT_LNK) {
++#endif
+         if (filename == std::string(ent->d_name)) {
+           closedir(dir);
+           return join(directory, ent->d_name);
+         }
++#if defined(__MINGW32__)
++      } else {
++#else
+       } else if (ent->d_type == DT_DIR) {
++#endif
+         if (strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+           std::string res =
+               FindLibAbsolutePath(join(directory, ent->d_name) + "/", filename);
+@@ -861,7 +877,11 @@ void* GetWarpCTCDsoHandle() {
+ #if defined(__APPLE__) || defined(__OSX__)
+   return GetDsoHandleFromSearchPath(warpctc_dir, "libwarpctc.dylib");
+ #elif defined(_WIN32)
++#if defined(__MINGW32__)
++  return GetDsoHandleFromSearchPath(warpctc_dir, "libwarpctc.dll");
++#else
+   return GetDsoHandleFromSearchPath(warpctc_dir, "warpctc.dll");
++#endif
+ #else
+   return GetDsoHandleFromSearchPath(warpctc_dir, "libwarpctc.so");
+ #endif
+@@ -875,7 +895,11 @@ void* GetWarpRNNTDsoHandle() {
+ #if defined(__APPLE__) || defined(__OSX__)
+   return GetDsoHandleFromSearchPath(warprnnt_dir, "libwarprnnt.dylib");
+ #elif defined(_WIN32)
++#if defined(__MINGW32__)
++  return GetDsoHandleFromSearchPath(warprnnt_dir, "libwarprnnt.dll");
++#else
+   return GetDsoHandleFromSearchPath(warprnnt_dir, "warprnnt.dll");
++#endif
+ #else
+   return GetDsoHandleFromSearchPath(warprnnt_dir, "libwarprnnt.so");
+ #endif
+@@ -1020,6 +1044,9 @@ void* GetLAPACKDsoHandle() {
+ #else
+   return GetDsoHandleFromSearchPath(FLAGS_lapack_dir, "liblapack.3.dylib");
+ #endif
++#elif defined(__MINGW32__)
++  // MSYS2: LAPACK is provided by the system OpenBLAS DLL.
++  return GetDsoHandleFromSearchPath(FLAGS_lapack_dir, "libopenblas.dll");
+ #elif defined(_WIN32)
+   return GetDsoHandleFromSearchPath(FLAGS_lapack_dir, "liblapack.dll");
+ #else
+diff --git a/paddle/phi/common/complex.h b/paddle/phi/common/complex.h
+index a7fb3d69..8d9213e0 100644
+--- a/paddle/phi/common/complex.h
++++ b/paddle/phi/common/complex.h
+@@ -36,7 +36,7 @@
+ #endif
+ 
+ #ifndef PADDLE_WITH_HIP
+-#if !defined(_WIN32)
++#if !defined(_MSC_VER)
+ #define PADDLE_ALIGN(x) __attribute__((aligned(x)))
+ #else
+ #define PADDLE_ALIGN(x) __declspec(align(x))
+diff --git a/paddle/phi/common/float16.h b/paddle/phi/common/float16.h
+index d970878d..6b15c1a3 100644
+--- a/paddle/phi/common/float16.h
++++ b/paddle/phi/common/float16.h
+@@ -21,7 +21,7 @@
+ #ifdef __SSE2__
+ #undef __SSE2__
+ #include <immintrin.h>
+-#define __SSE2__
++#define __SSE2__ 1
+ #else
+ #include <immintrin.h>
+ #endif
+@@ -52,7 +52,7 @@
+ #endif
+ 
+ #ifndef PADDLE_WITH_HIP
+-#if !defined(_WIN32)
++#if !defined(_MSC_VER)
+ #define PADDLE_ALIGN(x) __attribute__((aligned(x)))
+ #else
+ #define PADDLE_ALIGN(x) __declspec(align(x))
+diff --git a/paddle/phi/common/float8_e4m3fn.h b/paddle/phi/common/float8_e4m3fn.h
+index 5ced07d1..2443736b 100644
+--- a/paddle/phi/common/float8_e4m3fn.h
++++ b/paddle/phi/common/float8_e4m3fn.h
+@@ -31,7 +31,7 @@
+ #endif
+ 
+ #ifndef PADDLE_WITH_HIP
+-#if !defined(_WIN32)
++#if !defined(_MSC_VER)
+ #define PADDLE_ALIGN(x) __attribute__((aligned(x)))
+ #else
+ #define PADDLE_ALIGN(x) __declspec(align(x))
+diff --git a/paddle/phi/common/float8_e5m2.h b/paddle/phi/common/float8_e5m2.h
+index 71b32a1c..cb22824c 100644
+--- a/paddle/phi/common/float8_e5m2.h
++++ b/paddle/phi/common/float8_e5m2.h
+@@ -33,7 +33,7 @@
+ #endif
+ 
+ #ifndef PADDLE_WITH_HIP
+-#if !defined(_WIN32)
++#if !defined(_MSC_VER)
+ #define PADDLE_ALIGN(x) __attribute__((aligned(x)))
+ #else
+ #define PADDLE_ALIGN(x) __declspec(align(x))
+diff --git a/paddle/phi/common/port.cc b/paddle/phi/common/port.cc
+index 6227b8d7..de1dedac 100644
+--- a/paddle/phi/common/port.cc
++++ b/paddle/phi/common/port.cc
+@@ -59,6 +59,7 @@ void *dlopen(const char *filename, int flag) {
+   return reinterpret_cast<void *>(hModule);
+ }
+ 
++#ifdef _MSC_VER
+ int gettimeofday(struct timeval *tp, void *tzp) {
+   time_t clock;
+   struct tm tm;
+@@ -78,6 +79,7 @@ int gettimeofday(struct timeval *tp, void *tzp) {
+ 
+   return (0);
+ }
++#endif  // _MSC_VER
+ #endif  // !_WIN32
+ 
+ void ExecShellCommand(const std::string &cmd, std::string *message) {
+diff --git a/paddle/phi/common/port.h b/paddle/phi/common/port.h
+index eba610cb..15f7a909 100644
+--- a/paddle/phi/common/port.h
++++ b/paddle/phi/common/port.h
+@@ -32,7 +32,11 @@
+ #include <io.h>  // _popen, _pclose
+ #include <stdio.h>
+ #include <windows.h>
++#ifdef _MSC_VER
+ #include <winsock.h>
++#else
++#include <sys/time.h>  // MinGW provides gettimeofday
++#endif
+ 
+ #ifndef S_ISDIR  // windows port for sys/stat.h
+ #define S_ISDIR(mode) (((mode)&S_IFMT) == S_IFDIR)
+@@ -42,7 +46,9 @@ PADDLE_API void *dlsym(void *handle, const char *symbol_name);
+ 
+ void *dlopen(const char *filename, int flag);
+ 
++#ifdef _MSC_VER
+ PADDLE_API int gettimeofday(struct timeval *tp, void *tzp);
++#endif
+ #endif  // !_WIN32
+ 
+ void ExecShellCommand(const std::string &cmd, std::string *message);
+diff --git a/paddle/phi/core/platform/profiler/cpu_utilization.cc b/paddle/phi/core/platform/profiler/cpu_utilization.cc
+index bc2461b2..1c13f688 100644
+--- a/paddle/phi/core/platform/profiler/cpu_utilization.cc
++++ b/paddle/phi/core/platform/profiler/cpu_utilization.cc
+@@ -18,7 +18,7 @@
+ 
+ namespace paddle::platform {
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ static uint64_t FileTimeToUint64(FILETIME time) {
+   uint64_t low_part = time.dwLowDateTime;
+   uint64_t high_part = time.dwHighDateTime;
+@@ -28,7 +28,7 @@ static uint64_t FileTimeToUint64(FILETIME time) {
+ #endif
+ 
+ void CpuUtilization::RecordBeginTimeInfo() {
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+   HANDLE process_handle = GetCurrentProcess();
+   GetSystemTimeAsFileTime(&start_);
+   GetSystemTimes(&system_idle_time_start_,
+@@ -75,7 +75,7 @@ void CpuUtilization::RecordBeginTimeInfo() {
+ }
+ 
+ void CpuUtilization::RecordEndTimeInfo() {
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+   HANDLE process_handle = GetCurrentProcess();
+   GetSystemTimeAsFileTime(&end_);
+   GetSystemTimes(
+@@ -122,7 +122,7 @@ void CpuUtilization::RecordEndTimeInfo() {
+ 
+ float CpuUtilization::GetCpuUtilization() {
+   float cpu_utilization = 0.0;
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+   uint64_t system_user_time_start = FileTimeToUint64(system_user_time_start_);
+   uint64_t system_user_time_end = FileTimeToUint64(system_user_time_end_);
+   uint64_t system_kernel_time_start =
+@@ -156,7 +156,7 @@ float CpuUtilization::GetCpuUtilization() {
+ 
+ float CpuUtilization::GetCpuCurProcessUtilization() {
+   float cpu_process_utilization = 0.0;
+-#ifdef _MSC_VER
++#ifdef _WIN32
+   uint64_t process_user_time_start = FileTimeToUint64(process_user_time_start_);
+   uint64_t process_user_time_end = FileTimeToUint64(process_user_time_end_);
+   uint64_t process_kernel_time_start =
+diff --git a/paddle/phi/core/platform/profiler/cpu_utilization.h b/paddle/phi/core/platform/profiler/cpu_utilization.h
+index 33f39fc2..b7f8be61 100644
+--- a/paddle/phi/core/platform/profiler/cpu_utilization.h
++++ b/paddle/phi/core/platform/profiler/cpu_utilization.h
+@@ -19,7 +19,7 @@
+ #include <cinttypes>
+ #include <cstdint>
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ #include <windows.h>
+ #else
+ #include <sys/times.h>
+@@ -38,7 +38,7 @@ class PADDLE_API CpuUtilization {
+   float GetCpuCurProcessUtilization();
+ 
+  private:
+-#ifdef _MSC_VER
++#ifdef _WIN32
+   FILETIME start_, end_;
+   FILETIME process_user_time_start_, process_user_time_end_;
+   FILETIME process_kernel_time_start_, process_kernel_time_end_;
+diff --git a/paddle/phi/core/platform/timer.h b/paddle/phi/core/platform/timer.h
+index 749eb3c3..7cfeefa5 100644
+--- a/paddle/phi/core/platform/timer.h
++++ b/paddle/phi/core/platform/timer.h
+@@ -15,10 +15,12 @@ limitations under the License. */
+ #pragma once
+ #include <stdlib.h>
+ 
++#include <cstdint>
++
+ #include "paddle/phi/common/port.h"
+ #include "paddle/utils/test_macros.h"
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+ static unsigned sleep(unsigned seconds) {
+   Sleep(seconds * 1000);
+   return 0;
+diff --git a/paddle/phi/kernels/funcs/detail/lstm_cpu_kernel.h b/paddle/phi/kernels/funcs/detail/lstm_cpu_kernel.h
+index 6dcc69da..f60584d5 100644
+--- a/paddle/phi/kernels/funcs/detail/lstm_cpu_kernel.h
++++ b/paddle/phi/kernels/funcs/detail/lstm_cpu_kernel.h
+@@ -20,7 +20,7 @@ limitations under the License. */
+ #include "paddle/phi/kernels/funcs/eigen/common.h"
+ #include "paddle/phi/kernels/funcs/lstm_compute.h"
+ 
+-#if defined(_WIN32)
++#if defined(_MSC_VER)
+ #if defined(__AVX2__) || defined(__AVX__)
+ inline __m256 operator+=(__m256 a, __m256 b) { return _mm256_add_ps(a, b); }
+ #endif

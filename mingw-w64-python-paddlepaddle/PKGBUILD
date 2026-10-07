@@ -1,0 +1,174 @@
+# Maintainer (msys2-ur): Kreijstal
+#
+# PaddlePaddle (CPU only) built with MinGW-w64 GCC. Upstream only supports
+# MSVC on Windows; the patch series (see PORTING-NOTES.md) ports the CMake
+# build, the DLL export model and a handful of MSVC-only code paths.
+
+_realname=paddlepaddle
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+_commit=4793e33e12bc8b7a20f0750b3a79b4b6e68ea98d
+pkgver=3.5.0.dev20260929
+pkgrel=2
+pkgdesc="PArallel Distributed Deep LEarning: machine learning framework (CPU) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.paddlepaddle.org.cn/'
+msys2_repository_url='https://github.com/PaddlePaddle/Paddle'
+msys2_references=(
+  'purl: pkg:pypi/paddlepaddle'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-libwinpthread"
+         "${MINGW_PACKAGE_PREFIX}-openblas"
+         "${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-httpx"
+         "${MINGW_PACKAGE_PREFIX}-python-networkx"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-opt_einsum"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-protobuf"
+         "${MINGW_PACKAGE_PREFIX}-python-safetensors"
+         "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-lld"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-jinja"
+             "${MINGW_PACKAGE_PREFIX}-python-pip"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel"
+             "${MINGW_PACKAGE_PREFIX}-python-yaml"
+             git)
+options=('!lto')
+# Submodules needed by the CPU build (GPU, oneDNN, xbyak, sleef, gloo, ... are
+# disabled).
+_submodules=(protobuf pocketfft gflags dlpack utf8proc warpctc warprnnt xxhash
+             pybind threadpool zlib glog eigen3 cryptopp cryptopp-cmake
+             nlohmann_json yaml-cpp libuv)
+source=("Paddle::git+https://github.com/PaddlePaddle/Paddle.git#commit=${_commit}"
+        "protobuf::git+https://github.com/protocolbuffers/protobuf.git"
+        "pocketfft::git+https://github.com/mreineck/pocketfft.git"
+        "gflags::git+https://github.com/gflags/gflags.git"
+        "dlpack::git+https://github.com/dmlc/dlpack.git"
+        "utf8proc::git+https://github.com/JuliaStrings/utf8proc.git"
+        "warpctc::git+https://github.com/baidu-research/warp-ctc.git"
+        "warprnnt::git+https://github.com/PaddlePaddle/warp-transducer.git"
+        "xxhash::git+https://github.com/Cyan4973/xxHash.git"
+        "pybind::git+https://github.com/pybind/pybind11.git"
+        "threadpool::git+https://github.com/progschj/ThreadPool.git"
+        "zlib::git+https://github.com/madler/zlib.git"
+        "glog::git+https://github.com/google/glog.git"
+        "eigen3::git+https://gitlab.com/libeigen/eigen.git"
+        "cryptopp::git+https://github.com/weidai11/cryptopp.git"
+        "cryptopp-cmake::git+https://github.com/noloader/cryptopp-cmake.git"
+        "nlohmann_json::git+https://github.com/nlohmann/json.git"
+        "yaml-cpp::git+https://github.com/jbeder/yaml-cpp.git"
+        "libuv::git+https://github.com/libuv/libuv.git"
+        "0001-cmake-MinGW-w64-toolchain-and-third-party-support.patch"
+        "0002-cmake-fix-mkdir-races-in-execute_process-pipelines.patch"
+        "0003-cmake-MinGW-DLL-exports-and-runtime-libraries.patch"
+        "0004-MinGW-fix-MSVC-only-code-paths.patch"
+        "0005-phi-kernel-instantiation-and-type-registry-for-MinGW.patch"
+        "0006-sot-PyFrame_GET_CODE-.bits-workaround-is-MSVC-only.patch"
+        "0007-python-MinGW-wheel-packaging.patch"
+        "0008-phi-ThreadDataRegistry-must-not-use-std-shared_mutex.patch")
+sha256sums=(SKIP SKIP SKIP SKIP SKIP SKIP SKIP SKIP SKIP SKIP
+            SKIP SKIP SKIP SKIP SKIP SKIP SKIP SKIP SKIP
+            'e261ac646c2de76466809c16a1a81a4d00cf72e01305820c1114271e1b8d83d0'
+            '3f0ff9cf47c7fe88818aabf5fe7ad0c190b9fb3a84ceb85f07c0cf9c3db9d6ca'
+            '382d8fec67ff80afef6838e64c2614e711b28c0e3ec9881e6f0580c8d100c1ff'
+            '597c5b2846661450acf78c337d21b913d2cfd32fc717e1cd8bf4b8569ab77268'
+            '3d6ca9537848e0cde00d36bacd554f3c57855d3eb7dd7b50dad0786881bc37f9'
+            'b904d467e307ee7e5a52a292121962fe8b35921fb9c30b1c2cea069490641732'
+            '4c9236a2c29c40acb27139a68d3283d69557932e564a4de6c7daec074624efea'
+            '47b8ab0d7c5c7faee775559c8a50797997466f8cf113a77346210008e9628c36')
+
+prepare() {
+  cd Paddle
+  git submodule init
+  local _sm
+  for _sm in "${_submodules[@]}"; do
+    git config "submodule.third_party/${_sm}.url" "${srcdir}/${_sm}"
+    git -c protocol.file.allow=always submodule update "third_party/${_sm}"
+  done
+
+  local _patch
+  for _patch in "${srcdir}"/0*.patch; do
+    msg2 "Applying ${_patch##*/}"
+    git apply -v "${_patch}"
+  done
+}
+
+build() {
+  mkdir -p "build-${MSYSTEM}" && cd "build-${MSYSTEM}"
+
+  # The version string is compiled in (-DPADDLE_VERSION) and becomes the
+  # wheel version; do not let cmake derive it from the git checkout.
+  export PADDLE_VERSION=${pkgver}
+  # pybind11-stubgen is not packaged; the .pyi stubs are optional.
+  export SKIP_STUB_GEN=1
+
+  local _prefix=$(cygpath -m "${MINGW_PREFIX}")
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    -DPADDLE_SKIP_SUBMODULE_UPDATE=ON \
+    -DPY_VERSION=$(${MINGW_PREFIX}/bin/python -c "import sys; print('%d.%d' % sys.version_info[:2])") \
+    -DPYTHON_EXECUTABLE="${_prefix}/bin/python.exe" \
+    -DPYTHON_INCLUDE_DIR="$(${MINGW_PREFIX}/bin/python -c "import sysconfig; print(sysconfig.get_path('include'))")" \
+    -DPYTHON_LIBRARY="$(${MINGW_PREFIX}/bin/python -c "import sysconfig, os; print(os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('LDLIBRARY')))")" \
+    -DWITH_GPU=OFF -DWITH_ROCM=OFF -DWITH_XPU=OFF -DWITH_NCCL=OFF -DWITH_RCCL=OFF \
+    -DWITH_MKL=OFF -DWITH_ONEDNN=OFF \
+    -DWITH_SYSTEM_BLAS=ON \
+    -DOPENBLAS_INC_DIR="${_prefix}/include/openblas" \
+    -DOPENBLAS_LAPACKE_INC_DIR="${_prefix}/include/openblas" \
+    -DOPENBLAS_CONFIG_INC_DIR="${_prefix}/include/openblas" \
+    -DOPENBLAS_LIB="${_prefix}/lib/libopenblas.dll.a" \
+    -DWITH_DISTRIBUTE=OFF -DWITH_TESTING=OFF -DWITH_CPP_TEST=OFF \
+    -DWITH_CUSTOM_DEVICE=OFF -DWITH_CINN=OFF -DWITH_XBYAK=OFF -DWITH_SLEEF=OFF \
+    -DWITH_PROFILER=OFF -DON_INFER=OFF -DWITH_SHARED_IR=OFF \
+    -DWITH_AVX=ON -DWITH_PYTHON=ON -DWITH_CRYPTO=ON -DWITH_POCKETFFT=ON \
+    ../Paddle
+
+  cmake --build . -j $(nproc)
+}
+
+check() {
+  cd "build-${MSYSTEM}/python"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import paddle
+paddle.utils.run_check()
+paddle.seed(0)
+x = paddle.randn([256, 3])
+y = x @ paddle.to_tensor([[2.0], [-3.0], [0.5]]) + 1.0
+model = paddle.nn.Linear(3, 1)
+opt = paddle.optimizer.SGD(learning_rate=0.1, parameters=model.parameters())
+losses = []
+for _ in range(50):
+    loss = paddle.nn.functional.mse_loss(model(x), y)
+    loss.backward()
+    opt.step()
+    opt.clear_grad()
+    losses.append(float(loss))
+assert losses[-1] < 1e-2 * losses[0], losses
+PY
+}
+
+package() {
+  cd "build-${MSYSTEM}/python"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 "${srcdir}/Paddle/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

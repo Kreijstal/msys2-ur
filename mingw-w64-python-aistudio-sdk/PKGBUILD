@@ -1,0 +1,44 @@
+# aistudio-sdk is only published as a pure-Python wheel (no sdist/tag on the
+# upstream repo), so the wheel is installed as-is.
+_realname=aistudio-sdk
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.3.9
+pkgrel=1
+pkgdesc="Baidu AI Studio SDK (model hub client used by PaddleX) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://aistudio.baidu.com'
+msys2_references=(
+  'purl: pkg:pypi/aistudio-sdk'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-bce-python-sdk"
+         "${MINGW_PACKAGE_PREFIX}-python-click"
+         "${MINGW_PACKAGE_PREFIX}-python-prettytable"
+         "${MINGW_PACKAGE_PREFIX}-python-psutil"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-installer")
+source=("https://files.pythonhosted.org/packages/py3/a/aistudio-sdk/aistudio_sdk-${pkgver}-py3-none-any.whl")
+noextract=("aistudio_sdk-${pkgver}-py3-none-any.whl")
+sha256sums=('41621d052ddb7a58643438a7ca541f58ef0ab94a2acdfff0a71db81bf68dc027')
+
+check() {
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk \
+    aistudio_sdk-${pkgver}-py3-none-any.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from aistudio_sdk.errors import NotExistError
+from aistudio_sdk.snapshot_download import snapshot_download
+print("aistudio_sdk ok")
+PY
+}
+
+package() {
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" aistudio_sdk-${pkgver}-py3-none-any.whl
+}

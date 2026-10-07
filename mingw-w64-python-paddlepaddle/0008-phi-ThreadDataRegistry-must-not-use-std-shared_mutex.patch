@@ -1,0 +1,57 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 12:37:29 +0200
+Subject: [PATCH 8/8] phi: ThreadDataRegistry must not use std::shared_mutex on
+ MinGW
+
+libstdc++'s std::shared_mutex is a winpthreads rwlock initialized with
+PTHREAD_RWLOCK_INITIALIZER. winpthreads initializes such a lock lazily on
+first use, and that initialization is not thread-safe: a thread racing the
+first locker gets EINVAL from pthread_rwlock_wrlock() (rwl_ref() sees the
+lock either NULL-ed by pthread_rwlock_init() or already initialized by
+rwlock_static_init()). std::shared_mutex::lock() only checks for EDEADLK,
+so the caller continues without holding the lock.
+
+The memory-stat registries (paddle::memory::Stat) are first used
+concurrently by the PIR interpreter's worker threads. The losing thread
+then inserts into tid_map_ while another thread holds the lock, and its
+unlock of a lock it never acquired corrupts the rwlock counters. When a
+worker thread exits later, ~ThreadDataHolder() (a noexcept TLS destructor)
+fails tid_map_.at(tid) with std::out_of_range and the process aborts
+("terminate called after throwing ... unordered_map::at"), intermittently
+and mostly under CPU load.
+
+Use std::mutex on MinGW, as on macOS. winpthreads initializes static
+mutexes with a compare-and-swap, and the registry's shared (reader) paths
+are rare.
+---
+ paddle/phi/common/thread_data_registry.h | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/paddle/phi/common/thread_data_registry.h b/paddle/phi/common/thread_data_registry.h
+index ba0fea5b..867df6e2 100644
+--- a/paddle/phi/common/thread_data_registry.h
++++ b/paddle/phi/common/thread_data_registry.h
+@@ -83,7 +83,18 @@ class ThreadDataRegistry {
+ // types
+ // Lock types
+ #if defined(__clang__) || defined(__GNUC__)  // CLANG or GCC
+-#ifndef __APPLE__
++#if defined(__MINGW32__)
++  // MinGW-w64: libstdc++'s std::shared_mutex is a winpthreads rwlock with
++  // PTHREAD_RWLOCK_INITIALIZER, and winpthreads initializes it lazily without
++  // proper synchronization: a thread that races the first locker gets EINVAL
++  // from pthread_rwlock_wrlock(), which std::shared_mutex::lock() ignores. The
++  // registry map is then modified without the lock and the stray unlock
++  // corrupts the rwlock, so a thread exiting later fails tid_map_.at() in
++  // ~ThreadDataHolder() -> std::terminate. std::mutex (CAS-initialized) is
++  // safe; the shared readers here are rare.
++  using LockType = std::mutex;
++  using SharedLockGuardType = std::lock_guard<std::mutex>;
++#elif !defined(__APPLE__)
+   using LockType = std::shared_mutex;
+   using SharedLockGuardType = std::shared_lock<std::shared_mutex>;
+ // Special case : mac. https://github.com/facebook/react-native/issues/31250
+-- 
+2.55.0
+
