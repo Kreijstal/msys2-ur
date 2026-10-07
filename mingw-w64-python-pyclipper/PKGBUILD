@@ -1,0 +1,58 @@
+_realname=pyclipper
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=1.4.0
+pkgrel=1
+pkgdesc="Cython wrapper for the Clipper polygon clipping and offsetting library (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/fonttools/pyclipper'
+msys2_repository_url='https://github.com/fonttools/pyclipper'
+msys2_references=(
+  'purl: pkg:pypi/pyclipper'
+)
+license=('spdx:MIT AND BSL-1.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-gcc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools-scm"
+             "${MINGW_PACKAGE_PREFIX}-cython"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+source=("https://pypi.org/packages/source/p/pyclipper/pyclipper-${pkgver}.tar.gz")
+sha256sums=('9882bd889f27da78add4dd6f881d25697efc740bf840274e749988d25496c8e1')
+
+build() {
+  cp -r "pyclipper-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import pyclipper
+pc = pyclipper.PyclipperOffset()
+pc.AddPath([(0, 0), (10, 0), (10, 10), (0, 10)], pyclipper.JT_ROUND, pyclipper.ET_CLOSEDPOLYGON)
+out = pc.Execute(2)
+assert len(out) == 1 and abs(pyclipper.Area(out[0])) > 100, out
+c = pyclipper.Pyclipper()
+c.AddPath([(0, 0), (10, 0), (10, 10), (0, 10)], pyclipper.PT_SUBJECT, True)
+c.AddPath([(5, 5), (15, 5), (15, 15), (5, 15)], pyclipper.PT_CLIP, True)
+inter = c.Execute(pyclipper.CT_INTERSECTION)
+assert abs(pyclipper.Area(inter[0])) == 25, inter
+print("pyclipper", pyclipper.__version__, "ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

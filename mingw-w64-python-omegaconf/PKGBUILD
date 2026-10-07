@@ -1,0 +1,60 @@
+_realname=omegaconf
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.3.1
+pkgrel=1
+pkgdesc="Flexible hierarchical configuration system (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/omry/omegaconf'
+msys2_repository_url='https://github.com/omry/omegaconf'
+msys2_references=(
+  'purl: pkg:pypi/omegaconf'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-antlr4-python3-runtime"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/o/omegaconf/omegaconf-${pkgver}.tar.gz")
+sha256sums=('e5e7de64aeebeddaf8e6d3f7a783b32ac2a01c0fbd9c878012caecb891a1f42a')
+
+prepare() {
+  cd "omegaconf-${pkgver}"
+  # build_py would wipe the pregenerated grammar parsers shipped in the sdist
+  # and regenerate them with java + antlr-4.9.3-complete.jar
+  sed -i '/"build_py": BuildPyCommand,/d' setup.py
+}
+
+build() {
+  cp -r "omegaconf-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from omegaconf import OmegaConf
+cfg = OmegaConf.create({"a": {"b": 2}, "c": "${a.b}", "d": "x_${c}"})
+assert cfg.c == 2 and cfg.d == "x_2"
+cfg = OmegaConf.merge(cfg, OmegaConf.from_dotlist(["a.b=5"]))
+assert cfg.c == 5
+y = OmegaConf.to_yaml(cfg)
+assert OmegaConf.create(y).a.b == 5
+print(y)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

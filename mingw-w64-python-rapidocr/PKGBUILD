@@ -1,0 +1,72 @@
+_realname=rapidocr
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.9.2
+pkgrel=1
+pkgdesc="OCR toolkit running PaddleOCR models on ONNXRuntime (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/RapidAI/RapidOCR'
+msys2_repository_url='https://github.com/RapidAI/RapidOCR'
+msys2_references=(
+  'purl: pkg:pypi/rapidocr'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-colorlog"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-omegaconf"
+         "${MINGW_PACKAGE_PREFIX}-python-onnxruntime"
+         "${MINGW_PACKAGE_PREFIX}-python-opencv"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-pyclipper"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-shapely"
+         "${MINGW_PACKAGE_PREFIX}-python-six"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel")
+options=('!strip')
+# no sdist on PyPI; the wheel is pure Python and carries the default
+# PP-OCR detection/classification/recognition ONNX models, so OCR works
+# without the runtime model download
+source=("https://pypi.org/packages/py3/r/rapidocr/rapidocr-${pkgver}-py3-none-any.whl"
+        "LICENSE::https://raw.githubusercontent.com/RapidAI/RapidOCR/v${pkgver}/LICENSE")
+noextract=("rapidocr-${pkgver}-py3-none-any.whl")
+sha256sums=('04d6b8d151f823d930bd91910555f57bea897c0c44fa6794267b94cf9c1ef9a0'
+            '3e0af25fdd06aa9586ae97adb00ea927ebe5a3805ac77d2d3a81ce5f55693333')
+
+build() {
+  rm -rf "python-build-${MSYSTEM}" && mkdir "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m wheel unpack "${srcdir}/rapidocr-${pkgver}-py3-none-any.whl"
+  # cv2 comes from MSYS2's opencv package, which has no opencv_python dist-info
+  sed -i '/^Requires-Dist: opencv_python/d' "rapidocr-${pkgver}/rapidocr-${pkgver}.dist-info/METADATA"
+  mkdir dist && ${MINGW_PREFIX}/bin/python -m wheel pack "rapidocr-${pkgver}" -d dist
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # OCR a rendered line of text with the bundled models
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import cv2, numpy as np
+from rapidocr import RapidOCR
+img = np.full((80, 420, 3), 255, np.uint8)
+cv2.putText(img, "Hello MSYS2 42", (10, 55), cv2.FONT_HERSHEY_SIMPLEX, 1.4, (0, 0, 0), 3)
+res = RapidOCR()(img)
+print(res.txts, res.scores)
+assert res.txts and "MSYS2" in "".join(res.txts).replace(" ", ""), res.txts
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 "${srcdir}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,65 @@
+_realname=img2table
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.0.0
+pkgrel=1
+pkgdesc="Table identification and extraction for PDF and images based on OpenCV (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/xavctn/img2table'
+msys2_repository_url='https://github.com/xavctn/img2table'
+msys2_references=(
+  'purl: pkg:pypi/img2table'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-beautifulsoup4"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-opencv"
+         "${MINGW_PACKAGE_PREFIX}-python-pypdfium2"
+         "${MINGW_PACKAGE_PREFIX}-python-xlsxwriter")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-rapidocr: RapidOCR backend (img2table.ocr.RapidOCR)"
+            "${MINGW_PACKAGE_PREFIX}-tesseract-ocr: Tesseract backend (img2table.ocr.TesseractOCR)")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools-scm"
+             "${MINGW_PACKAGE_PREFIX}-cython"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-rapidocr"
+              "${MINGW_PACKAGE_PREFIX}-python-pymupdf")
+source=("https://pypi.org/packages/source/i/img2table/img2table-${pkgver}.tar.gz"
+        "img2table-smoke.py")
+sha256sums=('584334b46c898d733a2a44941df96bed2fefb2cd5e89ae57830614e6119be06f'
+            'dfb5446a917f89b2dd72ff8d74dcb809b967a8211576c1f2ffe3296c665edd9d')
+
+prepare() {
+  cd "img2table-${pkgver}"
+  # MSYS2's opencv is built with the contrib modules (cv2.ximgproc, which
+  # img2table uses) but registers no opencv-contrib-python distribution
+  sed -i '/"opencv-contrib-python>=4",/d' pyproject.toml
+}
+
+build() {
+  cp -r "img2table-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # draw a table into a PNG and a PDF, extract it with RapidOCR (bundled
+  # models) and from the PDF text layer, and export to xlsx
+  ${MINGW_PREFIX}/bin/python - "$(mktemp -d)" < "${srcdir}/img2table-smoke.py"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.txt"
+}

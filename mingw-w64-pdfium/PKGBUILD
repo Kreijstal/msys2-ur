@@ -1,0 +1,154 @@
+# PDFium as a standalone shared library, built from the Chromium snapshot that
+# ships in the qtwebengine sources. Qt's GN/CMake glue already knows how to
+# build pdfium with the MinGW toolchain (MSYS2's qt6-pdf uses it); here only
+# the pdfium half of that build is kept and linked into libpdfium.dll with
+# the public FPDF*/FORM_*/FSDK_* C API exported.
+
+_realname=pdfium
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+_qtver=6.11.2
+# Chromium build number of the pdfium snapshot in qtwebengine ${_qtver}
+# (chrome/VERSION: 140.0.7339.225), the same numbering pdfium-binaries uses
+_chromiumver=140.0.7339.225
+pkgver=7339
+pkgrel=1
+pkgdesc='PDF rendering and parsing library from the Chromium project (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://pdfium.googlesource.com/pdfium/'
+msys2_repository_url='https://pdfium.googlesource.com/pdfium/'
+license=('spdx:BSD-3-Clause AND Apache-2.0 AND FTL AND IJG AND MIT AND Zlib AND libpng-2.0 AND ICU')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-qt6-base"
+             "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
+             "${MINGW_PACKAGE_PREFIX}-qt6-tools")
+_pkgfn="qtwebengine-everywhere-src-${_qtver}"
+source=("https://download.qt.io/official_releases/qt/${_qtver%.*}/${_qtver}/submodules/${_pkgfn}.tar.xz"
+        "0001-missing-include.patch")
+sha256sums=('6101c1aa00ff933d1b65ee5d167f76e8d71b9ac5b378b0111277723ebda7c163'
+            '6eb8984843aaeb0f97b55c609d78231a82cb0bb2b04ac6f466edd7a53a76b5ac')
+
+prepare() {
+  cd ${_pkgfn}
+  patch -Nbp1 -i "${srcdir}/0001-missing-include.patch"
+}
+
+build() {
+  PYTHON3_PATH=${MINGW_PREFIX}/bin \
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -Wno-author \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+    -DCMAKE_MESSAGE_LOG_LEVEL=STATUS \
+    -DPython3_EXECUTABLE=${MINGW_PREFIX}/bin/python \
+    -DQT_FEATURE_qtwebengine_build=OFF \
+    -DQT_FEATURE_system_png=OFF \
+    -S ${_pkgfn} \
+    -B build-${MSYSTEM}
+
+  # only the GN/ninja half: the complete static archive of pdfium and deps
+  cmake --build build-${MSYSTEM} --target run_pdf_NinjaDone
+
+  # Qt's GN emits the QtPdf "complete static library" as response files
+  # (objects, extra archives, system libs) relative to the CMake build dir
+  cd build-${MSYSTEM}
+  local _rsp=$(find src/pdf -name QtPdf_objects.rsp | head -1)
+  [[ -f ${_rsp} ]] || { error "QtPdf_objects.rsp not found"; return 1; }
+  _rsp=${_rsp%_objects.rsp}
+  msg2 "GN response files: ${_rsp}_*.rsp"
+
+  rm -rf ../link-${MSYSTEM} && mkdir ../link-${MSYSTEM}
+  {
+    echo "LIBRARY libpdfium.dll"
+    echo "EXPORTS"
+    nm -g --defined-only @${_rsp}_objects.rsp 2>/dev/null \
+      | awk '$2 == "T" && $3 ~ /^(FPDF|FORM_|FSDK_)/ {print "  " $3}' | sort -u
+  } > ../link-${MSYSTEM}/pdfium.def
+  msg2 "$(($(wc -l < ../link-${MSYSTEM}/pdfium.def) - 2)) exported functions"
+
+  local _extra=()
+  [[ -s ${_rsp}_archives.rsp ]] && _extra+=(-Wl,--start-group @${_rsp}_archives.rsp -Wl,--end-group)
+  [[ -s ${_rsp}_libs.rsp ]] && _extra+=(@${_rsp}_libs.rsp)
+
+  ${CXX:-g++} -shared -o ../link-${MSYSTEM}/libpdfium.dll \
+    ../link-${MSYSTEM}/pdfium.def @${_rsp}_objects.rsp "${_extra[@]}" \
+    -lwinmm -lgdi32 -luser32 -ladvapi32 -lshell32 -lole32 \
+    -Wl,--gc-sections -Wl,--out-implib,../link-${MSYSTEM}/libpdfium.dll.a ${LDFLAGS}
+}
+
+check() {
+  cd link-${MSYSTEM}
+  local _pub="${srcdir}/${_pkgfn}/src/3rdparty/chromium/third_party/pdfium/public"
+  cat > smoke.c <<'END'
+#include <stdio.h>
+#include <string.h>
+#include "fpdfview.h"
+#include "fpdf_edit.h"
+#include "fpdf_text.h"
+#include "fpdf_save.h"
+static char buf[1 << 16]; static size_t len;
+static int put(FPDF_FILEWRITE *w, const void *d, unsigned long n) { memcpy(buf + len, d, n); len += n; return 1; }
+int main(void) {
+  FPDF_InitLibrary();
+  FPDF_DOCUMENT doc = FPDF_CreateNewDocument();
+  FPDF_PAGE page = FPDFPage_New(doc, 0, 200, 100);
+  FPDF_PAGEOBJECT t = FPDFPageObj_NewTextObj(doc, "Helvetica", 12);
+  FPDF_WIDESTRING ws = (FPDF_WIDESTRING)L"hello pdfium";
+  FPDFText_SetText(t, ws);
+  FPDFPageObj_Transform(t, 1, 0, 0, 1, 20, 50);
+  FPDFPage_InsertObject(page, t);
+  FPDFPage_GenerateContent(page);
+  FPDF_FILEWRITE w = {1, put};
+  if (!FPDF_SaveAsCopy(doc, &w, 0)) return 1;
+  FPDF_ClosePage(page); FPDF_CloseDocument(doc);
+  doc = FPDF_LoadMemDocument(buf, (int)len, NULL);
+  if (!doc || FPDF_GetPageCount(doc) != 1) return 2;
+  page = FPDF_LoadPage(doc, 0);
+  FPDF_TEXTPAGE tp = FPDFText_LoadPage(page);
+  unsigned short out[64] = {0}; char a[64] = {0};
+  int n = FPDFText_GetText(tp, 0, 63, out);
+  for (int i = 0; i < n && out[i]; i++) a[i] = (char)out[i];
+  FPDF_BITMAP bmp = FPDFBitmap_Create(200, 100, 0);
+  FPDFBitmap_FillRect(bmp, 0, 0, 200, 100, 0xFFFFFFFF);
+  FPDF_RenderPageBitmap(bmp, page, 0, 0, 200, 100, 0, 0);
+  const unsigned char *px = FPDFBitmap_GetBuffer(bmp); int dark = 0;
+  for (int i = 0; i < 200 * 100 * 4; i += 4) dark += px[i] < 128;
+  printf("text=%s dark_pixels=%d\n", a, dark);
+  FPDFBitmap_Destroy(bmp); FPDFText_ClosePage(tp); FPDF_ClosePage(page); FPDF_CloseDocument(doc);
+  FPDF_DestroyLibrary();
+  return !(strcmp(a, "hello pdfium") == 0 && dark > 20);
+}
+END
+  ${CC:-gcc} -I"${_pub}" smoke.c -o smoke.exe -L. -lpdfium
+  ./smoke.exe
+}
+
+package() {
+  local _pdfium="${srcdir}/${_pkgfn}/src/3rdparty/chromium/third_party/pdfium"
+  cd link-${MSYSTEM}
+  install -Dm755 libpdfium.dll "${pkgdir}${MINGW_PREFIX}/bin/libpdfium.dll"
+  install -Dm644 libpdfium.dll.a "${pkgdir}${MINGW_PREFIX}/lib/libpdfium.dll.a"
+  install -Dm644 "${_pdfium}"/public/*.h -t "${pkgdir}${MINGW_PREFIX}/include/pdfium"
+  install -Dm644 "${_pdfium}"/public/cpp/*.h -t "${pkgdir}${MINGW_PREFIX}/include/pdfium/cpp"
+
+  install -d "${pkgdir}${MINGW_PREFIX}/lib/pkgconfig"
+  cat > "${pkgdir}${MINGW_PREFIX}/lib/pkgconfig/libpdfium.pc" <<END
+prefix=${MINGW_PREFIX}
+libdir=\${prefix}/lib
+includedir=\${prefix}/include/pdfium
+
+Name: libpdfium
+Description: PDFium PDF library
+Version: ${_chromiumver}
+Libs: -L\${libdir} -lpdfium
+Cflags: -I\${includedir}
+END
+
+  install -Dm644 "${_pdfium}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

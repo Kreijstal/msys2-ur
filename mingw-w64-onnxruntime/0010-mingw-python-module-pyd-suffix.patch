@@ -1,0 +1,11 @@
+--- a/cmake/onnxruntime_python.cmake	2026-10-06 19:14:56.883320022 +0200
++++ b/cmake/onnxruntime_python.cmake	2026-10-06 19:14:56.896320327 +0200
+@@ -305,7 +305,7 @@
+   set_target_properties(onnxruntime_pybind11_state PROPERTIES INTERPROCEDURAL_OPTIMIZATION_RELWITHDEBINFO TRUE)
+   set_target_properties(onnxruntime_pybind11_state PROPERTIES INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
+ endif()
+-if (MSVC)
++if (WIN32)
+   set_target_properties(onnxruntime_pybind11_state PROPERTIES SUFFIX ".pyd")
+ else()
+   set_target_properties(onnxruntime_pybind11_state PROPERTIES SUFFIX ".so")

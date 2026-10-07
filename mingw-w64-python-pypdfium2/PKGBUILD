@@ -1,0 +1,96 @@
+_realname=pypdfium2
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.14.0
+pkgrel=1
+pkgdesc="Python bindings to PDFium (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/pypdfium2-team/pypdfium2'
+msys2_repository_url='https://github.com/pypdfium2-team/pypdfium2'
+msys2_references=(
+  'purl: pkg:pypi/pypdfium2'
+)
+license=('spdx:Apache-2.0 OR BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-pdfium")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-pillow: PIL image conversion"
+            "${MINGW_PACKAGE_PREFIX}-python-numpy: NumPy array conversion")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-packaging"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pillow")
+source=("https://pypi.org/packages/source/p/pypdfium2/pypdfium2-${pkgver}.tar.gz")
+sha256sums=('c5f009b3157f10e97dceb55963f5910eff92feb00587ba10a76f12b87ce1a4b6')
+
+prepare() {
+  cd "pypdfium2-${pkgver}"
+  # the libpdfium.pc version probe runs pkg-config without capturing its
+  # stdout and then calls .decode() on None (subprocess.PIPE == -1)
+  sed -i 's|"libpdfium"\], cwd=None, check=False)|"libpdfium"], cwd=None, check=False, stdout=-1)|' \
+    setupsrc/system_pdfium.py
+  grep -q 'check=False, stdout=-1)' setupsrc/system_pdfium.py
+}
+
+build() {
+  cp -r "pypdfium2-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  # bind against the system libpdfium instead of downloading pdfium-binaries:
+  # ctypes bindings are generated (with the bundled ctypesgen) from the
+  # installed headers, the version comes from libpdfium.pc, and the library
+  # is loaded by bare name, i.e. from ${MINGW_PREFIX}/bin next to python.exe
+  PDFIUM_PLATFORM=system-search \
+  PDFIUM_BINARY=libpdfium.dll \
+  PDFIUM_HEADERS="$(cygpath -m "${MINGW_PREFIX}/include/pdfium")" \
+  CPP="${MINGW_PREFIX}/bin/gcc -E" \
+    ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # build a PDF with the raw API, then reopen, extract text and render
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import ctypes
+import pypdfium2 as pdfium
+import pypdfium2.raw as raw
+print(pdfium.PDFIUM_INFO)
+pdf = pdfium.PdfDocument.new()
+page = pdf.new_page(300, 120)
+font = raw.FPDFText_LoadStandardFont(pdf, b"Helvetica")
+obj = raw.FPDFPageObj_CreateTextObj(pdf, font, 18)
+text = "Hello pypdfium2"
+buf = ctypes.create_string_buffer((text + "\0").encode("utf-16-le"))
+raw.FPDFText_SetText(obj, ctypes.cast(buf, ctypes.POINTER(raw.FPDF_WCHAR)))
+raw.FPDFPageObj_Transform(obj, 1, 0, 0, 1, 20, 50)
+raw.FPDFPage_InsertObject(page, obj)
+raw.FPDFPage_GenerateContent(page)
+import io
+out = io.BytesIO()
+pdf.save(out)
+doc = pdfium.PdfDocument(out.getvalue())
+assert len(doc) == 1
+p = doc[0]
+got = p.get_textpage().get_text_bounded()
+print("text:", got)
+assert got.strip() == text
+img = p.render(scale=2).to_pil()
+assert img.size == (600, 240)
+assert min(img.convert("L").getdata()) < 100
+print("render ok", img.size)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSES/Apache-2.0.txt LICENSES/BSD-3-Clause.txt \
+    -t "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}"
+}

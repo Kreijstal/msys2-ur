@@ -1,0 +1,50 @@
+_realname=antlr4-python3-runtime
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+# omegaconf 2.3 pins antlr4-python3-runtime==4.9.*: its bundled parsers use
+# the 4.9 serialized ATN format, which 4.10+ runtimes reject
+pkgver=4.9.3
+pkgrel=1
+pkgdesc="ANTLR 4.9 runtime for Python 3 (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.antlr.org'
+msys2_repository_url='https://github.com/antlr/antlr4'
+msys2_references=(
+  'purl: pkg:pypi/antlr4-python3-runtime'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/a/antlr4-python3-runtime/antlr4-python3-runtime-${pkgver}.tar.gz"
+        "LICENSE.txt::https://raw.githubusercontent.com/antlr/antlr4/${pkgver}/LICENSE.txt")
+sha256sums=('f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b'
+            'b1b379fcaf3219593a4c433feb1b35c780bed23fafaae440b1ae2771a9521e3a')
+
+build() {
+  cp -r "antlr4-python3-runtime-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python -c "
+import antlr4
+s = antlr4.InputStream('abc')
+assert s.LA(1) == ord('a') and s.size == 3
+print('antlr4 runtime ok')"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 "${srcdir}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.txt"
+}
