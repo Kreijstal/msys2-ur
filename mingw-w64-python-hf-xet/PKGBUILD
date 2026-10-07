@@ -1,0 +1,68 @@
+_realname=hf-xet
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=1.6.0
+pkgrel=1
+pkgdesc="Xet storage client for fast transfer of large files with the Hugging Face Hub (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/xet-core'
+msys2_repository_url='https://github.com/huggingface/xet-core'
+msys2_references=(
+  'purl: pkg:pypi/hf-xet'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-maturin"
+             "${MINGW_PACKAGE_PREFIX}-rust")
+options=('!strip')
+source=("https://pypi.org/packages/source/h/hf-xet/hf_xet-${pkgver}.tar.gz")
+sha256sums=('2e58454a340b3556dfa4972d5451aff4fba8dd42a236600ba1a1d2b1514f0fef')
+
+prepare() {
+  cd "hf_xet-${pkgver}/hf_xet"
+  # 0.29.3 links a lib_name it has no raw-dylib entry for through its import
+  # library (0.29.0 always uses raw-dylib); see build()
+  cargo update --precise 0.29.3 -p pyo3
+}
+
+build() {
+  cp -r "hf_xet-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+
+  # maturin builds abi3 modules for Windows without asking the interpreter,
+  # so pyo3 assumes MSVC naming and links python3.dll; MinGW Python's stable
+  # ABI library is libpython3.dll
+  cat > pyo3-config.txt <<END
+implementation=CPython
+version=3.8
+shared=true
+target_abi=CPython-abi3-3.8
+lib_name=libpython3
+lib_dir=$(cygpath -m "${MINGW_PREFIX}/lib")
+ext_suffix=.pyd
+build_flags=
+suppress_build_script_link_lines=false
+END
+  export PYO3_CONFIG_FILE="$(cygpath -m "${PWD}/pyo3-config.txt")"
+  export _PYTHON_HOST_PLATFORM=$(${MINGW_PREFIX}/bin/python -c "import sysconfig, sys; sys.stdout.write(sysconfig.get_platform())")
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python -c "import hf_xet"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

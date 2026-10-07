@@ -1,0 +1,47 @@
+_realname=httpcore2
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.13.1
+pkgrel=1
+pkgdesc="Minimal low-level HTTP client (httpx2 fork of httpcore) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/pydantic/httpx2'
+msys2_references=(
+  'purl: pkg:pypi/httpcore2'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-h11"
+         "${MINGW_PACKAGE_PREFIX}-python-truststore")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-hatch-fancy-pypi-readme"
+             "${MINGW_PACKAGE_PREFIX}-python-uv-dynamic-versioning")
+options=('!strip')
+source=("https://pypi.org/packages/source/h/httpcore2/httpcore2-${pkgver}.tar.gz")
+sha256sums=('e0aa977abe17e69a3b820a24542a6fa88702676d83880b8d194dcd18408e5103')
+
+build() {
+  cp -r "httpcore2-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  # the version comes from git tags, which an sdist does not have
+  export UV_DYNAMIC_VERSIONING_BYPASS="${pkgver}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages && ${MINGW_PREFIX}/bin/python -c "import httpcore2, importlib.metadata as m; assert m.version('httpcore2') == '${pkgver}'"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.md "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.md"
+}

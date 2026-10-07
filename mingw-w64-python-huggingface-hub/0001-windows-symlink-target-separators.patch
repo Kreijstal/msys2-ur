@@ -1,0 +1,27 @@
+Windows symlink targets need backslashes; MSYS2's Python builds relative
+paths with "/", so the cache's snapshot links did not resolve (EINVAL).
+
+--- a/src/huggingface_hub/file_download.py	2026-10-06 12:02:14.840654385 +0200
++++ b/src/huggingface_hub/file_download.py	2026-10-06 12:02:14.882655175 +0200
+@@ -699,7 +699,8 @@
+         src_rel_or_abs = relative_src or abs_src
+         logger.debug(f"Creating pointer from {src_rel_or_abs} to {abs_dst}")
+         try:
+-            os.symlink(src_rel_or_abs, abs_dst)
++            # MSYS2's Python joins paths with "/", which Windows does not resolve in symlink targets
++            os.symlink(src_rel_or_abs.replace("/", "\\") if os.name == "nt" else src_rel_or_abs, abs_dst)
+             return
+         except FileExistsError:
+             if os.path.islink(abs_dst) and os.path.realpath(abs_dst) == os.path.realpath(abs_src):
+--- a/src/huggingface_hub/utils/_shared_blobs.py	2026-10-06 12:02:14.844654460 +0200
++++ b/src/huggingface_hub/utils/_shared_blobs.py	2026-10-06 12:02:14.882655175 +0200
+@@ -374,7 +374,8 @@
+ def _make_temporary_symlink(blob_path: Path, store_path: Path) -> Path:
+     tmp_link = blob_path.with_name(f".{blob_path.name}.{secrets.token_hex(4)}.shared")
+     relative_target = os.path.relpath(_path_for_comparison(store_path), start=_path_for_comparison(blob_path).parent)
+-    os.symlink(relative_target, tmp_link)
++    # MSYS2's Python joins paths with "/", which Windows does not resolve in symlink targets
++    os.symlink(relative_target.replace("/", "\\") if os.name == "nt" else relative_target, tmp_link)
+     return tmp_link
+ 
+ 

@@ -1,0 +1,73 @@
+_realname=huggingface-hub
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.1.1
+pkgrel=1
+pkgdesc="Client library to download and publish models, datasets and other repos on the Hugging Face Hub (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/huggingface_hub'
+msys2_references=(
+  'purl: pkg:pypi/huggingface-hub'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-click"
+         "${MINGW_PACKAGE_PREFIX}-python-filelock"
+         "${MINGW_PACKAGE_PREFIX}-python-fsspec"
+         "${MINGW_PACKAGE_PREFIX}-python-hf-xet"
+         "${MINGW_PACKAGE_PREFIX}-python-httpx2"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+options=('!strip')
+source=("https://pypi.org/packages/source/h/huggingface-hub/huggingface_hub-${pkgver}.tar.gz"
+        '0001-windows-symlink-target-separators.patch')
+sha256sums=('c56285bb7047ff1fe510f23be0705934fb3fd43afda75543341e6574a7e79630'
+            '436fa23b382c3469f54d039b7de205b4fee3b3088a19cae1f75131cea2fd9421')
+
+prepare() {
+  cd "huggingface_hub-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-windows-symlink-target-separators.patch"
+}
+
+build() {
+  cp -r "huggingface_hub-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from huggingface_hub import HfApi, hf_hub_url
+from huggingface_hub.utils._runtime import is_xet_available
+assert hf_hub_url("gpt2", "config.json").endswith("/gpt2/resolve/main/config.json")
+assert is_xet_available()
+HfApi()
+# cache snapshot entries are relative symlinks to blobs and must resolve
+import os, tempfile
+from huggingface_hub.file_download import _create_symlink
+d = tempfile.mkdtemp()
+os.makedirs(os.path.join(d, "blobs")); os.makedirs(os.path.join(d, "snapshots", "x"))
+with open(os.path.join(d, "blobs", "b"), "w") as f: f.write("ok")
+_create_symlink(os.path.join(d, "blobs", "b"), os.path.join(d, "snapshots", "x", "f"))
+assert open(os.path.join(d, "snapshots", "x", "f")).read() == "ok"
+PY
+  ${MINGW_PREFIX}/bin/python -c "from huggingface_hub.cli.hf import main; main()" --help > /dev/null
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}
