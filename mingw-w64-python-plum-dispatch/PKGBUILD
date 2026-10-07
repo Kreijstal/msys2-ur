@@ -1,0 +1,46 @@
+_realname=plum-dispatch
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.9.0
+pkgrel=1
+pkgdesc="Multiple dispatch in Python (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/beartype/plum'
+msys2_references=(
+  'purl: pkg:pypi/plum-dispatch'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-beartype"
+         "${MINGW_PACKAGE_PREFIX}-python-rich"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-hatch-vcs")
+options=('!strip')
+source=("https://pypi.org/packages/source/p/plum-dispatch/plum_dispatch-${pkgver}.tar.gz")
+sha256sums=('fb45c5b2dd4dadd57def51bcf321dfa3a258df5c725f43adea7e7f6db3b79b52')
+
+build() {
+  cp -r "plum_dispatch-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  export SETUPTOOLS_SCM_PRETEND_VERSION="${pkgver}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages && ${MINGW_PREFIX}/bin/python -c "import plum"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENCE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENCE.txt"
+}

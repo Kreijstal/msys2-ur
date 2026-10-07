@@ -1,0 +1,74 @@
+_realname=fastai
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.8.12
+pkgrel=1
+pkgdesc="Deep learning library built on PyTorch, with high-level training APIs (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://docs.fast.ai/'
+msys2_references=(
+  'purl: pkg:pypi/fastai'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-cloudpickle"
+         "${MINGW_PACKAGE_PREFIX}-python-fastcore"
+         "${MINGW_PACKAGE_PREFIX}-python-fastdownload"
+         "${MINGW_PACKAGE_PREFIX}-python-fastprogress"
+         "${MINGW_PACKAGE_PREFIX}-python-fasttransform"
+         "${MINGW_PACKAGE_PREFIX}-python-matplotlib"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-pandas"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-plum-dispatch"
+         "${MINGW_PACKAGE_PREFIX}-python-pytorch"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-scikit-learn"
+         "${MINGW_PACKAGE_PREFIX}-python-scipy"
+         "${MINGW_PACKAGE_PREFIX}-python-spacy"
+         "${MINGW_PACKAGE_PREFIX}-python-torchvision"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('b995efbb1ade78c99cc228e65db7493a668eb10cfa4945e21d2e348d738aba04')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # a tiny tabular model trained for one epoch on the CPU
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import numpy as np, pandas as pd
+from fastai.tabular.all import *
+from fastai.vision.all import xresnet18
+rng = np.random.default_rng(0)
+df = pd.DataFrame({'a': rng.normal(size=200), 'b': rng.normal(size=200)})
+df['y'] = (df.a + df.b > 0).astype(int)
+dls = TabularDataLoaders.from_df(df, cont_names=['a', 'b'], y_names='y',
+                                 y_block=CategoryBlock(), bs=32)
+learn = tabular_learner(dls, metrics=accuracy)
+learn.fit(1)
+xresnet18(n_out=2)
+from fastai.text.all import SpacyTokenizer
+assert list(SpacyTokenizer()(["Hello world, this is fastai."]))[0][:3] == ["Hello", "world", ","]
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}
