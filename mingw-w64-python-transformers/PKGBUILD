@@ -1,0 +1,88 @@
+_realname=transformers
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.18.0
+pkgrel=1
+pkgdesc="State-of-the-art pretrained models for inference and training (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/transformers'
+msys2_repository_url='https://github.com/huggingface/transformers'
+msys2_references=(
+  'purl: pkg:pypi/transformers'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-regex"
+         "${MINGW_PACKAGE_PREFIX}-python-safetensors"
+         "${MINGW_PACKAGE_PREFIX}-python-tokenizers"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-typer"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-pytorch: PyTorch models"
+            "${MINGW_PACKAGE_PREFIX}-python-accelerate: device_map and Trainer support"
+            "${MINGW_PACKAGE_PREFIX}-python-jinja: chat templates"
+            "${MINGW_PACKAGE_PREFIX}-python-pillow: vision processors"
+            "${MINGW_PACKAGE_PREFIX}-python-torchvision: fast image processors"
+            "${MINGW_PACKAGE_PREFIX}-python-sentencepiece: sentencepiece tokenizers"
+            "${MINGW_PACKAGE_PREFIX}-python-protobuf: sentencepiece tokenizer conversion")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytorch")
+options=('!strip')
+source=("https://pypi.org/packages/source/t/transformers/transformers-${pkgver}.tar.gz")
+sha256sums=('d89c206e42e841af7cd314b3d2b21c03e977d819cdb4aef65ada048769a644df')
+
+build() {
+  cp -r "transformers-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # a tiny randomly initialised GPT-2 with a locally trained tokenizer:
+  # save/reload through safetensors, generate, and one training step
+  HF_HUB_OFFLINE=1 ${MINGW_PREFIX}/bin/python - <<'PY'
+import tempfile, torch
+from tokenizers import Tokenizer, models, trainers, pre_tokenizers, decoders
+from transformers import (GPT2Config, AutoModelForCausalLM, PreTrainedTokenizerFast,
+                          AutoTokenizer, pipeline)
+tok = Tokenizer(models.BPE())
+tok.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
+tok.decoder = decoders.ByteLevel()
+tok.train_from_iterator(["hello world", "the quick brown fox"] * 20,
+                        trainers.BpeTrainer(vocab_size=280, special_tokens=["<|endoftext|>"],
+                                            initial_alphabet=pre_tokenizers.ByteLevel.alphabet()))
+fast = PreTrainedTokenizerFast(tokenizer_object=tok, eos_token="<|endoftext|>")
+torch.manual_seed(0)
+model = AutoModelForCausalLM.from_config(GPT2Config(vocab_size=fast.vocab_size, n_positions=64,
+                                                    n_embd=32, n_layer=2, n_head=2))
+d = tempfile.mkdtemp()
+model.save_pretrained(d); fast.save_pretrained(d)
+model = AutoModelForCausalLM.from_pretrained(d); fast = AutoTokenizer.from_pretrained(d)
+ids = fast("hello world", return_tensors="pt")
+out = model.generate(**ids, max_new_tokens=5, do_sample=False, pad_token_id=fast.eos_token_id)
+assert out.shape[1] == ids["input_ids"].shape[1] + 5
+loss = model(**ids, labels=ids["input_ids"]).loss
+loss.backward()
+print("loss", loss.item())
+print(ascii(pipeline("text-generation", model=model, tokenizer=fast)("hello", max_new_tokens=3)[0]))
+PY
+  ${MINGW_PREFIX}/bin/python -c "from transformers.cli.transformers import main; main()" --help > /dev/null
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

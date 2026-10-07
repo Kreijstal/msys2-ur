@@ -1,0 +1,82 @@
+_realname=safetensors
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.8.0
+pkgrel=1
+pkgdesc="Simple, safe way to store and distribute tensors (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/safetensors'
+msys2_repository_url='https://github.com/huggingface/safetensors'
+msys2_references=(
+  'purl: pkg:pypi/safetensors'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-numpy: numpy support"
+            "${MINGW_PACKAGE_PREFIX}-python-pytorch: torch support")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-maturin"
+             "${MINGW_PACKAGE_PREFIX}-rust")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-numpy"
+              "${MINGW_PACKAGE_PREFIX}-python-pytorch")
+options=('!strip')
+source=("https://pypi.org/packages/source/s/safetensors/safetensors-${pkgver}.tar.gz")
+sha256sums=('fabaf3e0f18a6618d9b36560682562157f77c2b71fcffc7b432be2baed9d753d')
+
+build() {
+  cp -r "safetensors-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+
+  # maturin builds abi3 modules for Windows without asking the interpreter,
+  # so pyo3 assumes MSVC naming and links python3.dll; MinGW Python's stable
+  # ABI library is libpython3.dll (pyo3 0.28 links it via its import library)
+  cat > pyo3-config.txt <<END
+implementation=CPython
+version=3.10
+shared=true
+abi3=true
+lib_name=libpython3
+lib_dir=$(cygpath -m "${MINGW_PREFIX}/lib")
+ext_suffix=.pyd
+build_flags=
+suppress_build_script_link_lines=false
+END
+  export PYO3_CONFIG_FILE="$(cygpath -m "${PWD}/pyo3-config.txt")"
+  export _PYTHON_HOST_PLATFORM=$(${MINGW_PREFIX}/bin/python -c "import sysconfig, sys; sys.stdout.write(sysconfig.get_platform())")
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import os, tempfile
+import numpy as np, torch
+from safetensors import safe_open
+from safetensors.torch import save_file, load_file
+from safetensors.numpy import save, load
+d = tempfile.mkdtemp()
+t = {"w": torch.randn(3, 4), "b": torch.arange(5, dtype=torch.int64), "h": torch.ones(2, dtype=torch.float16)}
+p = os.path.join(d, "m.safetensors")
+save_file(t, p, metadata={"format": "pt"})
+r = load_file(p)
+assert all(torch.equal(t[k], r[k]) and t[k].dtype == r[k].dtype for k in t)
+with safe_open(p, framework="pt") as f:
+    assert f.metadata() == {"format": "pt"} and sorted(f.keys()) == ["b", "h", "w"]
+    assert torch.equal(f.get_slice("w")[1:, :2], t["w"][1:, :2])
+a = {"x": np.arange(6, dtype=np.float32).reshape(2, 3)}
+assert np.array_equal(load(save(a))["x"], a["x"])
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

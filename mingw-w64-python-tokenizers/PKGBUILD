@@ -1,0 +1,87 @@
+_realname=tokenizers
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.23.2
+pkgrel=1
+pkgdesc="Fast state-of-the-art tokenizers optimized for research and production (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/tokenizers'
+msys2_repository_url='https://github.com/huggingface/tokenizers'
+msys2_references=(
+  'purl: pkg:pypi/tokenizers'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-maturin"
+             "${MINGW_PACKAGE_PREFIX}-rust")
+options=('!strip')
+source=("https://pypi.org/packages/source/t/tokenizers/tokenizers-${pkgver}.tar.gz")
+sha256sums=('7f0f085686b9de0d0079e6f874ae053600db64c5d13049e0bbc0119926d25aac')
+
+prepare() {
+  cd "tokenizers-${pkgver}"
+  # only hf_hub_download is used (Tokenizer.from_pretrained), which hub 2.x keeps
+  sed -i 's/"huggingface_hub>=0.16.4,<2.0"/"huggingface_hub>=0.16.4,<3.0"/' pyproject.toml
+  grep -q 'huggingface_hub>=0.16.4,<3.0' pyproject.toml
+  cd bindings/python
+  # 0.29.3 links a lib_name it has no raw-dylib entry for through its import
+  # library (0.29.0 always uses raw-dylib); see build()
+  cargo update --precise 0.29.3 -p pyo3
+}
+
+build() {
+  cp -r "tokenizers-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+
+  # maturin builds abi3 modules for Windows without asking the interpreter,
+  # so pyo3 assumes MSVC naming and links python3.dll; MinGW Python's stable
+  # ABI library is libpython3.dll
+  cat > pyo3-config.txt <<END
+implementation=CPython
+version=3.10
+shared=true
+target_abi=CPython-abi3-3.10
+lib_name=libpython3
+lib_dir=$(cygpath -m "${MINGW_PREFIX}/lib")
+ext_suffix=.pyd
+build_flags=
+suppress_build_script_link_lines=false
+END
+  export PYO3_CONFIG_FILE="$(cygpath -m "${PWD}/pyo3-config.txt")"
+  export _PYTHON_HOST_PLATFORM=$(${MINGW_PREFIX}/bin/python -c "import sysconfig, sys; sys.stdout.write(sysconfig.get_platform())")
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from tokenizers import Tokenizer, models, trainers, pre_tokenizers, decoders
+tok = Tokenizer(models.BPE(unk_token="[UNK]"))
+tok.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=False)
+tok.decoder = decoders.ByteLevel()
+trainer = trainers.BpeTrainer(vocab_size=300, special_tokens=["[UNK]"],
+                              initial_alphabet=pre_tokenizers.ByteLevel.alphabet())
+corpus = ["hello world", "hello there", "the world is wide", "low lower lowest"] * 50
+tok.train_from_iterator(corpus, trainer)
+enc = tok.encode("hello lower world")
+assert tok.decode(enc.ids) == "hello lower world", enc.tokens
+assert len(enc.ids) < len("hello lower world")
+print(ascii(enc.tokens))
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 tokenizers/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

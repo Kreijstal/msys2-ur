@@ -1,0 +1,12 @@
+--- a/src/accelerate/utils/other.py
++++ b/src/accelerate/utils/other.py
+@@ -239,6 +239,9 @@
+     Returns:
+         `bool`: Whether the model has DTensor parameters.
+     """
++    if not is_torch_distributed_available():
++        # torch.distributed.tensor cannot be imported without c10d
++        return False
+     if is_torch_version(">=", "2.5.0"):
+         from torch.distributed.tensor import DTensor
+     else:

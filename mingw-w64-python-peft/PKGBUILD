@@ -1,0 +1,74 @@
+_realname=peft
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.21.2
+pkgrel=1
+pkgdesc="Parameter-efficient fine-tuning methods for large models (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/huggingface/peft'
+msys2_repository_url='https://github.com/huggingface/peft'
+msys2_references=(
+  'purl: pkg:pypi/peft'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-accelerate"
+         "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-psutil"
+         "${MINGW_PACKAGE_PREFIX}-python-pytorch"
+         "${MINGW_PACKAGE_PREFIX}-python-safetensors"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-transformers"
+         "${MINGW_PACKAGE_PREFIX}-python-yaml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+options=('!strip')
+source=("https://pypi.org/packages/source/p/peft/peft-${pkgver}.tar.gz")
+sha256sums=('b803ccfb3f3f316004d850284306687833a2235ea278fb56abc856203456142e')
+
+build() {
+  cp -r "peft-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # LoRA on a tiny randomly initialised GPT-2: train a step, save, reload
+  HF_HUB_OFFLINE=1 ${MINGW_PREFIX}/bin/python - <<'PY'
+import tempfile, torch
+from transformers import GPT2Config, AutoModelForCausalLM
+from peft import LoraConfig, get_peft_model, PeftModel
+torch.manual_seed(0)
+cfg = GPT2Config(vocab_size=100, n_positions=32, n_embd=32, n_layer=2, n_head=2)
+model = get_peft_model(AutoModelForCausalLM.from_config(cfg),
+                       LoraConfig(r=4, lora_alpha=8, target_modules=["c_attn"], task_type="CAUSAL_LM"))
+model.print_trainable_parameters()
+ids = torch.randint(0, 100, (2, 8))
+opt = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=1e-2)
+loss = model(input_ids=ids, labels=ids).loss
+loss.backward(); opt.step()
+assert all(p.grad is None for n, p in model.named_parameters() if "lora_" not in n)
+d = tempfile.mkdtemp(); model.save_pretrained(d)
+torch.manual_seed(0)
+re = PeftModel.from_pretrained(AutoModelForCausalLM.from_config(cfg), d)
+re.eval(); model.eval()
+assert torch.allclose(re(input_ids=ids).logits, model(input_ids=ids).logits, atol=1e-5)
+print("loss", loss.item())
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}
