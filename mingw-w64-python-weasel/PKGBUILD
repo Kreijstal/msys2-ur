@@ -1,0 +1,51 @@
+_realname=weasel
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Small and easy workflow system (mingw-w64)"
+arch=('any')
+# pure Python, but depends on python-srsly (compiled, only built/tested on ucrt64)
+mingw_arch=('ucrt64')
+url='https://github.com/explosion/weasel'
+msys2_references=(
+  'purl: pkg:pypi/weasel'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-confection"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging"
+         "${MINGW_PACKAGE_PREFIX}-python-wasabi"
+         "${MINGW_PACKAGE_PREFIX}-python-srsly"
+         "${MINGW_PACKAGE_PREFIX}-python-typer"
+         "${MINGW_PACKAGE_PREFIX}-python-cloudpathlib"
+         "${MINGW_PACKAGE_PREFIX}-python-smart-open"
+         "${MINGW_PACKAGE_PREFIX}-python-httpx"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('7b129b44c90cc543b760532974ca1e4eb30dad2aa2026f57bdce66354ae610fc')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages && ${MINGW_PREFIX}/bin/python -c "import weasel"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

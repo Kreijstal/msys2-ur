@@ -1,0 +1,57 @@
+_realname=preshed
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.0.13
+pkgrel=1
+pkgdesc="Cython hash tables that assume keys are pre-hashed (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/explosion/preshed'
+msys2_references=(
+  'purl: pkg:pypi/preshed'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-cymem"
+         "${MINGW_PACKAGE_PREFIX}-python-murmurhash")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cython"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz"
+        "0001-cython-3.3-uint64-item-keys.patch")
+sha256sums=('d75f718bbfd97e992f7827e0fa7faf6a91bdd9c922d5baa4b50d62731396cb89'
+            '32fbbf13958689406845f4350f16f7eaae30ae18416290d309b4a545e7cea916')
+
+# 0001: Cython 3.3 compiles a __getitem__/__setitem__/__delitem__ whose key is a
+#       C integer into sq_item/sq_ass_item style wrappers taking a Py_ssize_t,
+#       so PreshMap/PreshCounter keys >= 2**63 (key_t is uint64_t; spaCy uses
+#       64-bit hashes) raise "OverflowError: Python int too large to convert to
+#       C ssize_t". Take the key as a Python object and convert it to key_t
+#       inside the method instead.
+prepare() {
+  cd "${_realname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-cython-3.3-uint64-item-keys.patch"
+}
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages && ${MINGW_PREFIX}/bin/python -c "from preshed.maps import PreshMap; m = PreshMap(); k = 2**64 - 3; m[k] = 2; assert m[k] == 2; del m[k]; assert m[k] is None"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

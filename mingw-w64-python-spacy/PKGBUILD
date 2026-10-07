@@ -1,0 +1,61 @@
+_realname=spacy
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.8.16
+pkgrel=1
+pkgdesc="Industrial-strength Natural Language Processing (NLP) in Python (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://spacy.io'
+msys2_references=(
+  'purl: pkg:pypi/spacy'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-spacy-legacy"
+         "${MINGW_PACKAGE_PREFIX}-python-spacy-loggers"
+         "${MINGW_PACKAGE_PREFIX}-python-murmurhash"
+         "${MINGW_PACKAGE_PREFIX}-python-cymem"
+         "${MINGW_PACKAGE_PREFIX}-python-preshed"
+         "${MINGW_PACKAGE_PREFIX}-python-thinc"
+         "${MINGW_PACKAGE_PREFIX}-python-wasabi"
+         "${MINGW_PACKAGE_PREFIX}-python-srsly"
+         "${MINGW_PACKAGE_PREFIX}-python-catalogue"
+         "${MINGW_PACKAGE_PREFIX}-python-weasel"
+         "${MINGW_PACKAGE_PREFIX}-python-confection"
+         "${MINGW_PACKAGE_PREFIX}-python-typer"
+         "${MINGW_PACKAGE_PREFIX}-python-click"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+         "${MINGW_PACKAGE_PREFIX}-python-jinja"
+         "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+         "${MINGW_PACKAGE_PREFIX}-python-packaging")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cython")
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('a3d19da23637cc396b42d22fc33852680f675d8ddcb847d3e2a0d094712d1794')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages && ${MINGW_PREFIX}/bin/python -c "import spacy; nlp = spacy.blank('en'); print([t.text for t in nlp('Hello world, this is spaCy on MSYS2.')])"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

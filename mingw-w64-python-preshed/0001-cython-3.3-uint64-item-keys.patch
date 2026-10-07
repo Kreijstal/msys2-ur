@@ -1,0 +1,40 @@
+--- a/preshed/counter.pyx
++++ b/preshed/counter.pyx
+@@ -28,7 +28,8 @@
+         while map_iter(self.c_map, &i, &key, &value):
+             yield key, <size_t>value
+ 
+-    def __getitem__(self, key_t key):
++    def __getitem__(self, key_obj):
++        cdef key_t key = key_obj
+         return <count_t>map_get(self.c_map, key)
+ 
+     cpdef int inc(self, key_t key, count_t inc) except -1:
+--- a/preshed/maps.pyx
++++ b/preshed/maps.pyx
+@@ -72,7 +72,8 @@
+         else:
+             return default
+ 
+-    def __getitem__(self, key_t key):
++    def __getitem__(self, key_obj):
++        cdef key_t key = key_obj
+         cdef Result result
+         with cython.critical_section(self):
+             result = map_get_unless_missing(self.c_map, key)
+@@ -81,11 +82,13 @@
+         else:
+             return None
+ 
+-    def __setitem__(self, key_t key, size_t value):
++    def __setitem__(self, key_obj, size_t value):
++        cdef key_t key = key_obj
+         with cython.critical_section(self):
+             map_set(self.mem, self.c_map, key, <void*>value)
+ 
+-    def __delitem__(self, key_t key):
++    def __delitem__(self, key_obj):
++        cdef key_t key = key_obj
+         with cython.critical_section(self):
+             map_clear(self.c_map, key)
+ 

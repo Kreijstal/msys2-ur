@@ -1,0 +1,11 @@
+--- a/setup.py
++++ b/setup.py
+@@ -222,7 +222,7 @@
+                 spec["source"] = os.path.join(BLIS_DIR, spec["source"])
+                 if compiler is not None:
+                     spec["compiler"] = compiler
+-                if platform == "windows":
++                if platform == "windows" and compiler is None:
+                     spec["compiler"] = locate_windows_llvm()
+                 # Ensure that symbols are visible to aid debugging and profiling.
+                 spec["flags"] = [
