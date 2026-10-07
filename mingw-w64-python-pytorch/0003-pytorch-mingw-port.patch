@@ -1,0 +1,686 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 294545e7f..cb3e059ae 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -452,7 +452,7 @@ option(USE_MIMALLOC "Use mimalloc" OFF)
+ # Enable third party mimalloc library to improve memory allocation performance
+ # on Windows and AArch64.
+ option(USE_MIMALLOC_ON_MKL "Use mimalloc on MKL" OFF)
+-if(WIN32 OR (CPU_AARCH64 AND NOT APPLE))
++if((WIN32 OR (CPU_AARCH64 AND NOT APPLE)) AND NOT "$ENV{USE_MIMALLOC}" STREQUAL "0")
+   set(USE_MIMALLOC ON)
+   # Disable OPT flags for mimalloc on aarch64 as it breaks ARMv8.0
+   # See https://github.com/pytorch/pytorch/issues/174344
+diff --git a/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt b/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
+index 5da89edd2..57e60688a 100644
+--- a/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
++++ b/aten/src/ATen/native/quantized/cpu/qnnpack/CMakeLists.txt
+@@ -54,13 +54,13 @@ if(NOT CMAKE_SYSTEM_PROCESSOR)
+   else()
+     message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR is not defined")
+   endif()
+-elseif(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86|x86_64|armv[5-8].*|aarch64|arm64)$")
++elseif(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "^(i[3-6]86|x86_64|AMD64|armv[5-8].*|aarch64|arm64|ARM64)$")
+   message(FATAL_ERROR "Unrecognized CMAKE_SYSTEM_PROCESSOR = ${CMAKE_SYSTEM_PROCESSOR}")
+ endif()
+ 
+ if(NOT CMAKE_SYSTEM_NAME)
+   message(FATAL_ERROR "CMAKE_SYSTEM_NAME not defined")
+-elseif(NOT CMAKE_SYSTEM_NAME MATCHES "^(Darwin|Linux|Android)$")
++elseif(NOT CMAKE_SYSTEM_NAME MATCHES "^(Darwin|Linux|Android|Windows)$")
+   message(FATAL_ERROR "Unrecognized CMAKE_SYSTEM_NAME = ${CMAKE_SYSTEM_NAME}")
+ endif()
+ 
+@@ -274,7 +274,7 @@ if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(aarch64|arm64)$" OR IOS_ARCH MATC
+   list(APPEND PYTORCH_QNNPACK_UKERNELS ${PYTORCH_QNNPACK_ARM_NEON_UKERNELS})
+   list(APPEND PYTORCH_QNNPACK_UKERNELS ${PYTORCH_QNNPACK_AARCH64_ASM_UKERNELS})
+ endif()
+-if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(i[3-6]86|x86_64)$" OR IOS_ARCH MATCHES "^(i386|x86_64)$")
++if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(i[3-6]86|x86_64|AMD64)$" OR IOS_ARCH MATCHES "^(i386|x86_64)$")
+   list(APPEND PYTORCH_QNNPACK_UKERNELS ${PYTORCH_QNNPACK_X86_SSE2_UKERNELS})
+ endif()
+ 
+@@ -303,7 +303,7 @@ if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(aarch64|arm64)$" OR IOS_ARCH MATC
+     set_property(SOURCE ${PYTORCH_QNNPACK_AARCH64_ASM_UKERNELS} APPEND_STRING PROPERTY COMPILE_FLAGS " -arch ${IOS_ARCH} ")
+   endif()
+ endif()
+-if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(i[3-6]86|x86_64)$" OR IOS_ARCH MATCHES "^(i386|x86_64)$")
++if(PYTORCH_QNNPACK_TARGET_PROCESSOR MATCHES "^(i[3-6]86|x86_64|AMD64)$" OR IOS_ARCH MATCHES "^(i386|x86_64)$")
+   set_property(SOURCE ${PYTORCH_QNNPACK_X86_SSE2_UKERNELS} APPEND_STRING PROPERTY COMPILE_FLAGS " -O2 -msse2 ")
+ endif()
+ if(CMAKE_SYSTEM_PROCESSOR MATCHES "^armv[5-8]" OR IOS_ARCH MATCHES "^armv7")
+diff --git a/c10/CMakeLists.txt b/c10/CMakeLists.txt
+index 470802d16..3f50f7e85 100644
+--- a/c10/CMakeLists.txt
++++ b/c10/CMakeLists.txt
+@@ -123,13 +123,17 @@ if(NOT BUILD_LIBTORCHLESS)
+     target_link_libraries(c10 PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,cpuinfo>")
+   endif()
+ 
+-  find_package(Backtrace)
+-  if(Backtrace_FOUND)
+-    target_include_directories(c10 PRIVATE ${Backtrace_INCLUDE_DIRS})
+-    target_link_libraries(c10 PRIVATE ${Backtrace_LIBRARIES})
+-    target_compile_definitions(c10 PRIVATE SUPPORTS_BACKTRACE=1)
+-  else()
++  if(MINGW)
+     target_compile_definitions(c10 PRIVATE SUPPORTS_BACKTRACE=0)
++  else()
++    find_package(Backtrace)
++    if(Backtrace_FOUND)
++      target_include_directories(c10 PRIVATE ${Backtrace_INCLUDE_DIR})
++      target_link_libraries(c10 PRIVATE ${Backtrace_LIBRARY})
++      target_compile_definitions(c10 PRIVATE SUPPORTS_BACKTRACE=1)
++    else()
++      target_compile_definitions(c10 PRIVATE SUPPORTS_BACKTRACE=0)
++    endif()
+   endif()
+ 
+   if(USE_MIMALLOC)
+diff --git a/c10/core/impl/LocalDispatchKeySet.cpp b/c10/core/impl/LocalDispatchKeySet.cpp
+index c8277f19a..e34cf516b 100644
+--- a/c10/core/impl/LocalDispatchKeySet.cpp
++++ b/c10/core/impl/LocalDispatchKeySet.cpp
+@@ -13,11 +13,11 @@ namespace c10::impl {
+ // logic is encapsulated in struct PODLocalDispatchKeySet.
+ thread_local PODLocalDispatchKeySet raw_local_dispatch_key_set;
+ 
+-#if defined(_MSC_VER) || defined(C10_ANDROID) || defined(C10_IPHONE)
++#if defined(_WIN32) || defined(C10_ANDROID) || defined(C10_IPHONE)
+ LocalDispatchKeySet tls_local_dispatch_key_set() {
+   return raw_local_dispatch_key_set;
+ }
+-#endif // defined(_MSC_VER) || defined(C10_ANDROID) || defined(C10_IPHONE)
++#endif // defined(_WIN32) || defined(C10_ANDROID) || defined(C10_IPHONE)
+ 
+ void _force_tls_local_dispatch_key_set(LocalDispatchKeySet key_set) {
+   raw_local_dispatch_key_set.set_included(key_set.included_);
+diff --git a/c10/core/impl/LocalDispatchKeySet.h b/c10/core/impl/LocalDispatchKeySet.h
+index bd8fe811b..a48d42434 100644
+--- a/c10/core/impl/LocalDispatchKeySet.h
++++ b/c10/core/impl/LocalDispatchKeySet.h
+@@ -62,9 +62,9 @@ struct C10_API LocalDispatchKeySet {
+ 
+ // thread_local variables cannot be C10_API on Windows.
+ // Inlining this seems to break AutoDispatchBelowAutograd on Android.
+-#if defined(_MSC_VER) || defined(C10_ANDROID) || defined(C10_IPHONE)
++#if defined(_WIN32) || defined(C10_ANDROID) || defined(C10_IPHONE)
+ C10_API LocalDispatchKeySet tls_local_dispatch_key_set();
+-#else // defined(_MSC_VER) || defined(C10_ANDROID) || defined(C10_IPHONE)
++#else // defined(_WIN32) || defined(C10_ANDROID) || defined(C10_IPHONE)
+ extern C10_API thread_local PODLocalDispatchKeySet raw_local_dispatch_key_set;
+ 
+ inline C10_API LocalDispatchKeySet tls_local_dispatch_key_set() {
+@@ -72,7 +72,7 @@ inline C10_API LocalDispatchKeySet tls_local_dispatch_key_set() {
+   // because they include this header.
+   return raw_local_dispatch_key_set;
+ }
+-#endif // defined(_MSC_VER) || defined(C10_ANDROID) || defined(C10_IPHONE)
++#endif // defined(_WIN32) || defined(C10_ANDROID) || defined(C10_IPHONE)
+ 
+ // Internal, use ThreadLocalStateGuard
+ C10_API void _force_tls_local_dispatch_key_set(LocalDispatchKeySet key_set);
+diff --git a/c10/core/impl/alloc_cpu.cpp b/c10/core/impl/alloc_cpu.cpp
+index d48a6251e..ebb406765 100644
+--- a/c10/core/impl/alloc_cpu.cpp
++++ b/c10/core/impl/alloc_cpu.cpp
+@@ -8,6 +8,9 @@
+ #include <c10/util/irange.h>
+ #include <c10/util/numa.h>
+ #include <cstring>
++#ifdef _WIN32
++#include <malloc.h>
++#endif
+ 
+ #ifdef USE_MIMALLOC
+ #include <mimalloc.h>
+@@ -69,7 +72,7 @@ inline bool is_thp_alloc(size_t nbytes) {
+   return (is_thp_alloc_enabled() && (nbytes >= gAlloc_threshold_thp));
+ }
+ 
+-#elif !defined(__ANDROID__) && !defined(_MSC_VER)
++#elif !defined(__ANDROID__) && !defined(_WIN32)
+ constexpr size_t c10_compute_alignment(size_t /*nbytes*/) {
+   return gAlignment;
+ }
+@@ -115,7 +118,7 @@ void* alloc_cpu(size_t nbytes) {
+       "DefaultCPUAllocator: not enough memory: you tried to allocate ",
+       nbytes,
+       " bytes.");
+-#elif defined(_MSC_VER)
++#elif defined(_WIN32)
+   data = _aligned_malloc(nbytes, gAlignment);
+   CAFFE_ENFORCE(
+       data,
+@@ -165,7 +168,7 @@ void* alloc_cpu(size_t nbytes) {
+ void free_cpu(void* data) {
+ #ifdef USE_MIMALLOC
+   mi_free(data);
+-#elif defined(_MSC_VER)
++#elif defined(_WIN32)
+   _aligned_free(data);
+ #else
+   // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
+diff --git a/c10/util/Flags.h b/c10/util/Flags.h
+index 0d460db22..ede60e810 100644
+--- a/c10/util/Flags.h
++++ b/c10/util/Flags.h
+@@ -215,7 +215,11 @@ C10_DECLARE_REGISTRY(C10FlagsRegistry, C10FlagParser, const std::string&);
+   C10_DEFINE_typed_var(std::string, name, default_value, help_str)
+ 
+ // DECLARE_typed_var should be used in header files and in the global namespace.
++#if defined(__MINGW32__)
++#define C10_DECLARE_typed_var(type, name) extern type FLAGS_##name
++#else
+ #define C10_DECLARE_typed_var(type, name) C10_API extern type FLAGS_##name
++#endif
+ 
+ #define C10_DECLARE_int(name) C10_DECLARE_typed_var(int, name)
+ #define C10_DECLARE_int32(name) C10_DECLARE_int(name)
+diff --git a/c10/util/env.cpp b/c10/util/env.cpp
+index a37419519..81418d936 100644
+--- a/c10/util/env.cpp
++++ b/c10/util/env.cpp
+@@ -15,25 +15,28 @@ static std::shared_mutex& get_env_mutex() {
+ // Set an environment variable.
+ void set_env(const char* name, const char* value, bool overwrite) {
+   std::lock_guard lk(get_env_mutex());
++#ifdef _WIN32
+ #ifdef _MSC_VER
+ #pragma warning(push)
+ #pragma warning(disable : 4996)
++#endif
+   if (!overwrite) {
+     // NOLINTNEXTLINE(concurrency-mt-unsafe)
+     if (std::getenv(name) != nullptr) {
+       return;
+     }
+   }
+-  auto full_env_variable = fmt::format("{}={}", name, value);
+   // NOLINTNEXTLINE(concurrency-mt-unsafe)
+-  auto err = putenv(full_env_variable.c_str());
++  auto err = _putenv_s(name, value);
+   TORCH_INTERNAL_ASSERT(
+       err == 0,
+-      "putenv failed for environment \"",
++      "_putenv_s failed for environment \"",
+       name,
+       "\", the error is: ",
+       err);
++#ifdef _MSC_VER
+ #pragma warning(pop)
++#endif
+ #else
+   // NOLINTNEXTLINE(concurrency-mt-unsafe)
+   auto err = setenv(name, value, static_cast<int>(overwrite));
+@@ -50,14 +53,10 @@ void set_env(const char* name, const char* value, bool overwrite) {
+ // Remove an environment variable.
+ void unset_env(const char* name) {
+   std::lock_guard lk(get_env_mutex());
+-#ifdef _MSC_VER
+-#pragma warning(push)
+-#pragma warning(disable : 4996)
++#ifdef _WIN32
+   // On Windows an assignment with an empty value removes the variable.
+-  auto full_env_variable = fmt::format("{}=", name);
+   // NOLINTNEXTLINE(concurrency-mt-unsafe)
+-  auto err = putenv(full_env_variable.c_str());
+-#pragma warning(pop)
++  auto err = _putenv_s(name, "");
+ #else
+   // NOLINTNEXTLINE(concurrency-mt-unsafe)
+   auto err = unsetenv(name);
+diff --git a/c10/util/tempfile.cpp b/c10/util/tempfile.cpp
+index 86a7b75f9..fcd3fcee7 100644
+--- a/c10/util/tempfile.cpp
++++ b/c10/util/tempfile.cpp
+@@ -12,6 +12,8 @@
+ #include <fcntl.h>
+ #include <fileapi.h>
+ #include <io.h>
++#include <share.h>
++#include <sys/stat.h>
+ #endif // defined(_WIN32)
+ 
+ // Creates the filename pattern passed to and completed by `mkstemp`.
+diff --git a/c10/util/typeid.h b/c10/util/typeid.h
+index 760878426..731d4e620 100644
+--- a/c10/util/typeid.h
++++ b/c10/util/typeid.h
+@@ -627,7 +627,7 @@ inline std::ostream& operator<<(
+ //   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2017/p0537r0.html
+ //   https://gcc.gnu.org/bugzilla/show_bug.cgi?id=51930
+ // and as a result, we define these two macros slightly differently.
+-#if defined(_MSC_VER) || defined(__clang__)
++#if defined(_MSC_VER)
+ #define EXPORT_IF_NOT_GCC C10_EXPORT
+ #else
+ #define EXPORT_IF_NOT_GCC
+diff --git a/caffe2/utils/string_utils.h b/caffe2/utils/string_utils.h
+index 6bf3b867b..b48315ae7 100644
+--- a/caffe2/utils/string_utils.h
++++ b/caffe2/utils/string_utils.h
+@@ -1,6 +1,8 @@
+ #pragma once
+ 
+ #include <algorithm>
++#include <array>
++#include <cstdint>
+ #include <memory>
+ #include <string>
+ #include <vector>
+diff --git a/caffe2/utils/threadpool/WorkersPool.h b/caffe2/utils/threadpool/WorkersPool.h
+index 6504d70c2..87bb1cc6b 100644
+--- a/caffe2/utils/threadpool/WorkersPool.h
++++ b/caffe2/utils/threadpool/WorkersPool.h
+@@ -7,9 +7,12 @@
+ #include <c10/util/irange.h>
+ #include <c10/util/Logging.h>
+ 
++#if defined(_WIN32)
++#include <malloc.h>
+ #if defined(_MSC_VER)
+ #include <intrin.h>
+ #endif
++#endif
+ 
+ namespace caffe2 {
+ 
+@@ -36,7 +39,7 @@ struct AllocAligned {
+ 
+ #if defined(__ANDROID__)
+     p = memalign(kGEMMLOWPCacheLineSize, sizeof(T));
+-#elif defined(_MSC_VER)
++#elif defined(_WIN32)
+     p = _aligned_malloc(sizeof(T), kGEMMLOWPCacheLineSize);
+ #else
+     auto res = posix_memalign(&p, kGEMMLOWPCacheLineSize, sizeof(T));
+@@ -54,7 +57,7 @@ struct AllocAligned {
+   static void release(T* p) {
+     if (p) {
+       p->~T();
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+       _aligned_free((void*)p);
+ #else
+       free((void*)p);
+diff --git a/cmake/public/utils.cmake b/cmake/public/utils.cmake
+index 5bb671264..b2917dd72 100644
+--- a/cmake/public/utils.cmake
++++ b/cmake/public/utils.cmake
+@@ -120,7 +120,7 @@ endfunction()
+ macro(caffe2_update_option variable value)
+   if(CAFFE2_CMAKE_BUILDING_WITH_MAIN_REPO)
+     get_property(__help_string CACHE ${variable} PROPERTY HELPSTRING)
+-    set(${variable} ${value} CACHE BOOL ${__help_string} FORCE)
++    set(${variable} ${value} CACHE BOOL "${__help_string}" FORCE)
+   else()
+     set(${variable} ${value})
+   endif()
+diff --git a/pyproject.toml b/pyproject.toml
+index 695842c97..a5ea0b532 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -172,6 +172,8 @@ exclude = [
+     # implicitly). The largest single offender today is libtorch_xpu_ops.a
+     # at ~1.1GB.
+     "**/*.a",
++    # MinGW import libraries are needed to link C++ extensions against torch.
++    "!torch/lib/*.dll.a",
+     # GNUInstallDirs places third-party cmake configs and static libs under
+     # lib64/ on x86_64; we don't ship any of them.
+     "torch/lib64/**",
+diff --git a/third_party/kineto/libkineto/CMakeLists.txt b/third_party/kineto/libkineto/CMakeLists.txt
+index 462b7841f..a4bc7a597 100644
+--- a/third_party/kineto/libkineto/CMakeLists.txt
++++ b/third_party/kineto/libkineto/CMakeLists.txt
+@@ -265,6 +265,9 @@ endif()
+ if(NOT WIN32 AND NOT APPLE AND NOT KINETO_BACKEND STREQUAL "xpu")
+     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic -Werror")
+ endif()
++if(WIN32)
++    target_link_libraries(kineto PRIVATE ws2_32)
++endif()
+ 
+ set_target_properties(kineto kineto_base kineto_api PROPERTIES
+       CXX_STANDARD 20
+diff --git a/third_party/pthreadpool/src/pthreads.c b/third_party/pthreadpool/src/pthreads.c
+index 0ea30be63..37e2c9e31 100644
+--- a/third_party/pthreadpool/src/pthreads.c
++++ b/third_party/pthreadpool/src/pthreads.c
+@@ -77,6 +77,8 @@
+ #if defined(_MSC_VER)
+ #include <malloc.h>
+ #define alloca _alloca
++#elif defined(__MINGW32__)
++#include <malloc.h>
+ #elif !defined(alloca) && defined(__GNUC__)
+ #define alloca(s) __builtin_alloca(s)
+ #else
+diff --git a/third_party/pthreadpool/src/threadpool-common.h b/third_party/pthreadpool/src/threadpool-common.h
+index 1165f1499..609cd16e2 100644
+--- a/third_party/pthreadpool/src/threadpool-common.h
++++ b/third_party/pthreadpool/src/threadpool-common.h
+@@ -25,7 +25,7 @@
+ #endif
+ 
+ #ifndef PTHREADPOOL_USE_PTHREADS
+-#if defined(_WIN32) || defined(__CYGWIN__)
++#if (defined(_WIN32) && !defined(__MINGW32__)) || defined(__CYGWIN__)
+ #define PTHREADPOOL_USE_PTHREADS 0
+ #else
+ #define PTHREADPOOL_USE_PTHREADS 1
+diff --git a/tools/autograd/gen_autograd_functions.py b/tools/autograd/gen_autograd_functions.py
+index 002a551c3..fc1f9c839 100644
+--- a/tools/autograd/gen_autograd_functions.py
++++ b/tools/autograd/gen_autograd_functions.py
+@@ -53,7 +53,7 @@ if TYPE_CHECKING:
+ 
+ FUNCTION_DECLARATION = CodeTemplate(
+     """\
+-#ifdef _WIN32
++#ifdef _MSC_VER
+ struct ${op} : public ${superclass} {
+   TORCH_API ${op}() = default;
+ #else
+diff --git a/torch/CMakeLists.txt b/torch/CMakeLists.txt
+index 4f7d6da71..8ed373ffc 100644
+--- a/torch/CMakeLists.txt
++++ b/torch/CMakeLists.txt
+@@ -20,7 +20,7 @@ if(NOT TORCH_INSTALL_LIB_DIR)
+   set(TORCH_INSTALL_LIB_DIR lib)
+ endif()
+ 
+-if(MSVC)
++if(WIN32)
+     set(LIBSHM_SUBDIR libshm_windows)
+ else()
+     set(LIBSHM_SUBDIR libshm)
+diff --git a/torch/__init__.py b/torch/__init__.py
+index f69b12c7b..24039604f 100644
+--- a/torch/__init__.py
++++ b/torch/__init__.py
+@@ -18,6 +18,7 @@ import math
+ import os
+ import platform
+ import sys
++import sysconfig
+ import textwrap
+ import threading
+ import typing
+@@ -51,6 +52,10 @@ def _running_with_deploy() -> builtins.bool:
+     return False
+ 
+ 
++def _running_with_mingw_python() -> builtins.bool:
++    return sysconfig.get_platform().startswith("mingw_")
++
++
+ from torch._utils import (
+     _functionalize_sync as _sync,
+     _import_dotted_name,
+@@ -262,20 +267,21 @@ if sys.platform == "win32":
+         for dll_path in dll_paths:
+             os.add_dll_directory(dll_path)
+ 
+-        try:
+-            ctypes.CDLL("vcruntime140.dll")
+-            ctypes.CDLL("msvcp140.dll")
+-            if platform.machine() != "ARM64":
+-                ctypes.CDLL("vcruntime140_1.dll")
+-        except OSError:
+-            print(
+-                textwrap.dedent(
+-                    """
+-                    Microsoft Visual C++ Redistributable is not installed, this may lead to the DLL load failure.
+-                    It can be downloaded at https://aka.ms/vs/17/release/vc_redist.x64.exe
+-                    """
+-                ).strip()
+-            )
++        if not _running_with_mingw_python():
++            try:
++                ctypes.CDLL("vcruntime140.dll")
++                ctypes.CDLL("msvcp140.dll")
++                if platform.machine() != "ARM64":
++                    ctypes.CDLL("vcruntime140_1.dll")
++            except OSError:
++                print(
++                    textwrap.dedent(
++                        """
++                        Microsoft Visual C++ Redistributable is not installed, this may lead to the DLL load failure.
++                        It can be downloaded at https://aka.ms/vs/17/release/vc_redist.x64.exe
++                        """
++                    ).strip()
++                )
+ 
+         dlls = glob.glob(os.path.join(th_dll_path, "*.dll"))
+         path_patched = False
+diff --git a/torch/csrc/Module.cpp b/torch/csrc/Module.cpp
+index 075e0dfac..bda18fd98 100644
+--- a/torch/csrc/Module.cpp
++++ b/torch/csrc/Module.cpp
+@@ -6,7 +6,7 @@
+ #include <csignal>
+ #include <optional>
+ 
+-#ifndef _MSC_VER
++#ifndef _WIN32
+ #include <sys/socket.h>
+ #endif
+ 
+diff --git a/torch/csrc/dynamo/eval_frame.c b/torch/csrc/dynamo/eval_frame.c
+index 7d117ff5f..c3e607841 100644
+--- a/torch/csrc/dynamo/eval_frame.c
++++ b/torch/csrc/dynamo/eval_frame.c
+@@ -746,7 +746,7 @@ static PyObject* set_guard_complete_hook(PyObject* dummy, PyObject* obj) {
+ // program, and that breakpoint would be hit every time Python makes a function
+ // call, leading to a spammy debugging experience.
+ static PyObject* raise_sigtrap(PyObject* dummy, PyObject* obj) {
+-#ifdef __GNUC__
++#if defined(__GNUC__) && !defined(_WIN32)
+   raise(SIGTRAP);
+ #endif
+   Py_RETURN_NONE;
+diff --git a/torch/csrc/jit/codegen/fuser/cpu/temp_file.h b/torch/csrc/jit/codegen/fuser/cpu/temp_file.h
+index dd21f7573..833f6251b 100644
+--- a/torch/csrc/jit/codegen/fuser/cpu/temp_file.h
++++ b/torch/csrc/jit/codegen/fuser/cpu/temp_file.h
+@@ -24,7 +24,7 @@
+ 
+ namespace torch::jit::fuser::cpu {
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ inline int wmkstemps(wchar_t* tmpl, int suffix_len) {
+   int len;
+   wchar_t* name;
+@@ -61,7 +61,7 @@ struct TempFile {
+   AT_DISALLOW_COPY_AND_ASSIGN(TempFile);
+ 
+   TempFile(const std::string& t, int suffix) {
+-#ifdef _MSC_VER
++#ifdef _WIN32
+     auto wt = c10::u8u16(t);
+     std::vector<wchar_t> tt(wt.c_str(), wt.c_str() + wt.size() + 1);
+     int fd = wmkstemps(tt.data(), suffix);
+@@ -95,7 +95,7 @@ struct TempFile {
+     AT_ASSERT(str.size() == result);
+   }
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+   void close() {
+     if (file_ != nullptr) {
+       fclose(file_);
+@@ -109,7 +109,7 @@ struct TempFile {
+   }
+ 
+   ~TempFile() {
+-#ifdef _MSC_VER
++#ifdef _WIN32
+     if (file_ != nullptr) {
+       fclose(file_);
+     }
+diff --git a/torch/csrc/jit/frontend/strtod.cpp b/torch/csrc/jit/frontend/strtod.cpp
+index daf768ee6..ae8a72d00 100644
+--- a/torch/csrc/jit/frontend/strtod.cpp
++++ b/torch/csrc/jit/frontend/strtod.cpp
+@@ -26,7 +26,7 @@
+ 
+ namespace torch::jit {
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ double strtod_c(const char* nptr, char** endptr) {
+   static _locale_t loc = _create_locale(LC_ALL, "C");
+   return _strtod_l(nptr, endptr, loc);
+diff --git a/torch/csrc/jit/ir/ir.h b/torch/csrc/jit/ir/ir.h
+index 839a54331..3d9045f3a 100644
+--- a/torch/csrc/jit/ir/ir.h
++++ b/torch/csrc/jit/ir/ir.h
+@@ -289,7 +289,7 @@ struct Value {
+ 
+   TORCH_API Value* copyMetadata(Value* from);
+ 
+-  TORCH_API std::shared_ptr<Wrap<Value>> wrap() {
++  std::shared_ptr<Wrap<Value>> wrap() {
+     if (!wrap_) {
+       wrap_ = std::make_shared<Wrap<Value>>(this);
+     }
+@@ -1149,7 +1149,7 @@ struct Block {
+   TORCH_API void cloneFrom(Block* src, std::function<Value*(Value*)> value_map);
+   TORCH_API void remapTypes(const std::function<TypePtr(TypePtr)>& type_map);
+ 
+-  TORCH_API std::shared_ptr<Wrap<Block>> wrap() {
++  std::shared_ptr<Wrap<Block>> wrap() {
+     if (!wrap_) {
+       wrap_ = std::make_shared<Wrap<Block>>(this);
+     }
+diff --git a/torch/csrc/jit/python/init.cpp b/torch/csrc/jit/python/init.cpp
+index 961b57019..ebc4fc771 100644
+--- a/torch/csrc/jit/python/init.cpp
++++ b/torch/csrc/jit/python/init.cpp
+@@ -1808,7 +1808,7 @@ void initJITBindings(PyObject* module) {
+           const auto sortedOps = getAllSortedOperatorsFor(symbol);
+           if (sortedOps.empty()) {
+             // No such operator
+-            return py::make_tuple(py::none(), py::none());
++            return py::make_tuple(py::object(), py::object());
+           }
+ 
+           std::ostringstream docstring;
+@@ -1835,7 +1835,7 @@ void initJITBindings(PyObject* module) {
+               },
+               py::name(symbol.toUnqualString()),
+               py::doc(std::move(docstring).str().c_str()));
+-          return py::make_tuple(func, overload_names);
++          return py::make_tuple(py::object(func), py::object(overload_names));
+         } catch (const c10::Error& e) {
+           auto msg = torch::get_cpp_stacktraces_enabled()
+               ? e.what()
+@@ -1860,9 +1860,9 @@ void initJITBindings(PyObject* module) {
+             args,
+             kwargs);
+         if (res) {
+-          return py::make_tuple(true, *res);
++          return py::make_tuple(true, py::object(*res));
+         } else {
+-          return py::make_tuple(false, py::none());
++          return py::make_tuple(false, py::object());
+         }
+       });
+ 
+diff --git a/torch/csrc/jit/serialization/mobile_bytecode_generated.h b/torch/csrc/jit/serialization/mobile_bytecode_generated.h
+index 06f527d56..ddbfa317b 100644
+--- a/torch/csrc/jit/serialization/mobile_bytecode_generated.h
++++ b/torch/csrc/jit/serialization/mobile_bytecode_generated.h
+@@ -6,12 +6,11 @@
+ 
+ #include "flatbuffers/flatbuffers.h"
+ 
+-// Ensure the included flatbuffers.h is the same version as when this file was
+-// generated, otherwise it may not be compatible.
+-static_assert(FLATBUFFERS_VERSION_MAJOR == 24 &&
+-              FLATBUFFERS_VERSION_MINOR == 12 &&
+-              FLATBUFFERS_VERSION_REVISION == 23,
+-             "Non-compatible flatbuffers version included");
++// PyTorch ships this generated header, but distro builds use the system
++// flatbuffers headers. Keep the upstream minimum while allowing newer
++// flatbuffers releases packaged by MSYS2.
++static_assert(FLATBUFFERS_VERSION_MAJOR >= 24,
++              "Non-compatible flatbuffers version included");
+ 
+ namespace torch {
+ namespace jit {
+diff --git a/torch/csrc/lazy/core/ir.h b/torch/csrc/lazy/core/ir.h
+index 6e1a6f6f1..03f06305b 100644
+--- a/torch/csrc/lazy/core/ir.h
++++ b/torch/csrc/lazy/core/ir.h
+@@ -216,7 +216,7 @@ const T* NodeCast(const Node* node) {
+ // can be composed by multiple outputs, the node+index coordinates fully qualify
+ // each single output.
+ struct TORCH_API Output {
+-  struct Hasher {
++  struct TORCH_API Hasher {
+     size_t operator()(const Output& output) const;
+   };
+ 
+diff --git a/torch/headeronly/macros/Export.h b/torch/headeronly/macros/Export.h
+index 14b26c18e..c877efa1e 100644
+--- a/torch/headeronly/macros/Export.h
++++ b/torch/headeronly/macros/Export.h
+@@ -87,14 +87,14 @@
+ // and export.
+ 
+ // This one is being used by libc10.so
+-#ifdef C10_BUILD_MAIN_LIB
++#if defined(C10_BUILD_MAIN_LIB) || defined(CAFFE2_BUILD_MAIN_LIB)
+ #define C10_API C10_EXPORT
+ #else
+ #define C10_API C10_IMPORT
+ #endif
+ 
+ // This one is being used by libtorch.so
+-#ifdef CAFFE2_BUILD_MAIN_LIB
++#if defined(CAFFE2_BUILD_MAIN_LIB) || defined(THP_BUILD_MAIN_LIB)
+ #define TORCH_API C10_EXPORT
+ #else
+ #define TORCH_API C10_IMPORT
+diff --git a/torch/headeronly/macros/Macros.h b/torch/headeronly/macros/Macros.h
+index 08c4e9f1f..1cbbfed5f 100644
+--- a/torch/headeronly/macros/Macros.h
++++ b/torch/headeronly/macros/Macros.h
+@@ -430,7 +430,7 @@ static inline int C10_WARP_SIZE_INTERNAL() {
+ #define CUDA_KERNEL_ASSERT_MSG(cond, msg)
+ #define CUDA_KERNEL_ASSERT_PRINTF(cond, msg, ...)
+ #define SYCL_KERNEL_ASSERT(cond)
+-#elif defined(_MSC_VER)
++#elif defined(_WIN32)
+ #if defined(NDEBUG)
+ extern "C" {
+ C10_IMPORT
+diff --git a/torch/nativert/common/FileUtil.h b/torch/nativert/common/FileUtil.h
+index 6fa82347a..da62c48d5 100644
+--- a/torch/nativert/common/FileUtil.h
++++ b/torch/nativert/common/FileUtil.h
+@@ -17,7 +17,9 @@
+ // This is a massive pain to have be an `int` due to the pthread implementation
+ // we support, but it's far more compatible with the rest of the windows world
+ // as an `int` than it would be as a `void*`
++#ifndef __MINGW32__
+ using pid_t = int;
++#endif
+ 
+ using uid_t = int;
+ using gid_t = int;
+@@ -31,8 +33,10 @@ using ssize_t = SSIZE_T;
+ #define HAVE_MODE_T 1
+ // The Windows headers don't define this anywhere, nor do any of the libs
+ // that Folly depends on, so define it here.
++#ifndef __MINGW32__
+ using mode_t = unsigned int;
+ #endif
++#endif
+ 
+ // Copied from folly/portability/Fcntl.h
+ #define O_CLOEXEC _O_NOINHERIT

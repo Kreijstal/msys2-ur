@@ -1,0 +1,46 @@
+From 75b9de6700244a32f759717a127e801d246e572e Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 15:56:31 +0200
+Subject: [PATCH] caffe2: do not destroy the pthreadpool singleton at exit on
+ MinGW
+
+The process-wide caffe2::pthreadpool() is a function-local static
+unique_ptr. On MinGW its destructor runs from libtorch_cpu.dll's
+DLL_PROCESS_DETACH during ExitProcess, when the worker threads have
+already been terminated; pthreadpool_destroy() joins them via
+winpthreads and never returns. Any process that created the pool, for
+example by calling torch.set_num_threads(), therefore hangs on exit.
+
+Release the pool from a static destructor that runs before the
+unique_ptr's, i.e. leak it, like the existing after-fork path does.
+---
+ caffe2/utils/threadpool/pthreadpool-cpp.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/caffe2/utils/threadpool/pthreadpool-cpp.cc b/caffe2/utils/threadpool/pthreadpool-cpp.cc
+index 9e31751..d2cbcd6 100644
+--- a/caffe2/utils/threadpool/pthreadpool-cpp.cc
++++ b/caffe2/utils/threadpool/pthreadpool-cpp.cc
+@@ -84,6 +84,19 @@ void PThreadPool::run(
+ PThreadPool* pthreadpool(size_t thread_count) {
+   static auto threadpool =
+     std::make_unique<PThreadPool>(thread_count);
++#if defined(__MINGW32__)
++  // MinGW runs this DLL's static destructors from DLL_PROCESS_DETACH while
++  // the process exits, after Windows has already killed the pool's worker
++  // threads. pthreadpool_destroy() then joins them through winpthreads and
++  // waits forever, so every process that used the pool (e.g. after
++  // torch.set_num_threads()) hangs in ExitProcess. Leak the pool at exit,
++  // as is already done after fork; the OS reclaims it.
++  static const struct LeakAtExit {
++    ~LeakAtExit() {
++      (void)threadpool.release();
++    }
++  } leak_at_exit;
++#endif
+ #if !(defined(WIN32))
+   static std::once_flag flag;
+   std::call_once(flag, []() {
+-- 
+2.55.0
+
