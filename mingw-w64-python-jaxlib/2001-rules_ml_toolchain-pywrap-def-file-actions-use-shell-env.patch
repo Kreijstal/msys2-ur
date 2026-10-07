@@ -1,0 +1,24 @@
+diff --git a/py/rules_pywrap/pywrap.impl.bzl b/py/rules_pywrap/pywrap.impl.bzl
+index c09dec2..c6ed110 100644
+--- a/py/rules_pywrap/pywrap.impl.bzl
++++ b/py/rules_pywrap/pywrap.impl.bzl
+@@ -1448,6 +1448,9 @@ def _generated_common_win_def_file_impl(ctx):
+         arguments = [args, obj_files_args],
+         outputs = [win_raw_def_file],
+         mnemonic = "WinDefFileParse",
++        # def_parser.exe and the py_binary launcher are MSVC-built and need the
++        # VC runtime from PATH (--action_env), e.g. with a MinGW toolchain.
++        use_default_shell_env = True,
+     )
+ 
+     win_def_file = win_raw_def_file
+@@ -1467,6 +1470,9 @@ def _generated_common_win_def_file_impl(ctx):
+             arguments = [filter_args],
+             outputs = [win_def_file],
+             mnemonic = "WinDefFileFilter",
++            # def_parser.exe and the py_binary launcher are MSVC-built and need the
++            # VC runtime from PATH (--action_env), e.g. with a MinGW toolchain.
++            use_default_shell_env = True,
+         )
+ 
+     return [DefaultInfo(files = depset(direct = [win_def_file]))]

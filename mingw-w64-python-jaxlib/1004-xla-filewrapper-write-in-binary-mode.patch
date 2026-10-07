@@ -1,0 +1,26 @@
+diff --git a/xla/tsl/util/filewrapper.cc b/xla/tsl/util/filewrapper.cc
+index c66e1f2..c4f85e3 100644
+--- a/xla/tsl/util/filewrapper.cc
++++ b/xla/tsl/util/filewrapper.cc
+@@ -297,7 +297,8 @@ void WriteHeader(const std::string& filename, const std::string& comment,
+                  const std::pair<std::string, std::string>& namespaces,
+                  const std::string& base, const std::string& runfiles,
+                  const Settings& settings) {
+-  std::ofstream hdr(filename, std::ios_base::out | std::ios_base::trunc);
++  std::ofstream hdr(filename, std::ios_base::out | std::ios_base::trunc |
++                                     std::ios_base::binary);
+   if (!hdr.is_open()) {
+     LOG(QFATAL) << absl::StrFormat(
+         "Unable to open header file '%s' for writing", filename);
+@@ -448,7 +449,10 @@ absl::Status WriteCpp(tsl::Env* env, const std::string& cc_filename,
+                       std::vector<Initializer>& initializers,
+                       const std::vector<std::string>& infiles,
+                       const Settings& settings) {
+-  std::ofstream toc(cc_filename, std::ios_base::out | std::ios_base::trunc);
++  // Binary mode: tellp()/seekp() offsets are byte offsets that are reused for
++  // the final truncation (text mode on Windows would add CRs).
++  std::ofstream toc(cc_filename, std::ios_base::out | std::ios_base::trunc |
++                                      std::ios_base::binary);
+   if (!toc.is_open()) {
+     return absl::InvalidArgumentError(absl::StrFormat(
+         "filewrapper: unable to open file '%s' for writing", cc_filename));

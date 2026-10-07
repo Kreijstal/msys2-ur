@@ -1,0 +1,27 @@
+diff --git a/third_party/farmhash/farmhash.BUILD b/third_party/farmhash/farmhash.BUILD
+index 8a1e701..031facd 100644
+--- a/third_party/farmhash/farmhash.BUILD
++++ b/third_party/farmhash/farmhash.BUILD
+@@ -43,7 +43,8 @@ cc_library(
+     # Disable __builtin_expect support on Windows
+     copts = select({
+         ":windows_x86_64_clang": ["-DFARMHASH_OPTIONAL_BUILTIN_EXPECT"],
+-        ":windows": ["/DFARMHASH_OPTIONAL_BUILTIN_EXPECT"],
++        # -D works for cl, clang-cl and the GNU drivers (MinGW).
++        ":windows": ["-DFARMHASH_OPTIONAL_BUILTIN_EXPECT"],
+         "//conditions:default": [],
+     }),
+     includes = ["src/."],
+diff --git a/xla/python/profiler/internal/BUILD b/xla/python/profiler/internal/BUILD
+index 32c542c..79242ff 100644
+--- a/xla/python/profiler/internal/BUILD
++++ b/xla/python/profiler/internal/BUILD
+@@ -59,7 +59,7 @@ cc_library(
+     name = "traceme_state",
+     srcs = ["traceme_state.cc"],
+     hdrs = ["traceme_state.h"],
+-    copts = tf_profiler_copts() + if_windows(["/DTF_COMPILE_LIBRARY"]),
++    copts = tf_profiler_copts() + if_windows(["-DTF_COMPILE_LIBRARY"]),
+     visibility = internal_visibility([
+         "//tensorflow/python/profiler/internal:__pkg__",
+     ]),

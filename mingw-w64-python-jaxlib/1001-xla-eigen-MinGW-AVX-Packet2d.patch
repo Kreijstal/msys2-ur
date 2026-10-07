@@ -1,0 +1,47 @@
+diff --git a/third_party/eigen3/mingw_avx_packet2d.patch b/third_party/eigen3/mingw_avx_packet2d.patch
+new file mode 100644
+index 0000000..32a60e8
+--- /dev/null
++++ b/third_party/eigen3/mingw_avx_packet2d.patch
+@@ -0,0 +1,27 @@
++--- a/Eigen/src/Core/arch/AVX/MathFunctions.h
+++++ b/Eigen/src/Core/arch/AVX/MathFunctions.h
++@@ -38,18 +38,18 @@
++ // that are not available. Process as two Packet2d halves using the SSE implementation.
++ template <>
++ EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS Packet4d psin<Packet4d>(const Packet4d& x) {
++-  return _mm256_insertf128_pd(_mm256_castpd128_pd256(psin(_mm256_castpd256_pd128(x))),
++-                              psin(_mm256_extractf128_pd(x, 1)), 1);
+++  return _mm256_insertf128_pd(_mm256_castpd128_pd256(psin<Packet2d>(_mm256_castpd256_pd128(x))),
+++                              psin<Packet2d>(_mm256_extractf128_pd(x, 1)), 1);
++ }
++ template <>
++ EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS Packet4d pcos<Packet4d>(const Packet4d& x) {
++-  return _mm256_insertf128_pd(_mm256_castpd128_pd256(pcos(_mm256_castpd256_pd128(x))),
++-                              pcos(_mm256_extractf128_pd(x, 1)), 1);
+++  return _mm256_insertf128_pd(_mm256_castpd128_pd256(pcos<Packet2d>(_mm256_castpd256_pd128(x))),
+++                              pcos<Packet2d>(_mm256_extractf128_pd(x, 1)), 1);
++ }
++ template <>
++ EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS Packet4d ptan<Packet4d>(const Packet4d& x) {
++-  return _mm256_insertf128_pd(_mm256_castpd128_pd256(ptan(_mm256_castpd256_pd128(x))),
++-                              ptan(_mm256_extractf128_pd(x, 1)), 1);
+++  return _mm256_insertf128_pd(_mm256_castpd128_pd256(ptan<Packet2d>(_mm256_castpd256_pd128(x))),
+++                              ptan<Packet2d>(_mm256_extractf128_pd(x, 1)), 1);
++ }
++ #endif
++ EIGEN_GENERIC_PACKET_FUNCTION(atan, Packet4d)
+diff --git a/third_party/eigen3/workspace.bzl b/third_party/eigen3/workspace.bzl
+index 865be45..ca87084 100644
+--- a/third_party/eigen3/workspace.bzl
++++ b/third_party/eigen3/workspace.bzl
+@@ -29,6 +29,9 @@ def repo():
+     tf_http_archive(
+         name = "eigen_archive",
+         build_file = "//third_party/eigen3:eigen_archive.BUILD",
++        # MinGW + AVX without AVX2: Packet2d is a wrapper type there, so the
++        # Packet4d sin/cos/tan halves must name psin<Packet2d> explicitly.
++        patch_file = ["//third_party/eigen3:mingw_avx_packet2d.patch"],
+         sha256 = EIGEN_SHA256,
+         strip_prefix = "eigen-{commit}".format(commit = EIGEN_COMMIT),
+         urls = tf_mirror_urls("https://gitlab.com/libeigen/eigen/-/archive/{commit}/eigen-{commit}.tar.gz".format(commit = EIGEN_COMMIT)),

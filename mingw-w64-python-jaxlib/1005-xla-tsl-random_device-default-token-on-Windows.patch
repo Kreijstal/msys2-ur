@@ -1,0 +1,18 @@
+diff --git a/third_party/tsl/tsl/platform/random.cc b/third_party/tsl/tsl/platform/random.cc
+index b3b909b..aa36129 100644
+--- a/third_party/tsl/tsl/platform/random.cc
++++ b/third_party/tsl/tsl/platform/random.cc
+@@ -29,7 +29,13 @@ namespace random {
+ 
+ namespace {
+ std::mt19937_64* InitRngWithRandomSeed() {
++#ifdef _WIN32
++  // MSVC's STL ignores the token, MinGW's libstdc++ rejects "/dev/urandom";
++  // the default token uses the OS RNG (rand_s) there.
++  std::random_device device;
++#else
+   std::random_device device("/dev/urandom");
++#endif
+   return new std::mt19937_64(device());
+ }
+ std::mt19937_64 InitRngWithDefaultSeed() { return std::mt19937_64(); }

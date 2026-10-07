@@ -1,0 +1,214 @@
+# Maintainer (msys2-ur): Kreijstal
+#
+# jaxlib (CPU only), the C++ part of JAX: XLA, LLVM/MLIR, StableHLO built
+# from the pinned sources with Bazel and MSYS2's clang/lld (GNU driver,
+# x86_64-w64-windows-gnu). Upstream only supports clang-cl on Windows; see
+# PORTING-NOTES.md for the toolchain and the patch series.
+
+_realname=jaxlib
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.11.2
+# Pinned by jax ${pkgver}'s MODULE.bazel.
+_xla_commit=91888df6ce85102c30220e41d952065925e10886
+_rmt_commit=c0eb2743b7b12b2bbcf0e1888e26d36ba6b093de
+_bazelver=8.7.0
+pkgrel=1
+pkgdesc="XLA library for JAX (CPU) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/jax-ml/jax'
+msys2_repository_url='https://github.com/jax-ml/jax'
+msys2_references=(
+  'purl: pkg:pypi/jaxlib'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-libwinpthread"
+         "${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-ml_dtypes"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-scipy")
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang"
+             "${MINGW_PACKAGE_PREFIX}-lld"
+             "${MINGW_PACKAGE_PREFIX}-llvm"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel"
+             "unzip")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-opt_einsum")
+options=('!strip' '!lto')
+# Bazel downloads the remaining pinned dependencies (LLVM, abseil, protobuf,
+# grpc, ... and the hermetic build-tool Python) itself during build().
+source=("jax-${pkgver}.tar.gz::https://github.com/jax-ml/jax/archive/refs/tags/jax-v${pkgver}.tar.gz"
+        "xla-${_xla_commit}.tar.gz::https://github.com/openxla/xla/archive/${_xla_commit}.tar.gz"
+        "rules_ml_toolchain-${_rmt_commit}.tar.gz::https://github.com/google-ml-infra/rules_ml_toolchain/archive/${_rmt_commit}.tar.gz"
+        "bazel-${_bazelver}.exe::https://github.com/bazelbuild/bazel/releases/download/${_bazelver}/bazel-${_bazelver}-windows-x86_64.exe"
+        # The official bazel.exe needs the MSVC C++ runtime DLLs.
+        "https://files.pythonhosted.org/packages/ce/92/5a10262c2a489d5854f96d69e287923d6f720c4935dd26634deb7a5426e9/msvc_runtime-14.44.35112-cp311-cp311-win_amd64.whl"
+        "BUILD.bazel.in"
+        "cc_toolchain_config.bzl"
+        "mingw_prefix.BUILD"
+        "0001-jax-MinGW-build-integration.patch"
+        "0002-jax-cpu_feature_guard-MinGW-uses-GCC-cpuid.patch"
+        "1001-xla-eigen-MinGW-AVX-Packet2d.patch"
+        "1002-xla-slinky-MinGW-aligned-malloc.patch"
+        "1003-xla-GNU-style-D-flags-on-Windows.patch"
+        "1004-xla-filewrapper-write-in-binary-mode.patch"
+        "1005-xla-tsl-random_device-default-token-on-Windows.patch"
+        "2001-rules_ml_toolchain-pywrap-def-file-actions-use-shell-env.patch")
+noextract=("rules_ml_toolchain-${_rmt_commit}.tar.gz"
+           "bazel-${_bazelver}.exe"
+           "msvc_runtime-14.44.35112-cp311-cp311-win_amd64.whl")
+sha256sums=('12dd77d86ec5a316be6038c9a597a1479bce13c828722a249b022e774b2eff75'
+            '32cb8087d88318a01f9974ead6254e1ca06d263fa1847f61503379525bd46897'
+            '003f9f700f80a10f70bec761d00529237d16a6e20c063124c9fffa98a8c0af35'
+            '29f1796f57379933340afa135f02703ffa21dd30135754bea695f8fd15103420'
+            'aba7fbe71897d25ed53fbb7f391e9f50289378a8a9ae218ba18530c663448391'
+            '7c566cddc36555e4c0a077de763fa813a868e27586117491003d78eb5eb21509'
+            'aa2ce54a0549314839a1f8240537b866f6b91776d1372369f470daa5b8e11f64'
+            '02763523901e3c429dc6238eb1e25878ba239fcb1e85f34c828c6cfca4e8c14f'
+            '718669db876dc3b8796beabdbe74d1ff924cd10a664787bad97d69a005b60f20'
+            '07a8c466533937330f7992f13c475dd20bb09960b1da5f37166f916cfac42f74'
+            '7f885d2b5c61d7a1730bf26602a90fa99a7ac138637448dfffb7d766c4488b8d'
+            'cadac32ae6bc615221dd87852b4fb6b5fdb207a8ec052bb64deeaeaa688e5b44'
+            'e6954630cf05f8231074aa825f202a4b7bc4d1f648b7122d8761951bd0e15e50'
+            'd93c71b78ec586a452d709da5f8cb124a84f8d31764e020e2f3056425fe7e980'
+            '80c42df36664e68b9caa6006b8b16acad5f29e8b09796e1067f9117f11c09fd6'
+            '430a1877556c906aa540ff0c87b8949328956c94be06e5805c95e683081a4de7')
+
+_jaxdir=jax-jax-v${pkgver}
+_xladir=xla-${_xla_commit}
+_rmtdir=rules_ml_toolchain-${_rmt_commit}
+
+_apply_patches() {
+  local _p
+  for _p in "$@"; do
+    [[ -f "${_p}" ]] || continue
+    msg2 "Applying ${_p##*/}"
+    patch -Np1 -i "${_p}"
+  done
+}
+
+prepare() {
+  # Contains symlinks that precede their targets, which bsdtar cannot create.
+  rm -rf "${_rmtdir}"
+  tar -xzf "rules_ml_toolchain-${_rmt_commit}.tar.gz"
+
+  # Bazel with its runtime DLLs.
+  mkdir -p bazel
+  cp "bazel-${_bazelver}.exe" bazel/bazel.exe
+  unzip -qjo "msvc_runtime-14.44.35112-cp311-cp311-win_amd64.whl" \
+    'msvc_runtime-14.44.35112.data/data/Scripts/msvcp140.dll' \
+    'msvc_runtime-14.44.35112.data/data/Scripts/vcruntime140.dll' \
+    'msvc_runtime-14.44.35112.data/data/Scripts/vcruntime140_1.dll' -d bazel
+
+  cd "${srcdir}/${_xladir}"
+  _apply_patches "${srcdir}"/1*-xla-*.patch
+
+  cd "${srcdir}/${_rmtdir}"
+  _apply_patches "${srcdir}"/2*-rules_ml_toolchain-*.patch
+
+  cd "${srcdir}/${_jaxdir}"
+  _apply_patches "${srcdir}"/0*-jax-*.patch
+
+  local _prefix=$(cygpath -m "${MINGW_PREFIX}")
+  local _pyver=$(${MINGW_PREFIX}/bin/python -c "import sys; print('%d.%d' % sys.version_info[:2])")
+  mkdir -p build/mingw
+  sed -e "s|@MINGW_PREFIX@|${_prefix}|g" -e "s|@PYVER@|${_pyver}|g" \
+    "${srcdir}/BUILD.bazel.in" > build/mingw/BUILD.bazel
+  sed -e "s|@MINGW_PREFIX@|${_prefix}|g" -e "s|@PYVER@|${_pyver}|g" \
+    "${srcdir}/mingw_prefix.BUILD" > build/mingw/mingw_prefix.BUILD
+  cp "${srcdir}/cc_toolchain_config.bzl" build/mingw/
+  sed -i "s|@MINGW_PREFIX@|${_prefix}|g" MODULE.bazel
+}
+
+# Bazel options; written in build() so that makepkg -e uses the same ones.
+_write_bazelrc() {
+  local _pyver=$(${MINGW_PREFIX}/bin/python -c "import sys; print('%d.%d' % sys.version_info[:2])")
+  local _prefix=$(cygpath -m "${MINGW_PREFIX}")
+  local _actpath="$(cygpath -m "${srcdir}/bazel");${_prefix}/bin;$(cygpath -m /usr/bin);C:/Windows/System32;C:/Windows"
+  # Picked up by the try-import at the end of .bazelrc.
+  cat > .bazelrc.user <<EOF
+common:mingw --config=clang_local
+common:mingw --config=clang
+common:mingw --incompatible_enable_cc_toolchain_resolution
+common:mingw --extra_toolchains=//build/mingw:cc_toolchain
+common:mingw --extra_toolchains=//build/mingw:py_cc_toolchain
+common:mingw --repo_env=HERMETIC_PYTHON_VERSION=${_pyver}
+common:mingw --repo_env=ML_WHEEL_TYPE=release
+# Fixed action PATH (part of every action key, so the result does not depend on
+# the calling shell); bazel/ has the MSVC runtime that Bazel's own launcher
+# tools need.
+common:mingw --action_env=PATH=${_actpath} --host_action_env=PATH=${_actpath}
+common:mingw --copt=-mavx --host_copt=-mavx
+# Build tools are run by Starlark actions without PATH: have Bazel copy the
+# MinGW C++ runtime DLLs next to every executable (see mingw_prefix.BUILD).
+common:mingw --@rules_cc//:link_extra_libs=@mingw_prefix//:runtime_dlls
+common:mingw --@bazel_tools//tools/cpp:link_extra_libs=@mingw_prefix//:runtime_dlls
+common:mingw --copt=-Wno-sign-compare --host_copt=-Wno-sign-compare
+common:mingw --override_module=xla=$(cygpath -m "${srcdir}/${_xladir}")
+common:mingw --override_module=rules_ml_toolchain=$(cygpath -m "${srcdir}/${_rmtdir}")
+EOF
+}
+
+_bazel() {
+  export BAZEL_SH=$(cygpath -m /usr/bin/bash.exe)
+  # Bazel's arguments (//labels, E:/paths) must reach it unconverted.
+  export MSYS2_ARG_CONV_EXCL="*"
+  unset JAVA_HOME
+  # JAXLIB_BAZEL_ROOT: optional shared Bazel output/repository cache.
+  "${srcdir}/bazel/bazel.exe" \
+    --output_user_root="${JAXLIB_BAZEL_ROOT:-$(cygpath -m "${srcdir}/bazel-root")}" \
+    "$@"
+}
+
+build() {
+  cd "${srcdir}/${_jaxdir}"
+  _write_bazelrc
+  _bazel build //jaxlib/tools:jaxlib_wheel \
+    --noenable_platform_specific_config --config=mingw \
+    --jobs=$(nproc) --local_resources=memory=HOST_RAM*.6 \
+    --verbose_failures --keep_going
+
+  # The wheel builder runs on the hermetic (MSVC) build-tool Python, which
+  # names it win_amd64; the extensions are built for MSYS2's Python.
+  local _pytag=$(${MINGW_PREFIX}/bin/python -c "import sys; print('cp%d%d' % sys.version_info[:2])")
+  rm -rf "${srcdir}/dist" && mkdir -p "${srcdir}/dist"
+  cp bazel-bin/jaxlib/tools/dist/jaxlib-${pkgver}-*.whl "${srcdir}/dist/"
+  chmod u+w "${srcdir}"/dist/*.whl
+  unset MSYS2_ARG_CONV_EXCL
+  ${MINGW_PREFIX}/bin/python -m wheel tags --remove \
+    --python-tag ${_pytag} --abi-tag ${_pytag} \
+    --platform-tag $(${MINGW_PREFIX}/bin/python -c "import sysconfig; print(sysconfig.get_platform().replace('-', '_').replace('.', '_'))") \
+    "${srcdir}"/dist/jaxlib-${pkgver}-*.whl
+}
+
+check() {
+  cd "${srcdir}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  # Test with the jax Python package of the same source tree.
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  PYTHONPATH="${srcdir}/${_jaxdir}" ${MINGW_PREFIX}/bin/python - <<'PY'
+import jax, jax.numpy as jnp
+print(jax.__version__, jax.devices())
+x = jnp.arange(6.0).reshape(2, 3)
+assert float((x @ x.T).sum()) == 83.0
+f = jax.jit(lambda a: jnp.sin(a) ** 2 + jnp.cos(a) ** 2)
+assert jnp.allclose(f(x), 1.0)
+g = jax.grad(lambda w: jnp.sum((w * 3.0 - 1.0) ** 2))(jnp.ones(3))
+assert jnp.allclose(g, 12.0), g
+assert jax.vmap(jnp.dot)(x, x).shape == (2,)
+print("jaxlib ok")
+PY
+}
+
+package() {
+  cd "${srcdir}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 "${srcdir}/${_jaxdir}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

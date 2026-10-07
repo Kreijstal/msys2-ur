@@ -1,0 +1,17 @@
+diff --git a/jaxlib/cpu_feature_guard.c b/jaxlib/cpu_feature_guard.c
+index d18478e..5d2f07b 100644
+--- a/jaxlib/cpu_feature_guard.c
++++ b/jaxlib/cpu_feature_guard.c
+@@ -30,10 +30,9 @@ limitations under the License.
+ // SIMD extension querying is only available on x86.
+ #ifdef PLATFORM_IS_X86
+ 
+-#ifdef PLATFORM_WINDOWS
+-#if defined(_MSC_VER)
++// MinGW (GCC/clang) uses the GCC inline assembly below.
++#if defined(PLATFORM_WINDOWS) && defined(_MSC_VER)
+ #include <intrin.h>
+-#endif
+ 
+ // Visual Studio defines a builtin function for CPUID, so use that if possible.
+ #define GETCPUID(a, b, c, d, a_inp, c_inp) \
