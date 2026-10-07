@@ -1,0 +1,74 @@
+From 52021769d5f601ae5c805f1b16055d936f912e05 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 4 Oct 2026 19:32:55 +0200
+Subject: [PATCH 1/5] mingw: fix gcc build (stack pointer, ZGC includes,
+ SOMAXCONN_HINT)
+
+---
+ src/hotspot/os_cpu/windows_x86/os_windows_x86.cpp | 6 ++++++
+ src/hotspot/share/gc/z/zCollectedHeap.cpp         | 1 +
+ src/hotspot/share/gc/z/zHeap.cpp                  | 1 +
+ src/java.base/windows/native/libnio/ch/Net.c      | 5 +++++
+ 4 files changed, 13 insertions(+)
+
+diff --git a/src/hotspot/os_cpu/windows_x86/os_windows_x86.cpp b/src/hotspot/os_cpu/windows_x86/os_windows_x86.cpp
+index 8e934bc48..40ecc2cfe 100644
+--- a/src/hotspot/os_cpu/windows_x86/os_windows_x86.cpp
++++ b/src/hotspot/os_cpu/windows_x86/os_windows_x86.cpp
+@@ -255,7 +255,13 @@ intptr_t* os::fetch_bcp_from_context(const void* ucVoid) {
+ // slot in the stack.
+ __declspec(noinline)
+ address os::current_stack_pointer() {
++#ifdef __GNUC__
++  // HotSpot is built with frame pointers, so the return PC sits right above
++  // the saved frame pointer and the caller's stack pointer right above that.
++  return ((address)__builtin_frame_address(0)) + 2 * sizeof(void*);
++#else
+   return ((address)_AddressOfReturnAddress()) + sizeof(void*);
++#endif
+ }
+ 
+ bool os::win32::get_frame_at_stack_banging_point(JavaThread* thread,
+diff --git a/src/hotspot/share/gc/z/zCollectedHeap.cpp b/src/hotspot/share/gc/z/zCollectedHeap.cpp
+index db55fff67..12abf043b 100644
+--- a/src/hotspot/share/gc/z/zCollectedHeap.cpp
++++ b/src/hotspot/share/gc/z/zCollectedHeap.cpp
+@@ -33,6 +33,7 @@
+ #include "gc/z/zDriver.hpp"
+ #include "gc/z/zGeneration.inline.hpp"
+ #include "gc/z/zGlobals.hpp"
++#include "gc/z/zDeferredConstructed.inline.hpp"
+ #include "gc/z/zHeap.inline.hpp"
+ #include "gc/z/zHeuristics.hpp"
+ #include "gc/z/zJNICritical.hpp"
+diff --git a/src/hotspot/share/gc/z/zHeap.cpp b/src/hotspot/share/gc/z/zHeap.cpp
+index 44e597499..ab581093b 100644
+--- a/src/hotspot/share/gc/z/zHeap.cpp
++++ b/src/hotspot/share/gc/z/zHeap.cpp
+@@ -30,6 +30,7 @@
+ #include "gc/z/zArray.inline.hpp"
+ #include "gc/z/zGeneration.inline.hpp"
+ #include "gc/z/zGlobals.hpp"
++#include "gc/z/zDeferredConstructed.inline.hpp"
+ #include "gc/z/zHeap.inline.hpp"
+ #include "gc/z/zHeapIterator.hpp"
+ #include "gc/z/zHeuristics.hpp"
+diff --git a/src/java.base/windows/native/libnio/ch/Net.c b/src/java.base/windows/native/libnio/ch/Net.c
+index 6c07ca8fc..bddd52d5e 100644
+--- a/src/java.base/windows/native/libnio/ch/Net.c
++++ b/src/java.base/windows/native/libnio/ch/Net.c
+@@ -34,6 +34,11 @@
+ #include "nio_util.h"
+ #include "net_util.h"
+ 
++/* mingw-w64's winsock2.h lacks this MSVC macro */
++#ifndef SOMAXCONN_HINT
++#define SOMAXCONN_HINT(b) (-(b))
++#endif
++
+ #include "sun_nio_ch_Net.h"
+ #include "sun_nio_ch_PollArrayWrapper.h"
+ 
+-- 
+2.56.0
+

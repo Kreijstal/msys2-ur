@@ -1,0 +1,186 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# OpenJDK built from source without any binary JDK.
+#
+# Stage -1: a shim boot JDK (java-tools/tools/bootjdk) whose javac is javac-js
+#   (a Java compiler written in JavaScript, run on Node) and whose java runs
+#   JavaScript ports of the JDK build tools. With it the JDK's own makefiles
+#   build HotSpot, the generated sources (byte-identical to a normal build),
+#   the classes of the modules a boot JDK needs and their native code.
+# Stage 0: that exploded image is the boot JDK of a normal, complete build.
+# Stage 1: the stage-0 output builds the JDK once more; this is what ships.
+#
+# The HotSpot/gcc port is TheShermanTanker's experimental mingw branch.
+
+_realname=openjdk
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+_jdkcommit=e269b249531de2b26fdc1a336d3ebbb89645d604
+_jtcommit=13940233ecb00d8074df48404d4d736e3e8d8dd0
+pkgver=28.0.0.r0
+pkgrel=1
+pkgdesc="OpenJDK 28 bootstrapped from source with javac-js, no binary JDK (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://openjdk.org/'
+msys2_repository_url='https://github.com/TheShermanTanker/jdk'
+license=('spdx:GPL-2.0-only WITH Classpath-exception-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-libwinpthread")
+# same /ucrt64/bin launchers as the older local java-openjdk recipe
+conflicts=("${MINGW_PACKAGE_PREFIX}-java-openjdk")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-nodejs"
+             "${MINGW_PACKAGE_PREFIX}-libxslt"
+             'autoconf' 'make' 'zip' 'unzip' 'git')
+options=('!strip' '!buildflags' '!lto')
+source=("jdk::git+https://github.com/TheShermanTanker/jdk.git#commit=${_jdkcommit}"
+        "java-tools::git+https://github.com/Kreijstal/java-tools.git#commit=${_jtcommit}"
+        '0001-mingw-fix-gcc-build-stack-pointer-ZGC-includes-SOMAX.patch'
+        '0002-make-accept-drive-letters-in-dependency-targets.patch'
+        '0003-make-convert-gcc-dependency-paths-after-compiling.patch'
+        '0004-make-write-manifest.rc-with-printf-WriteFile-drops-t.patch'
+        '0005-jpackage-MSVC-library-names-only-for-the-microsoft-t.patch'
+        '0006-jrt-URLs-read-resources-from-an-exploded-image.patch'
+        'launcher.c')
+sha256sums=('SKIP'
+            'SKIP'
+            'f5496f4674a2924c27be9ee116c2b2049950d2dcdefac928c490410f8702001b'
+            '0b2bcf980536218bd635696569fa45a5082eb0af88b5a116c5e5fd76e124b8ac'
+            '983d6c61dc2f0154a69e254c0f5fe1c93fd4544973b542fe43b94c306573325e'
+            '02f574c3187a1c536086340008297d28143d1f8760569ad87cc1387cdfb1081c'
+            '9c51e893daa0dbac9d691687e8d5dc36e5f9c5e6f96c8c1cf5066f162c69e01b'
+            'e0574dfe909d202e256bde7dc2912ce3fb46da7fcf7bb50ddd386a322dab57d3'
+            '7ed646507073ce9a32c86f5b42cd1105bc25a842bb140a65a0667d998d2d0521')
+
+# modules the stage-0 boot JDK consists of (javac, javadoc and what the
+# JDK build tools running on it need)
+_stage0_modules=(java.base java.xml java.prefs java.datatransfer java.logging
+                 java.compiler jdk.internal.opt jdk.zipfs jdk.jartool
+                 jdk.compiler jdk.internal.md jdk.javadoc java.desktop
+                 jdk.localedata)
+_jdkdir="openjdk-28"
+
+prepare() {
+  cd "${srcdir}/jdk"
+  git am --committer-date-is-author-date "${srcdir}"/000*.patch
+}
+
+_configure() {
+  # $1 = build dir, $2 = boot JDK, rest = extra options
+  local _dir=$1 _boot=$2
+  shift 2
+  mkdir -p "${_dir}"
+  cd "${_dir}"
+  bash "${srcdir}/jdk/configure" \
+    --with-toolchain-type=gcc \
+    --with-boot-jdk="${_boot}" \
+    --disable-warnings-as-errors \
+    --with-native-debug-symbols=none \
+    --with-jvm-variants=server \
+    --with-version-pre= \
+    --with-version-opt= \
+    --with-vendor-name="MSYS2-UR" \
+    "$@"
+}
+
+build() {
+  local _jobs=${MAKEFLAGS#-j}
+  [[ ${_jobs} =~ ^[0-9]+$ ]] || _jobs=$(nproc)
+  # the JDK makefiles refuse -jN and take JOBS=N instead
+  unset MAKEFLAGS
+
+  # ---- stage -1: shim boot JDK -------------------------------------------
+  node "${srcdir}/java-tools/tools/bootjdk/make-shim.js" \
+    --jdk-src "$(cygpath -m "${srcdir}/jdk")" \
+    --gensrc "$(cygpath -m "${srcdir}/build-shim/support/gensrc")" \
+    "${srcdir}/shim"
+  _configure "${srcdir}/build-shim" "${srcdir}/shim" --disable-javac-server
+
+  local _m _t
+  local -a _gensrc=() _natives=()
+  for _m in "${_stage0_modules[@]}"; do
+    _gensrc+=("${_m}-gensrc-only")
+    _natives+=("${_m}-gendata-only" "${_m}-copy-only" "${_m}-libs-only" "${_m}-launchers-only")
+  done
+  # -only targets: the build tools are JavaScript ports, nothing compiled
+  # for or run on a JVM may be pulled in as a dependency
+  make interim-tzdb-only JOBS=${_jobs}
+  # javac-js compiles the langtools build tools against the JDK sources, which
+  # need java.base's generated ones (CharsetDecoder...); jdk.compiler's gensrc
+  # in turn needs those tools
+  make java.base-gensrc-only BUILD_TOOLS_JDK= JOBS=${_jobs}
+  make buildtools-langtools-only JOBS=${_jobs}
+  make "${_gensrc[@]}" BUILD_TOOLS_JDK= JOBS=${_jobs}
+  # compiled with javac-js only because the module compilations depend on
+  # its Depend plugin target; the classes are never run
+  make buildtools-jdk-only JOBS=${_jobs}
+  make java.base-copy-only JOBS=${_jobs}
+  make buildtools-hotspot-only JOBS=${_jobs}
+  make hotspot-server-gensrc-only JOBS=${_jobs}
+  make hotspot-server-libs-only JOBS=${_jobs}
+  for _m in "${_stage0_modules[@]}"; do
+    make "${_m}-java-only" JOBS=${_jobs}
+  done
+  # -k: the cacerts/blocked-certs/public-suffix data and ct.sym (which needs
+  # every module) are not built here; the boot JDK needs none of them
+  make -k "${_natives[@]}" JOBS=${_jobs} || true
+  local _j="${srcdir}/build-shim/jdk"
+  "${_j}/bin/java.exe" -version
+
+  # ct.sym (javac --release N for older N) is written by the JDK's
+  # CreateSymbols, which needs a JVM: compile and run it on stage 0 itself
+  local _w="${srcdir}/build-shim/support/symbols-stage0"
+  local -a _x=()
+  for _m in api code util jvm; do
+    _x+=(--add-exports "jdk.compiler/com.sun.tools.javac.${_m}=ALL-UNNAMED")
+  done
+  mkdir -p "${_w}/classes"
+  "${_j}/bin/javac.exe" "${_x[@]}" -nowarn -d "$(cygpath -m "${_w}/classes")" \
+    "$(cygpath -m "${srcdir}/jdk/make/langtools/src/classes/build/tools/symbolgenerator/CreateSymbols.java")"
+  for _m in "${_j}"/modules/*; do
+    [[ -f ${_m}/module-info.class ]] && basename "${_m}"
+  done > "${_w}/included-modules"
+  "${_j}/bin/java.exe" "${_x[@]}" -cp "$(cygpath -m "${_w}/classes")" \
+    build.tools.symbolgenerator.CreateSymbols build-ctsym \
+    "$(cygpath -m "${srcdir}/jdk/src/jdk.compiler/share/data/symbols/symbols")" \
+    "$(cygpath -m "${_w}/ct.sym")" 0 28 "" \
+    "$(cygpath -m "${_j}/modules")/" "$(cygpath -m "${_w}/included-modules")"
+  install -Dm644 "${_w}/ct.sym" "${_j}/lib/ct.sym"
+
+  # ---- stage 0: complete build with the shim-built boot JDK --------------
+  _configure "${srcdir}/build-0" "${srcdir}/build-shim/jdk"
+  make images JOBS=${_jobs}
+
+  # ---- stage 1: rebuild with the stage-0 JDK -----------------------------
+  _configure "${srcdir}/build-1" "${srcdir}/build-0/images/jdk"
+  make images JOBS=${_jobs}
+}
+
+check() {
+  local _j="${srcdir}/build-1/images/jdk/bin"
+  mkdir -p "${srcdir}/check"
+  cd "${srcdir}/check"
+  printf '%s\n' 'public class Hello { public static void main(String[] a) {' \
+    '  System.out.println("Hello " + java.util.List.of(a).size()); } }' > Hello.java
+  "${_j}/javac.exe" Hello.java
+  [[ "$("${_j}/java.exe" Hello x y | tr -d '\r')" == "Hello 2" ]]
+}
+
+package() {
+  local _dest="${pkgdir}${MINGW_PREFIX}/lib/jvm/${_jdkdir}"
+  mkdir -p "${_dest}"
+  cp -a "${srcdir}/build-1/images/jdk/." "${_dest}/"
+
+  # launchers in ${MINGW_PREFIX}/bin forwarding to lib/jvm/<jdk>/bin/<name>
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/bin"
+  ${CC:-cc} -O2 -municode -DJDK_SUBDIR="L\"${_jdkdir}\"" \
+    -o "${srcdir}/jdk-launcher.exe" "${srcdir}/launcher.c"
+  local _exe
+  for _exe in "${_dest}"/bin/*.exe; do
+    install -m755 "${srcdir}/jdk-launcher.exe" \
+      "${pkgdir}${MINGW_PREFIX}/bin/$(basename "${_exe}")"
+  done
+
+  install -Dm644 "${srcdir}/jdk/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

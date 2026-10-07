@@ -1,0 +1,28 @@
+From 6d88de5c7159c18436ff53f5bd6760d1a78182a9 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 4 Oct 2026 20:00:30 +0200
+Subject: [PATCH 5/5] jpackage: MSVC library names only for the microsoft
+ toolchain
+
+---
+ make/modules/jdk.jpackage/Lib.gmk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/make/modules/jdk.jpackage/Lib.gmk b/make/modules/jdk.jpackage/Lib.gmk
+index ab22b636f..d1037efc8 100644
+--- a/make/modules/jdk.jpackage/Lib.gmk
++++ b/make/modules/jdk.jpackage/Lib.gmk
+@@ -74,8 +74,8 @@ $(eval $(call SetupJdkExecutable, BUILD_JPACKAGEAPPLAUNCHER, \
+     LDFLAGS_macosx := -rpath @executable_path/../Frameworks/ \
+         -rpath @executable_path/../PlugIns/, \
+     LIBS_macosx := -framework Cocoa, \
+-    LIBS_windows := msi.lib ole32.lib shell32.lib shlwapi.lib user32.lib, \
+-    LIBS_gcc_windows := -lmsi -lole32 -lshlwapi, \
++    LIBS_microsoft := msi.lib ole32.lib shell32.lib shlwapi.lib user32.lib, \
++    LIBS_gcc_windows := -lmsi -lole32 -lshell32 -lshlwapi -luser32, \
+     LIBS_linux := $(LIBDL) $(LIBPTHREAD), \
+     MANIFEST := $(JAVA_MANIFEST), \
+     MANIFEST_VERSION := $(VERSION_NUMBER_FOUR_POSITIONS) \
+-- 
+2.56.0
+

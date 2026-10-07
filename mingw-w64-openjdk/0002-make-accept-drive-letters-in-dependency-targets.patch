@@ -1,0 +1,25 @@
+From 4b030ef42e2b5d8ef5fb090673878480d15afc21 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 4 Oct 2026 19:36:13 +0200
+Subject: [PATCH 2/5] make: accept drive letters in dependency targets
+
+---
+ make/common/native/CompileFile.gmk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/make/common/native/CompileFile.gmk b/make/common/native/CompileFile.gmk
+index 04e4ec891..26d69a611 100644
+--- a/make/common/native/CompileFile.gmk
++++ b/make/common/native/CompileFile.gmk
+@@ -86,7 +86,7 @@ WINDOWS_SHOWINCLUDE_SED_PATTERN := \
+ # of make targets for dependent files (.d.targets)
+ DEPENDENCY_TARGET_SED_PATTERN := \
+     -e 's/\#.*//' \
+-    -e 's/^[^:]*: *//' \
++    -e 's/^\([a-zA-Z]:\)\{0,1\}[^:]*: *//' \
+     -e 's/ *\\$$$$//' \
+     -e 's/^[	 ]*//' \
+     -e '/^$$$$/ d' \
+-- 
+2.56.0
+

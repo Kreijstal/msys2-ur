@@ -1,0 +1,40 @@
+From 64b2d15dd6e2911ba1583cc668d72d91d3e939a8 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 4 Oct 2026 19:37:21 +0200
+Subject: [PATCH 3/5] make: convert gcc dependency paths after compiling
+
+---
+ make/common/native/CompileFile.gmk | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/make/common/native/CompileFile.gmk b/make/common/native/CompileFile.gmk
+index 26d69a611..748dc1360 100644
+--- a/make/common/native/CompileFile.gmk
++++ b/make/common/native/CompileFile.gmk
+@@ -84,6 +84,10 @@ WINDOWS_SHOWINCLUDE_SED_PATTERN := \
+ ################################################################################
+ # This pattern is used to transform a dependency file (.d) to a list
+ # of make targets for dependent files (.d.targets)
++ifeq ($(call isTargetOs, windows), true)
++  MSYS_ROOT_MIXED := $(shell $(PATHTOOL) -m /)
++endif
++
+ DEPENDENCY_TARGET_SED_PATTERN := \
+     -e 's/\#.*//' \
+     -e 's/^\([a-zA-Z]:\)\{0,1\}[^:]*: *//' \
+@@ -216,7 +220,11 @@ define CreateCompiledNativeFileBody
+ 	      $$($1_COMPILE_OPTIONS)))
+           ifneq ($$($1_DEPS_FILE), )
+             ifeq ($(call isTargetOs, windows), true)
+-	    $$(foreach path, $$(filter-out \, $$(call ReadFile, $$(addsuffix .tmp, $$($1_DEPS_FILE)))), $$(shell $(SED) --in-place= -e 's/$$(subst /,\/,$(path))/$$(subst /,\/,$$(shell $(PATHTOOL) $(path)))/g' $$(addsuffix .tmp, $$($1_DEPS_FILE))))  # FixPathFile can only convert Unix to Windows, so we can't use fixpath
++              # gcc writes Windows paths into dependency files; make needs
++              # Unix paths. This has to run after the compiler, so it is a
++              # recipe line rather than a make function.
++	    $(SED) -i -e 's|$(MSYS_ROOT_MIXED)/|/|g' -e 's|\([ 	]\)\([A-Za-z]\):/|\1/\l\2/|g' \
++	        -e 's|^\([A-Za-z]\):/|/\l\1/|' $$(addsuffix .tmp, $$($1_DEPS_FILE))
+             endif
+ 	    $$(call fix-deps-file, $$($1_DEPS_FILE))
+             # Create a dependency target file from the dependency file.
+-- 
+2.56.0
+

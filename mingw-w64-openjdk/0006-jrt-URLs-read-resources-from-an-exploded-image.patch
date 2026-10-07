@@ -1,0 +1,135 @@
+From 84bfc0d3d82d665f8ec9e0a30c7aecd3c74664e0 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 6 Oct 2026 09:32:33 +0200
+Subject: [PATCH] jrt: URLs: read resources from an exploded image
+
+Without lib/modules, SystemImageReader fails to initialize, so every jrt:
+URL failed in an exploded JDK; the XML parsers load their built-in catalog
+from jrt:/java.xml, which broke CLDRConverter when an exploded JDK is the
+boot JDK. Resolve jrt:/<module>/<path> under <java.home>/modules instead.
+---
+ .../jrt/JavaRuntimeURLConnection.java         | 61 +++++++++++++++++--
+ 1 file changed, 56 insertions(+), 5 deletions(-)
+
+diff --git a/src/java.base/share/classes/sun/net/www/protocol/jrt/JavaRuntimeURLConnection.java b/src/java.base/share/classes/sun/net/www/protocol/jrt/JavaRuntimeURLConnection.java
+index d994f2d38..a9ba34ad6 100644
+--- a/src/java.base/share/classes/sun/net/www/protocol/jrt/JavaRuntimeURLConnection.java
++++ b/src/java.base/share/classes/sun/net/www/protocol/jrt/JavaRuntimeURLConnection.java
+@@ -26,6 +26,8 @@
+ package sun.net.www.protocol.jrt;
+ 
+ import java.io.ByteArrayInputStream;
++import java.io.File;
++import java.io.FileInputStream;
+ import java.io.IOException;
+ import java.io.InputStream;
+ import java.io.UncheckedIOException;
+@@ -35,6 +37,7 @@
+ import jdk.internal.jimage.ImageReader;
+ import jdk.internal.jimage.ImageReader.Node;
+ import jdk.internal.jimage.SystemImageReader;
++import jdk.internal.util.StaticProperty;
+ 
+ import sun.net.www.ParseUtil;
+ import sun.net.www.URLConnection;
+@@ -47,8 +50,23 @@
+  */
+ public class JavaRuntimeURLConnection extends URLConnection {
+ 
+-    // ImageReader to access resources in jimage.
+-    private static final ImageReader READER = SystemImageReader.get();
++    // The modules directory of an exploded image (no lib/modules), else null.
++    private static final File EXPLODED_MODULES = explodedModules();
++
++    // ImageReader to access resources in jimage (holder: an exploded image
++    // has no jimage to open).
++    private static final class Holder {
++        static final ImageReader READER = SystemImageReader.get();
++    }
++
++    private static File explodedModules() {
++        String home = StaticProperty.javaHome();
++        if (new File(home, "lib" + File.separator + "modules").isFile()) {
++            return null;
++        }
++        File modules = new File(home, "modules");
++        return modules.isDirectory() ? modules : null;
++    }
+ 
+     // The module and resource name in the URL (i.e. "jrt:/[$MODULE[/$PATH]]").
+     //
+@@ -59,6 +77,8 @@ public class JavaRuntimeURLConnection extends URLConnection {
+ 
+     // The resource node (non-null when connected).
+     private Node resourceNode;
++    // The resource file in an exploded image (non-null when connected).
++    private File resourceFile;
+ 
+     JavaRuntimeURLConnection(URL url) throws IOException {
+         super(url);
+@@ -87,7 +107,7 @@ private synchronized Node connectResourceNode() throws IOException {
+             if (module.isEmpty() || path == null) {
+                 throw new IOException("cannot connect to jrt:/" + module);
+             }
+-            Node node = READER.findResourceNode(module, path);
++            Node node = Holder.READER.findResourceNode(module, path);
+             if (node == null) {
+                 throw new IOException(module + "/" + path + " not found");
+             }
+@@ -97,20 +117,51 @@ private synchronized Node connectResourceNode() throws IOException {
+         return resourceNode;
+     }
+ 
++    /**
++     * Finds the resource file of this URL in an exploded image and marks the
++     * connection as "connected".
++     */
++    private synchronized File connectResourceFile() throws IOException {
++        if (resourceFile == null) {
++            if (module.isEmpty() || path == null) {
++                throw new IOException("cannot connect to jrt:/" + module);
++            }
++            File file = new File(new File(EXPLODED_MODULES, module),
++                                 path.replace('/', File.separatorChar));
++            if (module.equals(".") || module.equals("..")
++                    || ("/" + path + "/").contains("/../") || !file.isFile()) {
++                throw new IOException(module + "/" + path + " not found");
++            }
++            this.resourceFile = file;
++            super.connected = true;
++        }
++        return resourceFile;
++    }
++
+     @Override
+     public void connect() throws IOException {
+-        connectResourceNode();
++        if (EXPLODED_MODULES != null) {
++            connectResourceFile();
++        } else {
++            connectResourceNode();
++        }
+     }
+ 
+     @Override
+     public InputStream getInputStream() throws IOException {
+-        return new ByteArrayInputStream(READER.getResource(connectResourceNode()));
++        if (EXPLODED_MODULES != null) {
++            return new FileInputStream(connectResourceFile());
++        }
++        return new ByteArrayInputStream(Holder.READER.getResource(connectResourceNode()));
+     }
+ 
+     @Override
+     public long getContentLengthLong() {
+         // connectResourceNode() may throw UncheckedIOException.
+         try {
++            if (EXPLODED_MODULES != null) {
++                return connectResourceFile().length();
++            }
+             return connectResourceNode().size();
+         } catch (IOException | UncheckedIOException ioe) {
+             return -1L;
+-- 
+2.56.0
+

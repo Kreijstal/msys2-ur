@@ -1,0 +1,29 @@
+From b5dcc125773f2a8e8790fad89b84faec3941c0ee Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 4 Oct 2026 19:53:11 +0200
+Subject: [PATCH 4/5] make: write manifest.rc with printf (WriteFile drops the
+ newline)
+
+---
+ make/common/native/Link.gmk | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/make/common/native/Link.gmk b/make/common/native/Link.gmk
+index 910f1d155..8ec3b3b01 100644
+--- a/make/common/native/Link.gmk
++++ b/make/common/native/Link.gmk
+@@ -180,9 +180,9 @@ define CreateDynamicLibraryOrExecutable
+         ifeq ($(TOOLCHAIN_TYPE)+$(call isTargetOs, windows), gcc+true)
+           ifneq ($$($1_MANIFEST), )
+             ifeq ($$($1_TYPE), EXECUTABLE)
+-	    $$(call WriteFile, $$(HASH)include $$(DQUOTE)winuser.h$$(DQUOTE)$$(NEWLINE)1 RT_MANIFEST $$(DQUOTE)$$($1_MANIFEST)$$(DQUOTE), $$($1_OBJECT_DIR)/manifest.rc)
++	    $(PRINTF) '$$(HASH)include "winuser.h"\n1 RT_MANIFEST "%s"\n' '$$(shell $(PATHTOOL) -m $$($1_MANIFEST))' > $$($1_OBJECT_DIR)/manifest.rc
+             else ifeq ($$($1_TYPE), LIBRARY)
+-	    $$(call WriteFile, $$(HASH)include $$(DQUOTE)winuser.h$$(DQUOTE)$$(NEWLINE)2 RT_MANIFEST $$(DQUOTE)$$($1_MANIFEST)$$(DQUOTE), $$($1_OBJECT_DIR)/manifest.rc)
++	    $(PRINTF) '$$(HASH)include "winuser.h"\n2 RT_MANIFEST "%s"\n' '$$(shell $(PATHTOOL) -m $$($1_MANIFEST))' > $$($1_OBJECT_DIR)/manifest.rc
+             endif
+ 	    $$(call ExecuteWithLog, $$($1_OBJECT_DIR)/$$($1_SAFE_NAME)_compile_manifest, $$($1_RC) $$($1_RCFLAGS) $$($1_SYSROOT_CFLAGS) -o $$($1_OBJECT_DIR)/manifest.res -O coff $$($1_OBJECT_DIR)/manifest.rc)
+           endif
+-- 
+2.56.0
+
