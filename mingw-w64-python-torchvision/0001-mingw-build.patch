@@ -1,40 +1,26 @@
 MinGW builds: GCC flags instead of MSVC ones, no ninja backend (torch's
-sets up MSVC on any win32 Python), libpng from the Python prefix, glog
-for c10's inline logging, and no Python headers in the image extension
+sets up MSVC on any win32 Python) and libpng from the Python prefix
 
---- a/setup.py	2026-04-16 11:43:55.000000000 +0200
-+++ b/setup.py	2026-10-06 10:17:45.285417291 +0200
-@@ -19,6 +19,10 @@
+--- a/setup.py	2026-10-07 16:43:32.794245347 +0200
++++ b/setup.py	2026-10-07 16:43:32.849246300 +0200
+@@ -19,6 +19,8 @@
  FORCE_CUDA = os.getenv("FORCE_CUDA", "0") == "1"
  FORCE_MPS = os.getenv("FORCE_MPS", "0") == "1"
  DEBUG = os.getenv("DEBUG", "0") == "1"
 +# MinGW Python: a GCC toolchain and unix-style library names
 +IS_MINGW = sysconfig.get_platform().startswith("mingw")
-+# c10's inline logging code calls into glog
-+GLOG_LIBRARIES = ["glog"] if IS_MINGW else []
  USE_PNG = os.getenv("TORCHVISION_USE_PNG", "1") == "1"
  USE_JPEG = os.getenv("TORCHVISION_USE_JPEG", "1") == "1"
  USE_WEBP = os.getenv("TORCHVISION_USE_WEBP", "1") == "1"
-@@ -127,6 +131,10 @@
+@@ -136,6 +138,7 @@
  
      if sys.platform == "win32":
          define_macros += [("torchvision_EXPORTS", None)]
-+    if IS_MINGW:
-+        # c10 is built with glog, whose headers want this from its CMake target
-+        define_macros += [("GLOG_USE_GLOG_EXPORT", None)]
 +    if sys.platform == "win32" and not IS_MINGW:
          extra_compile_args["cxx"].append("/MP")
          extra_compile_args["cxx"].append("/Zc:preprocessor")
          if not IS_ROCM and "nvcc" in extra_compile_args:
-@@ -191,6 +199,7 @@
-         name="torchvision._C",
-         sources=sorted(str(s) for s in sources),
-         include_dirs=[CSRS_DIR],
-+        libraries=GLOG_LIBRARIES,
-         define_macros=define_macros,
-         extra_compile_args=extra_compile_args,
-     )
-@@ -198,6 +207,13 @@
+@@ -234,6 +237,13 @@
  
  def find_libpng():
      # Returns (found, include dir, library dir, library name)
@@ -48,16 +34,7 @@ for c10's inline logging, and no Python headers in the image extension
      if sys.platform in ("linux", "darwin", "aix"):
          libpng_config = shutil.which("libpng-config")
          if libpng_config is None:
-@@ -285,7 +301,7 @@
-     include_dirs = TORCHVISION_INCLUDE.copy()
-     library_dirs = TORCHVISION_LIBRARY.copy()
- 
--    libraries = []
-+    libraries = GLOG_LIBRARIES.copy()
-     define_macros, extra_compile_args = get_macros_and_flags()
- 
-     image_dir = CSRS_DIR / "io/image"
-@@ -338,7 +354,7 @@
+@@ -366,7 +376,7 @@
                  # if those are None it means they come from standard paths that are already in the search paths, which we don't need to re-add.
                  include_dirs.append(webp_include_dir)
                  library_dirs.append(webp_library_dir)
@@ -66,7 +43,7 @@ for c10's inline logging, and no Python headers in the image extension
              libraries.append(webp_library)
              define_macros += [("WEBP_FOUND", 1)]
          else:
-@@ -418,7 +434,8 @@
+@@ -441,7 +451,8 @@
          ext_modules=extensions,
          python_requires=">=3.10,!=3.14.1",
          cmdclass={
@@ -76,16 +53,3 @@ for c10's inline logging, and no Python headers in the image extension
              "clean": clean,
          },
      )
---- a/torchvision/csrc/io/image/common.h	2026-04-16 11:43:55.000000000 +0200
-+++ b/torchvision/csrc/io/image/common.h	2026-10-06 10:17:45.302417750 +0200
-@@ -2,7 +2,9 @@
- 
- #include <stdint.h>
- #include <torch/headeronly/util/Exception.h>
--#include <torch/torch.h>
-+// torch/all.h, not torch/torch.h: no Python headers needed here (and
-+// torch/csrc/Exceptions.h does not compile with GCC on Windows)
-+#include <torch/all.h>
- 
- namespace vision {
- namespace image {

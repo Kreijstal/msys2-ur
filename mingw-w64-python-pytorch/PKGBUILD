@@ -4,7 +4,7 @@ _realname=pytorch
 pkgbase=mingw-w64-python-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
 pkgver=2.14.1
-pkgrel=2
+pkgrel=3
 _srcdir=${_realname}-v${pkgver}
 pkgdesc="Tensors and dynamic neural networks in Python (mingw-w64)"
 arch=('any')
@@ -60,7 +60,8 @@ source=("https://github.com/pytorch/pytorch/releases/download/v${pkgver}/pytorch
         "0005-fix-build-with-glog-0.7.patch"
         "0006-define-uint-for-aarch64.patch"
         "0007-mingw-fix-cpp-extensions.patch"
-        "0008-mingw-leak-pthreadpool-at-process-exit.patch")
+        "0008-mingw-leak-pthreadpool-at-process-exit.patch"
+        "0009-mingw-export-aoti-stable-abi-shim.patch")
 sha256sums=('d0ebad9ca4219959b29b7ad9ab6469fe49a3d668f8b5a62dd115f02f3a914447'
             '5f33d2a338c430f1dbe7152909eecaee6332b13f8abf96c65981e363e141310a'
             '36357b9df13c554f666f34fe03bafd2e497789b5da08687aa360ff5eb51e51da'
@@ -68,7 +69,8 @@ sha256sums=('d0ebad9ca4219959b29b7ad9ab6469fe49a3d668f8b5a62dd115f02f3a914447'
             'c6fc64744c40c4e62cf81e47df000e1f480e0cff6faefcb9b9d45e58c77b405c'
             'a09716dee7ed8a532c33208291bc4c71885a1b48f4ce075628ccd2993bf4d7b3'
             '1e85f338753d28b6c802be1354cba1826bb9aa7c0e0d525300b753b0efbe775c'
-            '0ba9944ce4a16531a2aae8b9cfcced57223161eb1b7a2858371942cc972f4960')
+            '0ba9944ce4a16531a2aae8b9cfcced57223161eb1b7a2858371942cc972f4960'
+            '8958b512ba13db2191504f4fd80d422303bc2b40e24fafbe37a6ca182f52cd6d')
 noextract=("pytorch-v${pkgver}.tar.gz")
 
 apply_patch_with_msg() {
@@ -90,7 +92,8 @@ prepare() {
     0005-fix-build-with-glog-0.7.patch \
     0006-define-uint-for-aarch64.patch \
     0007-mingw-fix-cpp-extensions.patch \
-    0008-mingw-leak-pthreadpool-at-process-exit.patch
+    0008-mingw-leak-pthreadpool-at-process-exit.patch \
+    0009-mingw-export-aoti-stable-abi-shim.patch
 
   patch -Nbp1 -d third_party/onnx -i "${srcdir}/0004-third_party-onnx-optional-macro.patch"
 }

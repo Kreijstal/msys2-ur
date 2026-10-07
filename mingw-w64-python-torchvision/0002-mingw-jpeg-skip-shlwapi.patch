@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 17:13:18 +0200
+Subject: [PATCH] Fix libjpeg-turbo headers on MinGW after torch's win32
+ headers
+
+MSYS2's libjpeg-turbo jmorecfg.h includes <shlwapi.h> for the INT16,
+INT32 and boolean types. torch's stable headers include
+torch/headeronly/util/win32-headers.h first, which defines NOMSG/NOUSER
+and undefines VOID, after which shlwapi.h's OLE headers fail to compile
+('LPMSG' has not been declared, 'VOID' was not declared). Declare the
+types directly and skip shlwapi.h in both includers of jpeglib.h.
+---
+ torchvision/csrc/io/image/cpu/common_jpeg.h | 10 ++++++++++
+ torchvision/csrc/io/image/cpu/exif.h        |  9 +++++++++
+ 2 files changed, 19 insertions(+)
+
+diff --git a/torchvision/csrc/io/image/cpu/common_jpeg.h b/torchvision/csrc/io/image/cpu/common_jpeg.h
+index 7f7f9f0..c0215cf 100644
+--- a/torchvision/csrc/io/image/cpu/common_jpeg.h
++++ b/torchvision/csrc/io/image/cpu/common_jpeg.h
+@@ -3,6 +3,16 @@
+ #if JPEG_FOUND
+ #include <stdio.h>
+ 
++#ifdef __MINGW32__
++// MinGW libjpeg-turbo's jmorecfg.h includes <shlwapi.h> for INT16, INT32 and
++// boolean, but that header does not compile after torch's win32-headers.h
++// (NOMSG, NOUSER, #undef VOID). Declare those types like the Windows headers
++// do (an identical typedef may be repeated in C++) and skip shlwapi.h.
++#include <basetsd.h>
++typedef unsigned char boolean;
++#define _INC_SHLWAPI
++#endif
++
+ #include <jpeglib.h>
+ #include <setjmp.h>
+ 
+diff --git a/torchvision/csrc/io/image/cpu/exif.h b/torchvision/csrc/io/image/cpu/exif.h
+index bb2e06a..997449d 100644
+--- a/torchvision/csrc/io/image/cpu/exif.h
++++ b/torchvision/csrc/io/image/cpu/exif.h
+@@ -52,6 +52,15 @@ direct,
+ // https://github.com/opencv/opencv/blob/097891e311fae1d8354eb092a0fd0171e630d78c/modules/imgcodecs/src/exif.cpp
+ 
+ #if JPEG_FOUND
++#ifdef __MINGW32__
++// As in common_jpeg.h: MinGW libjpeg-turbo's jmorecfg.h includes <shlwapi.h> for INT16, INT32 and
++// boolean, but that header does not compile after torch's win32-headers.h
++// (NOMSG, NOUSER, #undef VOID). Declare those types like the Windows headers
++// do (an identical typedef may be repeated in C++) and skip shlwapi.h.
++#include <basetsd.h>
++typedef unsigned char boolean;
++#define _INC_SHLWAPI
++#endif
+ #include <jpeglib.h>
+ #endif
+ #if PNG_FOUND
+-- 
+2.55.0
+

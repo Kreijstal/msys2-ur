@@ -1,8 +1,9 @@
 _realname=torchvision
 pkgbase=mingw-w64-python-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
-# 0.27.x is the release that pairs with pytorch 2.12
-pkgver=0.27.0
+# 0.29.x pairs with pytorch 2.14; its ops use torch's stable C ABI, which
+# upstream promises from 2.14 on, but stay below the next untested release
+pkgver=0.29.1
 pkgrel=1
 pkgdesc="Datasets, transforms and models for computer vision with PyTorch (mingw-w64)"
 arch=('any')
@@ -16,9 +17,8 @@ license=('spdx:BSD-3-Clause')
 depends=("${MINGW_PACKAGE_PREFIX}-python"
          "${MINGW_PACKAGE_PREFIX}-python-numpy"
          "${MINGW_PACKAGE_PREFIX}-python-pillow"
-         "${MINGW_PACKAGE_PREFIX}-python-pytorch>=2.12.0"
-         "${MINGW_PACKAGE_PREFIX}-python-pytorch<2.13"
-         "${MINGW_PACKAGE_PREFIX}-glog"
+         "${MINGW_PACKAGE_PREFIX}-python-pytorch>=2.14.0"
+         "${MINGW_PACKAGE_PREFIX}-python-pytorch<2.15"
          "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
          "${MINGW_PACKAGE_PREFIX}-libpng"
          "${MINGW_PACKAGE_PREFIX}-libwebp")
@@ -28,16 +28,19 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-python-setuptools")
 options=('!strip')
 source=("${_realname}-${pkgver}.tar.gz::https://github.com/pytorch/vision/archive/refs/tags/v${pkgver}.tar.gz"
-        '0001-mingw-build.patch')
+        '0001-mingw-build.patch'
+        '0002-mingw-jpeg-skip-shlwapi.patch')
 # the sphinx gallery's symlinked example images cannot be extracted on Windows
 noextract=("${_realname}-${pkgver}.tar.gz")
-sha256sums=('04c588d80e63903e1e4444db8a1c32dc56e4080ed48782555e1d00752d6edb17'
-            'c539152ef0e6417b6782f9d89eb9f5bd1bb21a534f27152fa93e9ac52185ba6f')
+sha256sums=('0a14655bd32095148d93fa595f93aba45dda0d13b25cc7fe86a041340e4a4862'
+            '93dcaee72864acca637888b641600ffbd56c242d405c3567bcc76293a69747e4'
+            'c745043575f753a0c5263d1f6e99dcc66a88c55ef32e56a4a0bbeff20e1a6f3a')
 
 prepare() {
   bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "vision-${pkgver}/gallery"
   cd "vision-${pkgver}"
   patch -Np1 -i "${srcdir}/0001-mingw-build.patch"
+  patch -Np1 -i "${srcdir}/0002-mingw-jpeg-skip-shlwapi.patch"
 }
 
 build() {

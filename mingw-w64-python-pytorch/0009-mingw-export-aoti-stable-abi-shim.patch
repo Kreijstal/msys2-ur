@@ -1,0 +1,41 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 17:03:08 +0200
+Subject: [PATCH] mingw: export the AOTI / stable ABI C shim from torch_cpu
+
+With GCC, AOTI_TORCH_EXPORT is a visibility attribute, which exports
+nothing from a PE DLL. libtorch_cpu.dll then does not export the
+aoti_torch_* / torch_* C shim of the stable ABI, and extensions built on
+it (torchvision >= 0.29, STABLE_TORCH_LIBRARY) fail to link. On MinGW,
+dllexport them while building torch_cpu, which defines all of them, and
+dllimport them elsewhere, as MSVC builds do.
+---
+ torch/csrc/inductor/aoti_torch/c/macros.h | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/torch/csrc/inductor/aoti_torch/c/macros.h b/torch/csrc/inductor/aoti_torch/c/macros.h
+index e49cd39..ee6933a 100644
+--- a/torch/csrc/inductor/aoti_torch/c/macros.h
++++ b/torch/csrc/inductor/aoti_torch/c/macros.h
+@@ -3,8 +3,17 @@
+ 
+ #include <stddef.h>
+ #include <stdint.h>
+-#ifdef __GNUC__
++#if defined(__GNUC__) && !defined(_WIN32)
+ #define AOTI_TORCH_EXPORT __attribute__((__visibility__("default")))
++#elif defined(__GNUC__) // MinGW
++// Visibility attributes export nothing from a PE DLL, so libtorch_cpu would
++// not export the AOTI / stable ABI C shim. CMake defines torch_cpu_EXPORTS
++// for the sources of torch_cpu, which defines all of these functions.
++#if defined(EXPORT_AOTI_FUNCTIONS) || defined(torch_cpu_EXPORTS)
++#define AOTI_TORCH_EXPORT __declspec(dllexport)
++#else
++#define AOTI_TORCH_EXPORT __declspec(dllimport)
++#endif
+ #else // !__GNUC__
+ #ifdef _WIN32
+ // PyTorch2 doesn't currently work on Windows. Exporting these APIs can lead
+-- 
+2.55.0
+
