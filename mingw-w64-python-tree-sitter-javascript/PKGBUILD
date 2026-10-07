@@ -1,0 +1,60 @@
+_realname=tree-sitter-javascript
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.25.0
+pkgrel=1
+pkgdesc="JavaScript grammar for tree-sitter (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/tree-sitter/tree-sitter-javascript'
+msys2_repository_url='https://github.com/tree-sitter/tree-sitter-javascript'
+msys2_references=(
+  'purl: pkg:pypi/tree-sitter-javascript'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-tree-sitter: parsing through the tree_sitter API")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-tree-sitter")
+source=("https://pypi.org/packages/source/t/tree-sitter-javascript/tree_sitter_javascript-${pkgver}.tar.gz")
+sha256sums=('329b5414874f0588a98f1c291f1b28138286617aa907746ffe55adfdcf963f38')
+
+prepare() {
+  cd "tree_sitter_javascript-${pkgver}"
+  # platform.system() is "Windows" under MinGW too, which selects MSVC's
+  # /std:c11 /utf-8; GCC needs the POSIX branch
+  sed -i 's/system() != "Windows"/True/' setup.py
+}
+
+build() {
+  cp -r "tree_sitter_javascript-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import tree_sitter_javascript
+from tree_sitter import Language, Parser
+p = Parser(Language(tree_sitter_javascript.language()))
+t = p.parse(b"const f = (x) => `v${x}`;\n")
+assert t.root_node.type == "program" and not t.root_node.has_error, t.root_node
+print("tree-sitter-javascript ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

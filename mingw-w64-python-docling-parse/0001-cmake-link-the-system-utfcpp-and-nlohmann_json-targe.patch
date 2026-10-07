@@ -1,0 +1,54 @@
+From af0baced51631d0a0731916ac83fa1fc185cf0c2 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 14:39:59 +0200
+Subject: [PATCH] cmake: link the system utfcpp and nlohmann_json targets
+
+With USE_SYSTEM_DEPS=ON the 'utf8' and 'json' interface targets only got
+add_dependencies() on the imported packages, which carries no usage
+requirements. utfcpp installs its headers into <prefix>/include/utf8cpp,
+so <utf8.h> was not found. Link the imported targets instead so their
+include directories propagate.
+---
+ cmake/extlib_json.cmake     | 2 +-
+ cmake/extlib_utf8.git.cmake | 9 +++++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/extlib_json.cmake b/cmake/extlib_json.cmake
+index cbec9a5..31dc8be 100644
+--- a/cmake/extlib_json.cmake
++++ b/cmake/extlib_json.cmake
+@@ -8,7 +8,7 @@ if(USE_SYSTEM_DEPS)
+     find_package(nlohmann_json REQUIRED)
+ 
+     add_library(${ext_name} INTERFACE IMPORTED)
+-    add_dependencies(${ext_name} nlohmann_json::nlohmann_json)
++    target_link_libraries(${ext_name} INTERFACE nlohmann_json::nlohmann_json)
+ 
+ else()
+ 
+diff --git a/cmake/extlib_utf8.git.cmake b/cmake/extlib_utf8.git.cmake
+index be2fdb8..43f93e0 100644
+--- a/cmake/extlib_utf8.git.cmake
++++ b/cmake/extlib_utf8.git.cmake
+@@ -6,11 +6,16 @@ set(ext_name "utf8")
+ if(USE_SYSTEM_DEPS)
+     message(STATUS "using system-deps in extlib_utf8.cmake")
+ 
+-    # this will define the utf8cpp target
++    # this will define the utf8cpp (alias utf8::cpp) target, whose include
++    # directory (<prefix>/include/utf8cpp) provides <utf8.h>
+     find_package(utf8cpp REQUIRED)
+ 
+     add_library(${ext_name} INTERFACE IMPORTED)
+-    add_dependencies(${ext_name} utf8cpp)
++    if(TARGET utf8::cpp)
++        target_link_libraries(${ext_name} INTERFACE utf8::cpp)
++    else()
++        target_link_libraries(${ext_name} INTERFACE utf8cpp)
++    endif()
+ 
+ else()
+     message(STATUS "ignoring system-deps extlib_utf8.cmake")
+-- 
+2.55.0
+

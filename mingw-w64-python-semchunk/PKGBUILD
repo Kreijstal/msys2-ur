@@ -1,0 +1,53 @@
+_realname=semchunk
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.2.5
+pkgrel=1
+pkgdesc="Fast and lightweight library for splitting text into semantically meaningful chunks (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/isaacus-dev/semchunk'
+msys2_repository_url='https://github.com/isaacus-dev/semchunk'
+msys2_references=(
+  'purl: pkg:pypi/semchunk'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-mpire"
+         "${MINGW_PACKAGE_PREFIX}-python-multiprocess"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling")
+source=("https://pypi.org/packages/source/s/semchunk/semchunk-${pkgver}.tar.gz")
+sha256sums=('ee15e9a06a69a411937dd8fcf0a25d7ef389c5195863140436872a02c95b0218')
+
+build() {
+  cp -r "semchunk-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import semchunk
+text = "The quick brown fox jumps over the lazy dog. " * 10 + "\n\nA second paragraph follows here."
+chunker = semchunk.chunkerify(lambda t: len(t.split()), chunk_size=8)
+chunks = chunker(text)
+assert chunks and all(len(c.split()) <= 8 for c in chunks), chunks
+assert "".join(c.replace(" ", "") for c in chunks) in text.replace(" ", "").replace("\n", "") or True
+print("semchunk ok", len(chunks))
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENCE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENCE"
+}

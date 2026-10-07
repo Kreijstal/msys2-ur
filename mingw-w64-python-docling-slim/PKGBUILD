@@ -1,0 +1,105 @@
+# Maintainer (msys2-ur): Kreijstal
+#
+# The docling Python package and CLI. Upstream's 'slim' install pulls in no
+# extras; mingw-w64-python-docling adds everything of docling[standard].
+
+_realname=docling-slim
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.135.0
+pkgrel=1
+pkgdesc="Docling document converter (PDF, DOCX, PPTX, HTML, images, ...) without the default extras (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/docling-project/docling'
+msys2_repository_url='https://github.com/docling-project/docling'
+msys2_references=(
+  'purl: pkg:pypi/docling-slim'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-certifi"
+         "${MINGW_PACKAGE_PREFIX}-python-docling-core"
+         "${MINGW_PACKAGE_PREFIX}-python-filetype"
+         "${MINGW_PACKAGE_PREFIX}-python-langcodes"
+         "${MINGW_PACKAGE_PREFIX}-python-pluggy"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic-settings"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-rtree"
+         "${MINGW_PACKAGE_PREFIX}-python-scipy")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-docling: all of docling[standard] (PDF/OCR models, Office formats, CLI)")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-docx"
+              "${MINGW_PACKAGE_PREFIX}-python-marko"
+              "${MINGW_PACKAGE_PREFIX}-python-pytorch"
+              "${MINGW_PACKAGE_PREFIX}-python-rich"
+              "${MINGW_PACKAGE_PREFIX}-python-typer"
+              "${MINGW_PACKAGE_PREFIX}-python-dotenv")
+source=("https://pypi.org/packages/source/d/docling-slim/docling_slim-${pkgver}.tar.gz")
+sha256sums=('375d5eb001be8f68598b2a6b976e31c45d388493082699512181872f3aded4e7')
+
+prepare() {
+  cd "docling_slim-${pkgver}"
+  # MSYS2 ships typer 0.27, websockets 17 and huggingface-hub 2.1; docling
+  # does not use anything they removed
+  sed -i -e "s/'typer>=0.19.0,<0.27.0'/'typer>=0.19.0'/" \
+         -e "s/'websockets>=14.0,<17.0'/'websockets>=14.0'/" \
+         -e "s/'huggingface_hub>=0.23,<2'/'huggingface_hub>=0.23'/" pyproject.toml
+}
+
+build() {
+  cp -r "docling_slim-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # convert Markdown and DOCX tables (no models needed) and run the CLI
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import io, pathlib, tempfile
+import docx
+from docling.datamodel.base_models import InputFormat
+from docling.document_converter import DocumentConverter
+d = pathlib.Path(tempfile.mkdtemp())
+(d / "t.md").write_text("# Report\n\nSome *text*.\n\n| Item | Qty |\n|------|-----|\n| Apples | 3 |\n| Pears | 5 |\n")
+w = docx.Document()
+w.add_heading("Inventory", 1)
+t = w.add_table(rows=3, cols=2)
+for r, row in enumerate([("Item", "Qty"), ("Apples", "3"), ("Pears", "5")]):
+    for c, v in enumerate(row):
+        t.cell(r, c).text = v
+w.save(d / "t.docx")
+conv = DocumentConverter(allowed_formats=[InputFormat.MD, InputFormat.DOCX])
+for name in ("t.md", "t.docx"):
+    doc = conv.convert(d / name).document
+    md = doc.export_to_markdown()
+    print(md)
+    assert len(doc.tables) == 1, name
+    grid = doc.tables[0].data.grid
+    assert [[c.text for c in row] for row in grid] == [["Item", "Qty"], ["Apples", "3"], ["Pears", "5"]], grid
+from typer.testing import CliRunner
+from docling.cli.main import app
+r = CliRunner().invoke(app, ["--version"])
+assert r.exit_code == 0 and "2.135.0" in r.output, r.output
+print(r.output)
+print("docling-slim ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

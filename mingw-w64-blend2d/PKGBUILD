@@ -1,0 +1,82 @@
+# Maintainer (msys2-ur): Kreijstal
+
+_realname=blend2d
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+# Blend2D publishes no tags. These are the blend2d/asmjit commits that
+# docling-parse 7.22 pins (the snake_case C++ API it is written against);
+# asmjit is embedded into libblend2d as upstream recommends.
+_commit=6dbc2cefbc996379e07104e34519a440b49b15d7
+_asmjit_commit=0bd5787b54b575ed94bf32ac452153b34385c514
+pkgver=0.21.2.r307.g6dbc2ce
+pkgrel=1
+pkgdesc="2D vector graphics engine with a JIT-compiled rasterization pipeline (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://blend2d.com'
+msys2_repository_url='https://github.com/blend2d/blend2d'
+license=('spdx:Zlib')
+depends=("${MINGW_PACKAGE_PREFIX}-gcc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "git")
+source=("git+https://github.com/blend2d/blend2d.git#commit=${_commit}"
+        "git+https://github.com/asmjit/asmjit.git#commit=${_asmjit_commit}")
+sha256sums=('SKIP'
+            'SKIP')
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -Wno-dev \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+    -DASMJIT_DIR="${srcdir}/asmjit" \
+    -DBLEND2D_STATIC=OFF \
+    -DBLEND2D_TEST=OFF \
+    -DBLEND2D_DEMOS=OFF \
+    -S ${_realname} \
+    -B build-${MSYSTEM}
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  # render with the JIT pipeline through the C++ API and the C API
+  rm -rf "${srcdir}/chk" "${srcdir}/chk-app"
+  DESTDIR="${srcdir}/chk" cmake --install build-${MSYSTEM}
+  mkdir -p "${srcdir}/chk-app" && cd "${srcdir}/chk-app"
+  cat > CMakeLists.txt <<'CM'
+cmake_minimum_required(VERSION 3.19)
+project(t CXX)
+find_package(blend2d CONFIG REQUIRED)
+add_executable(t t.cpp)
+target_link_libraries(t blend2d::blend2d)
+CM
+  cat > t.cpp <<'CPP'
+#include <blend2d/blend2d.h>
+#include <cstdio>
+int main() {
+  BLImage img(64, 64, BL_FORMAT_PRGB32);
+  BLContext ctx(img);
+  ctx.clear_all();
+  ctx.fill_rect(BLRect(8, 8, 32, 32), BLRgba32(0xFFFF0000u));
+  ctx.fill_circle(BLCircle(48, 48, 10), BLRgba32(0xFF00FF00u));
+  ctx.end();
+  BLImageData d;
+  img.get_data(&d);
+  auto px = [&](int x, int y) { return ((const uint32_t*)((const uint8_t*)d.pixel_data + y * d.stride))[x]; };
+  std::printf("blend2d %06x: %08x %08x %08x\n", BL_VERSION, px(20, 20), px(48, 48), px(2, 2));
+  return !(px(20, 20) == 0xFFFF0000u && px(48, 48) == 0xFF00FF00u && px(2, 2) == 0);
+}
+CPP
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_PREFIX_PATH=" \
+  cmake -GNinja -Wno-dev -DCMAKE_PREFIX_PATH="$(cygpath -m "${srcdir}/chk${MINGW_PREFIX}")" -B b .
+  cmake --build b
+  PATH="${srcdir}/chk${MINGW_PREFIX}/bin:${PATH}" ./b/t.exe
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 ${_realname}/LICENSE.md "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.md"
+}

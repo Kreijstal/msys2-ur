@@ -1,0 +1,104 @@
+# Maintainer (msys2-ur): Kreijstal
+#
+# docling-parse: the C++ PDF parser/renderer behind docling, as a pybind11
+# extension. Built with USE_SYSTEM_DEPS=ON against the MSYS2 libraries
+# (qpdf, libjpeg-turbo, openjpeg2, lcms2, freetype, blend2d, loguru,
+# nlohmann-json, utfcpp, cxxopts, zlib), so build() fetches nothing.
+
+_realname=docling-parse
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=7.22.2
+pkgrel=1
+pkgdesc="Extract text, paths and bitmaps with coordinates from programmatic PDFs (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/docling-project/docling-parse'
+msys2_repository_url='https://github.com/docling-project/docling-parse'
+msys2_references=(
+  'purl: pkg:pypi/docling-parse'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-docling-core"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+         "${MINGW_PACKAGE_PREFIX}-blend2d"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-gcc-libs"
+         "${MINGW_PACKAGE_PREFIX}-lcms2"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+         "${MINGW_PACKAGE_PREFIX}-openjpeg2"
+         "${MINGW_PACKAGE_PREFIX}-qpdf"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-wheel"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-pybind11"
+             "${MINGW_PACKAGE_PREFIX}-cxxopts"
+             "${MINGW_PACKAGE_PREFIX}-loguru"
+             "${MINGW_PACKAGE_PREFIX}-nlohmann-json"
+             "${MINGW_PACKAGE_PREFIX}-utf8cpp")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytest"
+              "${MINGW_PACKAGE_PREFIX}-python-numpy"
+              "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub")
+source=("https://pypi.org/packages/source/d/docling-parse/docling_parse-${pkgver}.tar.gz"
+        "0001-cmake-link-the-system-utfcpp-and-nlohmann_json-targe.patch"
+        "0002-cmake-add-DOCLING_PARSE_BUILD_APPS-to-skip-the-comma.patch"
+        "0003-cmake-define-_USE_MATH_DEFINES-for-MinGW-too.patch")
+sha256sums=('368d076d2b887fcb44a90c37c219a190b975f01b257b61bd83ba75dc06861536'
+            '3fd1da3fd121b41c8db1d262f8fbcfde6de9d5d77bfc5d3c4659b1a549737a5a'
+            '832a51d3fe9af3e71f85a5f16700d00e5d7d456b18986416622ed5a40cf032dc'
+            'ab43920c4eb9487ff64306866a89a61030ff69537c0d046e03e253fb07495844')
+
+prepare() {
+  cd "docling_parse-${pkgver}"
+  # 0001: the system utfcpp/nlohmann_json targets were only add_dependencies()'d,
+  #       so <utf8.h> (in include/utf8cpp) was not on the include path
+  # 0002: option to skip the five CLI tools, which each recompile the parser
+  # 0003: _USE_MATH_DEFINES for MinGW (M_PI under -std=c++20)
+  patch -Nbp1 -i "${srcdir}/0001-cmake-link-the-system-utfcpp-and-nlohmann_json-targe.patch"
+  patch -Nbp1 -i "${srcdir}/0002-cmake-add-DOCLING_PARSE_BUILD_APPS-to-skip-the-comma.patch"
+  patch -Nbp1 -i "${srcdir}/0003-cmake-define-_USE_MATH_DEFINES-for-MinGW-too.patch"
+
+  # pywin32 is not imported anywhere (Python or C++); drop the requirement
+  sed -i '/"pywin32>=305; sys_platform == .win32."/d' pyproject.toml
+}
+
+build() {
+  [[ -d "python-build-${MSYSTEM}" ]] || cp -r "docling_parse-${pkgver}" "python-build-${MSYSTEM}"
+  cd "python-build-${MSYSTEM}"
+  # setup.py's build_py runs local_build.py, which configures and builds the
+  # CMake project and installs pdf_parsers*.pyd into docling_parse/
+  USE_SYSTEM_DEPS=ON \
+  CMAKE_GENERATOR=Ninja \
+  CMAKE_ARGS="-Wno-dev -DDOCLING_PARSE_BUILD_APPS=OFF" \
+  BUILD_THREADS=$(nproc) \
+    ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # the unit tests build their PDFs in code (the regression tests download a
+  # corpus from Hugging Face and are not run)
+  rm -rf tests && cp -r "${srcdir}/python-build-${MSYSTEM}/tests" .
+  ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider tests/test_unit_*.py
+  rm -rf tests
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

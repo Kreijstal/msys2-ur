@@ -1,0 +1,45 @@
+_realname=latex2mathml
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.81.1
+pkgrel=1
+pkgdesc="Pure Python LaTeX to MathML converter (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/roniemartinez/latex2mathml'
+msys2_repository_url='https://github.com/roniemartinez/latex2mathml'
+msys2_references=(
+  'purl: pkg:pypi/latex2mathml'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-uv-build")
+source=("https://pypi.org/packages/source/l/latex2mathml/latex2mathml-${pkgver}.tar.gz")
+sha256sums=('c95add0c0fcdecad2d70567e0643050d5ea1149fb2e98a5d5792fb1c8eea2ed5')
+
+build() {
+  cp -r "latex2mathml-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from latex2mathml.converter import convert
+m = convert(r"\frac{1}{2} + \sqrt{x^2}")
+assert "<mfrac>" in m and "<msqrt>" in m and "<msup>" in m, m
+print("latex2mathml ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+}

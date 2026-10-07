@@ -1,0 +1,53 @@
+_realname=langcodes
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.5.1
+pkgrel=1
+pkgdesc="Tools for labeling human languages with IETF language tags (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/georgkrause/langcodes'
+msys2_repository_url='https://github.com/georgkrause/langcodes'
+msys2_references=(
+  'purl: pkg:pypi/langcodes'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools-scm")
+source=("https://pypi.org/packages/source/l/langcodes/langcodes-${pkgver}.tar.gz")
+sha256sums=('40bff315e01b01d11c2ae3928dd4f5cbd74dd38f9bd912c12b9a3606c143f731')
+
+build() {
+  cp -r "langcodes-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
+    ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # the calls docling makes (language names need the optional language_data)
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import langcodes
+assert langcodes.Language.get("ja").maximize().script == "Jpan"
+assert langcodes.standardize_tag("eng_US") == "en-US"
+assert langcodes.Language.get("de").to_alpha3(variant="T") == "deu"
+m, d = langcodes.closest_match("en-AU", ["de", "en", "fr"])
+assert m == "en", (m, d)
+print("langcodes ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.txt"
+}

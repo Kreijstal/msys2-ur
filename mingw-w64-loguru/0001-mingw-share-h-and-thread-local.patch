@@ -1,0 +1,47 @@
+From 0b1bf9e9c96b5dd008d595ccd516d784763bbdff Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 14:26:39 +0200
+Subject: [PATCH] Fix the build with MinGW-w64
+
+_SH_DENYNO comes from <share.h>, which MSVC's <windows.h> pulls in but
+MinGW's does not. GCC ignores __declspec(thread), which left the thread
+name buffer shared between all threads; use C++11 thread_local instead.
+NOMINMAX is already defined by libstdc++'s os_defines.h on MinGW.
+---
+ loguru.cpp | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/loguru.cpp b/loguru.cpp
+index 7eaadb7..2f14ac8 100644
+--- a/loguru.cpp
++++ b/loguru.cpp
+@@ -127,10 +127,16 @@
+ 		#define _WIN32_WINNT 0x0502
+ 	#endif
+ 	#define WIN32_LEAN_AND_MEAN
+-	#define NOMINMAX
++	#ifndef NOMINMAX
++		#define NOMINMAX
++	#endif
+ 	#include <windows.h>
+ #endif
+ 
++#ifdef _WIN32
++	#include <share.h> // _SH_DENYNO for _fsopen()
++#endif
++
+ #ifndef LOGURU_PTLS_NAMES
+    #define LOGURU_PTLS_NAMES 0
+ #endif
+@@ -1034,7 +1040,7 @@ namespace loguru
+ 	// Where we store the custom thread name set by `set_thread_name`
+ 	char* thread_name_buffer()
+ 	{
+-		__declspec( thread ) static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
++		thread_local static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+ 		return &thread_name[0];
+ 	}
+ #endif // LOGURU_WINTHREADS
+-- 
+2.55.0
+

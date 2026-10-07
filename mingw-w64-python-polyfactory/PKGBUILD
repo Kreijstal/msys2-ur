@@ -1,0 +1,64 @@
+_realname=polyfactory
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=3.3.0
+pkgrel=1
+pkgdesc="Mock data generation factories for dataclasses, TypedDicts and Pydantic models (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/litestar-org/polyfactory'
+msys2_repository_url='https://github.com/litestar-org/polyfactory'
+msys2_references=(
+  'purl: pkg:pypi/polyfactory'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-faker"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-pydantic: pydantic model factories")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pydantic")
+source=("https://pypi.org/packages/source/p/polyfactory/polyfactory-${pkgver}.tar.gz")
+sha256sums=('237258b6ff43edf362ffd1f68086bb796466f786adfa002b0ac256dbf2246e9a')
+
+build() {
+  cp -r "polyfactory-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from dataclasses import dataclass
+from pydantic import BaseModel
+from polyfactory.factories import DataclassFactory
+from polyfactory.factories.pydantic_factory import ModelFactory
+@dataclass
+class P:
+    name: str
+    age: int
+class M(BaseModel):
+    x: float
+    tags: list[str]
+    p: P
+p = DataclassFactory.create_factory(P).build()
+assert isinstance(p.name, str) and isinstance(p.age, int)
+m = ModelFactory.create_factory(M).build()
+assert isinstance(m.tags, list) and isinstance(m.p, P), m
+print("polyfactory ok", m)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

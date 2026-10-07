@@ -1,0 +1,49 @@
+_realname=pylatexenc
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.11
+pkgrel=1
+pkgdesc="Simple LaTeX parser providing latex-to-unicode and unicode-to-latex conversion (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/phfaist/pylatexenc'
+msys2_repository_url='https://github.com/phfaist/pylatexenc'
+msys2_references=(
+  'purl: pkg:pypi/pylatexenc'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+source=("https://pypi.org/packages/source/p/pylatexenc/pylatexenc-${pkgver}.tar.gz")
+sha256sums=('305a072a99ce736246049c9da05841b9d718c0f7ea8888f5f596cf15cb621053')
+
+build() {
+  cp -r "pylatexenc-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from pylatexenc.latex2text import LatexNodes2Text
+from pylatexenc.latexencode import unicode_to_latex
+t = LatexNodes2Text().latex_to_text(r"\textbf{bold} $\alpha + \beta$ caf\'e")
+assert t == "bold α + β café", ascii(t)
+assert unicode_to_latex("é") == "\\'e", unicode_to_latex("é")
+print("pylatexenc ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.txt"
+}

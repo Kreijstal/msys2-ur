@@ -1,0 +1,60 @@
+_realname=pydantic-settings
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.15.0
+pkgrel=1
+pkgdesc="Settings management using Pydantic (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/pydantic/pydantic-settings'
+msys2_repository_url='https://github.com/pydantic/pydantic-settings'
+msys2_references=(
+  'purl: pkg:pypi/pydantic-settings'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+         "${MINGW_PACKAGE_PREFIX}-python-dotenv"
+         "${MINGW_PACKAGE_PREFIX}-python-typing-inspection")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling")
+source=("https://pypi.org/packages/source/p/pydantic-settings/pydantic_settings-${pkgver}.tar.gz")
+sha256sums=('694b793e84f766ba76a90ebdefc01d0a9a045dab0382bee70393da93712ad117')
+
+build() {
+  cp -r "pydantic_settings-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import os, pathlib, tempfile
+from pydantic_settings import BaseSettings, SettingsConfigDict
+env = pathlib.Path(tempfile.mkdtemp()) / ".env"
+env.write_text("T_NAME=from-dotenv\n")
+class S(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="T_", env_file=str(env))
+    n: int = 1
+    name: str = "x"
+    tags: list[str] = []
+os.environ["T_N"] = "5"
+os.environ["T_TAGS"] = '["a", "b"]'
+s = S()
+assert (s.n, s.name, s.tags) == (5, "from-dotenv", ["a", "b"]), s
+print("pydantic-settings ok", s)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,88 @@
+# Maintainer (msys2-ur): Kreijstal
+
+_realname=loguru
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+# v2.1.0 has no CMake install support; this is the master commit docling-parse
+# pins (it also matches Fedora's loguru package)
+_commit=4adaa185883e3c04da25913579c451d3c32cfac1
+pkgver=2.1.0.r49.g4adaa18
+pkgrel=1
+pkgdesc="Lightweight C++ logging library (static library, streams enabled) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/emilk/loguru'
+msys2_repository_url='https://github.com/emilk/loguru'
+license=('spdx:Unlicense')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "git")
+source=("git+https://github.com/emilk/loguru.git#commit=${_commit}"
+        "0001-mingw-share-h-and-thread-local.patch")
+sha256sums=('SKIP'
+            '1d7e2da799e1fb6c529955b3f5207768bf74db8eaaa2402e486b1c0eec147d23')
+
+prepare() {
+  cd ${_realname}
+  # <share.h> for _SH_DENYNO; thread_local instead of __declspec(thread),
+  # which GCC ignores
+  patch -Nbp1 -i "${srcdir}/0001-mingw-share-h-and-thread-local.patch"
+  # -Werror on top of -Wall -Wextra -pedantic breaks with newer GCC warnings
+  sed -i 's/-Wall;-Wextra;-Werror;-pedantic/-Wall;-Wextra/' CMakeLists.txt
+}
+
+build() {
+  # Static only: loguru has no dllexport annotations by default (LOGURU_EXPORT
+  # is empty), so a DLL would export nothing usable.
+  # LOGURU_WITH_STREAMS=1 compiles the LOG_S()/stream API (docling-parse uses
+  # it) and is exported as a PUBLIC definition of loguru::loguru.
+  # Stack traces need libdl, which Windows lacks; loguru disables them itself.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -Wno-dev \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+    -DBUILD_SHARED_LIBS=OFF \
+    -DLOGURU_INSTALL=ON \
+    -DLOGURU_BUILD_EXAMPLES=OFF \
+    -DLOGURU_BUILD_TESTS=OFF \
+    -DLOGURU_WITH_STREAMS=ON \
+    -DLOGURU_STACKTRACES=OFF \
+    -S ${_realname} \
+    -B build-${MSYSTEM}
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  # link a small program against the installed-to-be target
+  rm -rf "${srcdir}/chk" "${srcdir}/chk-app"
+  DESTDIR="${srcdir}/chk" cmake --install build-${MSYSTEM}
+  mkdir -p "${srcdir}/chk-app" && cd "${srcdir}/chk-app"
+  cat > CMakeLists.txt <<'CM'
+cmake_minimum_required(VERSION 3.10)
+project(t CXX)
+find_package(loguru CONFIG REQUIRED)
+add_executable(t t.cpp)
+target_link_libraries(t loguru::loguru)
+CM
+  cat > t.cpp <<'CPP'
+#include <loguru.hpp>
+int main(int argc, char** argv) {
+  loguru::init(argc, argv);
+  LOG_S(INFO) << "loguru streams " << 42;
+  LOG_F(INFO, "loguru printf %d", 43);
+  return 0;
+}
+CPP
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_PREFIX_PATH=" \
+  cmake -GNinja -Wno-dev -DCMAKE_PREFIX_PATH="$(cygpath -m "${srcdir}/chk${MINGW_PREFIX}")" -B b .
+  cmake --build b
+  ./b/t.exe 2>&1 | tee out.txt
+  grep -q "loguru streams 42" out.txt
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 ${_realname}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

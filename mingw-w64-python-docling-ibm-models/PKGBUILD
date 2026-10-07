@@ -1,0 +1,73 @@
+# Maintainer (msys2-ur): Kreijstal
+
+_realname=docling-ibm-models
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=4.0.3
+pkgrel=1
+pkgdesc="TableFormer table structure models used by Docling (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/docling-project/docling-ibm-models'
+msys2_repository_url='https://github.com/docling-project/docling-ibm-models'
+msys2_references=(
+  'purl: pkg:pypi/docling-ibm-models'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-huggingface-hub"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-opencv"
+         "${MINGW_PACKAGE_PREFIX}-python-pillow"
+         "${MINGW_PACKAGE_PREFIX}-python-pytorch"
+         "${MINGW_PACKAGE_PREFIX}-python-safetensors"
+         "${MINGW_PACKAGE_PREFIX}-python-torchvision"
+         "${MINGW_PACKAGE_PREFIX}-python-transformers")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytest")
+source=("https://pypi.org/packages/source/d/docling-ibm-models/docling_ibm_models-${pkgver}.tar.gz")
+sha256sums=('509e89af75e06b48500977dca11ecb6022e81b1526c90dd54587a60ccc82bdb6')
+
+prepare() {
+  cd "docling_ibm_models-${pkgver}"
+  # huggingface-hub 2.x (MSYS2 ships 2.1) keeps the hf_hub_download and
+  # snapshot_download API used here
+  sed -i "s/'huggingface_hub (>=0.23,<2)'/'huggingface_hub (>=0.23)'/" pyproject.toml
+}
+
+build() {
+  cp -r "docling_ibm_models-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # the offline unit tests (the others download models from Hugging Face)
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import torch
+from docling_ibm_models.tableformer.data_management.tf_predictor import TFPredictor
+from docling_ibm_models.tableformer.otsl import otsl_to_html
+from docling_ibm_models.tableformer_v2 import TableFormerV2
+html = "".join(otsl_to_html(["fcel", "fcel", "nl", "fcel", "lcel", "nl"], False))
+assert html.count("<td") == 3 and 'colspan="2"' in html, html
+print("docling-ibm-models ok", torch.__version__)
+PY
+  cd "${srcdir}/python-build-${MSYSTEM}"
+  PYTHONPATH="$(cygpath -w "$(echo "${PWD}"/chk${MINGW_PREFIX}/lib/python3*/site-packages)")" \
+    ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider \
+    tests/test_tf_predictor_indexes.py tests/test_tf_cell_matcher.py tests/test_matching_post_processor_orphans.py
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,39 @@
+From b9be4b0f79089d52557eea3f00b8a2f657a254d2 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Wed, 7 Oct 2026 14:40:06 +0200
+Subject: [PATCH] cmake: add DOCLING_PARSE_BUILD_APPS to skip the command line
+ tools
+
+Each of the five tools (parse.exe, parse_fonts.exe, render.exe,
+analyse.exe, run_scaling.exe) compiles the whole header-only parser and
+renderer again, but the Python package only ships the pdf_parsers
+extension. Keep building them by default; packagers can turn them off.
+---
+ CMakeLists.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 50163c4..ba7c086 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -179,6 +179,9 @@ message(STATUS "cmake dependencies: ${DEPENDENCIES_SEMICOLON}")
+ string(REPLACE ";" ";" LIBLINK_SEMICOLON "${LIB_LINK}")
+ message(STATUS "cmake lib-link: ${LIBLINK_SEMICOLON}")
+ 
++option(DOCLING_PARSE_BUILD_APPS "Build the parse/render/analyse command line tools" ON)
++
++if(DOCLING_PARSE_BUILD_APPS)
+ add_executable(parse.exe "${TOPLEVEL_PREFIX_PATH}/app/parse.cpp")
+ add_executable(parse_fonts.exe "${TOPLEVEL_PREFIX_PATH}/app/parse_fonts.cpp")
+ add_executable(render.exe "${TOPLEVEL_PREFIX_PATH}/app/render.cpp")
+@@ -213,6 +216,7 @@ target_link_libraries(render.exe ${DEPENDENCIES} ${LIB_LINK})
+ target_link_libraries(analyse.exe ${DEPENDENCIES} ${LIB_LINK})
+ target_link_libraries(run_scaling.exe ${DEPENDENCIES} ${LIB_LINK})
+ # target_link_libraries(page_images.exe ${DEPENDENCIES} ${LIB_LINK})
++endif()
+ 
+ # **********************
+ # ***  Libraries     ***
+-- 
+2.55.0
+

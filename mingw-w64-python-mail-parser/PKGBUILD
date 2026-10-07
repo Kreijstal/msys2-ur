@@ -1,0 +1,51 @@
+_realname=mail-parser
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=4.8.0
+pkgrel=1
+pkgdesc="Wrapper for the email standard library that parses raw mails into objects (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/SpamScope/mail-parser'
+msys2_repository_url='https://github.com/SpamScope/mail-parser'
+msys2_references=(
+  'purl: pkg:pypi/mail-parser'
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling")
+source=("https://pypi.org/packages/source/m/mail-parser/mail_parser-${pkgver}.tar.gz")
+sha256sums=('602e659b159652d378b0f9cce2d682bee692bedae72687786e2b2e52eaeb9afc')
+
+build() {
+  cp -r "mail_parser-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import mailparser
+raw = ("From: Alice <a@example.com>\nTo: b@example.com\nSubject: Hi there\n"
+       "Date: Tue, 6 Oct 2026 10:00:00 +0000\nContent-Type: text/plain\n\nBody text\n")
+m = mailparser.parse_from_string(raw)
+assert m.subject == "Hi there", m.subject
+assert m.from_ == [("Alice", "a@example.com")], m.from_
+assert "Body text" in m.body
+print("mail-parser ok", m.date)
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE.txt"
+}

@@ -1,0 +1,60 @@
+_realname=mpire
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.10.2
+pkgrel=1
+pkgdesc="Multiprocessing package that is faster than the standard multiprocessing pool (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/sybrenjansen/mpire'
+msys2_repository_url='https://github.com/sybrenjansen/mpire'
+msys2_references=(
+  'purl: pkg:pypi/mpire'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-pygments"
+         "${MINGW_PACKAGE_PREFIX}-python-pywin32"
+         "${MINGW_PACKAGE_PREFIX}-python-tqdm")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-multiprocess: dill serialization (use_dill=True)"
+            "${MINGW_PACKAGE_PREFIX}-python-flask: dashboard")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-multiprocess")
+source=("https://pypi.org/packages/source/m/mpire/mpire-${pkgver}.tar.gz")
+sha256sums=('f66a321e93fadff34585a4bfa05e95bd946cf714b442f51c529038eb45773d97')
+
+build() {
+  cp -r "mpire-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # spawned workers re-run the main script, so it must be a real file
+  local _t=$(mktemp -d)
+  cat > "${_t}/chk.py" <<'PY'
+from mpire import WorkerPool
+if __name__ == "__main__":
+    with WorkerPool(n_jobs=2, start_method="threading") as pool:
+        assert pool.map(lambda x: x * x, range(10)) == [x * x for x in range(10)]
+    # dill-pickled lambda in spawned worker processes
+    with WorkerPool(n_jobs=2, start_method="spawn", use_dill=True) as pool:
+        assert pool.map(lambda x: x + 1, range(5)) == [1, 2, 3, 4, 5]
+    print("mpire ok")
+PY
+  PYTHONPATH="$(cygpath -w "${PWD}")" ${MINGW_PREFIX}/bin/python "$(cygpath -w "${_t}/chk.py")"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}
