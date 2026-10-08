@@ -1,0 +1,27 @@
+# fpc.cfg holds absolute Windows paths (FPC has no exe-relative macro for
+# -Fu/-FD).  The package is built with the build host's MSYS2 root; rewrite the
+# recorded prefix (marker line "# fpc-kgpc-prefix: ...") to this installation's.
+_fpc_kgpc_relocate() {
+  local d cfg old new
+  for d in /ucrt64 /clang64 /mingw64 /clangarm64; do
+    cfg="${d}/bin/fpc.cfg"
+    [ -f "${cfg}" ] || continue
+    old="$(sed -n 's/^# fpc-kgpc-prefix: //p' "${cfg}" | tr -d '\r')"
+    [ -n "${old}" ] || continue
+    new="$(cygpath -w "${d}")"
+    [ "${old}" = "${new}" ] && continue
+    O="${old}" N="${new}" awk '{
+      o = ENVIRON["O"]; n = ENVIRON["N"]; s = $0; out = ""
+      while ((i = index(s, o)) > 0) { out = out substr(s, 1, i - 1) n; s = substr(s, i + length(o)) }
+      print out s
+    }' "${cfg}" > "${cfg}.new" && mv -f "${cfg}.new" "${cfg}"
+  done
+}
+
+post_install() {
+  _fpc_kgpc_relocate
+}
+
+post_upgrade() {
+  _fpc_kgpc_relocate
+}

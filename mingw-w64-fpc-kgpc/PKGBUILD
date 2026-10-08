@@ -7,16 +7,21 @@
 # self-cycles a native FPC 3.2.2 ppcx64.exe to a fixpoint (ppc2 == ppc3) and
 # builds the Win64 RTL.  No host fpc is used anywhere in the chain -- the seed
 # is pure C.  The shipped ppcx64.exe is therefore a genuine FPC-built FPC, with
-# KGPC acting only as the initial bootstrap seed.
+# KGPC acting only as the initial bootstrap seed.  The fixpoint ppcx64 then
+# builds the complete FPC distribution exactly like upstream `make all`: RTL,
+# all packages (FCL, fcl-*, winunits, ...) and the utils (fpcres, fpcmake,
+# fpdoc, h2pas, ...).  ${pkgbase}-src ships the pristine FPC sources (for
+# Lazarus CodeTools).
 #
 # Build inside an MSYS2 MINGW64/UCRT64/CLANG64 shell:
 #     makepkg-mingw -sCf
 
 _realname=fpc
 pkgbase="mingw-w64-${_realname}-kgpc"
-pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc"
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc"
+         "${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc-src")
 pkgver=3.2.2
-pkgrel=1
+pkgrel=2
 # FPC source git tag (GitLab) and the KGPC release tag used as the bootstrap
 # seed.  KGPC 0.0.7 is the first revision that fully self-cycles win64 FPC 3.2.2
 # to a fixpoint (the FreeAndNil untyped-var pointer-store fix, PR #762).
@@ -34,10 +39,12 @@ license=('spdx:GPL-2.0-or-later' 'spdx:LGPL-2.1-or-later')  # compiler GPL2, RTL
 # ppcx64 uses its internal assembler/linker on win64, but FPC can shell out to a
 # system linker for some link modes.  GCC environments ship GNU binutils; the
 # CLANG64 environment has no binutils package and uses LLVM lld instead.
+# {$R foo.rc} resources are compiled with `windres` (binutils; llvm-tools in
+# CLANG64).
 if [ "${MINGW_PACKAGE_PREFIX}" = "mingw-w64-clang-x86_64" ]; then
-  depends=("${MINGW_PACKAGE_PREFIX}-lld")
+  _fpc_depends=("${MINGW_PACKAGE_PREFIX}-lld" "${MINGW_PACKAGE_PREFIX}-llvm-tools")
 else
-  depends=("${MINGW_PACKAGE_PREFIX}-binutils")
+  _fpc_depends=("${MINGW_PACKAGE_PREFIX}-binutils")
 fi
 # "-cc" is the toolchain-agnostic C compiler virtual: provided by -gcc in the
 # GCC environments and by -clang in CLANG64.  It links the KGPC-emitted seed.
@@ -48,9 +55,11 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-gmp")
 options=('!strip' '!debug')   # ppcx64.exe is a self-contained PE; the .ppu/.o units must not be stripped
 source=("fpc-${pkgver}.tar.gz::https://gitlab.com/freepascal.org/fpc/source/-/archive/${_fpctag}/source-${_fpctag}.tar.gz"
-        "kgpc-${_kgpc_tag}.tar.gz::https://github.com/Kreijstal/Pascal-Compiler/archive/refs/tags/${_kgpc_tag}.tar.gz")
+        "kgpc-${_kgpc_tag}.tar.gz::https://github.com/Kreijstal/Pascal-Compiler/archive/refs/tags/${_kgpc_tag}.tar.gz"
+        "0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch")
 sha256sums=('c15ae8c7b1fd1e6da4194d669d538b833516af3251afca5de5bec50727c3528f'
-            '13cdba1b9cd8cc0d442812feddfdf666f3403725071470ff30ce9fc94462238d')
+            '13cdba1b9cd8cc0d442812feddfdf666f3403725071470ff30ce9fc94462238d'
+            'b372e4cd4f334c2f503f84955cffb7b516657a477f7b7c2998272c1d312796c4')
 
 _fpctarget="x86_64-win64"
 
@@ -59,6 +68,9 @@ prepare() {
   cd "${srcdir}"
   [ -d fpc ]  || mv "source-${_fpctag}"          fpc
   [ -d kgpc ] || mv "Pascal-Compiler-${_kgpc_tag}" kgpc
+
+  # {$R *.rc}: llvm-windres (CLANG64) chokes on FPC's "--include <dir>\".
+  patch -d fpc -Np1 -i "${srcdir}/0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch"
 }
 
 build() {
@@ -122,31 +134,90 @@ build() {
   cd "${srcdir}/${fpc}"
   make -C rtl clean all FPC="$ppboot" CPU_TARGET=x86_64 OS_TARGET=win64
   make -C compiler cycle FPC="$ppboot" CPU_TARGET=x86_64 OS_TARGET=win64
+
+  # --- 4. full FPC with the fixpoint compiler ------------------------------
+  # Same sequence as upstream's top-level `make all` after its compiler_cycle
+  # (rtl clean+all, packages, utils with RELEASE=1), but invoked per directory:
+  # the top-level Makefile derives absolute POSIX paths (-FU/home/...) from
+  # `pwd`, which the native ppcx64 cannot open.  The sub-Makefiles use
+  # relative paths.  fpmake builds the packages with up to 2 worker threads.
+  local ppc="${srcdir}/${fpc}/compiler/ppcx64.exe"
+  local fullopts=(FPC="$ppc" CPU_TARGET=x86_64 OS_TARGET=win64 RELEASE=1 "FPMAKEOPT=-T 2")
+  make -C rtl clean all "${fullopts[@]}"
+  make -C packages all "${fullopts[@]}"
+  make -C utils all "${fullopts[@]}"
 }
 
-package() {
+package_fpc-kgpc() {
+  pkgdesc="Free Pascal Compiler 3.2.2 (compiler, RTL, packages, utils), bootstrapped from source via KGPC (no host FPC) (mingw-w64)"
+  depends=("${_fpc_depends[@]}")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc-src: FPC sources (for Lazarus CodeTools)"
+              "${MINGW_PACKAGE_PREFIX}-cc: C preprocessor that windres runs for {$R *.rc} resources")
+  install="${_realname}-kgpc.install"
+
   local fpc=fpc
-  local _units="${srcdir}/${fpc}/rtl/units/${_fpctarget}"
+  local _dest; _dest="$(cygpath -m "${pkgdir}${MINGW_PREFIX}")"
+  # Upstream install targets.  Paths are passed in mixed (C:/...) form because
+  # fpmake.exe (packages/utils install) is a native program.  The non-UNIXHier
+  # (Windows) layout is used, with the base dir moved under lib/fpc/<ver>:
+  #   bin/                               ppcx64, fpc, fpcres, fpcmake, fpdoc, h2pas, ...
+  #   lib/fpc/<ver>/units/<target>/<pkg> rtl, fcl-*, winunits-*, ... (.ppu/.o/.a)
+  #   lib/fpc/<ver>/{msg,fpmkinst,bin/<target>,doc}
+  local instopts=(FPC="${srcdir}/${fpc}/compiler/ppcx64.exe"
+    FPCMAKE="${srcdir}/${fpc}/utils/fpcm/bin/${_fpctarget}/fpcmake.exe"
+    CPU_TARGET=x86_64 OS_TARGET=win64
+    INSTALL_PREFIX="${_dest}"
+    INSTALL_BASEDIR="${_dest}/lib/fpc/${pkgver}"
+    INSTALL_BINDIR="${_dest}/bin")
+  cd "${srcdir}/${fpc}"
+  make -C compiler install "${instopts[@]}"
+  make -C rtl      install "${instopts[@]}"
+  make -C packages install "${instopts[@]}"
+  make -C utils    install "${instopts[@]}"
+
+  # fpc.cfg from upstream's fpcmkcfg template (-Fu<base>/units/$fpctarget/*,
+  # .../rtl, ...), with absolute install paths.  ppcx64 reads fpc.cfg from its
+  # own directory.  The build-time prefix is recorded on the marker line; the
+  # .install scriptlet rewrites it to the actual MSYS2 root after installation.
   local _bin="${pkgdir}${MINGW_PREFIX}/bin"
-  local _unitdir="${pkgdir}${MINGW_PREFIX}/lib/fpc/${pkgver}/units/${_fpctarget}/rtl"
-
-  install -d "${_bin}" "${_unitdir}"
-  install -m755 "${srcdir}/${fpc}/compiler/ppcx64.exe"      "${_bin}/ppcx64.exe"
-  install -m755 "${srcdir}/${fpc}/compiler/utils/fpc.exe"   "${_bin}/fpc.exe"
-  install -m644 "${_units}"/*.ppu                            "${_unitdir}/"
-  install -m644 "${_units}"/*.o                              "${_unitdir}/"
-
-  # fpc.cfg with absolute install paths (standard for fixed-prefix mingw-w64 pkgs).
-  # ppcx64 auto-reads fpc.cfg from its own directory; -FD lets the driver find ppcx64.
   local _winprefix; _winprefix="$(cygpath -w "${MINGW_PREFIX}")"
-  local _winprefix_bs="${_winprefix//\//\\}"
-  cat > "${_bin}/fpc.cfg" <<EOF
-# fpc.cfg for KGPC-bootstrapped FPC ${pkgver} (${_fpctarget}) -- generated by PKGBUILD
--FD${_winprefix_bs}\\bin
--Fu${_winprefix_bs}\\lib\\fpc\\${pkgver}\\units\\${_fpctarget}\\rtl
-EOF
+  "${_bin}/fpcmkcfg.exe" -d "basepath=${_winprefix}\\lib\\fpc\\${pkgver}" \
+    -o "$(cygpath -m "${_bin}/fpc.cfg.tmp")"
+  {
+    printf '# fpc-kgpc-prefix: %s\n' "${_winprefix}"
+    printf '# Generated by fpcmkcfg; the line above lets the package scriptlet relocate it.\n'
+    printf '# MSYS2 tools (binutils/lld, fpcres, ...) live in the prefix bin dir.\n'
+    printf -- '-FD%s\\bin\n' "${_winprefix}"
+    tr -d '\r' < "${_bin}/fpc.cfg.tmp"   # LF only, like the header
+  } > "${_bin}/fpc.cfg"
+  rm -f "${_bin}/fpc.cfg.tmp"
 
   install -d "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-kgpc"
   install -m644 "${srcdir}/${fpc}/rtl/COPYING.FPC" \
     "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-kgpc/COPYING.FPC"
 }
+
+package_fpc-kgpc-src() {
+  pkgdesc="Free Pascal Compiler 3.2.2 sources, for Lazarus CodeTools (mingw-w64)"
+  depends=()
+  # Pristine sources straight from the release tarball (not the build tree),
+  # minus the testsuite; same location as Arch's fpc-src (/usr/lib/fpc/src).
+  local _dst="${pkgdir}${MINGW_PREFIX}/lib/fpc/src"
+  install -d "${_dst}"
+  bsdtar -xf "${srcdir}/fpc-${pkgver}.tar.gz" -C "${_dst}" \
+    --strip-components=1 --exclude "source-${_fpctag}/tests"
+  install -d "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-kgpc-src"
+  install -m644 "${_dst}/rtl/COPYING.FPC" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-kgpc-src/COPYING.FPC"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

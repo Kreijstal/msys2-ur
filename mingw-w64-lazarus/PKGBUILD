@@ -1,0 +1,106 @@
+# Maintainer: Kreijstal <elektrischrainbow@gmail.com>
+#
+# Lazarus IDE + LCL (native win32 widgetset) + lazbuild, built from source with
+# the source-bootstrapped Free Pascal (fpc-kgpc).  No prebuilt FPC/Lazarus.
+
+_realname=lazarus
+pkgbase="mingw-w64-${_realname}"
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=4.8
+_tag="lazarus_${pkgver//./_}"
+pkgrel=1
+pkgdesc="Delphi-like IDE for Free Pascal: IDE, LCL (win32 widgetset) and lazbuild (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.lazarus-ide.org/'
+msys2_repository_url='https://gitlab.com/freepascal.org/lazarus/lazarus'
+msys2_references=(
+  'archlinux: lazarus'
+)
+license=('spdx:GPL-2.0-or-later' 'spdx:LGPL-2.1-or-later' 'spdx:MPL-1.1')  # IDE GPL, LCL modified LGPL
+depends=("${MINGW_PACKAGE_PREFIX}-fpc-kgpc>=3.2.2-2"
+         "${MINGW_PACKAGE_PREFIX}-fpc-kgpc-src>=3.2.2-2")
+optdepends=("${MINGW_PACKAGE_PREFIX}-gdb: GDB debugger backend (FpDebug is built in and the default)"
+            "${MINGW_PACKAGE_PREFIX}-make: mingw32-make, for building projects with Makefiles from the IDE")
+install="${_realname}.install"
+options=('!strip' '!debug' '!makeflags')  # FPC-built PEs and .ppu/.o units must not be touched by binutils strip;
+                                        # the top-level Lazarus Makefile is not parallel-safe
+source=("${_realname}-${pkgver}.tar.gz::https://gitlab.com/freepascal.org/lazarus/lazarus/-/archive/${_tag}/lazarus-${_tag}.tar.gz"
+        "lazlauncher.pas"
+        "environmentoptions.xml")
+# The tarball has macOS bundle symlinks (*.app/Contents/MacOS/* -> ../../../x)
+# that point to not-yet-built binaries; bsdtar cannot create those on Windows.
+noextract=("${_realname}-${pkgver}.tar.gz")
+sha256sums=('38f72afae9b9a44d3745eeb025ce9c38050efcd0d27f3f1edebc1f680c529f03'
+            '36590e2bbb22bf8a5f84d97353aa43f51ac7a18d22c7dcd653a87cd70809371e'
+            'c1eb3a33b8164312872dadf5a42e6b55e53b8ad2f5305dc09a10f85c1f3ae3d3')
+
+prepare() {
+  cd "${srcdir}"
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" \
+    --exclude '*.app/Contents/MacOS/*'
+}
+
+build() {
+  cd "${srcdir}/lazarus-${_tag}"
+  local _fpc="${MINGW_PREFIX}/bin/fpc.exe"
+
+  # Same target set as Arch's lazarus and the official Windows installer:
+  # lazbuild, LCL, base + "big IDE" component packages, IDE, startlazarus, lhelp.
+  # LCL_PLATFORM defaults to win32 (the native widgetset) on win64.
+  make bigide FPC="${_fpc}"
+
+  # bin/ launchers (see lazlauncher.pas): console one for lazbuild & tools,
+  # GUI one (no console window) for the IDE and startlazarus.
+  cd "${srcdir}"
+  rm -rf "${srcdir:?}/launcher"
+  mkdir -p launcher/con launcher/gui launcher/u-con launcher/u-gui
+  "${_fpc}" -O2 -Xs -FUlauncher/u-con -olauncher/con/lazbuild.exe lazlauncher.pas
+  "${_fpc}" -O2 -Xs -dGUILAUNCHER -FUlauncher/u-gui -olauncher/gui/lazarus.exe lazlauncher.pas
+}
+
+package() {
+  cd "${srcdir}/lazarus-${_tag}"
+  local _lazdir="${pkgdir}${MINGW_PREFIX}/lib/lazarus"
+  local _bin="${pkgdir}${MINGW_PREFIX}/bin"
+
+  # Like Arch: skip `make install` and copy the built tree (sources are needed
+  # by the IDE/lazbuild: they recompile packages and the IDE itself).
+  install -d "${_lazdir}" "${_bin}"
+  tar -cf - \
+    --exclude='.git*' --exclude='.gitlab-ci.yml' --exclude='buildenv.Dockerfile' \
+    --exclude='*.bak' --exclude='*.orig' --exclude='*.rej' \
+    --exclude='./lazarus.app' --exclude='./startlazarus.app' \
+    --exclude='./install' --exclude='./tools/install' \
+    . | tar -xf - -C "${_lazdir}"
+
+  # The packages are compiled with -g -gl, so the linked programs carry ~0.5 GB
+  # of DWARF (lazarus.exe alone ~340 MB).  Strip the executables only
+  # (strip comes with binutils / llvm-tools, both pulled in by fpc-kgpc);
+  # the .ppu/.o units keep their debug info for debugging user programs.
+  find "${_lazdir}" -name '*.exe' -exec "${MINGW_PREFIX}/bin/strip" --strip-debug {} +
+
+  # Default IDE/lazbuild settings, copied into the user's config dir on first
+  # use (SecondaryConfigPath = the directory of lazarus.exe).  Compiler, FPC
+  # source, make and gdb paths are relative to $(LazarusDir).  LazarusDirectory
+  # itself must be absolute (an empty one means "current directory"); it is
+  # filled with the build-time path here and rewritten to the real MSYS2 root
+  # by the .install scriptlet.
+  local _wlazdir; _wlazdir="$(cygpath -w "${MINGW_PREFIX}/lib/lazarus")"
+  _wlazdir="${_wlazdir//\\/\\\\}"
+  sed "s|@LAZARUSDIR@|${_wlazdir}|" "${srcdir}/environmentoptions.xml" \
+    > "${_lazdir}/environmentoptions.xml"
+  chmod 644 "${_lazdir}/environmentoptions.xml"
+
+  local _p
+  for _p in lazbuild lazres lrstolfm updatepofiles; do
+    install -m755 "${srcdir}/launcher/con/lazbuild.exe" "${_bin}/${_p}.exe"
+  done
+  for _p in lazarus startlazarus; do
+    install -m755 "${srcdir}/launcher/gui/lazarus.exe" "${_bin}/${_p}.exe"
+  done
+
+  install -d "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+  install -m644 COPYING.txt COPYING.GPL.txt COPYING.LGPL.txt COPYING.modifiedLGPL.txt \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/"
+}

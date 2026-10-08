@@ -1,0 +1,24 @@
+# The default environmentoptions.xml (template copied to a user's config dir
+# on first start) needs an absolute LazarusDirectory; point it at this
+# installation's MSYS2 root.
+_lazarus_relocate() {
+  local d f
+  for d in /ucrt64 /clang64 /mingw64 /clangarm64; do
+    f="${d}/lib/lazarus/environmentoptions.xml"
+    [ -f "${f}" ] || continue
+    N="$(cygpath -w "${d}/lib/lazarus")" awk '{
+      if (index($0, "<LazarusDirectory Value=") > 0)
+        print "    <LazarusDirectory Value=\"" ENVIRON["N"] "\">"
+      else
+        print
+    }' "${f}" > "${f}.new" && mv -f "${f}.new" "${f}"
+  done
+}
+
+post_install() {
+  _lazarus_relocate
+}
+
+post_upgrade() {
+  _lazarus_relocate
+}

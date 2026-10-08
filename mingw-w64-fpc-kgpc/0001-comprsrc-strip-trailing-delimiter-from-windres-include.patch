@@ -1,0 +1,16 @@
+--- a/compiler/comprsrc.pas
++++ b/compiler/comprsrc.pas
+@@ -316,7 +316,12 @@
+   { windres doesn't like empty include paths }
+   if respath='' then
+     respath:='.';
+-  Replace(s,'$INC',maybequoted(respath));
++  { llvm-windres (CLANG64's windres) rejects a trailing backslash in the
++    --include path ("Unterminated escape"); GNU windres accepts both. }
++  if (length(respath)>3) and (respath[length(respath)] in AllowDirectorySeparators) then
++    Replace(s,'$INC',maybequoted(copy(respath,1,length(respath)-1)))
++  else
++    Replace(s,'$INC',maybequoted(respath));
+   if (output=roRes) and (target_res.rcbin='windres') then
+   begin
+     { try to find a preprocessor }
