@@ -1,0 +1,96 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=wpf-penimc
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.12
+_wpf_commit=3bbc551873ff9afc718eec20077a9118c15b0688  # tag v10.0.12
+pkgrel=1
+pkgdesc='WPF pen/stylus input bridge PenImc_cor3.dll, built from dotnet/wpf with mingw-w64 (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/dotnet/wpf'
+msys2_repository_url='https://github.com/dotnet/wpf'
+msys2_changelog_url='https://github.com/dotnet/wpf/releases'
+# PenImc itself is MIT; it is compiled against the ReactOS ATL headers
+# (LGPL-2.1-or-later / GPL-2.0-or-later, see mingw-w64-reactos-atl), whose
+# template code ends up in the DLL.
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-tools"
+             "${MINGW_PACKAGE_PREFIX}-reactos-atl")
+source=("wpf-${pkgver}.tar.gz::https://github.com/dotnet/wpf/archive/refs/tags/v${pkgver}.tar.gz"
+        "CMakeLists.txt"
+        "NativeVersion.rc"
+        "wpf_mingw_compat.h"
+        "tpcshrd.h"
+        "penimc_uuids.h"
+        "exporttest.c"
+        "penimctest.c")
+sha256sums=('ef299fb9a6c4089bcebbd6af65d1d0fe83a62e87e0b2b2babc4e7ccabf618e7b'
+            '58314986bd0e68841f11e2cd7f645aba2442c72842dd082620d45d282d310836'
+            'db240b23bd165ed7e1b2797c81bcfc0d3cd05344279a035e181c2e270e83144f'
+            'f46616f5f458e699ce53f625e1cacfab32af3940290fb31777a986b2be78db74'
+            '172df3f819b3cfabd3217663b5a12d06166ecf891945a6b918761165ebef6cf9'
+            '2550b93d00fd8faa3b3f7a1188268e8c3eb2a45c8b9aecf8ea79ab62ecfbca79'
+            'b4d7eda946c009afe8a9a13e253d1814e486e9a2f2c1e19eb9109d375092f493'
+            '83de84df159ec199b74ce2f5bab1d7d4da3c556d96529ff94ee6a3a3d2967530')
+noextract=("wpf-${pkgver}.tar.gz")
+
+prepare() {
+  # only PenImc and the shared headers/helpers it uses are needed
+  rm -rf "${srcdir}/wpf-${pkgver}"
+  tar -xzf "${srcdir}/wpf-${pkgver}.tar.gz" -C "${srcdir}" \
+    "wpf-${pkgver}/LICENSE.TXT" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/PenImc" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/Shared/inc" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/Shared/OSVersionHelper" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/native"
+
+  local _p="${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/PenImc"
+  cp "${srcdir}/CMakeLists.txt" "${_p}/"
+  mkdir -p "${_p}/mingw"
+  cp "${srcdir}"/{NativeVersion.rc,wpf_mingw_compat.h,tpcshrd.h,penimc_uuids.h} "${_p}/mingw/"
+}
+
+build() {
+  cd "${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/PenImc"
+
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -B "build-${MSYSTEM}" \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DWPF_VERSION="${pkgver}" \
+      "${_extra_config[@]}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "build-${MSYSTEM}"
+}
+
+check() {
+  local _b="${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/PenImc/build-${MSYSTEM}"
+  cd "${srcdir}"
+  # every name in PenImc.def must be exported and resolvable
+  ${CC:-cc} -O2 exporttest.c -o exporttest.exe
+  ./exporttest.exe "${_b}/PenImc_cor3.dll" "${_b}/gen/PenImc.def"
+  # COM class object + merged proxy/stub
+  ${CC:-cc} -O2 -I"${_b}/gen" penimctest.c "${_b}/gen/penimc_i.c" -o penimctest.exe -lole32 -luuid
+  ./penimctest.exe "${_b}/PenImc_cor3.dll"
+}
+
+package() {
+  cd "${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/PenImc"
+  install -Dm755 "build-${MSYSTEM}/PenImc_cor3.dll" "${pkgdir}${MINGW_PREFIX}/bin/PenImc_cor3.dll"
+  install -Dm644 "${srcdir}/wpf-${pkgver}/LICENSE.TXT" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.TXT"
+}

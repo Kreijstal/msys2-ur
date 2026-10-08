@@ -1,0 +1,140 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=wpf-gfx
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.12
+_wpf_commit=3bbc551873ff9afc718eec20077a9118c15b0688  # tag v10.0.12
+pkgrel=1
+pkgdesc='WPF composition/rendering engine wpfgfx_cor3.dll (milcore), built from dotnet/wpf with mingw-w64 clang (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/dotnet/wpf'
+msys2_repository_url='https://github.com/dotnet/wpf'
+msys2_changelog_url='https://github.com/dotnet/wpf/releases'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-directxmath"
+             "${MINGW_PACKAGE_PREFIX}-vkd3d")
+source=("wpf-${pkgver}.tar.gz::https://github.com/dotnet/wpf/archive/refs/tags/v${pkgver}.tar.gz"
+        "CMakeLists.txt"
+        "NativeVersion.rc"
+        "wpf_mingw_compat.h"
+        "wpfgfx_mingw_compat.h"
+        "winnt.h"
+        "sourceannotations.h"
+        "wpp_stub.h"
+        "dllcrt_alias.cpp"
+        "wpfgfx_mingw_shims.cpp"
+        "fxasm.py"
+        "gendef.py"
+        "exporttest.c"
+        "gfxtest.c"
+        "0001-wpfgfx-make-friend-functions-and-dependent-base-name.patch"
+        "0002-wpfgfx-use-standard-template-specialization-and-inst.patch"
+        "0003-wpfgfx-replace-__if_exists-uses-clang-cannot-express.patch"
+        "0004-wpfgfx-avoid-other-MSVC-only-constructs.patch"
+        "0005-wpfgfx-fix-declarations-that-only-link-with-MSVC.patch"
+        "0006-wpfgfx-build-against-mingw-w64-headers.patch")
+sha256sums=('ef299fb9a6c4089bcebbd6af65d1d0fe83a62e87e0b2b2babc4e7ccabf618e7b'
+            '8a7dce92aa5180f3b8dca9d693fc9898debb0dcfafe82c07c6ddd4dcc47518e4'
+            'db240b23bd165ed7e1b2797c81bcfc0d3cd05344279a035e181c2e270e83144f'
+            '658ba6bea6aa4e91c0cad3d39b3a52808dfeb26292d015a9631dafeb0f3c8adb'
+            '0125b50b7471c71b5a0e7eb64b4cfb153c631b659cb4d02dd8d2582485dbb213'
+            '99bc7e68d4381a6a4556849c81debd15c6a3fb348a02e3854f79df2379c64497'
+            '1e24c6333ea29eb184125e80acb3450f389c7a0a354ffc02f1da452adfacb071'
+            'e8300126b0018a917aabc99ceb32bc5950be3aa0cd075089eb0b555dfd0fa73d'
+            'c33a2fae7c3d9dcb2fb08a4ab8cc431c17522ca3b597d44b2ad31fe2ab31b50e'
+            '9e9469326f2a16e8eaf845d5796e17a5d7623daaa25e7934bd988ada2889183b'
+            '80458959c201da20783803f9a76cb6e0a6340520f628a8b5522c76b7628e74bf'
+            '9ca2569cd10aa90671de8c72481ddd8c2d6f3cdd37d5d68bd0de85eff3be6eea'
+            'b4d7eda946c009afe8a9a13e253d1814e486e9a2f2c1e19eb9109d375092f493'
+            'f8708dbec2ebe8ca07843acc4a0569eb0b8006feb03546105218420ac8c904fd'
+            'c29e05916ea0ab578d26581dcbb099f7e651353b5ba0f2e812d7ab81776cf54c'
+            'd69f8010388be222f0caa96cbb07a470b4586b82a96b78b07ee336a8bcfdcfba'
+            '87de69e300db40fb0f3fbddde3f62ce6e56cf523068b79d51291692230b38d82'
+            '61a9f7675882266907eac87858149f4709ca19d87ef9e99e2b35ae6670c729cb'
+            '6171457a1c74562f724fae1b96246e4e228f64aac51b68e150d235f45c965ecd'
+            'a98a5e7daec542aeaca4cc8b46af56d42458722c0cad16523ace5bded77f6ae6')
+noextract=("wpf-${pkgver}.tar.gz")
+
+_patches=("0001-wpfgfx-make-friend-functions-and-dependent-base-name.patch"
+          "0002-wpfgfx-use-standard-template-specialization-and-inst.patch"
+          "0003-wpfgfx-replace-__if_exists-uses-clang-cannot-express.patch"
+          "0004-wpfgfx-avoid-other-MSVC-only-constructs.patch"
+          "0005-wpfgfx-fix-declarations-that-only-link-with-MSVC.patch"
+          "0006-wpfgfx-build-against-mingw-w64-headers.patch")
+
+prepare() {
+  rm -rf "${srcdir}/wpf-${pkgver}"
+  tar -xzf "${srcdir}/wpf-${pkgver}.tar.gz" -C "${srcdir}" \
+    "wpf-${pkgver}/LICENSE.TXT" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/WpfGfx" \
+    "wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/Shared"
+
+  cd "${srcdir}/wpf-${pkgver}"
+  local _p
+  for _p in "${_patches[@]}"; do
+    patch -Np1 -i "${srcdir}/${_p}"
+  done
+
+  local _g="${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/WpfGfx"
+  # The D3DX/ShaderGen-generated text shader tokens are replaced by fxasm.py
+  # output; keep upstream's copy aside only to compare against in check().
+  mv "${_g}/core/hw/Shaders.rc" "${_g}/core/hw/Shaders.rc.upstream"
+  cp "${srcdir}/CMakeLists.txt" "${_g}/"
+  mkdir -p "${_g}/mingw/codeanalysis"
+  cp "${srcdir}"/{NativeVersion.rc,wpf_mingw_compat.h,wpfgfx_mingw_compat.h,winnt.h,wpp_stub.h,dllcrt_alias.cpp,wpfgfx_mingw_shims.cpp,fxasm.py,gendef.py} "${_g}/mingw/"
+  cp "${srcdir}/sourceannotations.h" "${_g}/mingw/codeanalysis/"
+}
+
+build() {
+  cd "${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/WpfGfx"
+
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # clang in both environments: WpfGfx needs -fms-compatibility
+  CC=clang CXX=clang++ \
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -B "build-${MSYSTEM}" \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DWPF_VERSION="${pkgver}" \
+      "${_extra_config[@]}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "build-${MSYSTEM}"
+}
+
+check() {
+  local _g="${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/WpfGfx"
+  local _b="${_g}/build-${MSYSTEM}"
+  cd "${srcdir}"
+  # fxasm.py must reproduce the text shader tokens upstream ships
+  "${MINGW_PREFIX}/bin/python" fxasm.py --check "${_g}/core/hw/Shaders.rc.upstream" \
+    Text11A="${_g}/core/hw/shaders/hlslTextShaders11A.fx" \
+    Text11L="${_g}/core/hw/shaders/hlslTextShaders11L.fx" \
+    Text20A="${_g}/core/hw/shaders/hlslTextShaders20A.fx" \
+    Text20L="${_g}/core/hw/shaders/hlslTextShaders20L.fx"
+  # every name in wpfgfx.def must be exported and resolvable
+  ${CC:-cc} -O2 exporttest.c -o exporttest.exe
+  ./exporttest.exe "${_b}/wpfgfx_cor3.dll" "${_b}/gen/wpfgfx.def"
+  # version handshake + embedded shader resources
+  ${CC:-cc} -O2 gfxtest.c -o gfxtest.exe
+  ./gfxtest.exe "${_b}/wpfgfx_cor3.dll"
+}
+
+package() {
+  cd "${srcdir}/wpf-${pkgver}/src/Microsoft.DotNet.Wpf/src/WpfGfx"
+  install -Dm755 "build-${MSYSTEM}/wpfgfx_cor3.dll" "${pkgdir}${MINGW_PREFIX}/bin/wpfgfx_cor3.dll"
+  install -Dm644 "${srcdir}/wpf-${pkgver}/LICENSE.TXT" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.TXT"
+}

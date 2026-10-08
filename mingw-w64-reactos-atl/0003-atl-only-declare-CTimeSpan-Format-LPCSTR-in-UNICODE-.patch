@@ -1,0 +1,35 @@
+From 2fa3348d4efdee21c11ba0e291807cc9ba8bf810 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 07:16:10 +0200
+Subject: [PATCH 3/3] atl: only declare CTimeSpan::Format(LPCSTR) in UNICODE
+ builds
+
+In ANSI builds LPCTSTR is LPCSTR, so the two Format() overloads
+collide and atltime.h fails to compile.
+---
+ atltime.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/atltime.h b/atltime.h
+index 3b3c9b1..cdba9cf 100644
+--- a/atltime.h
++++ b/atltime.h
+@@ -39,6 +39,7 @@ public:
+         m_nSpan = ((((LONGLONG)lDays) * 24 + nHours) * 60 + nMins) * 60 + nSecs;
+     }
+ 
++#ifdef UNICODE
+     CString Format(LPCSTR pFormat) const
+     {
+         struct tm time;
+@@ -48,6 +49,7 @@ public:
+         strTime.ReleaseBuffer();
+         return CString(strTime);
+     }
++#endif
+ 
+     CString Format(LPCTSTR pszFormat) const
+     {
+-- 
+2.55.0
+

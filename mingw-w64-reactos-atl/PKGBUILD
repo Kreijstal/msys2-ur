@@ -1,0 +1,124 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=reactos-atl
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+_commit=4e54653243eb47343398028a25845a11faddff9a
+pkgver=0.4.16dev.r20261007
+pkgrel=1
+pkgdesc='ReactOS implementation of the ATL C++ template library (CComPtr, CComObject, ...) (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://reactos.org/'
+msys2_repository_url='https://github.com/reactos/reactos'
+license=('spdx:LGPL-2.1-or-later AND LGPL-2.0-or-later AND GPL-2.0-or-later AND LicenseRef-Public-Domain')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc")
+_atl_headers=(atlalloc.h atlbase.h atlcoll.h atlcom.h atlcomcli.h atlconv.h atlcore.h atldef.h atlexcept.h atlfile.h atlimage.h atlmem.h atlpath.h atlsimpcoll.h atlsimpstr.h atlstr.h atlsync.h atltime.h atltrace.h atltypes.h atlwin.h cstringt.h statreg.h)
+source=(
+        "reactos-atl-${_commit}-atlalloc.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlalloc.h"
+        "reactos-atl-${_commit}-atlbase.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlbase.h"
+        "reactos-atl-${_commit}-atlcoll.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlcoll.h"
+        "reactos-atl-${_commit}-atlcom.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlcom.h"
+        "reactos-atl-${_commit}-atlcomcli.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlcomcli.h"
+        "reactos-atl-${_commit}-atlconv.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlconv.h"
+        "reactos-atl-${_commit}-atlcore.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlcore.h"
+        "reactos-atl-${_commit}-atldef.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atldef.h"
+        "reactos-atl-${_commit}-atlexcept.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlexcept.h"
+        "reactos-atl-${_commit}-atlfile.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlfile.h"
+        "reactos-atl-${_commit}-atlimage.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlimage.h"
+        "reactos-atl-${_commit}-atlmem.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlmem.h"
+        "reactos-atl-${_commit}-atlpath.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlpath.h"
+        "reactos-atl-${_commit}-atlsimpcoll.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlsimpcoll.h"
+        "reactos-atl-${_commit}-atlsimpstr.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlsimpstr.h"
+        "reactos-atl-${_commit}-atlstr.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlstr.h"
+        "reactos-atl-${_commit}-atlsync.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlsync.h"
+        "reactos-atl-${_commit}-atltime.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atltime.h"
+        "reactos-atl-${_commit}-atltrace.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atltrace.h"
+        "reactos-atl-${_commit}-atltypes.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atltypes.h"
+        "reactos-atl-${_commit}-atlwin.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/atlwin.h"
+        "reactos-atl-${_commit}-cstringt.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/cstringt.h"
+        "reactos-atl-${_commit}-statreg.h::https://raw.githubusercontent.com/reactos/reactos/${_commit}/sdk/lib/atl/statreg.h"
+        "reactos-COPYING-${_commit}::https://raw.githubusercontent.com/reactos/reactos/${_commit}/COPYING"
+        "reactos-COPYING.LIB-${_commit}::https://raw.githubusercontent.com/reactos/reactos/${_commit}/COPYING.LIB"
+        "0001-atl-do-not-require-PSEH-outside-of-ReactOS.patch"
+        "0002-atl-add-MSVC-ATL-pieces-needed-by-mingw-w64-users.patch"
+        "0003-atl-only-declare-CTimeSpan-Format-LPCSTR-in-UNICODE-.patch"
+        "reactos-atl.pc.in"
+        "atltest.cpp"
+        "atltest2.cpp"
+        "atltest_obj.h")
+sha256sums=('f7315a31b819a0dc2e075b233e51ad63dde1a996842fdc1aa4e94c84c6b73738'
+            'c0fa2f2176469fbbf285074bd353cdc770e590af916bf45a2ccb2cbccffcda02'
+            '672790c1afe3ed8491b6ab71826945e6353eb72399d86a47275ef2a9b58f9e08'
+            'df4eeb1998be1c6457ae318215cb2e57a165eeff8eef1a0005c8a30fe48d8005'
+            '5948da07c9901f8dd1e629860011409699650d986d4d1e6d9e9c1e708f87d788'
+            '33bbda1b0d2805b3a7882fd593b547c26371d331aba27b096347f05f5cb8735e'
+            '906e2c5f23c1490c9e850488b53d7f059bf9fa73ed04513b5aecd412d7a0cc7f'
+            '82669c6db4f8f3f5887077fc61bea15332f9e015b1ef16579031b345435609a6'
+            '7bbd3031a6e11bf4f121a79da8a9410ae302a73a28c3ce3e79fd19b76204e087'
+            '3e05074ebe719588d3f3526ecda712c241dece07499db0c6171b482d0bfbff0b'
+            '7b97e93175bd88c5d829d4b11c2678fd00aa185c514688c47babb134f3941414'
+            'a62983da3d84c105a7af6aed7e841d3f9bddeacc88a0d415be6b87161ead0a37'
+            'c74f96667fc8fd6ecd7f76bfba5d2c7d353c99d2bf35bd0bd5925b6c9b7624ab'
+            '7891a30a16d3a64e62defbd08c964883c124ae05b2173cdf49a3e613a15cf4fe'
+            '2f5b6526f7100791a8c45ed90499e1590442c4d3147b7b0ea07a003f7fe3122a'
+            'da3dd41e48fc95d1d59e78de9c1c4fdff4fad2b8f8fad0a916f51173aed386dd'
+            '1062a352ea9a938202cd433f2104b7f0242cc2553d2f28204d90040296e6ae95'
+            'bc44237a357e33e8ef9d3ab1a715540a4b6ed7d5e1286576938aff986572c8a2'
+            'a5c94c9d9c07ddc9b38678356aba33af45958c4a7bacff76ef168a1b32a2a611'
+            '6ecfb5e0442cb72eeb3347b63776d96a6e08503c583452e0e0d8cf403078175b'
+            'e40c1626470a1334ba97595a610e2b22225068fc0265c7cd25c5b26835fa48ee'
+            'b2438ddd77a1e55b345e4fe4c6f5045ed0d65f3a11fb57ce33c4781ab00f7130'
+            'e8050d5448bec3a8a0c220710db8877a027bfd5afac786363cdd03dbd700d4eb'
+            '5dd08524bb37f07b4a6f548439ffcd8ec0444bc0ae92e0fe929ea70185cdbc62'
+            '42a43212349af1e133ee4d6c5324f474e79f4214d1a382135a5d78b90c8e88ea'
+            '372ba32bbc9238b6a37edce405f7b113dcd723079c458c798c71574e6cfe5db8'
+            '34e07bbe0bce5dc3a0a157976f461a0efdc932c3518f7a0f7d7c3315c2c7fc8f'
+            'b1cfbc91a6deb062b5e143d76becbf9c56ebdd9b0b9fd94251822f62fc9f571b'
+            'b3638329528dbc71a7265b50c50b601c157570101a3bcb0c6fbfd6d82157d61d'
+            'f0ed0ad9ac5959fb2f066af5078f1edcb2467ebccbdc2ec64ea36e05d2d3aaa3'
+            '106fbe0be97e0e03f2249d513264a2f90fbc248070d5e6ee182e4ea49b04b92b'
+            '3c5b12624557c2e34bdf54a658fb8c83825ace59e17a933e7ee98955ff8560a7')
+
+prepare() {
+  rm -rf "${srcdir}/${_realname}"
+  mkdir -p "${srcdir}/${_realname}"
+  local _h
+  for _h in "${_atl_headers[@]}"; do
+    cp "${srcdir}/reactos-atl-${_commit}-${_h}" "${srcdir}/${_realname}/${_h}"
+  done
+
+  cd "${srcdir}/${_realname}"
+  patch -Np1 -i "${srcdir}/0001-atl-do-not-require-PSEH-outside-of-ReactOS.patch"
+  patch -Np1 -i "${srcdir}/0002-atl-add-MSVC-ATL-pieces-needed-by-mingw-w64-users.patch"
+  patch -Np1 -i "${srcdir}/0003-atl-only-declare-CTimeSpan-Format-LPCSTR-in-UNICODE-.patch"
+}
+
+build() {
+  sed -e "s|@PREFIX@|${MINGW_PREFIX}|" -e "s|@VERSION@|${pkgver}|" \
+    "${srcdir}/reactos-atl.pc.in" > "${srcdir}/reactos-atl.pc"
+}
+
+check() {
+  cd "${srcdir}"
+  # every header must be self-contained after atlbase.h, in ANSI and UNICODE
+  local _h _d
+  for _d in "" "-DUNICODE -D_UNICODE"; do
+    for _h in "${_atl_headers[@]}"; do
+      printf '#include <atlbase.h>\n#include <%s>\nint main() { return 0; }\n' "${_h}" > hdrtest.cpp
+      ${CXX:-c++} ${_d} -std=c++17 -I"${_realname}" -fsyntax-only hdrtest.cpp
+    done
+  done
+  # CComPtr / CComQIPtr / CComObject / CComCoClass / CComGITPtr, and
+  # OBJECT_ENTRY_AUTO from a header shared by two translation units
+  ${CXX:-c++} -O2 -Wall -I"${_realname}" atltest.cpp atltest2.cpp -o atltest.exe -lole32 -loleaut32 -luuid
+  ./atltest.exe
+}
+
+package() {
+  install -d "${pkgdir}${MINGW_PREFIX}/include/${_realname}"
+  install -m644 "${srcdir}/${_realname}"/*.h "${pkgdir}${MINGW_PREFIX}/include/${_realname}/"
+  install -Dm644 "${srcdir}/reactos-atl.pc" "${pkgdir}${MINGW_PREFIX}/lib/pkgconfig/reactos-atl.pc"
+  install -Dm644 "${srcdir}/reactos-COPYING-${_commit}" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+  install -Dm644 "${srcdir}/reactos-COPYING.LIB-${_commit}" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING.LIB"
+}

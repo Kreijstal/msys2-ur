@@ -1,0 +1,64 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=vkd3d
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.1
+pkgrel=1
+pkgdesc='Direct3D 12 to Vulkan translation library and vkd3d-shader (HLSL/DXBC/D3DBC compiler) (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://gitlab.winehq.org/wine/vkd3d'
+msys2_repository_url='https://gitlab.winehq.org/wine/vkd3d'
+msys2_changelog_url='https://gitlab.winehq.org/wine/vkd3d/-/blob/master/ANNOUNCE'
+license=('spdx:LGPL-2.1-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-spirv-headers"
+             "${MINGW_PACKAGE_PREFIX}-vulkan-headers"
+             "${MINGW_PACKAGE_PREFIX}-tools"
+             "bison"
+             "flex"
+             "perl"
+             "perl-json")
+source=("https://dl.winehq.org/vkd3d/source/${_realname}-${pkgver}.tar.xz")
+sha256sums=('7510146aff2adfb4ae07ab890701a607e5ff7c66e57100cfc9f630ec92eeda6a')
+
+build() {
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+  # vulkan-1.dll is loaded at run time; no import library needed.
+  # Do not pick up mingw-w64-dlfcn: libvkd3d uses LoadLibrary on Windows.
+  ../${_realname}-${pkgver}/configure \
+    --prefix="${MINGW_PREFIX}" \
+    --build="${MINGW_CHOST}" \
+    --host="${MINGW_CHOST}" \
+    --disable-tests \
+    --disable-demos \
+    --disable-doxygen-doc \
+    --without-ncurses \
+    --without-opengl \
+    --without-xcb \
+    --without-spirv-tools \
+    SONAME_LIBVULKAN=vulkan-1.dll \
+    ac_cv_lib_dl_dlopen=no \
+    WIDL="${MINGW_PREFIX}/bin/widl"
+
+  make
+}
+
+check() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  # smoke test: compile an SM2 pixel shader to D3D9 bytecode
+  printf 'float4 c : register(c0);\nfloat4 main() : COLOR0 { return c; }\n' > smoke.hlsl
+  ./vkd3d-compiler.exe -x hlsl -b d3dbc -p ps_2_0 -o smoke.bin smoke.hlsl
+  ./vkd3d-compiler.exe -x d3dbc -b d3d-asm smoke.bin
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  make DESTDIR="${pkgdir}" install
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

@@ -1,0 +1,549 @@
+From e25c9bb5f4398b73474b5ab2f194ce9a260aad7a Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 8 Oct 2026 07:15:18 +0200
+Subject: [PATCH 2/3] atl: add MSVC ATL pieces needed by mingw-w64 users
+
+- CComQIPtr<T[, piid]> (piid defaults to nullptr, meaning __uuidof(T)
+  at run time, since mingw-w64 GCC's __uuidof is not a constant)
+- CComGITPtr<T> on top of the standard Global Interface Table
+- CComPtr<T>::CoCreateInstance(clsid[, outer[, ctx]]) with the MSVC
+  signature (interface taken from T)
+- _ATL_IIDOF(x) = __uuidof(x) so COM_INTERFACE_ENTRY(x) works
+- GetUnknown() in BEGIN_COM_MAP
+- CComCoClass: DECLARE_AGGREGATABLE and CreateInstance<Q>()
+- CAtlDllModuleT::DllMain()
+- DECLARE_LIBID, DECLARE_REGISTRY_APPID_RESOURCEID and the matching
+  InitLibId/UpdateRegistryAppId hooks in CAtlModuleT/CAtlDllModuleT
+- ATL_NO_VTABLE expands to nothing outside MSVC (GCC/clang ignore
+  __declspec(novtable) with a warning)
+- OBJECT_ENTRY_AUTO usable from headers included by several translation
+  units, with both GNU ld and lld: the entries get COMDAT linkage (C++17
+  inline variables), a writable per-class ATL$__m_<class> section (ld
+  deduplicates COMDAT sections by name; lld does not merge sections that
+  differ in flags) and 'used'.
+---
+ atlbase.h   |  75 +++++++++++++++-
+ atlcom.h    |  49 ++++++++++-
+ atlcomcli.h | 243 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+ atldef.h    |   2 +-
+ 4 files changed, 361 insertions(+), 8 deletions(-)
+
+diff --git a/atlbase.h b/atlbase.h
+index 54effd7..3db2e7d 100644
+--- a/atlbase.h
++++ b/atlbase.h
+@@ -39,7 +39,7 @@
+ #define ATLTRY(x) x;
+ #endif
+ 
+-#ifdef _ATL_DISABLE_NO_VTABLE
++#if defined(_ATL_DISABLE_NO_VTABLE) || !defined(_MSC_VER)
+ #define ATL_NO_VTABLE
+ #else
+ #define ATL_NO_VTABLE __declspec(novtable)
+@@ -185,6 +185,33 @@ typedef _ATL_WIN_MODULE70 _ATL_WIN_MODULE;
+ 
+ // Auto object map
+ 
++// OBJECT_ENTRY_AUTO may sit in a header that several translation units
++// include, so its variables need COMDAT ("pick any") linkage; use C++17
++// inline variables for that where available.
++#if !defined(_MSC_VER) && defined(__cplusplus) && __cplusplus >= 201703L
++#define _ATL_OBJMAP_SELECTANY inline
++#else
++#define _ATL_OBJMAP_SELECTANY __declspec(selectany)
++#endif
++
++#if defined(_MSC_VER)
++#define _ATLALLOC_OBJMAP(class) _ATLALLOC("ATL$__m")
++#else
++// GNU ld deduplicates COMDAT ("link once") sections by section name, so
++// every entry needs its own section; ATL$__m_<class> still sorts between
++// ATL$__a and ATL$__z.
++#define _ATLALLOC_OBJMAP(class) _ATLALLOC("ATL$__m_" #class)
++#endif
++
++#if defined(_MSC_VER)
++#define _ATL_OBJMAP_CONST const
++#else
++// The section markers __pobjMapEntryFirst/Last are writable; a const entry
++// would land in a read-only section of the same name that the linker does
++// not merge (lld), so the auto object map would appear empty.
++#define _ATL_OBJMAP_CONST
++#endif
++
+ #if defined(_MSC_VER)
+ #pragma section("ATL$__a", read, write)
+ #pragma section("ATL$__z", read, write)
+@@ -199,6 +226,11 @@ typedef _ATL_WIN_MODULE70 _ATL_WIN_MODULE;
+ #error  Your platform is not supported.
+ #endif
+ 
++#elif defined(__clang__)
++
++#define _ATLALLOC(x) __attribute__((section(x), used))
++#define OBJECT_ENTRY_PRAGMA(class)
++
+ #elif defined(__GNUC__)
+ 
+ // GCC completely ignores __attribute__((unused)) on the __pobjMap_ pointer, so we pass it to a function that is not allowed to be optimized....
+@@ -207,7 +239,7 @@ static int __attribute__((optimize("O0"), unused)) hack_for_gcc(const _ATL_OBJMA
+     return 1;
+ }
+ 
+-#define _ATLALLOC(x) __attribute__((section(x)))
++#define _ATLALLOC(x) __attribute__((section(x), used))
+ #define OBJECT_ENTRY_PRAGMA(class) static int __pobjMap_hack_##class = hack_for_gcc(&__pobjMap_##class);
+ 
+ #else
+@@ -578,6 +610,29 @@ template <class T>
+ class CAtlModuleT : public CAtlModule
+ {
+ public:
++    CAtlModuleT()
++    {
++        T::InitLibId();
++    }
++
++    static void InitLibId()
++    {
++    }
++
++    static HRESULT WINAPI UpdateRegistryAppId(BOOL /*bRegister*/)
++    {
++        return S_OK;
++    }
++
++    HRESULT RegisterAppId()
++    {
++        return T::UpdateRegistryAppId(TRUE);
++    }
++
++    HRESULT UnregisterAppId()
++    {
++        return T::UpdateRegistryAppId(FALSE);
++    }
+ 
+     HRESULT RegisterServer(BOOL bRegTypeLib = FALSE, const CLSID *pCLSID = NULL);
+     HRESULT UnregisterServer(BOOL bUnRegTypeLib, const CLSID *pCLSID = NULL);
+@@ -687,6 +742,16 @@ public:
+         _AtlComModule.ExecuteObjectMain(true);
+     }
+ 
++    BOOL WINAPI DllMain(DWORD dwReason, LPVOID /*lpReserved*/)
++    {
++        if (dwReason == DLL_PROCESS_ATTACH)
++        {
++            if (CAtlBaseModule::m_bInitFailed)
++                return FALSE;
++        }
++        return TRUE;
++    }
++
+     ~CAtlDllModuleT()
+     {
+         _AtlComModule.ExecuteObjectMain(false);
+@@ -716,7 +781,9 @@ public:
+         HRESULT hResult;
+ 
+         pThis = static_cast<T *>(this);
+-        hResult = pThis->RegisterServer(bRegTypeLib);
++        hResult = pThis->RegisterAppId();
++        if (SUCCEEDED(hResult))
++            hResult = pThis->RegisterServer(bRegTypeLib);
+         return hResult;
+     }
+ 
+@@ -727,6 +794,8 @@ public:
+ 
+         pThis = static_cast<T *>(this);
+         hResult = pThis->UnregisterServer(bUnRegTypeLib);
++        if (SUCCEEDED(hResult))
++            hResult = pThis->UnregisterAppId();
+         return hResult;
+     }
+ 
+diff --git a/atlcom.h b/atlcom.h
+index 89911ce..4866537 100644
+--- a/atlcom.h
++++ b/atlcom.h
+@@ -583,6 +583,10 @@ class CComObjectNoLock : public Base
+ #define BEGIN_COM_MAP(x)                                                        \
+ public:                                                                            \
+     typedef x _ComMapClass;                                                        \
++    IUnknown *GetUnknown()                                                         \
++    {                                                                            \
++        return reinterpret_cast<IUnknown *>(reinterpret_cast<DWORD_PTR>(this) + _GetEntries()->dw); \
++    }                                                                            \
+     HRESULT _InternalQueryInterface(REFIID iid, void **ppvObject)                \
+     {                                                                            \
+         return this->InternalQueryInterface(this, _GetEntries(), iid, ppvObject);        \
+@@ -600,6 +604,10 @@ public:
+     virtual ULONG STDMETHODCALLTYPE Release() = 0;                                \
+     STDMETHOD(QueryInterface)(REFIID, void **) = 0;
+ 
++#ifndef _ATL_IIDOF
++#define _ATL_IIDOF(x) __uuidof(x)
++#endif
++
+ #define COM_INTERFACE_ENTRY_IID(iid, x)                                            \
+     {&iid, offsetofclass(x, _ComMapClass), _ATL_SIMPLEMAPENTRY},
+ 
+@@ -650,6 +658,27 @@ public:
+         return ATL::_pAtlModule->UpdateRegistryFromResource(x, bRegister);        \
+     }
+ 
++#define DECLARE_REGISTRY_APPID_RESOURCEID(resid, appid)                           \
++    static LPCOLESTR GetAppId()                                                    \
++    {                                                                            \
++        return OLESTR(appid);                                                    \
++    }                                                                            \
++    static HRESULT WINAPI UpdateRegistryAppId(BOOL bRegister)                    \
++    {                                                                            \
++        ATL::_ATL_REGMAP_ENTRY aMapEntries[] =                                    \
++        {                                                                        \
++            { OLESTR("APPID"), GetAppId() },                                    \
++            { NULL, NULL }                                                        \
++        };                                                                        \
++        return ATL::_pAtlModule->UpdateRegistryFromResource(resid, bRegister, aMapEntries); \
++    }
++
++#define DECLARE_LIBID(libid)                                                    \
++    static void InitLibId()                                                        \
++    {                                                                            \
++        ATL::CAtlModule::m_libid = libid;                                        \
++    }
++
+ #define DECLARE_NOT_AGGREGATABLE(x)                                                \
+ public:                                                                            \
+     typedef ATL::CComCreator2<ATL::CComCreator<ATL::CComObject<x> >, ATL::CComFailCreator<CLASS_E_NOAGGREGATION> > _CreatorClass;
+@@ -707,7 +736,7 @@ public:
+ 
+ 
+ #define OBJECT_ENTRY_AUTO(clsid, class)                                                                                \
+-    ATL::_ATL_OBJMAP_ENTRY __objMap_##class = {                                                                        \
++    _ATL_OBJMAP_SELECTANY ATL::_ATL_OBJMAP_ENTRY __objMap_##class = {                                                                        \
+         &clsid,                                                                                                        \
+         class ::UpdateRegistry,                                                                                        \
+         class ::_ClassFactoryCreatorClass::CreateInstance,                                                             \
+@@ -717,7 +746,7 @@ public:
+         class ::GetObjectDescription,                                                                                  \
+         class ::GetCategoryMap,                                                                                        \
+         class ::ObjectMain};                                                                                           \
+-    extern "C" _ATLALLOC("ATL$__m") ATL::_ATL_OBJMAP_ENTRY *const __pobjMap_##class = &__objMap_##class;               \
++    extern "C" { _ATL_OBJMAP_SELECTANY _ATLALLOC_OBJMAP(class) ATL::_ATL_OBJMAP_ENTRY *_ATL_OBJMAP_CONST __pobjMap_##class = &__objMap_##class; }           \
+     OBJECT_ENTRY_PRAGMA(class)
+ 
+ 
+@@ -853,12 +882,26 @@ class CComCoClass
+ {
+ public:
+     DECLARE_CLASSFACTORY()
+-    //DECLARE_AGGREGATABLE(T)   // This should be here, but gcc...
++    DECLARE_AGGREGATABLE(T)
+ 
+     static LPCTSTR WINAPI GetObjectDescription()
+     {
+         return NULL;
+     }
++
++#ifndef _ATL_NO_UUIDOF
++    template <class Q>
++    static HRESULT CreateInstance(IUnknown *punkOuter, Q **pp)
++    {
++        return T::_CreatorClass::CreateInstance(punkOuter, __uuidof(Q), reinterpret_cast<void **>(pp));
++    }
++
++    template <class Q>
++    static HRESULT CreateInstance(Q **pp)
++    {
++        return T::_CreatorClass::CreateInstance(NULL, __uuidof(Q), reinterpret_cast<void **>(pp));
++    }
++#endif
+ };
+ 
+ template <class T>
+diff --git a/atlcomcli.h b/atlcomcli.h
+index e7c5fd3..01b79d4 100644
+--- a/atlcomcli.h
++++ b/atlcomcli.h
+@@ -44,7 +44,7 @@
+ #define ATLTRY(x) x;
+ #endif
+ 
+-#ifdef _ATL_DISABLE_NO_VTABLE
++#if defined(_ATL_DISABLE_NO_VTABLE) || !defined(_MSC_VER)
+ #define ATL_NO_VTABLE
+ #else
+ #define ATL_NO_VTABLE __declspec(novtable)
+@@ -111,6 +111,22 @@ public:
+         return FAILED(hr) ? hr : CoCreateInstance(clsid, riid, pOuter, ClsCtx);
+     }
+ 
++#ifndef _ATL_NO_UUIDOF
++    // MSVC ATL signatures: the interface is taken from T
++    HRESULT CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
++    {
++        ATLASSERT(!p);
++        return ::CoCreateInstance(rclsid, pOuter, ClsCtx, __uuidof(T), (void**)&p);
++    }
++
++    HRESULT CoCreateInstance(LPCOLESTR ProgID, LPUNKNOWN pOuter = NULL, DWORD ClsCtx = CLSCTX_ALL)
++    {
++        CLSID clsid;
++        HRESULT hr = CLSIDFromProgID(ProgID, &clsid);
++        return FAILED(hr) ? hr : CoCreateInstance(clsid, pOuter, ClsCtx);
++    }
++#endif
++
+     T *operator = (T *lp)
+     {
+         T* pOld = p;
+@@ -284,6 +300,231 @@ public:
+ };
+ 
+ 
++#ifndef _ATL_NO_UUIDOF
++// CComQIPtr<Itype> / CComQIPtr<Itype, &IID_Itype>.
++// MSVC defaults piid to &__uuidof(T), which is not a constant expression
++// with GCC (mingw-w64 implements __uuidof as an inline function), so a NULL
++// default selects __uuidof(T) at run time instead.
++template <class T, const IID* piid = nullptr>
++class CComQIPtr :
++    public CComPtr<T>
++{
++public:
++    using CComPtr<T>::p;
++
++    static const IID& _GetIID()
++    {
++        return (piid != nullptr) ? *piid : __uuidof(T);
++    }
++
++    CComQIPtr()
++    {
++    }
++    CComQIPtr(_Inout_opt_ T* lp) :
++        CComPtr<T>(lp)
++    {
++    }
++    CComQIPtr(_Inout_ const CComQIPtr<T,piid>& lp) :
++        CComPtr<T>(lp.p)
++    {
++    }
++    CComQIPtr(_Inout_opt_ IUnknown* lp)
++    {
++        if (lp != NULL)
++        {
++            if (FAILED(lp->QueryInterface(_GetIID(), (void**)(IUnknown**)&p)))
++                p = NULL;
++        }
++    }
++    T *operator = (T *lp)
++    {
++        T* pOld = p;
++
++        p = lp;
++        if (p != NULL)
++            p->AddRef();
++
++        if (pOld != NULL)
++            pOld->Release();
++
++        return *this;
++    }
++
++    T *operator = (const CComQIPtr<T,piid> &lp)
++    {
++        return *this = lp.p;
++    }
++
++    T * operator=(IUnknown* lp)
++    {
++        T* pOld = p;
++
++        if (!lp || FAILED(lp->QueryInterface(_GetIID(), (void**)(IUnknown**)&p)))
++            p = NULL;
++
++        if (pOld != NULL)
++            pOld->Release();
++
++        return *this;
++    }
++};
++
++// IUnknown specialization: no QueryInterface needed, every interface is an IUnknown
++template <>
++class CComQIPtr<IUnknown, nullptr> :
++    public CComPtr<IUnknown>
++{
++public:
++    CComQIPtr()
++    {
++    }
++    CComQIPtr(_Inout_opt_ IUnknown* lp) :
++        CComPtr<IUnknown>(lp)
++    {
++    }
++    CComQIPtr(_Inout_ const CComQIPtr<IUnknown, nullptr>& lp) :
++        CComPtr<IUnknown>(lp.p)
++    {
++    }
++};
++#endif // _ATL_NO_UUIDOF
++
++
++// Pointer stored in the process-wide Global Interface Table.
++template <class T>
++class CComGITPtr
++{
++public:
++    DWORD m_dwCookie;
++
++    CComGITPtr() :
++        m_dwCookie(0)
++    {
++    }
++    CComGITPtr(_In_opt_ T* p) :
++        m_dwCookie(0)
++    {
++        Attach(p);
++    }
++    CComGITPtr(_In_ const CComPtr<T>& sp) :
++        m_dwCookie(0)
++    {
++        Attach(sp.p);
++    }
++    explicit CComGITPtr(_In_ DWORD dwCookie) :
++        m_dwCookie(dwCookie)
++    {
++    }
++    CComGITPtr(_In_ const CComGITPtr& git) :
++        m_dwCookie(0)
++    {
++        CComPtr<T> sp;
++        if (SUCCEEDED(git.CopyTo(&sp)))
++            Attach(sp.p);
++    }
++    ~CComGITPtr()
++    {
++        Revoke();
++    }
++
++    CComGITPtr<T>& operator=(_In_ const CComGITPtr<T>& git)
++    {
++        if (this != &git)
++        {
++            CComPtr<T> sp;
++            if (SUCCEEDED(git.CopyTo(&sp)))
++                Attach(sp.p);
++            else
++                Revoke();
++        }
++        return *this;
++    }
++    CComGITPtr<T>& operator=(_In_opt_ T* p)
++    {
++        Attach(p);
++        return *this;
++    }
++    CComGITPtr<T>& operator=(_In_ DWORD dwCookie)
++    {
++        Attach(dwCookie);
++        return *this;
++    }
++
++    operator DWORD() const
++    {
++        return m_dwCookie;
++    }
++    DWORD GetCookie() const
++    {
++        return m_dwCookie;
++    }
++
++    static HRESULT GetGIT(_Outptr_ IGlobalInterfaceTable **ppGIT)
++    {
++        return ::CoCreateInstance(CLSID_StdGlobalInterfaceTable, NULL, CLSCTX_INPROC_SERVER,
++                                  IID_IGlobalInterfaceTable, (void **)ppGIT);
++    }
++
++    HRESULT Attach(_In_opt_ T* p)
++    {
++        HRESULT hr = Revoke();
++        if (FAILED(hr) || p == NULL)
++            return hr;
++        CComPtr<IGlobalInterfaceTable> git;
++        hr = GetGIT(&git);
++        if (FAILED(hr))
++            return hr;
++#ifndef _ATL_NO_UUIDOF
++        return git->RegisterInterfaceInGlobal(p, __uuidof(T), &m_dwCookie);
++#else
++        return git->RegisterInterfaceInGlobal(p, IID_IUnknown, &m_dwCookie);
++#endif
++    }
++    HRESULT Attach(_In_ DWORD dwCookie)
++    {
++        HRESULT hr = Revoke();
++        if (SUCCEEDED(hr))
++            m_dwCookie = dwCookie;
++        return hr;
++    }
++    DWORD Detach()
++    {
++        DWORD dwCookie = m_dwCookie;
++        m_dwCookie = 0;
++        return dwCookie;
++    }
++    HRESULT Revoke()
++    {
++        HRESULT hr = S_OK;
++        if (m_dwCookie != 0)
++        {
++            CComPtr<IGlobalInterfaceTable> git;
++            hr = GetGIT(&git);
++            if (SUCCEEDED(hr))
++                hr = git->RevokeInterfaceFromGlobal(m_dwCookie);
++            if (SUCCEEDED(hr))
++                m_dwCookie = 0;
++        }
++        return hr;
++    }
++    HRESULT CopyTo(_Outptr_ T** pp) const
++    {
++        if (pp == NULL)
++            return E_POINTER;
++        *pp = NULL;
++        CComPtr<IGlobalInterfaceTable> git;
++        HRESULT hr = GetGIT(&git);
++        if (FAILED(hr))
++            return hr;
++#ifndef _ATL_NO_UUIDOF
++        return git->GetInterfaceFromGlobal(m_dwCookie, __uuidof(T), (void **)pp);
++#else
++        return git->GetInterfaceFromGlobal(m_dwCookie, IID_IUnknown, (void **)pp);
++#endif
++    }
++};
++
++
+ class CComBSTR
+ {
+ public:
+diff --git a/atldef.h b/atldef.h
+index f7b76fd..0a20683 100644
+--- a/atldef.h
++++ b/atldef.h
+@@ -32,7 +32,7 @@
+ 
+ 
+ 
+-#ifdef _ATL_DISABLE_NO_VTABLE
++#if defined(_ATL_DISABLE_NO_VTABLE) || !defined(_MSC_VER)
+ #define ATL_NO_VTABLE
+ #else
+ #define ATL_NO_VTABLE __declspec(novtable)
+-- 
+2.55.0
+
