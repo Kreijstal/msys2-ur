@@ -1,0 +1,46 @@
+pkgbase = mingw-w64-pnet-bootstrap
+	pkgdesc = DotGNU Portable.NET (cscc C# compiler + ilrun) built from C sources, root of the source-only .NET bootstrap (mingw-w64)
+	pkgver = 0.8.0.r0.3baf947
+	pkgrel = 1
+	url = https://www.gnu.org/software/dotgnu/
+	arch = any
+	license = spdx:GPL-2.0-or-later
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = mingw-w64-ucrt-x86_64-autotools
+	makedepends = mingw-w64-ucrt-x86_64-python
+	makedepends = bison
+	makedepends = flex
+	makedepends = texinfo
+	makedepends = git
+	depends = mingw-w64-ucrt-x86_64-gc
+	depends = mingw-w64-ucrt-x86_64-libffi
+	depends = mingw-w64-ucrt-x86_64-libwinpthread
+	options = !strip
+	options = !lto
+	options = !buildflags
+	source = https://download.savannah.gnu.org/releases/dotgnu-pnet/treecc-0.3.10.tar.gz
+	source = pnet::git+https://git.savannah.gnu.org/git/dotgnu-pnet/pnet.git#commit=3baf94734d8dc3fdabba68a8891e67a43ed6c4bd
+	source = pnetlib::git+https://git.savannah.gnu.org/git/dotgnu-pnet/pnetlib.git#commit=c3c12b8b0c65f5482d03d6a4865f7670e98baf4c
+	source = treecc-0001-configure-drop-mno-cygwin-on-mingw.patch
+	source = pnet-0001-pnet-newer-libgc-fix.patch
+	source = pnet-0002-pnet-newer-texinfo-fix.patch
+	source = pnet-0003-pnet-fix-line-number-info.patch
+	source = pnet-0004-pnet-fix-off-by-one.patch
+	source = pnet-0005-ucrt-timezone-macro.patch
+	source = pnet-0006-win64-findfirst-intptr.patch
+	source = pnetlib-0001-csant-flags-no-double-exeext.patch
+	source = ln-s-rel
+	sha256sums = 5e9d20a6938e0c6fedfed0cabc7e9e984024e4881b748d076e8c75f1aeb6efe7
+	sha256sums = SKIP
+	sha256sums = SKIP
+	sha256sums = 1f8d063379fde01c5eef2f786253aa6adb0b1fd6279634890a6e02abd006d6d5
+	sha256sums = 5774c1932b59142f31435460ffb2c96800b10889334e9bd39488a590434c7c34
+	sha256sums = c7f710a094b75154812abaa63bbf208803cabeb96eae46f7b7428ff5f7b613eb
+	sha256sums = fae847118dace63bedd8ca569aff3d7e7b9a474203a9a3cac7bc2abe1fcebdf2
+	sha256sums = 88eb0200d379d56206218d211367364bcff8854bb8871d866ef9154a1df66cfe
+	sha256sums = 586ed6b4c37e426705d005a78f3d2a5b33d2a76d8ffd4eee8fa0356b4df74740
+	sha256sums = a754afdf63c4e18d2b4b1fde50f00600200b9dac7b62c109a6786e26fc01d71d
+	sha256sums = 0723cf1bb645e47cfbc2a83f22a907d2e014324a45437d5780445864ab6370e8
+	sha256sums = 0cf070bf4f90008e02b3952a6d030107d700ea60eba7900c9124626d72037ae8
+
+pkgname = mingw-w64-ucrt-x86_64-pnet-bootstrap
