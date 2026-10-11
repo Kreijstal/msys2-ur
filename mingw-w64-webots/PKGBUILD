@@ -1,0 +1,107 @@
+# Maintainer: Kreijstal
+
+_realname=webots
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+epoch=1
+pkgver=R2025b.r0.g1e3d80178
+pkgrel=2
+pkgdesc="Open-source robot simulator (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64')
+url="https://cyberbotics.com/"
+msys2_repository_url="https://github.com/kreijstal-contributions/webots"
+license=('spdx:Apache-2.0')
+install="${_realname}.install"
+depends=(
+  "${MINGW_PACKAGE_PREFIX}-assimp"
+  "${MINGW_PACKAGE_PREFIX}-cc-libs"
+  "${MINGW_PACKAGE_PREFIX}-dlfcn"
+  "${MINGW_PACKAGE_PREFIX}-ffmpeg"
+  "${MINGW_PACKAGE_PREFIX}-freetype"
+  "${MINGW_PACKAGE_PREFIX}-gcc"
+  "${MINGW_PACKAGE_PREFIX}-glm"
+  "${MINGW_PACKAGE_PREFIX}-libwinpthread"
+  "${MINGW_PACKAGE_PREFIX}-ois"
+  "${MINGW_PACKAGE_PREFIX}-openal"
+  "${MINGW_PACKAGE_PREFIX}-openvr"
+  "${MINGW_PACKAGE_PREFIX}-qt6-base"
+  "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
+  "${MINGW_PACKAGE_PREFIX}-qt6-websockets"
+  "${MINGW_PACKAGE_PREFIX}-stb"
+  make
+  "${MINGW_PACKAGE_PREFIX}-pkgconf"
+  "${MINGW_PACKAGE_PREFIX}-python"
+)
+optdepends=(
+  "${MINGW_PACKAGE_PREFIX}-xinput1_3: XInput compatibility on systems without the legacy DirectX runtime"
+)
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-cmake"
+  "${MINGW_PACKAGE_PREFIX}-ninja"
+  "${MINGW_PACKAGE_PREFIX}-pkgconf"
+  "${MINGW_PACKAGE_PREFIX}-popt"
+  patch
+)
+_commit=1e3d80178df302ab5cbcc598a72f84f6caf97155
+_picotts_commit=d42a96fe93629202147b6e40e93133766b2229d8
+_sourcedir="${_realname}-${_commit}"
+_picotts_sourcedir="picotts-${_picotts_commit}"
+# stb_image.h from Webots' own stb submodule. Its reworked RLE HDR decoder avoids a GCC
+# miscompilation (seen with 15.2 and 16.1) that corrupts the IBL irradiance maps: the 3D view
+# renders black on Intel GPUs and tinted elsewhere. MSYS2's stb package lacks that change.
+_stb_commit=7ee7f4bd2e72d601555e926b725ceac22a93e294
+source=(
+  "${_sourcedir}.tar.gz::https://github.com/kreijstal-contributions/webots/archive/${_commit}.tar.gz"
+  "${_picotts_sourcedir}.tar.gz::https://github.com/Kreijstal/picotts/archive/${_picotts_commit}.tar.gz"
+  '002-use-packaged-picotts-source.patch'
+  "stb_image-${_stb_commit}.h::https://raw.githubusercontent.com/omichel/stb/${_stb_commit}/stb_image.h"
+)
+sha256sums=('f68c666d33680ec8b93c215b91da33009d61464f414a7bbea3b8b994445c9da2'
+            '69a34a386d8c0ec378ef3e7b6e7ef2a1b0c6e26a7ca05b4e05bbb14192ea1ee0'
+            'd7f4f1f4d1d83d87730ad59d0a88a49d5e141b05c6c360c3089b45915d78f43a'
+            '6e15e5306f58c34819af6aafc01a61d9658bf6d83ae89e0f7b6686638482ce3d')
+
+prepare() {
+  cd "${srcdir}/${_sourcedir}"
+
+  patch -Nbp1 -i "${srcdir}/002-use-packaged-picotts-source.patch"
+
+  mkdir -p "${srcdir}/stb"
+  cp "${srcdir}/stb_image-${_stb_commit}.h" "${srcdir}/stb/stb_image.h"
+}
+
+build() {
+  local -a _build_type
+  if check_option "debug" "n"; then
+    _build_type=(-DCMAKE_BUILD_TYPE=Release)
+  else
+    _build_type=(-DCMAKE_BUILD_TYPE=Debug)
+  fi
+
+  WEBOTS_HOME="${srcdir}/${_sourcedir}" \
+    "${MINGW_PREFIX}/bin/python" \
+      "${srcdir}/${_sourcedir}/scripts/packaging/generate_proto_list.py"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DPICOTTS_SOURCE_DIR="${srcdir}/${_picotts_sourcedir}" \
+      -DSTB_INCLUDE_DIR="${srcdir}/stb" \
+      -DWEBOTS_PACKAGE_BUILD=ON \
+      "${_build_type[@]}" \
+      -S "${srcdir}/${_sourcedir}" \
+      -B "${srcdir}/build-${MSYSTEM}"
+
+  cmake --build "${srcdir}/build-${MSYSTEM}"
+
+}
+
+package() {
+  DESTDIR="${pkgdir}" \
+    cmake --install "${srcdir}/build-${MSYSTEM}"
+
+  install -Dm644 "${srcdir}/${_sourcedir}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}
