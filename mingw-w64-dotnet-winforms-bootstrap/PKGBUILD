@@ -1,0 +1,121 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-winforms-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=7.0.20
+pkgrel=1
+pkgdesc='Source-built WinForms 7 interim port on the .NET 8 bootstrap runtime (mingw-w64)'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Kreijstal/msys2-ur'
+license=('spdx:MIT')
+_dotnetver=8.0.131
+_bootstrap_commit=3ae98d56e483dcf09847aec2b1099ea281d97408
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_dotnetver}")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_dotnetver}"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm=${_dotnetver}"
+             "${MINGW_PACKAGE_PREFIX}-clang"
+             'mingw-w64-ucrt-x86_64-mono'
+             'python' 'curl' 'tar')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-cppcli")
+options=('!strip' '!lto')
+source=("dotnet-bootstrap-${_bootstrap_commit}.tar.gz"
+        "winforms-7.0.20.tar.gz::https://codeload.github.com/dotnet/winforms/tar.gz/refs/tags/v7.0.20"
+        "winforms-8.0.0.tar.gz::https://codeload.github.com/dotnet/winforms/tar.gz/refs/tags/v8.0.0"
+        "runtime-8.0.0.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v8.0.0"
+        "wpf-8.0.0.tar.gz::https://codeload.github.com/dotnet/wpf/tar.gz/refs/tags/v8.0.0"
+        README.md)
+sha256sums=('64c068ace30add9d1394105c56e0d2f7b94db1bded1bb07b398d1df421b5c25f'
+            '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
+            'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
+            'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
+            'b4acc515805fd551fe9982f496e4062f0e9ddc4bed219a236454857b56126748'
+            '46187eed9d637ddc86cf167b92ddcf7caeefd490a4f490773032dc34435ed6c8')
+noextract=("${source[@]%%::*}")
+_tree() { printf '%s/dotnet-bootstrap-%s' "$srcdir" "$_bootstrap_commit"; }
+_root() { printf '%s/work' "$srcdir"; }
+_sdk() { printf '%s/lib/dotnet' "$MINGW_PREFIX"; }
+_driver() { printf '%s/bootstrap/m612' "$(_tree)"; }
+
+prepare() {
+  mkdir -p "$(_tree)" "$(_root)/src"
+  tar -xf "$srcdir/dotnet-bootstrap-${_bootstrap_commit}.tar.gz" -C "$srcdir"
+  local release directory file
+  for release in winforms-7.0.20 winforms-8.0.0 runtime-8.0.0 wpf-8.0.0; do
+    directory=$release
+    [ "$release" = runtime-8.0.0 ] && directory=runtime-8.0.0-native
+    mkdir -p "$(_root)/src/$directory"
+    tar -xf "$srcdir/$release.tar.gz" --strip-components=1 -C "$(_root)/src/$directory"
+  done
+  # Executable fixtures from upstream source archives cannot be build inputs.
+  find "$(_root)/src" -type f \( -iname '*.dll' -o -iname '*.exe' -o -iname '*.winmd' -o -iname '*.nupkg' -o -iname '*.obj' -o -iname '*.lib' -o -iname '*.a' -o -iname '*.so' -o -iname '*.pdb' -o -iname '*.resources' \) -print > "$(_root)/deleted-binaries.txt"
+  /usr/bin/python3 - "$(_root)" <<'PYCLEAN'
+from pathlib import Path
+import sys
+root=Path(sys.argv[1]);source=root/'src';report=root/'deleted-binaries.txt'
+paths=[Path(line) for line in report.read_text().splitlines()]
+for file in paths: file.unlink()
+report.write_text(''.join(str(file.relative_to(source))+'\n' for file in paths))
+PYCLEAN
+  for release in winforms-7.0.20 winforms-8.0.0; do
+    sha256sum "$srcdir/$release.tar.gz" | awk '{print $1}' > "$(_root)/src/$release/.source-bootstrap"
+  done
+  # The driver checks pinned archive hashes even when sources are already staged.
+  for release in winforms-7.0.20 winforms-8.0.0 wpf-8.0.0; do cp "$srcdir/$release.tar.gz" "$(_root)/src/"; done
+  mkdir -p "$(_root)/build/refpack-8.0.0/out" "$(_root)/pkgs/analyzers"
+  cp "$(_sdk)/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0/"*.dll "$(_root)/build/refpack-8.0.0/out/"
+  cp "$(_sdk)/packs/Microsoft.NETCore.App.Ref/8.0.31/analyzers/dotnet/cs/"*.dll "$(_root)/pkgs/analyzers/"
+}
+
+_oob() {
+  local names=$1 name
+  M612="$(_root)" MSYSTEM=UCRT64 CSC_DOTNET="$(_sdk)/dotnet.exe" OOB="$names" \
+    bash "$(_driver)/libraries.sh" "$(_sdk)/sdk/8.0.131/Roslyn/bincore/csc.dll" plan gens build report
+  # libraries.sh reports failures without failing its report step; enforce every output here.
+  for name in $names; do test -s "$(_root)/oob-8.0.0/lib/$name.dll"; done
+}
+_forms() {
+  local release=$1; shift
+  M612="$(_root)" MSYSTEM=CLANG64 WINFORMS_VERSION=$release WINFORMS_SDK="$(_sdk)" \
+    bash "$(_driver)/winforms.sh" "$@"
+}
+
+build() {
+  _oob 'Microsoft.Win32.SystemEvents'
+  _forms 8.0.0 drawing
+  cp "$(_root)/build/winforms-8.0.0/lib/System.Drawing.Common.dll" "$(_root)/oob-8.0.0/lib/"
+  _oob 'System.Security.Cryptography.ProtectedData System.Diagnostics.EventLog System.Configuration.ConfigurationManager System.Resources.Extensions System.Windows.Extensions'
+  _forms 7.0.20 accessibility generator primitives forms analyzers layout
+}
+
+check() {
+  # Clone the installed, source-built SDK using hard links; add only new files owned by this package.
+  local root="$(_root)/check-root"
+  rm -rf "${root:?}"
+  mkdir -p "$root"
+  cp -al "$(_sdk)/." "$root/"
+  # Unlink an earlier installed copy before merging, so hard links cannot modify installed files.
+  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop" \
+    "$root/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.7.0.20" \
+    "$root/packs/Microsoft.WindowsDesktop.App.Ref/8.0.0-bootstrap.7.0.20" \
+    "$root/packs/Microsoft.WindowsDesktop.App.Runtime.win-x64/8.0.0-bootstrap.7.0.20"
+  cp -a "$(_root)/build/winforms-7.0.20/layout/." "$root/"
+  PATH="$MINGW_PREFIX/bin:/usr/bin" MSYS2_ARG_CONV_EXCL='*' \
+    bash "$(_driver)/winforms-tests/check-sdk.sh" "$root" "$(_root)/sdk-check"
+  PATH="$MINGW_PREFIX/bin:/usr/bin" MSYS2_ARG_CONV_EXCL='*' \
+    bash "$(_driver)/winforms-tests/check-cppcli.sh" "$root" "$MINGW_PREFIX/bin/cli-clang.exe" "$(_root)/cppcli-check"
+}
+
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX/lib/dotnet"
+  cp -a "$(_root)/build/winforms-7.0.20/layout/." "$pkgdir$MINGW_PREFIX/lib/dotnet/"
+  local release file
+  for release in winforms-7.0.20 winforms-8.0.0 wpf-8.0.0; do
+    install -Dm644 "$(_root)/src/$release/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$release.LICENSE"
+  done
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do
+    install -Dm644 "$(_root)/src/runtime-8.0.0-native/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/runtime.$file"
+  done
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -Dm644 "$(_root)/deleted-binaries.txt" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/deleted-binaries.txt"
+}
