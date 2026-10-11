@@ -73,6 +73,8 @@ prepare() {
 }
 
 build() {
+  # The sample controller Makefiles test $(OS) to add Windows libs (e.g. -lwinmm); login shells may not set it.
+  export OS=Windows_NT
   local -a _build_type
   if check_option "debug" "n"; then
     _build_type=(-DCMAKE_BUILD_TYPE=Release)
