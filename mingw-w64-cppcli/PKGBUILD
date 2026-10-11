@@ -1,0 +1,149 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=cppcli
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Clang-backed C++/CLI compiler subset with source-built CLR assembly output (mingw-w64)'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Kreijstal/msys2-ur'
+license=('spdx:Apache-2.0 WITH LLVM-exception' 'spdx:MIT')
+_llvmver=22.1.8
+_bootstrap_commit=3cbf21078968e2290a54ab093392b4dfeb1c6f1f
+_dotnetver=8.0.131
+depends=("${MINGW_PACKAGE_PREFIX}-clang=${_llvmver}"
+         "${MINGW_PACKAGE_PREFIX}-clang-libs=${_llvmver}"
+         "${MINGW_PACKAGE_PREFIX}-llvm-libs=${_llvmver}"
+         "${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_dotnetver}"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=${_dotnetver}"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm=${_dotnetver}")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-llvm=${_llvmver}"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_dotnetver}"
+             'patch')
+checkdepends=('mingw-w64-ucrt-x86_64-gcc')
+options=('!strip' '!lto' '!buildflags')
+source=("dotnet-bootstrap-${_bootstrap_commit}.tar.gz"
+        'launcher.c'
+        'package-driver.py'
+        "LLVM-LICENSE.TXT::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/llvm/LICENSE.TXT"
+        "ParseAST.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseAST.cpp"
+        "ParseCXXInlineMethods.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseCXXInlineMethods.cpp"
+        "ParseDecl.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseDecl.cpp"
+        "ParseDeclCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseDeclCXX.cpp"
+        "ParseExpr.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseExpr.cpp"
+        "ParseExprCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseExprCXX.cpp"
+        "ParseHLSL.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseHLSL.cpp"
+        "ParseHLSLRootSignature.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseHLSLRootSignature.cpp"
+        "ParseInit.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseInit.cpp"
+        "ParseObjc.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseObjc.cpp"
+        "ParseOpenACC.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseOpenACC.cpp"
+        "ParseOpenMP.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseOpenMP.cpp"
+        "ParsePragma.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParsePragma.cpp"
+        "ParseStmt.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseStmt.cpp"
+        "ParseStmtAsm.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseStmtAsm.cpp"
+        "ParseTemplate.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseTemplate.cpp"
+        "ParseTentative.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseTentative.cpp"
+        "Parser.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/Parser.cpp"
+)
+source+=('LICENSE.launcher' 'check-launcher.py')
+sha256sums=('75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
+            '2abc10f6cb6e5cf7bfcd72137565f831e9b0ec5dbecf90cb3edcec2d906a7abf'
+            '58f537b7f803ac76f3eced97625fe03a71803f54446d9dc694859f5476ae86a0'
+            '8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee'
+            '733349ba89f600a8902d059bb20f6e2d15f0b4491ed7660c7f06b8ca24856d17'
+            '1d3c117e448184000e6f446cbf16a7553a8c0db35ed0909dcee6b62873a90057'
+            '28aa51a88ccebd2d19825b2d61246caf8b83ad8d83dc9313669a7c34154b6591'
+            '6598dcd7f0fdef7c8cdf3d7e14846adffa6f8fcb3c4ff62aaed2b3dc238c2b46'
+            'be659823e85cf4401510fed6b6f3a9a2d266499c6714165e7d8ab17f7a3936e7'
+            '6a61327601814e49573f338da7823fdda3e96db2de40cc31fc29556da342195b'
+            'd43ca50f127289d6c5e0379993c6f6562e56f5130ad4bd993cf6bf060bee6dd1'
+            '4456fc0d4e59d95c2b05d32a2e843c38119ad6767bc5935df1d5f29521282af1'
+            'e24a7bcfad1b914a3951bed6800eb254b8adb1a4a9d9c146e0b38af4cb65a7ca'
+            'a28542e38c35fc14c7421da77f373f24f2388cf6c449c5f991e590d8476a695e'
+            '58f081bec744d55d730d5bccb8e51f7ac5ebb56338f1dc78ac735210efba772d'
+            '62e06eceaf236089014a85fce1d4fd0a8dbaf1cc04823a19ff7e32af2ae5b052'
+            'b7c9d5777f74d5d7acd9fe5eadb99a069ad4f898f422b0835a4aee3343f301c4'
+            '2924c7fd490855f3b63d1c4abdca050a7599d6382a1b2bc9f2735eef05217ec5'
+            'e133b291db72fd1c504ddda97d531901b7c11c571253006aba0fe7b7238382cc'
+            '13059e9963c1b117ea3b19df6d7510171a8c016d03fa873a8dea05574871cad7'
+            '9522a11bb4b900c71d28ce384a83b8a57d054d0ecca1d5151a03b56c1507fc1f'
+            'dc6d58f43e0117f58c1174c809eab7cb76f87bc7a9906d0a43051e456393aac9'
+            'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
+            '13621544a12725292b1c8a206e43a195c62bbb4fbc1008454c1f162329008335'
+)
+
+_tree() { printf '%s/dotnet-bootstrap-%s' "${srcdir}" "${_bootstrap_commit}"; }
+_frontend() { printf '%s/bootstrap/m612/cppcli' "$(_tree)"; }
+
+prepare() {
+  mkdir -p "${srcdir}/parse-cache"
+  local file
+  for file in "${source[@]:4:18}"; do
+    file=${file%%::*}
+    cp "${srcdir}/${file}" "${srcdir}/parse-cache/${file}"
+  done
+  HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 NO_PROXY= \
+    "${MINGW_PREFIX}/bin/python.exe" "$(_frontend)/fetch-clang-parse.py" \
+      "${srcdir}/parse-cache" "${srcdir}/clang-parse"
+}
+
+_sdkroot() { printf '%s' "${CPPCLI_SDK:-${MINGW_PREFIX}/lib/dotnet}"; }
+_ilasm() { printf '%s' "${CPPCLI_ILASM:-${MINGW_PREFIX}/bin/ilasm-dotnet.exe}"; }
+
+build() {
+  mkdir -p "${srcdir}/build"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "${srcdir}/build/NuGet.config"
+  "$(_sdkroot)/dotnet.exe" build "$(cygpath -m "$(_frontend)/metadata/metadata.csproj")" -c Release -nologo \
+    --configfile "$(cygpath -m "${srcdir}/build/NuGet.config")" -p:UseSharedCompilation=false \
+    "-p:BaseIntermediateOutputPath=$(cygpath -m "${srcdir}/build/metadata-obj")/" \
+    "-p:OutputPath=$(cygpath -m "${srcdir}/build/metadata")/" -p:NuGetAudit=false
+  "${MINGW_PREFIX}/bin/cmake" -S "$(_frontend)" -B "${srcdir}/build" -GNinja \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER="${MINGW_PREFIX}/bin/clang.exe" \
+    -DCMAKE_CXX_COMPILER="${MINGW_PREFIX}/bin/clang++.exe" \
+    -DLLVM_DIR="${MINGW_PREFIX}/lib/cmake/llvm" -DCPPCLI_PARSE_DIR="${srcdir}/clang-parse"
+  "${MINGW_PREFIX}/bin/cmake" --build "${srcdir}/build" --target cli_ast -j2
+  printf '#define TARGET_RELATIVE L"../bin/python.exe"\n#define TOOL_RELATIVE L"../lib/cppcli/package-driver.py"\n' \
+    > "${srcdir}/launcher-config.h"
+  "${MINGW_PREFIX}/bin/cc" -std=c11 -O2 -Wall -Wextra -Werror -municode \
+    -include "${srcdir}/launcher-config.h" "${srcdir}/launcher.c" -o "${srcdir}/cli-clang.exe"
+}
+
+check() {
+  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/check-launcher.py" \
+    "$(cygpath -m "${srcdir}/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
+
+  # Use the build tree through the same driver as the installed package.
+  local test="${srcdir}/check"
+  mkdir -p "${test}"
+  CPPCLI_SDK="$(cygpath -m "$(_sdkroot)")" CPPCLI_ILASM="$(cygpath -m "$(_ilasm)")" \
+    CPPCLI_CLANG="$(cygpath -m "${MINGW_PREFIX}/bin/clang++.exe")" \
+    "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/build/cli-clang" \
+      "$(cygpath -m "$(_frontend)/../cli-poc/hello.cpp")" -o "$(cygpath -m "${test}/hello.dll")"
+  "$(_sdkroot)/dotnet.exe" "$(cygpath -m "${test}/hello.dll")" | tr -d '\r' > "${test}/hello.txt"
+  grep -qx 'Hello from C++/CLI through a GCC plugin!' "${test}/hello.txt"
+  CPPCLI_BUILD="${srcdir}/build" CPPCLI_TESTDIR="${test}" CPPCLI_SDK="$(_sdkroot)" CPPCLI_ILASM="$(_ilasm)" \
+    bash "$(_frontend)/../cppcli.sh" test-core test-objects test-properties test-virtuals test-arrays test-exceptions test-interop test-adapter-gate
+}
+
+package() {
+  local dest="${pkgdir}${MINGW_PREFIX}/lib/${_realname}" file
+  install -Dm755 "${srcdir}/cli-clang.exe" "${pkgdir}${MINGW_PREFIX}/bin/cli-clang.exe"
+  install -Dm755 "${srcdir}/build/cli_ast.dll" "${dest}/cli_ast.dll"
+  install -Dm644 "$(_frontend)/cli-clang.py" "${dest}/cli-clang.py"
+  install -Dm644 "${srcdir}/package-driver.py" "${dest}/package-driver.py"
+  mkdir -p "${dest}/metadata"
+  for file in metadata.dll metadata.deps.json metadata.runtimeconfig.json; do
+    install -m644 "${srcdir}/build/metadata/${file}" "${dest}/metadata/${file}"
+  done
+  for file in capabilities.json roadmap.json adapter-gate.json clang-parse-manifest.json clang-caret.patch; do
+    install -Dm644 "$(_frontend)/${file}" "${pkgdir}${MINGW_PREFIX}/share/${_realname}/${file}"
+  done
+  cp -a "$(_frontend)/tests" "${pkgdir}${MINGW_PREFIX}/share/${_realname}/"
+  install -Dm644 "${srcdir}/LICENSE.launcher" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.launcher"
+  install -Dm644 "${srcdir}/LLVM-LICENSE.TXT" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LLVM-LICENSE.TXT"
+}
