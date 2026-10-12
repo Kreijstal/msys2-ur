@@ -1,0 +1,69 @@
+From: MSYS2-UR
+Subject: Target the connected kernel and report Windows interrupt limits
+
+BlockingKernelClient has no interrupt() method. Use its control channel on
+POSIX. Windows IPython rejects interrupt_request, so report the limitation
+without signalling the first ipykernel process found on the machine.
+
+--- a/src/ipython_kernel_mcp/server.py
++++ b/src/ipython_kernel_mcp/server.py
+@@ -13,7 +13,7 @@
+ 
+ import json
+ import os
+-import signal
++import sys
+ from pathlib import Path
+ 
+ from mcp.server.mcpserver import MCPServer
+@@ -176,36 +176,23 @@
+ 
+ @mcp.tool()
+ def interrupt_kernel() -> str:
+-    """Interrupt the current kernel execution by sending SIGINT.
+-
+-    Useful for stopping long-running code or infinite loops.
+-
+-    Returns:
+-        Interrupt status message.
+-    """
+-    global kernel_client
+-
++    """Interrupt the connected kernel using its Jupyter control channel.
++
++    This targets the shared kernel explicitly on POSIX. Windows IPython
++    requires interruption from the kernel console.
++    """
+     if kernel_client is None:
+         return "Not connected to any kernel"
+ 
+-    try:
+-        kernel_client.interrupt()
+-        return "Sent interrupt to kernel"
+-    except Exception:
+-        pass
+-
+-    # Fallback: try to find the kernel PID and send SIGINT
+-    try:
+-        import psutil
+-        for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+-            cmdline = proc.info.get("cmdline") or []
+-            if any("ipykernel" in str(arg) for arg in cmdline):
+-                proc.send_signal(signal.SIGINT)
+-                return f"Sent SIGINT to kernel process (PID: {proc.pid})"
+-    except Exception as e:
+-        return f"Interrupt failed: {e}"
+-
+-    return "Could not interrupt kernel"
++    if sys.platform == "win32":
++        return "Protocol interruption is not supported on Windows; interrupt from the kernel console."
++
++    try:
++        request = kernel_client.session.msg("interrupt_request")
++        kernel_client.control_channel.send(request)
++        return "Sent interrupt request to the connected kernel"
++    except Exception as exc:
++        return f"Interrupt failed: {exc}"
+ 
+ 
+ def main():

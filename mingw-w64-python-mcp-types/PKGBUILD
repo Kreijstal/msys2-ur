@@ -1,0 +1,44 @@
+_realname=mcp-types
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.3.0
+pkgrel=1
+pkgdesc="Model Context Protocol wire types (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/modelcontextprotocol/python-sdk'
+msys2_repository_url='https://github.com/modelcontextprotocol/python-sdk'
+msys2_references=('purl: pkg:pypi/mcp-types')
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic>=2.12.0"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions>=4.13.0")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-uv-dynamic-versioning")
+options=('!strip')
+source=("https://pypi.org/packages/source/m/mcp-types/mcp_types-${pkgver}.tar.gz")
+sha256sums=('d1e46549edb35ee19a94940fcee6d1addd7e589ab7ea92dda83f5d84781fc362')
+
+build() {
+  cp -r "mcp_types-${pkgver}" "python-build-${MSYSTEM}"
+  cd "python-build-${MSYSTEM}" || return
+  export UV_DYNAMIC_VERSIONING_BYPASS="${pkgver}"
+  "${MINGW_PREFIX}/bin/python" -m build --wheel --no-isolation --skip-dependency-check
+}
+
+check() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir=check dist/*.whl
+  cd check"${MINGW_PREFIX}"/lib/python3*/site-packages || return
+  "${MINGW_PREFIX}/bin/python" -c "import mcp_types, importlib.metadata as m; assert m.version('mcp-types') == '${pkgver}'"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}
