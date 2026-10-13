@@ -43,6 +43,8 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
             'd62cdcd11a1c1a20e87cc165bf313123152b9694289d31cf0e2464740b2002ee')
+source+=('0001-desktop-crypto-closure.patch')
+sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 noextract=("${source[@]%%::*}")
 _tree() { printf '%s/dotnet-bootstrap-%s' "$srcdir" "$_bootstrap_commit"; }
 _root() { printf '%s/work' "$srcdir"; }
@@ -54,6 +56,7 @@ _wpfbuild() { printf '%s/build/wpf-8.0.0' "$(_root)"; }
 prepare() {
   [[ ${MSYSTEM} == CLANG64 ]] || { error 'The source desktop port requires CLANG64'; return 1; }
   tar -xf "$srcdir/dotnet-bootstrap-${_bootstrap_commit}.tar.gz" -C "$srcdir"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0001-desktop-crypto-closure.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
@@ -108,7 +111,7 @@ build() {
   _oob 'Microsoft.Win32.SystemEvents'
   _forms 8.0.0 drawing
   cp "$(_root)/build/winforms-8.0.0/lib/System.Drawing.Common.dll" "$(_root)/oob-8.0.0/lib/"
-  _oob 'System.Security.Cryptography.ProtectedData System.Diagnostics.EventLog System.Configuration.ConfigurationManager System.Resources.Extensions System.Windows.Extensions System.IO.Packaging System.Security.Permissions System.DirectoryServices System.CodeDom System.Reflection.MetadataLoadContext'
+  _oob 'System.Security.Cryptography.ProtectedData System.Security.Cryptography.Pkcs System.Security.Cryptography.Xml System.Diagnostics.EventLog System.Configuration.ConfigurationManager System.Resources.Extensions System.Windows.Extensions System.IO.Packaging System.Security.Permissions System.DirectoryServices System.CodeDom System.Reflection.MetadataLoadContext'
   _forms 7.0.20 accessibility generator primitives forms analyzers layout
   cp -a "$(_root)/build/winforms-7.0.20/layout/." "$(_sdk)/"
   # Adapt installed compiler filenames to the build driver's expected layout;
