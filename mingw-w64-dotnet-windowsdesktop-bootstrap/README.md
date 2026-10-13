@@ -6,8 +6,8 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 65 of 139
-imported exports). Bidi, paragraph layout and other documented text behavior
+The native text/paragraph/NLS replacement is still partial (currently 80 of 139
+imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
 source metadata-generator bootstrap. The framework records this scope and its
@@ -93,3 +93,12 @@ now emits page/section/track/text/line records and checks 277 field sizes/offset
 against original managed WPF, including both arms of nested unions. Native
 imported-symbol coverage increases to 67/139; FlowDocument pagination still
 requires FsCreatePageFinite and the remaining page services.
+
+Release 8.0.0-10 adds callback-driven finite single-column text pages and
+recursive container subtracks. Original FlowDocument now lays out and renders
+short/wrapped paragraphs in Ideal/Display modes through ordinary SDK projects,
+with cached pages, real page counts, compacting GC and dispatcher cleanup.
+Native gates check exact paragraph/line/break ownership and failure rollback.
+Imported-symbol coverage increases to 80/139. Multi-page continuation, bottomless
+layout, multiple columns, RTL page text, optimal/keep policies and tables/floaters
+remain unfinished; overflow rejects without claiming the remaining text fits.
