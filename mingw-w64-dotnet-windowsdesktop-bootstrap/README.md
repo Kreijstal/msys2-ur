@@ -140,3 +140,13 @@ mapping checks pass in Ideal/Display through normal SDK and portable publishes.
 Imported-symbol coverage remains 89/139. Keep/optimal/forced-line policies,
 balancing/span areas, tables/floaters/figures, advanced algorithms and full
 bidi/native language behavior remain incomplete.
+
+Release 8.0.0-15 adds KeepTogether paragraph deferral and nested fresh-area
+propagation. Original WPF comparisons show that the same paragraph splits with
+keep disabled and moves intact with keep enabled, in flat/nested documents and
+Ideal/Display. Oversized kept paragraphs make bounded progress, and kept text
+can move intact into the next column of the same page. Native resource/source
+checks and shared-framework/portable SDK consumers pass. Coverage remains
+89/139; KeepWithNext chains, optimal/forced-line policies, balancing/span areas,
+advanced algorithms, tables/floaters/figures and full bidi/native language remain
+incomplete.
