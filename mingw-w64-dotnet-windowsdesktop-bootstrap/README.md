@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 83 of 139
+The native text/paragraph/NLS replacement is still partial (currently 86 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -112,3 +112,13 @@ Two-color raster checks verify page padding and separated paragraph rows.
 Imported-symbol coverage is 83/139. Multi-page continuation, advanced paragraph
 layout, incremental/interruptible formatting and full bidi/optimal/native
 language behavior remain incomplete.
+
+Release 8.0.0-12 adds finite multi-page text continuation through original
+container/line callbacks. Page and subtrack break records independently retain
+resume state after page disposal; cloned records have separate identities.
+Native gates validate exact four-page ranges, cleanup and failed callback
+rollback. Original WPF paginator checks render six pages, cover all 1278 source
+characters exactly once and verify content/page mapping in both formatting
+modes through shared-framework and portable SDK consumers. Imported-symbol
+coverage is 86/139. Tiny pages that cannot fit a line, hard/keep/optimal policies,
+multiple columns, advanced layout and full bidi/native language remain unfinished.
