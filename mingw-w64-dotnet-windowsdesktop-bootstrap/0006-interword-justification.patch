@@ -1,0 +1,487 @@
+diff --git a/bootstrap/m612/tools/wpf-lineservices-header.py b/bootstrap/m612/tools/wpf-lineservices-header.py
+index cc32d80..42e9f01 100644
+--- a/bootstrap/m612/tools/wpf-lineservices-header.py
++++ b/bootstrap/m612/tools/wpf-lineservices-header.py
+@@ -9,17 +9,26 @@ text=source.read_text()
+ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_t','IntPtr':'void*'}
+ records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
+          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
+-         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit')
++         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit',
++         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo')
+ lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
+ for name in records:
+     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
+     if not match: raise SystemExit('Missing LS record: '+name)
+-    fields=re.findall(r'public\s+(\w+)\s+(\w+)\s*;',match.group(1))
++    fields=re.findall(r'public\s+(\w+\*?)\s+(\w+)\s*;',match.group(1))
+     if not fields: raise SystemExit('No fields in LS record: '+name)
+     lines.append('struct '+name+' {')
+     for kind,field in fields:
++        if kind.endswith('*'):
++            pointee=kind[:-1]
++            if pointee in primitive: native=primitive[pointee]+'*'
++            elif pointee=='GlyphOffset': native='void*' # external record; pointer ABI only
++            else: raise SystemExit('Unsupported LS pointer field: '+kind+' '+field)
++            lines.append('    '+native+' '+field+';')
++            continue
+         if kind not in primitive:
+             if kind in records: native=kind
++            elif kind=='Plsrun': native='uint32_t'
+             elif re.search(r'\benum\s+'+kind+r'\b',text): native='int32_t'
+             elif re.search(r'\bdelegate\s+\w+\s+'+kind+r'\s*\(',text): native='void*'
+             else: raise SystemExit('Unsupported LS ABI field: '+kind+' '+field)
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 565936a..e8e28e8 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -9,6 +9,7 @@
+ #include <new>
+ #include <limits>
+ #include <unicode/ubrk.h>
++#include <unicode/uchar.h>
+ #include "LineServicesNative.h"
+ 
+ namespace {
+@@ -30,7 +31,7 @@ struct Run {
+     LsChp properties{};
+     LsTxM metrics{};
+     std::vector<WCHAR> text;
+-    std::vector<int> widths,advances;
++    std::vector<int> widths,advances,nominal_advances;
+     std::vector<uint16_t> glyphs,clusters,characters;
+     std::vector<uint32_t> glyph_properties;
+     std::vector<uint8_t> expansion;
+@@ -74,6 +75,8 @@ using EnumTabCallback=int (WINAPI *)(void*,uint32_t,int,WCHAR*,uint16_t,int,int,
+ using ObjectHandler=int (WINAPI *)(void*,uint32_t,InlineInit*);
+ using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,int*,int*);
+ using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
++using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
++using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
+ 
+ int format_object(Context& context,Run& run,int position,int margin) {
+     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
+@@ -254,6 +257,113 @@ int trailing_width(const Run& run,bool& all_spaces) {
+     return width;
+ }
+ 
++LsNeighborInfo neighbor(const Run* run,bool last) {
++    LsNeighborInfo value{};
++    if(!run || run->text.empty()) return value;
++    value.fNeighborIsPresent=1; value.plsrun=static_cast<uint32_t>(run->id);
++    value.fNeighborIsText=!run->hidden && !run->embedded && !run->tab;
++    size_t index=last?run->text.size()-1:0;
++    value.wch=run->text[index]; value.fGlyphBased=run->shaped;
++    if(run->shaped) {
++        unsigned glyph=run->clusters[index];
++        if(glyph<run->glyphs.size()) { value.chprop=run->characters[index]; value.gindex=run->glyphs[glyph]; value.gprop=run->glyph_properties[glyph]; }
++    }
++    return value;
++}
++
++int justify_line(Line& line,int target,int& total,int& trailing) {
++    int64_t remaining=static_cast<int64_t>(target)-trailing;
++    if(remaining<=0) return LS_None;
++    auto& context=*line.context;
++    if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
++        std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
++    int visible_cp=line.first;
++    for(const auto& run:line.runs) visible_cp+=static_cast<int>(run.text.size());
++    for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
++        size_t count=run->text.size();
++        while(count && (run->text[count-1]==L' ' || run->text[count-1]==0xa0)) { --count; --visible_cp; }
++        if(count) break;
++    }
++    struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; };
++    std::vector<Opportunity> sites;
++    size_t begin=0;
++    for(size_t i=0;i<line.runs.size();++i) if(line.runs[i].tab) begin=i+1;
++    for(size_t index=begin;index<line.runs.size();++index) {
++        auto& run=line.runs[index];
++        if(run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
++        if(run.flow!=0) return LS_NotImplemented;
++        size_t count=run.shaped?run.advances.size():run.text.size();
++        std::vector<int> left[3],right[3]; int* lp[3]; int* rp[3];
++        for(int level=0;level<3;++level) { left[level].assign(count,0);right[level].assign(count,0);lp[level]=left[level].data();rp[level]=right[level].data(); }
++        std::vector<uint8_t> types(count,1);std::vector<int> ink(count),zero(run.text.size());
++        auto previous=neighbor(index?&line.runs[index-1]:nullptr,true);
++        auto next=neighbor(index+1<line.runs.size()?&line.runs[index+1]:nullptr,false);
++        int status=0;
++        if(run.shaped) {
++            if(!context.info.pfnGetGlyphExpansionInfoFullMixed) return LS_NotImplemented;
++            LsGlyphRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.clusters.data(),run.characters.data(),
++                static_cast<int>(run.text.size()),0,run.glyphs.data(),run.glyph_properties.data(),run.advances.data(),run.offsets.data(),static_cast<int>(count)};
++            status=reinterpret_cast<GlyphExpansion>(context.info.pfnGetGlyphExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp,types.data(),ink.data());
++        } else {
++            if(!context.info.pfnGetCharExpansionInfoFullMixed) return LS_NotImplemented;
++            LsCharRunInfo info{static_cast<uint32_t>(run.id),reinterpret_cast<uint16_t*>(run.text.data()),run.widths.data(),zero.data(),zero.data(),static_cast<int>(count)};
++            status=reinterpret_cast<CharExpansion>(context.info.pfnGetCharExpansionInfoFullMixed)(context.info.pols,0,run.flow,&info,&previous,&next,3,lp,rp);
++        }
++        if(status) return status;
++        for(size_t item=0;item<count;++item) {
++            if(types[item]>3 || ink[item]<0) return LS_InvalidFormatterResult;
++            for(int level=0;level<3;++level) if(left[level][item]<0 || right[level][item]<0) return LS_InvalidFormatterResult;
++        }
++        for(size_t cp=0;cp<run.text.size() && run.cp+static_cast<int>(cp)<visible_cp;++cp) {
++            if(!u_isUWhiteSpace(run.text[cp])) continue;
++            size_t item=cp;
++            if(run.shaped) {
++                if((cp && run.clusters[cp]==run.clusters[cp-1]) || (cp+1<run.text.size() && run.clusters[cp]==run.clusters[cp+1])) continue;
++                unsigned end=cp+1<run.text.size()?run.clusters[cp+1]:run.advances.size();
++                if(end<=run.clusters[cp] || end>run.advances.size()) return LS_InvalidCharToGlyphMapping;
++                item=end-1;
++                if(types[item]==0) continue;
++                if(types[item]!=1) return LS_NotImplemented;
++            }
++            for(int side=0;side<2;++side) {
++                auto* capacities=side?right:left;
++                sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item]});
++            }
++        }
++    }
++    int64_t added=0;
++    for(int level=0;level<3 && remaining>0;++level) {
++        for(;;) {
++            size_t active=0;
++            for(const auto& site:sites) if(site.capacity[level]>site.added) ++active;
++            if(!active || !remaining) break;
++            int64_t share=(remaining+active-1)/active;
++            for(auto& site:sites) {
++                int64_t room=static_cast<int64_t>(site.capacity[level])-site.added;
++                if(room<=0) continue;
++                int amount=static_cast<int>(std::min({room,share,remaining}));
++                site.added+=amount;remaining-=amount;added+=amount;
++            }
++        }
++    }
++    if(static_cast<int64_t>(total)+added>INT_MAX) return LS_InvalidFormatterResult;
++    for(const auto& site:sites) if(site.added) {
++        auto& run=*site.run;
++        if(run.shaped && run.nominal_advances.empty()) run.nominal_advances=run.advances;
++        int& advance=run.shaped?run.advances[site.index]:run.widths[site.index];
++        if(static_cast<int64_t>(advance)+site.added>INT_MAX || static_cast<int64_t>(run.width)+site.added>INT_MAX) return LS_InvalidFormatterResult;
++        advance+=site.added;run.width+=site.added;
++        if(run.shaped) {
++            run.expansion[site.index]=site.type;
++            if(site.left) {
++                if(static_cast<int64_t>(run.offsets[site.index].du)+site.added>INT_MAX) return LS_InvalidFormatterResult;
++                run.offsets[site.index].du+=site.added;
++            }
++        }
++    }
++    total+=static_cast<int>(added);trailing+=static_cast<int>(added);return LS_None;
++}
++
+ // Prefix widths are meaningful only at complete glyph-cluster boundaries.
+ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
+     const auto& runs=line.runs;
+@@ -523,7 +633,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         if(!previous_break) result->paragraph_first=paragraph.cpFirst;
+         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
+         if(status) return status;
+-        if(paragraph.fJustify || (paragraph.grpf&0x1000)) return LS_NotImplemented;
++        if((paragraph.fJustify && paragraph.lskj!=0) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
+         result->widths.upStartMainText=properties.durLeft;
+         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
+         int flow=paragraph.lstflow;
+@@ -655,6 +765,12 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+             trailing-=trailing_width(*item,all_spaces);
+             if(!all_spaces) break;
+         }
++        int minimum_total=total,minimum_trailing=trailing;
++        if(paragraph.fJustify && result->info.endr==0 && limit==0) {
++            int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
++            if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
++            status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
++        }
+         result->info.dvrAscent=result->info.dvpAscent;
+         result->info.dvrDescent=result->info.dvpDescent;
+         result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;
+@@ -662,7 +778,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         result->info.cpLimToContinue=result->info.cpLimToStay=position;
+         result->info.cpFirstVis=cp; result->info.fFirstLineInPara=cp==result->paragraph_first;
+         result->widths.upLimLine=total; result->widths.upStartTrailing=trailing;
+-        result->widths.upMinLimLine=total; result->widths.upMinStartTrailing=trailing;
++        result->widths.upMinLimLine=minimum_total; result->widths.upMinStartTrailing=minimum_trailing;
+         void* line_handle=result.get();
+         { std::lock_guard<std::mutex> lock(gate); lines.emplace(line_handle,result); }
+         *info=result->info; *widths=result->widths; *depth=1; *output=line_handle;
+@@ -779,7 +895,7 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT*
+                 if(!context.info.pfnDrawGlyphs) return LS_NotImplemented;
+                 status=reinterpret_cast<DrawGlyphs>(context.info.pfnDrawGlyphs)(context.info.pols,static_cast<uint32_t>(run.id),
+                     run.text.data(),run.clusters.data(),run.characters.data(),static_cast<int>(run.text.size()),run.glyphs.data(),
+-                    run.advances.data(),run.advances.data(),run.offsets.data(),run.glyph_properties.data(),run.expansion.data(),
++                    run.advances.data(),run.nominal_advances.empty()?run.advances.data():run.nominal_advances.data(),run.offsets.data(),run.glyph_properties.data(),run.expansion.data(),
+                     static_cast<int>(run.glyphs.size()),run.flow,mode,&point,&height,run.width,clip);
+             } else {
+                 if(!context.info.pfnDrawTextRun) return LS_NotImplemented;
+diff --git a/bootstrap/m612/wpf-tests/JustificationNative.cpp b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+new file mode 100644
+index 0000000..0d7d199
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+@@ -0,0 +1,77 @@
++// SPDX-License-Identifier: MIT
++#include <windows.h>
++#include <cstdio>
++#include <cstring>
++#include <stdexcept>
++#include <string>
++#include "LineServicesNative.h"
++struct GlyphOffset { int32_t du,dv; };
++static std::wstring text=L"aa bb cc dd\u2029";
++static bool shaped=false;
++static int failure=0,calls=0,draws=0;
++static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
++static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;return 0; }
++static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;value->durRightJustify=3;return 0; }
++static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR**,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
++    if(cp<0 || cp>=static_cast<int>(text.size()))return LS_WrongGivenCp;
++    int end=static_cast<int>(text.size())-1;*count=cp<end?end-cp:1;*used=1;*hidden=0;*chp={};chp->idObj=0xffff;chp->flags=shaped?0x400:0;*id=7;
++    std::memcpy(buffer,text.data()+cp,*count*sizeof(WCHAR));return 0;
++}
++static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0};return 0; }
++static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=count*10;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
++static int WINAPI glyphs(void*,uintptr_t*,int*,int,WCHAR*,int count,int,uint16_t* indices,uint32_t* properties,int,int* used,uint16_t* clusters,uint16_t* chars,int* alone,int* actual) {
++    *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}return 0;
++}
++static int WINAPI positions(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,uint32_t*,int count,int,int* advances,GlyphOffset* offsets) {
++    for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
++}
++static int fill(int count,int** left,int** right) {
++    ++calls;if(failure==1)return LS_ClientAbort;
++    for(int level=0;level<3;++level)for(int i=0;i<count;++i){left[level][i]=0;right[level][i]=failure==4?1:level==0?5:level==1?8:100;}
++    if(failure==2)left[0][0]=-1;return 0;
++}
++static int WINAPI char_expand(void*,int device,int flow,LsCharRunInfo* run,LsNeighborInfo* left,LsNeighborInfo* right,int priorities,int** l,int** r) {
++    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=' '||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
++    return fill(run->cwch,l,r);
++}
++static int WINAPI glyph_expand(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** l,int** r,uint8_t* types,int* ink) {
++    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=' '||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
++    for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}if(failure==3)types[2]=2;
++    return fill(run->cgindex,l,r);
++}
++static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int* widths,int count,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
++    if(count!=6||widths[2]!=23||widths[5]!=10||width!=73)return LS_ClientAbort;++draws;return 0;
++}
++static int WINAPI draw_glyphs(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int count,uint16_t*,int* justified,int* nominal,GlyphOffset*,uint32_t*,uint8_t* types,int,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
++    if(count!=6||justified[2]!=23||nominal[2]!=10||types[2]!=1||width!=73)return LS_ClientAbort;++draws;return 0;
++}
++int main(int argc,char** argv) {
++    try {
++        require(argc==2,"usage: check DLL");HMODULE dll=LoadLibraryA(argv[1]);require(dll!=nullptr,"native DLL load");
++        using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);using Doc=int(WINAPI*)(void*,int,int,LsDevRes*);
++        using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);
++        using Query=int(WINAPI*)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);using Display=int(WINAPI*)(void*,LSPOINT*,uint32_t,LSRECT*);
++        using Dispose=int(WINAPI*)(void*,BOOL);using Destroy=int(WINAPI*)(void*);
++#define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));require(name!=nullptr,#name)
++        PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
++        require(sizeof(LsNeighborInfo)==28&&sizeof(LsCharRunInfo)==48&&sizeof(LsGlyphRunInfo)==80&&offsetof(LsGlyphRunInfo,rgduWidth)==56,"source nominal/glyph/neighbor record ABI");
++        LsContextInfo config{};config.version=4;config.pfnFetchPap=reinterpret_cast<void*>(pap);config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);config.pfnDrawTextRun=reinterpret_cast<void*>(draw_text);config.pfnDrawGlyphs=reinterpret_cast<void*>(draw_glyphs);config.pfnGetGlyphPositions=reinterpret_cast<void*>(positions);config.pfnGetCharExpansionInfoFullMixed=reinterpret_cast<void*>(char_expand);config.pfnGetGlyphExpansionInfoFullMixed=reinterpret_cast<void*>(glyph_expand);
++        LscbkRedefined callbacks{reinterpret_cast<void*>(fetch),reinterpret_cast<void*>(glyphs),reinterpret_cast<void*>(props)};
++        void* context=nullptr;LsDevRes resolution{1440,1440,1440,1440};require(LoCreateContext(&config,&callbacks,&context)==0&&LoSetDoc(context,1,1,&resolution)==0,"justification context");
++        LsLInfo info{};LsLineWidths measured{};void* line=nullptr;int depth=0;
++        for(bool mode:{false,true}) {
++            shaped=mode;calls=draws=0;
++            require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&calls==1&&measured.upStartTrailing==67&&measured.upLimLine==77&&measured.upMinStartTrailing==54&&measured.upMinLimLine==64,"exact justified widths preserve nominal minima and trailing spaces");
++            LsQSubInfo sub{};LsTextCell cell{};require(LoQueryLineCpPpoint(line,2,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==24&&cell.dupCell==23,"expanded space has retained actual caret geometry");
++            require(LoQueryLineCpPpoint(line,3,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==47,"following text moves by exact distributed expansion");
++            LSPOINT origin{0,12};LSRECT clip{-100,-100,1000,1000};require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1,"nominal/shaped drawing receives actual and original advances");
++            require(LoDisposeLine(line,FALSE)==0,"justified line disposal");
++            for(int bad=1;bad<=2;++bad){failure=bad;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==(bad==1?LS_ClientAbort:LS_InvalidFormatterResult)&&!line,"callback failure/negative capacity preserves empty output");}
++            failure=4;require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==55,"provider capacity limits cannot be exceeded to forge column width");require(LoDisposeLine(line,FALSE)==0,"limited-capacity line disposal");failure=0;
++            calls=0;require(LoCreateLine(context,0,0,200,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==2&&calls==0&&measured.upLimLine==114,"last paragraph line stays nominal and does not request expansion");require(LoDisposeLine(line,FALSE)==0,"last line disposal");
++        }
++        failure=3;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"unsupported ink expansion rejects without fabricated glyphs");
++        require(LoDestroyContext(context)==0,"justification context teardown");
++        std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;
++    } catch(const std::exception& e){std::printf("FAIL: %s\n",e.what());return 1;}
++}
+diff --git a/bootstrap/m612/wpf-tests/TextJustification.cs b/bootstrap/m612/wpf-tests/TextJustification.cs
+new file mode 100644
+index 0000000..89ff23c
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/TextJustification.cs
+@@ -0,0 +1,87 @@
++using System;
++using System.Globalization;
++using System.Linq;
++using System.IO;
++using System.Windows.Media.Imaging;
++using System.Windows.Controls;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.TextFormatting;
++class JustifyRunProperties:TextRunProperties {
++    public override Typeface Typeface=>new Typeface("Nirmala UI");
++    public override double FontRenderingEmSize=>24;
++    public override double FontHintingEmSize=>24;
++    public override TextDecorationCollection TextDecorations=>null;
++    public override Brush ForegroundBrush=>Brushes.Black;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("hi-IN");
++    public override TextEffectCollection TextEffects=>null;
++}
++class JustifyParagraph:TextParagraphProperties {
++    readonly bool justify;
++    public JustifyParagraph(bool justify=true) { this.justify=justify; }
++    public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
++    public override TextAlignment TextAlignment=>justify?TextAlignment.Justify:TextAlignment.Left;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>new JustifyRunProperties();
++    public override TextWrapping TextWrapping=>TextWrapping.Wrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++}
++class JustifySource:TextSource {
++    public readonly string Text;
++    public JustifySource(string text="कि") { Text=text; }
++    public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,Text.Length-index,new JustifyRunProperties()):new TextEndOfParagraph(1);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,
++        new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("hi-IN"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++    static void Near(double actual,double expected,string why,double tolerance=0.03) { if(Math.Abs(actual-expected)>tolerance)throw new Exception(why+": "+actual+" vs "+expected); }
++    [STAThread]
++    static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++            using var formatter=TextFormatter.Create(mode);
++            foreach(string text in new[]{"alpha beta gamma delta epsilon zeta", "कि कि कि कि कि कि कि कि", "abcdefghijklmnopqrstuv", "alpha beta\ngamma delta"}) {
++                var source=new JustifySource(text);int cp=0,lines=0,expanded=0;
++                while(cp<=text.Length) {
++                    using var line=formatter.FormatLine(source,cp,133,new JustifyParagraph(),null);
++                    using var plain=formatter.FormatLine(source,cp,133,new JustifyParagraph(false),null);
++                    if(line.Length!=plain.Length || line.Length<=0 || cp+line.Length>text.Length+1)throw new Exception("justification changes source coverage/break selection");
++                    int end=Math.Min(text.Length,cp+line.Length),visible=end;
++                    while(visible>cp && (text[visible-1]==' ' || text[visible-1]=='\n'))--visible;
++                    bool hard=end>cp&&text[end-1]=='\n',last=cp+line.Length>text.Length;
++                    bool space=Enumerable.Range(cp,Math.Max(0,visible-cp)).Any(index=>text[index]==' ');
++                    if(!last && !hard && space) {
++                        Near(line.Width,133,"justified visible width");
++                        int at=Enumerable.Range(cp,visible-cp).First(index=>text[index]==' ');
++                        double adjusted=line.GetTextBounds(at,1).Sum(bound=>bound.Rectangle.Width);
++                        double ordinary=plain.GetTextBounds(at,1).Sum(bound=>bound.Rectangle.Width);
++                        if(adjusted<=ordinary)throw new Exception("interword expansion did not reach retained selection geometry: "+adjusted+" vs "+ordinary);
++                        ++expanded;
++                    } else Near(line.Width,plain.Width,"final/hard/no-opportunity line stays ragged");
++                    GC.Collect(2,GCCollectionMode.Forced,true,true);
++                    var runs=line.GetIndexedGlyphRuns().ToArray();
++                    Near(runs.Sum(run=>run.GlyphRun.AdvanceWidths.Sum()),line.WidthIncludingTrailingWhitespace,"retained glyph advances match justified width",mode==TextFormattingMode.Ideal?runs.Sum(run=>run.GlyphRun.GlyphIndices.Count)*24.0/2000+0.01:1.0);
++                    if(visible<text.Length && visible>=cp)Near(line.GetDistanceFromCharacterHit(new CharacterHit(visible,0)),line.Width,"justified caret endpoint");
++                    var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())line.Draw(drawing,new Point(10,10),InvertAxes.None);
++                    var bitmap=new RenderTargetBitmap(180,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
++                    var pixels=new byte[180*80*4];bitmap.CopyPixels(pixels,180*4,0);
++                    if(!pixels.Where((value,index)=>index%4==3).Any(alpha=>alpha>150))throw new Exception("justified raster has no glyph pixels");
++                    cp+=line.Length;++lines;if(lines>30)throw new Exception("justification did not terminate");
++                }
++                if(cp!=text.Length+1 || (text.Contains("alpha beta gamma") || text.StartsWith("कि"))&&expanded==0)throw new Exception("justified paragraph expansion/source coverage");
++                Console.WriteLine($"public justification {mode}, {text.Length} source units: {lines} lines, {expanded} expanded; metrics/caret/selection/enumeration/raster/GC PASS");
++            }
++        }
++        var block=new TextBlock{FontFamily=new FontFamily("Nirmala UI"),FontSize=24,TextAlignment=TextAlignment.Justify,TextWrapping=TextWrapping.Wrap,Text="alpha beta gamma delta epsilon zeta",Foreground=Brushes.Black};
++        block.Measure(new Size(133,240));block.Arrange(new Rect(0,0,133,240));
++        GC.Collect(2,GCCollectionMode.Forced,true,true);
++        var image=new RenderTargetBitmap(160,240,96,96,PixelFormats.Pbgra32);image.Render(block);
++        var bytes=new byte[160*240*4];image.CopyPixels(bytes,160*4,0);
++        if(bytes.Where((value,index)=>index%4==3).Count(alpha=>alpha>150)<300 || block.GetPositionFromPoint(new Point(100,15),true)==null)throw new Exception("original justified TextBlock raster/point hit");
++        Console.WriteLine("original justified TextBlock measure/render/point hit across GC PASS");
++        Console.WriteLine("public original TextFormatter nominal/shaped justification, final/hard lines, no-space fallback, both formatting modes and source coverage PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-justification-sdk.sh b/bootstrap/m612/wpf-tests/check-justification-sdk.sh
+new file mode 100644
+index 0000000..9f55bad
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-justification-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/TextJustification.cs" "$work/Program.cs"
++cat > "$work/JustificationSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/JustificationSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/JustificationSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/JustificationSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/JustificationSdkCheck.exe"
++printf 'PASS normal offline WPF SDK justification/TextBlock check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 3aded7e..391ff75 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -228,6 +228,14 @@ step_check_inline_objects_native() {
+   "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+ }
+ 
++step_check_justification_native() {
++  local work=$build/justification-native-check
++  mkdir -p "$work"
++  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/JustificationNative.cpp" \
++    -I "$build/classification-native" -o "$work/native-check.exe"
++  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
++}
++
+ step_check_text_line() {
+   initialize
+   local work=$build/text-line-check
+@@ -279,6 +287,32 @@ PY
+   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DecorationsCheck.dll")"
+ }
+ 
++step_check_text_justification() {
++  initialize
++  local work=$build/text-justification-check
++  mkdir -p "$work"
++  cp "$here/wpf-tests/TextJustification.cs" "$work/Program.cs"
++  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
++from pathlib import Path
++import subprocess,sys,xml.etree.ElementTree as E
++work,lib,oob=map(Path,sys.argv[1:])
++root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
++for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
++items=E.SubElement(root,'ItemGroup')
++files={f.stem:f for f in oob.glob('*.dll')}
++files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
++for name,file in sorted(files.items()):
++    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
++E.ElementTree(root).write(work/'JustificationCheck.csproj',encoding='utf-8')
++PY
++  "$sdk/dotnet.exe" build "$(cygpath -m "$work/JustificationCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
++  local native
++  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
++    cp "${WPF_JUSTIFICATION_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
++  done
++  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/JustificationCheck.dll")"
++}
++
+ step_check_text_tabs() {
+   initialize
+   local work=$build/text-tabs-check
+@@ -724,6 +758,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
+   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
++  bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 
