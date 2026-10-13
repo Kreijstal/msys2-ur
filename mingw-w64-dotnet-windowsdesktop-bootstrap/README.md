@@ -71,3 +71,10 @@ actual justified TextBlock. Final/hard-break/no-opportunity lines stay ragged.
 Aligned-tab/other justification modes, ink insertion, compression/optimal
 algorithms and full bidi/paragraph layout remain incomplete; imported-symbol
 coverage remains 58/139.
+
+Release 8.0.0-7 adds paragraph minimum/maximum widths using retained Unicode,
+cluster and object break geometry. Normal SDK checks cover nominal/Indic text,
+NBSP, hard lines, trailing/empty content, cached calls across GC, original
+FormattedText.MinWidth and intrinsic/wrapped TextBlock layout. Full RTL,
+hyphenation/compression/optimal algorithms and paragraph/natural-language
+behavior remain incomplete; imported-symbol coverage remains 58/139.
