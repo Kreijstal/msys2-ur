@@ -24,7 +24,8 @@ Run `python make-source.py` to export the pinned local bootstrap commit, then
 build in a CLANG64 shell with `makepkg-mingw -s`. An interactive Windows desktop
 is needed by `check()`. It validates the real bridge assemblies, printer
 enumeration, a local XPS document, automation/Ribbon/interop, native graphics,
-and ordinary offline WPF/WinForms build and self-contained publish.
+text-decoration callback geometry and public raster output, and ordinary offline
+WPF/WinForms build and self-contained publish.
 
 This package replaces the WinForms-only bootstrap package because both own the
 desktop SDK. It preserves the freshly source-built legacy WinForms framework and
@@ -35,3 +36,8 @@ Normal projects use `net8.0-windows` and `<UseWPF>true</UseWPF>` with
 `Microsoft.NET.Sdk`. With no external NuGet dependencies, an empty package feed
 is sufficient. `dotnet publish -r win-x64 --self-contained true` produces an app
 with the source framework and its native dependencies.
+
+Release 8.0.0-2 adds original native text-decoration callbacks. Public tests
+verify underline, strikethrough, overline and baseline with custom pens across
+compacting GC. This improves existing exports; the imported-symbol count stays
+58/139.

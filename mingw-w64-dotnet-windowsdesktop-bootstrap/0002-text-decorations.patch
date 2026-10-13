@@ -1,0 +1,276 @@
+diff --git a/bootstrap/m612/tools/wpf-lineservices-header.py b/bootstrap/m612/tools/wpf-lineservices-header.py
+index 70909b5..a7aa797 100644
+--- a/bootstrap/m612/tools/wpf-lineservices-header.py
++++ b/bootstrap/m612/tools/wpf-lineservices-header.py
+@@ -9,7 +9,7 @@ text=source.read_text()
+ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_t','IntPtr':'void*'}
+ records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
+          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
+-         'LsQSubInfo','LsTextCell')
++         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo')
+ lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
+ for name in records:
+     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 24d6444..217da16 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -62,6 +62,9 @@ using Positions=int (WINAPI *)(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,ui
+ using DrawTextCallback=int (WINAPI *)(void*,uint32_t,LSPOINT*,WCHAR*,int*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*);
+ using DrawGlyphs=int (WINAPI *)(void*,uint32_t,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,int*,int*,GlyphOffset*,uint32_t*,uint8_t*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*);
+ using EnumText=int (WINAPI *)(void*,uint32_t,int,int,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,GlyphOffset*,uint32_t*,int);
++using UnderlineInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsULInfo*);
++using StrikeInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsStInfo*);
++using DrawDecoration=int (WINAPI *)(void*,uint32_t,uint32_t,LSPOINT*,int,int,int,uint32_t,LSRECT*);
+ 
+ int measure_run(Context& context,Run& run) {
+     int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
+@@ -562,7 +565,6 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT*
+         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+         int status=0;
+         if(!run.hidden) {
+-            if(run.properties.flags&0x60000) return LS_NotImplemented;
+             if(run.shaped) {
+                 if(!context.info.pfnDrawGlyphs) return LS_NotImplemented;
+                 status=reinterpret_cast<DrawGlyphs>(context.info.pfnDrawGlyphs)(context.info.pols,static_cast<uint32_t>(run.id),
+@@ -575,6 +577,46 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT*
+                     &point,run.text.data(),run.widths.data(),static_cast<int>(run.text.size()),run.flow,mode,&point,&height,run.width,clip);
+             }
+             if(status) return status;
++            auto draw=[&](void* callback,uint32_t kind,int offset,int thickness) {
++                int64_t y=static_cast<int64_t>(origin->y)+offset;
++                if(thickness<=0 || y<INT_MIN || y>INT_MAX) return LS_InvalidFormatterResult;
++                LSPOINT decoration{x,static_cast<int>(y)};
++                return reinterpret_cast<DrawDecoration>(callback)(context.info.pols,static_cast<uint32_t>(run.id),kind,
++                    &decoration,run.width,thickness,run.flow,mode,clip);
++            };
++            if(run.properties.flags&0x20000) {
++                if(!context.info.pfnGetRunUnderlineInfo || !context.info.pfnDrawUnderline) return LS_NotImplemented;
++                LsULInfo info{};
++                status=reinterpret_cast<UnderlineInfo>(context.info.pfnGetRunUnderlineInfo)(context.info.pols,
++                    static_cast<uint32_t>(run.id),&height,run.flow,&info);
++                if(status) return status;
++                if(info.cNumberOfLines<0 || info.cNumberOfLines>2) return LS_InvalidFormatterResult;
++                int64_t offset=static_cast<int64_t>(info.dvpUnderlineOriginOffset)+info.dvpFirstUnderlineOffset;
++                if(offset<INT_MIN || offset>INT_MAX) return LS_InvalidFormatterResult;
++                if(info.cNumberOfLines) status=draw(context.info.pfnDrawUnderline,info.kulBase,static_cast<int>(offset),info.dvpFirstUnderlineSize);
++                if(status) return status;
++                offset+=static_cast<int64_t>(info.dvpFirstUnderlineSize)+info.dvpGapBetweenLines;
++                if(info.cNumberOfLines==2) {
++                    if(offset<INT_MIN || offset>INT_MAX) return LS_InvalidFormatterResult;
++                    status=draw(context.info.pfnDrawUnderline,info.kulBase,static_cast<int>(offset),info.dvpSecondUnderlineSize);
++                    if(status) return status;
++                }
++            }
++            if(run.properties.flags&0x40000) {
++                if(!context.info.pfnGetRunStrikethroughInfo || !context.info.pfnDrawStrikethrough) return LS_NotImplemented;
++                LsStInfo info{};
++                status=reinterpret_cast<StrikeInfo>(context.info.pfnGetRunStrikethroughInfo)(context.info.pols,
++                    static_cast<uint32_t>(run.id),&height,run.flow,&info);
++                if(status) return status;
++                if(info.cNumberOfLines<0 || info.cNumberOfLines>2 || info.dvpLowerStrikethroughOffset==INT_MIN || info.dvpUpperStrikethroughOffset==INT_MIN)
++                    return LS_InvalidFormatterResult;
++                if(info.cNumberOfLines) status=draw(context.info.pfnDrawStrikethrough,info.kstBase,-info.dvpLowerStrikethroughOffset,info.dvpLowerStrikethroughSize);
++                if(status) return status;
++                if(info.cNumberOfLines==2) {
++                    status=draw(context.info.pfnDrawStrikethrough,info.kstBase,-info.dvpUpperStrikethroughOffset,info.dvpUpperStrikethroughSize);
++                    if(status) return status;
++                }
++            }
+         }
+         x+=run.width;
+     }
+diff --git a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+index a102823..9cac6f9 100644
+--- a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
++++ b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+@@ -5,6 +5,7 @@
+ #include <stdexcept>
+ #include <string>
+ #include <algorithm>
++#include <vector>
+ #include "LineServicesNative.h"
+ static bool abort_fetch=false;
+ static int draws=0;
+@@ -12,6 +13,10 @@ static std::wstring sample=L"abc  \u2029";
+ static uint32_t paragraph_flags=0;
+ static int run_length=9600;
+ static bool uniform_width=false;
++static bool decorate=false;
++static int decoration_error=0;
++struct DecorationCall { uint32_t kind; int x,y,width,thickness; };
++static std::vector<DecorationCall> decorations;
+ static int WINAPI pap(void*,int,LsPap* value) { *value={}; value->cpFirst=0; value->grpf=paragraph_flags; return 0; }
+ static int WINAPI props(void*,int,int,LsLineProps* value) { *value={}; value->durLeft=4; return 0; }
+ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** output,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
+@@ -19,6 +24,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
+     int end=static_cast<int>(sample.size())-1;
+     if(cp<0 || cp>end) return LS_WrongGivenCp;
+     *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=0xFFFF; *id=cp<end?5:8;
++    if(decorate && cp<end) chp->flags=0x60000;
+     if(capacity>=*count) { std::memcpy(buffer,sample.data()+cp,*count*sizeof(WCHAR)); *used=1; }
+     return 0;
+ }
+@@ -33,6 +39,20 @@ static int WINAPI draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int* values,int
+     ++draws; return 0;
+ }
+ static void require(bool value,const char* message) { if(!value) throw std::runtime_error(message); }
++static int WINAPI underline_info(void*,uint32_t id,LsHeights* height,int flow,LsULInfo* value) {
++    if(id!=5 || height->dvAscent!=12 || height->dvDescent!=8 || flow!=0) return LS_ClientAbort;
++    if(decoration_error==1) return LS_ClientAbort;
++    *value={7,decoration_error==2?3:2,1,3,2,1,4}; return 0;
++}
++static int WINAPI strike_info(void*,uint32_t id,LsHeights*,int,LsStInfo* value) {
++    if(id!=5) return LS_ClientAbort;
++    *value={9,2,5,3,8,1}; return 0;
++}
++static int WINAPI decoration_draw(void*,uint32_t id,uint32_t kind,LSPOINT* point,int width,int thickness,int flow,uint32_t mode,LSRECT* clip) {
++    if(id!=5 || flow!=0 || mode!=1 || clip->left!=-100) return LS_ClientAbort;
++    if(decoration_error==3) return LS_ClientAbort;
++    decorations.push_back({kind,point->x,point->y,width,thickness}); return 0;
++}
+ int main(int argc,char** argv) {
+     try {
+         require(argc==2,"usage: check DLL");
+@@ -77,6 +97,23 @@ int main(int argc,char** argv) {
+         LSPOINT origin{0,12}; LSRECT clip{-100,-100,1000,1000};
+         require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1,"retained text/widths/metrics drawing callback");
+         require(LoDisposeLine(line,FALSE)==0&&LoDisposeLine(line,FALSE)==LS_InvalidLine,"owned line disposal");
++        config.pfnGetRunUnderlineInfo=reinterpret_cast<void*>(underline_info);
++        config.pfnGetRunStrikethroughInfo=reinterpret_cast<void*>(strike_info);
++        config.pfnDrawUnderline=config.pfnDrawStrikethrough=reinterpret_cast<void*>(decoration_draw);
++        void* decorated_context=nullptr;
++        require(LoCreateContext(&config,&callbacks,&decorated_context)==0,"decoration context creation");
++        require(LoSetDoc(decorated_context,1,1,&resolution)==0,"decoration context device");
++        decorate=true;
++        require(LoCreateLine(decorated_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==0,"decorated line creation");
++        require(LoDisplayLine(line,&origin,1,&clip)==0&&decorations.size()==4,"original decoration callback ABI");
++        const int ys[]={16,19,7,4},thicknesses[]={2,4,3,1};
++        for(size_t i=0;i<decorations.size();++i) require(decorations[i].kind==(i<2?7u:9u)&&decorations[i].x==4&&decorations[i].y==ys[i]&&decorations[i].width==70&&decorations[i].thickness==thicknesses[i],"decoration baseline offset/width/thickness/identity");
++        decoration_error=1;require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort,"decoration metric failure propagation");
++        decoration_error=2;require(LoDisplayLine(line,&origin,1,&clip)==LS_InvalidFormatterResult,"invalid decoration metrics rejected");
++        decoration_error=3;require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort,"decoration draw failure propagation");
++        decoration_error=0;decorate=false;
++        require(LoDisposeLine(line,FALSE)==0&&LoDestroyContext(decorated_context)==0,"decoration line/context teardown");
++        std::puts("native decoration callback ABI, single/double offsets, widths, thicknesses, errors and ownership PASS");
+         require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_InvalidLine&&queried_depth==0,"disposed line query fails without dereferencing handle");
+         abort_fetch=true; line=reinterpret_cast<void*>(1);
+         require(LoCreateLine(context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_ClientAbort&&!line,"callback abort propagated without fabricated line");
+diff --git a/bootstrap/m612/wpf-tests/TextDecorations.cs b/bootstrap/m612/wpf-tests/TextDecorations.cs
+new file mode 100644
+index 0000000..c6d0d17
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/TextDecorations.cs
+@@ -0,0 +1,75 @@
++using System;
++using System.Globalization;
++using System.IO;
++using System.Linq;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++class DecorationProperties:TextRunProperties {
++    readonly TextDecorationCollection decorations;
++    public DecorationProperties(TextDecorationCollection value) { decorations=value; }
++    public override Typeface Typeface=>new Typeface("Segoe UI");
++    public override double FontRenderingEmSize=>32;
++    public override double FontHintingEmSize=>32;
++    public override TextDecorationCollection TextDecorations=>decorations;
++    public override Brush ForegroundBrush=>Brushes.Black;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("en-US");
++    public override TextEffectCollection TextEffects=>null;
++}
++class DecorationParagraph:TextParagraphProperties {
++    readonly TextRunProperties properties;
++    public DecorationParagraph(TextRunProperties value) { properties=value; }
++    public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
++    public override TextAlignment TextAlignment=>TextAlignment.Left;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>properties;
++    public override TextWrapping TextWrapping=>TextWrapping.NoWrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++}
++class DecorationSource:TextSource {
++    public readonly string Text;
++    readonly TextRunProperties properties;
++    public DecorationSource(string text,TextRunProperties value) { Text=text; properties=value; }
++    public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,Text.Length-index,properties):new TextEndOfParagraph(1);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("en-US"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++    [STAThread]
++    static void Main() {
++        using var formatter=TextFormatter.Create();
++        foreach(var location in new[]{TextDecorationLocation.Underline,TextDecorationLocation.Strikethrough,TextDecorationLocation.OverLine,TextDecorationLocation.Baseline}) {
++            var decoration=new TextDecoration(location,new Pen(Brushes.Red,2),0,TextDecorationUnit.Pixel,TextDecorationUnit.Pixel);
++            var collection=new TextDecorationCollection{decoration};
++            var properties=new DecorationProperties(collection);
++            var source=new DecorationSource("source text",properties);
++            using var line=formatter.FormatLine(source,0,400,new DecorationParagraph(properties),null);
++            using var plain=formatter.FormatLine(new DecorationSource(source.Text,new DecorationProperties(null)),0,400,new DecorationParagraph(new DecorationProperties(null)),null);
++            if(Math.Abs(line.Width-plain.Width)>0.01 || Math.Abs(line.Height-plain.Height)>0.01) throw new Exception("decoration changes text metrics");
++            GC.Collect(2,GCCollectionMode.Forced,true,true);
++            var visual=new DrawingVisual();
++            using(var drawing=visual.RenderOpen()) line.Draw(drawing,new Point(10,10),InvertAxes.None);
++            var bitmap=new RenderTargetBitmap(420,100,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
++            var pixels=new byte[420*100*4];bitmap.CopyPixels(pixels,420*4,0);
++            int red=0,black=0;double redY=0;
++            for(int at=0;at<pixels.Length;at+=4) {
++                if(pixels[at+3]>200 && pixels[at+2]>180 && pixels[at+1]<50 && pixels[at]<50) { ++red;redY+=(at/4)/420; }
++                if(pixels[at+3]>200 && pixels[at+2]<50 && pixels[at+1]<50 && pixels[at]<50) ++black;
++            }
++            if(red<line.Width || black<100) throw new Exception("decoration or glyph pixels missing: "+location+" "+red+" "+black);
++            redY/=red;
++            double baseline=10+line.Baseline;
++            if(location==TextDecorationLocation.Underline && redY<=baseline || location==TextDecorationLocation.Strikethrough && redY>=baseline ||
++               location==TextDecorationLocation.OverLine && redY>=baseline-10 || location==TextDecorationLocation.Baseline && Math.Abs(redY-baseline)>2)
++                throw new Exception("decoration baseline geometry: "+location+" "+redY+" vs "+baseline);
++            var encoder=new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));
++            using(var file=File.Create(Path.Combine(AppContext.BaseDirectory,"decoration-"+location+".png"))) encoder.Save(file);
++            Console.WriteLine($"public text decoration {location}: {red} red pixels, y={redY:F2}, baseline={baseline:F2} PASS");
++        }
++        Console.WriteLine("public source TextFormatter decoration metrics, custom pens, all locations, raster geometry and moving GC PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index cb2c2b8..cd592e7 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -245,6 +245,32 @@ PY
+   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TextLineCheck.dll")"
+ }
+ 
++step_check_text_decorations() {
++  initialize
++  local work=$build/text-decorations-check
++  mkdir -p "$work"
++  cp "$here/wpf-tests/TextDecorations.cs" "$work/Program.cs"
++  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
++from pathlib import Path
++import subprocess,sys,xml.etree.ElementTree as E
++work,lib,oob=map(Path,sys.argv[1:])
++root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
++for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
++items=E.SubElement(root,'ItemGroup')
++files={f.stem:f for f in oob.glob('*.dll')}
++files.update({name:lib/(name+'.dll') for name in ('PresentationCore','WindowsBase','System.Xaml','DirectWriteForwarder')})
++for name,file in sorted(files.items()):
++    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
++E.ElementTree(root).write(work/'DecorationsCheck.csproj',encoding='utf-8')
++PY
++  "$sdk/dotnet.exe" build "$(cygpath -m "$work/DecorationsCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
++  local native
++  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
++    cp "${WPF_DECORATION_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
++  done
++  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/DecorationsCheck.dll")"
++}
++
+ step_prepare_gfx() {
+   local root=$build/gfx-source
+   local gfx=$root/src/Microsoft.DotNet.Wpf/src/WpfGfx
