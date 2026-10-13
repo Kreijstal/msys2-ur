@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=1
+pkgrel=2
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,9 +42,11 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            'd62cdcd11a1c1a20e87cc165bf313123152b9694289d31cf0e2464740b2002ee')
+            '758e7e8d699326f6b71f0cc3b6443b74e5714edee81595aa6c74cd082caf655a')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
+source+=('0002-text-decorations.patch')
+sha256sums+=('394c49a1b3cff0de6e08d0976d220d32d78da6f612ea090239fcc3ff7e566318')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -59,6 +61,7 @@ prepare() {
   [[ ${MSYSTEM} == CLANG64 ]] || { error 'The source desktop port requires CLANG64'; return 1; }
   tar -xf "$srcdir/dotnet-bootstrap-${_bootstrap_commit}.tar.gz" -C "$srcdir"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0001-desktop-crypto-closure.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0002-text-decorations.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
@@ -129,6 +132,7 @@ build() {
 
 check() {
   _wpf check-directwrite-assembly check-printing-assembly check-printing-runtime check-shipping-managed
+  _wpf check-lineservices-line-native check-text-decorations
   _wpf check-gfx check-sdk
 }
 
