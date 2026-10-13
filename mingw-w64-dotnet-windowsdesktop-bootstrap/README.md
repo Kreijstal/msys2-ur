@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 102 of 139
+The native text/paragraph/NLS replacement is still partial (currently 103 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -218,3 +218,16 @@ overflow gates and shared-framework/portable SDK consumers pass. Coverage rises
 to 102/139. Comparison/display transfer, public table/floater/figure layout,
 balancing/span areas and advanced/optimal/interruptible/bidi/native-language
 behavior remain unfinished.
+
+Release 8.0.0-22 adds public rectangular floaters discovered through original
+before-line attachment callbacks. Original content/clients and attachment queries
+retain real source and placement; left/right obstacles constrain host line widths
+until their bottom edge. Public WPF raster checks render blue floating text on a
+red background with black host glyphs beside it and zero overlap, finish three
+pages with all 821 characters covered once, and regenerate disposed floating
+content. Scrolling viewers update host/floater raster after edits. Native ownership/
+query/failure gates and shared-framework/portable SDK consumers pass. Coverage
+rises to 103/139. This initial path supports one intact before-line floater;
+in-line anchors, multiple/split floaters, center wrapping, figures/tables,
+comparison/display transfer, advanced/bidi/native-language behavior and broader
+runtime support remain unfinished.
