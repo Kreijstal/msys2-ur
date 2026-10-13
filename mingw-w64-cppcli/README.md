@@ -45,9 +45,24 @@ The runtime, targeting pack and ilasm are sufficient for compiling C++/CLI;
 the SDK is a build/check dependency.
 
 This is a compiler subset, with classes, handles, constructors, properties,
-interfaces/virtuals, arrays, exceptions and a separate native DLL bridge.
+interfaces/virtuals, enums, value classes, explicit boxing, tracking references,
+arrays, exceptions and a separate native DLL bridge.
 It does not provide general MSVC C++/CLI compatibility or mixed-mode PE
 output. Consult `share/cppcli/capabilities.json` and `roadmap.json` for the
-implemented scope. `check()` runs all eight frontend suites, including
+implemented scope. `check()` runs all eleven frontend suites, including
 C# consumption of emitted metadata and a UCRT64 GCC-built native DLL, plus
 Windows launcher checks.
+
+For the source-built WinForms interim framework, install
+`mingw-w64-clang-x86_64-dotnet-winforms-bootstrap` and compile with
+`cli-clang --framework windowsforms hello.cpp -o hello.dll`. The driver selects
+the desktop reference pack and matching runtime configuration. The recipe
+applies the framework-selection change as a pinned source patch on the shared
+bootstrap archive used by the WinForms package.
+
+Version 0.3.0 includes the compiler features used to source-build the full WPF
+DirectWriteForwarder and System.Printing assemblies, including nested enums,
+tracked value/pointer storage and Windows x64 native COM argument handling.
+The package installs its vcclr.h intrinsic header and checks focused WPF compiler
+fixtures. This remains a language subset; full WPF native text/layout support is
+separate work. The pinned source is bootstrap commit 96ae31a.

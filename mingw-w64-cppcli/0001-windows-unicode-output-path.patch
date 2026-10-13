@@ -1,0 +1,19 @@
+--- a/bootstrap/m612/cppcli/frontend.cpp
++++ b/bootstrap/m612/cppcli/frontend.cpp
+@@ -20,6 +20,7 @@
+ #include <llvm/Support/raw_ostream.h>
+ #include <algorithm>
+ #include <fstream>
++#include <filesystem>
+ #include <functional>
+ #include <map>
+ #include <set>
+@@ -75,7 +76,7 @@
+     return (*buffer)->getBuffer().str();
+ }
+ void write_file(const std::string& path, const std::string& text) {
+-    std::ofstream out(path, std::ios::binary);
++    std::ofstream out(std::filesystem::u8path(path), std::ios::binary);
+     out << text;
+     out.close();
+     if (!out) throw std::runtime_error("cannot write " + path);
