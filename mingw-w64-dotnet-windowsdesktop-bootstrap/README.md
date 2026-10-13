@@ -63,3 +63,11 @@ rendering and point hits. SDK validation unlinks replacement desktop hardlinks
 before overlaying source output. Position-dependent objects following aligned
 tabs, full bidi/paragraph layout and justification remain unfinished. Native
 imported-symbol coverage remains 58/139.
+
+Release 8.0.0-6 adds regular inter-word justification through original nominal
+and shaped-glyph expansion callbacks, retaining real caret/selection and drawing
+advances. Normal SDK checks cover Latin/Indic Ideal/Display paragraphs and an
+actual justified TextBlock. Final/hard-break/no-opportunity lines stay ragged.
+Aligned-tab/other justification modes, ink insertion, compression/optimal
+algorithms and full bidi/paragraph layout remain incomplete; imported-symbol
+coverage remains 58/139.
