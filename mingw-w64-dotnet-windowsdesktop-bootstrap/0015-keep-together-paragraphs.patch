@@ -1,0 +1,202 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index 19aa5c0..da07378 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -294,7 +294,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
+     if(!cb.pfnGetTextProperties||!cb.pfnFormatLine||!cb.pfnDestroyLine||!cb.pfnDestroyLineBreakRecord)return PTS_tserrInvalidParameter;
+     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
+     if(status)return status;
+-    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph||props.fKeepTogether)return PTS_tserrNotImplemented;
++    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
+     auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
+     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0;bool overflow=false,ended=false;
+     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
+@@ -326,6 +326,10 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
+             fit=std::max(0,int(text->lines.size())-props.cMinLinesAfterBreak);
+         if(fit<props.cMinLinesBeforeBreak)fit=0;
+         if(!fit&&force)fit=fitting;
++        // A new keep-together paragraph that does not fit the remaining area
++        // is deferred intact. At a fresh area, an oversized paragraph must
++        // still split so pagination makes progress rather than looping.
++        if(props.fKeepTogether&&!force&&!input)fit=0;
+         output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;
+         output->dcp=fit?text->lines[fit-1].dcpLim:(input?input->dcp:props.dcpStartContent);
+         output->line_break=fit?text->breaks[fit-1]:text->incoming;
+@@ -394,7 +398,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+                 FSFMTR fmtr{};void* break_output=nullptr;
+                 void* child_input=resume&&resume->child?resume->child.get():nullptr;
+                 status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,child_input,child_input&&previous_page?1:0,name,0,nullptr,nullptr,
+-                    track->paras.empty()?0:1,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
++                    (empty_ok||!track->paras.empty())?1:0,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
+                     &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+                 pending.claimed_record=status?nullptr:break_output;
+                 if(!status && break_output) {
+diff --git a/bootstrap/m612/wpf-tests/KeepTogether.cs b/bootstrap/m612/wpf-tests/KeepTogether.cs
+new file mode 100644
+index 0000000..8114861
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/KeepTogether.cs
+@@ -0,0 +1,69 @@
++using System;
++using System.Linq;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    static Paragraph Para(Run run,bool keep=false)=>new Paragraph(run){Margin=new Thickness(0),LineHeight=24,LineStackingStrategy=LineStackingStrategy.BlockLineHeight,MinOrphanLines=1,MinWidowLines=1,KeepTogether=keep};
++    static int Render(Visual visual) {
++        var bitmap=new RenderTargetBitmap(400,140,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);var bytes=new byte[400*140*4];bitmap.CopyPixels(bytes,400*4,0);
++        int count=0;for(int at=0;at<bytes.Length;at+=4)if(bytes[at+3]>100&&bytes[at]<100&&bytes[at+1]<100&&bytes[at+2]<100)++count;
++        if(count<100)throw new Exception("kept paragraph page has no glyph raster");return count;
++    }
++    static DynamicDocumentPaginator Paginator(FlowDocument document,TextFormattingMode mode) {
++        document.FontFamily=new FontFamily("Segoe UI");document.FontSize=20;document.Foreground=Brushes.Black;document.PagePadding=new Thickness(10);document.ColumnWidth=double.PositiveInfinity;TextOptions.SetTextFormattingMode(document,mode);
++        var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,140);return paginator;
++    }
++    [STAThread]
++    static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(bool nested in new[]{false,true})
++        foreach(bool keep in new[]{false,true}) {
++            var prefix=new Run("Prefix line one.\nPrefix line two.\nPrefix line three.");
++            var text=new Run("Kept line one.\nKept line two.\nKept line three.");
++            var first=Para(prefix);var second=Para(text,keep);
++            var document=new FlowDocument();
++            if(nested){var section=new Section(first){Margin=new Thickness(0)};section.Blocks.Add(second);document.Blocks.Add(section);}
++            else {document.Blocks.Add(first);document.Blocks.Add(second);}
++            var paginator=Paginator(document,mode);int pages=0,ink=0;
++            for(;pages<10;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;ink+=Render(page.Visual);}
++            if(pages!=2||!paginator.IsPageCountValid||paginator.PageCount!=2)throw new Exception("keep policy created empty/repeated pages or lost text");
++            int firstPage=paginator.GetPageNumber(text.ContentStart.GetPositionAtOffset(0,LogicalDirection.Forward));
++            int lastPage=paginator.GetPageNumber(text.ContentStart.GetPositionAtOffset(text.Text.Length-1,LogicalDirection.Forward));
++            if(firstPage!=(keep?1:0)||lastPage!=1)throw new Exception($"keep-together comparison failed: keep={keep}, first={firstPage}, last={lastPage}");
++            foreach(var run in new[]{prefix,text})for(int at=0;at<run.Text.Length;++at) {
++                int page=paginator.GetPageNumber(run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward));
++                if(page<0||page>=2||(run==prefix&&page!=0)||(run==text&&keep&&page!=1))throw new Exception("kept source character maps outside its required page");
++            }
++            GC.Collect(2,GCCollectionMode.Forced,true,true);
++            using(var again=paginator.GetPage(1))Render(again.Visual);
++            Console.WriteLine($"original KeepTogether {mode}, nested={nested}, keep={keep}: 2 rendered pages, kept range {firstPage}..{lastPage}, {ink} glyph pixels, source/page mapping and GC PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++            var run=new Run(string.Join("\n",Enumerable.Range(0,11).Select(i=>$"Oversized kept line {i}.")));
++            var document=new FlowDocument(Para(run,true));var paginator=Paginator(document,mode);int pages=0;
++            for(;pages<10;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;Render(page.Visual);}
++            if(pages!=3||!paginator.IsPageCountValid||paginator.GetPageNumber(run.ContentStart.GetPositionAtOffset(run.Text.Length-1,LogicalDirection.Forward))!=2)throw new Exception("oversized kept paragraph does not make bounded progress to the document end");
++            Console.WriteLine($"original oversized KeepTogether {mode}: 3 rendered pages, complete source and bounded progress PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++            var prefix=Para(new Run("Prefix one.\nPrefix two.\nPrefix three."));prefix.Foreground=Brushes.Red;
++            var kept=Para(new Run("Kept one.\nKept two.\nKept three."),true);kept.Foreground=Brushes.Blue;
++            var document=new FlowDocument(prefix);document.Blocks.Add(kept);var paginator=Paginator(document,mode);
++            document.ColumnWidth=145;document.ColumnGap=30;document.IsColumnWidthFlexible=false;
++            using var page=paginator.GetPage(0);if(paginator.GetPage(1)!=DocumentPage.Missing||paginator.PageCount!=1)throw new Exception("kept paragraph did not resume in the next column of the same page");
++            var bitmap=new RenderTargetBitmap(400,140,96,96,PixelFormats.Pbgra32);bitmap.Render(page.Visual);var pixels=new byte[400*140*4];bitmap.CopyPixels(pixels,400*4,0);
++            int red=0,blue=0,wrong=0;
++            for(int y=0;y<140;++y)for(int x=0;x<400;++x) {
++                int at=(y*400+x)*4;if(pixels[at+3]<100)continue;
++                bool r=pixels[at+2]>4*pixels[at]&&pixels[at+2]>4*pixels[at+1],b=pixels[at]>4*pixels[at+1]&&pixels[at]>4*pixels[at+2];
++                if(r){++red;if(x<10||x>=155)++wrong;}if(b){++blue;if(x<185||x>=330)++wrong;}
++            }
++            if(red<200||blue<200||wrong!=0)throw new Exception($"keep-together column placement: red={red}, blue={blue}, wrong={wrong}");
++            Console.WriteLine($"original column KeepTogether {mode}: preceding red and intact blue paragraph in separate columns, glyph placement and same-page completion PASS");
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original keep-together paragraph pagination and dispatcher resource cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 1c3ec37..00a0078 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -13,7 +13,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
+     *output=reinterpret_cast<void*>(100+id);return 0;
+ }
+ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
+-static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0;
++static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0;
+ static bool containers=false,lose_subtrack=false;
+ static void* page_context=nullptr;
+ using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
+@@ -44,7 +44,7 @@ static int WINAPI next_para(void*,void* segment,void* current,int* found,void**
+ static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+ static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+ static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+-static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};return 0;}
++static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
+ static int WINAPI line_format(void*,void*,void*,int,int dcp,void* incoming,uint32_t direction,
+     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
+     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
+@@ -177,7 +177,7 @@ int main(int argc,char** argv) {
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&lines_created==breaks_destroyed&&clients_created==clients_destroyed,"partial callback allocation failure rolls back line/client/break ownership");
+         fail_line=-1;available_height=10;reset_page_counts();
+         PROC(FsDestroyPageBreakRecord,PageAction);
+-        void* incoming_record=nullptr;
++        void* incoming_record=nullptr;keep_mode=2;
+         for(int number=0;number<4;++number) {
+             require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle,"finite continuation formats the next real page");
+             if(incoming_record)require(FsDestroyPageBreakRecord(context,incoming_record)==0,"input record can be released after continuation");
+@@ -188,7 +188,16 @@ int main(int argc,char** argv) {
+             require(FsDestroyPage(context,page_handle)==0,"page can be disposed while its independent continuation remains");incoming_record=page_break;
+         }
+         require(!incoming_record&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"pagination releases speculative and accepted lines and independent records exactly once");
++        keep_mode=0;
+         std::puts("native finite pagination: four-page exact source coverage, real break records, input/page-independent lifetime and complete callback cleanup PASS");
++        available_height=30;keep_mode=1;reset_page_counts();
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"keep-together paragraph is deferred rather than partially consumed");
++        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(101),"first page retains preceding text and no fragment of the kept paragraph");
++        require(FsDestroyPage(context,page_handle)==0,"keep-together first page disposal");incoming_record=page_break;
++        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(102)&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==0&&text_details.u.full.dcpLim==10,"kept paragraph resumes intact from its first character on the next page");
++        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"kept and speculative line/break/client resources are released exactly once");
++        keep_mode=0;available_height=10;
++        std::puts("native keep-together: intact deferral/resume, preceding source preservation, oversized kept paragraph progress and exact teardown PASS");
+         using CloneRecord=int(WINAPI*)(void*,void*,void**);
+         PROC(FsDuplicateSubtrackBreakRecord,CloneRecord);reset_page_counts();
+         FSRECT small{10,20,100,10};void* subtrack=nullptr;void* subrecord=nullptr;void* clone=nullptr;void* margin=nullptr;int used=0,top_space=0;FSBBOX bbox{};FSKCLEAR clear{};
+diff --git a/bootstrap/m612/wpf-tests/check-keep-together-sdk.sh b/bootstrap/m612/wpf-tests/check-keep-together-sdk.sh
+new file mode 100644
+index 0000000..9015405
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-keep-together-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/KeepTogether.cs" "$work/Program.cs"
++cat > "$work/KeepTogetherSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/KeepTogetherSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/KeepTogetherSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/KeepTogetherSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/KeepTogetherSdkCheck.exe"
++printf 'PASS normal offline WPF SDK keep-together paragraph check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 49f608b..a15c912 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -828,6 +828,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-pagination-sdk.sh" "$root" "$build/pagination-sdk-check"
+   bash "$here/wpf-tests/check-columns-sdk.sh" "$root" "$build/columns-sdk-check"
+   bash "$here/wpf-tests/check-hard-breaks-sdk.sh" "$root" "$build/hard-breaks-sdk-check"
++  bash "$here/wpf-tests/check-keep-together-sdk.sh" "$root" "$build/keep-together-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 
