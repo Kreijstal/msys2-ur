@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=17
+pkgrel=18
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '7588e5dce09e578c58b3b1f12236da1edcf9d2d0a2514bf19df36dedc7aa271e')
+            'ca04fb69ec99f64adcdf4f6c791456e6fb5b2fcab10df75fd9a1f4656bfce41f')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -77,6 +77,8 @@ source+=('0016-keep-with-next-chains.patch')
 sha256sums+=('1b5e1a49a92efbb2665f89fdf54b78e6a9f4275516973361dfdcc6cc71b4b2aa')
 source+=('0017-forced-page-progress.patch')
 sha256sums+=('866978ad708199adc953331bec7a6c6d62f15d93488248f4ff10477b8d3606a0')
+source+=('0018-block-ui-containers.patch')
+sha256sums+=('1f9167a2f1bc560987d634bbe717ce03a9684d6459b0c4096df409021d23fa8f')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -107,6 +109,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0015-keep-together-paragraphs.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0016-keep-with-next-chains.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0017-forced-page-progress.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0018-block-ui-containers.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
