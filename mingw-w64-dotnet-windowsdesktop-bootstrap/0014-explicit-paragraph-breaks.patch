@@ -1,0 +1,286 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index e5ee1b4..19aa5c0 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -219,6 +219,8 @@ struct PageData {
+     std::shared_ptr<SectionData> section;
+     FSPAGEDETAILS details{};
+     bool bottomless=false;
++    std::shared_ptr<Continuation> continuation;
++    FSFMTRKSTOP stop=fmtrGoalReached;
+ };
+ std::unordered_map<void*,std::shared_ptr<TrackData>> tracks;
+ std::unordered_map<void*,std::weak_ptr<TextData>> texts;
+@@ -341,7 +343,7 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
+ }
+ 
+ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
+-    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true) {
++    int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn) {
+     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
+     if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
+     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
+@@ -359,12 +361,22 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
+         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
+         if(props.idobj!=-1&&props.idobj!=0)return PTS_tserrNotImplemented;
+-        if(props.fKeepWithNext||props.fBreakPageBefore||props.fBreakColumnBefore)return PTS_tserrNotImplemented;
++        if(props.fKeepWithNext)return PTS_tserrNotImplemented;
++        bool first=track->paras.empty();
++        bool continued=input&&first&&(input->child||input->dcp>0);
++        bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
++        bool column_break=!bottomless&&!continued&&props.fBreakColumnBefore&&!(first&&suppress_break!=fsksuppresshardbreakbeforefirstparaNone);
++        if(page_break||column_break) {
++            auto position=std::make_shared<Continuation>();position->context=context;position->segment=segment;position->paragraph=name;
++            track->continuation=position;
++            track->stop=page_break?(first?fmtrNoProgressPageBreakBeforePara:fmtrBrokenPageBreakBeforePara):(first?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara);
++            break;
++        }
+         auto para=std::make_shared<ParaData>();para->context=context;para->desc.nmp=name;para->desc.idobj=props.idobj;para->desc.fsupdinf.fskupd=fskupdNew;
+         status=reinterpret_cast<PtsCreateParaclient>(cb.pfnCreateParaclient)(client,name,&para->desc.pfsparaclient);if(status)return status;
+         if(!para->desc.pfsparaclient)return PTS_tserrInvalidClientOutput;
+         FSRECT available=rect;available.v+=track->used;available.dv-=track->used;
+-        std::shared_ptr<Continuation> next_position;
++        std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
+         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
+         if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty());
+         else {
+@@ -382,14 +394,14 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+                 FSFMTR fmtr{};void* break_output=nullptr;
+                 void* child_input=resume&&resume->child?resume->child.get():nullptr;
+                 status=reinterpret_cast<PtsObjFormatParaFinite>(methods.pfnFormatParaFinite)(context->object_contexts[0],para->desc.pfsparaclient,child_input,child_input&&previous_page?1:0,name,0,nullptr,nullptr,
+-                    track->paras.empty()?0:1,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,0,
++                    track->paras.empty()?0:1,suppress&&track->paras.empty(),direction,&available,input_margin,fskclearNone,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,0,
+                     &fmtr,&para->desc.pfspara,&break_output,&para->desc.dvrUsed,&para->desc.fsbbox,&margin_next,&clear,&para->desc.dvrTopSpace,&can_break);
+                 pending.claimed_record=status?nullptr:break_output;
+                 if(!status && break_output) {
+                     auto child=lookup_owned(records,context.get(),break_output);
+                     if(!child||child->page)return PTS_tserrInvalidBreakRecord;
+-                    next_position=std::make_shared<Continuation>();next_position->context=context;next_position->paragraph=name;next_position->child=child;
+-                    if(fmtr.kstop>=fmtrNoProgressOutOfSpace){next_position->child.reset();pending.claimed_record=nullptr;}
++                    next_position=std::make_shared<Continuation>();next_position->context=context;next_position->paragraph=name;next_position->child=child;next_stop=fmtr.kstop;
++                    if(fmtr.kstop>=fmtrNoProgressOutOfSpace){if(resume)next_position=resume;else next_position->child.reset();pending.claimed_record=nullptr;}
+                 } else if(!status&&fmtr.kstop!=fmtrGoalReached)status=PTS_tserrNotImplemented;
+             }
+             pending.claimed=para->desc.pfspara;
+@@ -399,7 +411,9 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+         if(status)return status;
+         if(para->desc.dvrUsed<0||para->desc.dvrUsed>available.dv)return PTS_tserrInvalidClientOutput;
+         if(para->desc.dvrUsed>0||!next_position){track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
+-        if(next_position){next_position->segment=segment;track->continuation=next_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;}
++        if(next_position){next_position->segment=segment;track->continuation=next_position;if(next_stop==fmtrBrokenPageBreakBeforePara||next_stop==fmtrNoProgressPageBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressPageBreakBeforePara:fmtrBrokenPageBreakBeforePara;
++            else if(next_stop==fmtrBrokenColumnBreakBeforePara||next_stop==fmtrNoProgressColumnBreakBeforePara)track->stop=track->paras.empty()?fmtrNoProgressColumnBreakBeforePara:fmtrBrokenColumnBreakBeforePara;
++            else track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;}
+         void* next=nullptr;status=reinterpret_cast<PtsGetNextPara>(cb.pfnGetNextPara)(client,segment,name,&found,&next);if(status)return status;name=next;
+     }
+     if(bottomless)track->rect.dv=track->used;
+@@ -449,7 +463,7 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackFinite(void* context
+     if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||input->page)return PTS_tserrInvalidBreakRecord;}
+     try {
+         std::shared_ptr<TrackData> track;MarginOwner margin{context};
+-        int status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0);if(status)return status;
++        int status=format_track(context,segment,direction,*rect,suppress,margin_input,track,&margin.value,false,input?input->position:nullptr,empty_ok!=0,previous_page!=0,suppress_break);if(status)return status;
+         track->subtrack=true;
+         if(callback_tracks)callback_tracks->push_back(track);
+         {std::lock_guard<std::mutex> lock(gate);tracks.emplace(track.get(),track);}
+@@ -482,7 +496,7 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
+     auto& details=page->details;details.fskupd=fskupdNew;
+     if(columns==1) {
+         status=format_track(context,segment,direction,rect,1,nullptr,page->track,&margin.value,bottomless,input);if(status)return status;
+-        details.fSimple=1;
++        details.fSimple=1;page->continuation=page->track->continuation;page->stop=page->track->stop;
+         auto& desc=details.u.simple.trackdescr;desc.fsupdinf.fskupd=fskupdNew;desc.nms=segment;desc.fsrc=page->track->rect;desc.fsbbox=page->track->bbox;desc.pfstrack=page->track.get();
+     } else {
+         if(!cb.pfnGetSectionColumnInfo)return PTS_tserrInvalidParameter;
+@@ -495,19 +509,20 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
+         for(const auto& col:info){if(col.durBefore<0||col.durWidth<=0)return PTS_tserrInvalidClientOutput;u+=int64_t(col.durBefore)+col.durWidth;if(u>int64_t(rect.u)+rect.du)return PTS_tserrInvalidGeometry;}
+         auto data=std::make_shared<SectionData>(context);page->section=data;
+         auto& desc=data->description;desc.fsupdinf.fskupd=fskupdNew;desc.nms=section;desc.fsrc=rect;desc.pfssection=data.get();
+-        auto continuation=input;bool finished=false;u=rect.u;
++        auto continuation=input;bool finished=false,stop_page=false;FSFMTRKSTOP stop=fmtrGoalReached;u=rect.u;
+         for(int index=0;index<columns;++index) {
+             u+=info[index].durBefore;FSRECT column{int(u),rect.v,info[index].durWidth,rect.dv};u+=column.du;
+             std::shared_ptr<TrackData> track;MarginOwner column_margin{context};
+-            if(finished){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
++            if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
+             else {
+-                status=format_track(context,segment,direction,column,1,nullptr,track,&column_margin.value,false,continuation,false,index==0);if(status)return status;
+-                continuation=track->continuation;finished=!continuation;
++                status=format_track(context,segment,direction,column,1,nullptr,track,&column_margin.value,false,continuation,false,index==0,index==0?fsksuppresshardbreakbeforefirstparaPageAndColumn:fsksuppresshardbreakbeforefirstparaColumn);if(status)return status;
++                continuation=track->continuation;finished=!continuation;stop=track->stop;
++                stop_page=stop==fmtrBrokenPageBreakBeforePara||stop==fmtrNoProgressPageBreakBeforePara;
+                 if(track->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
+             }
+             status=merge_bbox(desc.fsbbox,track->bbox);if(status)return status;data->columns.push_back(track);
+         }
+-        page->track=data->columns.back();
++        page->track=data->columns.back();page->continuation=continuation;page->stop=stop;
+         details.fSimple=0;auto& body=details.u.complex;body.fswdirPageProper=direction;body.fsupdinfPageBody.fskupd=fskupdNew;
+         body.fsrcPageBody=rect;body.fsrcPageMarginActual=rect;body.fsbboxPageBody=desc.fsbbox;body.cSections=1;
+     }
+@@ -533,10 +548,10 @@ extern "C" __declspec(dllexport) int WINAPI FsCreatePageFinite(void* context_han
+     if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||!input->page)return PTS_tserrInvalidBreakRecord;section=input->section;}
+     try {
+         std::shared_ptr<PageData> page;int status=build_page(context,section,false,page,input?input->position:nullptr);if(status)return status;
+-        if(page->track->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
+-        std::shared_ptr<BreakData> outgoing;if(page->track->continuation)outgoing=make_record(context,page->track->continuation,true,section);
++        if(page->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
++        std::shared_ptr<BreakData> outgoing;if(page->continuation)outgoing=make_record(context,page->continuation,true,section);
+         try {register_page(page);}catch(...){if(outgoing)destroy_record(context_handle,outgoing.get(),true);throw;}
+-        formatted->kstop=page->track->stop;*output=page.get();*break_output=outgoing?outgoing.get():nullptr;return 0;
++        formatted->kstop=page->stop;*output=page.get();*break_output=outgoing?outgoing.get():nullptr;return 0;
+     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsCreatePageBottomless(void* context_handle,void* section,FSFMTRBL* formatted,void** output) {
+@@ -570,7 +585,7 @@ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context
+         std::shared_ptr<TrackData> previous=page->track;
+         {std::lock_guard<std::mutex> lock(gate);
+             tracks.emplace(replacement->track.get(),replacement->track);
+-            tracks.erase(previous.get());page->track=replacement->track;page->details=replacement->details;}
++            tracks.erase(previous.get());page->track=replacement->track;page->details=replacement->details;page->continuation=replacement->continuation;page->stop=replacement->stop;}
+         // Retain page identity while replacing layout atomically. The old
+         // clients/lines are released outside the registry lock after success.
+         return 0;
+diff --git a/bootstrap/m612/wpf-tests/HardBreaks.cs b/bootstrap/m612/wpf-tests/HardBreaks.cs
+new file mode 100644
+index 0000000..5ffabc6
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/HardBreaks.cs
+@@ -0,0 +1,50 @@
++using System;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    static byte[] Raster(Visual visual) {
++        var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(visual);
++        var pixels=new byte[400*220*4];image.CopyPixels(pixels,400*4,0);return pixels;
++    }
++    static (int MinX,int MaxX,int MinY,int MaxY,int Pixels) Bounds(byte[] bytes,int channel) {
++        int x0=400,x1=-1,y0=220,y1=-1,count=0;
++        for(int y=0;y<220;++y)for(int x=0;x<400;++x) {
++            int at=(y*400+x)*4;if(bytes[at+3]<100)continue;
++            bool hit=channel<0?bytes[at]<100&&bytes[at+1]<100&&bytes[at+2]<100&&Math.Abs(bytes[at]-bytes[at+1])<5&&Math.Abs(bytes[at]-bytes[at+2])<5:
++                bytes[at+channel]>50 && bytes[at+channel]>4*bytes[at+(channel+1)%3] && bytes[at+channel]>4*bytes[at+(channel+2)%3];
++            if(hit){++count;x0=Math.Min(x0,x);x1=Math.Max(x1,x);y0=Math.Min(y0,y);y1=Math.Max(y1,y);}
++        }
++        return (x0,x1,y0,y1,count);
++    }
++    [STAThread]
++    static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(bool nested in new[]{false,true}) {
++            var runs=new[]{new Run("First section."),new Run("Next column."),new Run("Next page."),new Run("Following paragraph.")};
++            var first=new Paragraph(runs[0]){Margin=new Thickness(0),Foreground=Brushes.Red,BreakPageBefore=true,BreakColumnBefore=true};
++            var second=new Paragraph(runs[1]){Margin=new Thickness(0),Foreground=Brushes.Blue,BreakColumnBefore=true};
++            var third=new Paragraph(runs[2]){Margin=new Thickness(0),Foreground=Brushes.Green,BreakPageBefore=true};
++            var fourth=new Paragraph(runs[3]){Margin=new Thickness(0),Foreground=Brushes.Black};
++            Block root=first;Section section=null;if(nested){section=new Section(first){Margin=new Thickness(0)};root=section;}
++            var document=new FlowDocument(root){FontFamily=new FontFamily("Segoe UI"),FontSize=20,PagePadding=new Thickness(10),ColumnWidth=145,ColumnGap=30,IsColumnWidthFlexible=false};
++            var blocks=nested?section.Blocks:document.Blocks;blocks.Add(second);blocks.Add(third);blocks.Add(fourth);TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);
++            using var page0=paginator.GetPage(0);using var page1=paginator.GetPage(1);
++            if(page0==DocumentPage.Missing||page1==DocumentPage.Missing||paginator.GetPage(2)!=DocumentPage.Missing||!paginator.IsPageCountValid||paginator.PageCount!=2)throw new Exception("explicit breaks created an empty/repeated page or lost content");
++            GC.Collect(2,GCCollectionMode.Forced,true,true);
++            var zero=Raster(page0.Visual);var one=Raster(page1.Visual);
++            var red=Bounds(zero,2);var blue=Bounds(zero,0);var green0=Bounds(zero,1);var green=Bounds(one,1);var black=Bounds(one,-1);
++            if(red.Pixels<100||blue.Pixels<100||green.Pixels<100||black.Pixels<100||green0.Pixels!=0||Bounds(one,2).Pixels!=0||Bounds(one,0).Pixels!=0)throw new Exception("paragraph colors appeared on the wrong page or failed to render");
++            if(red.MinX<10||red.MaxX>=155||blue.MinX<185||blue.MaxX>=330||green.MinX<10||green.MaxX>=155||black.MinY<=green.MaxY)throw new Exception($"explicit paragraph placement: red={red}, blue={blue}, green={green}, black={black}");
++            int characters=0;
++            for(int r=0;r<runs.Length;++r)for(int at=0;at<runs[r].Text.Length;++at) {
++                if(paginator.GetPageNumber(runs[r].ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward))!=(r<2?0:1))throw new Exception("explicit-break source character maps to the wrong page");++characters;
++            }
++            Console.WriteLine($"original explicit breaks {mode}, nested={nested}: first-block suppression, red/blue separate columns, green/black next page, {characters} character/page mappings and compacting GC PASS");
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original explicit paragraph page/column breaks and dispatcher cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 3974e01..1c3ec37 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -13,7 +13,7 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
+     *output=reinterpret_cast<void*>(100+id);return 0;
+ }
+ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
+-static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false;
++static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0;
+ static bool containers=false,lose_subtrack=false;
+ static void* page_context=nullptr;
+ using SubtrackFormat=int(WINAPI*)(void*,void*,int,void*,int,void*,void*,int,int,uint32_t,const FSRECT*,void*,FSKCLEAR,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*);
+@@ -41,7 +41,7 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
+ static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
+ static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+ static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&current==reinterpret_cast<void*>(101);*next=*found?reinterpret_cast<void*>(102):nullptr;return 0;}
+-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;return 0;}
++static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+ static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+ static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+ static int WINAPI text_properties(void*,void*,int,FSTXTPROPS* props){*props={};return 0;}
+@@ -218,6 +218,18 @@ int main(int argc,char** argv) {
+         require(FsQuerySectionBasicColumnList(context,section_desc.pfssection,1,column_desc,&actual_count)==PTS_tserrInvalidParameter&&!actual_count,"short column query rejects without partial output");
+         require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&column_desc[0].fsupdinf.fskupd==fskupdNoChange&&column_desc[1].fsupdinf.fskupd==fskupdNoChange,"update clearing propagates through every column");
+         require(FsDestroyPage(context,page_handle)==0&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==PTS_tserrInvalidQuery&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"page teardown invalidates section/columns and releases all callback resources");
++        available_height=80;hard_break=1;reset_page_counts();
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&formatted.kstop==fmtrBrokenPageBreakBeforePara,"explicit page break before a paragraph stops the page despite spare column space");
++        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0,"page-break section/column query");
++        require(FsQueryTrackDetails(context,column_desc[1].pfstrack,&track_details)==0&&track_details.cParas==0,"page break leaves remaining columns empty without consuming following text");
++        require(FsDestroyPage(context,page_handle)==0,"explicit page-break page release");incoming_record=page_break;
++        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&formatted.kstop==fmtrGoalReached,"pending page break is suppressed exactly once at the destination page start");
++        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"explicit page-break continuation cleanup");
++        hard_break=2;reset_page_counts();
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&formatted.kstop==fmtrGoalReached,"explicit column break resumes within the same page");
++        require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&FsQueryTrackParaList(context,column_desc[1].pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].nmp==reinterpret_cast<void*>(102),"column-break paragraph starts at the second column without duplication");
++        require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"explicit column-break cleanup");hard_break=0;
++        std::puts("native explicit breaks: page stop/skipped columns, column resume, destination suppression, exact character ownership and record cleanup PASS");
+         invalid_columns=true;reset_page_counts();
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrInvalidGeometry&&!page_handle&&!page_break&&!clients_created,"invalid column extents reject before client allocation");
+         invalid_columns=false;fail_line=4;reset_page_counts();
+diff --git a/bootstrap/m612/wpf-tests/check-hard-breaks-sdk.sh b/bootstrap/m612/wpf-tests/check-hard-breaks-sdk.sh
+new file mode 100644
+index 0000000..859bc7f
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-hard-breaks-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/HardBreaks.cs" "$work/Program.cs"
++cat > "$work/HardBreaksSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/HardBreaksSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/HardBreaksSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/HardBreaksSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/HardBreaksSdkCheck.exe"
++printf 'PASS normal offline WPF SDK explicit paragraph-break check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 2f8ca56..49f608b 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -827,6 +827,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-bottomless-sdk.sh" "$root" "$build/bottomless-sdk-check"
+   bash "$here/wpf-tests/check-pagination-sdk.sh" "$root" "$build/pagination-sdk-check"
+   bash "$here/wpf-tests/check-columns-sdk.sh" "$root" "$build/columns-sdk-check"
++  bash "$here/wpf-tests/check-hard-breaks-sdk.sh" "$root" "$build/hard-breaks-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 

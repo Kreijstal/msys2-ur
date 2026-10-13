@@ -131,3 +131,12 @@ and validate cleanup after a later-column failure. Shared-framework and portable
 SDK consumers pass. Imported-symbol coverage is 89/139. Balancing/span areas,
 hard/keep/optimal/forced-line policies, tables/floaters/figures, advanced algorithms
 and full bidi/native language behavior remain incomplete.
+
+Release 8.0.0-14 adds explicit paragraph page/column breaks, correct destination
+suppression and propagation through nested Section/container callbacks. Page
+breaks preserve remaining empty columns and the next source position; column
+breaks resume within the same page. Original flat/nested WPF raster and source
+mapping checks pass in Ideal/Display through normal SDK and portable publishes.
+Imported-symbol coverage remains 89/139. Keep/optimal/forced-line policies,
+balancing/span areas, tables/floaters/figures, advanced algorithms and full
+bidi/native language behavior remain incomplete.
