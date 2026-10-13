@@ -41,3 +41,10 @@ Release 8.0.0-2 adds original native text-decoration callbacks. Public tests
 verify underline, strikethrough, overline and baseline with custom pens across
 compacting GC. This improves existing exports; the imported-symbol count stays
 58/139.
+
+Release 8.0.0-3 adds explicit and incremental tab layout, dotted leaders,
+caret/selection geometry and original tab enumeration callbacks. It also fixes
+embedding all four source composite-font resources in PresentationCore, needed
+for font fallback. A wrap that cuts an aligned field and moves its stop beyond
+the column still returns an explicit error; bidi tabs and exact legacy leader
+spacing remain unfinished. Native imported-symbol coverage stays 58/139.
