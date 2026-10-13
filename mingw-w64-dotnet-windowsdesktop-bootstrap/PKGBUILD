@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=8
+pkgrel=9
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            'f97042ebd1991040ca50249dac576869fd4b8c1b9fdf4f54fc7bfb4600e7f6d6')
+            'd865c0137a93ad87e2aac3234cd2b1a7f4f42af72b5118a2a2d184d0c850ff7e')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -59,6 +59,8 @@ source+=('0007-paragraph-widths.patch')
 sha256sums+=('6dd06d145261841aadd3cf2b4a15231885663523fe25c8c408440eb5af25eead')
 source+=('0008-paragraph-contexts-and-penalty-resources.patch')
 sha256sums+=('ee0dbffe4b1c75938fe2ca0d7af1805c0b9fb1b082100d7671cb814895d2cf20')
+source+=('0009-paragraph-geometry-and-page-abi.patch')
+sha256sums+=('1fa5f12a86c84ad0745388d7fe65c63599a430261d719050be1033c09a7683dd')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -80,6 +82,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0006-interword-justification.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0007-paragraph-widths.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0008-paragraph-contexts-and-penalty-resources.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0009-paragraph-geometry-and-page-abi.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do

@@ -86,3 +86,10 @@ resources pass through normal SDK and portable publishes. Imported-symbol
 coverage increases to 65/139. FlowDocument now reaches missing FsCreatePageFinite;
 page layout, penalty scoring/optimal breaking and full bidi/natural-language
 behavior remain unfinished.
+
+Release 8.0.0-9 adds paragraph rectangle/bounding-box transforms for all eight
+writing directions, with aliasing and overflow checks. The source ABI generator
+now emits page/section/track/text/line records and checks 277 field sizes/offsets
+against original managed WPF, including both arms of nested unions. Native
+imported-symbol coverage increases to 67/139; FlowDocument pagination still
+requires FsCreatePageFinite and the remaining page services.
