@@ -1,0 +1,391 @@
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index e8e28e8..7673f9c 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -38,7 +38,7 @@ struct Run {
+     std::vector<GlyphOffset> offsets;
+     bool shaped=false,hidden=false,tab=false;
+     uint16_t leader=0;
+-    bool embedded=false,position_used=false;
++    bool embedded=false,position_used=false,hard_break=false;
+     InlineInit object_handler{};
+     ObjDim object_metrics{};
+     int break_before=1,break_after=1;
+@@ -201,6 +201,7 @@ int layout_tabs(Line& line,int start,int& total) {
+     int64_t x=start;
+     for(size_t i=0;i<line.runs.size();++i) {
+         auto& run=line.runs[i];
++        if(run.hard_break) { x=start; continue; }
+         if(run.tab && !run.hidden) {
+             int64_t target=0;
+             int status=tab_target(line,i,x,INT_MAX,target,run.leader); if(status) return status;
+@@ -364,14 +365,23 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
+     total+=static_cast<int>(added);trailing+=static_cast<int>(added);return LS_None;
+ }
+ 
+-// Prefix widths are meaningful only at complete glyph-cluster boundaries.
+-int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
+-    const auto& runs=line.runs;
+-    unavoidable=false;
+-    bool tabs=std::any_of(runs.begin(),runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
++struct BreakGeometry {
+     std::vector<UChar> text;
+     std::vector<int64_t> width{0};
+     std::vector<bool> boundary{true};
++    std::vector<int> before,after;
++    bool allowed(int point,bool natural) const {
++        int left=after[point],right=before[point];
++        if(left<0 && right<0) return natural;
++        if(left<0) left=natural?2:1;
++        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
++        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
++    }
++};
++
++int break_geometry(const Line& line,BreakGeometry& geometry) {
++    const auto& runs=line.runs;
++    auto& text=geometry.text;auto& width=geometry.width;auto& boundary=geometry.boundary;
+     for(const auto& run:runs) {
+         int64_t before=width.back();
+         text.insert(text.end(),run.text.begin(),run.text.end());
+@@ -386,26 +396,28 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool&
+                 size_t end=i+1;
+                 while(end<run.text.size() && run.clusters[end]==run.clusters[i]) ++end;
+                 unsigned first=run.clusters[i],last=end<run.text.size()?run.clusters[end]:run.advances.size();
+-                if(first>last || last>run.advances.size()) return -1;
++                if(first>last || last>run.advances.size()) return LS_InvalidCharToGlyphMapping;
+                 for(unsigned glyph=first;glyph<last;++glyph) before+=run.advances[glyph];
+                 width[base+end]=before; boundary[base+end]=true; i=end;
+             }
+         }
+     }
+-    std::vector<int> before(text.size()+1,-1),after(text.size()+1,-1);
++    geometry.before.assign(text.size()+1,-1);geometry.after.assign(text.size()+1,-1);
++    auto& before=geometry.before;auto& after=geometry.after;
+     for(const auto& run:runs) if(run.embedded) {
+         before[run.cp-line.first]=run.break_before;
+         after[run.cp-line.first+run.text.size()]=run.break_after;
+     }
+-    auto allowed=[&](int point,bool natural) {
+-        int left=after[point],right=before[point];
+-        if(left<0 && right<0) return natural;
+-        if(left<0) left=natural?2:1;
+-        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
+-        // Original LineBreakCondition combination table: Always wins over
+-        // restraint; Desired breaks unless restrained; Possible/Possible does not.
+-        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
+-    };
++    return LS_None;
++}
++
++// Prefix widths are meaningful only at complete glyph-cluster boundaries.
++int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
++    unavoidable=false;
++    bool tabs=std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
++    BreakGeometry geometry;if(break_geometry(line,geometry)) return -1;
++    const auto& text=geometry.text;const auto& width=geometry.width;const auto& boundary=geometry.boundary;
++    auto allowed=[&](int point,bool natural) { return geometry.allowed(point,natural); };
+     UErrorCode error=U_ZERO_ERROR;
+     auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
+     if(U_FAILURE(error) || !iterator) return -1;
+@@ -444,6 +456,63 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool&
+     ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
+ }
+ 
++int range_width(const Line& line,int first,int end,int visible,int64_t& width) {
++    int64_t x=line.widths.upStartMainText;
++    for(size_t i=0;i<line.runs.size();++i) {
++        const auto& run=line.runs[i];
++        int run_end=run.cp+static_cast<int>(run.text.size());
++        if(run_end<=first) continue;
++        if(run.cp>=visible) break;
++        if(run.tab && !run.hidden) {
++            int64_t target=0;uint16_t leader=0;
++            int status=tab_target(line,i,x,end,target,leader);if(status)return status;
++            x=target;
++        } else {
++            size_t begin=first>run.cp?first-run.cp:0;
++            size_t finish=std::min<size_t>(run.text.size(),visible-run.cp);
++            int64_t before=0,after=0;
++            int status=prefix_width(run,begin,before);if(status)return status;
++            status=prefix_width(run,finish,after);if(status)return status;
++            x+=after-before;
++        }
++        if(x<INT_MIN || x>INT_MAX)return LS_InvalidFormatterResult;
++    }
++    width=x;return LS_None;
++}
++
++int paragraph_widths(const Line& line,int& maximum_total,int& maximum_visible,int& minimum_total,int& minimum_visible) {
++    BreakGeometry geometry;int status=break_geometry(line,geometry);if(status)return status;
++    const auto& text=geometry.text;
++    UErrorCode error=U_ZERO_ERROR;
++    auto* raw=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
++    if(U_FAILURE(error) || !raw)return LS_InvalidFormatterResult;
++    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
++    maximum_total=maximum_visible=minimum_total=minimum_visible=line.widths.upStartMainText;
++    int segment=0,hard_first=0;
++    auto measure=[&](int first,int end,int& total,int& visible) {
++        int trim=end;
++        while(trim>first && (text[trim-1]==L' ' || text[trim-1]==0xa0 || text[trim-1]==0x2028))--trim;
++        while(trim>first && !geometry.boundary[trim])--trim;
++        int64_t full=0,shown=0;
++        int result=range_width(line,line.first+first,line.first+end,line.first+end,full);if(result)return result;
++        result=range_width(line,line.first+first,line.first+end,line.first+trim,shown);if(result)return result;
++        total=std::max(total,static_cast<int>(full));visible=std::max(visible,static_cast<int>(shown));return LS_None;
++    };
++    for(int point=1;point<=static_cast<int>(text.size());++point) {
++        bool hard=text[point-1]==0x2028;
++        if(hard || (geometry.boundary[point] && geometry.allowed(point,ubrk_isBoundary(raw,point)))) {
++            status=measure(segment,point,minimum_total,minimum_visible);if(status)return status;
++            segment=point;
++        }
++        if(hard || point==static_cast<int>(text.size())) {
++            status=measure(hard_first,point,maximum_total,maximum_visible);if(status)return status;
++            hard_first=point;
++        }
++    }
++    if(segment<static_cast<int>(text.size())) { status=measure(segment,text.size(),minimum_total,minimum_visible);if(status)return status; }
++    return LS_None;
++}
++
+ struct Cell {
+     const Run* run;
+     int cp,length,x,width,glyphs,run_x;
+@@ -618,7 +687,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         std::shared_ptr<Context> context;
+         ~Active() { std::lock_guard<std::mutex> lock(gate); context->in_use=false; }
+     } active{context};
+-    if(flags&8) return LS_NotImplemented;
++    const bool minmax=(flags&8)!=0;
+     try {
+         auto result=std::make_shared<Line>(); result->context=context; result->first=cp; result->paragraph_first=cp;
+         if(previous_break) {
+@@ -662,6 +731,12 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+                 if(position==INT_MAX) return LS_InvalidFormatterResult;
+                 result->info.endr=text[0]==0x2029?2:4;
+                 run.hidden=true; result->terminator=std::move(run); result->has_terminator=true;
++                if(minmax && text[0]==0x2028) {
++                    result->terminator.hard_break=true;
++                    result->terminator.widths.assign(1,0);
++                    result->runs.push_back(std::move(result->terminator));result->has_terminator=false;
++                    total=properties.durLeft;++position;continue;
++                }
+                 ended=true; ++position; break;
+             }
+             if(limit>0 && position-cp+count>limit) count=limit-(position-cp);
+@@ -703,7 +778,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         }
+         // Fetch through the separator before finding Unicode breaks: a client
+         // run boundary can be in the middle of a word or grapheme.
+-        if((paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
++        if(!minmax && (paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
+             int max_cut=INT_MAX;
+             for(;;) {
+                 bool unavoidable=false;
+@@ -766,11 +841,14 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+             if(!all_spaces) break;
+         }
+         int minimum_total=total,minimum_trailing=trailing;
+-        if(paragraph.fJustify && result->info.endr==0 && limit==0) {
++        if(!minmax && paragraph.fJustify && result->info.endr==0 && limit==0) {
+             int64_t target=static_cast<int64_t>(column)-properties.durRightJustify;
+             if(target<INT_MIN || target>INT_MAX) return LS_InvalidFormatterResult;
+             status=justify_line(*result,static_cast<int>(target),total,trailing); if(status) return status;
+         }
++        if(minmax) {
++            status=paragraph_widths(*result,total,trailing,minimum_total,minimum_trailing);if(status)return status;
++        }
+         result->info.dvrAscent=result->info.dvpAscent;
+         result->info.dvrDescent=result->info.dvpDescent;
+         result->info.dvrMultiLineHeight=result->info.dvpMultiLineHeight;
+diff --git a/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp b/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp
+index 20d8f93..f933b97 100644
+--- a/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp
++++ b/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp
+@@ -72,6 +72,8 @@ int main(int argc,char** argv) {
+             bool allowed=breaks[left][right];
+             require(LoCreateLine(context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==(allowed?1:3)&&measured.upLimLine==(allowed?54:104),"all 16 original break-condition combinations match source table");
+             require(LoDisposeLine(line,FALSE)==0,"break-table line disposal");
++            require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3&&measured.upStartTrailing==104&&measured.upMinStartTrailing==(allowed?54:104),"min/max respects source object break table and atomic widths");
++            require(LoDisposeLine(line,FALSE)==0,"object min/max line disposal");
+         }
+         require(LoDestroyContext(context)==0,"object context teardown");
+         std::puts("native InlineInit/ObjDim ABI, format/draw identity/geometry, atomic query, all 16 source break combinations, errors and ownership PASS");return 0;
+diff --git a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+index b21d0f3..c73b95a 100644
+--- a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
++++ b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+@@ -224,6 +224,19 @@ int main(int argc,char** argv) {
+         require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidFormatterResult&&!line,"missing tab stops reject without fabricated geometry");
+         require(LoDestroyContext(tab_context)==0,"tab context disposal");
+         std::puts("native tab stop/EnumTab ABI, five alignments, cross-run fields, leader drawing, caret geometry, incremental stops and errors PASS");
++        uniform_width=true;run_length=1;sample=L"abc defghi  \u2029";
++        require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==13&&info.endr==2&&measured.upLimLine==124&&measured.upStartTrailing==104&&measured.upMinLimLine==84&&measured.upMinStartTrailing==64,"min/max ignores column and measures widest complete word across client runs");
++        require(LoDisposeLine(line,FALSE)==0,"min/max full paragraph disposal");
++        sample=L"a\u2028abcdef gh\u2029";
++        require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==12&&info.endr==2&&measured.upStartTrailing==94&&measured.upMinStartTrailing==64,"min/max scans hard lines through paragraph end and measures largest line/word");
++        require(LoDisposeLine(line,FALSE)==0,"min/max hard-line disposal");
++        sample=L"ab\u00a0cd ef\u2029";
++        require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==84&&measured.upMinStartTrailing==54,"minimum keeps NBSP-bound text indivisible");
++        require(LoDisposeLine(line,FALSE)==0,"min/max NBSP disposal");
++        require(LoSetTabs(context,40,0,nullptr)==0,"minimum/maximum incremental tab setup");sample=L"a\tbc\u2029";
++        require(LoCreateLine(context,0,0,1,8,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==60&&measured.upMinStartTrailing==40,"min/max tab segments retain actual paragraph stop geometry");
++        require(LoDisposeLine(line,FALSE)==0,"min/max tab disposal");
++        std::puts("native min/max exact column-independent widths, trailing spaces, cross-run words, hard-line paragraph coverage and NBSP boundaries PASS");
+         require(LoDestroyContext(context)==0,"line context disposal");
+         std::puts("native line callbacks, exact metrics/CP-point geometry, query ABI/identity/failure isolation, cross-run word/grapheme wrapping, overflow/emergency policies, trailing spaces and native break-record clone/continuation/ownership PASS");
+         return 0;
+diff --git a/bootstrap/m612/wpf-tests/ParagraphWidths.cs b/bootstrap/m612/wpf-tests/ParagraphWidths.cs
+new file mode 100644
+index 0000000..e43da69
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/ParagraphWidths.cs
+@@ -0,0 +1,68 @@
++using System;
++using System.Globalization;
++using System.Linq;
++using System.Windows.Controls;
++using System.Windows.Media.Imaging;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.TextFormatting;
++class WidthRunProperties:TextRunProperties {
++    public override Typeface Typeface=>new Typeface("Nirmala UI");
++    public override double FontRenderingEmSize=>24;
++    public override double FontHintingEmSize=>24;
++    public override TextDecorationCollection TextDecorations=>null;
++    public override Brush ForegroundBrush=>Brushes.Black;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("hi-IN");
++    public override TextEffectCollection TextEffects=>null;
++}
++class WidthParagraph:TextParagraphProperties {
++    readonly bool wrap;
++    public WidthParagraph(bool wrap=false) { this.wrap=wrap; }
++    public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
++    public override TextAlignment TextAlignment=>TextAlignment.Left;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>new WidthRunProperties();
++    public override TextWrapping TextWrapping=>wrap?TextWrapping.Wrap:TextWrapping.NoWrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++}
++class WidthSource:TextSource {
++    public readonly string Text;
++    public WidthSource(string text="कि") { Text=text; }
++    public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,Text.Length-index,new WidthRunProperties()):new TextEndOfParagraph(1);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,
++        new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("hi-IN"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++    static void Near(double actual,double expected,string why) { if(Math.Abs(actual-expected)>0.03)throw new Exception(why+": "+actual+" vs "+expected); }
++    static double Width(TextFormatter formatter,string text) { using var line=formatter.FormatLine(new WidthSource(text),0,10000,new WidthParagraph(),null);return line.Width; }
++    [STAThread]
++    static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++            using var formatter=TextFormatter.Create(mode);
++            foreach(string text in new[]{"alpha beta gamma delta", "कि कि कि", "alpha\u00a0beta gamma", "a\nlongerword beta", "abcdefghijk", "alpha beta   ", "    ", ""}) {
++                var source=new WidthSource(text);var cache=new TextRunCache();
++                var widths=formatter.FormatMinMaxParagraphWidth(source,0,new WidthParagraph(true),cache);
++                double expectedMin=text.Split(new[]{' ','\n'},StringSplitOptions.RemoveEmptyEntries).Select(word=>Width(formatter,word)).DefaultIfEmpty(0).Max();
++                double expectedMax=text.Split('\n').Select(line=>Width(formatter,line)).DefaultIfEmpty(0).Max();
++                Near(widths.MinWidth,expectedMin,"paragraph minimum widest unbroken word");Near(widths.MaxWidth,expectedMax,"paragraph maximum hard-line width");
++                GC.Collect(2,GCCollectionMode.Forced,true,true);
++                var again=formatter.FormatMinMaxParagraphWidth(source,0,new WidthParagraph(true),cache);Near(again.MinWidth,widths.MinWidth,"cached minimum across GC");Near(again.MaxWidth,widths.MaxWidth,"cached maximum across GC");
++                if(widths.MinWidth<0 || widths.MinWidth>widths.MaxWidth+0.03)throw new Exception("invalid minimum/maximum order");
++                Console.WriteLine($"public paragraph widths {mode}, {text.Length} units: min={widths.MinWidth:F3}, max={widths.MaxWidth:F3} PASS");
++            }
++            var formatted=new FormattedText("alpha beta gamma delta",CultureInfo.GetCultureInfo("en-US"),FlowDirection.LeftToRight,new Typeface("Nirmala UI"),24,Brushes.Black,null,mode,1);
++            Near(formatted.MinWidth,new[]{"alpha","beta","gamma","delta"}.Select(word=>Width(formatter,word)).Max(),"FormattedText.MinWidth uses real word metrics");
++        }
++        var block=new TextBlock{FontFamily=new FontFamily("Nirmala UI"),FontSize=24,Text="alpha beta gamma delta",TextWrapping=TextWrapping.Wrap};
++        block.Measure(new Size(double.PositiveInfinity,200));double maximum=block.DesiredSize.Width;
++        block.Measure(new Size(90,200));block.Arrange(new Rect(0,0,90,200));GC.Collect(2,GCCollectionMode.Forced,true,true);
++        var bitmap=new RenderTargetBitmap(120,200,96,96,PixelFormats.Pbgra32);bitmap.Render(block);
++        if(maximum<=90 || block.DesiredSize.Height<=24 || block.GetPositionFromPoint(new Point(20,10),true)==null)throw new Exception("TextBlock intrinsic/wrapped layout and point hit");
++        Console.WriteLine("original FormattedText.MinWidth and TextBlock intrinsic/wrapped layout/render/hit after GC PASS");
++        Console.WriteLine("public paragraph min/max nominal/shaped/NBSP/hard-break/trailing/empty/cache/GC in both formatting modes PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-paragraph-widths-sdk.sh b/bootstrap/m612/wpf-tests/check-paragraph-widths-sdk.sh
+new file mode 100644
+index 0000000..3e7f931
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-paragraph-widths-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/ParagraphWidths.cs" "$work/Program.cs"
++cat > "$work/WidthsSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/WidthsSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/WidthsSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/WidthsSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/WidthsSdkCheck.exe"
++printf 'PASS normal offline WPF SDK paragraph-width/FormattedText check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 391ff75..763caf7 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -313,6 +313,32 @@ PY
+   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/JustificationCheck.dll")"
+ }
+ 
++step_check_paragraph_widths() {
++  initialize
++  local work=$build/paragraph-widths-check
++  mkdir -p "$work"
++  cp "$here/wpf-tests/ParagraphWidths.cs" "$work/Program.cs"
++  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
++from pathlib import Path
++import subprocess,sys,xml.etree.ElementTree as E
++work,lib,oob=map(Path,sys.argv[1:])
++root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
++for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
++items=E.SubElement(root,'ItemGroup')
++files={f.stem:f for f in oob.glob('*.dll')}
++files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
++for name,file in sorted(files.items()):
++    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
++E.ElementTree(root).write(work/'ParagraphWidthsCheck.csproj',encoding='utf-8')
++PY
++  "$sdk/dotnet.exe" build "$(cygpath -m "$work/ParagraphWidthsCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
++  local native
++  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
++    cp "${WPF_WIDTHS_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
++  done
++  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/ParagraphWidthsCheck.dll")"
++}
++
+ step_check_text_tabs() {
+   initialize
+   local work=$build/text-tabs-check
+@@ -759,6 +785,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
+   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
+   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
++  bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 
