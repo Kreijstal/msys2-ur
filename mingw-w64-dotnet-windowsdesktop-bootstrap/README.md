@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 89 of 139
+The native text/paragraph/NLS replacement is still partial (currently 91 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -170,4 +170,17 @@ pages at the requested size in Ideal/Display with exact character/page mapping
 and retained oversized glyph ink. Shared-framework/portable SDK consumers pass.
 Imported-symbol coverage remains 89/139. Optimal policies, balancing/span areas,
 tables/floaters/figures, advanced algorithms and full bidi/native language remain
+incomplete.
+
+Release 8.0.0-18 adds BlockUIContainer formatting through original floater
+callbacks, UIElementIsland child layout and margin handling. Original flat/nested
+WPF documents defer a real button intact to the next page with expected child
+bounds, colored raster, content/page mapping, point hits, routed events and page
+regeneration. Oversized/empty blocks finish without phantom continuations; blocks
+can move intact into the second column. Scrolling controls update when their
+embedded child resizes. Native tests cover handler registration, query/update
+state, deferral/forced progress, callback failures and exact resource cleanup.
+Shared-framework/portable SDK consumers pass. Imported-symbol coverage rises to
+91/139. Floating obstacles/figures, tables, balancing/span areas, advanced/optimal/
+incremental/interruptible algorithms and full bidi/native language remain
 incomplete.
