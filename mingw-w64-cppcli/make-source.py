@@ -5,7 +5,7 @@ import gzip
 from pathlib import Path
 import subprocess
 
-COMMIT = "3cbf21078968e2290a54ab093392b4dfeb1c6f1f"
+COMMIT = "96ae31a4c7e54685de440de2adde387840392054"
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("repo", nargs="?", type=Path, default=Path(__file__).resolve().parents[2] / "dotnet-bootstrap")
 p.add_argument("--output", type=Path, default=Path(__file__).resolve().parent)
