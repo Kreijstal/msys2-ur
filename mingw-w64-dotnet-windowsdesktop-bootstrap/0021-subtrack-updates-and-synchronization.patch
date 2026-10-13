@@ -1,0 +1,279 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index b5557a7..1bae098 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -223,6 +223,7 @@ struct TrackData {
+     FSFMTRKSTOP stop=fmtrGoalReached;
+     bool forced_progress=false;
+     bool subtrack=false;
++    bool bottomless=false;
+     FSKUPDATE update=fskupdNew;
+     std::vector<std::shared_ptr<ParaData>> paras;
+ };
+@@ -463,7 +464,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
+     if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
+     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
+-    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;
++    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;track->bottomless=bottomless;
+     int found=0,status=0;void* name=nullptr;
+     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
+     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
+@@ -736,6 +737,67 @@ extern "C" __declspec(dllexport) int WINAPI FsFormatSubtrackBottomless(void* con
+         *output=track.get();*used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;return 0;
+     }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+ }
++extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessSubtrack(void* context_handle,void* handle,void* segment,int area,void* geometry,int suppress,uint32_t direction,
++    int u,int width,int v,void* margin_input,FSKCLEAR clear,int interruptible,FSFMTRBL* formatted,int* used,FSBBOX* bbox,
++    void** margin_output,FSKCLEAR* clear_output,int* top_space,int* uninterruptible) {
++    if(!formatted||!used||!bbox||!margin_output||!clear_output||!top_space||!uninterruptible)return PTS_tserrNullOutputParameter;
++    *formatted=fmtrblGoalReached;*margin_output=nullptr;*used=*top_space=*uninterruptible=0;*bbox={};*clear_output=fskclearNone;
++    auto track=lookup_owned(tracks,context_handle,handle);
++    if(!track||!track->subtrack||!track->bottomless||track->segment!=segment)return PTS_tserrInvalidQuery;
++    if(area||geometry||clear!=fskclearNone)return PTS_tserrNotImplemented;if(v<0)return PTS_tserrInvalidGeometry;
++    try {
++        FSRECT rect{u,v,width,INT32_MAX-v};std::shared_ptr<TrackData> replacement;MarginOwner margin{track->context};
++        int status=format_track(track->context,segment,direction,rect,suppress,margin_input,replacement,&margin.value,true);if(status)return status;
++        {
++            std::lock_guard<std::mutex> lock(gate);
++            // Keep the exported track identity and move the old owned clients
++            // into the temporary tree for teardown outside the registry lock.
++            std::swap(track->rect,replacement->rect);std::swap(track->bbox,replacement->bbox);
++            std::swap(track->used,replacement->used);track->paras.swap(replacement->paras);
++            track->continuation.swap(replacement->continuation);
++            std::swap(track->stop,replacement->stop);std::swap(track->forced_progress,replacement->forced_progress);
++            track->update=fskupdNew;
++        }
++        *used=track->used;*bbox=track->bbox;*margin_output=margin.value;margin.value=nullptr;*uninterruptible=1;return 0;
++    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
++}
++namespace {
++struct TrackShift {
++    int delta;
++    std::vector<std::pair<int32_t*,int32_t>> values;
++    std::vector<std::shared_ptr<TrackData>> owners;
++    std::unordered_set<TrackData*> visited;
++    int add(int32_t& value,int64_t extent=0) {
++        int64_t shifted=int64_t(value)+delta;
++        if(extent<0||shifted<INT32_MIN||shifted>INT32_MAX||shifted+extent>INT32_MAX)return PTS_tserrInvalidGeometry;
++        values.emplace_back(&value,int32_t(shifted));return 0;
++    }
++    int box(FSBBOX& value){return value.fDefined?add(value.fsrc.v,value.fsrc.dv):0;}
++    int collect(const std::shared_ptr<TrackData>& track) {
++        if(!visited.insert(track.get()).second)return PTS_tserrInvalidClientOutput;
++        owners.push_back(track);
++        int status=add(track->rect.v,track->rect.dv);if(status)return status;
++        status=box(track->bbox);if(status)return status;
++        for(const auto& para:track->paras) {
++            status=box(para->desc.fsbbox);if(status)return status;
++            if(para->text)for(auto& line:para->text->lines){status=add(line.vrStart,int64_t(line.dvrAscent)+line.dvrDescent);if(status)return status;}
++            if(para->floater){auto& rect=para->floater->details.fsrcFloater;status=add(rect.v,rect.dv);if(status)return status;}
++            if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(!child)return PTS_tserrInvalidQuery;status=collect(child);if(status)return status;}
++            // Subpage content uses its own local coordinate system. Its outer
++            // paragraph bbox moves here; its local tracks remain unchanged.
++        }
++        return 0;
++    }
++    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;}}}
++};
++}
++extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
++    auto track=lookup_owned(tracks,context_handle,handle);
++    if(!track||!track->subtrack||!track->bottomless)return PTS_tserrInvalidQuery;
++    if(geometry||direction!=PTS_fswdirES)return PTS_tserrNotImplemented;
++    try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
++    catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
++}
+ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context_handle,void* handle,void* section,FSFMTRBL* formatted) {
+     if(!formatted)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;
+     auto page=lookup_owned(pages,context_handle,handle);if(!page||page->subpage||!page->bottomless)return PTS_tserrInvalidQuery;
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 85db692..fddc078 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -328,6 +328,28 @@ int main(int argc,char** argv) {
+         fail_line=-1;require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed,"bottomless update/failure/teardown releases every source callback resource");
+         available_height=80;
+         std::puts("native bottomless pages: full content height, stable page identity, atomic replacement/failed-update retention, stale layout rejection and exact cleanup PASS");
++        using SubtrackBottomless=int(WINAPI*)(void*,void*,int,void*,int,uint32_t,int,int,int,void*,FSKCLEAR,int,FSFMTRBL*,void**,int*,FSBBOX*,void**,FSKCLEAR*,int*,int*);
++        using SubtrackUpdate=int(WINAPI*)(void*,void*,void*,int,void*,int,uint32_t,int,int,int,void*,FSKCLEAR,int,FSFMTRBL*,int*,FSBBOX*,void**,FSKCLEAR*,int*,int*);
++        PROC(FsFormatSubtrackBottomless,SubtrackBottomless);PROC(FsUpdateBottomlessSubtrack,SubtrackUpdate);
++        using SubtrackSync=int(WINAPI*)(void*,void*,void*,uint32_t,int);PROC(FsSynchronizeBottomlessSubtrack,SubtrackSync);
++        using QuerySubtrack=int(WINAPI*)(void*,void*,FSSUBTRACKDETAILS*);PROC(FsQuerySubtrackDetails,QuerySubtrack);FSSUBTRACKDETAILS updated_track_details{};
++        int track_used=0,track_top=0,track_uninterruptible=0;FSBBOX track_box{};void* track_margin=nullptr;FSKCLEAR track_clear{};
++        reset_page_counts();
++        require(FsFormatSubtrackBottomless(context,reinterpret_cast<void*>(77),0,nullptr,1,0,10,100,20,nullptr,fskclearNone,1,&bottomless_result,&track,&track_used,&track_box,&track_margin,&track_clear,&track_top,&track_uninterruptible)==0&&track_used==40,"standalone bottomless subtrack initial actual extent");
++        require(FsQuerySubtrackParaList(context,track,2,paras,&actual_count)==0&&actual_count==2,"standalone subtrack owns original paragraph records");void* previous_text=paras[0].pfspara;para_count=3;
++        auto update_track=[&](void* target,int width=100){return FsUpdateBottomlessSubtrack(context,target,reinterpret_cast<void*>(77),0,nullptr,1,0,10,width,40,nullptr,fskclearNone,1,&bottomless_result,&track_used,&track_box,&track_margin,&track_clear,&track_top,&track_uninterruptible);};
++        require(update_track(track)==0&&track_used==60&&track_uninterruptible&&FsQuerySubtrackDetails(context,track,&updated_track_details)==0&&updated_track_details.fsrc.v==40&&updated_track_details.fsrc.dv==60&&updated_track_details.cParas==3&&FsQueryTextDetails(context,previous_text,&text_details)==PTS_tserrInvalidQuery,"subtrack retains identity, publishes new source/geometry and invalidates superseded text records");
++        require(lines_created==10&&lines_destroyed==4&&clients_created==5&&clients_destroyed==2,"subtrack replacement releases superseded callbacks exactly once");
++        FSPARADESCRIPTION updated_paras[3]{};require(FsQuerySubtrackParaList(context,track,3,updated_paras,&actual_count)==0&&actual_count==3&&FsQueryLineListSingle(context,updated_paras[0].pfspara,2,lines,&actual_count)==0,"updated line snapshot before synchronization");void* stable_line=lines[0].pfslineclient;
++        require(FsSynchronizeBottomlessSubtrack(context,track,nullptr,0,13)==0&&FsQuerySubtrackDetails(context,track,&updated_track_details)==0&&updated_track_details.fsrc.v==53&&FsQueryLineListSingle(context,updated_paras[0].pfspara,2,lines,&actual_count)==0&&lines[0].vrStart==53&&lines[1].vrStart==63&&lines[0].pfslineclient==stable_line&&lines_created==10,"subtrack shift preserves line identity/source while moving real query geometry without formatting callbacks");
++        require(FsSynchronizeBottomlessSubtrack(context,track,nullptr,0,INT_MAX)==PTS_tserrInvalidGeometry&&FsQuerySubtrackDetails(context,track,&updated_track_details)==0&&updated_track_details.fsrc.v==53&&FsQueryLineListSingle(context,updated_paras[0].pfspara,2,lines,&actual_count)==0&&lines[0].vrStart==53,"overflowing shift rejects before changing any retained geometry");
++        require(FsSynchronizeBottomlessSubtrack(context,track,reinterpret_cast<void*>(1),0,1)==PTS_tserrNotImplemented&&FsSynchronizeBottomlessSubtrack(context,track,nullptr,4,1)==PTS_tserrNotImplemented&&FsSynchronizeBottomlessSubtrack(context,track,nullptr,0,-13)==0,"unsupported synchronization inputs reject and reverse shift restores original coordinates");
++        fail_line=lines_created+3;track_used=123;track_box={1,{1,2,3,4}};track_margin=reinterpret_cast<void*>(1);track_uninterruptible=1;
++        require(update_track(track)==PTS_tserrCallbackException&&!track_used&&!track_box.fDefined&&!track_margin&&!track_uninterruptible&&FsQuerySubtrackDetails(context,track,&updated_track_details)==0&&updated_track_details.cParas==3&&updated_track_details.fsrc.dv==60,"failed subtrack replacement preserves prior layout and clears outputs");fail_line=-1;
++        int before_bad=clients_created;require(update_track(track,0)==PTS_tserrNotImplemented&&clients_created==before_bad,"invalid subtrack width rejects before callbacks");
++        require(update_track(reinterpret_cast<void*>(1))==PTS_tserrInvalidQuery&&!track_used&&!track_box.fDefined,"stale subtrack update rejects with reset outputs");
++        require(FsDestroySubtrack(context,track)==0&&lines_created==lines_destroyed&&breaks_destroyed==lines_created&&clients_created==clients_destroyed&&update_track(track)==PTS_tserrInvalidQuery,"updated subtrack final teardown and stale identity rejection");para_count=2;
++        std::puts("native bottomless subtrack update: stable identity, changed source/extent/position, old text invalidation, partial failure retention, clean outputs and exact callback teardown PASS");
+         using QueryFloater=int(WINAPI*)(void*,void*,FSFLOATERDETAILS*);PROC(FsQueryFloaterDetails,QueryFloater);
+         block_ui=true;available_height=30;reset_page_counts();float_created=float_destroyed=0;
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"block defers intact after preceding text");
+diff --git a/bootstrap/m612/wpf-tests/Subtracks.cs b/bootstrap/m612/wpf-tests/Subtracks.cs
+new file mode 100644
+index 0000000..86693a6
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/Subtracks.cs
+@@ -0,0 +1,105 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Linq;
++using System.Reflection;
++using System.Runtime.InteropServices;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    const BindingFlags I=BindingFlags.Instance|BindingFlags.NonPublic|BindingFlags.Public;
++    const BindingFlags S=BindingFlags.Static|BindingFlags.NonPublic|BindingFlags.Public;
++    static readonly Assembly A=typeof(FlowDocument).Assembly;
++    static readonly Type Pts=A.GetType("MS.Internal.PtsHost.UnsafeNativeMethods.PTS",true);
++    static Type Record(string name)=>A.GetType(Pts.FullName+"+"+name,true);
++    static object Get(object value,string name)=>value.GetType().GetProperty(name,I)?.GetValue(value)??value.GetType().GetField(name,I)?.GetValue(value)??throw new Exception("missing member "+name);
++    static object Call(object value,string name,params object[] args)=>value.GetType().GetMethods(I).Single(m=>m.Name==name&&m.GetParameters().Length==args.Length).Invoke(value,args);
++    static object Enum(string name,int value)=>System.Enum.ToObject(Record(name),value);
++    static object Rect(int u,int v,int du,int dv) {
++        var r=Activator.CreateInstance(Record("FSRECT"));foreach(var pair in new[]{("u",u),("v",v),("du",du),("dv",dv)})r.GetType().GetField(pair.Item1,I).SetValue(r,pair.Item2);return r;
++    }
++    static int Dpi(double value)=>(int)Math.Round(value*300);
++    static int Native(string method,params object[] args) {
++        int status=(int)Pts.GetMethod(method,S).Invoke(null,args);if(status!=0)throw new Exception(method+" status "+status);return status;
++    }
++    static int Ink(Visual visual) {
++        var image=new RenderTargetBitmap(400,180,96,96,PixelFormats.Pbgra32);image.Render(visual);var bytes=new byte[400*180*4];image.CopyPixels(bytes,400*4,0);
++        int ink=0;for(int i=0;i<bytes.Length;i+=4)if(bytes[i+3]>100&&bytes[i]<100&&bytes[i+1]<100&&bytes[i+2]<100)++ink;
++        if(ink<100){Dump(visual,0);throw new Exception("original subtrack visual has no glyph raster: "+ink+", bounds="+VisualTreeHelper.GetDescendantBounds(visual));}return ink;
++    }
++    static byte[] Raster(Visual visual){var image=new RenderTargetBitmap(400,180,96,96,PixelFormats.Pbgra32);image.Render(visual);var bytes=new byte[400*180*4];image.CopyPixels(bytes,400*4,0);return bytes;}
++    static void Dump(Visual visual,int depth){Console.WriteLine(new string(' ',depth)+visual.GetType().Name+" bounds="+VisualTreeHelper.GetDescendantBounds(visual)+" clip="+VisualTreeHelper.GetClip(visual));for(int i=0;i<VisualTreeHelper.GetChildrenCount(visual);++i)Dump((Visual)VisualTreeHelper.GetChild(visual,i),depth+1);}
++    static void ReleaseMargin(object context,object value){if(value is IntPtr handle&&handle!=IntPtr.Zero)((IDisposable)Call(context,"HandleToObject",handle)).Dispose();}
++    static List<(TextPointer Start,TextPointer End)> Ranges(object context,IntPtr handle,IntPtr track) {
++        object[] details={handle,track,null};Native("FsQuerySubtrackDetails",details);
++        object[] list={context,track,details[2],null};A.GetType("MS.Internal.PtsHost.PtsHelper",true).GetMethod("ParaListFromSubtrack",S).Invoke(null,list);
++        var ranges=new List<(TextPointer,TextPointer)>();
++        foreach(var desc in (Array)list[3]) {
++            int kind=(int)Get(desc,"idobj");
++            if(kind==0)ranges.AddRange(Ranges(context,handle,(IntPtr)Get(desc,"pfspara")));
++            else if(kind==-1){var client=Call(context,"HandleToObject",Get(desc,"pfsparaclient"));foreach(var segment in (IEnumerable)Call(Call(client,"GetTextContentRange"),"GetTextSegments"))ranges.Add(((TextPointer)Get(segment,"Start"),(TextPointer)Get(segment,"End")));}
++            else throw new Exception("unexpected paragraph kind in source-coverage fixture: "+kind);
++        }
++        return ranges;
++    }
++    static void Coverage(object context,IntPtr handle,IntPtr track,Run run) {
++        var ranges=Ranges(context,handle,track);
++        for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);if(ranges.Count(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0)!=1)throw new Exception("source text must belong to exactly one real native text range at "+at);}
++    }
++    [STAThread]
++    static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(bool padded in new[]{false,true}) {
++            var run=new Run(string.Join(" ",Enumerable.Range(0,100).Select(i=>$"sub{i:D3}")));
++            var section=new Section(new Paragraph(run){Margin=new Thickness(0)}){Margin=padded?new Thickness(12,8,10,6):new Thickness(0),Padding=padded?new Thickness(4):new Thickness(0)};
++            var document=new FlowDocument(section){FontFamily=new FontFamily("Segoe UI"),FontSize=20,Foreground=Brushes.Black,PagePadding=new Thickness(0),ColumnWidth=double.PositiveInfinity};TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,180);using var seedPage=paginator.GetPage(0);
++            var cache=Get(document,"StructuralCache");var context=Get(cache,"PtsContext");var handle=(IntPtr)Get(context,"Context");
++            using var ownerPage=(DocumentPage)Activator.CreateInstance(A.GetType("MS.Internal.PtsHost.FlowDocumentPage",true),I,null,new[]{cache},null);Call(ownerPage,"SetSize",new Size(400,180));
++            var paragraph=Activator.CreateInstance(A.GetType("MS.Internal.PtsHost.ContainerParagraph",true),I,null,new[]{(object)section,cache},null);
++            object[] clients={IntPtr.Zero};Call(paragraph,"CreateParaclient",clients);var client=Call(context,"HandleToObject",clients[0]);IntPtr track=IntPtr.Zero;
++            try {
++                object[] args={client,0,IntPtr.Zero,1,0u,Dpi(10),Dpi(380),Dpi(10),null,Enum("FSKCLEAR",0),1,null,IntPtr.Zero,0,null,IntPtr.Zero,null,0,0};
++                using((IDisposable)Call(cache,"SetDocumentFormatContext",ownerPage)) {
++                    var format=Get(cache,"CurrentFormatContext");Call(format,"PushNewPageData",new Size(400,double.PositiveInfinity),new Thickness(0),false,false);
++                    try {Call(paragraph,"FormatParaBottomless",args);track=(IntPtr)args[12];ReleaseMargin(context,args[15]);args[15]=IntPtr.Zero;}finally{Call(format,"PopPageData");}
++                }
++                if(track==IntPtr.Zero||(int)args[13]<=Dpi(180))throw new Exception("original container must retain full bottomless extent");
++                byte[] before;
++                using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
++                    var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(400),(int)args[13]+Dpi(10)),false);
++                    try {Call(client,"Arrange",track,Rect(Dpi(10),Dpi(10),Dpi(380),(int)args[13]),(int)args[17],0u);Get(client,"Visual");Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(400),Dpi(180)));Ink((Visual)Get(client,"Visual"));Coverage(context,handle,track,run);before=Raster((Visual)Get(client,"Visual"));}finally{Call(arrange,"PopPageData");}
++                }
++                int oldHeight=(int)args[13];run.Text+=" "+string.Join(" ",Enumerable.Range(100,80).Select(i=>$"edit{i:D3}"));
++                object[] update={track,client,0,IntPtr.Zero,1,0u,Dpi(20),Dpi(280),Dpi(20),null,Enum("FSKCLEAR",0),1,null,0,null,IntPtr.Zero,null,0,0};
++                using((IDisposable)Call(cache,"SetDocumentFormatContext",ownerPage)) {
++                    var format=Get(cache,"CurrentFormatContext");Call(format,"PushNewPageData",new Size(300,double.PositiveInfinity),new Thickness(0),true,false);
++                    try {Call(paragraph,"UpdateBottomlessPara",update);ReleaseMargin(context,update[15]);update[15]=IntPtr.Zero;}finally{Call(format,"PopPageData");}
++                }
++                if((int)update[13]<=oldHeight||(int)update[18]!=1||(IntPtr)Get(Get(client,"_paraHandle"),"Value")!=track)throw new Exception("updated container must retain identity and grow extent");
++                object[] details={handle,track,null};Native("FsQuerySubtrackDetails",details);var rect=Get(details[2],"fsrc");
++                if((int)Get(rect,"u")!=Dpi(20+(padded?16:0))||(int)Get(rect,"v")!=Dpi(20+(padded?4:0))||(int)Get(rect,"du")!=Dpi(280-(padded?30:0)))throw new Exception("updated original margin/padding geometry");
++                using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
++                    var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(300),(int)update[13]+Dpi(20)),false);
++                    try {Call(client,"Arrange",track,Rect(Dpi(20),Dpi(20),Dpi(280),(int)update[13]),(int)update[17],0u);Get(client,"Visual");Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(300),Dpi(180)));Ink((Visual)Get(client,"Visual"));Coverage(context,handle,track,run);if(before.SequenceEqual(Raster((Visual)Get(client,"Visual"))))throw new Exception("updated container must change its real glyph raster");}finally{Call(arrange,"PopPageData");}
++                }
++                byte[] unshifted=Raster((Visual)Get(client,"Visual"));
++                using((IDisposable)Call(cache,"SetDocumentArrangeContext",ownerPage)) {
++                    var arrange=Get(cache,"CurrentArrangeContext");Call(arrange,"PushNewPageData",Get(ownerPage,"PageContext"),Rect(0,0,Dpi(300),(int)update[13]+Dpi(35)),false);
++                    try {
++                        var host=Get(context,"_ptsHost");if((int)Call(host,"SubtrackSynchronizeBottomlessPara",track,clients[0],IntPtr.Zero,0u,Dpi(15))!=0)throw new Exception("original subtrack synchronization callback");
++                        object[] shifted={handle,track,null};Native("FsQuerySubtrackDetails",shifted);if((int)Get(Get(shifted[2],"fsrc"),"v")!=Dpi(35+(padded?4:0)))throw new Exception("original synchronized track coordinates");
++                        Call(client,"Arrange",track,Rect(Dpi(20),Dpi(35),Dpi(280),(int)update[13]),(int)update[17],0u);Get(client,"Visual");Call(client,"ValidateVisual",Enum("FSKUPDATE",2));Call(client,"UpdateViewport",Rect(0,0,Dpi(300),Dpi(180)));Ink((Visual)Get(client,"Visual"));Coverage(context,handle,track,run);
++                        if(unshifted.SequenceEqual(Raster((Visual)Get(client,"Visual"))))throw new Exception("synchronized original track must move its viewport glyphs");
++                    }finally{Call(arrange,"PopPageData");}
++                }
++                Console.WriteLine($"original bottomless subtrack update/sync {mode}, padded={padded}: stable identity, moved/resized geometry, extent {oldHeight/300.0:F1}->{(int)update[13]/300.0:F1}, {run.Text.Length} characters covered exactly once through actual text records, updated and shifted viewport glyphs PASS");
++            }finally{Call(context,"Enter");try{if(track!=IntPtr.Zero)Native("FsDestroySubtrack",handle,track);((IDisposable)client).Dispose();((IDisposable)paragraph).Dispose();}finally{Call(context,"Leave");}}
++            if(context.GetType().GetProperty("CallbackException",I).GetValue(context) is Exception failure)throw new Exception("original subtrack cleanup callback",failure);GC.Collect(2,GCCollectionMode.Forced,true,true);
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original container subtrack creation/update/render/source/cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-subtracks-sdk.sh b/bootstrap/m612/wpf-tests/check-subtracks-sdk.sh
+new file mode 100755
+index 0000000..ed092c6
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-subtracks-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/Subtracks.cs" "$work/Program.cs"
++cat > "$work/SubtracksSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/SubtracksSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SubtracksSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/SubtracksSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SubtracksSdkCheck.exe"
++printf 'PASS normal offline WPF SDK original subtrack updates check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index d3a693f..f73b4b9 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -833,6 +833,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-forced-progress-sdk.sh" "$root" "$build/forced-sdk-check"
+   bash "$here/wpf-tests/check-block-ui-sdk.sh" "$root" "$build/block-ui-sdk-check"
+   bash "$here/wpf-tests/check-subpages-sdk.sh" "$root" "$build/subpages-sdk-check"
++  bash "$here/wpf-tests/check-subtracks-sdk.sh" "$root" "$build/subtracks-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 

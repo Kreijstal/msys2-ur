@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 100 of 139
+The native text/paragraph/NLS replacement is still partial (currently 102 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -206,3 +206,15 @@ and full extent in Ideal/Display. Shared-framework/portable SDK consumers pass.
 Coverage rises to 100/139. Subpage comparison/display transfer, subtrack updates,
 public table/floater/figure layout, balancing/span areas and advanced/optimal/
 interruptible/bidi/native-language behavior remain unfinished.
+
+Release 8.0.0-21 adds bottomless subtrack updates and vertical synchronization.
+The track keeps its identity during full replacement; failed callbacks retain
+its prior tree. Shift plans validate all coordinates before moving retained
+lines/bounds and preserve line identity without formatting callbacks. Original
+container clients with/without margins and padding update after edits/resizing,
+cover all 1339 characters exactly once through actual text records, and render
+changed and vertically shifted glyphs in Ideal/Display. Native ownership/error/
+overflow gates and shared-framework/portable SDK consumers pass. Coverage rises
+to 102/139. Comparison/display transfer, public table/floater/figure layout,
+balancing/span areas and advanced/optimal/interruptible/bidi/native-language
+behavior remain unfinished.
