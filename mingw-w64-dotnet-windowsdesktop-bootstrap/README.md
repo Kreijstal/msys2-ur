@@ -231,3 +231,14 @@ rises to 103/139. This initial path supports one intact before-line floater;
 in-line anchors, multiple/split floaters, center wrapping, figures/tables,
 comparison/display transfer, advanced/bidi/native-language behavior and broader
 runtime support remain unfinished.
+
+Release 8.0.0-23 adds multiple before-line rectangular floaters. Later colliding
+objects move below earlier ones while retaining their horizontal edge; disjoint
+opposite-edge rectangles share a row. Actual line height refines obstacle
+exclusion so host glyphs cannot cross a wider later rectangle. Public WPF tests
+render red/green objects without object/host overlap and finish three pages with
+all 944 characters covered once in Ideal/Display, including page regeneration.
+Native capacity/placement/later-failure/cleanup checks and shared-framework/
+portable SDK consumers pass. Coverage stays 103/139. Placement requiring deferred
+or split floater pages, later inline anchors, complex center/clear policies,
+figures/tables and other documented WPF paths remain unfinished.
