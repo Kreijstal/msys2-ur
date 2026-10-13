@@ -45,6 +45,8 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             'd62cdcd11a1c1a20e87cc165bf313123152b9694289d31cf0e2464740b2002ee')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
+source+=('check-staged.py')
+sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
 _tree() { printf '%s/dotnet-bootstrap-%s' "$srcdir" "$_bootstrap_commit"; }
 _root() { printf '%s/work' "$srcdir"; }
@@ -137,6 +139,7 @@ package() {
   cp -a "$(_root)/build/winforms-7.0.20/layout/shared" "$dest/"
   cp -a "$(_root)/build/winforms-7.0.20/layout/packs" "$dest/"
   cp -a "$(_wpfbuild)/layout/." "$dest/"
+  /usr/bin/python3 "$srcdir/check-staged.py" "$dest"
   for release in winforms-7.0.20 winforms-8.0.0 wpf-8.0.0; do
     install -Dm644 "$(_root)/src/$release/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$release.LICENSE"
   done
