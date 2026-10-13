@@ -159,3 +159,15 @@ source/resource checks and normal shared-framework/portable SDK consumers pass.
 Imported-symbol coverage remains 89/139. Optimal/forced-line policies, balancing/
 span areas, tables/floaters/figures, advanced algorithms and full bidi/native
 language behavior remain incomplete.
+
+Release 8.0.0-17 adds forced progress for finite areas too short to fit a line.
+The formatter retains one actual original line, its glyph geometry and the exact
+next source position, bounds used height by the available extent and propagates
+the forced-result flag through containers and pages. Native flat/nested tests
+cover undersized and zero-height areas, terminal continuations and exact cleanup.
+Original WPF flat/nested documents, including keep constraints, finish on tiny
+pages at the requested size in Ideal/Display with exact character/page mapping
+and retained oversized glyph ink. Shared-framework/portable SDK consumers pass.
+Imported-symbol coverage remains 89/139. Optimal policies, balancing/span areas,
+tables/floaters/figures, advanced algorithms and full bidi/native language remain
+incomplete.
