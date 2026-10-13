@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 86 of 139
+The native text/paragraph/NLS replacement is still partial (currently 89 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -122,3 +122,12 @@ characters exactly once and verify content/page mapping in both formatting
 modes through shared-framework and portable SDK consumers. Imported-symbol
 coverage is 86/139. Tiny pages that cannot fit a line, hard/keep/optimal policies,
 multiple columns, advanced layout and full bidi/native language remain unfinished.
+
+Release 8.0.0-13 adds finite multi-column text flow using original width/gap
+callbacks and an owned page/section/column query hierarchy. Original WPF tests
+render two columns and their rule across 12 Ideal/9 Display pages, cover all 1278
+source characters exactly once, verify glyphs in both columns and a clear gap,
+and validate cleanup after a later-column failure. Shared-framework and portable
+SDK consumers pass. Imported-symbol coverage is 89/139. Balancing/span areas,
+hard/keep/optimal/forced-line policies, tables/floaters/figures, advanced algorithms
+and full bidi/native language behavior remain incomplete.
