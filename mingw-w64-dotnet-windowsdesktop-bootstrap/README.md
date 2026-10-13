@@ -150,3 +150,12 @@ checks and shared-framework/portable SDK consumers pass. Coverage remains
 89/139; KeepWithNext chains, optimal/forced-line policies, balancing/span areas,
 advanced algorithms, tables/floaters/figures and full bidi/native language remain
 incomplete.
+
+Release 8.0.0-16 adds KeepWithNext heading chains with margin-preserving rollback
+and the implied unbroken heading paragraph. Original WPF comparisons cover one/
+three-heading flat/nested chains, nonzero margins, multi-line headings, oversized
+chain progress and heading/body glyphs together in the next column. Native
+source/resource checks and normal shared-framework/portable SDK consumers pass.
+Imported-symbol coverage remains 89/139. Optimal/forced-line policies, balancing/
+span areas, tables/floaters/figures, advanced algorithms and full bidi/native
+language behavior remain incomplete.
