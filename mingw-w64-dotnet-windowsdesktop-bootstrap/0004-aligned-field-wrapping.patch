@@ -1,0 +1,381 @@
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 1368d6b..fd5d056 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -129,43 +129,47 @@ int prefix_width(const Run& run,size_t end,int64_t& width) {
+     return LS_None;
+ }
+ 
+-// Tab locations are relative to the paragraph origin. Measure the entire
+-// following field, across client runs, before selecting an aligned stop.
++// Tab locations are relative to the paragraph origin. A break candidate
++// aligns only its retained field, across client runs, rather than the rest
++// of the paragraph that will move to the following line.
++int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader) {
++    const Context& context=*line.context;
++    leader=0;
++    for(const auto& stop:context.tabs) {
++        if(stop.ur<=x) continue;
++        int64_t field=0;
++        bool aligned=false;
++        if(stop.lskt) {
++            WCHAR align=stop.lskt==3?L'.':stop.wchCharTab;
++            for(size_t j=index+1;j<line.runs.size() && !line.runs[j].tab;++j) {
++                const auto& next=line.runs[j];
++                if(next.cp>=end_cp) break;
++                size_t end=std::min<size_t>(next.text.size(),end_cp-next.cp);
++                if(stop.lskt>=3) {
++                    auto found=std::find(next.text.begin(),next.text.begin()+end,align);
++                    if(found!=next.text.begin()+end) { end=found-next.text.begin(); aligned=true; }
++                }
++                int status=prefix_width(next,end,field); if(status) return status;
++                if(aligned) break;
++            }
++        }
++        target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
++        if(target<=x) continue;
++        leader=stop.wchTabLeader; return LS_None;
++    }
++    if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
++    int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
++    target=(after/context.incremental_tab+1)*context.incremental_tab;
++    return LS_None;
++}
++
+ int layout_tabs(Line& line,int start,int& total) {
+     int64_t x=start;
+-    const Context& context=*line.context;
+     for(size_t i=0;i<line.runs.size();++i) {
+         auto& run=line.runs[i];
+         if(run.tab && !run.hidden) {
+-            bool selected=false;
+             int64_t target=0;
+-            run.leader=0;
+-            for(const auto& stop:context.tabs) {
+-                if(stop.ur<=x) continue;
+-                int64_t field=0;
+-                bool aligned=false;
+-                if(stop.lskt) {
+-                    WCHAR align=stop.lskt==3?L'.':stop.wchCharTab;
+-                    for(size_t j=i+1;j<line.runs.size() && !line.runs[j].tab;++j) {
+-                        const auto& next=line.runs[j];
+-                        size_t end=next.text.size();
+-                        if(stop.lskt>=3) {
+-                            auto found=std::find(next.text.begin(),next.text.end(),align);
+-                            if(found!=next.text.end()) { end=found-next.text.begin(); aligned=true; }
+-                        }
+-                        int status=prefix_width(next,end,field); if(status) return status;
+-                        if(aligned) break;
+-                    }
+-                }
+-                target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
+-                if(target<=x) continue;
+-                run.leader=stop.wchTabLeader; selected=true; break;
+-            }
+-            if(!selected) {
+-                if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
+-                int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
+-                target=(after/context.incremental_tab+1)*context.incremental_tab;
+-            }
++            int status=tab_target(line,i,x,INT_MAX,target,run.leader); if(status) return status;
+             if(target>x+INT_MAX || target>INT_MAX) return LS_InvalidFormatterResult;
+             run.width=static_cast<int>(target-x); run.widths.assign(1,run.width);
+         }
+@@ -175,6 +179,25 @@ int layout_tabs(Line& line,int start,int& total) {
+     total=static_cast<int>(x); return LS_None;
+ }
+ 
++int candidate_width(const Line& line,int count,int visible,int64_t& width) {
++    int64_t x=line.widths.upStartMainText;
++    int end_cp=line.first+count,visible_cp=line.first+visible;
++    for(size_t i=0;i<line.runs.size();++i) {
++        const auto& run=line.runs[i];
++        if(run.cp>=visible_cp) break;
++        if(run.tab && !run.hidden) {
++            int64_t target=0; uint16_t leader=0;
++            int status=tab_target(line,i,x,end_cp,target,leader); if(status) return status;
++            x=target;
++        } else {
++            size_t end=std::min<size_t>(run.text.size(),visible_cp-run.cp);
++            int status=prefix_width(run,end,x); if(status) return status;
++        }
++        if(x<INT_MIN || x>INT_MAX) return LS_InvalidFormatterResult;
++    }
++    width=x-line.widths.upStartMainText; return LS_None;
++}
++
+ std::shared_ptr<Line> get_line(void* handle) {
+     std::lock_guard<std::mutex> lock(gate);
+     auto found=lines.find(handle); return found==lines.end()?nullptr:found->second;
+@@ -201,7 +224,10 @@ int trailing_width(const Run& run,bool& all_spaces) {
+ }
+ 
+ // Prefix widths are meaningful only at complete glyph-cluster boundaries.
+-int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
++int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool& unavoidable) {
++    const auto& runs=line.runs;
++    unavoidable=false;
++    bool tabs=std::any_of(runs.begin(),runs.end(),[](const Run& run) { return run.tab && !run.hidden; });
+     std::vector<UChar> text;
+     std::vector<int64_t> width{0};
+     std::vector<bool> boundary{true};
+@@ -230,25 +256,37 @@ int choose_wrap(const std::vector<Run>& runs,int allowance,bool emergency) {
+     if(U_FAILURE(error) || !iterator) return -1;
+     int chosen=0,first_break=0;
+     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+-        if(!boundary[point]) continue;
+-        if(!first_break) first_break=point;
++        if(point>max_cut || !boundary[point]) continue;
+         int visible=point;
+         while(visible>0 && text[visible-1]==L' ') --visible;
+         while(visible>0 && !boundary[visible]) --visible;
+-        if(width[visible]<=allowance) chosen=point;
++        int64_t actual=width[visible];
++        if(tabs) {
++            int status=candidate_width(line,point,visible,actual);
++            if(status==LS_InvalidFormatterResult) continue; // No usable stop for this retained field.
++            if(status) { ubrk_close(iterator); return -1; }
++        }
++        if(!first_break) first_break=point;
++        if(actual<=allowance) chosen=point;
+     }
+     ubrk_close(iterator);
+-    if(chosen || !emergency) return chosen?chosen:first_break;
++    if(chosen || !emergency) { unavoidable=!chosen; return chosen?chosen:first_break; }
+     error=U_ZERO_ERROR;
+     iterator=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+     if(U_FAILURE(error) || !iterator) return -1;
+     first_break=0;
+     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+-        if(!boundary[point]) continue;
++        if(point>max_cut || !boundary[point]) continue;
++        int64_t actual=width[point];
++        if(tabs) {
++            int status=candidate_width(line,point,point,actual);
++            if(status==LS_InvalidFormatterResult) continue;
++            if(status) { ubrk_close(iterator); return -1; }
++        }
+         if(!first_break) first_break=point;
+-        if(width[point]<=allowance) chosen=point;
++        if(actual<=allowance) chosen=point;
+     }
+-    ubrk_close(iterator); return chosen?chosen:first_break;
++    ubrk_close(iterator); unavoidable=!chosen; return chosen?chosen:first_break;
+ }
+ 
+ struct Cell {
+@@ -492,35 +530,61 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+             if(limit>0 && position-cp>=limit) ended=true;
+         }
+         if(!ended) return LS_TooLongParagraph;
+-        status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
++        bool needs_tab_layout=false;
++        status=layout_tabs(*result,properties.durLeft,total);
++        if(status) {
++            // With no incremental fallback, a long full field can miss all
++            // explicit stops even though a shorter wrapped field fits one.
++            if(status!=LS_InvalidFormatterResult || !(paragraph.grpf&0x40) || limit || context->tabs.empty()) return status;
++            needs_tab_layout=true;
++        }
+         // Fetch through the separator before finding Unicode breaks: a client
+         // run boundary can be in the middle of a word or grapheme.
+-        if((paragraph.grpf&0x40) && total>column-properties.durRightBreak && limit==0) {
+-            int cut=choose_wrap(result->runs,column-properties.durRightBreak-properties.durLeft,
+-                (paragraph.grpf&0x80000)==0 || (flags&4));
+-            if(cut<=0) return LS_InvalidFormatterResult;
+-            int text_end=cp;
+-            for(const auto& item:result->runs) text_end+=static_cast<int>(item.text.size());
+-            bool truncated=cp+cut<text_end;
+-            int remaining=cut;
+-            size_t keep=0;
+-            for(auto& item:result->runs) {
+-                int length=static_cast<int>(item.text.size());
+-                if(remaining<=0) break;
+-                if(remaining<length) {
+-                    item.text.resize(remaining);
+-                    status=measure_run(*context,item); if(status) return status;
+-                    length=remaining;
++        if((paragraph.grpf&0x40) && (needs_tab_layout || total>column-properties.durRightBreak) && limit==0) {
++            int max_cut=INT_MAX;
++            for(;;) {
++                bool unavoidable=false;
++                int cut=choose_wrap(*result,column-properties.durRightBreak-properties.durLeft,
++                    (paragraph.grpf&0x80000)==0 || (flags&4),max_cut,unavoidable);
++                if(cut<=0) return LS_InvalidFormatterResult;
++                Line candidate=*result;
++                int text_end=cp;
++                for(const auto& item:candidate.runs) text_end+=static_cast<int>(item.text.size());
++                bool truncated=cp+cut<text_end;
++                int remaining=cut;
++                size_t keep=0;
++                for(auto& item:candidate.runs) {
++                    int length=static_cast<int>(item.text.size());
++                    if(remaining<=0) break;
++                    if(remaining<length) {
++                        item.text.resize(remaining);
++                        status=measure_run(*context,item); if(status) return status;
++                        length=remaining;
++                    }
++                    remaining-=length; ++keep;
++                }
++                candidate.runs.resize(keep);
++                if(truncated) { candidate.info.endr=0; candidate.has_terminator=false; }
++                status=layout_tabs(candidate,properties.durLeft,total);
++                if(status) {
++                    if(status==LS_InvalidFormatterResult && cut>1 && !context->tabs.empty()) { max_cut=cut-1; continue; }
++                    return status;
++                }
++                int visible=total;
++                for(auto item=candidate.runs.rbegin();item!=candidate.runs.rend();++item) {
++                    bool all_spaces=false;
++                    visible-=trailing_width(*item,all_spaces);
++                    if(!all_spaces) break;
+                 }
+-                remaining-=length; ++keep;
++                // Reshaping a retained prefix can change contextual advances.
++                // Recheck the real retained geometry and try an earlier legal
++                // candidate if it no longer fits. Only the first indivisible
++                // unit/word may overflow, matching the selected wrapping policy.
++                if(visible>column-properties.durRightBreak && !unavoidable) { max_cut=cut-1; continue; }
++                *result=std::move(candidate);
++                if(truncated) position=cp+cut;
++                break;
+             }
+-            result->runs.resize(keep);
+-            if(truncated) { result->info.endr=0; result->has_terminator=false; position=cp+cut; }
+-            status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
+-            // Aligned fields can move after a wrap cuts their text. Do not
+-            // silently return a line whose recomputed stop exceeds its column.
+-            if(total>column-properties.durRightBreak && std::any_of(result->runs.begin(),result->runs.end(),
+-                [](const Run& run) { return run.tab; })) return LS_NotImplemented;
+             total=properties.durLeft; trailing=total;
+             result->info.dvpAscent=result->info.dvpDescent=result->info.dvpMultiLineHeight=0;
+             result->info.EffectsFlags=0;
+diff --git a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+index 83d1d80..b21d0f3 100644
+--- a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
++++ b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+@@ -13,6 +13,7 @@ static std::wstring sample=L"abc  \u2029";
+ static uint32_t paragraph_flags=0;
+ static int run_length=9600;
+ static bool uniform_width=false;
++static bool contextual_widths=false;
+ static bool decorate=false;
+ static int decoration_error=0;
+ struct DecorationCall { uint32_t kind; int x,y,width,thickness; };
+@@ -50,7 +51,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
+ static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0}; return 0; }
+ static int WINAPI widths(void*,uint32_t,int,WCHAR* text,int count,int,int,int* values,int* total,int* fitted) {
+     *total=0; *fitted=count;
+-    for(int i=0;i<count;++i) { values[i]=uniform_width?10:text[i]==L'a'?10:text[i]==L'b'?20:text[i]==L'c'?30:5; *total+=values[i]; }
++    for(int i=0;i<count;++i) { values[i]=contextual_widths&&count<6?15:uniform_width?10:text[i]==L'a'?10:text[i]==L'b'?20:text[i]==L'c'?30:5; *total+=values[i]; }
+     return 0;
+ }
+ static int WINAPI draw(void*,uint32_t,LSPOINT* point,WCHAR* text,int* values,int count,int,uint32_t,LSPOINT*,LsHeights* height,int width,LSRECT*) {
+@@ -162,6 +163,9 @@ int main(int argc,char** argv) {
+         paragraph_flags=0x40;
+         require(LoCreateLine(context,0,0,34,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==3,"emergency wrap advances complete graphemes");
+         require(LoDisposeLine(line,FALSE)==0,"emergency line disposal");
++        sample=L"abcdef\u2029";run_length=9600;contextual_widths=true;
++        require(LoCreateLine(context,0,0,34,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2&&measured.upLimLine==34,"changed retained-prefix advances retry an earlier fitting candidate");
++        require(LoDisposeLine(line,FALSE)==0,"remeasured prefix line disposal");contextual_widths=false;
+         sample=L"a\u0301b\u2029"; run_length=1;
+         require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2,"combining grapheme spans client runs at tiny width");
+         require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_NotImplemented&&queried_depth==0,"cross-run caret ownership remains explicit rather than splitting a grapheme");
+@@ -198,7 +202,23 @@ int main(int argc,char** argv) {
+         sample=L"a\tb.c\u2029";paragraph_flags=0x40;
+         LsTbd right_stop{2,100,0,0};
+         require(LoSetTabs(tab_context,40,1,&right_stop)==0,"aligned wrap tab setup");line=reinterpret_cast<void*>(1);
+-        require(LoCreateLine(tab_context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"aligned field wrap cannot fabricate a fitting line after moving the stop");
++        require(LoCreateLine(tab_context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==1&&measured.upLimLine==14,"out-of-column aligned stop breaks before tab");
++        require(LoDisposeLine(line,FALSE)==0,"before-tab line disposal");
++        require(LoCreateLine(tab_context,1,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2&&measured.upLimLine==100,"indivisible first tab outside column advances with explicit overflow");
++        require(LoDisposeLine(line,FALSE)==0,"overflow tab line disposal");
++        uniform_width=true;sample=L"a\tabc def\u2029";
++        right_stop.ur=60;
++        require(LoSetTabs(tab_context,40,1,&right_stop)==0,"right aligned retained field setup");
++        require(LoCreateLine(tab_context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upLimLine==60&&measured.upStartTrailing==50,"right aligned wrap chooses fitting retained field rather than full paragraph");
++        require(LoQueryLineCpPpoint(line,1,1,&sub,&queried_depth,&cell)==0&&cell.pointUvStartCell.x==14&&cell.dupCell==6,"wrapped tab retains recomputed gap geometry");
++        require(LoAcquireBreakRecord(line,&record)==0&&LoCloneBreakRecord(record,&clone)==0,"aligned wrap continuation owns cloned break record");
++        require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(record,FALSE)==0,"aligned wrap original line/record disposal");
++        require(LoCreateLine(tab_context,6,0,70,0,clone,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==10&&measured.upLimLine==34,"aligned wrap clone resumes complete remaining field");
++        require(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(clone,FALSE)==0,"aligned wrap continuation disposal");
++        require(LoSetTabs(tab_context,0,1,&right_stop)==0,"explicit-only aligned tab setup");
++        require(LoCreateLine(tab_context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upLimLine==60,"explicit-only stop fits retained prefix despite missing full-field fallback");
++        require(LoDisposeLine(line,FALSE)==0,"explicit-only wrapped line disposal");
++        uniform_width=false;
+         paragraph_flags=0;
+         require(LoSetTabs(tab_context,0,0,nullptr)==0,"zero incremental tab setup");line=reinterpret_cast<void*>(1);
+         require(LoCreateLine(tab_context,0,0,1000,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidFormatterResult&&!line,"missing tab stops reject without fabricated geometry");
+diff --git a/bootstrap/m612/wpf-tests/TextTabs.cs b/bootstrap/m612/wpf-tests/TextTabs.cs
+index b869dc2..d10756f 100644
+--- a/bootstrap/m612/wpf-tests/TextTabs.cs
++++ b/bootstrap/m612/wpf-tests/TextTabs.cs
+@@ -20,7 +20,8 @@ class TabRunProperties:TextRunProperties {
+ class TabParagraph:TextParagraphProperties {
+     readonly IList<TextTabProperties> tabs;
+     readonly bool wrap;
+-    public TabParagraph(IList<TextTabProperties> value=null,bool wrap=false) { tabs=value;this.wrap=wrap; }
++    readonly double increment;
++    public TabParagraph(IList<TextTabProperties> value=null,bool wrap=false,double increment=80) { tabs=value;this.wrap=wrap;this.increment=increment; }
+     public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
+     public override TextAlignment TextAlignment=>TextAlignment.Left;
+     public override double LineHeight=>0;
+@@ -29,7 +30,7 @@ class TabParagraph:TextParagraphProperties {
+     public override TextWrapping TextWrapping=>wrap?TextWrapping.Wrap:TextWrapping.NoWrap;
+     public override TextMarkerProperties TextMarkerProperties=>null;
+     public override double Indent=>0;
+-    public override double DefaultIncrementalTab=>80;
++    public override double DefaultIncrementalTab=>increment;
+     public override IList<TextTabProperties> Tabs=>tabs;
+ }
+ class TabSource:TextSource {
+@@ -95,6 +96,48 @@ class Check {
+             position+=line.Length;++count;if(count>30)throw new Exception("tab wrapping did not end");
+         }
+         if(position!=wrapped.Text.Length+1 || count<2)throw new Exception("tab wrapping coverage");
++        foreach(bool split in new[]{false,true}) {
++            foreach(var alignment in new[]{TextTabAlignment.Left,TextTabAlignment.Center,TextTabAlignment.Right,TextTabAlignment.Character}) {
++                foreach(double stop in new[]{100.0,160.0}) {
++                    var source=new TabSource("कि\talpha beta.gamma delta",split);
++                    var paragraph=new TabParagraph(new[]{new TextTabProperties(alignment,stop,'.','.')},true);
++                    int cp=0,lines=0,overflow=0;TextLineBreak previous=null;
++                    try {
++                        while(cp<=source.Text.Length) {
++                            using var line=formatter.FormatLine(source,cp,125,paragraph,previous);
++                            int end=cp+line.Length;
++                            if(line.Length<=0 || end>source.Text.Length+1)throw new Exception("aligned wrap lost source progress");
++                            if(end<source.Text.Length && (char.IsLowSurrogate(source.Text[end]) || CharUnicodeInfo.GetUnicodeCategory(source.Text,end)==UnicodeCategory.SpacingCombiningMark || CharUnicodeInfo.GetUnicodeCategory(source.Text,end)==UnicodeCategory.NonSpacingMark))throw new Exception("aligned wrap split a grapheme");
++                            if(line.Width>125.02) {
++                                if(cp>=source.Text.Length || source.Text[cp]!='\t' || line.Length!=1)throw new Exception("avoidable aligned wrap overflow");
++                                ++overflow;
++                            }
++                            if(cp==0 && stop==100 && alignment==TextTabAlignment.Right) {
++                                if(line.Length<=3)throw new Exception("aligned wrap dropped a fitting retained field");
++                                Near(line.WidthIncludingTrailingWhitespace,100,"retained right field ends at its stop");
++                            }
++                            GC.Collect(2,GCCollectionMode.Forced,true,true);
++                            var glyphs=line.GetIndexedGlyphRuns().ToArray();
++                            if(glyphs.Sum(run=>run.TextSourceLength)!=Math.Min(line.Length,source.Text.Length-cp))throw new Exception("aligned wrap enumeration lost source units");
++                            var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())line.Draw(drawing,new Point(10,10),InvertAxes.None);
++                            var bitmap=new RenderTargetBitmap(240,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
++                            previous?.Dispose();previous=line.GetTextLineBreak();if(previous!=null){using var clone=previous.Clone();}
++                            cp=end;++lines;if(lines>30)throw new Exception("aligned wrapping did not terminate");
++                        }
++                    } finally { previous?.Dispose(); }
++                    if(cp!=source.Text.Length+1 || lines<2)throw new Exception("aligned wrap source coverage");
++                    Console.WriteLine($"public aligned wrapping {alignment}, stop={stop}, split={split}: {lines} lines, {overflow} indivisible tab overflows PASS");
++                }
++            }
++        }
+         Console.WriteLine("public TextFormatter aligned/incremental tabs, cross-run fields, leaders, caret/selection/enumeration, raster, wrapping and moving GC PASS");
++        foreach(bool split in new[]{false,true}) {
++            var source=new TabSource("कि\talpha beta.gamma delta",split);
++            var paragraph=new TabParagraph(new[]{new TextTabProperties(TextTabAlignment.Right,100,0,'.')},true,0);
++            using var line=formatter.FormatLine(source,0,125,paragraph,null);
++            if(line.Length<=3 || line.Width>125.02)throw new Exception("explicit-only aligned stop lost fitting retained prefix");
++            Near(line.WidthIncludingTrailingWhitespace,100,"explicit-only retained right field");
++            Console.WriteLine($"public explicit-only aligned wrap, split={split}, length={line.Length} PASS");
++        }
+     }
+ }

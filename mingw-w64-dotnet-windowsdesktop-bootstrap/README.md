@@ -48,3 +48,10 @@ embedding all four source composite-font resources in PresentationCore, needed
 for font fallback. A wrap that cuts an aligned field and moves its stop beyond
 the column still returns an explicit error; bidi tabs and exact legacy leader
 spacing remain unfinished. Native imported-symbol coverage stays 58/139.
+
+Release 8.0.0-4 chooses aligned-tab line breaks using the retained field and
+validates geometry again after prefix remeasurement/reshaping. Its normal SDK
+checks cover all four WPF alignments, whole/split fields, continuation and
+indivisible leading-tab overflow. This resolves the release 3 aligned-field
+wrapping error; full bidi/paragraph layout and exact legacy leader spacing
+remain unfinished. Imported-symbol coverage stays 58/139.
