@@ -1,0 +1,484 @@
+diff --git a/bootstrap/m612/tools/wpf-lineservices-header.py b/bootstrap/m612/tools/wpf-lineservices-header.py
+index a7aa797..cc32d80 100644
+--- a/bootstrap/m612/tools/wpf-lineservices-header.py
++++ b/bootstrap/m612/tools/wpf-lineservices-header.py
+@@ -9,7 +9,7 @@ text=source.read_text()
+ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_t','IntPtr':'void*'}
+ records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
+          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
+-         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo')
++         'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit')
+ lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
+ for name in records:
+     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
+@@ -29,4 +29,7 @@ for name in records:
+ body=re.search(r'\benum\s+LsErr\s*\{(.*?)\n    \}',text,re.S).group(1)
+ for key,value in re.findall(r'\b(\w+)\s*=\s*(-?\d+)\s*[,\n]',body):
+     lines.append(f'constexpr int32_t LS_{key} = {value};')
++infinite=re.search(r'const int\s+IdealInfiniteWidth\s*=\s*(0x[0-9A-Fa-f]+|\d+)',text)
++if not infinite: raise SystemExit('Missing original IdealInfiniteWidth')
++lines.append(f'constexpr int32_t LS_IdealInfiniteWidth = {infinite.group(1)};')
+ output.write_text('\n'.join(lines)+'\n')
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index fd5d056..565936a 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -37,6 +37,10 @@ struct Run {
+     std::vector<GlyphOffset> offsets;
+     bool shaped=false,hidden=false,tab=false;
+     uint16_t leader=0;
++    bool embedded=false,position_used=false;
++    InlineInit object_handler{};
++    ObjDim object_metrics{};
++    int break_before=1,break_after=1;
+ };
+ struct Line {
+     std::shared_ptr<Context> context;
+@@ -67,8 +71,35 @@ using UnderlineInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsULInfo*);
+ using StrikeInfo=int (WINAPI *)(void*,uint32_t,LsHeights*,int,LsStInfo*);
+ using DrawDecoration=int (WINAPI *)(void*,uint32_t,uint32_t,LSPOINT*,int,int,int,uint32_t,LSRECT*);
+ using EnumTabCallback=int (WINAPI *)(void*,uint32_t,int,WCHAR*,uint16_t,int,int,int,LSPOINT*,LsHeights*,int);
++using ObjectHandler=int (WINAPI *)(void*,uint32_t,InlineInit*);
++using FormatObject=int (WINAPI *)(void*,uint32_t,int,int,int,ObjDim*,int*,int*,int*,int*);
++using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
++
++int format_object(Context& context,Run& run,int position,int margin) {
++    if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
++    int status=reinterpret_cast<ObjectHandler>(context.info.pfnGetObjectHandlerInfo)(context.info.pols,1,&run.object_handler);
++    if(status) return status;
++    if(run.object_handler.dwVersion || !run.object_handler.pfnFormat || !run.object_handler.pfnDraw) return LS_InvalidFormatterResult;
++    int first=0,used=0;
++    status=reinterpret_cast<FormatObject>(run.object_handler.pfnFormat)(context.info.pols,
++        static_cast<uint32_t>(run.id),run.cp,position,margin,&run.object_metrics,&first,&used,&run.break_before,&run.break_after);
++    if(status) return status;
++    const auto& reference=run.object_metrics.heightsRef;
++    const auto& height=run.object_metrics.heightsPres;
++    auto valid=[](const LsHeights& value) {
++        return value.dvAscent>=0 && value.dvDescent>=0 && value.dvMultiLineHeight>=0 &&
++            static_cast<int64_t>(value.dvAscent)+value.dvDescent==value.dvMultiLineHeight;
++    };
++    if(run.object_metrics.dur<0 || !valid(reference) || !valid(height) ||
++        run.break_before<0 || run.break_before>3 || run.break_after<0 || run.break_after>3 ||
++        (first!=0 && first!=1) || (used!=0 && used!=1)) return LS_InvalidFormatterResult;
++    run.width=run.object_metrics.dur; run.widths.assign(run.text.size(),0); run.widths[0]=run.width;
++    run.metrics={height.dvAscent,height.dvDescent,height.dvMultiLineHeight,0};
++    run.position_used=used!=0; return LS_None;
++}
+ 
+ int measure_run(Context& context,Run& run) {
++    if(run.embedded) return LS_None; // Objects are formatted atomically at their pen position.
+     int count=static_cast<int>(run.text.size()),flow=run.flow,status=0;
+     run.width=0; run.widths.assign(count,0);
+     if(!run.hidden) {
+@@ -251,12 +282,26 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool&
+             }
+         }
+     }
++    std::vector<int> before(text.size()+1,-1),after(text.size()+1,-1);
++    for(const auto& run:runs) if(run.embedded) {
++        before[run.cp-line.first]=run.break_before;
++        after[run.cp-line.first+run.text.size()]=run.break_after;
++    }
++    auto allowed=[&](int point,bool natural) {
++        int left=after[point],right=before[point];
++        if(left<0 && right<0) return natural;
++        if(left<0) left=natural?2:1;
++        if(right<0) right=point==static_cast<int>(text.size())?3:natural?2:1;
++        // Original LineBreakCondition combination table: Always wins over
++        // restraint; Desired breaks unless restrained; Possible/Possible does not.
++        return left==3 || right==3 || ((left!=0 && right!=0) && (left==2 || right==2));
++    };
+     UErrorCode error=U_ZERO_ERROR;
+     auto* iterator=ubrk_open(UBRK_LINE,"root",text.data(),static_cast<int>(text.size()),&error);
+     if(U_FAILURE(error) || !iterator) return -1;
+     int chosen=0,first_break=0;
+-    for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+-        if(point>max_cut || !boundary[point]) continue;
++    for(int point=1;point<=static_cast<int>(text.size()) && point<=max_cut;++point) {
++        if(!boundary[point] || !allowed(point,ubrk_isBoundary(iterator,point))) continue;
+         int visible=point;
+         while(visible>0 && text[visible-1]==L' ') --visible;
+         while(visible>0 && !boundary[visible]) --visible;
+@@ -276,7 +321,7 @@ int choose_wrap(const Line& line,int allowance,bool emergency,int max_cut,bool&
+     if(U_FAILURE(error) || !iterator) return -1;
+     first_break=0;
+     for(int point=ubrk_first(iterator);(point=ubrk_next(iterator))!=UBRK_DONE;) {
+-        if(point>max_cut || !boundary[point]) continue;
++        if(point>max_cut || !boundary[point] || !allowed(point,true)) continue;
+         int64_t actual=width[point];
+         if(tabs) {
+             int status=candidate_width(line,point,point,actual);
+@@ -338,7 +383,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
+                     glyphs=last-first;
+                     for(unsigned glyph=first;glyph<last;++glyph) width+=run.advances[glyph];
+                 } else {
+-                    glyphs=static_cast<int>(end-start);
++                    glyphs=run.embedded?0:static_cast<int>(end-start);
+                     for(size_t i=start;i<end;++i) width+=run.widths[i];
+                 }
+             }
+@@ -498,7 +543,9 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+                 buffer.resize(count);
+             }
+             if(!text) return LS_InvalidCpContentFetched;
+-            if(run.properties.idObj!=0xFFFF) return LS_NotImplemented;
++            if(run.properties.idObj!=0xFFFF && run.properties.idObj!=1) return LS_NotImplemented;
++            run.embedded=run.properties.idObj==1;
++            if(run.embedded && count!=1) return LS_InvalidDcpFetched;
+             run.hidden=hidden_flag!=0 || (run.properties.flags&0x10000)!=0;
+             run.text.assign(text,text+count); run.widths.resize(count);
+             if(count==1 && (text[0]==0x2028 || text[0]==0x2029)) {
+@@ -513,7 +560,13 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+             if(tab==text) { count=1; run.tab=true; }
+             else if(tab!=text+count) count=static_cast<int>(tab-text);
+             run.text.resize(count); run.widths.resize(count);
+-            status=measure_run(*context,run);
++            if(run.embedded) {
++                status=layout_tabs(*result,properties.durLeft,total); if(status) return status;
++                status=format_object(*context,run,total,LS_IdealInfiniteWidth);
++                if(status) return status;
++                if(run.position_used && std::any_of(result->runs.begin(),result->runs.end(),[](const Run& value) { return value.tab; }) &&
++                    std::any_of(context->tabs.begin(),context->tabs.end(),[](const LsTbd& value) { return value.lskt!=0; })) return LS_NotImplemented;
++            } else status=measure_run(*context,run);
+             if(status) return status;
+             result->info.dvpAscent=std::max(result->info.dvpAscent,run.metrics.dvAscent);
+             result->info.dvpDescent=std::max(result->info.dvpDescent,run.metrics.dvDescent);
+@@ -700,7 +753,10 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT*
+         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+         int status=0;
+         if(!run.hidden) {
+-            if(run.tab) {
++            if(run.embedded) {
++                status=reinterpret_cast<DrawObject>(run.object_handler.pfnDraw)(context.info.pols,
++                    static_cast<uint32_t>(run.id),&point,run.flow,run.width);
++            } else if(run.tab) {
+                 if(run.leader && run.width) {
+                     if(!context.info.pfnDrawTextRun) return LS_NotImplemented;
+                     WCHAR leader=run.leader; int advance=0,measured=0,fitted=0;
+@@ -789,7 +845,7 @@ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse
+     for(const auto& run:line->runs) { starts.push_back(x); x+=run.width; }
+     for(size_t index=0;index<line->runs.size();++index) {
+         size_t position=reverse?line->runs.size()-index-1:index;
+-        auto& run=line->runs[position]; if(run.hidden) continue;
++        auto& run=line->runs[position]; if(run.hidden || run.embedded) continue;
+         LSPOINT point{starts[position],origin->y};
+         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+         if(run.tab) {
+diff --git a/bootstrap/m612/wpf-tests/InlineObjects.cs b/bootstrap/m612/wpf-tests/InlineObjects.cs
+new file mode 100644
+index 0000000..a5becae
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/InlineObjects.cs
+@@ -0,0 +1,118 @@
++using System;
++using System.Globalization;
++using System.Linq;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++using System.Windows.Controls;
++using System.Windows.Documents;
++class ObjectRunProperties:TextRunProperties {
++    public override Typeface Typeface=>new Typeface("Nirmala UI");
++    public override double FontRenderingEmSize=>24;
++    public override double FontHintingEmSize=>24;
++    public override TextDecorationCollection TextDecorations=>null;
++    public override Brush ForegroundBrush=>Brushes.Black;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("hi-IN");
++    public override TextEffectCollection TextEffects=>null;
++}
++class ObjectParagraph:TextParagraphProperties {
++    public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
++    public override TextAlignment TextAlignment=>TextAlignment.Left;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>new ObjectRunProperties();
++    public override TextWrapping TextWrapping=>TextWrapping.Wrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++}
++class BoxObject:TextEmbeddedObject {
++    readonly bool fixedSize;
++    public int Formats,Draws;
++    public double Available,Width;
++    public Point Origin;
++    public bool FailFormat,FailDraw;
++    public BoxObject(bool fixedSize=true) { this.fixedSize=fixedSize; }
++    public override CharacterBufferReference CharacterBufferReference=>new CharacterBufferReference(string.Empty,0);
++    public override int Length=>3;
++    public override TextRunProperties Properties=>new ObjectRunProperties();
++    public override LineBreakCondition BreakBefore=>LineBreakCondition.BreakDesired;
++    public override LineBreakCondition BreakAfter=>LineBreakCondition.BreakDesired;
++    public override bool HasFixedSize=>fixedSize;
++    public override TextEmbeddedObjectMetrics Format(double remainingParagraphWidth) {
++        ++Formats;Available=remainingParagraphWidth;
++        if(FailFormat)throw new InvalidOperationException("object format failure");
++        Width=fixedSize?70:Math.Min(60,remainingParagraphWidth/2);
++        return new TextEmbeddedObjectMetrics(Width,30,20);
++    }
++    public override Rect ComputeBoundingBox(bool rightToLeft,bool sideways)=>new Rect(0,-20,Width,30);
++    public override void Draw(DrawingContext drawing,Point origin,bool rightToLeft,bool sideways) {
++        if(FailDraw)throw new InvalidOperationException("object draw failure");
++        if(rightToLeft || sideways)throw new Exception("unexpected object flow");
++        ++Draws;Origin=origin;drawing.DrawRectangle(Brushes.Blue,null,new Rect(origin.X,origin.Y-20,Width,30));
++    }
++}
++class ObjectSource:TextSource {
++    public readonly BoxObject Box;
++    public ObjectSource(BoxObject box) { Box=box; }
++    public override TextRun GetTextRun(int index)=>index==0?new TextCharacters("कि",new ObjectRunProperties()):index==2?Box:index==5?new TextCharacters("ab",new ObjectRunProperties()):index==7?new TextEndOfParagraph(1):throw new Exception("source split an atomic embedded object: "+index);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("hi-IN"),new CharacterBufferRange("किXXXab",0,Math.Min(limit,7))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++    static void Near(double actual,double expected,string why) { if(Math.Abs(actual-expected)>0.02)throw new Exception(why+": "+actual+" vs "+expected); }
++    [STAThread]
++    static void Main() {
++        using var formatter=TextFormatter.Create();
++        foreach(bool fixedSize in new[]{true,false}) {
++            var box=new BoxObject(fixedSize);var source=new ObjectSource(box);
++            using var line=formatter.FormatLine(source,0,200,new ObjectParagraph(),null);
++            if(line.Length!=8 || line.Height<30 || line.Baseline<20 || box.Formats!=1)throw new Exception("inline object metrics/format ownership");
++            double first=line.GetDistanceFromCharacterHit(new CharacterHit(2,0));
++            double last=line.GetDistanceFromCharacterHit(new CharacterHit(2,3));
++            Near(last-first,box.Width,"atomic object caret width");Near(box.Available,200-first,"object remaining paragraph width");
++            var leading=line.GetCharacterHitFromDistance(first+1);var trailing=line.GetCharacterHitFromDistance(last-1);
++            if(leading.FirstCharacterIndex!=2 || leading.TrailingLength!=0 || trailing.FirstCharacterIndex!=2 || trailing.TrailingLength!=3)throw new Exception("object point hit splits backing span");
++            var next=line.GetNextCaretCharacterHit(new CharacterHit(2,0));
++            if(next.FirstCharacterIndex!=2 || next.TrailingLength!=3)throw new Exception("object caret navigation split");
++            var bounds=line.GetTextBounds(2,3).ToArray();Near(bounds.Sum(b=>b.Rectangle.Width),box.Width,"object selection width");
++            GC.Collect(2,GCCollectionMode.Forced,true,true);
++            var runs=line.GetIndexedGlyphRuns().ToArray();
++            if(runs.Sum(r=>r.TextSourceLength)!=4 || runs.Any(r=>r.TextSourceCharacterIndex>=2 && r.TextSourceCharacterIndex<5))throw new Exception("embedded object emitted fake text glyphs");
++            var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())line.Draw(drawing,new Point(10,10),InvertAxes.None);
++            Near(box.Origin.X,10+first,"inline draw pen position");Near(box.Origin.Y,10+line.Baseline,"inline draw baseline");
++            var bitmap=new RenderTargetBitmap(250,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
++            var pixels=new byte[250*80*4];bitmap.CopyPixels(pixels,250*4,0);int blue=0;
++            for(int at=0;at<pixels.Length;at+=4)if(pixels[at]>200 && pixels[at+1]<40 && pixels[at+2]<40 && pixels[at+3]>200)++blue;
++            if(blue<box.Width*25 || box.Draws!=1)throw new Exception("inline object raster missing");
++            Console.WriteLine($"public inline object fixed={fixedSize}: width={box.Width:F3}, available={box.Available:F3}, {blue} blue pixels; metrics/caret/selection/enumeration/GC PASS");
++        }
++        var wrappedBox=new BoxObject();var wrappedSource=new ObjectSource(wrappedBox);int cp=0,count=0;
++        while(cp<8) {
++            using var line=formatter.FormatLine(wrappedSource,cp,80,new ObjectParagraph(),null);
++            int end=cp+line.Length;if(line.Length<=0 || end>8 || end>2&&end<5)throw new Exception("wrapped inline object split or source progress");
++            if(line.Width>80.02)throw new Exception("avoidable inline overflow");
++            cp=end;++count;if(count>10)throw new Exception("inline wrapping stalled");
++        }
++        if(count<2)throw new Exception("inline object wrapping did not break");
++        var bad=new BoxObject{FailFormat=true};
++        try { using var line=formatter.FormatLine(new ObjectSource(bad),0,200,new ObjectParagraph(),null);throw new Exception("object format exception was lost"); }
++        catch(InvalidOperationException e) when(e.Message=="object format failure") { }
++        var drawBad=new BoxObject{FailDraw=true};using var badLine=formatter.FormatLine(new ObjectSource(drawBad),0,200,new ObjectParagraph(),null);
++        try { var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())badLine.Draw(drawing,new Point(),InvertAxes.None);throw new Exception("object draw exception was lost"); }
++        catch(InvalidOperationException e) when(e.Message=="object draw failure") { }
++        var block=new TextBlock{FontFamily=new FontFamily("Nirmala UI"),FontSize=24,TextWrapping=TextWrapping.Wrap,Foreground=Brushes.Black};
++        var border=new Border{Width=45,Height=20,Background=Brushes.Red};
++        block.Inlines.Add(new Run("कि "));block.Inlines.Add(new InlineUIContainer(border));block.Inlines.Add(new Run(" ab"));
++        block.Measure(new Size(200,80));block.Arrange(new Rect(0,0,200,80));
++        GC.Collect(2,GCCollectionMode.Forced,true,true);
++        var uiBitmap=new RenderTargetBitmap(220,80,96,96,PixelFormats.Pbgra32);uiBitmap.Render(block);
++        var uiPixels=new byte[220*80*4];uiBitmap.CopyPixels(uiPixels,220*4,0);int red=0;
++        for(int at=0;at<uiPixels.Length;at+=4)if(uiPixels[at+2]>200&&uiPixels[at+1]<40&&uiPixels[at]<40&&uiPixels[at+3]>200)++red;
++        Near(border.ActualWidth,45,"InlineUIContainer actual child width");Near(border.ActualHeight,20,"InlineUIContainer actual child height");
++        if(red<800 || block.GetPositionFromPoint(new Point(60,10),true)==null)throw new Exception("real InlineUIContainer raster/hit testing");
++        Console.WriteLine($"original TextBlock InlineUIContainer layout/child/raster/point hit after GC: {red} red pixels PASS");
++        Console.WriteLine("public original TextEmbeddedObject fixed/flexible format/draw, atomic wrapping, geometry, source mapping and callback exception propagation PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp b/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp
+new file mode 100644
+index 0000000..20d8f93
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/InlineObjectsNative.cpp
+@@ -0,0 +1,79 @@
++// SPDX-License-Identifier: MIT
++#include <windows.h>
++#include <cstdio>
++#include <cstring>
++#include <stdexcept>
++#include <string>
++#include <vector>
++#include "LineServicesNative.h"
++static std::wstring text=L"a\ufffcb\u2029";
++static int after_first=2,before_second=2,error=0,formats=0,draws=0;
++static LSPOINT object_origin{};
++static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
++static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;return 0; }
++static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;return 0; }
++static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR**,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
++    if(cp<0 || cp>=static_cast<int>(text.size()))return LS_WrongGivenCp;
++    *used=1;*count=1;*hidden=0;buffer[0]=text[cp];*chp={};chp->idObj=text[cp]==0xfffc?1:0xffff;*id=cp+5;return 0;
++}
++static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0};return 0; }
++static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=10*count;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
++static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int*,int,int,uint32_t,LSPOINT*,LsHeights*,int,LSRECT*) { return 0; }
++static int WINAPI draw_object(void*,uint32_t id,LSPOINT* point,int flow,int width) {
++    if(flow || width!=(text.size()==3?50:70) || id<5)return LS_ClientAbort;
++    object_origin=*point;++draws;return error==3?LS_ClientAbort:0;
++}
++static int WINAPI format_object(void*,uint32_t id,int cp,int position,int margin,ObjDim* dim,int* first,int* used,int* before,int* after) {
++    if(id!=static_cast<uint32_t>(cp+5) || margin!=LS_IdealInfiniteWidth || position<4)return LS_ClientAbort;
++    ++formats;if(error==1)return LS_ClientAbort;
++    dim->heightsRef=dim->heightsPres={20,10,30};dim->dur=error==2?-1:text.size()==3?50:70;
++    *first=cp==0;*used=0;*before=cp==1&&text.size()==3?before_second:2;*after=cp==0&&text.size()==3?after_first:2;
++    return 0;
++}
++static int WINAPI handler(void*,uint32_t id,InlineInit* value) {
++    if(id!=1)return LS_InvalidObjectIdFetched;
++    *value={0,reinterpret_cast<void*>(format_object),reinterpret_cast<void*>(draw_object)};return 0;
++}
++int main(int argc,char** argv) {
++    try {
++        require(argc==2,"usage: check DLL");HMODULE dll=LoadLibraryA(argv[1]);require(dll!=nullptr,"load native library");
++        using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);
++        using Doc=int(WINAPI*)(void*,int,int,LsDevRes*);
++        using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);
++        using Query=int(WINAPI*)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);
++        using Display=int(WINAPI*)(void*,LSPOINT*,uint32_t,LSRECT*);
++        using Dispose=int(WINAPI*)(void*,BOOL);
++        using Destroy=int(WINAPI*)(void*);
++#define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));require(name!=nullptr,#name)
++        PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
++        require(sizeof(InlineInit)==24&&offsetof(InlineInit,pfnFormat)==8&&offsetof(InlineInit,pfnDraw)==16&&sizeof(ObjDim)==28,"original object callback record ABI");
++        LsContextInfo config{};config.version=4;config.pfnFetchPap=reinterpret_cast<void*>(pap);config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);config.pfnDrawTextRun=reinterpret_cast<void*>(draw_text);config.pfnGetObjectHandlerInfo=reinterpret_cast<void*>(handler);
++        LscbkRedefined callbacks{reinterpret_cast<void*>(fetch),nullptr,reinterpret_cast<void*>(props)};
++        void* context=nullptr;LsDevRes resolution{1440,1440,1440,1440};
++        require(LoCreateContext(&config,&callbacks,&context)==0&&LoSetDoc(context,1,1,&resolution)==0,"object context setup");
++        LsLInfo info{};LsLineWidths measured{};void* line=nullptr;int depth=0;
++        require(LoCreateLine(context,0,0,200,0,nullptr,&info,&line,&depth,&measured)==0&&formats==1&&measured.upLimLine==94&&info.dvpAscent==20&&info.dvpDescent==10&&info.dvpMultiLineHeight==30,"object format identity, pen, dimensions and line metrics");
++        LsQSubInfo sub{};LsTextCell cell{};
++        require(LoQueryLineCpPpoint(line,1,1,&sub,&depth,&cell)==0&&sub.idobj==1&&sub.plsrun==reinterpret_cast<void*>(6)&&cell.pointUvStartCell.x==14&&cell.dupCell==70&&cell.cGlyphsInCell==0,"object query retains identity and real atomic geometry without glyphs");
++        LSPOINT origin{10,21};LSRECT clip{-100,-100,1000,1000};
++        require(LoDisplayLine(line,&origin,1,&clip)==0&&draws==1&&object_origin.x==24&&object_origin.y==21,"original object draw ABI and baseline origin");
++        error=3;require(LoDisplayLine(line,&origin,1,&clip)==LS_ClientAbort,"object draw failure propagates");error=0;
++        require(LoDisposeLine(line,FALSE)==0,"object line disposal");
++        for(int failure=1;failure<=2;++failure) {
++            error=failure;line=reinterpret_cast<void*>(1);
++            require(LoCreateLine(context,0,0,200,0,nullptr,&info,&line,&depth,&measured)==(failure==1?LS_ClientAbort:LS_InvalidFormatterResult)&&!line,"object format/invalid-dimension errors preserve empty output");
++        }
++        error=0;text=L"\xfffc\xfffc\x2029";
++        // Original TextAndFontProperties.cs table, reordered to native
++        // Never/Can/Please/Must rather than repeating the engine's predicate.
++        const bool breaks[4][4]={{false,false,false,true},{false,false,true,true},{false,true,true,true},{true,true,true,true}};
++        for(int left=0;left<4;++left)for(int right=0;right<4;++right) {
++            after_first=left;before_second=right;
++            bool allowed=breaks[left][right];
++            require(LoCreateLine(context,0,0,80,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==(allowed?1:3)&&measured.upLimLine==(allowed?54:104),"all 16 original break-condition combinations match source table");
++            require(LoDisposeLine(line,FALSE)==0,"break-table line disposal");
++        }
++        require(LoDestroyContext(context)==0,"object context teardown");
++        std::puts("native InlineInit/ObjDim ABI, format/draw identity/geometry, atomic query, all 16 source break combinations, errors and ownership PASS");return 0;
++    } catch(const std::exception& e) { std::printf("FAIL: %s\n",e.what());return 1; }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-inline-objects-sdk.sh b/bootstrap/m612/wpf-tests/check-inline-objects-sdk.sh
+new file mode 100644
+index 0000000..01d8b08
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-inline-objects-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/InlineObjects.cs" "$work/Program.cs"
++cat > "$work/InlineSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/InlineSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/InlineSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/InlineSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/InlineSdkCheck.exe"
++printf 'PASS normal offline WPF SDK inline-object/InlineUIContainer check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index d9916c4..3aded7e 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -220,6 +220,14 @@ step_check_lineservices_line_native() {
+   "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
+ }
+ 
++step_check_inline_objects_native() {
++  local work=$build/inline-objects-native-check
++  mkdir -p "$work"
++  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/InlineObjectsNative.cpp" \
++    -I "$build/classification-native" -o "$work/native-check.exe"
++  "$work/native-check.exe" "$build/lib/PresentationNative_cor3.dll"
++}
++
+ step_check_text_line() {
+   initialize
+   local work=$build/text-line-check
+@@ -297,6 +305,32 @@ PY
+   "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/TabsCheck.dll")"
+ }
+ 
++step_check_inline_objects() {
++  initialize
++  local work=$build/inline-objects-check
++  mkdir -p "$work"
++  cp "$here/wpf-tests/InlineObjects.cs" "$work/Program.cs"
++  /usr/bin/python3 - "$work" "$build/lib" "$oob" <<'PY'
++from pathlib import Path
++import subprocess,sys,xml.etree.ElementTree as E
++work,lib,oob=map(Path,sys.argv[1:])
++root=E.Element('Project',Sdk='Microsoft.NET.Sdk');props=E.SubElement(root,'PropertyGroup')
++for name,value in {'TargetFramework':'net8.0','OutputType':'Exe','UseAppHost':'false','EnableNETAnalyzers':'false','NuGetAudit':'false','UseSharedCompilation':'false'}.items():E.SubElement(props,name).text=value
++items=E.SubElement(root,'ItemGroup')
++files={f.stem:f for f in oob.glob('*.dll')}
++files.update({name:lib/(name+'.dll') for name in ('PresentationCore','PresentationFramework','WindowsBase','System.Xaml','DirectWriteForwarder')})
++for name,file in sorted(files.items()):
++    ref=E.SubElement(items,'Reference',Include=name);E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-m',str(file)],text=True).strip()
++E.ElementTree(root).write(work/'InlineObjectsCheck.csproj',encoding='utf-8')
++PY
++  "$sdk/dotnet.exe" build "$(cygpath -m "$work/InlineObjectsCheck.csproj")" -c Release --configfile "$(cygpath -m "$build/NuGet.config")" -v:q -p:UseSharedCompilation=false
++  local native
++  for native in PresentationNative_cor3 wpfgfx_cor3 wpf-dwrite-loader wpf-subsetter; do
++    cp "${WPF_INLINE_NATIVE:-$build/lib}/$native.dll" "$work/bin/Release/net8.0/"
++  done
++  "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0/InlineObjectsCheck.dll")"
++}
++
+ step_prepare_gfx() {
+   local root=$build/gfx-source
+   local gfx=$root/src/Microsoft.DotNet.Wpf/src/WpfGfx
+@@ -676,16 +710,20 @@ EOF
+ }
+ 
+ step_check_sdk() {
+-  local root=$build/sdk-check-root
++  local root=$build/sdk-check-root desktop_version=8.0.0-bootstrap.wpf.8.0.0
+   if [ ! -s "${WPF_LAYOUT:-$build/layout}/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationFramework.dll" ]; then step_layout; fi
+   rm -rf "${root:?}"
+   mkdir -p "$root"
+   cp -al "$sdk/." "$root/"
+   # Unlink the SDK overlay before copying to avoid modifying installed hardlinks.
+-  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop"
++  rm -rf "$root/sdk/8.0.131/Sdks/Microsoft.NET.Sdk.WindowsDesktop" \
++    "$root/shared/Microsoft.WindowsDesktop.App/$desktop_version" \
++    "$root/packs/Microsoft.WindowsDesktop.App.Ref/$desktop_version" \
++    "$root/packs/Microsoft.WindowsDesktop.App.Runtime.win-x64/$desktop_version"
+   cp -a "${WPF_LAYOUT:-$build/layout}/." "$root/"
+   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
++  bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 

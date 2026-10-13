@@ -55,3 +55,11 @@ checks cover all four WPF alignments, whole/split fields, continuation and
 indivisible leading-tab overflow. This resolves the release 3 aligned-field
 wrapping error; full bidi/paragraph layout and exact legacy leader spacing
 remain unfinished. Imported-symbol coverage stays 58/139.
+
+Release 8.0.0-5 adds original inline object format/draw callbacks, atomic
+geometry/wrapping and the documented break-condition table. Normal SDK checks
+cover fixed/flexible TextEmbeddedObject and actual TextBlock InlineUIContainer
+rendering and point hits. SDK validation unlinks replacement desktop hardlinks
+before overlaying source output. Position-dependent objects following aligned
+tabs, full bidi/paragraph layout and justification remain unfinished. Native
+imported-symbol coverage remains 58/139.
