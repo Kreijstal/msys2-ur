@@ -1,0 +1,37 @@
+# Source WindowsDesktop bootstrap
+
+This recipe builds WPF 8.0.0 and the approved interim WinForms 7.0.20 port from
+source using the source-built .NET 8 SDK and C++/CLI compiler. Its framework
+version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks,
+targeting/runtime packs, all managed shipping implementations, native graphics,
+pen input and the source PresentationNative replacement.
+
+The native text/paragraph/NLS replacement is still partial (currently 58 of 139
+imported exports). Bidi, paragraph layout and other documented text behavior
+remain unfinished. This experimental package is part of the ongoing bootstrap;
+it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
+source metadata-generator bootstrap. The framework records this scope and its
+source/assembly/dependency hashes in `source-bootstrap.json`.
+
+The recipe recompiles both desktop components in its private build tree; no
+existing desktop installation is used as an implementation input. The installed
+source-built core SDK/compiler and trusted MSYS2 native/Mono tools are its seeds.
+Executable fixtures in the upstream source archives are deleted before building.
+Native libc++/ICU dependencies are bundled for self-contained publish, with their
+MSYS2 package owners, hashes and licenses recorded.
+
+Run `python make-source.py` to export the pinned local bootstrap commit, then
+build in a CLANG64 shell with `makepkg-mingw -s`. An interactive Windows desktop
+is needed by `check()`. It validates the real bridge assemblies, printer
+enumeration, a local XPS document, automation/Ribbon/interop, native graphics,
+and ordinary offline WPF/WinForms build and self-contained publish.
+
+This package replaces the WinForms-only bootstrap package because both own the
+desktop SDK. It preserves the freshly source-built legacy WinForms framework and
+pack versions for existing interim applications. The installed core .NET SDK
+remains a separate package.
+
+Normal projects use `net8.0-windows` and `<UseWPF>true</UseWPF>` with
+`Microsoft.NET.Sdk`. With no external NuGet dependencies, an empty package feed
+is sufficient. `dotnet publish -r win-x64 --self-contained true` produces an app
+with the source framework and its native dependencies.
