@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 58 of 139
+The native text/paragraph/NLS replacement is still partial (currently 65 of 139
 imported exports). Bidi, paragraph layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -78,3 +78,11 @@ NBSP, hard lines, trailing/empty content, cached calls across GC, original
 FormattedText.MinWidth and intrinsic/wrapped TextBlock layout. Full RTL,
 hyphenation/compression/optimal algorithms and paragraph/natural-language
 behavior remain incomplete; imported-symbol coverage remains 58/139.
+
+Release 8.0.0-8 adds owned paragraph object registrations/document contexts
+and Line Services penalty-resource wrapper lifetimes. Native ABI/callback/
+rollback tests and original PtsContext Ideal/Display with and without penalty
+resources pass through normal SDK and portable publishes. Imported-symbol
+coverage increases to 65/139. FlowDocument now reaches missing FsCreatePageFinite;
+page layout, penalty scoring/optimal breaking and full bidi/natural-language
+behavior remain unfinished.
