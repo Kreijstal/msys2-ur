@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=21
+pkgrel=22
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '08d206064628c2540f293c933529f6ce8e64931f9268263a59fed3e92a43d5bb')
+            '28955a6d90d630c6daef65d3e75711e6b66f5dae8679123945428326665d9f60')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -85,6 +85,8 @@ source+=('0020-bottomless-subpage-updates.patch')
 sha256sums+=('f910381961b21edcffbe3a40ea71772bdcf828d8f6e97b833e10d6742770d24d')
 source+=('0021-subtrack-updates-and-synchronization.patch')
 sha256sums+=('00638975f6ad89e98370d45411d0860b8373c1e412c3dae5deaff9961e2388f4')
+source+=('0022-rectangular-floaters.patch')
+sha256sums+=('24f44759bb5cc9684a7d7537a1f0b4218eea9abe7979ee941d1817d58ed297a7')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -119,6 +121,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0019-subpage-layout.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0020-bottomless-subpage-updates.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0021-subtrack-updates-and-synchronization.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0022-rectangular-floaters.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
