@@ -1,0 +1,281 @@
+--- a/src/Greenshot/Helpers/GreenshotCommandLine.cs
++++ b/src/Greenshot/Helpers/GreenshotCommandLine.cs
+@@ -200,8 +200,25 @@
+         }
+ 
+         /// <summary>Returns true when a new console had to be allocated.</summary>
++        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
++        private static extern IntPtr GetStdHandle(int standardHandle);
++
++        [System.Runtime.InteropServices.DllImport("kernel32.dll")]
++        private static extern uint GetFileType(IntPtr handle);
++
+         private static bool AttachOrAllocateConsole()
+         {
++            // Preserve redirected output from MSYS2 shells and automation.
++            // A WinExe launched from Explorer has no valid standard output handle.
++            IntPtr output = GetStdHandle(-11);
++            if (output != IntPtr.Zero && output != new IntPtr(-1))
++            {
++                uint type = GetFileType(output);
++                if (type == 1 || type == 3) // FILE_TYPE_DISK or FILE_TYPE_PIPE
++                {
++                    return false;
++                }
++            }
+             if (Kernel32Api.AttachConsole())
+             {
+                 return false;
+--- a/src/Greenshot/Helpers/ResourceMutex.cs
++++ b/src/Greenshot/Helpers/ResourceMutex.cs
+@@ -88,7 +88,19 @@
+                 mutexSecurity.AddAccessRule(new MutexAccessRule(sid, MutexRights.Delete, AccessControlType.Deny));
+ 
+                 // 1) Create Mutex
+-                _applicationMutex = new Mutex(true, _mutexId, out var createdNew, mutexSecurity);
++                bool createdNew;
++                try
++                {
++                    _applicationMutex = MutexAcl.Create(true, _mutexId, out createdNew, mutexSecurity);
++                }
++                catch (UnauthorizedAccessException)
++                {
++                    // The existing DACL denies changing permissions and deletion.
++                    // Reopen with only the rights required to wait/release, as the
++                    // .NET Framework Mutex constructor did for an existing object.
++                    _applicationMutex = MutexAcl.OpenExisting(_mutexId, MutexRights.Synchronize | MutexRights.Modify);
++                    createdNew = false;
++                }
+                 // 2) if the mutex wasn't created new get the right to it, this returns false if it's already locked
+ #pragma warning disable RS0030 // R1: a mutex is owned by the thread which acquired it, so it can't be awaited; this waits at most 100 ms at startup
+                 if (!createdNew && !_applicationMutex.WaitOne(100, false))
+--- a/src/Greenshot/Ipc/NamedPipeServer.cs
++++ b/src/Greenshot/Ipc/NamedPipeServer.cs
+@@ -145,7 +145,7 @@
+                 try
+                 {
+                     PipeSecurity pipeSecurity = NamedPipeEndpoint.CreateServerSecurity();
+-                    serverStream = new NamedPipeServerStream(
++                    serverStream = NamedPipeServerStreamAcl.Create(
+                         _pipeName,
+                         PipeDirection.InOut,
+                         NamedPipeServerStream.MaxAllowedServerInstances,
+--- a/src/Greenshot/Native/DataTransferManagerHelper.cs
++++ b/src/Greenshot/Native/DataTransferManagerHelper.cs
+@@ -31,33 +31,10 @@
+     {
+         private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(typeof(DataTransferManagerHelper));
+ 
+-        [DllImport("api-ms-win-core-winrt-l1-1-0.dll")]
+-        private static extern int RoGetActivationFactory(
+-            [MarshalAs(UnmanagedType.HString)] string activatableClassId,
+-            [In] ref Guid iid,
+-            out IntPtr factory);
+-
+         public static IDataTransferManagerInterOp GetInteropFactory(string className)
+         {
+-            // Interface for the Activation Factory: IActivationFactory
+-            Guid iidFactory = new Guid("00000035-0000-0000-C000-000000000046"); ;
+-            int hr = RoGetActivationFactory(className, ref iidFactory, out IntPtr pFactory);
+-            if (hr < 0) throw Marshal.GetExceptionForHR(hr);
+-
+-            try
+-            {
+-                // Interface for the Factory: IDataTransferManagerInterop
+-                Guid iidInterop = new Guid("3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8");
+-                IntPtr pInterop;
+-                int qiHr = Marshal.QueryInterface(pFactory, ref iidInterop, out pInterop);
+-                if (qiHr < 0) throw new InvalidCastException("Failed to QI factory for Interop interface.");
+-
+-                return (IDataTransferManagerInterOp)Marshal.GetTypedObjectForIUnknown(pInterop, typeof(IDataTransferManagerInterOp));
+-            }
+-            finally
+-            {
+-                if (pFactory != IntPtr.Zero) Marshal.Release(pFactory);
+-            }
++            using var factory = WinRT.ActivationFactory.Get(className, typeof(IDataTransferManagerInterOp).GUID);
++            return (IDataTransferManagerInterOp)Marshal.GetObjectForIUnknown(factory.ThisPtr);
+         }
+     }
+ }
+--- a/src/Greenshot/Native/IDataTransferManagerInterOp.cs
++++ b/src/Greenshot/Native/IDataTransferManagerInterOp.cs
+@@ -39,7 +39,7 @@
+         /// <param name="appWindow">The window handle</param>
+         /// <param name="riid">ID of the DataTransferManager interface</param>
+         /// <returns>DataTransferManager for the specified window</returns>
+-        DataTransferManager GetForWindow([In] IntPtr appWindow, [In] ref Guid riid);
++        IntPtr GetForWindow([In] IntPtr appWindow, [In] ref Guid riid);
+         /// <summary>
+         /// Show the share flyout for the window identified by a window handle
+         /// </summary>
+--- a/src/Greenshot/Views/ShareHostWindow.cs
++++ b/src/Greenshot/Views/ShareHostWindow.cs
+@@ -137,7 +137,15 @@
+             _dtmInterop = DataTransferManagerHelper.GetInteropFactory("Windows.ApplicationModel.DataTransfer.DataTransferManager");
+ 
+             Guid dtmIid = DataTransferManagerIid;
+-            _dataTransferManager = _dtmInterop.GetForWindow(hwnd, ref dtmIid);
++            var managerPointer = _dtmInterop.GetForWindow(hwnd, ref dtmIid);
++            try
++            {
++                _dataTransferManager = WinRT.MarshalInterface<DataTransferManager>.FromAbi(managerPointer);
++            }
++            finally
++            {
++                if (managerPointer != IntPtr.Zero) System.Runtime.InteropServices.Marshal.Release(managerPointer);
++            }
+             if (_dataTransferManager == null)
+             {
+                 throw new InvalidOperationException("GetForWindow returned null.");
+--- a/src/Greenshot.Base/Core/StringExtensions.cs
++++ b/src/Greenshot.Base/Core/StringExtensions.cs
+@@ -110,7 +110,7 @@
+             try
+             {
+                 byte[] clearTextBytes = Encoding.ASCII.GetBytes(clearText);
+-                SymmetricAlgorithm rijn = SymmetricAlgorithm.Create();
++                using SymmetricAlgorithm rijn = Aes.Create();
+ 
+                 using MemoryStream ms = new MemoryStream();
+                 byte[] rgbIV = Encoding.ASCII.GetBytes(RGBIV);
+@@ -141,7 +141,7 @@
+             {
+                 byte[] encryptedTextBytes = Convert.FromBase64String(encryptedText);
+                 using MemoryStream ms = new MemoryStream();
+-                SymmetricAlgorithm rijn = SymmetricAlgorithm.Create();
++                using SymmetricAlgorithm rijn = Aes.Create();
+ 
+ 
+                 byte[] rgbIV = Encoding.ASCII.GetBytes(RGBIV);
+--- a/src/Greenshot.Base/Native/WindowsGraphicsCaptureInterop.cs
++++ b/src/Greenshot.Base/Native/WindowsGraphicsCaptureInterop.cs
+@@ -272,7 +272,13 @@
+         /// The activation factory of GraphicsCaptureItem, it was looked up for every capture item
+         /// </summary>
+         private static IGraphicsCaptureItemInterop CaptureItemInterop =>
+-            _captureItemInterop ??= (IGraphicsCaptureItemInterop)WindowsRuntimeMarshal.GetActivationFactory(typeof(GraphicsCaptureItem));
++            _captureItemInterop ??= GetCaptureItemInterop();
++
++        private static IGraphicsCaptureItemInterop GetCaptureItemInterop()
++        {
++            using var factory = WinRT.ActivationFactory.Get("Windows.Graphics.Capture.GraphicsCaptureItem", typeof(IGraphicsCaptureItemInterop).GUID);
++            return (IGraphicsCaptureItemInterop)Marshal.GetObjectForIUnknown(factory.ThisPtr);
++        }
+ 
+         /// <summary>
+         /// Creates a new instance of a GraphicsCaptureItem that represents the specified window, enabling capture of
+@@ -287,7 +293,7 @@
+         {
+             var interop = CaptureItemInterop;
+             var itemPointer = interop.CreateForWindow(window, GraphicsCaptureItemGuid);
+-            var item = Marshal.GetObjectForIUnknown(itemPointer) as GraphicsCaptureItem;
++            var item = WinRT.MarshalInterface<GraphicsCaptureItem>.FromAbi(itemPointer);
+             Marshal.Release(itemPointer);
+             return item;
+         }
+@@ -304,7 +310,7 @@
+         {
+             var interop = CaptureItemInterop;
+             var itemPointer = interop.CreateForMonitor(hMonitor, GraphicsCaptureItemGuid);
+-            var item = Marshal.GetObjectForIUnknown(itemPointer) as GraphicsCaptureItem;
++            var item = WinRT.MarshalInterface<GraphicsCaptureItem>.FromAbi(itemPointer);
+             Marshal.Release(itemPointer);
+             return item;
+         }
+@@ -356,7 +362,7 @@
+                 var hr = CreateDirect3D11DeviceFromDXGIDevice(pDxgiDevice, out IntPtr pUnknown);
+                 if (hr == 0)
+                 {
+-                    device = Marshal.GetObjectForIUnknown(pUnknown) as IDirect3DDevice;
++                    device = WinRT.MarshalInterface<IDirect3DDevice>.FromAbi(pUnknown);
+                     Marshal.Release(pUnknown);
+                 }
+                 else
+@@ -387,7 +393,7 @@
+                 int hr = CreateDirect3D11SurfaceFromDXGISurface(pDxgiSurface, out IntPtr pUnknown);
+                 if (hr == 0 && pUnknown != IntPtr.Zero)
+                 {
+-                    var surface = Marshal.GetObjectForIUnknown(pUnknown) as IDirect3DSurface;
++                    var surface = WinRT.MarshalInterface<IDirect3DSurface>.FromAbi(pUnknown);
+                     Marshal.Release(pUnknown);
+                     return surface;
+                 }
+@@ -411,7 +417,7 @@
+         /// <returns>An ID3D11Texture2D object representing the texture created from the provided surface.</returns>
+         internal static ID3D11Texture2D CreateTexture2DFromID3DSurface(IDirect3DSurface surface)
+         {
+-            var access = (IDirect3DDxgiInterfaceAccess)surface;
++            var access = WinRT.CastExtensions.As<IDirect3DDxgiInterfaceAccess>(surface);
+             var d3dPointer = access.GetInterface(IID_ID3D11Texture2D);
+             var d3dSurface = (ID3D11Texture2D)Marshal.GetObjectForIUnknown(d3dPointer);
+             Marshal.Release(d3dPointer);
+--- a/src/Greenshot.Editor/Configuration/GreenshotEditorObjectValueConverter.cs
++++ b/src/Greenshot.Editor/Configuration/GreenshotEditorObjectValueConverter.cs
+@@ -20,7 +20,7 @@
+  */
+ using System;
+ using System.ComponentModel;
+-using System.ServiceModel.Security;
++using System.Security;
+ using Dapplo.Ini.Converters;
+ using Greenshot.Editor.Helpers;
+ using log4net;
+@@ -65,7 +65,7 @@
+                 return raw;
+             }
+             LOG.Warn($"Unexpected type in .ini file detected, maybe vulnerability attack? Suspicious information: {raw}");
+-            throw new SecurityAccessDeniedException($"Unexpected type in .ini file detected, maybe vulnerability attack? Suspicious information: {raw}");
++            throw new SecurityException($"Unexpected type in .ini file detected, maybe vulnerability attack? Suspicious information: {raw}");
+         }
+ 
+         public override string ConvertToString(object value)
+--- a/src/Greenshot.Editor/Drawing/Surface.cs
++++ b/src/Greenshot.Editor/Drawing/Surface.cs
+@@ -28,7 +28,7 @@
+ using System.IO;
+ using System.Linq;
+ using System.Runtime.Serialization.Formatters.Binary;
+-using System.ServiceModel.Security;
++using System.Security;
+ using System.Windows.Forms;
+ using Dapplo.Windows.Clipboard;
+ using Dapplo.Windows.Common.Extensions;
+@@ -812,7 +812,7 @@
+                 SelectElements(loadedElements);
+                 FieldAggregator.BindElements(loadedElements);
+             }
+-            catch (SecurityAccessDeniedException)
++            catch (SecurityException)
+             {
+                 throw;
+             }
+--- a/src/Greenshot.Editor/Helpers/BinaryFormatterHelper.cs
++++ b/src/Greenshot.Editor/Helpers/BinaryFormatterHelper.cs
+@@ -22,7 +22,7 @@
+ using System;
+ using System.Collections.Generic;
+ using System.Runtime.Serialization;
+-using System.ServiceModel.Security;
++using System.Security;
+ using Greenshot.Base.Interfaces.Drawing;
+ using Greenshot.Editor.Drawing;
+ using Greenshot.Editor.Drawing.Emoji;
+@@ -138,7 +138,7 @@
+         /// <param name="assemblyName">Assembly for the type that was serialized</param>
+         /// <param name="typeName">Type that was serialized</param>
+         /// <returns>Type which was mapped</returns>
+-        /// <exception cref="SecurityAccessDeniedException">If something smells fishy</exception>
++        /// <exception cref="SecurityException">If something smells fishy</exception>
+         public override Type BindToType(string assemblyName, string typeName)
+         {
+             if (TryGetType(typeName, out var returnType))
+@@ -147,7 +147,7 @@
+                 return returnType;
+             }
+             LOG.Warn($"Unexpected Greenshot type in .greenshot file detected, maybe vulnerability attack created with ysoserial? Suspicious type: {assemblyName} - {typeName}");
+-            throw new SecurityAccessDeniedException($"Suspicious type in .greenshot file: {assemblyName} - {typeName}");
++            throw new SecurityException($"Suspicious type in .greenshot file: {assemblyName} - {typeName}");
+         }
+     }
+ }
