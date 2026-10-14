@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 126 of 139
+The native text/paragraph/NLS replacement is still partial (currently 129 of 139
 imported exports). Advanced bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -605,3 +605,19 @@ execution join the existing floater/optimal regressions. The SDK suite now has
 34 WPF consumers. Imported coverage remains 129/139 and paragraph ABI 479 fields.
 General polygons, oversized individual objects and advanced object/table/subpage/
 column-span/footnote behavior remain unfinished.
+
+Release 8.0.0-46 honors the original finite callback's forced-progress flag for
+an unshifted first atomic floater whose outer height exceeds the available page.
+Its real content rectangle survives while the host's used height stays bounded.
+Later/collision-shifted objects retain deferral; continuation consumes the host
+source once and does not repeat the object after page disposal.
+
+Native tests validate the flag, oversized object query, bounded parent extent,
+exact remaining CPs and complete callback/resource cleanup. Public SDK checks
+cover 48 cases per execution across both modes/directions, left/center/right
+alignment, preceding text and ordinary/oversized padding around fixed UI content.
+They verify requested raster geometry, one object/source owner, finite completion,
+disposed-page regeneration and compacting GC in shared and portable applications.
+The complete SDK suite now has 35 WPF consumers. Imported coverage remains
+129/139 and paragraph ABI 479 fields. General polygon/object/table/subpage,
+column-span/footnote and other documented advanced behavior remains unfinished.
