@@ -1,7 +1,7 @@
 pkgbase = mingw-w64-cppcli
 	pkgdesc = Clang-backed C++/CLI compiler subset with source-built CLR assembly output (mingw-w64)
 	pkgver = 0.3.0
-	pkgrel = 1
+	pkgrel = 2
 	url = https://github.com/Kreijstal/msys2-ur
 	arch = any
 	license = spdx:Apache-2.0 WITH LLVM-exception
@@ -10,12 +10,12 @@ pkgbase = mingw-w64-cppcli
 	makedepends = mingw-w64-clang-x86_64-cc
 	makedepends = mingw-w64-clang-x86_64-cmake
 	makedepends = mingw-w64-clang-x86_64-ninja
-	makedepends = mingw-w64-clang-x86_64-llvm=22.1.8
+	makedepends = mingw-w64-clang-x86_64-llvm=23.1.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
 	makedepends = patch
-	depends = mingw-w64-clang-x86_64-clang=22.1.8
-	depends = mingw-w64-clang-x86_64-clang-libs=22.1.8
-	depends = mingw-w64-clang-x86_64-llvm-libs=22.1.8
+	depends = mingw-w64-clang-x86_64-clang=23.1.3
+	depends = mingw-w64-clang-x86_64-clang-libs=23.1.3
+	depends = mingw-w64-clang-x86_64-llvm-libs=23.1.3
 	depends = mingw-w64-clang-x86_64-python
 	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
 	depends = mingw-w64-clang-x86_64-dotnet-targeting-pack=8.0.131
@@ -42,64 +42,70 @@ pkgbase = mingw-w64-cppcli
 	noextract = ParseTemplate.cpp
 	noextract = ParseTentative.cpp
 	noextract = Parser.cpp
+	noextract = ParseReflect.cpp
 	noextract = LICENSE.launcher
 	noextract = check-launcher.py
 	noextract = 0001-windows-unicode-output-path.patch
 	noextract = 0002-windowsforms-framework.patch
+	noextract = 0003-llvm23-parser-and-abi.patch
 	options = !strip
 	options = !lto
 	options = !buildflags
 	source = dotnet-bootstrap-96ae31a4c7e54685de440de2adde387840392054.tar.gz
 	source = launcher.c
 	source = package-driver.py
-	source = LLVM-LICENSE.TXT::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/llvm/LICENSE.TXT
-	source = ParseAST.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseAST.cpp
-	source = ParseCXXInlineMethods.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseCXXInlineMethods.cpp
-	source = ParseDecl.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseDecl.cpp
-	source = ParseDeclCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseDeclCXX.cpp
-	source = ParseExpr.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseExpr.cpp
-	source = ParseExprCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseExprCXX.cpp
-	source = ParseHLSL.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseHLSL.cpp
-	source = ParseHLSLRootSignature.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseHLSLRootSignature.cpp
-	source = ParseInit.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseInit.cpp
-	source = ParseObjc.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseObjc.cpp
-	source = ParseOpenACC.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseOpenACC.cpp
-	source = ParseOpenMP.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseOpenMP.cpp
-	source = ParsePragma.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParsePragma.cpp
-	source = ParseStmt.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseStmt.cpp
-	source = ParseStmtAsm.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseStmtAsm.cpp
-	source = ParseTemplate.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseTemplate.cpp
-	source = ParseTentative.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/ParseTentative.cpp
-	source = Parser.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/Parser.cpp
+	source = LLVM-LICENSE.TXT::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/llvm/LICENSE.TXT
+	source = ParseAST.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseAST.cpp
+	source = ParseCXXInlineMethods.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseCXXInlineMethods.cpp
+	source = ParseDecl.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseDecl.cpp
+	source = ParseDeclCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseDeclCXX.cpp
+	source = ParseExpr.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseExpr.cpp
+	source = ParseExprCXX.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseExprCXX.cpp
+	source = ParseHLSL.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseHLSL.cpp
+	source = ParseHLSLRootSignature.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseHLSLRootSignature.cpp
+	source = ParseInit.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseInit.cpp
+	source = ParseObjc.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseObjc.cpp
+	source = ParseOpenACC.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseOpenACC.cpp
+	source = ParseOpenMP.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseOpenMP.cpp
+	source = ParsePragma.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParsePragma.cpp
+	source = ParseStmt.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseStmt.cpp
+	source = ParseStmtAsm.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseStmtAsm.cpp
+	source = ParseTemplate.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseTemplate.cpp
+	source = ParseTentative.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseTentative.cpp
+	source = Parser.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/Parser.cpp
+	source = ParseReflect.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-23.1.3/clang/lib/Parse/ParseReflect.cpp
 	source = LICENSE.launcher
 	source = check-launcher.py
 	source = 0001-windows-unicode-output-path.patch
 	source = 0002-windowsforms-framework.patch
+	source = 0003-llvm23-parser-and-abi.patch
 	sha256sums = 8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7
 	sha256sums = 2abc10f6cb6e5cf7bfcd72137565f831e9b0ec5dbecf90cb3edcec2d906a7abf
 	sha256sums = 58f537b7f803ac76f3eced97625fe03a71803f54446d9dc694859f5476ae86a0
 	sha256sums = 8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee
 	sha256sums = 733349ba89f600a8902d059bb20f6e2d15f0b4491ed7660c7f06b8ca24856d17
-	sha256sums = 1d3c117e448184000e6f446cbf16a7553a8c0db35ed0909dcee6b62873a90057
-	sha256sums = 28aa51a88ccebd2d19825b2d61246caf8b83ad8d83dc9313669a7c34154b6591
-	sha256sums = 6598dcd7f0fdef7c8cdf3d7e14846adffa6f8fcb3c4ff62aaed2b3dc238c2b46
-	sha256sums = be659823e85cf4401510fed6b6f3a9a2d266499c6714165e7d8ab17f7a3936e7
-	sha256sums = 6a61327601814e49573f338da7823fdda3e96db2de40cc31fc29556da342195b
+	sha256sums = 7e13ffcf9a4458bcb683566d9ee31559695e0c52adae604d88204be185c3a414
+	sha256sums = 6e3c14424367c206a57ccac384941545fcece46b99fd8c32b347955a2a698a63
+	sha256sums = 8109fde806aa07e1cbee87ef7973990b69ad37d101848bf629279a5c705fee77
+	sha256sums = 63d587d720445975e20be22431dabd6dc61bbd4aa6db6200a3d9e22ecd0af477
+	sha256sums = 9ecf98cb058c2e3f6051692121b7ae7ecd4293505ceaffdc3dce5827a2b5af40
 	sha256sums = d43ca50f127289d6c5e0379993c6f6562e56f5130ad4bd993cf6bf060bee6dd1
-	sha256sums = 4456fc0d4e59d95c2b05d32a2e843c38119ad6767bc5935df1d5f29521282af1
-	sha256sums = e24a7bcfad1b914a3951bed6800eb254b8adb1a4a9d9c146e0b38af4cb65a7ca
-	sha256sums = a28542e38c35fc14c7421da77f373f24f2388cf6c449c5f991e590d8476a695e
-	sha256sums = 58f081bec744d55d730d5bccb8e51f7ac5ebb56338f1dc78ac735210efba772d
-	sha256sums = 62e06eceaf236089014a85fce1d4fd0a8dbaf1cc04823a19ff7e32af2ae5b052
-	sha256sums = b7c9d5777f74d5d7acd9fe5eadb99a069ad4f898f422b0835a4aee3343f301c4
-	sha256sums = 2924c7fd490855f3b63d1c4abdca050a7599d6382a1b2bc9f2735eef05217ec5
-	sha256sums = e133b291db72fd1c504ddda97d531901b7c11c571253006aba0fe7b7238382cc
-	sha256sums = 13059e9963c1b117ea3b19df6d7510171a8c016d03fa873a8dea05574871cad7
-	sha256sums = 9522a11bb4b900c71d28ce384a83b8a57d054d0ecca1d5151a03b56c1507fc1f
-	sha256sums = dc6d58f43e0117f58c1174c809eab7cb76f87bc7a9906d0a43051e456393aac9
+	sha256sums = 11612a887d0c8e428071145bf258089f38fb26dccdd1b0ca462532deed1cc44f
+	sha256sums = 03266313e08f3fec11054497f672e1358fdf2de09601e246a6f67a7e22478ea7
+	sha256sums = 633c8b0f9091372beaf23d0057876160f536064d8a4face94ddd12e597e0a0d9
+	sha256sums = fd584d446eade6a0fa5c244b79bc94d764d1f7b44fe54fa3e90b02521875980a
+	sha256sums = d2d47e36085cd3109c8ab812be2513b15c6e4d1e371bf17f1dc741ce8be7dfee
+	sha256sums = 6d3e15bca8fae606c25c2e4f1901f14cc4b8ebda58a8dd6f119805bc02ce02d4
+	sha256sums = 76cb5427a08c1649435ca20f4d3ca83e9fd696e67f209b05bb8c5853ea91bc25
+	sha256sums = 3b9e1cdb7bc9954bd7491eaca53ec0bd59c69a7df7968d9c1c6552836dd9a4ec
+	sha256sums = b9742eb5de33d4a0eee309e01acf272993b5386cb3bf56464da4e2d203f6b3fc
+	sha256sums = da24949a3ed41114f34ce08b3809474b712f8f1959a0d3bfa2bebb55effeaa9a
+	sha256sums = 6b2af862ccb2d9636f4af7fb88345906ab5cb33326dcaca7567e16e4fc633d9f
+	sha256sums = ebae8d1b43c3d5f20ea34c8cff6eca9ce65ac416b24594471bd8a5023856ce10
 	sha256sums = c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde
 	sha256sums = 13621544a12725292b1c8a206e43a195c62bbb4fbc1008454c1f162329008335
 	sha256sums = a51f5c95886338927ad0c7000e491375701c91c5dba986ec6a81fe15ebfed794
 	sha256sums = ff141326ed2390d5e4bd5399c473cb16370772934c6f329e1f154f43701ce054
+	sha256sums = a5cda253c85eb2a92f403bf4355ddc8e896b2703ae9bdb239bc2367bafad04ee
 
 pkgname = mingw-w64-clang-x86_64-cppcli
