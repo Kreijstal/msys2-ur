@@ -739,3 +739,17 @@ it does not change codec implementations. WPF uses the installed Windows WIC
 codecs as OS dependencies. Native import coverage remains 133/139, and existing
 native behavior gaps and current Greenshot's framework/dependency requirements
 remain unfinished.
+
+Release 8.0.0-54 accepts BlockUIContainer.ClearFloaters through the original
+UIElementParagraph callback. Inherited obstacles in the current container direction
+set selective left/right/both clearance before margin, border and padding layout.
+Accepted gaps contribute to consumed height and top space; deferred children keep
+an immutable source continuation and consume no gap on the previous page.
+
+Native checks cover valid/invalid clear values, exact inherited geometry and
+ownership, intact deferral/resume and populated callback failure. The new required
+SDK consumer exercises 64 finite source/pagination cases, 16 styled margin/border/
+padding cases and eight bottomless live-edit cases, each in shared and portable
+execution. The registered WPF SDK suite now has39 consumers. Existing block UI,
+floater and section clearing regressions remain required. Native import coverage
+remains133/139; the other documented native behavior gaps remain unfinished.

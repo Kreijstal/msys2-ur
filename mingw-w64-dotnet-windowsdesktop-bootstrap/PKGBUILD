@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=53
+pkgrel=54
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '6af218e1671a0b9e92051613f622679853829290b8c63c2dcbcf4030a9184ff6')
+            '3f93b1821e0751ff67ea32abd6ee2d502a61581f78112c046a61a4e80372db9c')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -149,6 +149,8 @@ source+=('0052-legacy-multiword-spelling.patch')
 sha256sums+=('75d1577cb578c665af3c120d3b1677a1a07d0adacdf8366cb22bb64dafa056e6')
 source+=('0053-image-codecs-sdk.patch')
 sha256sums+=('ff95e5d4f3be82d40f5f75b4a3db0852086bafb2c48ba5fbd0919f7c921881fa')
+source+=('0054-block-ui-clearing.patch')
+sha256sums+=('dd3fe45a5fedcd1ca64c33d237ed71f7cbc28975eb8c17f4aba31a6e940cb1d0')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -215,6 +217,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0051-styled-container-clearing.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0052-legacy-multiword-spelling.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0053-image-codecs-sdk.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0054-block-ui-clearing.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
