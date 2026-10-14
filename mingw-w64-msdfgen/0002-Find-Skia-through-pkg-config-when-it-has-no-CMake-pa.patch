@@ -1,0 +1,81 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] Find Skia through pkg-config when it has no CMake package
+
+Outside vcpkg, MSDFGEN_USE_SKIA required find_package(skia), but
+distributions such as MSYS2 install Skia with only skia.pc and its
+headers in the Skia source-tree layout (<prefix>/include/skia/include/
+core/SkPath.h, include path <prefix>/include/skia). Fall back to
+pkg-config when there is no CMake package, both in the build and in the
+installed msdfgenConfig.cmake, and accept the source-tree include
+layout.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -186,7 +186,14 @@
+                 find_package(unofficial-skia REQUIRED)
+                 set(MSDFGEN_SKIA_LIB unofficial::skia::skia)
+             else()
+-                find_package(skia REQUIRED)
++                find_package(skia QUIET)
++                if(NOT skia_FOUND)
++                    # Distributions such as MSYS2 ship Skia with only a
++                    # pkg-config file (skia.pc), no CMake package.
++                    find_package(PkgConfig REQUIRED)
++                    pkg_check_modules(SKIA REQUIRED IMPORTED_TARGET skia)
++                    set(MSDFGEN_SKIA_LIB PkgConfig::SKIA)
++                endif()
+             endif()
+         endif()
+         target_compile_features(msdfgen-ext PUBLIC cxx_std_17)
+--- a/cmake/msdfgenConfig.cmake.in
++++ b/cmake/msdfgenConfig.cmake.in
+@@ -23,7 +23,11 @@
+     if(MSDFGEN_USE_VCPKG)
+         find_dependency(unofficial-skia REQUIRED)
+     else()
+-        find_dependency(skia REQUIRED)
++        find_package(skia QUIET)
++        if(NOT skia_FOUND)
++            find_dependency(PkgConfig REQUIRED)
++            pkg_check_modules(SKIA REQUIRED IMPORTED_TARGET skia)
++        endif()
+     endif()
+ endif()
+ if(MSDFGEN_USE_OPENMP)
+--- a/ext/import-svg.cpp
++++ b/ext/import-svg.cpp
+@@ -25,9 +25,16 @@
+ #endif
+ 
+ #ifdef MSDFGEN_USE_SKIA
++#if __has_include(<skia/core/SkPath.h>)
+ #include <skia/core/SkPath.h>
+ #include <skia/utils/SkParsePath.h>
+ #include <skia/pathops/SkPathOps.h>
++#else
++// Skia source-tree layout, see resolve-shape-geometry.cpp
++#include <include/core/SkPath.h>
++#include <include/utils/SkParsePath.h>
++#include <include/pathops/SkPathOps.h>
++#endif
+ #endif
+ 
+ #include "../core/arithmetics.hpp"
+--- a/ext/resolve-shape-geometry.cpp
++++ b/ext/resolve-shape-geometry.cpp
+@@ -3,8 +3,15 @@
+ 
+ #ifdef MSDFGEN_USE_SKIA
+ 
++#if __has_include(<skia/core/SkPath.h>)
+ #include <skia/core/SkPath.h>
+ #include <skia/pathops/SkPathOps.h>
++#else
++// Skia source-tree layout (include path is the Skia root), as installed by
++// skia.pc-based packages
++#include <include/core/SkPath.h>
++#include <include/pathops/SkPathOps.h>
++#endif
+ #include "../core/arithmetics.hpp"
+ #include "../core/Vector2.hpp"
+ #include "../core/edge-segments.h"
