@@ -694,3 +694,17 @@ placement, source/page coverage, regeneration, GC and resize/clear-property edit
 check-sdk now includes this additional consumer (37 registered WPF consumers).
 The ABI remains 482 fields and imported coverage remains 133/139. Styled margin/
 border conformance and the other documented advanced native gaps remain open.
+
+Release 8.0.0-51 clears containers from a copied outer-frame rectangle before
+managed margin, border and padding adjustments. Accepted clearance reaches the
+parent paragraph top-space independently of the callback's collapsed-margin
+report. This fixes borders/backgrounds remaining above a floater and content
+padding disappearing. Callback ref-rectangle changes cannot alter the snapshot.
+
+Native checks cover sixteen side/clear/inset combinations, modified input
+rectangles, exact child widths/positions, parent top space and ownership. The
+section SDK consumer now has 216 shared/portable case executions: its original
+136 plus styled margins/borders/padding, opposite direction, exact source/page
+coverage, regeneration, bottomless resizing and end scrolling. Paragraph ABI
+remains 482 fields; native imported coverage remains 133/139. Complex nested
+margin-collapse conformance and other documented native gaps remain open.
