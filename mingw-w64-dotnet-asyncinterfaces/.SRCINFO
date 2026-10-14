@@ -1,0 +1,26 @@
+pkgbase = mingw-w64-dotnet-asyncinterfaces
+	pkgdesc = Source-built Microsoft.Bcl.AsyncInterfaces facade for the .NET 8 offline feed
+	pkgver = 10.0.12
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	options = !strip
+	options = !lto
+	source = Microsoft.Bcl.AsyncInterfaces.Forwards.cs::https://raw.githubusercontent.com/dotnet/runtime/4271d88e0aebf3d04f188f1334c2220d80555ef6/src/libraries/Microsoft.Bcl.AsyncInterfaces/src/Microsoft.Bcl.AsyncInterfaces.Forwards.cs
+	source = upstream.csproj::https://raw.githubusercontent.com/dotnet/runtime/4271d88e0aebf3d04f188f1334c2220d80555ef6/src/libraries/Microsoft.Bcl.AsyncInterfaces/src/Microsoft.Bcl.AsyncInterfaces.csproj
+	source = LICENSE.TXT::https://raw.githubusercontent.com/dotnet/runtime/4271d88e0aebf3d04f188f1334c2220d80555ef6/LICENSE.TXT
+	source = prepare.py
+	source = check.cs
+	source = Open.pubkey.hex
+	sha256sums = 1c730b89cad62b5a2f7ba03814ebe5cc37524a938745084acc4b12f8ed0f07f9
+	sha256sums = b6a5e4d783a7a965526245f9e70d8df50407f2e3c9a90fef4555f6db60cf7a75
+	sha256sums = cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310
+	sha256sums = c86732cb657c883bb8afeaa8c783259b2758827fa1f173a823962d1919e7c326
+	sha256sums = 42fd087509b360959b9f04518cdbd08eeb8881c46db7387a5dc5ad2bacffb1fe
+	sha256sums = 68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5
+
+pkgname = mingw-w64-clang-x86_64-dotnet-asyncinterfaces
