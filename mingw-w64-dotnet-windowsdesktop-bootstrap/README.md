@@ -531,3 +531,28 @@ multiple/deferred/split/scrolling floater regressions also pass. The SDK suite n
 contains 31 WPF consumers. Imported coverage remains 126/139 and paragraph ABI
 479 fields. Cross-paragraph clearing/float propagation, forced groups exceeding
 an empty page, polygon constraints and other advanced layout/NLS gaps remain open.
+
+Release 8.0.0-43 implements the original NlLoad/NlGetClassObject/NlUnload spelling
+COM bridge. GUIDs, virtual method slots and range roles are derived from original
+NLGSpellerInterop.cs. ICU supplies UTF-16 word/sentence boundaries; spelling uses
+the ordinary Windows ISpellChecker service. Owned enumeration snapshots survive
+parent release, support independent clones and retain the original variant and
+boolean marshaling contracts. Custom lexicons decode UTF-8 and UTF-16 LE/BE,
+match without case, retain language scopes and support add/remove/release-all.
+
+A managed patch retains culture-scoped words alongside the original WinRT OS
+registration, fixing the demonstrated host behavior where Windows accepts a
+scoped dictionary but does not honor its entries. Dictionaries remain scoped;
+original files retain their bytes. Public TextBox checks exercise both original
+providers through detection/suggestions/correction, IgnoreAll, six dictionary
+encoding/header combinations, foreign-culture rejection, removal and clear.
+Original NLG wrapper checks additionally cover multiple sentences, surrogate
+positions, word/verification modes, callback cancellation and collection.
+
+The full SDK gate now contains 32 WPF consumers. Native checks exercise factory
+error/IID contracts, VARIANT/VARIANT_BOOL ABI, invalid cultures, enumeration
+snapshot/clone ownership and reload. Imported coverage rises to 129/139, with ten
+missing APIs; paragraph ABI remains 479 fields. Spelling requires an installed
+Windows provider (Windows 8 or later); legacy multiword/compound errors and
+German/French reform selection remain explicitly unsupported. Advanced layout,
+object handlers, column spans and footnote behavior remain unfinished.
