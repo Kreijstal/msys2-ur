@@ -325,3 +325,14 @@ regeneration. Native clone/no-progress/failure/single-owner cleanup checks pass.
 Coverage stays 109/139. More complex span/row-break layouts, repeated headers/
 footers, figures, advanced/bidi/native-language behavior and other documented
 paths remain unfinished.
+
+Release 8.0.0-31 connects finite Figure attachments to original WPF content and
+positioning callbacks. Real FigureParaClient subpages retain their managed owner;
+figure-details queries expose actual flow rectangles and bounds. Page/margin/
+column anchors, offsets, initial deferral, autosizing and nested content pass
+Ideal/Display checks with exact source ownership, glyph raster and regeneration.
+Rectangular wrapping intersects permitted regions before choosing one line
+interval. Native context/stale-query and lost/populated callback cleanup gates
+pass; ABI checks now cover 441 fields and imported coverage is 110/139. Complex
+figure collision/search policies, composite lines using both sides of an inset
+obstacle, bidi/native-language and other documented paths remain unfinished.
