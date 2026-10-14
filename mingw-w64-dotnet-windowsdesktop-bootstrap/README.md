@@ -491,3 +491,24 @@ The source score is explicit and does not claim Microsoft's unpublished native
 optimizer behavior. Full stretchability/compression/ink insertion, globally
 optimized variable-width object constraints, external penalty restrictions,
 advanced layout/bidi, general column spans, footnotes and legacy NLS remain open.
+
+Release 8.0.0-41 implements the original automatic-number callback and separate
+negative-CP marker source. Markers use original fetch/font/shaping/drawing
+callbacks in their own geometry; the implicit text tab restores the body origin.
+They do not alter body measurement, wrapping, caret/selection positions,
+backing-source glyph enumeration or cloned continuation state. Only the first
+line paints a marker, including when a cached paragraph retains its marker store.
+The marker CP constant is derived from original TextStore.cs.
+
+Native checks validate original callback ABI, exact LTR/RTL marker/body origins,
+marker-independent height/source metrics, callback failure rollback and cloned
+continuations. Original TextFormatter checks cover bullets, decimal/Roman and
+Hebrew markers, whole/split runs, outside/inside offsets, empty marked lines and
+marked-cache reconstruction. Public Disc/Decimal/LowerRoman lists paginate three
+pages in both modes/directions, with and without paragraph optimization. Four
+items produce exactly 4/10/13 marker characters and retain all 176 body characters
+with page mapping, disposed-page regeneration and GC. Shared-framework and
+portable execution validate actual colored marker/body pixels. The SDK suite now
+contains 30 WPF consumers. Imported coverage remains 126/139 and paragraph ABI
+479 fields. Legacy Word95 marker models and embedded-object markers remain
+explicitly unsupported; other documented advanced layout/NLS gaps remain open.

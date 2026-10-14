@@ -1,0 +1,349 @@
+diff --git a/bootstrap/m612/tools/wpf-lineservices-header.py b/bootstrap/m612/tools/wpf-lineservices-header.py
+index 74f34c3..3164147 100644
+--- a/bootstrap/m612/tools/wpf-lineservices-header.py
++++ b/bootstrap/m612/tools/wpf-lineservices-header.py
+@@ -42,4 +42,8 @@ for key,value in re.findall(r'\b(\w+)\s*=\s*(-?\d+)\s*[,\n]',body):
+ infinite=re.search(r'const int\s+IdealInfiniteWidth\s*=\s*(0x[0-9A-Fa-f]+|\d+)',text)
+ if not infinite: raise SystemExit('Missing original IdealInfiniteWidth')
+ lines.append(f'constexpr int32_t LS_IdealInfiniteWidth = {infinite.group(1)};')
++store=source.with_name('TextStore.cs').read_text()
++marker=re.search(r'const int\s+LscpFirstMarker\s*=\s*\((-?0x[0-9A-Fa-f]+)\)',store)
++if not marker: raise SystemExit('Missing original marker CP range')
++lines.append(f'constexpr int32_t LS_FirstMarkerCp = {marker.group(1)};')
+ output.write_text('\n'.join(lines)+'\n')
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 23226a7..b90d5ce 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -53,6 +53,7 @@ struct ParaSession;
+ struct Line {
+     std::shared_ptr<Context> context;
+     std::vector<Run> runs;
++    std::vector<Run> markers;
+     LsLInfo info{};
+     LsLineWidths widths{};
+     int first=0,paragraph_first=0,base_flow=0,initial_level=0;
+@@ -104,6 +105,7 @@ using DrawObject=int (WINAPI *)(void*,uint32_t,LSPOINT*,int,int);
+ using CharExpansion=int(WINAPI*)(void*,int,int,LsCharRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**);
+ using GlyphExpansion=int(WINAPI*)(void*,int,int,LsGlyphRunInfo*,LsNeighborInfo*,LsNeighborInfo*,int,int**,int**,uint8_t*,int*);
+ using HyphenOpportunity=int(WINAPI*)(void*,int,int,int*,int*,LsHyph*);
++using AutoNumber=int(WINAPI*)(void*,int*,LsChp*,uintptr_t*,uint16_t*,LsChp*,uintptr_t*,int*,int*,int*);
+ 
+ int format_object(Context& context,Run& run,int position,int margin) {
+     if(!context.info.pfnGetObjectHandlerInfo) return LS_NotImplemented;
+@@ -177,6 +179,55 @@ int measure_run(Context& context,Run& run) {
+     return LS_None;
+ }
+ 
++int format_marker(Line& line,int requested,int& main_start) {
++    auto& context=*line.context;
++    if(!context.info.pfnGetAutoNumberInfo)return LS_NotImplemented;
++    int alignment=0,word95=0,offset=0,width=0;uint16_t added=0;
++    LsChp marker_props{},added_props{};uintptr_t marker_id=0,added_id=0;
++    int status=reinterpret_cast<AutoNumber>(context.info.pfnGetAutoNumberInfo)(context.info.pols,&alignment,&marker_props,&marker_id,&added,&added_props,&added_id,&word95,&offset,&width);
++    if(status)return status;
++    if(alignment<0||alignment>2||word95||(added && added!=L'\t'))return LS_NotImplemented;
++    if(added==L'\t') {
++        auto stop=std::find_if(context.tabs.begin(),context.tabs.end(),[&](const LsTbd& tab){return tab.ur>requested;});
++        if(stop==context.tabs.end()||stop->lskt)return LS_InvalidFormatterResult;
++        main_start=stop->ur;
++    }
++    int position=LS_FirstMarkerCp,level=line.base_flow==4?1:0,total=0;
++    bool ended=false;
++    for(int attempts=0;attempts<9600&&!ended;++attempts) {
++        Run run;run.cp=position;run.level=level;run.flow=(level&1)?4:0;
++        std::vector<WCHAR> buffer(4096);WCHAR* text=nullptr;int used=0,count=0,hidden=0;
++        for(int retry=0;retry<3;++retry) {
++            status=reinterpret_cast<FetchRun>(context.callbacks.pfnFetchRunRedefined)(context.info.pols,position,0,nullptr,buffer.data(),int(buffer.size()),&used,&text,&count,&hidden,&run.properties,&run.id);
++            if(status)return status;
++            if(count<=0||count>9600)return LS_InvalidDcpFetched;
++            if(used){text=buffer.data();break;}
++            if(text)break;buffer.resize(count);
++        }
++        if(!text)return LS_InvalidCpContentFetched;
++        if(int64_t(position)+count>=0)return LS_InvalidAutonumRun;
++        bool opening=run.properties.idObj==0;
++        bool closing=run.properties.idObj==0xFFFF && text[0]==0xFFFB && (run.id&0x0FFFFFFFu)==0;
++        if(opening||closing) {
++            if(opening){if(text[0]!=0xFFFC||count>125-level)return LS_InvalidFormatterResult;run.level_delta=count;level+=count;}
++            else {if(count>level-(line.base_flow==4?1:0))return LS_InvalidFormatterResult;run.level_delta=-count;level-=count;}
++            run.hidden=true;run.text.assign(count,opening?0xFFFC:0xFFFB);run.widths.assign(count,0);
++            line.markers.push_back(std::move(run));position+=count;continue;
++        }
++        if(count==1 && (text[0]==0x2028||text[0]==0x2029)){ended=true;break;}
++        if(run.properties.idObj!=0xFFFF)return LS_NotImplemented;
++        run.hidden=hidden!=0||(run.properties.flags&0x10000)!=0;
++        run.text.assign(text,text+count);status=measure_run(context,run);if(status)return status;
++        if(int64_t(total)+run.width>INT_MAX)return LS_InvalidFormatterResult;
++        total+=run.width;position+=count;line.markers.push_back(std::move(run));
++    }
++    if(!ended)return LS_TooLongParagraph;
++    int64_t start=requested-(alignment==2?int64_t(total):alignment==1?total/2:0);
++    if(start<INT_MIN||start>INT_MAX||start+total>INT_MAX)return LS_InvalidFormatterResult;
++    line.widths.upStartMarker=int(start);line.widths.upLimMarker=int(start)+total;
++    return LS_None;
++}
++
+ int measure_hyphen(Context& context,const Run& owner,int cp,Run& marker) {
+     marker=owner;marker.cp=cp;
+     marker.text.assign(1,context.info.wchHyphen?context.info.wchHyphen:L'-');
+@@ -839,13 +890,23 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         if(!previous_break) result->paragraph_first=paragraph.cpFirst;
+         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
+         if(status) return status;
+-        if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
++        if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4)) return LS_NotImplemented;
+         result->justified=paragraph.fJustify!=0;
+-        result->widths.upStartMainText=properties.durLeft;
+-        int position=cp,total=properties.durLeft,trailing=properties.durLeft;
+         int flow=paragraph.lstflow;
+         if(flow!=0 && flow!=4) return LS_NotImplemented;
+         result->base_flow=flow;if(!previous_break)result->initial_level=flow==4?1:0;int level=result->initial_level;
++        int main_start=properties.durLeft;
++        if((paragraph.grpf&0x1000) && cp==result->paragraph_first) {
++            status=format_marker(*result,properties.durLeft,main_start);if(status)return status;
++        } else if((paragraph.grpf&0x1000) && !context->tabs.empty() && context->tabs.front().ur>main_start) {
++            // A cached paragraph retains its marker store on later lines. Its
++            // implicit tab still names the main-text origin, without repainting
++            // the paragraph's marker or using its offset as the body indent.
++            main_start=context->tabs.front().ur;
++        }
++        properties.durLeft=main_start;
++        result->widths.upStartMainText=main_start;
++        int position=cp,total=main_start,trailing=main_start;
+         bool ended=false;
+         for(int attempts=0;attempts<9600 && !ended;++attempts) {
+             if(limit>0&&position-cp>=limit){ended=true;break;}
+@@ -1116,6 +1177,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,v
+         LsLineProps properties{};LsPap paragraph{};
+         status=reinterpret_cast<FetchProps>(session->context->callbacks.pfnFetchLineProps)(session->context->info.pols,cp,cp==session->first,&properties);
+         if(status)return status;
++        properties.durLeft=full->widths.upStartMainText;
+         status=reinterpret_cast<FetchPap>(session->context->info.pfnFetchPap)(session->context->info.pols,cp,&paragraph);
+         if(status)return status;
+         int64_t available=int64_t(session->width)-properties.durRightBreak-properties.durLeft;
+@@ -1292,14 +1354,11 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,con
+     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+ }
+ 
+-extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
+-    if(!origin || !clip) return LS_InvalidParameter;
+-    auto line=get_line(handle); if(!line) return LS_InvalidLine;
+-    auto& context=*line->context;
+-    try {
+-    auto geometry=visual_runs(*line);
+-    for(size_t index=0;index<line->runs.size();++index) {
+-        auto& run=line->runs[index];int x=origin->x+(line->base_flow==4?-geometry.edge[index]:geometry.edge[index]);
++namespace {
++int display_runs(Line& line,Context& context,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
++    auto geometry=visual_runs(line);
++    for(size_t index=0;index<line.runs.size();++index) {
++        auto& run=line.runs[index];int x=origin->x+(line.base_flow==4?-geometry.edge[index]:geometry.edge[index]);
+         LSPOINT point{x,origin->y};
+         LsHeights height{run.metrics.dvAscent,run.metrics.dvDescent,run.metrics.dvMultiLineHeight};
+         int status=0;
+@@ -1381,7 +1440,19 @@ extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT*
+         }
+     }
+     return LS_None;
+-    } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
++}
++}
++extern "C" __declspec(dllexport) int WINAPI LoDisplayLine(void* handle,LSPOINT* origin,uint32_t mode,LSRECT* clip) {
++    if(!origin||!clip)return LS_InvalidParameter;
++    auto line=get_line(handle);if(!line)return LS_InvalidLine;
++    try {
++        if(!line->markers.empty()) {
++            Line marker;marker.context=line->context;marker.base_flow=line->base_flow;marker.initial_level=line->base_flow==4?1:0;
++            marker.runs=line->markers;marker.widths.upStartMainText=line->widths.upStartMarker;marker.widths.upLimLine=line->widths.upLimMarker;
++            int status=display_runs(marker,*line->context,origin,mode,clip);if(status)return status;
++        }
++        return display_runs(*line,*line->context,origin,mode,clip);
++    }catch(const std::bad_alloc&){return LS_OutOfMemory;}
+ }
+ 
+ extern "C" __declspec(dllexport) int WINAPI LoEnumLine(void* handle,BOOL reverse,BOOL geometry,LSPOINT* origin) {
+diff --git a/bootstrap/m612/wpf-tests/ListMarkers.cs b/bootstrap/m612/wpf-tests/ListMarkers.cs
+new file mode 100644
+index 0000000..f4d4240
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/ListMarkers.cs
+@@ -0,0 +1,77 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Globalization;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++using System.Windows.Threading;
++class MarkerRun : TextRunProperties {
++ readonly bool marker;public MarkerRun(bool marker=false){this.marker=marker;}
++ public override Typeface Typeface=>new Typeface("Arial");public override double FontRenderingEmSize=>24;public override double FontHintingEmSize=>24;
++ public override TextDecorationCollection TextDecorations=>null;public override Brush ForegroundBrush=>marker?Brushes.Red:Brushes.Black;public override Brush BackgroundBrush=>null;
++ public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("en-US");public override TextEffectCollection TextEffects=>null;
++}
++class MarkerSource : TextSource {
++ public readonly string Text;readonly bool marker,split;
++ public MarkerSource(string text,bool marker=false,bool split=false){Text=text;this.marker=marker;this.split=split;}
++ public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,split?1:Text.Length-index,new MarkerRun(marker)):new TextEndOfParagraph(1);
++ public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("en-US"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++ public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class MarkerProperties : TextMarkerProperties {
++ readonly double offset;readonly TextSource source;
++ public MarkerProperties(string text,double offset,bool split=false){this.offset=offset;source=new MarkerSource(text,true,split);}
++ public override double Offset=>offset;public override TextSource TextSource=>source;
++}
++class MarkerParagraph : TextParagraphProperties {
++ readonly FlowDirection direction;readonly TextMarkerProperties marker;readonly double indent;readonly bool first,wrap;
++ public MarkerParagraph(FlowDirection d,TextMarkerProperties marker=null,double indent=0,bool first=true,bool wrap=false){direction=d;this.marker=marker;this.indent=indent;this.first=first;this.wrap=wrap;}
++ public override FlowDirection FlowDirection=>direction;public override TextAlignment TextAlignment=>TextAlignment.Left;public override double LineHeight=>0;
++ public override bool FirstLineInParagraph=>first;public override TextRunProperties DefaultTextRunProperties=>new MarkerRun();public override TextWrapping TextWrapping=>wrap?TextWrapping.Wrap:TextWrapping.NoWrap;
++ public override TextMarkerProperties TextMarkerProperties=>marker;public override double Indent=>indent;
++}
++class Check {
++ const BindingFlags I=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++ static (int Red,int Black,int MinRed,int MaxRed) Ink(Visual visual,int w=650,int h=150){var bitmap=new RenderTargetBitmap(w,h,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);var bytes=new byte[w*h*4];bitmap.CopyPixels(bytes,w*4,0);int red=0,black=0,min=w,max=-1;for(int y=0;y<h;++y)for(int x=0;x<w;++x){int at=(y*w+x)*4;if(bytes[at+3]<120)continue;if(bytes[at+2]>150&&bytes[at]<80&&bytes[at+1]<80){++red;min=Math.Min(min,x);max=Math.Max(max,x);}if(bytes[at]<80&&bytes[at+1]<80&&bytes[at+2]<80)++black;}return(red,black,min,max);}
++ static int MarkerCharacters(Drawing d){if(d is GlyphRunDrawing g&&g.ForegroundBrush is SolidColorBrush brush&&brush.Color==Colors.Red)return g.GlyphRun.Characters.Count;return d is DrawingGroup group?group.Children.Sum(MarkerCharacters):0;}
++ static int MarkerCharacters(Visual v){int n=MarkerCharacters(VisualTreeHelper.GetDrawing(v));for(int i=0;i<VisualTreeHelper.GetChildrenCount(v);++i)n+=MarkerCharacters((Visual)VisualTreeHelper.GetChild(v,i));return n;}
++ static DrawingVisual Draw(TextLine line){var v=new DrawingVisual();using(var d=v.RenderOpen())line.Draw(d,new Point(150,40),InvertAxes.None);return v;}
++ static void Near(double a,double b,string why){if(Math.Abs(a-b)>0.02)throw new Exception(why+": "+a+" vs "+b);}
++ [STAThread] static void Main(){
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})foreach(bool split in new[]{false,true})foreach(string symbol in new[]{"•","42.","iv.","שלום"})foreach(double indent in new[]{0.0,40.0}) {
++   using var formatter=TextFormatter.Create(mode);var source=new MarkerSource("alpha beta gamma");var marker=new MarkerProperties(symbol,indent==0?-20:10,split);
++   using var plain=formatter.FormatLine(source,0,400,new MarkerParagraph(direction,indent:indent),null);
++   using var line=formatter.FormatLine(source,0,400,new MarkerParagraph(direction,marker,indent),null);
++   if(line.Length!=plain.Length)throw new Exception("marker consumes body source");Near(line.Width,plain.Width,"marker changes measured width");Near(line.Start,plain.Start,"marker changes body indent");Near(line.Height,plain.Height,"marker changes line height");Near(line.Baseline,plain.Baseline,"marker changes baseline");
++   var glyphs=line.GetIndexedGlyphRuns().ToArray();if(glyphs.Sum(g=>g.TextSourceLength)!=source.Text.Length||glyphs.Any(g=>g.TextSourceCharacterIndex<0))throw new Exception("marker leaks into backing-source glyph enumeration");
++   for(int cp=0;cp<source.Text.Length;++cp)Near(line.GetDistanceFromCharacterHit(new CharacterHit(cp,0)),plain.GetDistanceFromCharacterHit(new CharacterHit(cp,0)),"marker moves caret");
++   var ink=Ink(Draw(line));if(ink.Red<10||ink.Black<100)throw new Exception($"marker or body missing raster: {ink}");
++   using var empty=formatter.FormatLine(new MarkerSource(""),0,400,new MarkerParagraph(direction,marker,indent),null);using var emptyPlain=formatter.FormatLine(new MarkerSource(""),0,400,new MarkerParagraph(direction,indent:indent),null);if(empty.Length!=emptyPlain.Length||Ink(Draw(empty)).Red<10)throw new Exception("empty marked line source/raster");Near(empty.Width,emptyPlain.Width,"marker changes empty-line indent/width");Near(empty.Height,emptyPlain.Height,"marker changes empty-line height");
++   Console.WriteLine($"original marker {mode} {direction} {symbol}, split={split}, indent={indent}: red={ink.Red}, body={ink.Black}, unchanged source/width/height/carets PASS");
++  }
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft}) {
++   using var formatter=TextFormatter.Create(mode);var source=new MarkerSource("alpha beta gamma delta epsilon zeta");var paragraph=new MarkerParagraph(direction,new MarkerProperties("42.",-20),0,true,true);
++   object cache=formatter.GetType().GetMethod("CreateParagraphCache",I).Invoke(formatter,new object[]{source,0,140.0,paragraph,null,new TextRunCache()});TextLineBreak previous=null;int cp=0,rows=0;
++   try{while(cp<=source.Text.Length){object[] args={cp,previous,IntPtr.Zero,140.0,0};var candidates=((IEnumerable)cache.GetType().GetMethod("FormatBreakpoints",I).Invoke(cache,args)).Cast<object>().ToArray();var selected=candidates[(int)args[4]];int length=(int)selected.GetType().GetProperty("Length",I).GetValue(selected);using var line=(TextLine)formatter.GetType().GetMethod("RecreateLine",I).Invoke(formatter,new object[]{source,cp,length,140.0,new MarkerParagraph(direction,paragraph.TextMarkerProperties,0,cp==0,true),previous,new TextRunCache()});if(line.Length!=length||line.Width>140.02)throw new Exception("marked cache source/width");var ink=Ink(Draw(line));if(cp==0?ink.Red<10:ink.Red!=0)throw new Exception($"marked cache repeats or loses first marker: mode={mode}, direction={direction}, cp={cp}, length={length}, red={ink.Red}, previous={previous!=null}");using var plain=(TextLine)formatter.GetType().GetMethod("RecreateLine",I).Invoke(formatter,new object[]{source,cp,length,140.0,new MarkerParagraph(direction,first:cp==0,wrap:true),previous,new TextRunCache()});Near(line.GetDistanceFromCharacterHit(new CharacterHit(cp,0)),plain.GetDistanceFromCharacterHit(new CharacterHit(cp,0)),"cached marker displaces main-text origin");var next=(TextLineBreak)selected.GetType().GetMethod("GetTextLineBreak",I).Invoke(selected,null);if(next!=null){var clone=next.Clone();next.Dispose();next=clone;}foreach(IDisposable candidate in candidates)candidate.Dispose();previous?.Dispose();previous=next;cp+=length;if(++rows>20)throw new Exception("marked cache progress");}}
++   finally{previous?.Dispose();((IDisposable)cache).Dispose();}
++   if(cp!=source.Text.Length+1||rows<2)throw new Exception("marked cache exact paragraph coverage");Console.WriteLine($"original marked paragraph cache {mode} {direction}: {rows} reconstructed rows, single marker, exact body source and cloned continuation PASS");
++  }
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})foreach(bool optimal in new[]{false,true})foreach(var style in new[]{TextMarkerStyle.Disc,TextMarkerStyle.Decimal,TextMarkerStyle.LowerRoman}) {
++   var list=new System.Windows.Documents.List{MarkerStyle=style,StartIndex=8,Foreground=Brushes.Red,Margin=new Thickness(0),Padding=new Thickness(45,0,0,0)};var runs=new List<Run>();
++   for(int n=0;n<4;++n){var run=new Run($"Item {n}: alpha beta gamma delta epsilon zeta.");runs.Add(run);var item=new ListItem(new Paragraph(run){Foreground=Brushes.Black,Margin=new Thickness(0)});list.ListItems.Add(item);}
++   var doc=new FlowDocument(list){FontFamily=new FontFamily("Arial"),FontSize=24,FlowDirection=direction,IsOptimalParagraphEnabled=optimal,PagePadding=new Thickness(10),ColumnWidth=double.PositiveInfinity};TextOptions.SetTextFormattingMode(doc,mode);
++   var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)doc).DocumentPaginator;paginator.PageSize=new Size(300,180);var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,red=0,markerChars=0;
++   for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var ink=Ink(page.Visual,300,180);red+=ink.Red;markerChars+=MarkerCharacters(page.Visual);if(ink.Black<20)throw new Exception("public list body raster missing");object view=((IServiceProvider)page).GetService(viewType);foreach(object segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();ranges.Add((pages,(TextPointer)t.GetProperty("Start",I).GetValue(segment),(TextPointer)t.GetProperty("End",I).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);}
++   if(markerChars!=(style==TextMarkerStyle.Disc?4:style==TextMarkerStyle.Decimal?10:13))throw new Exception($"markers repeated or lost across pages: style={style}, characters={markerChars}");
++   if(pages<2||pages>=20||red<30||!paginator.IsPageCountValid)throw new Exception($"public list markers absent: pages={pages}, red={red}");int count=0;
++   foreach(var run in runs)for(int n=0;n<run.Text.Length;++n){var pos=run.ContentStart.GetPositionAtOffset(n,LogicalDirection.Forward);var owners=ranges.Where(r=>pos.CompareTo(r.Start)>=0&&pos.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(pos)!=owners[0].Page)throw new Exception("list marker corrupts source/page identity");++count;}
++   using(var page=paginator.GetPage(0))if(Ink(page.Visual,300,180).Red<10)throw new Exception("disposed list page loses marker regeneration");Console.WriteLine($"public list {style} {mode} {direction}, optimal={optimal}: {pages} pages, red={red}, markerChars={markerChars}, exact {count} source chars/page mapping/regeneration/GC PASS");
++  }
++  Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original source marker callback, separate negative CPs, public bullets/numbering and cleanup PASS");
++ }
++}
+diff --git a/bootstrap/m612/wpf-tests/ListMarkersNative.cpp b/bootstrap/m612/wpf-tests/ListMarkersNative.cpp
+new file mode 100644
+index 0000000..460f0eb
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/ListMarkersNative.cpp
+@@ -0,0 +1,35 @@
++// SPDX-License-Identifier: MIT
++#include <windows.h>
++#include <cstdio>
++#include <cstring>
++#include <stdexcept>
++#include <string>
++#include <vector>
++#include "LineServicesNative.h"
++static bool rtl=false,abort_marker=false,abort_info=false;
++static int draws=0,marker_draws=0,source_units=0;
++static int WINAPI pap(void*,int,LsPap* p){*p={};p->cpFirst=0;p->grpf=0x1040;p->lstflow=rtl?4:0;return 0;}
++static int WINAPI props(void*,int,int first,LsLineProps* p){*p={};p->durLeft=first?-20:0;return 0;}
++static int WINAPI number(void*,int* align,LsChp* p,uintptr_t* id,uint16_t* added,LsChp* ap,uintptr_t* aid,int* word95,int* offset,int* width){if(abort_info)return LS_ClientAbort;*align=2;*p={};p->idObj=0xFFFF;*id=0x40000001;*added=L'\t';*ap=*p;*aid=*id;*word95=0;*offset=0;*width=0;return 0;}
++static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** out,int* count,int* hidden,LsChp* p,uintptr_t* id){bool marker=cp<0;if(marker&&abort_marker)return LS_ClientAbort;std::wstring text=marker?L"42.\u2029":L"abc\u2029";int at=marker?cp-LS_FirstMarkerCp:cp;if(at<0||at>=int(text.size()))return LS_WrongGivenCp;*count=at<3?3-at:1;*hidden=0;*p={};p->idObj=0xFFFF;*id=marker?0x40000001:1;*used=0;*out=nullptr;if(capacity>=*count){std::memcpy(buffer,text.data()+at,*count*2);*used=1;}return 0;}
++static int WINAPI metrics(void*,uint32_t id,int,int,LsTxM* p){*p=id&0x40000000?LsTxM{99,1,100,0}:LsTxM{10,5,15,0};return 0;}
++static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted){for(int i=0;i<count;++i)values[i]=10;*total=10*count;*fitted=count;return 0;}
++static int WINAPI draw(void*,uint32_t id,LSPOINT* point,WCHAR* text,int*,int count,int flow,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*){if(flow!=(rtl?4:0)||width!=10*count)return LS_ClientAbort;if(id&0x40000000){if(point->x!=(rtl?50:-50)||count!=3||text[0]!=L'4')return LS_ClientAbort;++marker_draws;}else if(point->x!=0)return LS_ClientAbort;++draws;return 0;}
++static int WINAPI enumerate(void*,uint32_t id,int cp,int dcp,WCHAR*,int,int,int,int,LSPOINT*,LsHeights*,int,int,int*,uint16_t*,uint16_t*,uint16_t*,int*,void*,uint32_t*,int){if(cp<0||(id&0x40000000))return LS_ClientAbort;source_units+=dcp;return 0;}
++static void check(bool value,const char* why){if(!value)throw std::runtime_error(why);}
++int main(int argc,char** argv){try{
++ check(argc==2,"usage: check DLL");HMODULE dll=LoadLibraryA(argv[1]);check(dll!=nullptr,"load DLL");
++ using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);using Doc=int(WINAPI*)(void*,int,int,const LsDevRes*);using Tabs=int(WINAPI*)(void*,int,int,const LsTbd*);
++ using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);using Dispose=int(WINAPI*)(void*,BOOL);using Destroy=int(WINAPI*)(void*);using Acquire=int(WINAPI*)(void*,void**);
++ using Draw=int(WINAPI*)(void*,LSPOINT*,uint32_t,LSRECT*);using Enum=int(WINAPI*)(void*,BOOL,BOOL,LSPOINT*);using Query=int(WINAPI*)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);
++#define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));check(name!=nullptr,#name)
++ PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoSetTabs,Tabs);PROC(LoCreateLine,Line);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);PROC(LoDisplayLine,Draw);PROC(LoEnumLine,Enum);PROC(LoQueryLineCpPpoint,Query);
++ PROC(LoAcquireBreakRecord,Acquire);PROC(LoCloneBreakRecord,Acquire);PROC(LoDisposeBreakRecord,Dispose);
++ for(bool direction:{false,true}){rtl=direction;draws=marker_draws=source_units=0;LsContextInfo cfg{};cfg.version=4;cfg.pfnFetchPap=reinterpret_cast<void*>(pap);cfg.pfnGetAutoNumberInfo=reinterpret_cast<void*>(number);cfg.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);cfg.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);cfg.pfnDrawTextRun=reinterpret_cast<void*>(draw);cfg.pfnEnumText=reinterpret_cast<void*>(enumerate);LscbkRedefined cb{reinterpret_cast<void*>(fetch),nullptr,reinterpret_cast<void*>(props)};void* context=nullptr;check(LoCreateContext(&cfg,&cb,&context)==0,"context");LsDevRes res{1440,1440,1440,1440};check(LoSetDoc(context,0,1,&res)==0,"doc");LsTbd stop{};stop.ur=0;check(LoSetTabs(context,40,1,&stop)==0,"marker-required text stop");
++  LsLInfo info{};LsLineWidths geometry{};void* line=nullptr;int depth=0;check(LoCreateLine(context,0,0,100,0,nullptr,&info,&line,&depth,&geometry)==0,"marker line");
++  check(info.cpLimToContinue==4&&info.dvpAscent==10&&info.dvpMultiLineHeight==15,"marker excluded from body source/height");check(geometry.upStartMarker==-50&&geometry.upLimMarker==-20&&geometry.upStartMainText==0&&geometry.upLimLine==30,"separate marker/body geometry");LSPOINT origin{};LSRECT clip{-100,-100,100,100};check(LoDisplayLine(line,&origin,1,&clip)==0&&draws==2&&marker_draws==1,"exact marker and body drawing");check(LoEnumLine(line,FALSE,FALSE,&origin)==0&&source_units==3,"body-only glyph enumeration");LsQSubInfo sub{};LsTextCell cell{};int qdepth=0;check(LoQueryLineCpPpoint(line,0,1,&sub,&qdepth,&cell)==0&&cell.dupCell==10&&cell.pointUvStartCell.x==0,"marker excluded from caret geometry");check(LoQueryLineCpPpoint(line,LS_FirstMarkerCp,1,&sub,&qdepth,&cell)==LS_WrongGivenCp,"negative marker is not backing source");check(LoDisposeLine(line,FALSE)==0,"dispose marker line");
++  abort_info=true;check(LoCreateLine(context,0,0,100,0,nullptr,&info,&line,&depth,&geometry)==LS_ClientAbort&&!line&&info.cpLimToContinue==0,"number callback failure clears outputs");abort_info=false;abort_marker=true;check(LoCreateLine(context,0,0,100,0,nullptr,&info,&line,&depth,&geometry)==LS_ClientAbort&&!line,"marker fetch failure clears outputs");abort_marker=false;
++  check(LoCreateLine(context,0,0,15,0,nullptr,&info,&line,&depth,&geometry)==0&&info.cpLimToContinue==1,"marker does not change wrapping");void* br=nullptr;void* clone=nullptr;check(LoAcquireBreakRecord(line,&br)==0&&LoCloneBreakRecord(br,&clone)==0,"independent marked continuation");check(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(br,FALSE)==0,"dispose original line and record");marker_draws=draws=0;check(LoCreateLine(context,1,0,100,0,clone,&info,&line,&depth,&geometry)==0&&info.cpLimToContinue==4,"continue body after marker");check(LoDisplayLine(line,&origin,1,&clip)==0&&marker_draws==0&&draws==1,"continuation does not repeat marker");check(LoDisposeLine(line,FALSE)==0&&LoDisposeBreakRecord(clone,FALSE)==0&&LoDestroyContext(context)==0,"marker resources cleanup");
++ }
++ FreeLibrary(dll);std::puts("PASS original autonumber callback ABI, negative marker source, separate LTR/RTL origins, body-only metrics/carets/enumeration, errors and cloned continuation");return 0;
++ }catch(const std::exception& e){std::fprintf(stderr,"FAIL %s\n",e.what());return 1;}}
+diff --git a/bootstrap/m612/wpf-tests/check-list-markers-sdk.sh b/bootstrap/m612/wpf-tests/check-list-markers-sdk.sh
+new file mode 100644
+index 0000000..b1865f8
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-list-markers-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/ListMarkers.cs" "$work/Program.cs"
++cat > "$work/ListMarkersSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/ListMarkersSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/ListMarkersSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/ListMarkersSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/ListMarkersSdkCheck.exe"
++printf 'PASS normal offline WPF SDK list markers check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index bdd192e..e5b3c56 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -140,6 +140,13 @@ step_check_paragraph_breaks_native() {
+   "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
+ }
+ 
++step_check_list_markers_native() {
++  local work=$build/list-markers-native
++  mkdir -p "$work"
++  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/ListMarkersNative.cpp" -I "$build/classification-native" -o "$work/check.exe"
++  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
++}
++
+ step_inventory() {
+   /usr/bin/python3 "$here/tools/wpfnative-inventory.py" "$source" "$build/lib/PresentationNative_cor3.dll" \
+     "$build/native-coverage.json"
+@@ -860,6 +867,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
+   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
+   bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
++  bash "$here/wpf-tests/check-list-markers-sdk.sh" "$root" "$build/list-markers-sdk-check"
+   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
+   bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"
