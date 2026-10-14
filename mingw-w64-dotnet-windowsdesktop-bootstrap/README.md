@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 132 of 139
+The native text/paragraph/NLS replacement is still partial (currently 133 of 139
 imported exports). Advanced bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -640,3 +640,24 @@ increase paragraph ABI coverage to 482 fields. Imported coverage becomes 132/139
 six of seven absent declarations are under upstream #if NEVER, while the native
 reverse-object handler remains absent. General polygon/object/table/subpage,
 full bidi/optimizer and other documented advanced behavior remains unfinished.
+
+Release 8.0.0-48 implements LocbkGetObjectHandlerInfo for native reverse object
+zero and routes body/list-marker controls through the original managed handler
+callback. A successful context-bound source handler performs actual opening/
+closing level transitions, retaining paragraph bases and level-125 limits; failed
+or malformed/foreign/incomplete callback output never becomes a binding. Nested,
+coalesced and wrapped/cloned controls keep their source and visual geometry.
+The private handler record is owned by this source producer/consumer; original
+WPF only forwards an opaque pointer. It does not claim Microsoft's unpublished
+native handler layout. Unknown object IDs do not overwrite an unknown buffer.
+
+Native tests cover registration, level results/bounds, callback failures/retries,
+stable binding reuse, invalid/stale ownership and nested/continued caret/point/
+drawing geometry. The original managed context fixture marshals the record and
+calls actual transitions across GC and teardown. It joins normal SDK shared/
+portable execution; existing bidi/list-marker consumers also exercise the real
+original callback path. The suite now has 36 WPF consumers. Paragraph ABI remains
+482 fields; source-visible imported coverage reaches 133/139. All six absent
+declarations are disabled upstream by #if NEVER. API presence does not prove full
+behavior: general polygon/object/table/subpage layouts, bidi/optimizer conformance
+and other documented native gaps remain unfinished.
