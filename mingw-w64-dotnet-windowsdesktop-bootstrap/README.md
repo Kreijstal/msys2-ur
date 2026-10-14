@@ -768,3 +768,19 @@ and interior caret queries, hit testing, selection, source glyph coverage and GC
 raster output. Shared and portable execution bring registered WPF consumers to40.
 Noncontiguous cell geometry and nonmonotonic glyph maps remain explicit gaps;
 native import coverage stays133/139 and full WPF conformance remains unfinished.
+
+Release 8.0.0-56 uses provider emergency expansion capacity for optimal FullMixed
+justification (LsKJust value4) at complete grapheme/glyph-cluster boundaries.
+InterWord (value0) keeps whitespace eligibility. Nonfinal no-space Latin and Indic
+paragraphs can fill their justified columns; source breaks, nominal advances,
+priority bounds and final-cluster/paragraph behavior remain authoritative.
+
+Native tests verify exact nominal/shaped mixed versus interword caret geometry.
+Glyph maps are validated against original GlyphRun requirements before placement:
+zero first index, monotonic entries and indices within the actual glyph array.
+These malformed inputs are rejected, rather than classified as a missing feature.
+The new SDK consumer checks 16 optimal paragraph cases and two direct mode/caret/
+selection cases in each shared/portable execution. Both formatting modes/directions,
+single/multiple columns, glyph clusters, source/page coverage, GC and raster output
+are covered. Registered WPF SDK consumers increase to41. Full compression, ink
+insertion, aligned-tab justification and other native conformance gaps remain open.

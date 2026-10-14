@@ -1,0 +1,347 @@
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 1e9b341..0c1f249 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -62,6 +62,7 @@ struct Line {
+     Run terminator;
+     bool has_terminator=false;
+     bool justified=false;
++    int justification=0; // LsKJust.lskjFullInterWord
+     std::shared_ptr<BreakPenalty> penalty;
+     std::weak_ptr<ParaSession> penalty_session;
+     bool detached_penalty=false;
+@@ -186,6 +187,10 @@ int measure_run(Context& context,Run& run) {
+                 capacity=actual;
+             }
+             if(!generated || actual<=0 || actual>capacity) return LS_InvalidCharToGlyphMapping;
++            // GlyphRun and the original placement/expansion callbacks require a
++            // zero-based, monotonic map entirely inside the actual glyph array.
++            if(run.clusters.empty()||run.clusters[0]!=0)return LS_InvalidCharToGlyphMapping;
++            for(size_t cp=0;cp<run.clusters.size();++cp)if(run.clusters[cp]>=actual||(cp&&run.clusters[cp]<run.clusters[cp-1]))return LS_InvalidCharToGlyphMapping;
+             run.glyphs.resize(actual); run.glyph_properties.resize(actual);
+             run.advances.resize(actual); run.offsets.resize(actual);
+             run.expansion.resize(actual);
+@@ -390,10 +395,25 @@ LsNeighborInfo neighbor(const Run* run,bool last) {
+     return value;
+ }
+ 
++struct SourceGraphemes {
++    std::vector<UChar> text;std::vector<int> logical{0};int first=0;
++    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> breaks{nullptr,ubrk_close};
++    int initialize(const Line& line) {
++        first=line.first;
++        // Reversal controls belong to the LS transport, not the Unicode source.
++        for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
++        UErrorCode error=U_ZERO_ERROR;
++        breaks.reset(ubrk_open(UBRK_CHARACTER,"root",text.data(),int(text.size()),&error));
++        return U_FAILURE(error)||!breaks?LS_InvalidFormatterResult:LS_None;
++    }
++    bool boundary(int cp) const {return cp>=first&&size_t(cp-first)<logical.size()&&ubrk_isBoundary(breaks.get(),logical[cp-first]);}
++};
++
+ int justify_line(Line& line,int target,int& total,int& trailing) {
+     int64_t remaining=static_cast<int64_t>(target)-trailing;
+     if(remaining<=0) return LS_None;
+-    auto& context=*line.context;
++    auto& context=*line.context;bool mixed=line.justification==4; // LsKJust.lskjFullMixed
++    SourceGraphemes graphemes;if(mixed){int status=graphemes.initialize(line);if(status)return status;}
+     if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
+         std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
+     int visible_cp=line.first;
+@@ -434,16 +454,17 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
+             for(int level=0;level<3;++level) if(left[level][item]<0 || right[level][item]<0) return LS_InvalidFormatterResult;
+         }
+         for(size_t cp=0;cp<run.text.size() && run.cp+static_cast<int>(cp)<visible_cp;++cp) {
+-            if(!u_isUWhiteSpace(run.text[cp])) continue;
+-            size_t item=cp;
++            size_t end=cp+1,item=cp;
+             if(run.shaped) {
+-                if((cp && run.clusters[cp]==run.clusters[cp-1]) || (cp+1<run.text.size() && run.clusters[cp]==run.clusters[cp+1])) continue;
+-                unsigned end=cp+1<run.text.size()?run.clusters[cp+1]:run.advances.size();
+-                if(end<=run.clusters[cp] || end>run.advances.size()) return LS_InvalidCharToGlyphMapping;
+-                item=end-1;
+-                if(types[item]==0) continue;
+-                if(types[item]!=1) return LS_NotImplemented;
++                if(cp&&run.clusters[cp]==run.clusters[cp-1])continue;
++                while(end<run.text.size()&&run.clusters[end]==run.clusters[cp])++end;
++                unsigned glyph_end=end<run.text.size()?run.clusters[end]:run.advances.size();
++                if(glyph_end<=run.clusters[cp]||glyph_end>run.advances.size())return LS_InvalidCharToGlyphMapping;
++                item=glyph_end-1;
+             }
++            bool space=end==cp+1&&u_isUWhiteSpace(run.text[cp]);
++            if(!space&&(!mixed||run.cp+int(end)>=visible_cp||!graphemes.boundary(run.cp+int(end))))continue;
++            if(run.shaped){if(types[item]==0)continue;if(types[item]!=1)return LS_NotImplemented;}
+             for(int side=0;side<2;++side) {
+                 auto* capacities=side?right:left;
+                 sites.push_back({&run,item,{capacities[0][item],capacities[1][item],capacities[2][item]},0,side==0,types[item]});
+@@ -715,13 +736,7 @@ struct Cell {
+ int text_cells(const Line& line,std::vector<Cell>& cells) {
+     // Unicode text elements are properties of the complete retained line,
+     // including when font/style/client buffers divide one grapheme.
+-    std::vector<UChar> text;std::vector<int> logical{0};
+-    // Reversal controls belong to the LS transport, not the Unicode source.
+-    for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
+-    UErrorCode error=U_ZERO_ERROR;
+-    auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+-    if(U_FAILURE(error)||!raw)return LS_InvalidFormatterResult;
+-    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> graphemes(raw,ubrk_close);
++    SourceGraphemes graphemes;int status=graphemes.initialize(line);if(status)return status;
+     auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
+     for(size_t index=0;index<line.runs.size();++index) {
+         const auto& run=line.runs[index];if(run.synthetic)continue;x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
+@@ -761,7 +776,7 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
+     for(size_t index=0;index<cells.size();++index) {
+         Cell cell=cells[index];cell.flow=cell.run->flow;cell.level=cell.run->level;
+         int left=cell.x-(cell.flow!=line.base_flow?cell.width:0),right=left+cell.width;
+-        while(!ubrk_isBoundary(graphemes.get(),logical.at(cell.cp-line.first+cell.length))) {
++        while(!graphemes.boundary(cell.cp+cell.length)) {
+             if(index+1>=cells.size())return LS_InvalidFormatterResult;
+             const auto& next=cells[++index];
+             if(next.cp!=cell.cp+cell.length)return LS_InvalidFormatterResult;
+@@ -979,7 +994,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
+         if(status) return status;
+         if((paragraph.fJustify && paragraph.lskj!=0 && paragraph.lskj!=4)) return LS_NotImplemented;
+-        result->justified=paragraph.fJustify!=0;
++        result->justified=paragraph.fJustify!=0;result->justification=paragraph.lskj;
+         int flow=paragraph.lstflow;
+         if(flow!=0 && flow!=4) return LS_NotImplemented;
+         result->base_flow=flow;if(!previous_break)result->initial_level=flow==4?1:0;int level=result->initial_level;
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.md b/bootstrap/m612/wpf-native/LineServicesContext.md
+index 1ceebb3..fb21b51 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.md
++++ b/bootstrap/m612/wpf-native/LineServicesContext.md
+@@ -66,8 +66,9 @@ The original nested query layouts are generated from LineServices.cs:
+ LsQSubInfo 120 bytes and LsTextCell 40 bytes on x64. Public Indic leading/trailing
+ hits, caret navigation, distances and selection rectangles pass after GC.
+ Queries join graphemes across client-run boundaries, retaining each requested
+-code point's source run metadata. Nonmonotonic glyph cluster maps and other
+-advanced geometry still require further work.
++code point's source run metadata. Glyph maps must start at zero, remain monotonic and name actual glyphs, as
++required by the original GlyphRun and expansion/placement consumers. Malformed
++maps fail before glyph placement; other advanced geometry still needs work.
+ 
+ LoDisplayLine obtains underline and strikethrough metrics through the original
+ callbacks and draws each retained decorated run with its original identity,
+@@ -168,3 +169,19 @@ style changes, tiny/full widths, Latin combining/Indic/emoji/flags. Forward/back
+ carets, every interior code-unit query, hit testing, selection width, glyph source
+ coverage, compacting GC and real raster output are checked, alongside ordinary
+ same-run character carets. Shared and portable executions remain separate checks.
++
++FullMixed justification (original LsKJust value 4) accepts provider expansion
++capacity at nonfinal Unicode grapheme and complete glyph-cluster boundaries,
++including non-space boundaries. InterWord (value 0) retains whitespace eligibility.
++Shared source grapheme segmentation excludes internal reversal transport controls
++and prevents expansion inside a user-perceived character. The final visible
++non-space cluster receives no gap after it. Callback priority/capacity bounds,
++nominal advances and original glyph expansion types remain authoritative.
++
++Native assertions compare exact nominal/shaped mixed and interword geometry and
++reject malformed first/range/decreasing cluster maps before placement callbacks.
++The mixed SDK consumer checks optimal no-space Latin and Indic paragraphs in both
++formatting modes/directions, single/multiple columns, exact source/page completion,
++caret/point queries, real raster/GC, plus direct mixed/interword caret/selection
++comparisons. Full ink expansion, compression and other advanced algorithms remain
++unfinished.
+diff --git a/bootstrap/m612/wpf-tests/JustificationNative.cpp b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+index 0d7d199..54d5833 100644
+--- a/bootstrap/m612/wpf-tests/JustificationNative.cpp
++++ b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+@@ -7,10 +7,11 @@
+ #include "LineServicesNative.h"
+ struct GlyphOffset { int32_t du,dv; };
+ static std::wstring text=L"aa bb cc dd\u2029";
+-static bool shaped=false;
++static bool shaped=false,mixed=false;
++static int map_failure=0,position_calls=0;
+ static int failure=0,calls=0,draws=0;
+ static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
+-static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;return 0; }
++static int WINAPI pap(void*,int,LsPap* value) { *value={};value->grpf=0x40;value->fJustify=1;value->lskj=mixed?4:0;return 0; }
+ static int WINAPI props(void*,int,int,LsLineProps* value) { *value={};value->durLeft=4;value->durRightJustify=3;return 0; }
+ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR**,int* count,int* hidden,LsChp* chp,uintptr_t* id) {
+     if(cp<0 || cp>=static_cast<int>(text.size()))return LS_WrongGivenCp;
+@@ -20,10 +21,10 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int,int* used,WCHAR
+ static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* value) { *value={12,8,20,0};return 0; }
+ static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted) { *total=count*10;*fitted=count;for(int i=0;i<count;++i)values[i]=10;return 0; }
+ static int WINAPI glyphs(void*,uintptr_t*,int*,int,WCHAR*,int count,int,uint16_t* indices,uint32_t* properties,int,int* used,uint16_t* clusters,uint16_t* chars,int* alone,int* actual) {
+-    *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}return 0;
++    *used=1;*actual=count;for(int i=0;i<count;++i){indices[i]=i+20;properties[i]=0;clusters[i]=i;chars[i]=0;alone[i]=1;}if(map_failure==1)clusters[0]=1;if(map_failure==2)clusters[count-1]=count;if(map_failure==3&&count>2)clusters[2]=0;return 0;
+ }
+ static int WINAPI positions(void*,uintptr_t*,int*,int,int,WCHAR*,uint16_t*,uint16_t*,int,uint16_t*,uint32_t*,int count,int,int* advances,GlyphOffset* offsets) {
+-    for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
++    ++position_calls;for(int i=0;i<count;++i){advances[i]=10;offsets[i]={};}return 0;
+ }
+ static int fill(int count,int** left,int** right) {
+     ++calls;if(failure==1)return LS_ClientAbort;
+@@ -31,13 +32,13 @@ static int fill(int count,int** left,int** right) {
+     if(failure==2)left[0][0]=-1;return 0;
+ }
+ static int WINAPI char_expand(void*,int device,int flow,LsCharRunInfo* run,LsNeighborInfo* left,LsNeighborInfo* right,int priorities,int** l,int** r) {
+-    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=' '||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
+-    return fill(run->cwch,l,r);
++    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=text[2]||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
++    int status=fill(run->cwch,l,r);if(mixed)for(int cp=0;cp<run->cwch;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
+ }
+ static int WINAPI glyph_expand(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** l,int** r,uint8_t* types,int* ink) {
+-    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=' '||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
++    if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=text[2]||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
+     for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}if(failure==3)types[2]=2;
+-    return fill(run->cgindex,l,r);
++    int status=fill(run->cgindex,l,r);if(mixed)for(int cp=0;cp<run->cgindex;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
+ }
+ static int WINAPI draw_text(void*,uint32_t,LSPOINT*,WCHAR*,int* widths,int count,int,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*) {
+     if(count!=6||widths[2]!=23||widths[5]!=10||width!=73)return LS_ClientAbort;++draws;return 0;
+@@ -70,6 +71,23 @@ int main(int argc,char** argv) {
+             failure=4;require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==55,"provider capacity limits cannot be exceeded to forge column width");require(LoDisposeLine(line,FALSE)==0,"limited-capacity line disposal");failure=0;
+             calls=0;require(LoCreateLine(context,0,0,200,0,nullptr,&info,&line,&depth,&measured)==0&&info.endr==2&&calls==0&&measured.upLimLine==114,"last paragraph line stays nominal and does not request expansion");require(LoDisposeLine(line,FALSE)==0,"last line disposal");
+         }
++        for(bool mode:{false,true}) {
++            shaped=mode;text=L"abcdefgh ij\u2029";
++            for(bool kind:{false,true}) {
++                mixed=kind;calls=position_calls=0;
++                require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==6&&measured.upMinStartTrailing==64&&measured.upStartTrailing==(mixed?67:64),"mixed mode uses only emergency capacity while interword mode retains its ordinary no-space width");
++                LsQSubInfo sub{};LsTextCell cell{};
++                for(int cp=0;cp<6;++cp)require(LoQueryLineCpPpoint(line,cp,1,&sub,&depth,&cell)==0&&cell.dupCell==(mixed&&cp<3?11:10),"nominal and shaped emergency expansion preserves exact distributed caret advances");
++                require(LoDisposeLine(line,FALSE)==0,"mixed emergency line disposal");
++            }
++        }
++        mixed=false;shaped=true;text=L"aa bb cc dd\u2029";
++        for(int malformed:{1,2,3}) {
++            map_failure=malformed;position_calls=0;line=reinterpret_cast<void*>(1);
++            require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_InvalidCharToGlyphMapping&&!line&&position_calls==0,"invalid first/range/decreasing cluster maps fail before glyph placement with empty output");
++        }
++        map_failure=0;
++        std::puts("native mixed emergency expansion: nominal/glyph capacities, exact caret distribution, interword policy and invalid cluster isolation PASS");
+         failure=3;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"unsupported ink expansion rejects without fabricated glyphs");
+         require(LoDestroyContext(context)==0,"justification context teardown");
+         std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;
+diff --git a/bootstrap/m612/wpf-tests/MixedJustification.cs b/bootstrap/m612/wpf-tests/MixedJustification.cs
+new file mode 100644
+index 0000000..7263020
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/MixedJustification.cs
+@@ -0,0 +1,77 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Globalization;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++using System.Windows.Threading;
++class MeasureRun : TextRunProperties {
++ public override Typeface Typeface=>new Typeface("Consolas");public override double FontRenderingEmSize=>24;public override double FontHintingEmSize=>24;
++ public override TextDecorationCollection TextDecorations=>null;public override Brush ForegroundBrush=>Brushes.Black;public override Brush BackgroundBrush=>null;
++ public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("en-US");public override TextEffectCollection TextEffects=>null;
++}
++class MeasureParagraph : TextParagraphProperties {
++ readonly FlowDirection direction;readonly TextAlignment alignment;
++ public MeasureParagraph(FlowDirection direction,TextAlignment alignment=TextAlignment.Left){this.direction=direction;this.alignment=alignment;}
++ public override FlowDirection FlowDirection=>direction;public override TextAlignment TextAlignment=>alignment;public override double LineHeight=>0;
++ public override bool FirstLineInParagraph=>true;public override TextRunProperties DefaultTextRunProperties=>new MeasureRun();public override TextWrapping TextWrapping=>TextWrapping.Wrap;
++ public override TextMarkerProperties TextMarkerProperties=>null;public override double Indent=>0;public override double DefaultIncrementalTab=>80;
++}
++class MeasureSource : TextSource {
++ public readonly string Text;readonly bool split;
++ public MeasureSource(string text,bool split=false){Text=text;this.split=split;}
++ public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,split?1:Text.Length-index,new MeasureRun()):new TextEndOfParagraph(1);
++ public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("en-US"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++ public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++ const BindingFlags I=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++ static object Prop(object o,string name)=>o.GetType().GetProperty(name,I).GetValue(o);
++ static readonly Type View=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
++ static IEnumerable<object> ParaLines(object para){var p=para.GetType().GetProperty("Lines",I);if(p!=null){var values=(IEnumerable)p.GetValue(para);if(values!=null)foreach(object line in values)yield return line;}p=para.GetType().GetProperty("Paragraphs",I);if(p!=null)foreach(object child in (IEnumerable)p.GetValue(para))foreach(var line in ParaLines(child))yield return line;}
++ static IEnumerable<object> Lines(DocumentPage page){object view=((IServiceProvider)page).GetService(View);foreach(object column in (IEnumerable)Prop(view,"Columns"))foreach(object para in (IEnumerable)Prop(column,"Paragraphs"))foreach(object line in ParaLines(para))yield return line;}
++ static List<int> Format(string body,double width,bool optimal,TextFormattingMode mode,FlowDirection direction,double pageHeight=400,bool hyphenation=false,bool justified=false,bool columns=false){
++  var run=new Run(body);var document=new FlowDocument(new Paragraph(run){Margin=new Thickness(0)}){FontFamily=new FontFamily("Consolas"),FontSize=24,PagePadding=new Thickness(10),ColumnWidth=columns?width:double.PositiveInfinity,ColumnGap=20,IsColumnWidthFlexible=false,IsOptimalParagraphEnabled=optimal,IsHyphenationEnabled=hyphenation,TextAlignment=justified?TextAlignment.Justify:TextAlignment.Left,FlowDirection=direction};TextOptions.SetTextFormattingMode(document,mode);
++  var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(columns?width*2+40:width+20,pageHeight);
++  var cuts=new List<int>();var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,total=0,carets=0,hyphens=0,expanded=0;
++  for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;
++   hyphens+=Markers(page.Visual);
++   object view=((IServiceProvider)page).GetService(View);var local=new List<(TextPointer Start,TextPointer End)>();
++   foreach(object segment in (IEnumerable)View.GetProperty("TextSegments").GetValue(view)){var start=(TextPointer)Prop(segment,"Start");var end=(TextPointer)Prop(segment,"End");ranges.Add((pages,start,end));local.Add((start,end));}
++   for(int at=0;at<Math.Min(24,body.Length);++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);if(!local.Any(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0))continue;var rect=(Rect)View.GetMethod("GetRectangleFromTextPosition").Invoke(view,new object[]{position});if(rect.IsEmpty||rect.Height<=0)throw new Exception("optimized caret geometry");if(View.GetMethod("GetTextPositionFromPoint").Invoke(view,new object[]{new Point(rect.Left+1,rect.Top+rect.Height/2),true})==null)throw new Exception("optimized point hit");++carets;}
++   foreach(object line in Lines(page)){var end=(TextPointer)Prop(line,"EndPosition");int cp=run.ContentStart.GetOffsetToPosition(end);cuts.Add(Math.Clamp(cp,0,body.Length));if(justified&&cp<body.Length){var box=(Rect)Prop(line,"LayoutBox");if(box.Width>width+0.02)throw new Exception("optimized justification exceeds column");if(Math.Abs(box.Width-width)>0.02)throw new Exception("mixed provider capacity did not fill a nonfinal line: "+box.Width);++expanded;}}
++   var bitmap=new RenderTargetBitmap((int)Math.Ceiling(columns?width*2+40:width+20),(int)Math.Ceiling(pageHeight),96,96,PixelFormats.Pbgra32);bitmap.Render(page.Visual);var bytes=new byte[bitmap.PixelWidth*bitmap.PixelHeight*4];bitmap.CopyPixels(bytes,bitmap.PixelWidth*4,0);int ink=bytes.Count(x=>x>100);if(ink<100)throw new Exception("no real optimal paragraph raster");total+=ink;GC.Collect(2,GCCollectionMode.Forced,true,true);
++  }
++  if(pages==0||pages>=20||cuts.Count==0||cuts.Last()!=body.Length)throw new Exception($"optimal paragraph exact completion: optimal={optimal}, pages={pages}, cuts={string.Join(",",cuts)}, expected={body.Length}");
++  for(int at=0;at<body.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("optimized source/page identity");}
++  if(justified&&expanded==0)throw new Exception("optimized justification never fills a nonfinal line");
++  if(hyphenation&&hyphens==0)throw new Exception("optimized dictionary break loses inserted hyphen on reconstruction");
++  using(var page=paginator.GetPage(0))if(!Lines(page).Any())throw new Exception("disposed optimal page regeneration");
++  Console.WriteLine($"public paragraph optimal={optimal} {mode} {direction}: cuts={string.Join(",",cuts)}, pages={pages}, ink={total}, carets={carets}, hyphens={hyphens}, expanded={expanded}, exact {body.Length} source/page positions PASS");return cuts;
++ }
++ static int Markers(Drawing d){if(d is GlyphRunDrawing g)return g.GlyphRun.Characters.Count(c=>c=='-');return d is DrawingGroup group?group.Children.Sum(Markers):0;}
++ static int Markers(Visual v){int n=Markers(VisualTreeHelper.GetDrawing(v));for(int i=0;i<VisualTreeHelper.GetChildrenCount(v);++i)n+=Markers((Visual)VisualTreeHelper.GetChild(v,i));return n;}
++ [STAThread] static void Main(){
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++  foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
++  foreach(string body in new[]{string.Concat(Enumerable.Repeat("abcdefghijklmnopqrstuvwxyz",3)),string.Concat(Enumerable.Repeat("कि",30))})
++  foreach(bool columns in new[]{false,true}) {
++   Format(body,133,true,mode,direction,140,false,true,columns);
++  }
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++   using var formatter=TextFormatter.Create(mode);var body="abcdefghijklmnopqrstuvwxyz";
++   var source=new MeasureSource(body);var paragraph=new MeasureParagraph(FlowDirection.LeftToRight,TextAlignment.Justify);
++   using var mixed=(TextLine)formatter.GetType().GetMethod("RecreateLine",I).Invoke(formatter,new object[]{source,0,9,133.0,paragraph,null,new TextRunCache()});
++   using var regular=formatter.FormatLine(source,0,133,paragraph,null);
++   if(Math.Abs(mixed.Width-133)>0.02||regular.Width>=132.98)throw new Exception("mixed/interword public modes lost their distinct expansion policy");
++   if(Math.Abs(mixed.GetDistanceFromCharacterHit(new CharacterHit(9,0))-133)>0.02||Math.Abs(mixed.GetTextBounds(0,9).Sum(b=>b.Rectangle.Width)-133)>0.02)throw new Exception("mixed expansion does not reach caret/selection geometry");
++   Console.WriteLine($"public mixed/interword {mode}: {mixed.Width}/{regular.Width}, exact caret/selection PASS");
++  }
++  Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("public optimal mixed inter-letter expansion and cleanup PASS");
++ }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-mixed-justification-sdk.sh b/bootstrap/m612/wpf-tests/check-mixed-justification-sdk.sh
+new file mode 100644
+index 0000000..bdc5339
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-mixed-justification-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/MixedJustification.cs" "$work/Program.cs"
++cat > "$work/MixedJustificationSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/MixedJustificationSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/MixedJustificationSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/MixedJustificationSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/MixedJustificationSdkCheck.exe"
++printf 'PASS normal offline WPF SDK mixed justification check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 98dd1f7..0469c64 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -886,6 +886,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-spell-check-sdk.sh" "$root" "$build/spell-check-sdk-check"
+   bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
+   bash "$here/wpf-tests/check-optimal-paragraph-sdk.sh" "$root" "$build/optimal-paragraph-sdk-check"
++  bash "$here/wpf-tests/check-mixed-justification-sdk.sh" "$root" "$build/mixed-justification-sdk-check"
+   bash "$here/wpf-tests/check-list-markers-sdk.sh" "$root" "$build/list-markers-sdk-check"
+   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
