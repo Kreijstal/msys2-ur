@@ -1,0 +1,6 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Xml;
+using System.ServiceModel.Syndication;
+class Check {static void Main(){var feed=new SyndicationFeed("Greenshot λ","description",new Uri("https://example.org"));feed.Items=new[]{new SyndicationItem("capture","body",new Uri("https://example.org/capture"))};foreach(bool atom in new[]{true,false}){using var stream=new MemoryStream();using(var writer=XmlWriter.Create(stream,new XmlWriterSettings{CloseOutput=false})){if(atom)feed.SaveAsAtom10(writer);else feed.SaveAsRss20(writer);}stream.Position=0;using var reader=XmlReader.Create(stream);var loaded=SyndicationFeed.Load(reader);if(loaded.Title.Text!=feed.Title.Text||loaded.Items.Single().Title.Text!="capture")throw new Exception("Atom/RSS Unicode round trip");}try{using var reader=XmlReader.Create(new StringReader("<invalid/>"));SyndicationFeed.Load(reader);throw new Exception("invalid feed accepted");}catch(XmlException error){if(string.IsNullOrEmpty(error.Message))throw new Exception("original exception resources");}if(Convert.ToHexString(typeof(SyndicationFeed).Assembly.GetName().GetPublicKeyToken()).ToLowerInvariant()!="b03f5f7f11d50a3a")throw new Exception("strong identity");Console.WriteLine("PASS Syndication original Atom/RSS writers/readers, Unicode, error resources and strong identity");}}

@@ -1,0 +1,4 @@
+using System;
+using System.CommandLine;
+using System.Linq;
+class Check {static void Main(){var count=new Option<int>("--count"){Required=true};var text=new Option<string>("--text");var command=new RootCommand("Greenshot command parser"){count,text};var parsed=command.Parse(new[]{"--count","42","--text","λ 🐾"});if(parsed.Errors.Any()||parsed.GetValue(count)!=42||parsed.GetValue(text)!="λ 🐾")throw new Exception("typed and Unicode parsing");if(!command.Parse(new[]{"--count","bad"}).Errors.Any()||!command.Parse(Array.Empty<string>()).Errors.Any())throw new Exception("validation diagnostics/resources");if(Convert.ToHexString(typeof(RootCommand).Assembly.GetName().GetPublicKeyToken()).ToLowerInvariant()!="31bf3856ad364e35")throw new Exception("original strong identity");Console.WriteLine("PASS System.CommandLine typed arguments, Unicode, required/invalid diagnostics and strong identity");}}

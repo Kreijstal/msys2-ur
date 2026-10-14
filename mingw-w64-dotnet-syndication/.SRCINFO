@@ -1,0 +1,23 @@
+pkgbase = mingw-w64-dotnet-syndication
+	pkgdesc = Source-built System.ServiceModel.Syndication for the .NET 8 offline feed
+	pkgver = 10.0.3
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	noextract = runtime-dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a.tar.gz
+	options = !strip
+	options = !lto
+	source = runtime-dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a
+	source = prepare.py
+	source = check.cs
+	source = Microsoft.pubkey.hex
+	sha256sums = 32de05f9721080a10f701da03cc3ed76cc5f081584e8ec6aa5250a76b0cdbfdf
+	sha256sums = e3398455a8af1433cff59ac46b0eb58dc5e6c2ae8470d71477daa722d2e6a3aa
+	sha256sums = 46d72904b7929dfd1dcd46d85e71e76eb1720e0a09e09e21047e158fcce44a00
+	sha256sums = f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f
+
+pkgname = mingw-w64-clang-x86_64-dotnet-syndication

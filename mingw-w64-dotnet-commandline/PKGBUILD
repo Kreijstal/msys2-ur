@@ -1,0 +1,58 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-commandline
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.0.0.preview1.26104.118
+pkgrel=1
+_nugetver=3.0.0-preview.1.26104.118
+pkgdesc='Source-built System.CommandLine 3 preview for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/command-line-api'
+license=('spdx:MIT')
+_commit=ddf3078641e8e11ebb7d6d893eb09d014d35df70
+_tree=command-line-api-${_commit}
+_project=src/System.CommandLine/System.CommandLine.csproj
+_id=System.CommandLine
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("command-line-api-ddf3078641e8e11ebb7d6d893eb09d014d35df70.tar.gz::https://codeload.github.com/dotnet/command-line-api/tar.gz/ddf3078641e8e11ebb7d6d893eb09d014d35df70" prepare.py check.cs MSShared.pubkey.hex)
+sha256sums=('18fb442d3a2ea5d86892b0f6fb6920cc85a942e26d4fe9122b4bd1b10c951480' '91cd638aeebb35556788a30b5ab8b3cb51569e4070b467017746dfe084a6defe' 'f10bbd8aeb36c1e683392f3cbc41e69d3302648cd41e1c877a14953f9d24d518' '7f0f29ad3362c7308306a581e4c3979582644fe8f997756628a1f511efa8dfcf')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" commandline "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$_nugetver" \
+    -p:Version="$_nugetver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:SolutionDir="$(cygpath -m "$srcdir/$_tree/src")/" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:TargetFrameworks=net8.0 -p:DisableArcade=1 -p:NetMinimum=net8.0 -p:IsTrimmable=false -p:EnableTrimAnalyzer=false -p:EnableSingleFileAnalyzer=false -p:SignAssembly=true -p:AssemblyOriginatorKeyFile="$(cygpath -m "$srcdir/$_tree/MSShared.public.snk")" -p:AssemblyVersion=3.0.0.0 -p:FileVersion=3.0.0.0 -p:PublicSign=true -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$_nugetver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$_nugetver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$_nugetver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE.md" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

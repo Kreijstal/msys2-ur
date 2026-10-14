@@ -1,0 +1,59 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-sixlabors-fonts
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.0.0
+pkgrel=1
+pkgdesc='Source-built SixLabors.Fonts for the .NET 8 bootstrap offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/SixLabors/Fonts'
+license=('spdx:Apache-2.0')
+_commit=32bef42997adb10268369ca149777f00e4241ce9
+_tree=Fonts-${_commit}
+_project=src/SixLabors.Fonts/SixLabors.Fonts.csproj
+_id=SixLabors.Fonts
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("fonts-32bef42997adb10268369ca149777f00e4241ce9.tar.gz::https://codeload.github.com/SixLabors/Fonts/tar.gz/${_commit}" "drawing-shared-33cb12ca77f919b44de56f344d2627cc2a108c3a.tar.gz::https://codeload.github.com/SixLabors/SharedInfrastructure/tar.gz/33cb12ca77f919b44de56f344d2627cc2a108c3a" "sixlabors-branding-e4597cdbe94892cf5ac7081ab98ce32a46291609.tar.gz::https://codeload.github.com/SixLabors/Branding/tar.gz/e4597cdbe94892cf5ac7081ab98ce32a46291609" prepare.py check.cs)
+sha256sums=('84b636f74d8166924bc487322dfa1e71055d47ff6315050f0051667d5b9c0faa' 'c11e3e03948fc53a6ae622e7d0b1116d97411f9d3cf597a4733aa2c50880247c' 'cf50f82281bfed2e3049a0806199c12a6998f252dc4a572e1ab66395f659d7d8' '9c5d74e99672bb21b64d6bb3c6ac18cce024b2cadf8bd1f5a544c8f85a0c0a17' 'a3d06bbf5f3ebf7711d57a208ac62ea2aa75b95efb8ba6737bf551c32c9aeaae')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  cp -a "$srcdir/SharedInfrastructure-33cb12ca77f919b44de56f344d2627cc2a108c3a/." "$srcdir/$_tree/shared-infrastructure/"
+  cp -a "$srcdir/Branding-e4597cdbe94892cf5ac7081ab98ce32a46291609/." "$srcdir/$_tree/shared-infrastructure/branding/"
+  /usr/bin/python3 "$srcdir/prepare.py" fonts "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=Apache-2.0 -p:GeneratePackageOnBuild=false \
+    -p:TargetFrameworks=net8.0 -p:LangVersion=12.0 -p:IsContinuousIntegration=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:PublicSign=true -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}
