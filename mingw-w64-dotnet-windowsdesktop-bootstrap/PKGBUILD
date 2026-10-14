@@ -3,12 +3,12 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=37
+pkgrel=38
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/Kreijstal/msys2-ur'
-license=('spdx:MIT' 'spdx:Apache-2.0 WITH LLVM-exception' 'spdx:Unicode-3.0')
+license=('spdx:MIT' 'spdx:Apache-2.0 WITH LLVM-exception' 'spdx:Unicode-3.0' 'spdx:MPL-1.1' 'spdx:LicenseRef-Hyphenation-Patterns')
 _dotnetver=8.0.131
 _bootstrap_commit=96ae31a4c7e54685de440de2adde387840392054
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_dotnetver}")
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            'e8b1daf023086696653687a693bdcc1541758c81e2a734987bb46f90dafbc1a8')
+            '9cc6be4a814d322c65de92b233fef9771588750e7a857bca22c29abc55525e52')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -117,6 +117,8 @@ source+=('0036-column-balancing.patch')
 sha256sums+=('4e3713a1c18c65d92ad696e7584b7785e97c8327d7dbb65e925e5ebcbf86be78')
 source+=('0037-composite-lines.patch')
 sha256sums+=('d1486b2b3df0634fa5fd33ffa9a919190cf9f70954c23b2093af44c07d57337c')
+source+=('0038-source-hyphenation.patch')
+sha256sums+=('512b64ddebdde1177eaa03be13e8b49931ce8dbffc85cf5fdb3896f6f7cca728')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -167,6 +169,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0035-display-transfer.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0036-column-balancing.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0037-composite-lines.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0038-source-hyphenation.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
@@ -237,7 +240,7 @@ build() {
 
 check() {
   _wpf check-directwrite-assembly check-printing-assembly check-printing-runtime check-shipping-managed
-  _wpf check-lineservices-line-native check-text-decorations check-text-tabs check-inline-objects-native check-inline-objects check-justification-native check-text-justification check-paragraph-widths check-paragraph-context-native check-paragraph-context
+  _wpf check-hyphenation-native check-lineservices-line-native check-text-decorations check-text-tabs check-inline-objects-native check-inline-objects check-justification-native check-text-justification check-paragraph-widths check-paragraph-context-native check-paragraph-context
   _wpf check-gfx check-sdk
 }
 
@@ -261,6 +264,18 @@ package() {
   icu_license=$(pacman -Ql "${MINGW_PACKAGE_PREFIX}-icu" | awk '$2 ~ /\/LICENSE$/ {print $2; exit}')
   test -n "$icu_license"
   install -Dm644 "$icu_license" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/icu.LICENSE"
+  local hyphenation_source="$(_driver)/wpf-native/hyphen"
+  local hyphenation_doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname/hyphenation"
+  mkdir -p "$hyphenation_doc/source/wpf-native/hyphen" "$hyphenation_doc/source/tools" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/hyphenation/engine"
+  cp -a "$hyphenation_source/." "$hyphenation_doc/source/wpf-native/hyphen/"
+  cp "$(_driver)/wpf-native/NaturalLanguageHyphenation.cpp" "$hyphenation_doc/source/wpf-native/"
+  cp "$(_driver)/tools/wpf-hyphen-data.py" "$hyphenation_doc/source/tools/"
+  for file in COPYING COPYING.LGPL COPYING.MPL; do
+    install -Dm644 "$hyphenation_source/engine/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/hyphenation/engine/$file"
+  done
+  while IFS= read -r -d '' file; do
+    install -Dm644 "$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/hyphenation/${file#"$hyphenation_source/"}"
+  done < <(find "$hyphenation_source/patterns" -type f \( -name LICENSE -o -name README_hyph_en_US.txt \) -print0)
   install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
   install -Dm644 "$(_root)/deleted-binaries.txt" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/deleted-binaries.txt"
 }

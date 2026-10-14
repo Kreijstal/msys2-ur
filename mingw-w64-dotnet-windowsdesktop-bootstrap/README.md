@@ -424,3 +424,25 @@ columns, page regeneration and GC through shared-framework and self-contained
 execution. Imported coverage rises to 119/139 and ABI coverage to 470 fields.
 Polygon/composite-line optimizations, advanced object layout, general column spans,
 footnotes, optimal formatting and full native-language behavior remain open.
+
+Release 8.0.0-38 adds source automatic hyphenation. NlCreateHyphenator,
+NlHyphenate and NlDestroyHyphenator implement the original HRESULT/out-retval,
+UTF-16 bitmask and disposal ABI. The source Hunspell/Hyphen C engine and 36 pinned
+UTF-8 text dictionaries are checksum-verified and embedded in the native DLL;
+published consumers need no external dictionary path. Original per-language
+notices and complete engine/dictionary source are included in the package.
+Regional English uses the bundled US patterns; German uses reformed orthography
+with a Swiss variant. Only opportunities that preserve original characters are
+exposed by WPF's bitmask contract. The line-breaking callback measures inserted
+hyphen glyphs when selecting a fitting dictionary break; glyph drawing, caret
+cells and enumeration preserve actual source lengths. Cloned break records resume
+from the original source position, and prohibited lines retain normal wrapping.
+Native checks cover exact/case/surrogate offsets, short arrays, stale resources,
+callback errors, invalid positions, marker geometry and continuation ownership.
+Original managed tests cover thirteen cultures, direct Ideal/Display LTR/RTL
+formatting and public left/justified FlowDocuments: ten pages, 30/39 inserted
+glyphs and all 539 source characters/page mappings survive regeneration and GC.
+Shared-framework and portable self-contained checks pass. Imported coverage rises
+to 122/139; paragraph ABI remains 470 fields. Linguistic results follow the bundled
+patterns; legacy spelling, unsupported cultures, nonstandard spelling changes,
+advanced layout and other documented paths remain unfinished.
