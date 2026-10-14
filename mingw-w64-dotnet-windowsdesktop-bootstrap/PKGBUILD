@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=46
+pkgrel=47
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '00819b18507530f9f9a783da75ce511ed640897738cc6397977a791b698f266b')
+            'ba2d89a3f767eaa97fff608cebbab13b48d22837cc3db16d58686bc4407f0924')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -135,6 +135,8 @@ source+=('0045-oversized-floating-groups.patch')
 sha256sums+=('9a987dd5586d1ad306bc586b4cc1943eb3e39d6579d48948760f4a109681b2dd')
 source+=('0046-forced-atomic-floaters.patch')
 sha256sums+=('386607c6897d9f683278ed7ebb9297b1f56856583a4de018c88edd413c0564b4')
+source+=('0047-original-footnote-queries.patch')
+sha256sums+=('14a5edafea8876d0efda821b0e3cf2a69c4d91e333a94bd925eed690f9ec99dd')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -194,6 +196,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0044-cross-paragraph-floats.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0045-oversized-floating-groups.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0046-forced-atomic-floaters.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0047-original-footnote-queries.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
