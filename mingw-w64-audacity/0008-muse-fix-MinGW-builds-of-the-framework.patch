@@ -1,0 +1,258 @@
+muse: fix MinGW builds of the framework
+
+- dlib.h used dlopen() for __MINGW64__ (dlfcn-win32); use LoadLibrary on
+  every Windows toolchain, and cast GetProcAddress()'s FARPROC explicitly.
+- musescore-mcpbridge relied on #pragma comment(lib, "ws2_32.lib"), which
+  only MSVC honours; link ws2_32 in CMake.
+- mpe/soundid.h: the id/category string maps were inline variables, used
+  by other globals' constructors during dynamic initialization. clang on
+  MinGW does not run inline variables' initializers first, and Audacity
+  aborted at startup (unordered_map::at: key not found). Make them
+  function-local statics.
+- threadutils.h: with libstdc++ on MinGW, std::thread runs on winpthreads
+  and native_handle() is a pthread_t, not a HANDLE; get the HANDLE with
+  pthread_gethandle().
+
+diff --git a/muse/framework/global/concurrency/threadutils.h b/muse/framework/global/concurrency/threadutils.h
+index 755f912..a53fc10 100644
+--- a/muse/framework/global/concurrency/threadutils.h
++++ b/muse/framework/global/concurrency/threadutils.h
+@@ -30,6 +30,9 @@
+ 
+ #ifdef Q_OS_WIN
+ #include <windows.h>
++#if defined(__MINGW32__) && !defined(_LIBCPP_VERSION)
++#include <pthread.h> // pthread_gethandle()
++#endif
+ #else
+ #include <pthread.h>
+ #endif
+@@ -57,7 +60,13 @@ static bool setThreadPriority(std::thread& thread, ThreadPriority priority)
+         break;
+     }
+ 
+-    if (!SetThreadPriority(thread.native_handle(), winPriority)) {
++#if defined(__MINGW32__) && !defined(_LIBCPP_VERSION)
++    // libstdc++ on MinGW runs on winpthreads: native_handle() is a pthread_t
++    HANDLE handle = pthread_gethandle(thread.native_handle());
++#else
++    HANDLE handle = thread.native_handle();
++#endif
++    if (!SetThreadPriority(handle, winPriority)) {
+         return false;
+     }
+ #else
+diff --git a/muse/framework/global/dlib.h b/muse/framework/global/dlib.h
+index 5a3a60a..86d9046 100644
+--- a/muse/framework/global/dlib.h
++++ b/muse/framework/global/dlib.h
+@@ -23,7 +23,7 @@
+ #ifndef MUSE_GLOBAL_DLIB_H
+ #define MUSE_GLOBAL_DLIB_H
+ 
+-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
++#if defined(Q_OS_WIN)
+ #include <windows.h>
+ #else
+ #include <dlfcn.h>
+@@ -36,7 +36,7 @@
+ namespace muse {
+ inline void* loadLib(const io::path_t& path)
+ {
+-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
++#if defined(Q_OS_WIN)
+     return LoadLibrary(io::toNativeSeparators(path).toStdWString().data());
+ #else
+     return dlopen(io::toNativeSeparators(path).toStdString().data(), RTLD_LAZY);
+@@ -45,8 +45,8 @@ inline void* loadLib(const io::path_t& path)
+ 
+ inline void* getLibFunc(void* libHandle, const char* funcName)
+ {
+-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
+-    return GetProcAddress((HINSTANCE)libHandle, funcName);
++#if defined(Q_OS_WIN)
++    return reinterpret_cast<void*>(GetProcAddress((HINSTANCE)libHandle, funcName));
+ #else
+     return dlsym(libHandle, funcName);
+ #endif
+@@ -54,7 +54,7 @@ inline void* getLibFunc(void* libHandle, const char* funcName)
+ 
+ inline void closeLib(void* libHandle)
+ {
+-#if defined(Q_OS_WIN) && !defined(__MINGW64__)
++#if defined(Q_OS_WIN)
+     UNUSED(libHandle);
+     return;
+ #else
+diff --git a/muse/framework/mpe/playbacksetupdata.h b/muse/framework/mpe/playbacksetupdata.h
+index a65f215..06c0912 100644
+--- a/muse/framework/mpe/playbacksetupdata.h
++++ b/muse/framework/mpe/playbacksetupdata.h
+@@ -132,7 +132,7 @@ struct PlaybackSetupData
+             return false;
+         }
+ 
+-        if (id == ID_STRINGS.at(SoundId::Undefined)) {
++        if (id == soundIdStrings().at(SoundId::Undefined)) {
+             return false;
+         }
+ 
+diff --git a/muse/framework/mpe/soundid.h b/muse/framework/mpe/soundid.h
+index 0ec32f8..e6dab02 100644
+--- a/muse/framework/mpe/soundid.h
++++ b/muse/framework/mpe/soundid.h
+@@ -456,8 +456,13 @@ enum class SoundSubCategory
+     Last
+ };
+ 
+-inline const std::unordered_map<SoundId, String> ID_STRINGS
++//! Function-local statics rather than inline variables: global objects
++//! elsewhere use these maps during dynamic initialization, and inline
++//! variables are not reliably initialized first on every toolchain
++//! (e.g. clang on MinGW).
++inline const std::unordered_map<SoundId, String>& soundIdStrings()
+ {
++    static const std::unordered_map<SoundId, String> s_strings {
+     { SoundId::Undefined, String(u"undefined") },
+     { SoundId::Unknown, String(u"unknown") },
+     { SoundId::Accordion, String(u"accordion") },
+@@ -693,13 +698,15 @@ inline const std::unordered_map<SoundId, String> ID_STRINGS
+     { SoundId::Taiko, String(u"taiko") },
+     { SoundId::Metronome, String(u"metronome") },
+     { SoundId::Last, String(u"last") }
+-};
++    };
++    return s_strings;
++}
+ 
+ inline const String& soundIdToString(const SoundId id)
+ {
+-    auto search = ID_STRINGS.find(id);
+-    if (search == ID_STRINGS.cend()) {
+-        return ID_STRINGS.at(SoundId::Unknown);
++    auto search = soundIdStrings().find(id);
++    if (search == soundIdStrings().cend()) {
++        return soundIdStrings().at(SoundId::Unknown);
+     }
+ 
+     return search->second;
+@@ -711,31 +718,34 @@ inline SoundId soundIdFromString(const String& str)
+         return SoundId::Undefined;
+     }
+ 
+-    auto search = std::find_if(ID_STRINGS.cbegin(),
+-                               ID_STRINGS.cend(),
++    auto search = std::find_if(soundIdStrings().cbegin(),
++                               soundIdStrings().cend(),
+                                [str](const auto& pair) { return pair.second == str; });
+ 
+-    if (search == ID_STRINGS.cend()) {
++    if (search == soundIdStrings().cend()) {
+         return SoundId::Unknown;
+     }
+ 
+     return search->first;
+ }
+ 
+-inline const std::unordered_map<SoundCategory, String> CATEGORY_STRINGS
++inline const std::unordered_map<SoundCategory, String>& soundCategoryStrings()
+ {
++    static const std::unordered_map<SoundCategory, String> s_strings {
+     { SoundCategory::Keyboards, String(u"keyboards") },
+     { SoundCategory::Strings, String(u"strings") },
+     { SoundCategory::Winds, String(u"winds") },
+     { SoundCategory::Percussions, String(u"percussions") },
+     { SoundCategory::Voices, String(u"voices") },
+     { SoundCategory::Last, String(u"last") }
+-};
++    };
++    return s_strings;
++}
+ 
+ inline const String& soundCategoryToString(const SoundCategory category)
+ {
+-    auto search = CATEGORY_STRINGS.find(category);
+-    if (search == CATEGORY_STRINGS.cend()) {
++    auto search = soundCategoryStrings().find(category);
++    if (search == soundCategoryStrings().cend()) {
+         static const String UNDEFINED_SUBCATEGORY_STR(u"undefined");
+         return UNDEFINED_SUBCATEGORY_STR;
+     }
+@@ -745,19 +755,20 @@ inline const String& soundCategoryToString(const SoundCategory category)
+ 
+ inline SoundCategory soundCategoryFromString(const String& str)
+ {
+-    auto search = std::find_if(CATEGORY_STRINGS.cbegin(),
+-                               CATEGORY_STRINGS.cend(),
++    auto search = std::find_if(soundCategoryStrings().cbegin(),
++                               soundCategoryStrings().cend(),
+                                [str](const auto& pair) { return pair.second == str; });
+ 
+-    if (search == CATEGORY_STRINGS.cend()) {
++    if (search == soundCategoryStrings().cend()) {
+         return SoundCategory::Undefined;
+     }
+ 
+     return search->first;
+ }
+ 
+-inline const std::unordered_map<SoundSubCategory, String> SUBCATEGORY_STRINGS
++inline const std::unordered_map<SoundSubCategory, String>& soundSubCategoryStrings()
+ {
++    static const std::unordered_map<SoundSubCategory, String> s_strings {
+     { SoundSubCategory::Undefined, String(u"undefined") },
+     { SoundSubCategory::Unknown, String(u"unknown") },
+     { SoundSubCategory::English, String(u"english") },
+@@ -927,15 +938,17 @@ inline const std::unordered_map<SoundSubCategory, String> SUBCATEGORY_STRINGS
+     { SoundSubCategory::In_B_flat, String(u"in_b_flat") },
+ 
+     { SoundSubCategory::Last, String(u"last") }
+-};
++    };
++    return s_strings;
++}
+ 
+ using SoundSubCategories = std::set<SoundSubCategory>;
+ 
+ inline const String& soundSubCategoryToString(const SoundSubCategory& subCategory)
+ {
+-    auto search = SUBCATEGORY_STRINGS.find(subCategory);
+-    if (search == SUBCATEGORY_STRINGS.cend()) {
+-        return SUBCATEGORY_STRINGS.at(SoundSubCategory::Unknown);
++    auto search = soundSubCategoryStrings().find(subCategory);
++    if (search == soundSubCategoryStrings().cend()) {
++        return soundSubCategoryStrings().at(SoundSubCategory::Unknown);
+     }
+ 
+     return search->second;
+@@ -947,11 +960,11 @@ inline SoundSubCategory soundSubCategoryFromString(const String& str)
+         return SoundSubCategory::Undefined;
+     }
+ 
+-    auto search = std::find_if(SUBCATEGORY_STRINGS.cbegin(),
+-                               SUBCATEGORY_STRINGS.cend(),
++    auto search = std::find_if(soundSubCategoryStrings().cbegin(),
++                               soundSubCategoryStrings().cend(),
+                                [str](const auto& pair) { return pair.second == str; });
+ 
+-    if (search == SUBCATEGORY_STRINGS.cend()) {
++    if (search == soundSubCategoryStrings().cend()) {
+         return SoundSubCategory::Unknown;
+     }
+ 
+diff --git a/muse/framework/rcontrol/CMakeLists.txt b/muse/framework/rcontrol/CMakeLists.txt
+index 7013316..611594d 100644
+--- a/muse/framework/rcontrol/CMakeLists.txt
++++ b/muse/framework/rcontrol/CMakeLists.txt
+@@ -41,6 +41,11 @@ set_target_properties(musescore-mcpbridge PROPERTIES
+     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+ )
+ 
++if (WIN32)
++    # #pragma comment(lib) is MSVC-only
++    target_link_libraries(musescore-mcpbridge PRIVATE ws2_32)
++endif()
++
+ #if (MUSE_MODULE_RCONTROL_TESTS)
+ #    add_subdirectory(tests)
+ #endif()

@@ -1,0 +1,65 @@
+muse_deps: support MinGW toolchains
+
+muse_deps was only used with MSVC on Windows:
+- the resolver assumed MSVC library names (<name>.lib, DEP_LIBS_WINDOWS
+  such as portaudio_x64, libexpat, zlib), while MinGW builds use the GNU
+  ones (lib<name>.dll.a / lib<name>.a, bin/lib<name>-N.dll);
+- system wxWidgets is found through wx-config, a shell script that
+  CMake's execute_process cannot start on Windows; run it through sh.
+
+diff --git a/muse_deps/buildtools/resolve.cmake b/muse_deps/buildtools/resolve.cmake
+index 36c2d5e..0eb05ec 100644
+--- a/muse_deps/buildtools/resolve.cmake
++++ b/muse_deps/buildtools/resolve.cmake
+@@ -28,7 +28,12 @@ function(_extdeps_resolve_libs prefix os config libnames out_link out_bundle)
+     set(_bundle_libs "")
+ 
+     foreach(_lib_name ${libnames})
+-        if(os STREQUAL "windows")
++        if(os STREQUAL "windows" AND MINGW)
++            # GNU naming: lib<name>.dll.a import library, bin/lib<name>[-N].dll
++            list(APPEND _link_libs "${prefix}/lib/lib${_lib_name}.dll.a")
++            file(GLOB _runtime_libs "${prefix}/bin/lib${_lib_name}.dll" "${prefix}/bin/lib${_lib_name}-[0-9]*.dll")
++            list(APPEND _bundle_libs ${_runtime_libs})
++        elseif(os STREQUAL "windows")
+             _extdeps_windows_link_name("${prefix}" "${_lib_name}" "${config}" _windows_lib_name)
+             list(APPEND _link_libs "${prefix}/lib/${_windows_lib_name}.lib")
+             file(GLOB _runtime_libs "${prefix}/bin/${_windows_lib_name}.dll" "${prefix}/bin/${_windows_lib_name}[0-9]*.dll")
+@@ -76,7 +81,8 @@ endfunction()
+ # Get library names for a given OS
+ macro(_extdeps_libnames os out)
+     # Windows base lib names can be overriden by DEP_LIBS_WINDOWS
+-    if(${os} STREQUAL "windows" AND DEFINED DEP_LIBS_WINDOWS)
++    # DEP_LIBS_WINDOWS holds MSVC names; MinGW builds use the Unix ones
++    if(${os} STREQUAL "windows" AND DEFINED DEP_LIBS_WINDOWS AND NOT MINGW)
+         set(${out} "${DEP_LIBS_WINDOWS}")
+     else()
+         set(${out} "${DEP_LIBS}")
+@@ -89,7 +95,7 @@ function(_extdeps_resolve_prefix_libs prefix os config libnames out_link out_bun
+         set(_link_libs "")
+         set(_bundle_libs "")
+         foreach(_lib_name ${libnames})
+-            if(os STREQUAL "windows")
++            if(os STREQUAL "windows" AND NOT MINGW)
+                 _extdeps_windows_link_name("${prefix}" "${_lib_name}" "${config}" _windows_lib_name)
+                 list(APPEND _link_libs "${prefix}/lib/${_windows_lib_name}.lib")
+             else()
+diff --git a/muse_deps/recipes/wxwidgets/meta.cmake b/muse_deps/recipes/wxwidgets/meta.cmake
+index b30de19..f69f721 100644
+--- a/muse_deps/recipes/wxwidgets/meta.cmake
++++ b/muse_deps/recipes/wxwidgets/meta.cmake
+@@ -117,7 +117,13 @@ function(wxwidgets_resolve_override mode local_path os arch version config)
+         if(NOT WX_CONFIG)
+             message(FATAL_ERROR "[wxwidgets] wx-config not found (install system wxWidgets dev package)")
+         endif()
+-        _wxwidgets_set_from_wxconfig("${WX_CONFIG}" "" "${os}")
++        set(_wxconfig "${WX_CONFIG}")
++        if(CMAKE_HOST_WIN32)
++            # MinGW/MSYS2 wx-config is a shell script, run it through sh
++            find_program(WX_CONFIG_SH NAMES sh REQUIRED)
++            set(_wxconfig "${WX_CONFIG_SH};${WX_CONFIG}")
++        endif()
++        _wxwidgets_set_from_wxconfig("${_wxconfig}" "" "${os}")
+     else()
+         set(_ok FALSE)
+         _extdeps_use_prebuilt("${mode}" "${config}" _use_prebuilt)

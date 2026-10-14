@@ -1,0 +1,231 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=audacity
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.0.1
+pkgrel=1
+# submodule commits of the Audacity-${pkgver} tag
+_muse=3ba3cd6886433b41759d2d7adef8aef9bbbd546b
+_muse_deps=a9db17d2f0478859711873f2db156eedfc082040
+pkgdesc='Multi-track audio editor and recorder (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.audacityteam.org/'
+msys2_repository_url='https://github.com/audacity/audacity'
+msys2_changelog_url='https://github.com/audacity/audacity/releases'
+license=('spdx:GPL-3.0-only AND GPL-2.0-or-later AND MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-expat"
+         "${MINGW_PACKAGE_PREFIX}-flac"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-harfbuzz"
+         "${MINGW_PACKAGE_PREFIX}-lame"
+         "${MINGW_PACKAGE_PREFIX}-libogg"
+         "${MINGW_PACKAGE_PREFIX}-libsbsms"
+         "${MINGW_PACKAGE_PREFIX}-libsndfile"
+         "${MINGW_PACKAGE_PREFIX}-libsoxr"
+         "${MINGW_PACKAGE_PREFIX}-libvorbis"
+         "${MINGW_PACKAGE_PREFIX}-mpg123"
+         "${MINGW_PACKAGE_PREFIX}-opus"
+         "${MINGW_PACKAGE_PREFIX}-opusfile"
+         "${MINGW_PACKAGE_PREFIX}-pugixml"
+         "${MINGW_PACKAGE_PREFIX}-qt6-5compat"
+         "${MINGW_PACKAGE_PREFIX}-qt6-base"
+         "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
+         "${MINGW_PACKAGE_PREFIX}-qt6-networkauth"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+         "${MINGW_PACKAGE_PREFIX}-soundtouch"
+         "${MINGW_PACKAGE_PREFIX}-sqlite3"
+         "${MINGW_PACKAGE_PREFIX}-twolame"
+         "${MINGW_PACKAGE_PREFIX}-wavpack"
+         "${MINGW_PACKAGE_PREFIX}-wxwidgets3.2-common-libs"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-cppwinrt"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-qt6-shadertools"
+             "${MINGW_PACKAGE_PREFIX}-qt6-tools"
+             "${MINGW_PACKAGE_PREFIX}-rapidjson"
+             "${MINGW_PACKAGE_PREFIX}-utf8cpp"
+             "${MINGW_PACKAGE_PREFIX}-vst3sdk"
+             "${MINGW_PACKAGE_PREFIX}-wxwidgets3.2-common"
+             "${MINGW_PACKAGE_PREFIX}-yasm"
+             "git")
+optdepends=("${MINGW_PACKAGE_PREFIX}-ffmpeg: import and export of AAC, AC3, WMA and other FFmpeg formats")
+# Sources that muse_deps (Audacity's dependency manager) would download at
+# configure time. They go into its download cache (EXTDEPS_CACHE), where it
+# verifies their SHA-256 and applies its own patches. Everything else comes
+# from MSYS2 packages through muse_deps' SYSTEM mode.
+# <muse_deps recipe>:<file name muse_deps looks for>
+_extdeps=("nyquist:nyquist-code-r331-trunk.zip"
+          "pffft:09796885cd5b.tar.gz"
+          "loop-tempo-estimator:loop-tempo-estimator-v0.0.5.tar.gz"
+          "tft:1d96301673ebc05fa09a7bd505eacd82ee0fea33.tar.gz"
+          "picojson:111c9be5188f7350c2eac9ddaedd8cca3d7bf394.tar.gz"
+          "asiosdk:ASIO-SDK_2.3.4_2025-10-15.zip"
+          "portaudio:v19.7.0.tar.gz")
+_patches=("0001-muse_deps-find-MSYS2-packages-in-SYSTEM-mode-on-MinGW.patch"
+          "0002-Link-the-patched-portaudio-statically-on-MinGW.patch"
+          "0003-Fix-the-nyquist-and-loop-tempo-estimator-sources-for-clang-MinGW.patch"
+          "0004-Install-into-a-shared-prefix-on-MinGW.patch"
+          "0005-Fix-the-MinGW-compiler-and-linker-flags.patch"
+          "0006-au3-add-missing-standard-library-includes.patch"
+          "0007-au3-build-against-a-wxUSE_STL-wxWidgets.patch"
+          "0008-muse-fix-MinGW-builds-of-the-framework.patch"
+          "0009-au3-fix-MSVC-only-constructs.patch"
+          "0010-portmixer-fix-the-build-with-mingw-w64-headers.patch"
+          "0011-nyx-use-the-ANSI-FindFirstFile-API-for-char-paths.patch"
+          "0012-effects-link-the-effect-modules-against-effects_base.patch")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/audacity/audacity/archive/refs/tags/Audacity-${pkgver}.tar.gz"
+        "muse_framework-${_muse}.tar.gz::https://github.com/musescore/muse_framework/archive/${_muse}.tar.gz"
+        "muse_deps-${_muse_deps}.tar.gz::https://github.com/musescore/muse_deps/archive/${_muse_deps}.tar.gz"
+        # SourceForge's on-demand r331 snapshot expires; this is muse_deps' own mirror of it
+        "nyquist-code-r331-trunk.zip::https://github.com/musescore/muse_deps/releases/download/deps-20260817-100754/nyquist-r331-src.zip"
+        "09796885cd5b.tar.gz::https://bitbucket.org/jpommier/pffft/get/09796885cd5b.tar.gz"
+        "https://github.com/saintmatthieu/loop-tempo-estimator/releases/download/v0.0.5/loop-tempo-estimator-v0.0.5.tar.gz"
+        "1d96301673ebc05fa09a7bd505eacd82ee0fea33.tar.gz::https://github.com/kgramhans/tft/archive/1d96301673ebc05fa09a7bd505eacd82ee0fea33.tar.gz"
+        "111c9be5188f7350c2eac9ddaedd8cca3d7bf394.tar.gz::https://github.com/kazuho/picojson/archive/111c9be5188f7350c2eac9ddaedd8cca3d7bf394.tar.gz"
+        "https://raw.githubusercontent.com/musescore/muse_deps/c9a299e19df04e40435d1c4649548c69ce152bd8/asiosdk/ASIO-SDK_2.3.4_2025-10-15/ASIO-SDK_2.3.4_2025-10-15.zip"
+        "v19.7.0.tar.gz::https://github.com/PortAudio/portaudio/archive/refs/tags/v19.7.0.tar.gz"
+        "${_patches[@]}")
+noextract=("${_extdeps[@]#*:}")
+sha256sums=('2471491c6dd2c0fdc30ba1e659f46c1d8d7b50ec0b528b1fb6f5d8ef42635af0'
+            '43c77617dea66cbba764a57196f20026c48c476058da9002b39e73dbb7bc0898'
+            'cf404152aeb8857422beb1850acdce88e7f4a4cbcaeb3d91cc5edbd17dc3a094'
+            '94bb10ec5189e07a0dc15d8e382aaa468cb0e33dce893633432931fea0113885'
+            'fdc80563de8c31d6380886bc1ba0ffb897abde58611707ac94eb8ed8ab850cbb'
+            'e70f2356bbea1bcec3a77e26dddd87b1dd0d5f24c8aed6351aa9d6ec42a66be0'
+            '97049161956685d5c6e475734b9b3c547639a73a04431b2d5fb755317fafee44'
+            '671f89832a17e9e71398f80c0a326afa2ebe81f4c26d5a9992e1fcd0888ae151'
+            'd5ebf0c20dd2c5f43771fd0c1418f4b361bf52434ee670097cfa6b3a335e2eca'
+            '5af29ba58bbdbb7bbcefaaecc77ec8fc413f0db6f4c4e286c40c3e1b83174fa0'
+            '84781d706bfbd1b5625ea152a005e5c188947249eb31b70278d11c81ef215bad'
+            'e92ce4ab87a3f3bbaed6ca4009b76c3b72321e3c9a1bf590c8c60154d0ebea78'
+            '6f1128658f09c4956950844654c8934cc027789460661f0fdf1e20289511dfda'
+            '47e5f44db281ea0ce22d76ca7c3a6ce7e971099e18331f46efa50fdcfe6ba808'
+            '53676d9ecc899b473fe33f5c2c028e36ca3441d4f15a8bb5b70ae31f79d90db9'
+            '773ea7397a4eff944eb637ab8f663a4c1e8d25ff55840ea9a0c0ca28b9d6c34e'
+            '7a5ffd2992e6ff8de390dd38d957d320ee5f5c17bc8636e801e122b22c52d179'
+            '80afd7681cac0aa8ea4a9ca9ee0b350d955968f4807c3cd4f74a824c691514c8'
+            '7f41e88045448dcbf027ea9384bf097e43f9fd5f2efb9004f9ced206037e8130'
+            '65880e57c11b8a8a78941e084c22723a23ee02d2863a750db6b9139a12f5f234'
+            '5d8c6ade937ccbe47efa8096ca1c1296ddbff866f31cde7d57f0f218204e9cf9'
+            'd2a60fe3ad0d662c4e99ccf60532123e09d2b2e4887e4fe6a850db6ec03afa3f')
+
+prepare() {
+  local _src="${srcdir}/${_realname}-Audacity-${pkgver}"
+  rm -rf "${_src:?}/muse" "${_src:?}/muse_deps" "${srcdir:?}/extdeps-cache"
+  cp -a "${srcdir}/muse_framework-${_muse}" "${_src}/muse"
+  cp -a "${srcdir}/muse_deps-${_muse_deps}" "${_src}/muse_deps"
+
+  local _e
+  for _e in "${_extdeps[@]}"; do
+    mkdir -p "${srcdir}/extdeps-cache/downloads/${_e%%:*}"
+    cp -L "${srcdir}/${_e#*:}" "${srcdir}/extdeps-cache/downloads/${_e%%:*}/"
+  done
+
+  cd "${_src}"
+  local _p
+  for _p in "${_patches[@]}"; do
+    patch -Np1 -i "${srcdir}/${_p}"
+  done
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # Dependencies: MSYS2 packages through muse_deps' SYSTEM mode, except the
+  # pinned sources above (nyquist, pffft, loop-tempo-estimator, tft, picojson
+  # are compiled in; portaudio is built with Audacity's patches and linked
+  # statically, see 0002).
+  # Off, as in Linux distributions: update checks, crash reporting (crashpad,
+  # already off by default) and the usage-info UUID (telemetry). Testflow
+  # (scripted UI tests) is off in release mode; unit tests are not built.
+  # LV2 is Linux-only in Audacity 4 (AU_MODULE_EFFECTS_LV2 is not offered on
+  # Windows), so it stays off and suil is not needed.
+  # AU_DEPLOY_RUNTIME=OFF (0004): use the shared Qt and compiler runtime
+  # instead of copying them next to the executable.
+  EXTDEPS_CACHE="$(cygpath -m "${srcdir}/extdeps-cache")" \
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${srcdir}/${_realname}-Audacity-${pkgver}" \
+      -B "${srcdir}/build-${MSYSTEM}" \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DAU4_BUILD_MODE=release \
+      -DAU_DEPLOY_RUNTIME=OFF \
+      -DAU_BUILD_USAGEINFO_MODULE=OFF \
+      -DMUSE_MODULE_UPDATE=OFF \
+      -DMUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT=OFF \
+      -DMUSE_ENABLE_UNIT_TESTS=OFF \
+      -DMUSE_COMPILE_USE_CCACHE=OFF \
+      -DEXTDEPS_OVERRIDE_ALL=SYSTEM \
+      -DVST3SDK="${MINGW_PREFIX}/share/vst3sdk" \
+      "${_extra_config[@]}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}"
+
+  # Not installed: the SDK's "adelay" sample, for check() to load into
+  # Audacity's VST3 host.
+  "${MINGW_PREFIX}/bin/cmake.exe" \
+    -GNinja \
+    -S "${MINGW_PREFIX}/share/vst3sdk" \
+    -B "${srcdir}/vst3-adelay-${MSYSTEM}" \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF \
+    -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=ON \
+    -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=OFF \
+    -DSMTG_CREATE_PLUGIN_LINK=OFF \
+    -DSMTG_RUN_VST_VALIDATOR=OFF
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/vst3-adelay-${MSYSTEM}" --target adelay
+}
+
+check() {
+  local _root="${srcdir}/check-${MSYSTEM}"
+  rm -rf "${_root:?}"
+  DESTDIR="${_root}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}" >/dev/null
+  local _exe="${_root}${MINGW_PREFIX}/bin/Audacity4.exe"
+  cd "${srcdir}"
+
+  # starts up through the Qt/muse module framework and prints its version
+  "${_exe}" --version | tr -d '\r' > version.txt
+  grep -qx "Audacity4 ${pkgver}" version.txt || { cat version.txt; return 1; }
+
+  # the background plugin-registration app initialises all modules
+  "${_exe}" --plugin-registration-self-test
+
+  # the VST3 host loads, instantiates and validates a real plug-in
+  local _vst3
+  _vst3=$(find "${srcdir}/vst3-adelay-${MSYSTEM}" -type d -name 'adelay.vst3' -print -quit)
+  rm -f vst3-registration.json
+  "${_exe}" --register-audio-plugin "$(cygpath -m "${_vst3}")" \
+    --register-audio-plugin-out "$(cygpath -m "${srcdir}/vst3-registration.json")"
+  grep -q '"title": "ADelay"' vst3-registration.json \
+    && grep -q '"state": "Validated"' vst3-registration.json \
+    || { cat vst3-registration.json; return 1; }
+
+  # the data files are where the MinGW layout (0004) looks for them
+  [[ -f "${_root}${MINGW_PREFIX}/share/audacity/nyquist-runtime/nyquist.lsp" ]]
+  [[ -n "$(ls "${_root}${MINGW_PREFIX}"/share/audacity/nyquist-plug-ins/*.ny)" ]]
+  [[ -n "$(ls "${_root}${MINGW_PREFIX}"/share/audacity-4.0/workspaces/*.mws)" ]]
+  rm -rf "${_root:?}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}"
+
+  local _lic="${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+  install -Dm644 "${srcdir}/${_realname}-Audacity-${pkgver}/LICENSE.txt" "${_lic}/LICENSE.txt"
+  # licenses of the statically linked portaudio (muse_deps puts them in <prefix>/licenses)
+  if [[ -d "${pkgdir}${MINGW_PREFIX}/licenses" ]]; then
+    cp -r "${pkgdir}${MINGW_PREFIX}/licenses/." "${_lic}/"
+    rm -rf "${pkgdir:?}${MINGW_PREFIX}/licenses"
+  fi
+}

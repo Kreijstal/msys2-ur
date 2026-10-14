@@ -1,0 +1,44 @@
+nyx: use the ANSI FindFirstFile API for char paths
+
+osdir_list_start()/osdir_list_next() (Nyquist's LISTDIR) pass and return
+char strings, but used the TCHAR WIN32_FIND_DATA/FindFirstFile, which are
+the wide versions in UNICODE builds (an error with gcc, wrong results
+elsewhere). Use the A versions explicitly.
+
+diff --git a/src/effects/nyquist/libnyquist/nyx.c b/src/effects/nyquist/libnyquist/nyx.c
+index a876e1b..cde74c9 100644
+--- a/src/effects/nyquist/libnyquist/nyx.c
++++ b/src/effects/nyquist/libnyquist/nyx.c
+@@ -1479,7 +1479,8 @@ LVAL xechoenabled()
+ 
+ #if defined(WIN32)
+ 
+-static WIN32_FIND_DATA FindFileData;
++// char paths: the ANSI API, also in UNICODE builds
++static WIN32_FIND_DATAA FindFileData;
+ static HANDLE hFind = INVALID_HANDLE_VALUE;
+ #define OSDIR_LIST_READY 0
+ #define OSDIR_LIST_STARTED 1
+@@ -1502,11 +1503,11 @@ int osdir_list_start(const char *path)
+       osdir_list_finish(); // close previously interrupted listing
+    }
+ 
+-   hFind = FindFirstFile(osdir_path, &FindFileData); // get the "."
++   hFind = FindFirstFileA(osdir_path, &FindFileData); // get the "."
+    if (hFind == INVALID_HANDLE_VALUE) {
+       return FALSE;
+    }
+-   if (FindNextFile(hFind, &FindFileData) == 0) {
++   if (FindNextFileA(hFind, &FindFileData) == 0) {
+       return FALSE; // get the ".."
+    }
+ 
+@@ -1518,7 +1519,7 @@ int osdir_list_start(const char *path)
+ /* osdir_list_next -- read the next entry from a directory */
+ const char *osdir_list_next()
+ {
+-   if (FindNextFile(hFind, &FindFileData) == 0) {
++   if (FindNextFileA(hFind, &FindFileData) == 0) {
+       osdir_list_status = OSDIR_LIST_DONE;
+       return NULL;
+    }

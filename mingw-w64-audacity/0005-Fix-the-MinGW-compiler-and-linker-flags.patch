@@ -1,0 +1,47 @@
+Fix the MinGW compiler and linker flags
+
+-mno-ms-bitfields (https://musescore.org/node/22048, from the Qt 4 days)
+changes the layout of structs with bit-fields away from the ABI that the
+system Qt and all other MinGW libraries are built with, e.g. QSizePolicy.
+Drop it, and define UNICODE/_UNICODE for clang-based MinGW toolchains too,
+not only for GCC (CC_IS_MINGW is only set for GCC).
+
+Pass -Wl,--large-address-aware only to 32-bit builds: MUSE_COMPILE_BUILD_64
+is never set, so 64-bit GCC builds got it too, and x86_64 GNU ld rejects
+it (it also replaced CMAKE_EXE_LINKER_FLAGS instead of extending them).
+
+diff --git a/buildscripts/cmake/SetupBuildEnvironment.cmake b/buildscripts/cmake/SetupBuildEnvironment.cmake
+index d45a772..9957c6d 100644
+--- a/buildscripts/cmake/SetupBuildEnvironment.cmake
++++ b/buildscripts/cmake/SetupBuildEnvironment.cmake
+@@ -69,9 +69,7 @@ elseif(CC_IS_MINGW)
+         set(BUILD_SHARED_LIBS ON)
+     endif()
+ 
+-    # -mno-ms-bitfields see #22048
+-    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -mno-ms-bitfields")
+-    if (NOT MUSE_COMPILE_BUILD_64)
++    if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+         set(CMAKE_EXE_LINKER_FLAGS "-Wl,--large-address-aware")
+     endif()
+ 
+diff --git a/muse/buildscripts/cmake/SetupBuildEnvironment.cmake b/muse/buildscripts/cmake/SetupBuildEnvironment.cmake
+index 994b4ab..14017ec 100644
+--- a/muse/buildscripts/cmake/SetupBuildEnvironment.cmake
++++ b/muse/buildscripts/cmake/SetupBuildEnvironment.cmake
+@@ -82,10 +82,11 @@ if(CC_IS_MSVC)
+     add_link_options("/NODEFAULTLIB:LIBCMT")
+ endif()
+ 
+-# MinGW-specific
+-if(CC_IS_MINGW)
+-    # https://musescore.org/node/22048
+-    add_compile_options(-mno-ms-bitfields)
++# MinGW-specific (GCC and Clang)
++if(MINGW)
++    # No -mno-ms-bitfields (https://musescore.org/node/22048): it changes the
++    # layout of bit-field structs away from the ABI the system Qt and the
++    # other MinGW libraries are built with.
+     add_compile_definitions(_UNICODE UNICODE)
+ endif()
+ 
