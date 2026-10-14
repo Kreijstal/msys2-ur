@@ -1,0 +1,31 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] import-svg: give the exported flag constants explicit extern
+
+A namespace-scope const int has internal linkage unless it is declared
+extern. The header does declare them extern, but GCC checks the
+dllexport attribute on the definition itself and rejects it in a shared
+mingw-w64 build: "external linkage required for symbol
+'msdfgen::SVG_IMPORT_FAILURE' because of 'dllexport' attribute".
+Spelling out extern on the definitions is valid everywhere.
+
+--- a/ext/import-svg.cpp
++++ b/ext/import-svg.cpp
+@@ -43,12 +43,12 @@
+ #define REQUIRE(cond) { if (!(cond)) return false; }
+ #endif
+ 
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_FAILURE = 0x00;
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_SUCCESS_FLAG = 0x01;
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_PARTIAL_FAILURE_FLAG = 0x02;
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_INCOMPLETE_FLAG = 0x04;
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_UNSUPPORTED_FEATURE_FLAG = 0x08;
+-MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_TRANSFORMATION_IGNORED_FLAG = 0x10;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_FAILURE = 0x00;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_SUCCESS_FLAG = 0x01;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_PARTIAL_FAILURE_FLAG = 0x02;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_INCOMPLETE_FLAG = 0x04;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_UNSUPPORTED_FEATURE_FLAG = 0x08;
++extern MSDFGEN_EXT_PUBLIC const int SVG_IMPORT_TRANSFORMATION_IGNORED_FLAG = 0x10;
+ 
+ #define ARC_SEGMENTS_PER_PI 2
+ #define ENDPOINT_SNAP_RANGE_PROPORTION (1/16384.)
