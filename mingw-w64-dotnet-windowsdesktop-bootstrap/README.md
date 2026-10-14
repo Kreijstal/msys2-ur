@@ -661,3 +661,20 @@ original callback path. The suite now has 36 WPF consumers. Paragraph ABI remain
 declarations are disabled upstream by #if NEVER. API presence does not prove full
 behavior: general polygon/object/table/subpage layouts, bidi/optimizer conformance
 and other documented native gaps remain unfinished.
+
+Release 8.0.0-49 preserves a table's independently specified horizontal
+FlowDirection through the original row, distribution, cell/subpage and height
+callbacks. Table placement and margin collapse remain in parent track coordinates;
+table details report the actual table direction. This enables opposing table/page
+directions without rejecting the original callback output or losing cell content.
+
+Native checks cover all four parent/table direction combinations for ordinary and
+spanning cells, queried geometry, callback arguments and exact resource ownership.
+The RTL SDK fixture verifies all eight Ideal/Display direction combinations with
+actual colored column backgrounds. The complete table suite also runs with both
+opposing directions, including nested tables with opposite direction, row/cell/span
+continuations, exact source/page coverage, forced progress, bottomless edits and
+scrolling, across shared and portable execution (312 scenario executions).
+Paragraph ABI remains 482 fields and imported native coverage remains 133/139.
+Vertical directions, floating tables, native non-default alignment and other
+advanced table behavior remain unsupported or unproven.
