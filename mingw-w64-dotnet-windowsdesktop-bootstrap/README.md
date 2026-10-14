@@ -371,3 +371,19 @@ placement, scrolling edits and basic table cell order/glyphs. Native matrix/
 failed-update/cleanup checks pass. ABI/import coverage remains 441 fields and
 111/139. Advanced bidi objects/decorations/expansion, complex layout, selective
 incremental reuse and other documented paths remain unfinished.
+
+Release 8.0.0-35 adds source subtrack/subpage comparison and display transfer.
+Comparison validates context, native object kind and direction; opaque fresh
+line clients conservatively report changed content. Empty tracks can compare
+unchanged or vertically shifted. Original object/cell callbacks handle their
+comparison contracts; shared-cell topology is validated. Display transfer moves
+original managed visual ownership recursively through source containers and
+subpages, preserves new-content flags, and skips already accepted transfers on
+retry. Weak ownership records do not retain old layouts. Native checks cover
+partial callback failure, retry/idempotence, empty shifted tracks, stale/foreign/
+wrong-kind handles and exact cleanup. Original managed clients in Ideal/Display
+verify nested visual identity, a same-geometry brush edit, a second-generation
+text edit, old-owner disposal/GC and source coverage through shared-framework
+and portable self-contained SDK execution. Imported coverage rises to 115/139;
+ABI remains 441 fields. Selective line reuse, complex object/layout behavior,
+advanced bidi and other documented paths remain unfinished.
