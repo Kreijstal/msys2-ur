@@ -1,0 +1,113 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-threading-accesscontrol
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.0
+pkgrel=1
+pkgdesc='Source-built System.Threading.AccessControl for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+_commit=5535e31a712343a63f5d7d796cd874e563e5ac14
+_tree=threading-source
+_project=Threading.csproj
+_id=System.Threading.AccessControl
+_framework=net8.0-windows
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=(
+  "Interop.Errors.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Interop.Errors.cs"
+  "Interop.BOOL.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Interop.BOOL.cs"
+  "Interop.Libraries.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Interop.Libraries.cs"
+  "Interop.MAX_PATH.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.MAX_PATH.cs"
+  "Interop.EventWaitHandle.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.EventWaitHandle.cs"
+  "Interop.Constants.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.Constants.cs"
+  "Interop.FormatMessage.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.FormatMessage.cs"
+  "Interop.Mutex.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.Mutex.cs"
+  "Interop.SECURITY_ATTRIBUTES.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.SECURITY_ATTRIBUTES.cs"
+  "Interop.Semaphore.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/Interop/Windows/Kernel32/Interop.Semaphore.cs"
+  "Win32Marshal.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/System/IO/Win32Marshal.cs"
+  "OpenExistingResult.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/System/Threading/OpenExistingResult.cs"
+  "MutexSecurity.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Security/AccessControl/MutexSecurity.cs"
+  "EventWaitHandleSecurity.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Security/AccessControl/EventWaitHandleSecurity.cs"
+  "SemaphoreSecurity.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Security/AccessControl/SemaphoreSecurity.cs"
+  "EventWaitHandleAcl.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Threading/EventWaitHandleAcl.cs"
+  "MutexAcl.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Threading/MutexAcl.cs"
+  "SemaphoreAcl.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Threading/SemaphoreAcl.cs"
+  "ThreadingAclExtensions.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System/Threading/ThreadingAclExtensions.cs"
+  "SR.cs::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/Common/src/System/SR.cs"
+  "Strings.resx::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/Resources/Strings.resx"
+  "LICENSE.TXT::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/LICENSE.TXT"
+  "upstream.csproj::https://raw.githubusercontent.com/dotnet/runtime/5535e31a712343a63f5d7d796cd874e563e5ac14/src/libraries/System.Threading.AccessControl/src/System.Threading.AccessControl.csproj"
+  prepare.py
+  check.cs
+  Microsoft.pubkey.hex
+  source-inputs.json
+)
+sha256sums=(
+  '5b7583a5b8158cd29fbbab62180bb6f8c5ff6ab052dc65448529dfeea887bb5e'
+  '840a1abae0bebceebaf297d6caee386b1facc0eb9f78014f8573357897f67932'
+  '92c7fa4b1bafc3809c6f101bf09ee0d6243a43aa40221cb390cb3ce31dc5b268'
+  'd00f681d36c8688940ce6b0de2d35318da87870d4458bd7b2253fdc68eff99a3'
+  '3267be06fa0c3835f15b5dc01f63b463e55751f624686bb35e6ef31524cf5cdd'
+  'b594ea536272b0b342afa1b816933f7042c656ed03897f9bf36ae22198096f0a'
+  '364c3c19e20fb2bea3befe7bcf9dde4e3d9c19fa6ae9125154f4c387c2150857'
+  '5eb001a9ae34a7c6b445d7bf1617d9ba2cefb4ea5be7a11495ad1768f48284dc'
+  '51ae24c74f8d86b752269c71062865be7d58668644a60e3af05d7792e4844cfb'
+  '22edf8dc38e6b19eabf97f077a48bccfba83a6d48e1ae3e4ac2f56cf6a7d7482'
+  'a294bd9a9d490e5639d88eb8b8f7ebccbb72f24cfe5409d76f26ed295d5bb1c0'
+  'e3b2db7e8d54be1df94ef93a88417ff92d142e5d940ac5408c21a49331356c7b'
+  '7765f80af95dc8227c29e35c82b7242cc20025487f09bfbbaa419b435696b254'
+  '11b368b50c83f93b91273c216e6afb8612beca89fc21f871750424ec29fd04a6'
+  '9f5ab3946456437029d76db1da94ee950b1b0f48ee97480fed804c2a438575a0'
+  'aee80f90275bba390ce40ddfbb75431e3121d959b888d34a411f0fd0bf658c7b'
+  '9cbdd9a0ea9335b0e362cb160d15ba4f0b9ba0d2c4e93fa17abc9adda79e2958'
+  '12deac07fca916d5f10db82f2dbb9fa05b4766efd8210507b4e7428acc679d04'
+  'c54032026ff81f351582828ecddcad96ba39606b95db831bd8cbed288eee91f3'
+  '4c61588a7613f8442ed8aad40b490be1cabda2b79dbd4e3d29a8d9b66b5d5833'
+  '6a6f795f052136fe3ed1bb53350999aa18cdb910b10e6b427090f062158875ca'
+  'cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310'
+  'c32373f86bf372b7d74121f7b1c2100c57e73a2a51edadf4ab667cc38a0fb328'
+  '176f2e16d6a0f89649af5a471fbb4b9e8b124f0181c01ef540acc09d4a4649c3'
+  '8282492e557d8ee48da880fed55fc72aff97684573cd886bc1d3648610d325ae'
+  'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+  '4f128c4c6d15b2a52a2930d616d9b50cb6fbecf5ac02ea64215ea5661739a1cd'
+)
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

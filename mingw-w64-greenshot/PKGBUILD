@@ -1,0 +1,119 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=greenshot
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.4.0.r20261011.6b1ba7c
+pkgrel=1
+pkgdesc='Greenshot Full screenshot application, source-built for the MSYS2 .NET 8 desktop runtime'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/greenshot/greenshot'
+license=('spdx:GPL-3.0-only' 'spdx:MIT')
+_commit=6b1ba7c4e4539c44503c5bb580438b31853068a8
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0-64")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-cc" 'python' 'patch'
+             "${MINGW_PACKAGE_PREFIX}-dotnet-asyncinterfaces"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-commandline"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-http"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-ini"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-ini-generator"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-log"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-windows"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-excss"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-htmlagilitypack"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-imagesharp"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-imagesharp-drawing"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-log4net"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-notifyicon-wpf"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reactive"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-recyclablememorystream"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sixlabors-fonts"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-svg"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-syndication"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-winrt-bootstrap"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-toolkit-notifications"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol"
+)
+options=('!strip' '!lto')
+source=("greenshot-${_commit}.tar.gz::https://codeload.github.com/greenshot/greenshot/tar.gz/${_commit}"
+        0001-dotnet8-compatibility.patch prepare.py check.cs launcher.c LICENSE.launcher)
+sha256sums=('65cce2d81f8f86e5a61da803fc9d9e6e4263cdfbfee71e918c468e5d6df922d2'
+            'a904b21cc5fab880311d855f9c31340e7f3dba7b35105baa700f53ed3a9e4727' '81d926ca8c287f15cf05d3578efd4d93a4c89627ed314b558c44f57a43731ba1' 'e1d99edccbfe417b2ef299e784d82b72a9e6c2108c4e9643b6a05210fe5ca386' '97f6af966bf8c5e1f8a0d6d928b40289a3ea719bcf65ceee2d77ef2110d1c4e4' 'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/offline-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  cd "$srcdir/greenshot-$_commit"
+  /usr/bin/python3 "$srcdir/prepare.py" "$PWD"
+  patch -Np1 -i "$srcdir/0001-dotnet8-compatibility.patch"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/greenshot-$_commit/src"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" publish Greenshot/Greenshot.csproj -c Release --self-contained false \
+    -o "$(cygpath -m "$srcdir/publish")" --configfile "$(cygpath -m "$srcdir/NuGet.config")" \
+    -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:GreenshotEdition=Full -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+  # These are generated/copied by the upstream build task and post-build event,
+  # rather than declared as publish items.
+  install -m644 Greenshot/bin/Release/net8.0-windows/emojis.xml "$srcdir/publish/"
+  install -m644 Greenshot/bin/Release/net8.0-windows/log4net.xml "$srcdir/publish/"
+  "${CC:-clang}" -O2 -Wall -Wextra -Werror -municode -mwindows \
+    '-DTARGET_RELATIVE=L"../lib/greenshot/Greenshot.exe"' "$srcdir/launcher.c" -o "$srcdir/greenshot.exe"
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><EnableNETAnalyzers>false</EnableNETAnalyzers><EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization><NoWarn>SYSLIB0011</NoWarn><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><Reference Include="../publish/*.dll" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$srcdir/check/check.csproj" -c Release \
+    -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:UseSharedCompilation=false -v:minimal
+  cp "$srcdir/publish/"*.dll "$srcdir/check/bin/Release/net8.0-windows/"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$srcdir/check/bin/Release/net8.0-windows/check.dll"
+  timeout 30 "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$srcdir/publish/Greenshot.dll" --no-run --ini-directory "$(cygpath -m "$srcdir/check/config")" > "$srcdir/check/no-run.log" 2>&1
+  timeout 30 "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$srcdir/publish/Greenshot.dll" --help > "$srcdir/check/help.log" 2>&1
+  /usr/bin/python3 - "$srcdir/check" <<'PY_CHECK'
+from pathlib import Path
+import sys
+root=Path(sys.argv[1]); startup=(root/'no-run.log').read_text(); help=(root/'help.log').read_text()
+assert 'ERROR' not in startup, startup
+assert 'ERROR' not in help and '--ini-directory' in help and '--no-run' in help,help
+print('PASS: isolated --no-run startup and redirected --help')
+PY_CHECK
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX/lib/greenshot"
+  cp -r "$srcdir/publish/"* "$pkgdir$MINGW_PREFIX/lib/greenshot/"
+  install -Dm755 "$srcdir/greenshot.exe" "$pkgdir$MINGW_PREFIX/bin/greenshot.exe"
+  install -Dm644 "$srcdir/greenshot-$_commit/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/greenshot/LICENSE"
+  install -Dm644 "$srcdir/LICENSE.launcher" "$pkgdir$MINGW_PREFIX/share/licenses/greenshot/LICENSE.launcher"
+  install -Dm644 "$srcdir/greenshot-$_commit/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/greenshot/removed-binaries.json"
+  install -Dm644 "$srcdir/greenshot-$_commit/src/Greenshot/obj/project.assets.json" "$pkgdir$MINGW_PREFIX/share/doc/greenshot/project.assets.json"
+  # Managed dependency assemblies are bundled in the private application directory.
+  # Keep the source package's installed license and notice beside this package.
+  for dependency in "${makedepends[@]}"; do
+    dependency=${dependency%%[\<\>\=]*}
+    case "$dependency" in
+      *-dotnet-sdk) continue ;;
+      *-dotnet-*) ;;
+      *) continue ;;
+    esac
+    local_name=${dependency#${MINGW_PACKAGE_PREFIX}-}
+    licenses="$MINGW_PREFIX/share/licenses/$local_name"
+    [[ -d "$licenses" ]] || licenses="$MINGW_PREFIX/share/licenses/$dependency"
+    [[ -d "$licenses" ]] || { error "Missing dependency license: $dependency"; return 1; }
+    mkdir -p "$pkgdir$MINGW_PREFIX/share/licenses/greenshot/third-party/$local_name"
+    cp -r "$licenses/"* "$pkgdir$MINGW_PREFIX/share/licenses/greenshot/third-party/$local_name/"
+  done
+}
