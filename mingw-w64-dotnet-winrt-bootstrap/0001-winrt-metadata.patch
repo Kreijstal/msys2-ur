@@ -1,0 +1,105 @@
+--- a/crates/libs/metadata/src/writer/file/mod.rs
++++ b/crates/libs/metadata/src/writer/file/mod.rs
+@@ -313,7 +313,11 @@
+         let Type::ClassName(ty) = ty else {
+             panic!("invalid event type");
+         };
+-        let event_type = TypeDefOrRef::TypeRef(self.TypeRef(&ty.namespace, &ty.name));
++        let event_type = if ty.generics.is_empty() {
++            TypeDefOrRef::TypeRef(self.TypeRef(&ty.namespace, &ty.name))
++        } else {
++            TypeDefOrRef::TypeSpec(self.TypeSpec(&ty.namespace, &ty.name, &ty.generics))
++        };
+ 
+         Event(self.records.Event.push_pos(rec::Event {
+             Flags: 0,
+--- a/crates/libs/rdl/src/reader/interface.rs
++++ b/crates/libs/rdl/src/reader/interface.rs
+@@ -192,6 +192,7 @@
+             | metadata::MethodAttributes::Virtual;
+ 
+         let mut method_signatures: Vec<(String, Vec<metadata::Type>, metadata::Type)> = Vec::new();
++        let mut properties = std::collections::BTreeMap::new();
+         let mut property_map_started = false;
+         let mut event_map_started = false;
+ 
+@@ -279,6 +280,26 @@
+ 
+                     self.encode_return_attrs(&method.return_attrs)?;
+                     self.encode_params(&params)?;
++                    // Attributed accessors retain their method spelling in RDL.
++                    // Restore the Property and MethodSemantics rows as well.
++                    if is_special {
++                        let name = method.sig.ident.to_string();
++                        let accessor = if let Some(name) = name.strip_prefix("get_") {
++                            Some((name, &signature.return_type, 0x0002))
++                        } else if let Some(name) = name.strip_prefix("put_") {
++                            signature.types.first().map(|ty| (name, ty, 0x0001))
++                        } else { None };
++                        if let Some((name, ty, semantics)) = accessor {
++                            let property = *properties.entry(name.to_string()).or_insert_with(|| self.output.Property(name, ty));
++                            if !property_map_started {
++                                self.output.PropertyMap(interface, property);
++                                property_map_started = true;
++                            }
++                            self.output.MethodSemantics(semantics, method_def,
++                                metadata::writer::HasSemantics::Property(property));
++                        }
++                    }
++
+                 }
+ 
+                 InterfaceMember::Property(prop) => {
+@@ -353,7 +374,8 @@
+                         self.encode_simple_params(&[("value", &ty)])?;
+                     }
+ 
+-                    let property = self.output.Property(&prop.name.to_string(), &ty);
++                    let property = *properties.entry(prop.name.to_string()).or_insert_with(||
++                        self.output.Property(&prop.name.to_string(), &ty));
+ 
+                     if !property_map_started {
+                         self.output.PropertyMap(interface, property);
+--- a/crates/libs/rdl/src/reader/class.rs
++++ b/crates/libs/rdl/src/reader/class.rs
+@@ -69,9 +69,16 @@
+             self.output.TypeRef("System", "Object")
+         };
+ 
+-        let flags = metadata::TypeAttributes::Public
+-            | metadata::TypeAttributes::Sealed
++        let mut flags = metadata::TypeAttributes::Public
+             | metadata::TypeAttributes::WindowsRuntime;
++
++        if !item.attrs.iter().any(|a| a.path().segments.last().is_some_and(|s| s.ident == "Composable")) {
++            flags |= metadata::TypeAttributes::Sealed;
++        }
++
++        if item.interfaces.is_empty() && item.extends.is_none() {
++            flags |= metadata::TypeAttributes::Abstract;
++        }
+ 
+         let class = self.output.TypeDef(
+             self.namespace,
+@@ -85,6 +92,21 @@
+             &item.attrs,
+             &[],
+         )?;
++
++        // A version-only Activatable attribute denotes the public default constructor.
++        // Preserve that metadata for consumers which inspect class MethodDefs.
++        for attr in &item.attrs {
++            if attr.path().segments.last().is_some_and(|s| s.ident == "Activatable") {
++                let args = attr.parse_args_with(syn::punctuated::Punctuated::<syn::Expr, syn::Token![,]>::parse_terminated).map_err(|e| self.error(attr, &e.to_string()))?;
++                if matches!(args.first(), Some(syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Int(_), .. }))) {
++                    self.output.MethodDef(".ctor", &metadata::Signature::default(),
++                        metadata::MethodAttributes::Public | metadata::MethodAttributes::HideBySig |
++                        metadata::MethodAttributes::SpecialName | metadata::MethodAttributes::RTSpecialName,
++                        metadata::MethodImplAttributes::Runtime);
++                    break;
++                }
++            }
++        }
+ 
+         for (index, interface) in item.interfaces.iter().enumerate() {
+             self.encode_implement(class, interface, index == 0)?;
