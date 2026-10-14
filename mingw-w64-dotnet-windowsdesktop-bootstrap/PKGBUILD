@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=34
+pkgrel=35
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '562d9cd21a2c63cbe93a508e662531f9ee58bb636c306a5fb7d79575d21941b1')
+            '7caa7ebe0d6d620d01a6a8175ab2fc8b7680429021015e5187f35da61caaa599')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -111,6 +111,8 @@ source+=('0033-bidi-reversals.patch')
 sha256sums+=('e66e85b3a5841654dbefbd842f0784ea7a27816dece525a46ecdcb61f924401f')
 source+=('0034-rtl-pages.patch')
 sha256sums+=('b14be24cec9514c91060962617ea12c49db4ba812f9bd3d0b619367fc0bc75b6')
+source+=('0035-display-transfer.patch')
+sha256sums+=('7772445d5218f539a224fbc1a181e82aa19a8eb4e8a2ab8d83ee9b28394cc230')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -158,6 +160,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0032-finite-page-updates.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0033-bidi-reversals.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0034-rtl-pages.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0035-display-transfer.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
