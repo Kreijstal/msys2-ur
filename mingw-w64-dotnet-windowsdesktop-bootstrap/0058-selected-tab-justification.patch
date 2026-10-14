@@ -1,0 +1,287 @@
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index c200edc..17ca812 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -41,6 +41,7 @@ struct Run {
+     std::vector<GlyphOffset> offsets;
+     bool shaped=false,hidden=false,tab=false,synthetic=false;
+     uint16_t leader=0;
++    int tab_alignment=0;
+     bool embedded=false,position_used=false,hard_break=false;
+     int format_position=0;
+     InlineInit object_handler{};
+@@ -290,9 +291,10 @@ int prefix_width(const Run& run,size_t end,int64_t& width) {
+ // Tab locations are relative to the paragraph origin. A break candidate
+ // aligns only its retained field, across client runs, rather than the rest
+ // of the paragraph that will move to the following line.
+-int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader) {
++int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& target,uint16_t& leader,int* alignment=nullptr) {
+     const Context& context=*line.context;
+     leader=0;
++    if(alignment)*alignment=0;
+     for(const auto& stop:context.tabs) {
+         if(stop.ur<=x) continue;
+         int64_t field=0;
+@@ -313,7 +315,7 @@ int tab_target(const Line& line,size_t index,int64_t x,int end_cp,int64_t& targe
+         }
+         target=static_cast<int64_t>(stop.ur)-(stop.lskt==1?field/2:field);
+         if(target<=x) continue;
+-        leader=stop.wchTabLeader; return LS_None;
++        leader=stop.wchTabLeader;if(alignment)*alignment=stop.lskt;return LS_None;
+     }
+     if(context.incremental_tab<=0) return LS_InvalidFormatterResult;
+     int64_t after=context.tabs.empty()?x:std::max<int64_t>(x,context.tabs.back().ur);
+@@ -333,7 +335,7 @@ int layout_tabs(Line& line,int start,int& total,bool position_objects=true,bool*
+             if(run.hard_break){x=start;continue;}
+             if(run.tab&&!run.hidden) {
+                 int64_t target=0;
+-                int status=tab_target(line,i,x,INT_MAX,target,run.leader);if(status)return status;
++                int status=tab_target(line,i,x,INT_MAX,target,run.leader,&run.tab_alignment);if(status)return status;
+                 if(target>x+INT_MAX||target>INT_MAX)return LS_InvalidFormatterResult;
+                 run.width=int(target-x);run.widths.assign(1,run.width);
+             }
+@@ -427,8 +429,11 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
+     if(remaining<=0) return LS_None;
+     auto& context=*line.context;bool mixed=line.justification==4; // LsKJust.lskjFullMixed
+     SourceGraphemes graphemes;if(mixed){int status=graphemes.initialize(line);if(status)return status;}
+-    if(std::any_of(line.runs.begin(),line.runs.end(),[](const Run& run) { return run.tab; }) &&
+-        std::any_of(context.tabs.begin(),context.tabs.end(),[](const LsTbd& stop) { return stop.lskt!=0; })) return LS_NotImplemented;
++    // Only the field following the last visible tab participates in expansion.
++    // Earlier aligned fields retain their anchors; unused stops impose no rule.
++    size_t begin=0;
++    for(size_t i=0;i<line.runs.size();++i)if(line.runs[i].tab&&!line.runs[i].hidden)begin=i+1;
++    if(begin&&line.runs[begin-1].tab_alignment!=0)return LS_NotImplemented;
+     int visible_cp=line.first;
+     for(const auto& run:line.runs)if(!run.synthetic)visible_cp+=static_cast<int>(run.text.size());
+     for(auto run=line.runs.rbegin();run!=line.runs.rend();++run) {
+@@ -439,8 +444,6 @@ int justify_line(Line& line,int target,int& total,int& trailing) {
+     }
+     struct Opportunity { Run* run; size_t index; int capacity[3]; int added; bool left; uint8_t type; };
+     std::vector<Opportunity> sites;
+-    size_t begin=0;
+-    for(size_t i=0;i<line.runs.size();++i) if(line.runs[i].tab) begin=i+1;
+     for(size_t index=begin;index<line.runs.size();++index) {
+         auto& run=line.runs[index];
+         if(run.synthetic || run.hidden || run.embedded || run.tab || run.cp>=visible_cp) continue;
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.md b/bootstrap/m612/wpf-native/LineServicesContext.md
+index 54212b5..25c3415 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.md
++++ b/bootstrap/m612/wpf-native/LineServicesContext.md
+@@ -202,3 +202,12 @@ complete-field and eight wrapping cases, source ownership, remaining width,
+ caret/selection, real raster and GC; initial/reformat/draw exceptions and reuse are
+ also checked. Display endpoints follow the original independent pixel rounding;
+ assertions use those exact rules rather than a larger arbitrary tolerance.
++
++Justification retains each visible tab's actual selected alignment, including
++incremental fallback. Only the field following the last visible tab expands.
++Earlier aligned fields keep their nominal anchors, and unused aligned stops do
++not disable a final left field. Final center/right/character fields still reject
++justification pending their anchor-preserving expansion policy. Native checks
++cover nominal/shaped and InterWord/FullMixed modes; the public consumer checks
++Ideal/Display, split runs, earlier four-way anchors and incremental fallback,
++exact width/caret/point/selection, source completion, raster and moving GC.
+diff --git a/bootstrap/m612/wpf-tests/JustificationNative.cpp b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+index 54d5833..756a3d3 100644
+--- a/bootstrap/m612/wpf-tests/JustificationNative.cpp
++++ b/bootstrap/m612/wpf-tests/JustificationNative.cpp
+@@ -7,7 +7,7 @@
+ #include "LineServicesNative.h"
+ struct GlyphOffset { int32_t du,dv; };
+ static std::wstring text=L"aa bb cc dd\u2029";
+-static bool shaped=false,mixed=false;
++static bool shaped=false,mixed=false,tab_mode=false;
+ static int map_failure=0,position_calls=0;
+ static int failure=0,calls=0,draws=0;
+ static void require(bool value,const char* why) { if(!value)throw std::runtime_error(why); }
+@@ -32,10 +32,12 @@ static int fill(int count,int** left,int** right) {
+     if(failure==2)left[0][0]=-1;return 0;
+ }
+ static int WINAPI char_expand(void*,int device,int flow,LsCharRunInfo* run,LsNeighborInfo* left,LsNeighborInfo* right,int priorities,int** l,int** r) {
++    if(tab_mode)return fill(run->cwch,l,r);
+     if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->pwch[2]!=text[2]||run->rgduNominalWidth[2]!=10||run->rgduChangeLeft[2]||run->rgduChangeRight[2]||left->fNeighborIsPresent||right->fNeighborIsPresent)return LS_ClientAbort;
+     int status=fill(run->cwch,l,r);if(mixed)for(int cp=0;cp<run->cwch;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
+ }
+ static int WINAPI glyph_expand(void*,int device,int flow,LsGlyphRunInfo* run,LsNeighborInfo*,LsNeighborInfo*,int priorities,int** l,int** r,uint8_t* types,int* ink) {
++    if(tab_mode){for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}return fill(run->cgindex,l,r);}
+     if(device||flow||priorities!=3||run->plsrun!=7||run->cwch!=6||run->cgindex!=6||run->pwch[2]!=text[2]||run->rggmap[2]!=2||run->rgduWidth[2]!=10||run->rggindex[2]!=22)return LS_ClientAbort;
+     for(int i=0;i<run->cgindex;++i){types[i]=1;ink[i]=0;}if(failure==3)types[2]=2;
+     int status=fill(run->cgindex,l,r);if(mixed)for(int cp=0;cp<run->cgindex;++cp)for(int level=0;level<2;++level)r[level][cp]=0;return status;
+@@ -51,10 +53,11 @@ int main(int argc,char** argv) {
+         require(argc==2,"usage: check DLL");HMODULE dll=LoadLibraryA(argv[1]);require(dll!=nullptr,"native DLL load");
+         using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);using Doc=int(WINAPI*)(void*,int,int,LsDevRes*);
+         using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);
++        using SetTabs=int(WINAPI*)(void*,int,int,LsTbd*);
+         using Query=int(WINAPI*)(void*,int,int,LsQSubInfo*,int*,LsTextCell*);using Display=int(WINAPI*)(void*,LSPOINT*,uint32_t,LSRECT*);
+         using Dispose=int(WINAPI*)(void*,BOOL);using Destroy=int(WINAPI*)(void*);
+ #define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));require(name!=nullptr,#name)
+-        PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
++        PROC(LoSetTabs,SetTabs);PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoCreateLine,Line);PROC(LoQueryLineCpPpoint,Query);PROC(LoDisplayLine,Display);PROC(LoDisposeLine,Dispose);PROC(LoDestroyContext,Destroy);
+         require(sizeof(LsNeighborInfo)==28&&sizeof(LsCharRunInfo)==48&&sizeof(LsGlyphRunInfo)==80&&offsetof(LsGlyphRunInfo,rgduWidth)==56,"source nominal/glyph/neighbor record ABI");
+         LsContextInfo config{};config.version=4;config.pfnFetchPap=reinterpret_cast<void*>(pap);config.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);config.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);config.pfnDrawTextRun=reinterpret_cast<void*>(draw_text);config.pfnDrawGlyphs=reinterpret_cast<void*>(draw_glyphs);config.pfnGetGlyphPositions=reinterpret_cast<void*>(positions);config.pfnGetCharExpansionInfoFullMixed=reinterpret_cast<void*>(char_expand);config.pfnGetGlyphExpansionInfoFullMixed=reinterpret_cast<void*>(glyph_expand);
+         LscbkRedefined callbacks{reinterpret_cast<void*>(fetch),reinterpret_cast<void*>(glyphs),reinterpret_cast<void*>(props)};
+@@ -89,6 +92,36 @@ int main(int argc,char** argv) {
+         map_failure=0;
+         std::puts("native mixed emergency expansion: nominal/glyph capacities, exact caret distribution, interword policy and invalid cluster isolation PASS");
+         failure=3;line=reinterpret_cast<void*>(1);require(LoCreateLine(context,0,0,70,0,nullptr,&info,&line,&depth,&measured)==LS_NotImplemented&&!line,"unsupported ink expansion rejects without fabricated glyphs");
++        failure=0;tab_mode=true;
++        for(bool mode:{false,true})for(bool kind:{false,true})for(int earlier:{0,1,2,3,4}) {
++            shaped=mode;mixed=kind;calls=0;
++            text=L"a\tAB\t aa bb cc dd\u2029";
++            LsTbd stops[3]{{earlier,60,0,L'.'},{0,90,0,0},{2,300,0,0}};
++            require(LoSetTabs(context,80,3,stops)==0,"selected-stop setup");
++            int status=LoCreateLine(context,0,0,160,0,nullptr,&info,&line,&depth,&measured);
++            if(status)std::printf("selected tab status=%d shaped=%d mixed=%d earlier=%d\n",status,mode,kind,earlier);
++            require(status==0&&info.cpLimToContinue==12&&measured.upStartTrailing==157&&measured.upMinStartTrailing==150,"earlier aligned field and unused right stop permit exact final left-field justification");
++            LsQSubInfo sub{};LsTextCell cell{};
++            require(LoQueryLineCpPpoint(line,2,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==(earlier==1?50:earlier?40:60)&&cell.dupCell==10,"earlier tab anchor remains nominal");
++            require(LoQueryLineCpPpoint(line,5,1,&sub,&depth,&cell)==0&&cell.pointUvStartCell.x==90,"last left stop remains fixed");
++            require(calls>0&&LoDisposeLine(line,FALSE)==0,"selected-stop expansion callback and disposal");
++        }
++        // The first stop is right-aligned; the next actual tab falls back to a
++        // left incremental stop. Its remembered alignment must reset to left.
++        text=L"a\tAB\t aa bb cc dd\u2029";mixed=false;
++        LsTbd right_stop{2,60,0,0};require(LoSetTabs(context,80,1,&right_stop)==0,"incremental selected-stop setup");
++        require(LoCreateLine(context,0,0,150,0,nullptr,&info,&line,&depth,&measured)==0&&measured.upStartTrailing==147,"incremental fallback after an aligned stop permits justification");
++        require(LoDisposeLine(line,FALSE)==0,"incremental justified disposal");
++        text=L"a\t aa bb cc dd ee ff gg hh ii jj kk ll mm nn\u2029";
++        for(int alignment:{1,2,3,4}) {
++            LsTbd final_stop{alignment,120,0,L'.'};
++            require(LoSetTabs(context,80,1,&final_stop)==0,"final aligned field setup");
++            line=reinterpret_cast<void*>(1);
++            int status=LoCreateLine(context,0,0,165,0,nullptr,&info,&line,&depth,&measured);
++            if(status!=LS_NotImplemented)std::printf("final aligned status=%d alignment=%d cp=%d end=%d width=%d minimum=%d\n",status,alignment,info.cpLimToContinue,info.endr,measured.upLimLine,measured.upMinLimLine);
++            require(status==LS_NotImplemented&&!line,"final aligned field still rejects without publishing moved anchors");
++        }
++        std::puts("native selected tab justification: earlier anchors, unused stops, incremental fallback, nominal/shaped and mixed/interword PASS");
+         require(LoDestroyContext(context)==0,"justification context teardown");
+         std::puts("native nominal/glyph/neighbor ABI, exact justified geometry, original advances, trailing/minimum widths, priority limits, callback errors and final-line policy PASS");return 0;
+     } catch(const std::exception& e){std::printf("FAIL: %s\n",e.what());return 1;}
+diff --git a/bootstrap/m612/wpf-tests/SelectedTabJustification.cs b/bootstrap/m612/wpf-tests/SelectedTabJustification.cs
+new file mode 100644
+index 0000000..245644e
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/SelectedTabJustification.cs
+@@ -0,0 +1,77 @@
++using System;
++using System.Collections.Generic;
++using System.Globalization;
++using System.IO;
++using System.Linq;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++class TabRunProperties:TextRunProperties {
++    public override Typeface Typeface=>new Typeface("Nirmala UI");
++    public override double FontRenderingEmSize=>24;
++    public override double FontHintingEmSize=>24;
++    public override TextDecorationCollection TextDecorations=>null;
++    public override Brush ForegroundBrush=>Brushes.Black;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("hi-IN");
++    public override TextEffectCollection TextEffects=>null;
++}
++class TabParagraph:TextParagraphProperties {
++    readonly IList<TextTabProperties> tabs;
++    readonly bool wrap;
++    readonly double increment;
++    readonly TextAlignment alignment;
++    public TabParagraph(IList<TextTabProperties> value=null,bool wrap=false,double increment=80,TextAlignment alignment=TextAlignment.Left) { tabs=value;this.wrap=wrap;this.increment=increment;this.alignment=alignment; }
++    public override FlowDirection FlowDirection=>FlowDirection.LeftToRight;
++    public override TextAlignment TextAlignment=>alignment;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>new TabRunProperties();
++    public override TextWrapping TextWrapping=>wrap?TextWrapping.Wrap:TextWrapping.NoWrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++    public override double DefaultIncrementalTab=>increment;
++    public override IList<TextTabProperties> Tabs=>tabs;
++}
++class TabSource:TextSource {
++    public readonly string Text;
++    readonly bool split;
++    public TabSource(string text="कि\tAB.CD",bool split=false) { Text=text;this.split=split; }
++    public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,split && index>=3?1:Text.Length-index,new TabRunProperties()):new TextEndOfParagraph(1);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("hi-IN"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++ static void Near(double actual,double expected,string why){if(Math.Abs(actual-expected)>0.02)throw new Exception(why+": "+actual+" vs "+expected);}
++ static double At(TextLine line,int cp)=>line.GetDistanceFromCharacterHit(new CharacterHit(cp,0));
++ [STAThread] static void Main(){
++  int cases=0;
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++  foreach(bool split in new[]{false,true})
++  foreach(var earlier in new[]{TextTabAlignment.Left,TextTabAlignment.Center,TextTabAlignment.Right,TextTabAlignment.Character})
++  foreach(bool fallback in new[]{false,true}) {
++   using var formatter=TextFormatter.Create(mode);
++   var tabs=new List<TextTabProperties>{new TextTabProperties(earlier,100,0,'.')};
++   if(!fallback){tabs.Add(new TextTabProperties(TextTabAlignment.Left,180,0,0));tabs.Add(new TextTabProperties(TextTabAlignment.Right,700,0,0));}
++   var source=new TabSource("a\tAB\t aa bb cc dd ee ff gg hh ii jj kk ll mm nn oo pp qq rr ss tt",split);
++   var paragraph=new TabParagraph(tabs,true,180,TextAlignment.Justify);
++   using var nominal=formatter.FormatLine(source,0,317,new TabParagraph(tabs,true,180),null);
++   using var first=formatter.FormatLine(source,0,317,paragraph,null);
++   if(first.Length!=nominal.Length||first.Length<=9||first.Length>=source.Text.Length)throw new Exception("retained justified tab field");
++   Near(first.Width,317,"justified right edge");Near(At(first,2),At(nominal,2),"earlier aligned field start");Near(At(first,4),At(nominal,4),"earlier aligned field end");Near(At(first,5),180,"last actual left stop");
++   Near(first.GetTextBounds(4,1).Sum(b=>b.Rectangle.Width),At(first,5)-At(first,4),"last tab selection");
++   bool expanded=false;
++   for(int cp=5;cp<first.Length-1;++cp){double begin=At(first,cp),end=At(first,cp+1);if(end>begin){var hit=first.GetCharacterHitFromDistance(begin+(end-begin)*0.2);if(hit.FirstCharacterIndex!=cp||hit.TrailingLength!=0)throw new Exception("expanded field point/caret ownership");}if(source.Text[cp]==' '&&end-begin>At(nominal,cp+1)-At(nominal,cp)+0.02)expanded=true;}
++   if(!expanded)throw new Exception("no actual final-field space expanded: "+mode+", nominal="+nominal.Width+", justified="+first.Width+", length="+first.Length+", cells="+string.Join(";",Enumerable.Range(5,first.Length-6).Select(cp=>$"{cp}:{source.Text[cp]}:{At(first,cp+1)-At(first,cp)}/{At(nominal,cp+1)-At(nominal,cp)}")));
++   var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())first.Draw(drawing,new Point(10,10),InvertAxes.None);
++   var bitmap=new RenderTargetBitmap(340,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);var pixels=new byte[340*80*4];bitmap.CopyPixels(pixels,340*4,0);if(pixels.Count(b=>b>100)<50)throw new Exception("no real justified tab raster");
++   int position=first.Length,rows=1;TextLineBreak previous=first.GetTextLineBreak();
++   try{while(position<=source.Text.Length){using var next=formatter.FormatLine(source,position,317,paragraph,previous);if(next.Length<=0||next.Width>317.02)throw new Exception("justified tab continuation");position+=next.Length;previous?.Dispose();previous=next.GetTextLineBreak();if(++rows>20)throw new Exception("continuation loop");}}finally{previous?.Dispose();}
++   if(position!=source.Text.Length+1)throw new Exception("exact tabbed paragraph source completion");
++   GC.Collect(2,GCCollectionMode.Forced,true,true);Near(At(first,5),180,"retained field after compacting GC");
++   Console.WriteLine($"public selected tab justification {mode}, split={split}, earlier={earlier}, fallback={fallback}, rows={rows}: anchor, width, caret/point, selection, raster, source and GC PASS");++cases;
++  }
++  Console.WriteLine($"public selected tab justification {cases} cases PASS");
++ }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-selected-tab-justification-sdk.sh b/bootstrap/m612/wpf-tests/check-selected-tab-justification-sdk.sh
+new file mode 100644
+index 0000000..5fae1a0
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-selected-tab-justification-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/SelectedTabJustification.cs" "$work/Program.cs"
++cat > "$work/SelectedTabJustificationSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/SelectedTabJustificationSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SelectedTabJustificationSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/SelectedTabJustificationSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SelectedTabJustificationSdkCheck.exe"
++printf 'PASS normal offline WPF SDK selected tab justification check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 230a6e5..59a11fe 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -857,6 +857,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-cross-run-carets-sdk.sh" "$root" "$build/cross-run-carets-sdk-check"
+   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
+   bash "$here/wpf-tests/check-aligned-objects-sdk.sh" "$root" "$build/aligned-objects-sdk-check"
++  bash "$here/wpf-tests/check-selected-tab-justification-sdk.sh" "$root" "$build/selected-tab-justification-sdk-check"
+   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
+   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
+   bash "$here/wpf-tests/check-paragraph-context-sdk.sh" "$root" "$build/paragraph-context-sdk-check"

@@ -799,3 +799,16 @@ remaining widths, source/caret/selection/raster/GC, pixel rounding, initial/refo
 draw exceptions and reuse in both shared and portable execution. Registered WPF SDK
 consumers increase to42. Aligned-tab justification and other documented native
 conformance gaps remain unfinished.
+
+Release 8.0.0-58 permits justification after the actual final left tab stop,
+including incremental fallback. Earlier aligned fields keep their anchors;
+unused aligned stops no longer reject an otherwise supported line. Final aligned
+fields still require an anchor-preserving justification policy and reject when
+expansion is needed. This release does not claim full aligned-tab justification.
+
+Native checks cover nominal/shaped and InterWord/FullMixed geometry, four earlier
+aligned-stop kinds, incremental fallback and final aligned-field rejection. The
+new public consumer checks32 Ideal/Display combinations with split runs, exact
+width/caret/point/selection, earlier anchors, source completion, real raster and
+compacting GC in shared and portable execution. Registered WPF SDK consumers
+increase to43. Other documented native conformance gaps remain open.
