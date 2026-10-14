@@ -512,3 +512,22 @@ portable execution validate actual colored marker/body pixels. The SDK suite now
 contains 30 WPF consumers. Imported coverage remains 126/139 and paragraph ABI
 479 fields. Legacy Word95 marker models and embedded-object markers remain
 explicitly unsupported; other documented advanced layout/NLS gaps remain open.
+
+Release 8.0.0-42 enables centered floating content with wrapping on both sides and
+selective ClearFloaters placement. Requested clearing raises the available content
+origin before the original floater callback, reducing finite height before fit/
+deferral is decided. Left/right selection follows alignment, so wide left objects
+remain left-side objects; centered objects clear both sides. Requested horizontal
+placement and previous content/source ownership remain unchanged.
+
+Original public consumers validate 64 finite cases per execution across both text
+modes/directions, four clear modes, occupied-page prefixes and wide-left obstacles.
+Intact groups that no longer fit defer without speculative leftovers or repeated
+objects, preserve all 799 host characters/page mappings and regenerate their
+geometry after disposal/GC. Bottomless cases move the cleared object after an
+80-to-120 pixel preceding-object resize and retain full scrolling. Centered text
+floaters render actual glyph rows on both sides with zero overlap; existing
+multiple/deferred/split/scrolling floater regressions also pass. The SDK suite now
+contains 31 WPF consumers. Imported coverage remains 126/139 and paragraph ABI
+479 fields. Cross-paragraph clearing/float propagation, forced groups exceeding
+an empty page, polygon constraints and other advanced layout/NLS gaps remain open.
