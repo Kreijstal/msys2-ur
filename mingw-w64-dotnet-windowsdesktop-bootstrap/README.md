@@ -359,3 +359,15 @@ TextBlock layout/hit/raster. Justified mixed FlowDocuments preserve exact source
 ownership across pages. ABI remains 441 fields and imported coverage 111/139.
 Full RTL paragraph/page layout, advanced bidi decorations/objects/expansion,
 selective incremental reuse and other documented paths remain unfinished.
+
+Release 8.0.0-34 adds horizontal RTL page/paragraph/subpage layout. Physical page
+margins convert to logical U coordinates; sections preserve writing direction
+and columns advance in reading order. Opposite-direction paragraphs format in
+their own coordinates and return bounds in the parent track's direction. Local
+subpage frames preserve coordinate ownership; synchronization validates the
+track's actual direction. Ideal/Display checks cover all page/paragraph/column
+combinations, asymmetric margins, exact source/page ownership and first-column
+placement, scrolling edits and basic table cell order/glyphs. Native matrix/
+failed-update/cleanup checks pass. ABI/import coverage remains 441 fields and
+111/139. Advanced bidi objects/decorations/expansion, complex layout, selective
+incremental reuse and other documented paths remain unfinished.

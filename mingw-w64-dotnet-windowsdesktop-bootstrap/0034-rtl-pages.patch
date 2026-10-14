@@ -1,0 +1,316 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index 5be4bb0..404a963 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -277,6 +277,7 @@ struct TrackData {
+     explicit TrackData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+     ~TrackData(){paras.clear();--context->resources;}
+     void* segment=nullptr;
++    uint32_t direction=0;
+     FSRECT rect{};
+     FSBBOX bbox{};
+     int used=0;
+@@ -294,6 +295,7 @@ struct SectionData {
+     explicit SectionData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+     ~SectionData(){erase_section(this);columns.clear();--context->resources;}
+     FSSECTIONDESCRIPTION description{};
++    uint32_t direction=0;
+     std::vector<std::shared_ptr<TrackData>> columns;
+     FSKUPDATE update=fskupdNew;
+ };
+@@ -579,8 +581,14 @@ int format_text(const std::shared_ptr<ParaData>& para,uint32_t direction,const F
+     FSTXTPROPS props{};int status=reinterpret_cast<PtsGetTextProperties>(cb.pfnGetTextProperties)(client,para->desc.nmp,0,&props);
+     if(status)return status;
+     if(keep_self)props.fKeepTogether=1;
+-    if(props.fswdir!=direction||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
+-    auto text=std::make_shared<TextData>(context);text->direction=direction;para->text=text;
++    if((props.fswdir!=PTS_fswdirES&&props.fswdir!=PTS_fswdirWS)||props.fDropCap||props.fVerticalGrid||props.fOptimizeParagraph)return PTS_tserrNotImplemented;
++    if(props.fswdir!=direction){
++        FSRECT page=FigureGeometry::current?FigureGeometry::current->page:rect,converted{};
++        status=FsTransformRectangle(direction,&page,&rect,props.fswdir,&converted);if(status)return status;
++        status=format_text(para,props.fswdir,converted,input,output,bottomless,force,keep_self,previous_page);if(status)return status;
++        FSBBOX box{};status=FsTransformBbox(props.fswdir,&page,&para->desc.fsbbox,direction,&box);if(!status)para->desc.fsbbox=box;return status;
++    }
++    auto text=std::make_shared<TextData>(context);text->direction=props.fswdir;para->text=text;
+     int dcp=input?input->dcp:props.dcpStartContent,used=0,fit=0,height_hint=0;bool overflow=false,ended=false,deferred=false;
+     std::shared_ptr<LineBreakData> previous=input?input->line_break:nullptr;text->incoming=previous;
+     if(input)for(const auto& pending:input->floaters) {
+@@ -932,9 +940,9 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const
+ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
+     int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
+     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
+-    if(!segment||direction!=PTS_fswdirES||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
++    if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||rect.du<=0||rect.dv<0||int64_t(rect.u)+rect.du>INT32_MAX||int64_t(rect.v)+rect.dv>INT32_MAX)return PTS_tserrNotImplemented;
+     if(!cb.pfnGetFirstPara||!cb.pfnGetNextPara||!cb.pfnGetParaProperties||!cb.pfnCreateParaclient||!cb.pfnDestroyParaclient||!context->info.fscbk.cbkobj.pfnDestroyMcsclient)return PTS_tserrInvalidParameter;
+-    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=rect;track->bottomless=bottomless;
++    auto track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=rect;track->bottomless=bottomless;
+     int found=0,status=0;void* name=nullptr;
+     if(input){if(input->segment!=segment)return PTS_tserrInvalidBreakRecord;name=input->paragraph;found=1;}
+     else {status=reinterpret_cast<PtsGetFirstPara>(cb.pfnGetFirstPara)(client,segment,&found,&name);if(status)return status;}
+@@ -1120,8 +1128,9 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
+     int status=reinterpret_cast<PtsGetPageDimensions>(cb.pfnGetPageDimensions)(client,section,&direction,&header,&width,&height,&rect);if(status)return status;
+     int new_page=0,balance=0,columns=0,segments=0,heights=0;
+     status=reinterpret_cast<PtsGetSectionProperties>(cb.pfnGetSectionProperties)(client,section,&new_page,&section_direction,&balance,&columns,&segments,&heights);if(status)return status;
+-    if(direction!=PTS_fswdirES||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
++    if((direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||section_direction!=direction||header||columns<1||segments||heights||balance|| (bottomless&&columns!=1))return PTS_tserrNotImplemented;
+     if(width<=0||(!bottomless&&height<=0)||rect.u<0||rect.v<0||rect.du<=0||int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
++    if(direction==PTS_fswdirWS){FSRECT page_rect{0,0,width,height},converted{};status=FsTransformRectangle(PTS_fswdirES,&page_rect,&rect,direction,&converted);if(status)return status;rect=converted;}
+     if(bottomless)rect.dv=INT32_MAX-rect.v;
+     FigureGeometry figure_geometry({0,0,width,height},rect);
+     void* segment=nullptr;status=reinterpret_cast<PtsGetMainTextSegment>(cb.pfnGetMainTextSegment)(client,section,&segment);if(status)return status;
+@@ -1140,13 +1149,13 @@ int build_page(const std::shared_ptr<Context>& context,void* section,bool bottom
+         // create managed paragraph clients or native continuation resources.
+         int64_t u=rect.u;
+         for(const auto& col:info){if(col.durBefore<0||col.durWidth<=0)return PTS_tserrInvalidClientOutput;u+=int64_t(col.durBefore)+col.durWidth;if(u>int64_t(rect.u)+rect.du)return PTS_tserrInvalidGeometry;}
+-        auto data=std::make_shared<SectionData>(context);page->section=data;
++        auto data=std::make_shared<SectionData>(context);page->section=data;data->direction=direction;
+         auto& desc=data->description;desc.fsupdinf.fskupd=fskupdNew;desc.nms=section;desc.fsrc=rect;desc.pfssection=data.get();
+         auto continuation=input;bool finished=false,stop_page=false;FSFMTRKSTOP stop=fmtrGoalReached;u=rect.u;
+         for(int index=0;index<columns;++index) {
+             u+=info[index].durBefore;FSRECT column{int(u),rect.v,info[index].durWidth,rect.dv};u+=column.du;
+             std::shared_ptr<TrackData> track;MarginOwner column_margin{context};
+-            if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
++            if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=column;}
+             else {
+                 status=format_track(context,segment,direction,column,1,nullptr,track,&column_margin.value,false,continuation,false,index==0,index==0?fsksuppresshardbreakbeforefirstparaPageAndColumn:fsksuppresshardbreakbeforefirstparaColumn);if(status)return status;
+                 continuation=track->continuation;finished=!continuation;stop=track->stop;
+@@ -1274,7 +1283,7 @@ struct TrackShift {
+ extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
+     auto track=lookup_owned(tracks,context_handle,handle);
+     if(!track||!track->subtrack||!track->bottomless)return PTS_tserrInvalidQuery;
+-    if(geometry||direction!=PTS_fswdirES)return PTS_tserrNotImplemented;
++    if(geometry||direction!=track->direction||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS))return PTS_tserrNotImplemented;
+     try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
+     catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+ }
+@@ -1436,7 +1445,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryPageSectionList(void* context
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsQuerySectionDetails(void* context,void* handle,FSSECTIONDETAILS* output) {
+     if(!output)return PTS_tserrNullOutputParameter;*output={};auto section=find_section(context,handle);if(!section)return PTS_tserrInvalidQuery;
+-    output->fFootnotesAsPagenotes=1;auto& body=output->u.withpagenotes;body.fswdir=0;body.fsrcSectionBody=section->description.fsrc;body.fsbboxSectionBody=section->description.fsbbox;body.cBasicColumns=int(section->columns.size());return 0;
++    output->fFootnotesAsPagenotes=1;auto& body=output->u.withpagenotes;body.fswdir=section->direction;body.fsrcSectionBody=section->description.fsrc;body.fsbboxSectionBody=section->description.fsbbox;body.cBasicColumns=int(section->columns.size());return 0;
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsQuerySectionBasicColumnList(void* context,void* handle,int capacity,FSTRACKDESCRIPTION* output,int* count) {
+     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto section=find_section(context,handle);if(!section)return PTS_tserrInvalidQuery;
+@@ -1449,18 +1458,19 @@ int build_subpage(const std::shared_ptr<Context>& context,void* segment,uint32_t
+     int width,int height,int columns,const FSCOLUMNINFO* info,bool bottomless,bool empty_ok,int suppress,bool previous,
+     FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break,const std::shared_ptr<Continuation>& input,
+     std::shared_ptr<PageData>& result,void** margin_output,int& used,FSBBOX& bbox) {
+-    if(!segment||direction!=PTS_fswdirES||width<=0||height<0||columns<1||!info||rect.u<0||rect.v<0||rect.du<=0||rect.dv<0||
++    if(!segment||(direction!=PTS_fswdirES&&direction!=PTS_fswdirWS)||width<=0||height<0||columns<1||!info||rect.u<0||rect.v<0||rect.du<=0||rect.dv<0||
+        int64_t(rect.u)+rect.du>width||(!bottomless&&int64_t(rect.v)+rect.dv>height))return PTS_tserrInvalidGeometry;
+     if(bottomless&&columns!=1)return PTS_tserrNotImplemented;
+     int64_t u=rect.u;
+     for(int index=0;index<columns;++index){if(info[index].durBefore<0||info[index].durWidth<=0)return PTS_tserrInvalidGeometry;u+=int64_t(info[index].durBefore)+info[index].durWidth;if(u>int64_t(rect.u)+rect.du)return PTS_tserrInvalidGeometry;}
++    FigureGeometry subpage_geometry({0,0,width,height},rect);
+     auto page=std::make_shared<PageData>(context);page->subpage=true;page->bottomless=bottomless;
+-    if(columns>1){page->section=std::make_shared<SectionData>(context);page->section->description.nms=segment;page->section->description.fsrc=rect;}
++    if(columns>1){page->section=std::make_shared<SectionData>(context);page->section->direction=direction;page->section->description.nms=segment;page->section->description.fsrc=rect;}
+     auto position=input;bool finished=false,stop_page=false;u=rect.u;
+     for(int index=0;index<columns;++index) {
+         u+=info[index].durBefore;FSRECT column{int(u),rect.v,info[index].durWidth,bottomless?INT32_MAX-rect.v:rect.dv};u+=column.du;
+         std::shared_ptr<TrackData> track;MarginOwner margin{context};
+-        if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->rect=column;}
++        if(finished||stop_page){track=std::make_shared<TrackData>(context);track->segment=segment;track->direction=direction;track->rect=column;}
+         else {
+             int status=format_track(context,segment,direction,column,suppress,nullptr,track,&margin.value,bottomless,position,empty_ok,previous&&index==0,
+                 index==0?suppress_break:fsksuppresshardbreakbeforefirstparaColumn);if(status)return status;
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 2cd4e7a..f0dc626 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -17,6 +17,8 @@ static int WINAPI create_object(void* client,void* context,FSCBKOBJ* callbacks,u
+ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(100)&&value!=reinterpret_cast<void*>(101))return PTS_tserrInvalidParameter;++destroys;return 0;}
+ static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
+ static bool containers=false,lose_subtrack=false;
++static uint32_t page_direction=0,text_direction=0;
++static bool rtl_matrix=false;
+ static bool attached_figure=false,figure_fail_properties=false,figure_fail_position=false,inside_figure=false;
+ static int figure_alignment=0;
+ static std::unordered_map<void*,void*> figure_content;
+@@ -67,10 +69,10 @@ static int WINAPI subpage_format(void*,void*,void* input,int previous,void* name
+ static int WINAPI subpage_destroy(void* page){return destroy_subpage(page_context,page);}
+ static int WINAPI subpage_destroy_record(void*,void* record){return destroy_subpage_record(page_context,record);}
+ static int WINAPI page_geometry(void*,void*,uint32_t* direction,int* header,int* width,int* height,FSRECT* margin) {
+-    *direction=0;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
++    *direction=page_direction;*header=0;*width=columns==2?240:200;*height=140;*margin={10,20,columns==2?210:100,available_height};return 0;
+ }
+ static int WINAPI section_properties(void*,void*,int* page,uint32_t* direction,int* balance,int* cols,int* segments,int* heights) {
+-    *page=0;*direction=0;*balance=0;*cols=columns;*segments=*heights=0;return 0;
++    *page=0;*direction=page_direction;*balance=0;*cols=columns;*segments=*heights=0;return 0;
+ }
+ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* output,int* actual) {
+     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
+@@ -81,11 +83,11 @@ static int WINAPI next_para(void*,void* segment,void* current,int* found,void**
+ static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+ static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+ static int WINAPI destroy_para_client(void*,void* client){auto at=figure_content.find(client);if(at!=figure_content.end()){void* page=at->second;figure_content.erase(at);require(destroy_subpage(page_context,page)==0,"original figure client owns its subpage through disposal");}++clients_destroyed;return 0;}
+-static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
++static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fswdir=text_direction;props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
+ static int WINAPI line_format(void*,void*,void* name,int,int dcp,void* incoming,uint32_t direction,
+     int start,int width,int track_start,int track_width,int margin,int hyphen,int left,int right,int first,int last,int suppress,
+     void** line,int* consumed,void** br,int* forced,FSFLRES* result,int* ascent,int* descent,int* bbox,int* bbox_width,int* depend,int* reformat) {
+-    if(!inside_figure&&(direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
++    if(!inside_figure&&(direction!=text_direction||(!attached_float&&!attached_figure&&(start!=track_start||width!=100))||(!rtl_matrix&&track_start!=10&&track_start!=120)||track_width!=100||margin!=track_start||hyphen||left||right||last||first!=(dcp==0)||bool(incoming)!=(dcp!=0)))return PTS_tserrInvalidParameter;
+     if(attached_float&&!inline_anchor_mode&&(!deferred_attachment||name==reinterpret_cast<void*>(102))&&(width!=(multiple_opposite?20:60)||start!=(attached_right?10:50)))return PTS_tserrInvalidParameter;
+     ++lines_created;*line=reinterpret_cast<void*>(1000+lines_created);*br=reinterpret_cast<void*>(2000+lines_created);
+     *consumed=5;*forced=0;*result=dcp==0?fsflrOutOfSpace:fsflrEndOfParagraph;*ascent=7;*descent=3;*bbox=start;*bbox_width=attached_figure?std::min(75,width):75;*depend=*reformat=0;
+@@ -703,6 +705,23 @@ int main(int argc,char** argv) {
+         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
+         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
+         std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
++        rtl_matrix=true;
++        for(uint32_t page_dir:{0u,4u})for(uint32_t para_dir:{0u,4u})for(int cols:{1,2}) {
++            page_direction=page_dir;text_direction=para_dir;columns=cols;available_height=80;reset_page_counts();
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0,"horizontal page/paragraph direction matrix formats actual source content");
++            FSTRACKDESCRIPTION first_track{};
++            if(cols==1){first_track=details.u.simple.trackdescr;require(first_track.fsrc.u==(page_dir==4?90:10),"RTL page margins map physical left padding to logical U");}
++            else {require(FsQueryPageSectionList(context,page_handle,1,&section_desc,&actual_count)==0&&FsQuerySectionDetails(context,section_desc.pfssection,&section_details)==0&&section_details.u.withpagenotes.fswdir==page_dir&&FsQuerySectionBasicColumnList(context,section_desc.pfssection,2,column_desc,&actual_count)==0&&actual_count==2,"section and column queries preserve actual page direction");first_track=column_desc[0];require(first_track.fsrc.u==(page_dir==4?20:10)&&column_desc[1].fsrc.u==first_track.fsrc.u+110,"columns advance in logical reading order");}
++            require(FsQueryTrackParaList(context,first_track.pfstrack,2,paras,&actual_count)==0&&actual_count==2&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.fswdir==para_dir&&FsQueryLineListSingle(context,paras[0].pfspara,2,lines,&actual_count)==0,"paragraph queries preserve their independent writing direction");
++            int expected_u=first_track.fsrc.u;if(page_dir!=para_dir)expected_u=(cols==2?240:200)-expected_u-first_track.fsrc.du;
++            require(lines[0].urStart==expected_u&&lines[0].dur==100&&lines[0].vrStart==20,"line coordinates use paragraph U rather than parent track U");
++            int expected_bbox=page_dir==para_dir?expected_u:(cols==2?240:200)-expected_u-75;
++            require(paras[0].fsbbox.fsrc.u==expected_bbox&&paras[0].fsbbox.fsrc.du==75,"paragraph bounds convert back to the parent track direction");
++            fail_line=lines_created+2;require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&clone)==PTS_tserrCallbackException&&!clone,"RTL finite-update failure preserves prior content and clears output");fail_line=-1;
++            require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsDestroyPage(context,page_handle)==0&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"RTL matrix/update failure releases every source client/line/record once");
++        }
++        page_direction=text_direction=0;rtl_matrix=false;
++        std::puts("native horizontal RTL pages: asymmetric physical margins, logical columns, independent paragraph coordinates/bounds, direction queries, failed-update retention and exact cleanup PASS");
+         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
+         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
+         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
+diff --git a/bootstrap/m612/wpf-tests/RtlPages.cs b/bootstrap/m612/wpf-tests/RtlPages.cs
+new file mode 100644
+index 0000000..cf5ac78
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/RtlPages.cs
+@@ -0,0 +1,83 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Controls;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    static int Ink(Visual visual) {
++        var bitmap=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);
++        var bytes=new byte[400*220*4];bitmap.CopyPixels(bytes,400*4,0);
++        int count=0,minX=400,maxX=-1;for(int i=0;i<bytes.Length;i+=4)if(bytes[i+3]>100&&bytes[i]<100&&bytes[i+1]<100&&bytes[i+2]<100){++count;int x=i/4%400;minX=Math.Min(minX,x);maxX=Math.Max(maxX,x);}if(minX<16||maxX>368)throw new Exception("asymmetric physical page margins: "+minX+".."+maxX);
++        if(count<50)throw new Exception("paginated page has no real glyph raster: "+count);return count;
++    }
++    static void Pump(FrameworkElement element){element.UpdateLayout();var frame=new DispatcherFrame();Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle,new Action(()=>frame.Continue=false));Dispatcher.PushFrame(frame);element.UpdateLayout();}
++    static byte[] Viewport(Visual visual){var image=new RenderTargetBitmap(400,300,96,96,PixelFormats.Pbgra32);image.Render(visual);var pixels=new byte[400*300*4];image.CopyPixels(pixels,1600,0);int ink=0;for(int i=0;i<pixels.Length;i+=4)if(pixels[i+3]>150&&pixels[i]<100&&pixels[i+1]<100&&pixels[i+2]<100)++ink;if(ink<500)throw new Exception("RTL scrolling viewport glyphs missing");return pixels;}
++    [STAThread]
++    static void Main() {
++        var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(var pageDirection in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
++        foreach(bool reverseParagraph in new[]{false,true})
++        foreach(bool columns in new[]{false,true}) {
++            var paragraphDirection=reverseParagraph?(pageDirection==FlowDirection.LeftToRight?FlowDirection.RightToLeft:FlowDirection.LeftToRight):pageDirection;
++            var runs=new[]{new Run(string.Join(" ",Enumerable.Range(0,90).Select(i=>$"אבג{i:D3}"))),new Run(string.Join(" ",Enumerable.Range(90,70).Select(i=>$"مرحبا{i:D3}")))};
++            var document=new FlowDocument(new Paragraph(runs[0]){Margin=new Thickness(0),FlowDirection=paragraphDirection,TextAlignment=paragraphDirection==FlowDirection.RightToLeft?TextAlignment.Right:TextAlignment.Left}){FontFamily=new FontFamily("Segoe UI"),FontSize=20,Foreground=Brushes.Black,FlowDirection=pageDirection,PagePadding=new Thickness(18,10,34,10),ColumnWidth=columns?160:double.PositiveInfinity,ColumnGap=20};
++            document.Blocks.Add(new Paragraph(runs[1]){Margin=new Thickness(0),FlowDirection=paragraphDirection,TextAlignment=paragraphDirection==FlowDirection.RightToLeft?TextAlignment.Right:TextAlignment.Left});TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);
++            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,totalInk=0;
++            for(;pages<30;++pages) {
++                using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;
++                totalInk+=Ink(page.Visual);
++                var view=((IServiceProvider)page).GetService(viewType);
++                if(pages==0&&columns){var firstRect=(Rect)viewType.GetMethod("GetRectangleFromTextPosition").Invoke(view,new object[]{runs[0].ContentStart});if(firstRect.IsEmpty||(pageDirection==FlowDirection.RightToLeft?firstRect.Left<190:firstRect.Right>190))throw new Exception("first source character must occupy the first column in page reading order: "+firstRect);}
++                foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)) {
++                    var type=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++                    ranges.Add((pages,(TextPointer)type.GetProperty("Start",flags).GetValue(segment),(TextPointer)type.GetProperty("End",flags).GetValue(segment)));
++                }
++                GC.Collect(2,GCCollectionMode.Forced,true,true);
++            }
++            if(pages<3||pages>=30||!paginator.IsPageCountValid||paginator.PageCount!=pages)throw new Exception("finite paginator did not reach the real document end");
++            int checkedCharacters=0;
++            foreach(var run in runs)for(int at=0;at<run.Text.Length;++at) {
++                var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);
++                var matches=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();
++                if(matches.Length!=1)throw new Exception($"source character belongs to {matches.Length} pages at {at}");
++                int mapped=paginator.GetPageNumber(position);if(mapped!=matches[0].Page)throw new Exception($"original content-position mapping: run={Array.IndexOf(runs,run)}, char={at}, offset={document.ContentStart.GetOffsetToPosition(position)}, mapped={mapped}, range={matches[0].Page}, pages={pages}");++checkedCharacters;
++            }
++            // Regenerate a disposed early page after later continuation records
++            // exist, then retrieve a later page through the original break table.
++            using(var first=paginator.GetPage(0))Ink(first.Visual);
++            using(var last=paginator.GetPage(pages-1))Ink(last.Visual);
++            Console.WriteLine($"original RTL pagination {mode}, page={pageDirection}, paragraph={paragraphDirection}, columns={columns}: {pages} rendered pages, {checkedCharacters} source characters covered exactly once, {totalInk} glyph pixels, content/page mapping, disposed-page regeneration and GC PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft}) {
++            var run=new Run("אבג مرحبا Latin initial scrolling source.");var first=new Paragraph(run){Margin=new Thickness(0)};
++            var document=new FlowDocument(first){FlowDirection=direction,FontFamily=new FontFamily("Segoe UI"),FontSize=20,PagePadding=new Thickness(18,10,34,10)};
++            for(int i=0;i<16;++i)document.Blocks.Add(new Paragraph(new Run($"Paragraph {i}: אבג مرحبا Latin source content reaches the end of the original scrolling document.")){Margin=new Thickness(0)});
++            TextOptions.SetTextFormattingMode(document,mode);var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=340,ShowInTaskbar=false};
++            window.Show();Pump(window);var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);double extent=scroll.ExtentHeight;if(extent<=scroll.ViewportHeight*3)throw new Exception("RTL bottomless full extent missing");var top=Viewport(viewer);
++            scroll.ScrollToEnd();Pump(window);var bottom=Viewport(viewer);if(scroll.VerticalOffset<=scroll.ViewportHeight||top.SequenceEqual(bottom))throw new Exception("RTL bottomless scrolling did not retain different end content");scroll.ScrollToHome();Pump(window);
++            run.Text+=" Added אבג مرحبا Latin words repeat to grow the first paragraph and change the original bottomless layout.";Pump(window);var edited=Viewport(viewer);if(top.SequenceEqual(edited)||scroll.ExtentHeight<=extent)throw new Exception("RTL bottomless edit must change extent and glyph raster");
++            Console.WriteLine($"original horizontal RTL scrolling {mode} {direction}: extent {extent:F1}->{scroll.ExtentHeight:F1}, top/end/edited glyphs, full scrolling and original cleanup PASS");window.Close();GC.Collect(2,GCCollectionMode.Forced,true,true);
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft}) {
++            var table=new Table{CellSpacing=2,Margin=new Thickness(0)};table.Columns.Add(new TableColumn{Width=new GridLength(150)});table.Columns.Add(new TableColumn{Width=new GridLength(150)});var group=new TableRowGroup();table.RowGroups.Add(group);
++            var row=new TableRow();group.Rows.Add(row);row.Cells.Add(new TableCell(new Paragraph(new Run("אבג first")){Margin=new Thickness(0)}){Background=Brushes.Red,Padding=new Thickness(4)});row.Cells.Add(new TableCell(new Paragraph(new Run("مرحبا second")){Margin=new Thickness(0)}){Background=Brushes.Blue,Padding=new Thickness(4)});
++            var document=new FlowDocument(table){FlowDirection=direction,FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(18,10,34,10)};TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);using var page=paginator.GetPage(0);var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(page.Visual);var pixels=new byte[400*220*4];image.CopyPixels(pixels,1600,0);long redX=0,blueX=0;int red=0,blue=0,black=0;
++            for(int y=0;y<220;++y)for(int x=0;x<400;++x){int at=(y*400+x)*4;if(pixels[at+3]>150&&pixels[at]<60&&pixels[at+1]<60&&pixels[at+2]<60)++black;if(pixels[at+3]>150&&pixels[at+2]>200&&pixels[at]<60&&pixels[at+1]<60){++red;redX+=x;}if(pixels[at+3]>150&&pixels[at]>200&&pixels[at+2]<60&&pixels[at+1]<60){++blue;blueX+=x;}}
++            if(red<1000||blue<1000||black<100||(direction==FlowDirection.RightToLeft?(double)redX/red<(double)blueX/blue:(double)redX/red>(double)blueX/blue))throw new Exception("RTL table cell reading order/background geometry");
++            Console.WriteLine($"original horizontal RTL table {mode} {direction}: logical first/second cell backgrounds, original subpage glyphs and arrangement PASS");
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();
++        Console.WriteLine("original multi-page FlowDocument pagination and page/break-record dispatcher cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-rtl-pages-sdk.sh b/bootstrap/m612/wpf-tests/check-rtl-pages-sdk.sh
+new file mode 100755
+index 0000000..17d5858
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-rtl-pages-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/RtlPages.cs" "$work/Program.cs"
++cat > "$work/RtlPagesSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/RtlPagesSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/RtlPagesSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/RtlPagesSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/RtlPagesSdkCheck.exe"
++printf 'PASS normal offline WPF SDK RTL page layout check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index da45a8e..1c65630 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -839,6 +839,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
+   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
++  bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 
