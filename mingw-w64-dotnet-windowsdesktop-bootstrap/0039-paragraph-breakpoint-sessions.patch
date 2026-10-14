@@ -1,0 +1,481 @@
+diff --git a/bootstrap/m612/tools/wpf-lineservices-header.py b/bootstrap/m612/tools/wpf-lineservices-header.py
+index 581050d..74f34c3 100644
+--- a/bootstrap/m612/tools/wpf-lineservices-header.py
++++ b/bootstrap/m612/tools/wpf-lineservices-header.py
+@@ -10,7 +10,7 @@ primitive={'uint':'uint32_t','int':'int32_t','ushort':'uint16_t','char':'uint16_
+ records=('EscStringInfo','LsTbd','LsDevRes','LsIMethods','LscbkRedefined','LsContextInfo',
+          'LsPap','LsLineProps','LsChp','LsTxM','LsHeights','LSPOINT','LSRECT','LsLInfo','LsLineWidths',
+          'LsQSubInfo','LsTextCell','LsULInfo','LsStInfo','ObjDim','InlineInit',
+-         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo','LsHyph')
++         'LsNeighborInfo','LsCharRunInfo','LsGlyphRunInfo','LsHyph','LsBreaks')
+ lines=['// Generated from original WPF LineServices.cs.','#pragma once','#include <cstdint>']
+ for name in records:
+     match=re.search(r'\bstruct\s+'+name+r'\s*\{(.*?)\n    \}',text,re.S)
+@@ -22,6 +22,7 @@ for name in records:
+         if kind.endswith('*'):
+             pointee=kind[:-1]
+             if pointee in primitive: native=primitive[pointee]+'*'
++            elif pointee in records: native=pointee+'*'
+             elif pointee=='GlyphOffset': native='void*' # external record; pointer ABI only
+             else: raise SystemExit('Unsupported LS pointer field: '+kind+' '+field)
+             lines.append('    '+native+' '+field+';')
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 7bb39be..30c6d9f 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -44,6 +44,12 @@ struct Run {
+     ObjDim object_metrics{};
+     int break_before=1,break_after=1;
+ };
++struct BreakPenalty {
++    int first=0,next=0,width=0,target=0;
++    bool forced=false,hyphenated=false,terminal=false;
++    double cost=0;
++};
++struct ParaSession;
+ struct Line {
+     std::shared_ptr<Context> context;
+     std::vector<Run> runs;
+@@ -52,6 +58,18 @@ struct Line {
+     int first=0,paragraph_first=0,base_flow=0,initial_level=0;
+     Run terminator;
+     bool has_terminator=false;
++    bool justified=false;
++    std::shared_ptr<BreakPenalty> penalty;
++    std::weak_ptr<ParaSession> penalty_session;
++    bool detached_penalty=false;
++};
++struct ParaSession {
++    std::shared_ptr<Context> context;
++    int first=0,end=0,width=0;
++    bool in_use=false;
++    std::vector<LsLInfo> information;
++    std::vector<void*> line_handles,penalty_handles;
++    std::vector<std::shared_ptr<BreakPenalty>> detached;
+ };
+ struct BreakRecord { int next,paragraph_first; std::shared_ptr<Context> context; int level=0; };
+ // Source-owned state for paragraph penalty services. Scoring/optimal breaking
+@@ -63,6 +81,7 @@ std::unordered_map<void*,std::shared_ptr<Context>> contexts;
+ std::unordered_map<void*,std::shared_ptr<Line>> lines;
+ std::unordered_map<void*,std::shared_ptr<BreakRecord>> records;
+ std::unordered_map<void*,std::shared_ptr<PenaltyModule>> penalties;
++std::unordered_map<void*,std::shared_ptr<ParaSession>> sessions;
+ 
+ using FetchPap=int (WINAPI *)(void*,int,LsPap*);
+ using FetchProps=int (WINAPI *)(void*,int,int,LsLineProps*);
+@@ -376,6 +395,7 @@ struct BreakGeometry {
+     std::vector<UChar> text;
+     std::vector<int64_t> width{0};
+     std::vector<int> raw{0};
++    std::vector<int> characters;
+     std::vector<bool> boundary{true};
+     std::vector<int> before,after;
+     bool allowed(int point,bool natural) const {
+@@ -392,8 +412,14 @@ int break_geometry(const Line& line,BreakGeometry& geometry) {
+     auto& text=geometry.text;auto& width=geometry.width;auto& boundary=geometry.boundary;
+     int consumed=0;
+     for(const auto& run:runs) {
+-        if(run.level_delta){consumed+=int(run.text.size());geometry.raw.back()=consumed;continue;}
+-        for(size_t i=0;i<run.text.size();++i)geometry.raw.push_back(++consumed);
++        if(run.level_delta){
++            consumed+=int(run.text.size());
++            // WPF maps a source boundary before an opening reverse but after
++            // closing reverses. Openings therefore belong to the next line.
++            if(run.level_delta<0)geometry.raw.back()=consumed;
++            continue;
++        }
++        for(size_t i=0;i<run.text.size();++i){geometry.characters.push_back(run.cp+int(i));geometry.raw.push_back(++consumed);}
+         int64_t before=width.back();
+         text.insert(text.end(),run.text.begin(),run.text.end());
+         if(!run.shaped || run.hidden) {
+@@ -476,7 +502,9 @@ int hyphen_opportunity(const Line& line,int allowance,int max_cut,int natural,bo
+     int start=ubrk_first(words.get()),end=0;
+     while((end=ubrk_next(words.get()))!=UBRK_DONE) {
+         if(ubrk_getRuleStatus(words.get())<UBRK_WORD_LETTER||ubrk_getRuleStatus(words.get())>=UBRK_WORD_KANA){start=end;continue;}
+-        int first=line.first+geometry.raw[start],last=line.first+geometry.raw[end-1];
++        // A break boundary can precede a zero-source-length opening reverse;
++        // lexical callbacks instead need the CP of the actual text character.
++        int first=geometry.characters[start],last=geometry.characters[end-1];
+         for(int current=first;current<last;) {
+             int found=0,hyphen=0;LsHyph detail{};
+             status=reinterpret_cast<HyphenOpportunity>(context.info.pfnGetNextHyphenOpp)(context.info.pols,current,last-current,&found,&hyphen,&detail);if(status)return status;
+@@ -802,6 +830,7 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+         status=reinterpret_cast<FetchProps>(context->callbacks.pfnFetchLineProps)(context->info.pols,cp,cp==result->paragraph_first,&properties);
+         if(status) return status;
+         if((paragraph.fJustify && paragraph.lskj!=0) || (paragraph.grpf&0x1000)) return LS_NotImplemented;
++        result->justified=paragraph.fJustify!=0;
+         result->widths.upStartMainText=properties.durLeft;
+         int position=cp,total=properties.durLeft,trailing=properties.durLeft;
+         int flow=paragraph.lstflow;
+@@ -981,6 +1010,168 @@ extern "C" __declspec(dllexport) int WINAPI LoCreateLine(void* handle,int cp,int
+     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+ }
+ 
++extern "C" __declspec(dllexport) int WINAPI LoCreateParaBreakingSession(void* handle,int cp,int width,
++    void* previous,void** output,BOOL* justified) {
++    if(!output || !justified)return LS_NullOutputParameter;
++    *output=nullptr;*justified=FALSE;
++    if(cp<0 || width<=0 || width>LS_IdealInfiniteWidth)return LS_InvalidParameter;
++    try {
++        auto session=std::make_shared<ParaSession>();
++        LsLInfo info{};LsLineWidths widths{};int depth=0;void* whole=nullptr;
++        // Prefetch the original managed FullTextState's runs as well as validating
++        // the source. Its CP-to-LSCP mapping needs these runs before CreateBreaks.
++        int status=LoCreateLine(handle,cp,0,LS_IdealInfiniteWidth,0,previous,&info,&whole,&depth,&widths);
++        if(status)return status;
++        {
++            std::lock_guard<std::mutex> lock(gate);
++            auto line=lines.at(whole);lines.erase(whole);
++            session->context=line->context;session->first=cp;session->end=info.cpLimToContinue;session->width=width;
++            *justified=line->justified;
++        }
++        // A soft line separator ends a line, not the paragraph cache. Prefetch
++        // the remaining hard lines so later LSCP mappings include their runs.
++        while(info.endr==4) {
++            int next=info.cpLimToContinue;
++            status=LoCreateLine(handle,next,0,LS_IdealInfiniteWidth,0,nullptr,&info,&whole,&depth,&widths);
++            if(status){*justified=FALSE;return status;}
++            {std::lock_guard<std::mutex> lock(gate);lines.erase(whole);}
++            if(info.cpLimToContinue<=next){*justified=FALSE;return LS_InvalidFormatterResult;}
++            session->end=info.cpLimToContinue;
++        }
++        {std::lock_guard<std::mutex> lock(gate);sessions.emplace(session.get(),session);*output=session.get();}
++        return LS_None;
++    } catch(const std::bad_alloc&) { *justified=FALSE;return LS_OutOfMemory; }
++}
++
++extern "C" __declspec(dllexport) int WINAPI LoDisposeParaBreakingSession(void* handle,BOOL) {
++    std::lock_guard<std::mutex> lock(gate);auto found=sessions.find(handle);
++    if(found==sessions.end())return LS_InvalidParameter;
++    if(found->second->in_use)return LS_ContextInUse;
++    // Returned lines and cloned break records retain their own context/lifetime.
++    sessions.erase(found);return LS_None;
++}
++
++extern "C" __declspec(dllexport) int WINAPI LoCreateBreaks(void* handle,int cp,void* previous,
++    void* session_handle,void* restriction,LsBreaks* output,int* best) {
++    if(!output || !best)return LS_NullOutputParameter;
++    *output={};*best=0;
++    std::shared_ptr<ParaSession> session;
++    {
++        std::lock_guard<std::mutex> lock(gate);auto found=sessions.find(session_handle);
++        if(found==sessions.end())return LS_InvalidParameter;
++        auto context=contexts.find(handle);if(context==contexts.end())return LS_InvalidContext;
++        session=found->second;
++        if(context->second!=session->context)return LS_MismatchLineContext;
++        if(session->in_use)return LS_ContextInUse;
++        if(cp<session->first || cp>=session->end)return LS_WrongCpFirstForGetBreaks;
++        if(restriction)return LS_NotImplemented; // No foreign/unknown penalty pointer is dereferenced.
++        session->in_use=true;
++    }
++    struct Active {
++        std::shared_ptr<ParaSession> session;
++        std::vector<void*> provisional;
++        bool committed=false;
++        ~Active(){std::lock_guard<std::mutex> lock(gate);if(!committed)for(void* key:provisional)lines.erase(key);session->in_use=false;}
++    } active{session};
++    try {
++        LsLInfo full_info{};LsLineWidths full_widths{};int depth=0;void* whole=nullptr;
++        int status=LoCreateLine(handle,cp,0,LS_IdealInfiniteWidth,0,previous,&full_info,&whole,&depth,&full_widths);
++        if(status)return status;
++        // Erase the provisional registration before any allocation can fail.
++        std::shared_ptr<Line> full;
++        {std::lock_guard<std::mutex> lock(gate);full=lines.at(whole);lines.erase(whole);}
++        full->paragraph_first=session->first;
++        LsLineProps properties{};LsPap paragraph{};
++        status=reinterpret_cast<FetchProps>(session->context->callbacks.pfnFetchLineProps)(session->context->info.pols,cp,cp==session->first,&properties);
++        if(status)return status;
++        status=reinterpret_cast<FetchPap>(session->context->info.pfnFetchPap)(session->context->info.pols,cp,&paragraph);
++        if(status)return status;
++        int64_t available=int64_t(session->width)-properties.durRightBreak-properties.durLeft;
++        if(available<0 || available>INT_MAX)return LS_InvalidFormatterResult;
++        BreakGeometry geometry;status=break_geometry(*full,geometry);if(status)return status;
++        UErrorCode error=U_ZERO_ERROR;
++        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(ubrk_open(UBRK_LINE,"root",geometry.text.data(),int(geometry.text.size()),&error),ubrk_close);
++        if(U_FAILURE(error)||!iterator)return LS_InvalidFormatterResult;
++        struct Candidate {int cut;bool forced;std::shared_ptr<Run> marker;bool overflow=false;};
++        std::vector<Candidate> candidates;
++        for(int point=1;point<=int(geometry.text.size());++point) {
++            if(!geometry.boundary[point] || !geometry.allowed(point,ubrk_isBoundary(iterator.get(),point)))continue;
++            int cut=geometry.raw[point];
++            if(point==int(geometry.text.size()) && full->has_terminator)cut=full_info.cpLimToContinue-cp;
++            candidates.push_back({cut,false,{}});
++        }
++        if(geometry.text.empty() && full->has_terminator)candidates.push_back({full_info.cpLimToContinue-cp,false,{}});
++        if((paragraph.grpf&0x100000)&&!properties.fProhibitHyphenation) {
++            for(int maximum=INT_MAX;maximum>0;) {
++                int cut=0;Run marker;
++                status=hyphen_opportunity(*full,int(available),maximum,0,true,cut,marker);if(status)return status;
++                if(!cut)break;candidates.push_back({cut,false,std::make_shared<Run>(std::move(marker))});maximum=cut-1;
++            }
++        }
++        std::sort(candidates.begin(),candidates.end(),[](const Candidate& a,const Candidate& b){return a.cut<b.cut || (a.cut==b.cut && bool(a.marker)<bool(b.marker));});
++        candidates.erase(std::unique(candidates.begin(),candidates.end(),[](const Candidate& a,const Candidate& b){return a.cut==b.cut&&bool(a.marker)==bool(b.marker);}),candidates.end());
++        std::vector<LsLInfo> information;std::vector<void*> line_handles,penalty_handles;
++        double best_cost=std::numeric_limits<double>::infinity();int best_index=0;
++        auto add=[&](const Candidate& candidate)->int {
++            LsLInfo info{};LsLineWidths widths{};void* key=nullptr;int count=0;
++            // Prefix reconstruction reshapes the actual retained clusters. A
++            // nominal full-paragraph width alone cannot establish feasibility.
++            int result=LoCreateLine(handle,cp,candidate.cut,session->width,0,previous,&info,&key,&count,&widths);
++            if(result)return result;
++            std::shared_ptr<Line> line;
++            {std::lock_guard<std::mutex> lock(gate);line=lines.at(key);lines.erase(key);}
++            line->paragraph_first=session->first;line->info.fFirstLineInPara=cp==session->first;
++            if(candidate.marker) {
++                if(int64_t(line->widths.upLimLine)+candidate.marker->width>INT_MAX)return LS_InvalidFormatterResult;
++                line->runs.push_back(*candidate.marker);line->has_terminator=false;line->info.endr=1;
++                line->widths.upLimLine+=candidate.marker->width;line->widths.upStartTrailing=line->widths.upLimLine;
++            }
++            int64_t visible=int64_t(line->widths.upStartTrailing)-properties.durLeft;
++            if(!candidate.overflow && visible>available)return LS_None;
++            if(line->info.cpLimToContinue<=cp)return LS_InvalidFormatterResult;
++            auto penalty=std::make_shared<BreakPenalty>();penalty->first=cp;penalty->next=line->info.cpLimToContinue;
++            penalty->width=int(visible);penalty->target=int(available);penalty->forced=candidate.forced;
++            penalty->hyphenated=bool(candidate.marker);penalty->terminal=line->info.endr==2||line->info.endr==4;
++            double slack=double(available-visible)/std::max<int64_t>(1,available);
++            penalty->cost=penalty->terminal?0:slack*slack;
++            if(penalty->hyphenated)penalty->cost+=0.1;
++            if(penalty->forced)penalty->cost+=1000;
++            line->penalty=penalty;line->penalty_session=session;line->info.fForcedBreak=candidate.forced;
++            // Reserve rollback ownership before publishing a handle.
++            active.provisional.push_back(key);
++            {std::lock_guard<std::mutex> lock(gate);lines.emplace(key,line);}
++            int index=int(information.size());information.push_back(line->info);line_handles.push_back(key);penalty_handles.push_back(penalty.get());
++            if(penalty->cost<best_cost || (penalty->cost==best_cost&&penalty->next>information[best_index].cpLimToContinue)){best_cost=penalty->cost;best_index=index;}
++            return LS_None;
++        };
++        for(const auto& candidate:candidates){status=add(candidate);if(status)return status;}
++        if(information.empty()) {
++            bool unavoidable=false;int cut=choose_wrap(*full,int(available),(paragraph.grpf&0x80000)==0,INT_MAX,unavoidable);
++            if(cut<=0)return LS_InvalidFormatterResult;
++            bool emergency=(paragraph.grpf&0x80000)==0;
++            if(!geometry.raw.empty() && cut==geometry.raw.back() && full->has_terminator)cut=full_info.cpLimToContinue-cp;
++            status=add({cut,emergency,{},true});if(status)return status;
++        }
++        if(information.empty())return LS_InvalidFormatterResult;
++        session->information.swap(information);session->line_handles.swap(line_handles);session->penalty_handles.swap(penalty_handles);
++        output->cBreaks=int(session->information.size());output->plslinfoArray=session->information.data();
++        output->pplolineArray=session->line_handles.data();output->plinepenaltyArray=session->penalty_handles.data();
++        *best=best_index;active.committed=true;return LS_None;
++    } catch(const std::bad_alloc&) {return LS_OutOfMemory;}
++}
++
++extern "C" __declspec(dllexport) int WINAPI LoRelievePenaltyResource(void* handle) {
++    std::lock_guard<std::mutex> lock(gate);auto found=lines.find(handle);
++    if(found==lines.end())return LS_InvalidLine;
++    auto line=found->second;if(!line->penalty)return LS_InvalidParameter;
++    if(line->detached_penalty)return LS_None;
++    try {
++        // The paragraph owns detached penalties until its session is disposed.
++        if(auto owner=line->penalty_session.lock()){owner->detached.push_back(line->penalty);line->detached_penalty=true;return LS_None;}
++        return LS_InvalidParameter;
++    }catch(const std::bad_alloc&){return LS_OutOfMemory;}
++}
++
+ extern "C" __declspec(dllexport) int WINAPI LoDisposeLine(void* handle,BOOL) {
+     std::lock_guard<std::mutex> lock(gate);
+     auto found=lines.find(handle); if(found==lines.end()) return LS_InvalidLine;
+diff --git a/bootstrap/m612/wpf-tests/ParagraphBreaks.cs b/bootstrap/m612/wpf-tests/ParagraphBreaks.cs
+new file mode 100644
+index 0000000..720d3ea
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/ParagraphBreaks.cs
+@@ -0,0 +1,75 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Globalization;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Media.TextFormatting;
++class BreakRun : TextRunProperties {
++ public override Typeface Typeface=>new Typeface("Arial");public override double FontRenderingEmSize=>24;public override double FontHintingEmSize=>24;
++ public override TextDecorationCollection TextDecorations=>null;public override Brush ForegroundBrush=>Brushes.Black;public override Brush BackgroundBrush=>null;
++ public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("en-US");public override TextEffectCollection TextEffects=>null;
++}
++class BreakParagraph : TextParagraphProperties {
++ readonly FlowDirection direction;readonly TextAlignment alignment;
++ public BreakParagraph(FlowDirection direction,TextAlignment alignment=TextAlignment.Left){this.direction=direction;this.alignment=alignment;}
++ public override FlowDirection FlowDirection=>direction;public override TextAlignment TextAlignment=>alignment;public override double LineHeight=>0;
++ public override bool FirstLineInParagraph=>true;public override TextRunProperties DefaultTextRunProperties=>new BreakRun();public override TextWrapping TextWrapping=>TextWrapping.Wrap;
++ public override TextMarkerProperties TextMarkerProperties=>null;public override double Indent=>0;public override double DefaultIncrementalTab=>80;
++}
++class BreakSource : TextSource {
++ public readonly string Text;readonly bool split;
++ public BreakSource(string text,bool split=false){Text=text;this.split=split;}
++ public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,split?1:Text.Length-index,new BreakRun()):new TextEndOfParagraph(1);
++ public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("en-US"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++ public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++ static readonly BindingFlags Any=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++ static object Call(object obj,string name,params object[] arguments){try{return obj.GetType().GetMethod(name,Any).Invoke(obj,arguments);}catch(TargetInvocationException e){throw e.InnerException;}}
++ static T Value<T>(object obj,string name)=>(T)obj.GetType().GetProperty(name,Any).GetValue(obj);
++ static void Require(bool value,string why){if(!value)throw new Exception(why);}
++ static void CandidateMatrix(TextFormattingMode mode,FlowDirection direction,bool split,string text,double width) {
++  using var formatter=TextFormatter.Create(mode);var source=new BreakSource(text,split);var paragraph=new BreakParagraph(direction);var runs=new TextRunCache();
++  object cache=Call(formatter,"CreateParagraphCache",source,0,width+60,paragraph,null,runs);TextLineBreak previous=null;int cp=0,rows=0,alternatives=0;
++  try {
++   while(cp<=text.Length){
++    object[] args={cp,previous,IntPtr.Zero,width,0};var breaks=((IEnumerable)Call(cache,"FormatBreakpoints",args)).Cast<object>().ToArray();int best=(int)args[4];
++    Require(breaks.Length>0&&best>=0&&best<breaks.Length,"nonempty feasible candidate set and valid best index");
++    int last=0;var lengths=new HashSet<int>();
++    foreach(object candidate in breaks){
++     int length=Value<int>(candidate,"Length"),end=cp+length;Require(length>0&&end<=text.Length+1&&length>=last,"ordered source break positions");last=length;lengths.Add(length);
++     if(end<text.Length){Require(!char.IsLowSurrogate(text[end]),"surrogate-safe break");var category=CharUnicodeInfo.GetUnicodeCategory(text,end);Require(category!=UnicodeCategory.NonSpacingMark&&category!=UnicodeCategory.SpacingCombiningMark,"grapheme-safe break");}
++     using var line=(TextLine)Call(formatter,"RecreateLine",source,cp,length,width,paragraph,previous,runs);
++     Require(line.Length==length,"reconstructed candidate preserves source length");
++     Require(line.Width<=width+0.02||Value<bool>(candidate,"IsTruncated"),"actual reshaped candidate fits its width");
++     var glyphs=line.GetIndexedGlyphRuns().ToArray();Require(glyphs.Sum(x=>x.TextSourceLength)==Math.Min(length,text.Length-cp)-text.Substring(cp,Math.Min(length,text.Length-cp)).Count(c=>c=='\u2028'),"candidate glyphs cover exact source");
++     var visual=new DrawingVisual();using(var dc=visual.RenderOpen())line.Draw(dc,new Point(10,10),InvertAxes.None);
++     var image=new RenderTargetBitmap(400,80,96,96,PixelFormats.Pbgra32);image.Render(visual);
++     var pixels=new byte[400*80*4];image.CopyPixels(pixels,400*4,0);Require(pixels.Any(x=>x!=0),"candidate actual raster");
++    }
++    alternatives+=breaks.Length;
++    if(cp==0&&text=="one two three four five six seven eight")Require(lengths.Count>=2,"enumerates multiple alternatives rather than only greedy line");
++    object selected=breaks[best];int consumed=Value<int>(selected,"Length");var next=(TextLineBreak)Call(selected,"GetTextLineBreak");
++    if(next!=null){var clone=next.Clone();next.Dispose();next=clone;}
++    foreach(IDisposable candidate in breaks)candidate.Dispose();previous?.Dispose();previous=next;cp+=consumed;++rows;
++    GC.Collect(2,GCCollectionMode.Forced,true,true);Require(rows<100,"paragraph break progress");
++   }
++   Require(cp==text.Length+1,"paragraph continuation covers all source plus EOP");
++  } finally {previous?.Dispose();((IDisposable)cache).Dispose();}
++  Console.WriteLine($"original paragraph cache {mode} {direction}, split={split}: {rows} rows, {alternatives} feasible variants, exact reconstruction/raster/grapheme/clone/GC PASS");
++ }
++ [STAThread] static void Main(){
++  foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})foreach(bool split in new[]{false,true}) {
++   CandidateMatrix(mode,direction,split,"one two three four five six seven eight",180);
++   CandidateMatrix(mode,direction,split,"alpha a\u0301b emoji \U0001F642 beta gamma",160);
++   CandidateMatrix(mode,direction,split,"abcdefghijklmno",45);
++   CandidateMatrix(mode,direction,split,"first line\u2028second line again",130);
++   CandidateMatrix(mode,direction,split,"abc שלום def مرحبا ghi",150);
++  }
++  Console.WriteLine("original managed paragraph sessions and feasible Unicode line breakpoints PASS");
++ }
++}
+diff --git a/bootstrap/m612/wpf-tests/ParagraphBreaksNative.cpp b/bootstrap/m612/wpf-tests/ParagraphBreaksNative.cpp
+new file mode 100644
+index 0000000..05323bb
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/ParagraphBreaksNative.cpp
+@@ -0,0 +1,56 @@
++// SPDX-License-Identifier: MIT
++#include <windows.h>
++#include <cstdio>
++#include <cstring>
++#include <stdexcept>
++#include <string>
++#include <vector>
++#include "LineServicesNative.h"
++static std::wstring text=L"aaa bb cc\u2029";
++static bool fail=false;
++static uint32_t flags=0x40;
++static int WINAPI pap(void*,int,LsPap* p){*p={};p->grpf=flags;p->cpFirst=0;return 0;}
++static int WINAPI props(void*,int,int,LsLineProps* p){*p={};return 0;}
++static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* used,WCHAR** out,int* count,int* hidden,LsChp* p,uintptr_t* id){if(fail)return LS_ClientAbort;if(cp<0||cp>=int(text.size()))return LS_WrongGivenCp;*count=cp<int(text.size())-1?int(text.size())-1-cp:1;*hidden=0;*p={};p->idObj=0xFFFF;*id=1;*used=0;*out=nullptr;if(capacity>=*count){std::memcpy(buffer,text.data()+cp,*count*2);*used=1;}return 0;}
++static int WINAPI metrics(void*,uint32_t,int,int,LsTxM* p){*p={10,5,15,0};return 0;}
++static int WINAPI widths(void*,uint32_t,int,WCHAR*,int count,int,int,int* values,int* total,int* fitted){for(int i=0;i<count;++i)values[i]=10;*total=count*10;*fitted=count;return 0;}
++static void check(bool yes,const char* why){if(!yes)throw std::runtime_error(why);}
++int main(int argc,char** argv){try {
++ check(argc==2,"usage: test DLL");HMODULE dll=LoadLibraryA(argv[1]);check(dll!=nullptr,"load DLL");
++ using Create=int(WINAPI*)(LsContextInfo*,LscbkRedefined*,void**);using Doc=int(WINAPI*)(void*,int,int,const LsDevRes*);
++ using Session=int(WINAPI*)(void*,int,int,void*,void**,BOOL*);using Breaks=int(WINAPI*)(void*,int,void*,void*,void*,LsBreaks*,int*);
++ using Destroy=int(WINAPI*)(void*);using Dispose=int(WINAPI*)(void*,BOOL);using Acquire=int(WINAPI*)(void*,void**);
++ using Line=int(WINAPI*)(void*,int,int,int,uint32_t,void*,LsLInfo*,void**,int*,LsLineWidths*);
++#define PROC(name,type) auto name=reinterpret_cast<type>(GetProcAddress(dll,#name));check(name!=nullptr,#name)
++ PROC(LoCreateContext,Create);PROC(LoSetDoc,Doc);PROC(LoDestroyContext,Destroy);PROC(LoCreateParaBreakingSession,Session);
++ PROC(LoDisposeParaBreakingSession,Dispose);PROC(LoCreateBreaks,Breaks);PROC(LoDisposeLine,Dispose);PROC(LoCreateLine,Line);
++ PROC(LoAcquireBreakRecord,Acquire);PROC(LoCloneBreakRecord,Acquire);PROC(LoDisposeBreakRecord,Dispose);PROC(LoRelievePenaltyResource,Destroy);
++ static_assert(sizeof(LsBreaks)==32,"original x64 LsBreaks ABI");
++ LsContextInfo info{};info.version=4;info.pfnFetchPap=reinterpret_cast<void*>(pap);info.pfnGetRunTextMetrics=reinterpret_cast<void*>(metrics);info.pfnGetRunCharWidths=reinterpret_cast<void*>(widths);
++ LscbkRedefined callbacks{reinterpret_cast<void*>(fetch),nullptr,reinterpret_cast<void*>(props)};void* context=nullptr;
++ check(LoCreateContext(&info,&callbacks,&context)==0,"context");LsDevRes res{1440,1440,1440,1440};check(LoSetDoc(context,0,1,&res)==0,"doc");
++ void* session=reinterpret_cast<void*>(1);BOOL justified=TRUE;
++ check(LoCreateParaBreakingSession(context,0,0,nullptr,&session,&justified)==LS_InvalidParameter && !session && !justified,"invalid width clears outputs");
++ fail=true;check(LoCreateParaBreakingSession(context,0,65,nullptr,&session,&justified)==LS_ClientAbort && !session,"session propagates source failure");fail=false;
++ check(LoCreateParaBreakingSession(context,0,65,nullptr,&session,&justified)==0 && session && !justified,"session prefetch");
++ LsBreaks breaks{};int best=-1;check(LoCreateBreaks(context,0,nullptr,session,nullptr,&breaks,&best)==0,"break enumeration");
++ check(breaks.cBreaks==2 && best==1,"two natural feasible alternatives");
++ check(breaks.plslinfoArray[0].cpLimToContinue==4 && breaks.plslinfoArray[1].cpLimToContinue==7,"actual word boundaries");
++ std::vector<void*> handles(breaks.pplolineArray,breaks.pplolineArray+breaks.cBreaks);void* br=nullptr;
++ check(breaks.plinepenaltyArray[0] && breaks.plinepenaltyArray[1] && breaks.plinepenaltyArray[0]!=breaks.plinepenaltyArray[1],"distinct real penalty resources");
++ check(LoRelievePenaltyResource(handles[1])==0 && LoRelievePenaltyResource(handles[1])==0,"detach penalty lifetime");
++ check(LoAcquireBreakRecord(handles[1],&br)==0,"break record");void* clone=nullptr;check(LoCloneBreakRecord(br,&clone)==0,"clone record");check(LoDisposeBreakRecord(br,FALSE)==0,"dispose original record");
++ for(void* key:handles)check(LoDisposeLine(key,FALSE)==0,"dispose candidates");
++ check(LoCreateBreaks(context,7,clone,session,nullptr,&breaks,&best)==0 && breaks.cBreaks==1 && breaks.plslinfoArray[0].cpLimToContinue==10 && breaks.plslinfoArray[0].endr==2,"continue from independent record to paragraph end");
++ void* last=breaks.pplolineArray[0];
++ fail=true;breaks.cBreaks=9;best=9;check(LoCreateBreaks(context,0,nullptr,session,nullptr,&breaks,&best)==LS_ClientAbort && !breaks.cBreaks && !breaks.pplolineArray && best==0,"failed enumeration is transactional");fail=false;
++ check(LoDisposeParaBreakingSession(session,FALSE)==0,"dispose session with live candidate");check(LoDisposeLine(last,FALSE)==0,"candidate outlives session");check(LoDisposeBreakRecord(clone,FALSE)==0,"dispose cloned record");
++ check(LoCreateBreaks(context,0,nullptr,session,nullptr,&breaks,&best)==LS_InvalidParameter && !breaks.cBreaks,"stale session rejected");
++ text=L"abcdefghij\u2029";check(LoCreateParaBreakingSession(context,0,25,nullptr,&session,&justified)==0,"long word session");
++ check(LoCreateBreaks(context,0,nullptr,session,nullptr,&breaks,&best)==0 && breaks.cBreaks==1 && breaks.plslinfoArray[0].cpLimToContinue==2 && breaks.plslinfoArray[0].fForcedBreak,"grapheme fallback marked forced");
++ check(LoDisposeLine(breaks.pplolineArray[0],FALSE)==0,"dispose forced");check(LoDisposeParaBreakingSession(session,TRUE)==0,"finalizer disposal");
++ flags|=0x80000;check(LoCreateParaBreakingSession(context,0,25,nullptr,&session,&justified)==0,"overflow policy session");
++ check(LoCreateBreaks(context,0,nullptr,session,nullptr,&breaks,&best)==0 && breaks.cBreaks==1 && breaks.plslinfoArray[0].cpLimToContinue==11 && breaks.plslinfoArray[0].endr==2 && !breaks.plslinfoArray[0].fForcedBreak,"WrapWithOverflow retains indivisible word and paragraph end without forced flag");
++ check(LoDisposeLine(breaks.pplolineArray[0],FALSE)==0,"dispose overflow");check(LoDisposeParaBreakingSession(session,FALSE)==0,"dispose overflow session");
++ check(LoDestroyContext(context)==0,"destroy context");FreeLibrary(dll);std::puts("PASS original paragraph session/break ABI, all feasible word breaks, penalties, continuation, transactional failures and lifetime");return 0;
++ }catch(const std::exception& e){std::fprintf(stderr,"FAIL %s\n",e.what());return 1;}}
+diff --git a/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh b/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh
+new file mode 100644
+index 0000000..6f4eb9d
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-paragraph-breaks-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/ParagraphBreaks.cs" "$work/Program.cs"
++cat > "$work/ParagraphBreaksSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/ParagraphBreaksSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/ParagraphBreaksSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/ParagraphBreaksSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/ParagraphBreaksSdkCheck.exe"
++printf 'PASS normal offline WPF SDK paragraph breakpoints check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 10955df..8decf5e 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -133,6 +133,13 @@ step_check_hyphenation_native() {
+   "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
+ }
+ 
++step_check_paragraph_breaks_native() {
++  local work=$build/paragraph-breaks-native
++  mkdir -p "$work"
++  /clang64/bin/clang++.exe -std=c++17 -O2 "$here/wpf-tests/ParagraphBreaksNative.cpp" -I "$build/classification-native" -o "$work/check.exe"
++  "$work/check.exe" "$build/lib/PresentationNative_cor3.dll"
++}
++
+ step_inventory() {
+   /usr/bin/python3 "$here/tools/wpfnative-inventory.py" "$source" "$build/lib/PresentationNative_cor3.dll" \
+     "$build/native-coverage.json"
+@@ -851,6 +858,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
+   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"
+   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"
++  bash "$here/wpf-tests/check-paragraph-breaks-sdk.sh" "$root" "$build/paragraph-breaks-sdk-check"
+   bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+   bash "$here/wpf-tests/check-bidi-sdk.sh" "$root" "$build/bidi-sdk-check"
+   bash "$here/wpf-tests/check-rtl-pages-sdk.sh" "$root" "$build/rtl-pages-sdk-check"
