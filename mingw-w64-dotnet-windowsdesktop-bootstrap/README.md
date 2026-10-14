@@ -6,8 +6,8 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 109 of 139
-imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
+The native text/paragraph/NLS replacement is still partial (currently 126 of 139
+imported exports). Advanced bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
 source metadata-generator bootstrap. The framework records this scope and its
@@ -446,3 +446,23 @@ Shared-framework and portable self-contained checks pass. Imported coverage rise
 to 122/139; paragraph ABI remains 470 fields. Linguistic results follow the bundled
 patterns; legacy spelling, unsupported cultures, nonstandard spelling changes,
 advanced layout and other documented paths remain unfinished.
+
+Release 8.0.0-39 implements original paragraph breaking sessions and feasible
+breakpoint enumeration (LoCreateParaBreakingSession, LoCreateBreaks,
+LoDisposeParaBreakingSession and LoRelievePenaltyResource). Sessions prefetch the
+original managed paragraph's LSCP mapping, including soft line separators.
+Unicode/cluster-safe word alternatives are reconstructed and reshaped before
+checking actual fit; emergency and indivisible-word overflow retain their
+original policies. Candidates own their line and penalty state, and cloned
+continuations remain valid after line/session disposal. Breaks occur before
+opening bidi controls and after closing controls, matching WPF's source mapping.
+The original managed cache validates both text modes/directions, whole/split runs,
+combining marks, emoji, hard lines and Hebrew/Arabic mixtures, with exact source
+coverage, reconstructed glyphs, raster output and compacting GC in both SDK
+execution modes. Native checks also cover callback errors and transactional
+outputs. All 28 WPF SDK consumers must pass before packaging. Imported coverage is 126/139 with
+13 absent; paragraph ABI remains 470 fields. Best-fit selection uses local
+raggedness costs; paragraph-wide optimization and PTS optimal-line reconstruction
+remain unfinished, and unknown external penalty restrictions are explicitly
+rejected. This release supplies the original cache/breakpoint substrate for that
+remaining work, without declaring full optimal formatting support.
