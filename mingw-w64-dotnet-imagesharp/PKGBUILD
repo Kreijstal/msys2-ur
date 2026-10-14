@@ -1,0 +1,59 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-imagesharp
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.1.13
+pkgrel=1
+pkgdesc='Source-built SixLabors.ImageSharp for the .NET 8 bootstrap offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/SixLabors/ImageSharp'
+license=('spdx:Apache-2.0')
+_commit=2c3967b22543545c902fb1fecf57d44025bda84d
+_tree=ImageSharp-${_commit}
+_project=src/ImageSharp/ImageSharp.csproj
+_id=SixLabors.ImageSharp
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("imagesharp-2c3967b22543545c902fb1fecf57d44025bda84d.tar.gz::https://codeload.github.com/SixLabors/ImageSharp/tar.gz/${_commit}" "imagesharp-shared-59ce17f5a4e1f956811133f41add7638e74c2836.tar.gz::https://codeload.github.com/SixLabors/SharedInfrastructure/tar.gz/59ce17f5a4e1f956811133f41add7638e74c2836" "sixlabors-branding-e4597cdbe94892cf5ac7081ab98ce32a46291609.tar.gz::https://codeload.github.com/SixLabors/Branding/tar.gz/e4597cdbe94892cf5ac7081ab98ce32a46291609" prepare.py check.cs)
+sha256sums=('bf5bc4e15b7f2b6aa6534ad02af3dc31b1e0764c2a8dcf3fc943cca54fe6a314' '961591d416059fc50f151240901e8d8dc581bffde9d2adb5f9d27f04ca0203a2' 'cf50f82281bfed2e3049a0806199c12a6998f252dc4a572e1ab66395f659d7d8' '85fc88a318d52ff3a30f37db1b7c64976095c20bac5abb8a687cbb7f190303c6' '93111c9379290f49eea724c330cab636316563840ad0996d19a235b2ac99b85d')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  cp -a "$srcdir/SharedInfrastructure-59ce17f5a4e1f956811133f41add7638e74c2836/." "$srcdir/$_tree/shared-infrastructure/"
+  cp -a "$srcdir/Branding-e4597cdbe94892cf5ac7081ab98ce32a46291609/." "$srcdir/$_tree/shared-infrastructure/branding/"
+  /usr/bin/python3 "$srcdir/prepare.py" imagesharp "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=Apache-2.0 -p:GeneratePackageOnBuild=false \
+    -p:TargetFrameworks=net8.0 -p:LangVersion=12.0 -p:IsContinuousIntegration=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:PublicSign=true -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

@@ -1,0 +1,4 @@
+using System;
+using System.Linq;
+using Microsoft.IO;
+class Check {static void Main(){var manager=new RecyclableMemoryStreamManager();var data=Enumerable.Range(0,700000).Select(i=>(byte)(i%251)).ToArray();using(var s=manager.GetStream("packaging-check")){s.Write(data);s.Position=0;var read=new byte[data.Length];s.ReadExactly(read);if(!read.SequenceEqual(data)||s.GetReadOnlySequence().Length!=data.Length)throw new Exception("pooled segmented stream round trip");s.SetLength(100);if(s.Length!=100)throw new Exception("truncate");}using(var s=manager.GetStream("reuse")){if(s.Length!=0)throw new Exception("pooled lease must start empty");s.WriteByte(42);s.Position=0;if(s.ReadByte()!=42)throw new Exception("pool reuse");}Console.WriteLine("PASS RecyclableMemoryStream segmented I/O, sequence, truncate, disposal and pool reuse");}}

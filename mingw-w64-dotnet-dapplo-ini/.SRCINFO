@@ -1,0 +1,24 @@
+pkgbase = mingw-w64-dotnet-dapplo-ini
+	pkgdesc = Source-built Dapplo.Ini configuration and source generator for .NET 8
+	pkgver = 1.1.11
+	pkgrel = 1
+	url = https://github.com/dapplo/Dapplo.Ini
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	options = !strip
+	options = !lto
+	source = dapplo-ini-8f2c2228175a39a09f88a3d77643fc4e947803d8.tar.gz::https://codeload.github.com/dapplo/Dapplo.Ini/tar.gz/8f2c2228175a39a09f88a3d77643fc4e947803d8
+	source = prepare.py
+	source = check.cs
+	sha256sums = e17846b10683a82b0d4436bbd0ddc13ad818896f8137be0ccfd49f00f6d0152b
+	sha256sums = eb65010dc09b9f1cc9e19a4fe75ea8b21be3b5f6c911d558d7556eef4fd3f528
+	sha256sums = 9be7ecaa43b41303034919457da6ed2a0dbf3d8733a49f0f6477479aa9fadbc8
+
+pkgname = mingw-w64-clang-x86_64-dotnet-dapplo-ini
+
+pkgname = mingw-w64-clang-x86_64-dotnet-dapplo-ini-generator
+	depends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-dapplo-ini=1.1.11
