@@ -387,3 +387,21 @@ text edit, old-owner disposal/GC and source coverage through shared-framework
 and portable self-contained SDK execution. Imported coverage rises to 115/139;
 ABI remains 441 fields. Selective line reuse, complex object/layout behavior,
 advanced bidi and other documented paths remain unfinished.
+
+Release 8.0.0-36 adds explicit finite column balancing and the two native
+subtrack/subpage balancing measurement APIs. Completed multi-column sections
+search for a reduced feasible height through original formatting callbacks;
+full pages preserve their continuation and capacity. Trial pages/clients/line
+records and margin states retain exact ownership on success or callback failure.
+KeepTogether and KeepWithNext retain their original paragraph/prefix constraints,
+including widow/orphan rules. Ordinary WPF section/subpage defaults remain as in
+the original source. Measurements derive from retained original line records,
+installed child/floater callbacks and conservative table row units, with checked
+counts/heights, actual direction and context/kind validation. Native tests cover
+root/subpage balance, exact source, completed/full pages, keep constraints,
+failed-trial cleanup and recursive callback measurements. Original managed
+Ideal/Display and LTR/RTL clients verify balanced glyph columns, line-record
+metrics, exact source ranges, kept/nested content and GC through shared-framework
+and portable self-contained execution. Imported coverage rises to 117/139;
+paragraph ABI remains 441 fields. General column spans, complex object layouts,
+optimal formatting, footnotes and full native-language behavior remain open.
