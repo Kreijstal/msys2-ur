@@ -405,3 +405,22 @@ metrics, exact source ranges, kept/nested content and GC through shared-framewor
 and portable self-contained execution. Imported coverage rises to 117/139;
 paragraph ABI remains 441 fields. General column spans, complex object layouts,
 optimal formatting, footnotes and full native-language behavior remain open.
+
+Release 8.0.0-37 adds rectangular composite text rows around centered obstacles.
+All permitted horizontal intervals can contain source-formatted elements on one
+row. Original element clients/break records retain ownership; row ascent/descent
+aggregate element metrics and vertical progress occurs once per row. Pagination,
+widow/orphan constraints, forced progress, balancing and keep-prefix measurements
+count rows. Inline geometry retries release provisional elements while retaining
+valid narrowed text breaks after obstacle postponement. Original composite row/
+element queries use source-derived records and context-owned weak row handles;
+short arrays, wrong kinds and stale/foreign handles reject without partial counts.
+Native checks cover exact intervals/metrics/source, cloned continuations after
+old-page destruction, ordinary rows after the obstacle, and later-element failure
+cleanup. Original managed Ideal/Display and LTR/RTL consumers render glyphs on
+both obstacle sides, check caret/point geometry and exact source/page ownership,
+and exercise late anchors, nested figure content, mixed font sizes, narrow
+columns, page regeneration and GC through shared-framework and self-contained
+execution. Imported coverage rises to 119/139 and ABI coverage to 470 fields.
+Polygon/composite-line optimizations, advanced object layout, general column spans,
+footnotes, optimal formatting and full native-language behavior remain open.
