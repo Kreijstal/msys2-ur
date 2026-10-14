@@ -1,0 +1,488 @@
+diff --git a/bootstrap/m612/patches/wpf/0011-cross-run-caret-cells.patch b/bootstrap/m612/patches/wpf/0011-cross-run-caret-cells.patch
+new file mode 100644
+index 0000000..9d84064
+--- /dev/null
++++ b/bootstrap/m612/patches/wpf/0011-cross-run-caret-cells.patch
+@@ -0,0 +1,59 @@
++--- a/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/FullTextLine.cs
+++++ b/src/Microsoft.DotNet.Wpf/src/PresentationCore/MS/internal/TextFormatting/FullTextLine.cs
++@@ -922,12 +922,13 @@
++ 
++                     if (    lsrun.IsHitTestable
++                         &&  (   lsrun.HasExtendedCharacter
++-                            ||  lsrun.NeedsCaretInfo)
+++                            ||  lsrun.NeedsCaretInfo
+++                            ||  CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1]))
++                         )
++                     {
++                         // A hit-testable run with caret stops at every cluster boundaries,
++                         // e.g. run with combining mark, with extended characters or complex scripts such as Thai
++-                        codepointsToNextCaretStop = caretStopCount;
+++                        codepointsToNextCaretStop = GetExternalCp(lsTextCell.lscpEndCell) + 1 - GetExternalCp(lsTextCell.lscpStartCell);
++                         caretStopCount = 1;
++                     }
++ 
++@@ -1063,6 +1064,14 @@
++             }
++ 
++ 
+++            // A Unicode text cell can span font/style runs. Run-local character
+++            // flags alone cannot describe caret boundaries in that cell.
+++            private static bool CellSpansRuns(LsTextCell cell, LsQSubInfo run)
+++            {
+++                return cell.lscpStartCell < run.lscpFirstRun
+++                    || cell.lscpEndCell >= (long)run.lscpFirstRun + run.lsdcpRun;
+++            }
+++
++             /// <summary>
++             /// Get distance from the start of text cell to the specified lscp
++             /// </summary>
++@@ -1093,7 +1102,8 @@
++ 
++                 if (    lsrun.IsHitTestable
++                     &&  (   lsrun.HasExtendedCharacter
++-                        ||  lsrun.NeedsCaretInfo)
+++                        ||  lsrun.NeedsCaretInfo
+++                            ||  CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1]))
++                     )
++                 {
++                     // A hit-testable run with caret stops at every cluster boundaries,
++@@ -1366,12 +1376,13 @@
++                     if (lsrun.IsHitTestable)
++                     {
++                         if (    lsrun.HasExtendedCharacter
++-                            ||  (direction != CaretDirection.Backspace && lsrun.NeedsCaretInfo)
+++                            ||  (direction != CaretDirection.Backspace
+++                                 && (lsrun.NeedsCaretInfo || CellSpansRuns(lsTextCell, sublineInfo[actualSublineCount - 1])))
++                             )
++                         {
++                             // LsTextCell.lscpEndCell is the index to the last lscp still in the cell.
++                             // The number of LSCP within the text cell is equal to the number of CP.
++-                            offsetToNextCaretStopIndex = lsTextCell.lscpEndCell + 1 - lsTextCell.lscpStartCell;
+++                            offsetToNextCaretStopIndex = GetExternalCp(lsTextCell.lscpEndCell) + 1 - GetExternalCp(lsTextCell.lscpStartCell);
++                         }
++                         else
++                         {
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.cpp b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+index 66e9b9c..1e9b341 100644
+--- a/bootstrap/m612/wpf-native/LineServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/LineServicesContext.cpp
+@@ -709,26 +709,19 @@ RunGeometry visual_runs(const Line& line) {
+ struct Cell {
+     const Run* run;
+     int cp,length,x,width,glyphs,run_x;
++    int flow=0,level=0;bool joined=false;
+ };
+ 
+ int text_cells(const Line& line,std::vector<Cell>& cells) {
+-    // A query cell names one client run. Until cross-run caret ownership is
+-    // implemented, reject graphemes crossing those runs rather than splitting
+-    // a user-perceived character at an artificial buffer boundary.
+-    if(line.runs.size()>1) {
+-        std::vector<UChar> text;
+-        for(const auto& run:line.runs) if(run.synthetic)continue;else if(run.level_delta)text.insert(text.end(),run.text.size(),0x2060);else text.insert(text.end(),run.text.begin(),run.text.end());
+-        UErrorCode error=U_ZERO_ERROR;
+-        auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
+-        if(U_FAILURE(error) || !raw) return LS_InvalidFormatterResult;
+-        std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> iterator(raw,ubrk_close);
+-        int end=0;
+-        for(const auto& run:line.runs) {
+-            if(run.synthetic)continue;
+-            end+=static_cast<int>(run.text.size());
+-            if(!ubrk_isBoundary(raw,end)) return LS_NotImplemented;
+-        }
+-    }
++    // Unicode text elements are properties of the complete retained line,
++    // including when font/style/client buffers divide one grapheme.
++    std::vector<UChar> text;std::vector<int> logical{0};
++    // Reversal controls belong to the LS transport, not the Unicode source.
++    for(const auto& run:line.runs)if(!run.synthetic)for(WCHAR ch:run.text){if(!run.level_delta)text.push_back(ch);logical.push_back(int(text.size()));}
++    UErrorCode error=U_ZERO_ERROR;
++    auto* raw=ubrk_open(UBRK_CHARACTER,"root",text.data(),static_cast<int>(text.size()),&error);
++    if(U_FAILURE(error)||!raw)return LS_InvalidFormatterResult;
++    std::unique_ptr<UBreakIterator,decltype(&ubrk_close)> graphemes(raw,ubrk_close);
+     auto geometry=visual_runs(line);int x=line.widths.upStartMainText;
+     for(size_t index=0;index<line.runs.size();++index) {
+         const auto& run=line.runs[index];if(run.synthetic)continue;x=geometry.edge[index];int sign=run.flow==line.base_flow?1:-1;
+@@ -764,17 +757,37 @@ int text_cells(const Line& line,std::vector<Cell>& cells) {
+             x+=sign*width; start=end;
+         }
+     }
++    std::vector<Cell> joined;
++    for(size_t index=0;index<cells.size();++index) {
++        Cell cell=cells[index];cell.flow=cell.run->flow;cell.level=cell.run->level;
++        int left=cell.x-(cell.flow!=line.base_flow?cell.width:0),right=left+cell.width;
++        while(!ubrk_isBoundary(graphemes.get(),logical.at(cell.cp-line.first+cell.length))) {
++            if(index+1>=cells.size())return LS_InvalidFormatterResult;
++            const auto& next=cells[++index];
++            if(next.cp!=cell.cp+cell.length)return LS_InvalidFormatterResult;
++            int next_left=next.x-(next.run->flow!=line.base_flow?next.width:0);
++            if(next.width){left=std::min(left,next_left);right=std::max(right,next_left+next.width);}
++            if(int64_t(cell.width)+next.width>INT_MAX||int64_t(cell.glyphs)+next.glyphs>INT_MAX)return LS_InvalidFormatterResult;
++            cell.length+=next.length;cell.width+=next.width;cell.glyphs+=next.glyphs;cell.joined=true;
++        }
++        // A single cell can contain internal reversal controls and style runs,
++        // but must occupy one contiguous visual interval without foreign ink.
++        if(int64_t(right)-left!=cell.width)return LS_NotImplemented;
++        cell.x=cell.flow==line.base_flow?left:right;
++        joined.push_back(cell);
++    }
++    cells.swap(joined);
+     for(const auto& run:line.runs)if(run.synthetic){auto at=std::find_if(cells.begin(),cells.end(),[&](const Cell& cell){return run.cp>=cell.cp&&run.cp<cell.cp+cell.length;});if(at!=cells.end())at->width+=run.width;}
+-    std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.run->flow!=line.base_flow?a.width:0),bx=b.x-(b.run->flow!=line.base_flow?b.width:0);return ax<bx;});
++    std::sort(cells.begin(),cells.end(),[&](const Cell& a,const Cell& b){int ax=a.x-(a.flow!=line.base_flow?a.width:0),bx=b.x-(b.flow!=line.base_flow?b.width:0);return ax<bx;});
+     x=line.widths.upLimLine;
+-    if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x});
++    if(line.has_terminator) cells.push_back({&line.terminator,line.terminator.cp,1,x,0,0,x,line.terminator.flow,line.terminator.level});
+     return LS_None;
+ }
+ 
+ void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& text) {
+     const Run& run=*cell.run;
+     sub={}; text={};
+-    sub.lstflowSubLine=run.flow; sub.lscpFirstSubLine=line.first;
++    sub.lstflowSubLine=cell.flow; sub.lscpFirstSubLine=line.first;
+     sub.lsdcpSubLine=line.info.cpLimToContinue-line.first;
+     sub.pointUvStartSubLine={line.widths.upStartMainText,0};
+     sub.lsHeightsPresSubLine={line.info.dvpAscent,line.info.dvpDescent,line.info.dvpMultiLineHeight};
+@@ -790,15 +803,24 @@ void fill_query(const Line& line,const Cell& cell,LsQSubInfo& sub,LsTextCell& te
+     text.cCharsInCell=cell.length; text.cGlyphsInCell=cell.glyphs;
+ }
+ 
+-int query_cell(const Line& line,const Cell& cell,int capacity,LsQSubInfo* sub,int* depth,LsTextCell* text) {
+-    int base=line.base_flow==4?1:0,needed=std::max(1,cell.run->level-base+1);
++int query_cell(const Line& line,const Cell& source,int capacity,LsQSubInfo* sub,int* depth,LsTextCell* text,int cp=-1) {
++    Cell cell=source;auto geometry=visual_runs(line);
++    // A complete text cell may cross style runs; the subline record must still
++    // identify the actual source run containing a requested code point.
++    if(cp>=0)for(size_t at=0;at<line.runs.size();++at){const auto& run=line.runs[at];if(!run.synthetic&&cp>=run.cp&&cp<run.cp+int(run.text.size())){cell.run=&run;cell.run_x=geometry.edge[at];break;}}
++    int base=line.base_flow==4?1:0,needed=std::max(1,cell.level-base+1);
+     if(capacity<needed)return LS_InvalidParameter;
+     fill_query(line,cell,sub[needed-1],*text);
+-    auto geometry=visual_runs(line);size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
++    size_t index=0;while(index<line.runs.size()&& &line.runs[index]!=cell.run)++index;
+     for(int offset=0;offset<needed;++offset){
+         auto value=sub[needed-1];value.lstflowSubLine=((base+offset)&1)?4:0;
+         if(offset==0){value.lscpFirstSubLine=line.first;value.lsdcpSubLine=line.info.cpLimToContinue-line.first;value.pointUvStartSubLine={line.widths.upStartMainText,0};value.dupSubLine=line.widths.upLimLine-line.widths.upStartMainText;}
+-        else {
++        else if(cell.joined) {
++            // Internal client reversal scopes do not divide one source text
++            // element. Every CP in the cell observes the same caret subline.
++            value.lscpFirstSubLine=cell.cp;value.lsdcpSubLine=cell.length;
++            value.pointUvStartSubLine={cell.x,0};value.dupSubLine=cell.width;
++        } else {
+             size_t first=index,last=index;int level=base+offset;
+             while(first&&line.runs[first-1].level>=level)--first;
+             while(last+1<line.runs.size()&&line.runs[last+1].level>=level)++last;
+@@ -1394,7 +1416,7 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLineCpPpoint(void* handle,int
+         std::vector<Cell> cells;
+         int status=text_cells(*line,cells); if(status) return status;
+         for(const auto& cell:cells) if(cp>=cell.cp && cp<cell.cp+cell.length) {
+-            return query_cell(*line,cell,capacity,sub,depth,text);
++            return query_cell(*line,cell,capacity,sub,depth,text,cp);
+         }
+         return LS_WrongGivenCp;
+     } catch(const std::bad_alloc&) { return LS_OutOfMemory; }
+@@ -1416,7 +1438,7 @@ extern "C" __declspec(dllexport) int WINAPI LoQueryLinePointPcp(void* handle,con
+         for(const auto& cell:cells) {
+             if(cell.width<=0) continue;
+             chosen=&cell;
+-            int end=cell.x+(cell.run->flow==line->base_flow?cell.width:0);if(static_cast<int64_t>(point->x)<end) break;
++            int end=cell.x+(cell.flow==line->base_flow?cell.width:0);if(static_cast<int64_t>(point->x)<end) break;
+         }
+         if(!chosen) chosen=&cells.front();
+         return query_cell(*line,*chosen,capacity,sub,depth,text);
+diff --git a/bootstrap/m612/wpf-tests/CrossRunCarets.cs b/bootstrap/m612/wpf-tests/CrossRunCarets.cs
+new file mode 100644
+index 0000000..2e602ab
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/CrossRunCarets.cs
+@@ -0,0 +1,76 @@
++using System;
++using System.Globalization;
++using System.Linq;
++using System.Windows.Media.Imaging;
++using System.Windows;
++using System.Windows.Media;
++using System.Windows.Media.TextFormatting;
++class CaretRunProperties:TextRunProperties {
++    readonly Brush brush;public CaretRunProperties(Brush brush=null){this.brush=brush??Brushes.Black;}
++    public override Typeface Typeface=>new Typeface("Nirmala UI");
++    public override double FontRenderingEmSize=>24;
++    public override double FontHintingEmSize=>24;
++    public override TextDecorationCollection TextDecorations=>null;
++    public override Brush ForegroundBrush=>brush;
++    public override Brush BackgroundBrush=>null;
++    public override CultureInfo CultureInfo=>CultureInfo.GetCultureInfo("hi-IN");
++    public override TextEffectCollection TextEffects=>null;
++}
++class CaretParagraph:TextParagraphProperties {
++    readonly FlowDirection direction;
++    public CaretParagraph(FlowDirection direction=FlowDirection.LeftToRight) { this.direction=direction; }
++    public override FlowDirection FlowDirection=>direction;
++    public override TextAlignment TextAlignment=>TextAlignment.Left;
++    public override double LineHeight=>0;
++    public override bool FirstLineInParagraph=>true;
++    public override TextRunProperties DefaultTextRunProperties=>new CaretRunProperties();
++    public override TextWrapping TextWrapping=>TextWrapping.Wrap;
++    public override TextMarkerProperties TextMarkerProperties=>null;
++    public override double Indent=>0;
++}
++class CaretSource:TextSource {
++    public readonly string Text;readonly bool split,styled;
++    public CaretSource(string text,bool split,bool styled=false) { Text=text;this.split=split;this.styled=styled; }
++    public override TextRun GetTextRun(int index)=>index<Text.Length?new TextCharacters(Text,index,split?(char.IsHighSurrogate(Text[index])?2:1):Text.Length-index,new CaretRunProperties(styled?(index%2==0?Brushes.Red:Brushes.Blue):Brushes.Black)):new TextEndOfParagraph(1);
++    public override TextSpan<CultureSpecificCharacterBufferRange> GetPrecedingText(int limit)=>new TextSpan<CultureSpecificCharacterBufferRange>(limit,new CultureSpecificCharacterBufferRange(CultureInfo.GetCultureInfo("hi-IN"),new CharacterBufferRange(Text,0,Math.Min(limit,Text.Length))));
++    public override int GetTextEffectCharacterIndexFromTextSourceCharacterIndex(int index)=>index;
++}
++class Check {
++    static void Near(double actual,double expected,string message){if(Math.Abs(actual-expected)>0.05)throw new Exception(message+": "+actual+" vs "+expected);}
++    [STAThread] static void Main() {
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(var direction in new[]{FlowDirection.LeftToRight,FlowDirection.RightToLeft})
++        foreach(bool styled in new[]{false,true})
++        foreach(double column in new[]{1.0,400.0})
++        foreach(var sample in new[]{"a\u0301b","\u0915\u093fb","\U0001f469\u200d\U0001f4bbx","\U0001f1e9\U0001f1eax"}) {
++            using var formatter=TextFormatter.Create(mode);
++            using var line=formatter.FormatLine(new CaretSource(sample,true,styled),0,column,new CaretParagraph(direction),null);
++            Console.WriteLine($"split grapheme {mode} {direction}, styled={styled}, column={column}, {sample}: width={line.Width}");
++            if(line.GetIndexedGlyphRuns().Sum(glyph=>glyph.TextSourceLength)!=Math.Min(sample.Length,line.Length))throw new Exception("split grapheme glyph enumeration loses source ownership");
++            int length=StringInfo.GetNextTextElement(sample,0).Length;
++            if(column==1&&line.Length!=length)throw new Exception("tiny-width wrap splits or skips a grapheme");
++            double first=line.GetDistanceFromCharacterHit(new CharacterHit(0,0));
++            double last=line.GetDistanceFromCharacterHit(new CharacterHit(0,length));
++            Console.WriteLine($"split grapheme {mode}: first={first}, last={last}, next={line.GetNextCaretCharacterHit(new CharacterHit(0,0)).FirstCharacterIndex}/{line.GetNextCaretCharacterHit(new CharacterHit(0,0)).TrailingLength}");
++            var next=line.GetNextCaretCharacterHit(new CharacterHit(0,0));
++            if(next.FirstCharacterIndex!=0||next.TrailingLength!=length)throw new Exception("split grapheme has an interior forward caret");
++            var previous=line.GetPreviousCaretCharacterHit(new CharacterHit(0,length));
++            if(previous.FirstCharacterIndex!=0||previous.TrailingLength!=0)throw new Exception("split grapheme has an interior backward caret");
++            for(int cp=0;cp<length;++cp){var hit=line.GetNextCaretCharacterHit(new CharacterHit(cp,0));if(hit.FirstCharacterIndex!=0||hit.TrailingLength!=length)throw new Exception("interior code-unit query loses its complete source cell");}
++            var middle=line.GetCharacterHitFromDistance((first+last)/2+0.1);
++            if(middle.FirstCharacterIndex!=0||(middle.TrailingLength!=0&&middle.TrailingLength!=length))throw new Exception("split grapheme point hit stops inside a text element");
++            double width=line.GetTextBounds(0,length).Sum(b=>b.Rectangle.Width);Near(width,Math.Abs(last-first),"split grapheme selection width");
++            GC.Collect(2,GCCollectionMode.Forced,true,true);Near(line.GetDistanceFromCharacterHit(new CharacterHit(0,length)),last,"split grapheme caret lifetime");
++            var visual=new DrawingVisual();using(var drawing=visual.RenderOpen())line.Draw(drawing,new Point(column==1&&direction==FlowDirection.RightToLeft?200:10,10),InvertAxes.None);
++            var bitmap=new RenderTargetBitmap(400,80,96,96,PixelFormats.Pbgra32);bitmap.Render(visual);var pixels=new byte[400*80*4];bitmap.CopyPixels(pixels,1600,0);
++            if(!pixels.Where((v,i)=>i%4==3).Any(alpha=>alpha>150))throw new Exception("split grapheme raster empty");
++            Console.WriteLine("public split grapheme caret/point/selection/GC/raster PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}) {
++            using var formatter=TextFormatter.Create(mode);
++            using var line=formatter.FormatLine(new CaretSource("office",false),0,400,new CaretParagraph(),null);
++            for(int cp=0;cp<6;++cp){var next=line.GetNextCaretCharacterHit(new CharacterHit(cp,0));if(next.FirstCharacterIndex!=cp||next.TrailingLength!=1)throw new Exception("ordinary same-run character carets changed");}
++            Console.WriteLine("public ordinary same-run character carets PASS");
++        }
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+index 09094a0..5f1c21b 100644
+--- a/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
++++ b/bootstrap/m612/wpf-tests/LineServicesLineNative.cpp
+@@ -6,6 +6,7 @@
+ #include <string>
+ #include <algorithm>
+ #include <vector>
++#include <utility>
+ #include "LineServicesNative.h"
+ #include "../wpf-native/ReverseObjectHandler.h"
+ static bool abort_fetch=false,bidi_mode=false;
+@@ -30,7 +31,7 @@ static int draws=0;
+ static std::wstring sample=L"abc  \u2029";
+ static uint32_t paragraph_flags=0;
+ static int run_length=9600;
+-static bool uniform_width=false;
++static bool uniform_width=false,distinct_caret_runs=false;
+ static int hyphen_mode=0,hyphen_draws=0,hyphen_sources=0,hyphen_characters=0;
+ static int WINAPI hyphen_opportunity(void*,int first,int length,int* found,int* position,LsHyph* detail){*found=0;*position=0;*detail={};if(hyphen_mode==2)return LS_ClientAbort;if(hyphen_mode==3){*found=1;*position=first+length;return 0;}for(int cp:{3,6})if(cp>=first&&cp<first+length){*found=1;*position=cp;break;}return 0;}
+ static int WINAPI hyphen_draw(void*,uint32_t id,LSPOINT* point,WCHAR* text,int*,int count,int flow,uint32_t,LSPOINT*,LsHeights*,int width,LSRECT*){if(id!=5||flow)return LS_ClientAbort;if(text[0]==L'-'){if(count!=1||width!=10||point->x!=44)return LS_ClientAbort;}else if(count!=4||width!=40||point->x!=4)return LS_ClientAbort;++hyphen_draws;return 0;}
+@@ -67,6 +68,7 @@ static int WINAPI fetch(void*,int cp,int,void*,WCHAR* buffer,int capacity,int* u
+     int end=static_cast<int>(sample.size())-1;
+     if(cp<0 || cp>end) return LS_WrongGivenCp;
+     *count=cp<end?std::min(run_length,end-cp):1; *output=nullptr; *used=0; *hidden=0; *chp={}; chp->idObj=bidi_mode&&sample[cp]==0xFFFC?0:0xFFFF; *id=bidi_mode&&sample[cp]==0xFFFB?0:cp<end?5:8;
++    if(distinct_caret_runs&&cp<end)*id=100+cp;
+     if(bidi_mode&&(sample[cp]==0xFFFC||sample[cp]==0xFFFB)){*count=1;while(cp+*count<end&&sample[cp+*count]==sample[cp])++*count;}
+     if(decorate && cp<end) chp->flags=0x60000;
+     if(capacity>=*count) { std::memcpy(buffer,sample.data()+cp,*count*sizeof(WCHAR)); *used=1; }
+@@ -198,8 +200,20 @@ int main(int argc,char** argv) {
+         require(LoDisposeLine(line,FALSE)==0,"remeasured prefix line disposal");contextual_widths=false;
+         sample=L"a\u0301b\u2029"; run_length=1;
+         require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==2,"combining grapheme spans client runs at tiny width");
+-        require(LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_NotImplemented&&queried_depth==0,"cross-run caret ownership remains explicit rather than splitting a grapheme");
++        for(int cp:{0,1})require(LoQueryLineCpPpoint(line,cp,1,&sub,&queried_depth,&cell)==0&&queried_depth==1&&cell.lscpStartCell==0&&cell.lscpEndCell==1&&cell.cCharsInCell==2&&cell.dupCell==20,"cross-run combining text retains one complete caret cell for either source code unit");
++        LSPOINT cluster_point{19,0};require(LoQueryLinePointPcp(line,&cluster_point,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==1&&cell.dupCell==20,"cross-run combining point hit retains the complete text element");
+         require(LoDisposeLine(line,FALSE)==0,"grapheme line disposal");
++        distinct_caret_runs=true;
++        for(const auto& value:std::vector<std::pair<std::wstring,int>>{{L"a\u0301b\u2029",2},{L"\xd83d\xdc69\u200d\xd83d\xdcbbx\u2029",5},{L"\xd83c\xdde9\xd83c\xddeax\u2029",4}}) {
++            sample=value.first;
++            require(LoCreateLine(context,0,0,5,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==value.second,"tiny-width wrapping retains the complete cross-run text element");
++            for(int cp=0;cp<value.second;++cp)require(LoQueryLineCpPpoint(line,cp,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==value.second-1&&cell.cCharsInCell==value.second&&cell.dupCell==10*value.second&&sub.plsrun==reinterpret_cast<void*>(uintptr_t(100+cp))&&sub.lscpFirstRun==cp&&sub.lsdcpRun==1,"cross-run grapheme geometry is atomic while each CP query retains its actual style-run identity and metrics");
++            LSPOINT before{5,0},after{3+10*value.second,0};
++            for(auto point:{before,after})require(LoQueryLinePointPcp(line,&point,1,&sub,&queried_depth,&cell)==0&&cell.lscpStartCell==0&&cell.lscpEndCell==value.second-1&&cell.dupCell==10*value.second,"both physical edges hit the same retained cross-run grapheme");
++            require(LoDisposeLine(line,FALSE)==0&&LoQueryLineCpPpoint(line,0,1,&sub,&queried_depth,&cell)==LS_InvalidLine&&!queried_depth,"cross-run grapheme queries reject disposed line state");
++        }
++        distinct_caret_runs=false;
++
+         sample=L"a  \u2029";
+         require(LoCreateLine(context,0,0,14,0,nullptr,&info,&line,&depth,&measured)==0&&info.cpLimToContinue==4&&info.endr==2&&measured.upStartTrailing==14,"trailing spaces across runs retain paragraph end");
+         require(LoDisposeLine(line,FALSE)==0,"trailing line disposal");
+diff --git a/bootstrap/m612/wpf-tests/check-cross-run-carets-sdk.sh b/bootstrap/m612/wpf-tests/check-cross-run-carets-sdk.sh
+new file mode 100644
+index 0000000..a7e7e07
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-cross-run-carets-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/CrossRunCarets.cs" "$work/Program.cs"
++cat > "$work/CrossRunCaretsSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/CrossRunCaretsSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/CrossRunCaretsSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/CrossRunCaretsSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/CrossRunCaretsSdkCheck.exe"
++printf 'PASS normal offline WPF SDK cross-run caret check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 362ec1d..98dd1f7 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -854,6 +854,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-sdk.sh" "$root" "$build/sdk-check"
+   bash "$here/wpf-tests/check-image-codecs-sdk.sh" "$root" "$build/image-codecs-sdk-check"
+   bash "$here/wpf-tests/check-text-tabs-sdk.sh" "$root" "$build/tabs-sdk-check"
++  bash "$here/wpf-tests/check-cross-run-carets-sdk.sh" "$root" "$build/cross-run-carets-sdk-check"
+   bash "$here/wpf-tests/check-inline-objects-sdk.sh" "$root" "$build/inline-sdk-check"
+   bash "$here/wpf-tests/check-justification-sdk.sh" "$root" "$build/justification-sdk-check"
+   bash "$here/wpf-tests/check-paragraph-widths-sdk.sh" "$root" "$build/paragraph-widths-sdk-check"
+diff --git a/bootstrap/m612/wpf-native/LineServicesContext.md b/bootstrap/m612/wpf-native/LineServicesContext.md
+--- a/bootstrap/m612/wpf-native/LineServicesContext.md
++++ b/bootstrap/m612/wpf-native/LineServicesContext.md
+@@ -65,12 +65,106 @@
+ The original nested query layouts are generated from LineServices.cs:
+ LsQSubInfo 120 bytes and LsTextCell 40 bytes on x64. Public Indic leading/trailing
+ hits, caret navigation, distances and selection rectangles pass after GC.
+-Queries reject RTL/nonmonotonic cluster maps and graphemes spanning client runs;
+-cross-run caret ownership remains unfinished even though wrapping respects
+-those graphemes.
++Queries join graphemes across client-run boundaries, retaining each requested
++code point's source run metadata. Nonmonotonic glyph cluster maps and other
++advanced geometry still require further work.
+ 
+-Optimal/min-max formatting, inline objects, bidi reversal objects, tabs,
+-justification and decorations remain unsupported and return explicit errors.
++LoDisplayLine obtains underline and strikethrough metrics through the original
++callbacks and draws each retained decorated run with its original identity,
++width, flow, drawing mode and clip rectangle. Single/double-line offsets and
++thicknesses follow the source-generated LsULInfo/LsStInfo records. Callback
++failures and invalid metrics propagate. Original managed drawing implements
++custom pens and underline/strikethrough/overline/baseline locations; public
++TextFormatter raster checks cover all four locations across compacting GC.
++
++Tabs are retained as individual layout runs. Explicit left/center/right/decimal/
++character stops align the following field across client runs; incremental stops
++continue after the last explicit stop. Tab caret/selection geometry retains the
++actual gap. Original EnumTab preserves source CP, leader and geometry, while
++leaders are measured and drawn using original text callbacks. The public test
++covers WPF's four exposed alignments, one-run/split fields, dotted leaders,
++incremental stops, aligned-field wrapping and drawing/enumeration across GC.
++Each legal Unicode break candidate aligns only its retained field. The selected
++prefix is remeasured/reshaped and its real visible width rechecked; if contextual
++advances make it wider, an earlier legal candidate is tried. A leading
++indivisible tab/word outside the column advances with unavoidable overflow under
++the selected wrapping policy. Native/public checks cover fitting retained fields,
++out-of-column tabs, cloned continuation records and complete source coverage.
++Explicit-only stops with zero incremental distance are evaluated per retained
++field even if the full field has no fallback stop. Candidates without usable
++stops are skipped; invalid configurations still fail. Candidate evaluation
++scans retained fields and needs optimization for long tabbed
++paragraphs. Leaders currently repeat whole measured characters centered in the
++gap; exact legacy leader spacing and non-LTR tab behavior require validation.
++
++Inline objects (original object ID 1) obtain source InlineInit format/draw
++callbacks through GetObjectHandlerInfo. Source-generated ObjDim/InlineInit
++records preserve the original x64 ABI. Format receives the actual preceding pen
++position and original infinite margin; valid object dimensions contribute line
++metrics and a retained atomic width. Draw receives its original identity, flow,
++width and baseline origin. Queries retain object ID/geometry with zero glyphs;
++glyph enumeration omits objects and preserves source positions around them.
++Wrapping applies the original LineBreakCondition combination table at object
++edges, including all 16 adjacent-object cases. Public tests cover fixed/flexible
++sizes, a three-character source span, remaining width, caret/selection, wrapping,
++callback exceptions and original TextBlock InlineUIContainer rendering/hit tests
++across GC. Position-dependent objects following aligned tabs still explicitly
++reject while that circular measurement path is unfinished; ordinary text and
++left/incremental-tab positions use retained preceding geometry.
++
++Regular inter-word justification requests original nominal/glyph expansion
++callbacks using source-generated 28-byte neighbor, 48-byte character and 80-byte
++glyph records. Three callback capacity levels distribute remaining visible
++width across eligible whitespace; negative capacities and callback failures
++propagate. Original glyph advances and nominal minimum widths remain retained,
++while actual advances, enumeration, caret/selection cells and drawing use the
++expanded geometry. Trailing spaces do not receive expansion. Paragraph-final,
++explicit-break and no-opportunity lines stay ragged. Public Latin/Indic tests
++cover Ideal/Display modes and actual justified TextBlock rendering/hit testing.
++Aligned-tab justification, other justification modes, ink insertion and full
++compression/optimal algorithms still explicitly reject or require further work.
++
++Min/max paragraph mode retains the entire paragraph without column wrapping or
++justification. Shared Unicode/cluster/object-edge break geometry determines the
++widest indivisible segment; hard lines are measured separately for maximum
++width. Trailing spaces remain in total widths but are excluded from visible
++widths. Tabs use actual stops from each measured segment's paragraph origin,
++and inline objects preserve atomic dimensions and source break conditions.
++Native exact and public nominal/Indic/NBSP/hard-break/trailing/empty/cache tests
++pass in Ideal/Display modes, including original FormattedText.MinWidth and
++intrinsic/wrapped TextBlock layout. Streaming/range measurement optimization,
++full hyphenation/compression and RTL width coverage still require further work.
++
++Optimal formatting and bidi reversal objects remain unsupported and return
++explicit errors.
+ Complete hit testing, RTL/nonmonotonic shaping clusters, full bidi and paragraph
+ layout require further work. This does not establish full Line Services
+ compatibility or complete WPF packaging.
++
++
++LoAcquirePenaltyModule creates an owned wrapper around retained source LS
++context state. LoGetPenaltyModuleInternalHandle exposes that state's opaque
++identity, and LoDisposePenaltyModule releases it with invalid/double-release
++checks. Native lifetime tests and original TextPenaltyModule through PtsContext
++pass in both formatting modes across GC and disposal. These exports implement
++resource ownership; they do not claim penalty scoring or optimal paragraph
++formatting. The paragraph-service context implementation separately retains
++original generated callback/configuration records and installed method tables.
++
++Cross-run query cells use Unicode grapheme boundaries over the retained source.
++Internal reversal controls are excluded from segmentation but remain in LS source
++ranges. Joined cells cover one contiguous visual interval, retain glyph counts and
++actual run identities, and expose stable caret sublines across internal reversal
++scopes. Unknown noncontiguous geometry still fails explicitly. PresentationCore's
++FullTextLine recognizes cells spanning source runs and maps their LSCP endpoints
++back to external source CPs for caret lengths. This prevents hidden controls from
++becoming caret stops while keeping ordinary within-run character navigation.
++
++Native fixtures cover split combining marks, surrogate pairs, ZWJ emoji and flags,
++exact complete-cell geometry, distinct per-CP client run metadata, both point edges,
++tiny-width wrapping and disposed-line rejection. The public SDK consumer covers
++64 split-grapheme combinations per execution: Ideal/Display, LTR/RTL paragraphs,
++style changes, tiny/full widths, Latin combining/Indic/emoji/flags. Forward/backward
++carets, every interior code-unit query, hit testing, selection width, glyph source
++coverage, compacting GC and real raster output are checked, alongside ordinary
++same-run character carets. Shared and portable executions remain separate checks.
