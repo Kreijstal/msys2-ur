@@ -291,3 +291,14 @@ row-resume and populated/lost-output cleanup gates pass; ABI checks cover 429
 fields. Coverage rises to 109/139. Splitting cells/rows, vertical spans, repeated
 headers/footers, figures, advanced/bidi/native-language behavior and other
 listed paths remain unfinished.
+
+Release 8.0.0-28 adds independently owned cell break records to row continuations.
+Tall rows split on fresh pages/columns while completed neighboring cells stop
+producing content handles. Original subpages resume unfinished cells, and later
+rows follow completed split rows. Shared immutable checkpoints support cloned
+resumes, no-progress preservation and failure cleanup. Public tests cover unequal
+cell lengths, initial whole-row deferral, columns, following rows, exact source/
+page ownership and chunk regeneration. Tiny pages force actual line progress.
+Native clone/failure/lifetime and shared-framework/portable SDK gates pass.
+Coverage stays 109/139. Vertical spans, repeated headers/footers, figures,
+advanced/bidi/native-language behavior and other documented paths remain open.
