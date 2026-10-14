@@ -266,3 +266,15 @@ edits also exercise inline anchors. Native retry, invalid-output and callback
 cleanup checks pass. Coverage stays 103/139. Oversized/split content, flow across
 paragraph boundaries, complex center/clear policies, figures/tables and the
 other documented WPF paths remain unfinished.
+
+Release 8.0.0-26 retains original floater content break records across paragraph
+continuations and resumes actual subpage chunks on following columns/pages.
+Host text and floating content advance independently, including floating-only
+chunks after the host ends. Shared record owners support independent cloned
+resumes and preserve inputs across no-progress or failed callbacks. Original WPF
+checks cover leading/inline/deferred anchors, column continuation, a long host
+paragraph and two opposite-edge split floaters with exact source/page ownership,
+real chunk glyph raster, page regeneration and GC. Native clone/error/lifetime
+checks pass. Coverage stays 103/139. Colliding multi-floater splits beyond one
+placement area, cross-paragraph flow, complex center/clear policies, figures/
+tables and the other documented WPF paths remain unfinished.
