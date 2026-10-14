@@ -832,3 +832,20 @@ terminal/nonterminal lines, actual previously overflowing boundaries, exact
 caret/point/selection/source/page identity, columns, raster and GC. Registered
 SDK consumers increase to44. Final aligned-field justification, ink insertion,
 broader native conformance and the other documented limitations remain open.
+
+Release 8.0.0-60 settles position-dependent inline objects after justification.
+Each bounded pass rebuilds nominal text spacing, retains current object metrics,
+then measures objects at the adjusted pen. FullMixed minimum widths settle maximum
+permitted compression separately; the accepted pass runs last to preserve object
+drawing state. InterWord keeps its valid nominal minimum. Fixed-size caching and
+already fitting aligned fields keep their existing paths. Callback failure or
+nonconvergence cannot publish a stale line.
+
+Native checks cover exact expansion/compression and minimum widths, final heights,
+two dependent objects, candidate feasibility, transactional rollback/reuse, bounded
+oscillation and drawing. The new public consumer has26 cases per shared/portable
+execution: Ideal/Display, normal/reconstructed lines, left tabs, fixed/flexible
+objects, actual nominal overflow/compression, exact pixel endpoints, remaining
+width, atomic caret/point/source/selection, raster, GC and callback recovery.
+Registered SDK consumers increase to45. Final aligned-field spacing adjustments,
+ink insertion and other documented native conformance gaps remain unfinished.
