@@ -1,0 +1,81 @@
+Fix the nyquist and loop-tempo-estimator sources for clang/MinGW
+
+Two more muse_deps recipe patches, for pinned sources compiled in:
+- xlisp.h aliases _setjmp to setjmp with an object-like macro. mingw-w64's
+  setjmp() is itself a macro expanding to the two-argument _setjmp(), and
+  clang then resolves the call to its one-argument _setjmp builtin
+  ("too many arguments"). Function-like aliases expand the same way
+  everywhere else.
+- LteDsp.h uses std::vector without including <vector>; libc++'s
+  <functional> does not pull it in.
+
+diff --git a/muse_deps/recipes/loop-tempo-estimator/patch/0001-include-vector.patch b/muse_deps/recipes/loop-tempo-estimator/patch/0001-include-vector.patch
+new file mode 100644
+index 0000000..11cf6e9
+--- /dev/null
++++ b/muse_deps/recipes/loop-tempo-estimator/patch/0001-include-vector.patch
+@@ -0,0 +1,16 @@
++LteDsp.h: include <vector> for std::vector
++
++The header relies on <functional> pulling in <vector>, which MSVC's and
++libstdc++'s do but libc++'s does not.
++
++diff --git a/source/LteDsp.h b/source/LteDsp.h
++--- a/source/LteDsp.h
+++++ b/source/LteDsp.h
++@@ -26,6 +26,7 @@
++ #pragma once
++ 
++ #include <functional>
+++#include <vector>
++ 
++ namespace LTE
++ {
+diff --git a/muse_deps/recipes/loop-tempo-estimator/spec.cmake b/muse_deps/recipes/loop-tempo-estimator/spec.cmake
+index 31dc1d3..fb1a6fc 100644
+--- a/muse_deps/recipes/loop-tempo-estimator/spec.cmake
++++ b/muse_deps/recipes/loop-tempo-estimator/spec.cmake
+@@ -3,3 +3,5 @@ set(DEP_VERSION 0.0.5)
+ set(DEP_SOURCES
+     "loop-tempo-estimator|tarball|https://github.com/saintmatthieu/loop-tempo-estimator/releases/download/v0.0.5/loop-tempo-estimator-v0.0.5.tar.gz|e70f2356bbea1bcec3a77e26dddd87b1dd0d5f24c8aed6351aa9d6ec42a66be0"
+ )
++
++set(DEP_PATCHES patch/0001-include-vector.patch)
+diff --git a/muse_deps/recipes/nyquist/patch/0031-xlisp-function-like-setjmp-aliases-for-mingw.patch b/muse_deps/recipes/nyquist/patch/0031-xlisp-function-like-setjmp-aliases-for-mingw.patch
+new file mode 100644
+index 0000000..70342a0
+--- /dev/null
++++ b/muse_deps/recipes/nyquist/patch/0031-xlisp-function-like-setjmp-aliases-for-mingw.patch
+@@ -0,0 +1,22 @@
++xlisp: alias _setjmp/_longjmp with function-like macros
++
++mingw-w64's setjmp() is itself a macro expanding to the two-argument
++_setjmp(buf, frame). With the object-like '#define _setjmp setjmp' the
++expansion ends in a call to the one-argument _setjmp that clang knows as a
++builtin, and the build fails (too many arguments / undeclared setjmp).
++Function-like aliases expand the same way everywhere else.
++
++diff --git a/nyquist/xlisp/xlisp.h b/nyquist/xlisp/xlisp.h
++--- a/nyquist/xlisp/xlisp.h
+++++ b/nyquist/xlisp/xlisp.h
++@@ -56,8 +56,8 @@
++ // #endif
++ /* #define SAVERESTORE */
++ #define XL_LITTLE_ENDIAN 
++-#define _longjmp longjmp
++-#define _setjmp setjmp
+++#define _longjmp(env, val) longjmp(env, val)
+++#define _setjmp(env) setjmp(env)
++ #endif
++ 
++ /* for the Turbo C compiler - MS-DOS, large model */
+diff --git a/muse_deps/recipes/nyquist/spec.cmake b/muse_deps/recipes/nyquist/spec.cmake
+index 918ec39..0bbf067 100644
+--- a/muse_deps/recipes/nyquist/spec.cmake
++++ b/muse_deps/recipes/nyquist/spec.cmake
+@@ -39,4 +39,5 @@ set(DEP_PATCHES
+     "patch/0028-c4e391cfc4-move-debug-defines-after-including-stand.patch"
+     "patch/0029-4191cfb837-freebsd-compilation-fixes.patch"
+     "patch/0030-d881c57712-rename-swap-functions-to-not-conflict-wi.patch"
++    "patch/0031-xlisp-function-like-setjmp-aliases-for-mingw.patch"
+ )

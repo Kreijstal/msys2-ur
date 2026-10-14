@@ -1,0 +1,218 @@
+portmixer: fix the build with mingw-w64 headers
+
+- px_win_ds.c: mingw-w64's dsconf.h declares DSPROPSETID_DirectSoundDevice
+  and CLSID_DirectSoundPrivate, which conflicts with the file's static
+  definitions; give those a PX_ prefix.
+- px_win_endpoint.c: <initguid.h> before <endpointvolume.h> makes the SDK
+  header define IID_IAudioEndpointVolume, which the file defines itself;
+  include it after the SDK headers.
+- Pass the out pointers to CoCreateInstance(), IMMDevice_Activate() and
+  PaWasapi_GetIMMDevice() as void** (incompatible pointer types are an
+  error in current clang and gcc).
+- Declare open_ep_mixers_byid() before px_win_wasapi.c calls it.
+- px_win_common.c keeps mixer names as char* but called the TCHAR mixer
+  API, i.e. the wide one in UNICODE builds, and strdup()ed WCHAR strings
+  (truncated names; an error with gcc). Use the ANSI API there.
+
+diff --git a/src/au3wrap/thirdparty/portmixer/src/px_win_common.c b/src/au3wrap/thirdparty/portmixer/src/px_win_common.c
+index 14c2e54..59d69c5 100644
+--- a/src/au3wrap/thirdparty/portmixer/src/px_win_common.c
++++ b/src/au3wrap/thirdparty/portmixer/src/px_win_common.c
+@@ -36,6 +36,11 @@
+  *
+  */
+ 
++/* The mixer names are kept as char*: use the ANSI mixer API even in
++   UNICODE builds (strdup() of the wide szName/szPname truncated them). */
++#undef UNICODE
++#undef _UNICODE
++
+ #include <windows.h>
+ #include <tchar.h>
+ 
+diff --git a/src/au3wrap/thirdparty/portmixer/src/px_win_common.h b/src/au3wrap/thirdparty/portmixer/src/px_win_common.h
+index af91ffc..27bbb8c 100644
+--- a/src/au3wrap/thirdparty/portmixer/src/px_win_common.h
++++ b/src/au3wrap/thirdparty/portmixer/src/px_win_common.h
+@@ -69,6 +69,7 @@ typedef struct PxInfo
+ 
+ int open_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut);
+ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut);
++int open_ep_mixers_byid(px_mixer *Px, const wchar_t *deviceIn, const wchar_t *deviceOut);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/src/au3wrap/thirdparty/portmixer/src/px_win_ds.c b/src/au3wrap/thirdparty/portmixer/src/px_win_ds.c
+index c747da7..028a559 100644
+--- a/src/au3wrap/thirdparty/portmixer/src/px_win_ds.c
++++ b/src/au3wrap/thirdparty/portmixer/src/px_win_ds.c
+@@ -51,13 +51,13 @@
+ #include "px_mixer.h"
+ #include "px_win_common.h"
+ 
+-static const GUID DSPROPSETID_DirectSoundDevice = 
++static const GUID PX_DSPROPSETID_DirectSoundDevice = 
+ {0x84624f82, 0x25ec, 0x11d1, {0xa4, 0xd8, 0x0, 0xc0, 0x4f, 0xc2, 0x8a, 0xca}};
+ 
+-static const GUID CLSID_DirectSoundPrivate = 
++static const GUID PX_CLSID_DirectSoundPrivate = 
+ {0x11ab3ec0, 0x25ec, 0x11d1, {0xa4, 0xd8, 0x0, 0xc0, 0x4f, 0xc2, 0x8a, 0xca}};
+ 
+-static const GUID DSIID_IKsPropertySet = 
++static const GUID PX_DSIID_IKsPropertySet = 
+ {0x31efac30, 0x515c, 0x11d0, {0xa9, 0xaa, 0x00, 0xaa, 0x00, 0x61, 0xbe, 0x93}};
+ 
+ typedef HRESULT (CALLBACK *GCO) (REFCLSID, REFIID, LPVOID *);
+@@ -102,7 +102,7 @@ int OpenMixer_Win_DirectSound(px_mixer *Px, int index)
+          break;
+       }
+    
+-      hr = DllGetClassObject(&CLSID_DirectSoundPrivate,
++      hr = DllGetClassObject(&PX_CLSID_DirectSoundPrivate,
+                              &IID_IClassFactory,
+                              (void **)(&pcf));
+       if (hr || pcf == NULL) {
+@@ -111,7 +111,7 @@ int OpenMixer_Win_DirectSound(px_mixer *Px, int index)
+    
+       hr = IClassFactory_CreateInstance(pcf,
+                                         NULL,
+-                                        &DSIID_IKsPropertySet,
++                                        &PX_DSIID_IKsPropertySet,
+                                         (void **)(&pps));
+       if (hr || pps == NULL) {
+          break;
+@@ -125,7 +125,7 @@ int OpenMixer_Win_DirectSound(px_mixer *Px, int index)
+          desc.DataFlow = DIRECTSOUNDDEVICE_DATAFLOW_CAPTURE;
+ 
+          hr = IKsPropertySet_Get(pps,
+-                                 &DSPROPSETID_DirectSoundDevice,
++                                 &PX_DSPROPSETID_DirectSoundDevice,
+                                  DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION,
+                                  NULL,
+                                  0,
+@@ -146,7 +146,7 @@ int OpenMixer_Win_DirectSound(px_mixer *Px, int index)
+          desc.DataFlow = DIRECTSOUNDDEVICE_DATAFLOW_RENDER;
+ 
+          hr = IKsPropertySet_Get(pps,
+-                                 &DSPROPSETID_DirectSoundDevice,
++                                 &PX_DSPROPSETID_DirectSoundDevice,
+                                  DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION,
+                                  NULL,
+                                  0,
+diff --git a/src/au3wrap/thirdparty/portmixer/src/px_win_endpoint.c b/src/au3wrap/thirdparty/portmixer/src/px_win_endpoint.c
+index ed3d374..0acad33 100644
+--- a/src/au3wrap/thirdparty/portmixer/src/px_win_endpoint.c
++++ b/src/au3wrap/thirdparty/portmixer/src/px_win_endpoint.c
+@@ -42,8 +42,9 @@
+ #include <tchar.h>
+ #include <strsafe.h>
+ #include <mmdeviceapi.h>
+-#include <initguid.h>
+ #include <endpointvolume.h>
++/* after the SDK headers: define only the GUIDs below, not the SDK's own */
++#include <initguid.h>
+ 
+ #include "portaudio.h"
+ 
+@@ -105,7 +106,7 @@ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut)
+                          NULL,
+                          CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator,
+-                         &denum);
++                         (void **)&denum);
+    if (FAILED(hr)) {
+       goto fail;
+    }
+@@ -120,7 +121,7 @@ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->inputEP);
++                                 (void **)&info->inputEP);
+          IUnknown_Release(device);
+       }
+ 
+@@ -157,7 +158,7 @@ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->inputEP);
++                                 (void **)&info->inputEP);
+          IUnknown_Release(device);
+       }
+ 
+@@ -178,7 +179,7 @@ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->outputEP);
++                                 (void **)&info->outputEP);
+          IUnknown_Release(device);
+       }
+ 
+@@ -215,7 +216,7 @@ int open_ep_mixers(px_mixer *Px, UINT deviceIn, UINT deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->outputEP);
++                                 (void **)&info->outputEP);
+          IUnknown_Release(device);
+       }
+ 
+@@ -240,7 +241,7 @@ fail:
+    return cleanup(Px);
+ }
+ 
+-int open_ep_mixers_byid(px_mixer *Px, wchar_t *deviceIn, wchar_t *deviceOut)
++int open_ep_mixers_byid(px_mixer *Px, const wchar_t *deviceIn, const wchar_t *deviceOut)
+ {
+    PxEPInfo *info;
+    IMMDeviceEnumerator *denum = NULL;
+@@ -260,7 +261,7 @@ int open_ep_mixers_byid(px_mixer *Px, wchar_t *deviceIn, wchar_t *deviceOut)
+                          NULL,
+                          CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator,
+-                         &denum);
++                         (void **)&denum);
+    if (FAILED(hr)) {
+       goto fail;
+    }
+@@ -272,7 +273,7 @@ int open_ep_mixers_byid(px_mixer *Px, wchar_t *deviceIn, wchar_t *deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->inputEP);
++                                 (void **)&info->inputEP);
+          IUnknown_Release(device);
+       }
+ 
+@@ -288,7 +289,7 @@ int open_ep_mixers_byid(px_mixer *Px, wchar_t *deviceIn, wchar_t *deviceOut)
+                                  &IID_IAudioEndpointVolume,
+                                  CLSCTX_ALL,
+                                  NULL,
+-                                 &info->outputEP);
++                                 (void **)&info->outputEP);
+          IUnknown_Release(device);
+       }
+ 
+diff --git a/src/au3wrap/thirdparty/portmixer/src/px_win_wasapi.c b/src/au3wrap/thirdparty/portmixer/src/px_win_wasapi.c
+index 56b5293..fb3654e 100644
+--- a/src/au3wrap/thirdparty/portmixer/src/px_win_wasapi.c
++++ b/src/au3wrap/thirdparty/portmixer/src/px_win_wasapi.c
+@@ -45,6 +45,7 @@
+ 
+ #include "portmixer.h"
+ #include "px_mixer.h"
++#include "px_win_common.h"
+ 
+ static const wchar_t* GetDeviceID(PaDeviceIndex index)
+ {
+@@ -53,7 +54,7 @@ static const wchar_t* GetDeviceID(PaDeviceIndex index)
+    if (index >= 0)
+    {
+       IMMDevice* immDevice;
+-      PaWasapi_GetIMMDevice(index, &immDevice);
++      PaWasapi_GetIMMDevice(index, (void **)&immDevice);
+ 
+       wchar_t* deviceID;
+ 

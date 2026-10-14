@@ -1,0 +1,141 @@
+Install into a shared Unix-like prefix on MinGW
+
+The Windows build installs a self-contained application directory:
+data files next to bin/ (prefix/workspaces, prefix/locale, ...), the Nyquist
+files in bin/, plus a windeployqt copy of Qt and the compiler runtime,
+and it even writes the executable into ${CMAKE_INSTALL_PREFIX}/bin at
+build time. None of that fits a MinGW distribution such as MSYS2, where
+Audacity shares the prefix with Qt and everything else.
+
+- MinGW uses the Linux data layout (share/audacity-4.0/, share/audacity/
+  for Nyquist); the muse resource lookup on Windows now honours
+  MUSE_APP_INSTALL_RESOURCES_LOCATION (which is "./" for MSVC, so nothing
+  changes there), and au3's path list also searches <prefix>/share/audacity.
+- New option AU_DEPLOY_RUNTIME (default ON, as before) to skip copying Qt
+  and the compiler runtime and pruning the Qt QML tree in the install dir,
+  and to keep the build output out of CMAKE_INSTALL_PREFIX.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7c9ff37..798487f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -154,6 +154,7 @@ endif()
+ 
+ # === Pack ===
+ option(AU_RUN_LRELEASE "Generate .qm files" ON)
++option(AU_DEPLOY_RUNTIME "Windows: copy Qt and the compiler runtime into the install tree" ON)
+ 
+ # === Tests ===
+ set(APP_WORKSPACE_CONFIG_FILE "${CMAKE_CURRENT_LIST_DIR}/src/app/configs/workspaces.cfg")
+diff --git a/SetupConfigure.cmake b/SetupConfigure.cmake
+index f85f358..cb4d12d 100644
+--- a/SetupConfigure.cmake
++++ b/SetupConfigure.cmake
+@@ -89,6 +89,10 @@ if (OS_IS_MAC)
+     SET(AU4_INSTALL_NAME  "Contents/Resources/")
+     SET(AU4_SHARE_NAME    "audacity.app/")
+     SET(AU4_FRAMEWORKS_NAME "Frameworks/")
++elseif (OS_IS_WIN AND MINGW)
++    # MinGW distributions (MSYS2) install into a shared Unix-like prefix
++    SET(AU4_INSTALL_NAME  "audacity${MUSE_APP_INSTALL_SUFFIX}-${MUSE_APP_VERSION_MAJ_MIN}/")
++    SET(AU4_SHARE_NAME    "share/")
+ elseif (OS_IS_WIN)
+     SET(AU4_INSTALL_NAME  "")
+     SET(AU4_SHARE_NAME    "./")
+diff --git a/au3/libraries/au3-files/PathList.cpp b/au3/libraries/au3-files/PathList.cpp
+index 1686267..f45922b 100644
+--- a/au3/libraries/au3-files/PathList.cpp
++++ b/au3/libraries/au3-files/PathList.cpp
+@@ -133,6 +133,10 @@ void FileNames::InitializePathList()
+     // Windows: executable directory and Languages subdirectory
+     addUniquePath(searchPaths, binDir);
+     addUniquePath(searchPaths, binDir + "\\Languages");
++#ifdef __MINGW32__
++    // MinGW distributions keep the data files in <prefix>/share/audacity
++    addUniquePath(searchPaths, PC::GetParentDir(binDir) + "\\share\\audacity");
++#endif
+ 
+     // Set up temp directory in user local data
+     PC::MakePath(userAppData);
+diff --git a/muse/framework/global/internal/globalconfiguration.cpp b/muse/framework/global/internal/globalconfiguration.cpp
+index a427b79..a8bb3c8 100644
+--- a/muse/framework/global/internal/globalconfiguration.cpp
++++ b/muse/framework/global/internal/globalconfiguration.cpp
+@@ -75,7 +75,7 @@ io::path_t GlobalConfiguration::appDataPath() const
+ QString GlobalConfiguration::resolveAppDataPath() const
+ {
+ #ifdef Q_OS_WIN
+-    QDir dir(QCoreApplication::applicationDirPath() + QString("/../"));
++    QDir dir(QCoreApplication::applicationDirPath() + QString("/../" MUSE_APP_INSTALL_RESOURCES_LOCATION));
+     return dir.absolutePath() + "/";
+ #elif defined(Q_OS_MAC)
+     QDir dir(QCoreApplication::applicationDirPath() + QString("/../Resources"));
+diff --git a/share/nyquist-plug-ins/CMakeLists.txt b/share/nyquist-plug-ins/CMakeLists.txt
+index 46f074d..0b8de61 100644
+--- a/share/nyquist-plug-ins/CMakeLists.txt
++++ b/share/nyquist-plug-ins/CMakeLists.txt
+@@ -46,7 +46,7 @@ if(OS_IS_MAC)
+    # This matches what PluginManager.cpp expects (see lines 229-238)
+    set(PLUGINS_INSTALL_DEST "${AU4_SHARE_NAME}Contents/nyquist-plug-ins")
+    set(PLUGINS_BUILD_DEST "${CMAKE_BINARY_DIR}/src/app/${AU4_SHARE_NAME}Contents/nyquist-plug-ins")
+-elseif(OS_IS_LIN)
++elseif(OS_IS_LIN OR MINGW)
+    # On Linux, files go in share/audacity/nyquist-plug-ins which PathList.cpp expects
+    set(PLUGINS_INSTALL_DEST "${CMAKE_INSTALL_PREFIX}/share/audacity/nyquist-plug-ins")
+    set(PLUGINS_BUILD_DEST "${CMAKE_BINARY_DIR}/share/audacity/nyquist-plug-ins")
+diff --git a/share/nyquist-runtime/CMakeLists.txt b/share/nyquist-runtime/CMakeLists.txt
+index 25aa9af..d98aab3 100644
+--- a/share/nyquist-runtime/CMakeLists.txt
++++ b/share/nyquist-runtime/CMakeLists.txt
+@@ -62,7 +62,7 @@ if(OS_IS_MAC)
+    # On macOS, Nyquist runtime files go in Contents/Resources/nyquist-runtime
+    set(NYQUIST_INSTALL_DEST "${AU4_SHARE_NAME}${AU4_INSTALL_NAME}")
+    set(NYQUIST_BUILD_DEST "${CMAKE_BINARY_DIR}/src/app/${AU4_SHARE_NAME}${AU4_INSTALL_NAME}")
+-elseif(OS_IS_LIN)
++elseif(OS_IS_LIN OR MINGW)
+    # On Linux, files go in share/audacity/ which PathList.cpp expects
+    set(NYQUIST_INSTALL_DEST "${CMAKE_INSTALL_PREFIX}/share/audacity/")
+    set(NYQUIST_BUILD_DEST "${CMAKE_BINARY_DIR}/share/audacity/")
+diff --git a/src/app/CMakeLists.txt b/src/app/CMakeLists.txt
+index e87b3b7..eb343c0 100644
+--- a/src/app/CMakeLists.txt
++++ b/src/app/CMakeLists.txt
+@@ -226,7 +226,7 @@ if (APP_OUTPUT_NAME)
+   set_target_properties(${EXECUTABLE_NAME} PROPERTIES OUTPUT_NAME ${APP_OUTPUT_NAME})
+ endif (APP_OUTPUT_NAME)
+ 
+-if (OS_IS_WIN)
++if (OS_IS_WIN AND AU_DEPLOY_RUNTIME)
+     set_target_properties(${EXECUTABLE_NAME} PROPERTIES
+         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_INSTALL_PREFIX}/bin
+         PDB_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+@@ -324,7 +324,9 @@ if (OS_IS_WIN)
+ 
+     include(GetCompilerInfo)
+ 
+-    if (CC_IS_MINGW)
++    if (NOT AU_DEPLOY_RUNTIME)
++        # distribution build: Qt and the compiler runtime are shared system packages
++    elseif (CC_IS_MINGW)
+         get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+         get_filename_component (MINGW_ROOT ${COMPILER_DIR} DIRECTORY)
+ 
+@@ -334,8 +336,9 @@ if (OS_IS_WIN)
+                ${MINGW_ROOT}/bin/libwinpthread-1.dll
+                DESTINATION bin)
+ 
+-    endif(CC_IS_MINGW)
++    endif()
+ 
++    if (AU_DEPLOY_RUNTIME)
+     # Install Qt
+     qt_generate_deploy_qml_app_script(
+         TARGET audacity
+@@ -361,6 +364,7 @@ if (OS_IS_WIN)
+     install(SCRIPT
+         "${PROJECT_SOURCE_DIR}/buildscripts/packaging/prune_qt_runtime.cmake"
+     )
++    endif (AU_DEPLOY_RUNTIME)
+ 
+     if (WIN_PORTABLE)
+         # deploy the files and directory structure needed for the PortableApps.com format

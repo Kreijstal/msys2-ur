@@ -1,0 +1,209 @@
+au3: build against a wxWidgets with wxUSE_STL
+
+Distribution wxWidgets builds (MSYS2's among them) use wxUSE_STL=1, where
+wxString has no implicit conversions to const char* / const wchar_t*.
+- Give TranslatableString an untranslatable(const wxString&) overload
+  (UTF-8 round trip, like au3::untranslatable()), instead of relying on
+  the implicit, locale-dependent const char* conversion.
+- Elsewhere convert explicitly with c_str() / wc_str(), which is what the
+  implicit conversions did.
+
+diff --git a/au3/libraries/au3-builtin-effects/EqualizationBase.cpp b/au3/libraries/au3-builtin-effects/EqualizationBase.cpp
+index 62034c1..209239f 100644
+--- a/au3/libraries/au3-builtin-effects/EqualizationBase.cpp
++++ b/au3/libraries/au3-builtin-effects/EqualizationBase.cpp
+@@ -114,9 +114,9 @@ bool EqualizationBase::VisitSettings(
+             const wxString nameFreq = wxString::Format("f%i", point);
+             const wxString nameVal = wxString::Format("v%i", point);
+             visitor.Define(
+-                curves[0].points[point].Freq, nameFreq, 0.0, 0.0, 0.0, 0.0);
++                curves[0].points[point].Freq, nameFreq.wc_str(), 0.0, 0.0, 0.0, 0.0);
+             visitor.Define(
+-                curves[0].points[point].dB, nameVal, 0.0, 0.0, 0.0, 0.0);
++                curves[0].points[point].dB, nameVal.wc_str(), 0.0, 0.0, 0.0, 0.0);
+         }
+     }
+     return true;
+@@ -137,8 +137,8 @@ bool EqualizationBase::VisitSettings(
+             const wxString nameVal = wxString::Format("v%i", i);
+             double f = -1000.0;
+             double d = 0.0;
+-            visitor.Define(f, nameFreq, 0.0, -10000.0, 1000000.0, 0.0);
+-            visitor.Define(d, nameVal, 0.0, -10000.0, 10000.0, 0.0);
++            visitor.Define(f, nameFreq.wc_str(), 0.0, -10000.0, 1000000.0, 0.0);
++            visitor.Define(d, nameVal.wc_str(), 0.0, -10000.0, 10000.0, 0.0);
+             if (f <= 0.0) {
+                 break;
+             }
+diff --git a/au3/libraries/au3-files/FileNames.cpp b/au3/libraries/au3-files/FileNames.cpp
+index 182f224..7611133 100644
+--- a/au3/libraries/au3-files/FileNames.cpp
++++ b/au3/libraries/au3-files/FileNames.cpp
+@@ -181,7 +181,7 @@ bool FileNames::HardLinkFile(const FilePath& file1, const FilePath& file2)
+ 
+     // Fix forced ASCII conversions and wrong argument order - MJB - 29/01/2019
+     //return ::CreateHardLinkA( file1.c_str(), file2.c_str(), NULL );
+-    return 0 != ::CreateHardLink(file2, file1, NULL);
++    return 0 != ::CreateHardLink(file2.wc_str(), file1.wc_str(), NULL);
+ 
+ #else
+ 
+diff --git a/au3/libraries/au3-nyquist-effects/NyquistBase.cpp b/au3/libraries/au3-nyquist-effects/NyquistBase.cpp
+index c491943..2f651d2 100644
+--- a/au3/libraries/au3-nyquist-effects/NyquistBase.cpp
++++ b/au3/libraries/au3-nyquist-effects/NyquistBase.cpp
+@@ -280,7 +280,7 @@ bool NyquistBase::VisitSettings(
+                 ctrl.choices.data(), ctrl.choices.size());
+         } else if (ctrl.type == NYQ_CTRL_STRING || ctrl.type == NYQ_CTRL_FILE) {
+             visitor.Define(
+-                ctrl.valStr, ctrl.var, wxString {}, ctrl.lowStr, ctrl.highStr);
++                ctrl.valStr, ctrl.var.wc_str(), wxString {}, ctrl.lowStr, ctrl.highStr);
+             // parms.Write(ctrl.var, ctrl.valStr);
+         }
+     }
+@@ -2732,7 +2732,7 @@ void* nyq_reformat_aud_do_response(const wxString& Str)
+     LVAL success;
+     wxString Left = Str.BeforeLast('\n').BeforeLast('\n').ToAscii();
+     wxString Right = Str.BeforeLast('\n').AfterLast('\n').ToAscii();
+-    message = cvstring(Left);
++    message = cvstring(Left.c_str());
+     success = Right.EndsWith("OK") ? s_true : nullptr;
+     dst = cons(message, success);
+     return (void*)dst;
+diff --git a/au3/libraries/au3-project-file-io/DBConnection.cpp b/au3/libraries/au3-project-file-io/DBConnection.cpp
+index 1073a3c..48e0c0a 100644
+--- a/au3/libraries/au3-project-file-io/DBConnection.cpp
++++ b/au3/libraries/au3-project-file-io/DBConnection.cpp
+@@ -392,7 +392,7 @@ int DBConnection::ModeConfig(sqlite3* db, const char* schema, const char* config
+     sql.Replace(wxT("<schema>"), schema);
+ 
+     // Set the configuration
+-    rc = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
++    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+     if (rc != SQLITE_OK) {
+         ADD_EXCEPTION_CONTEXT("sqlite3.rc", std::to_string(rc));
+         ADD_EXCEPTION_CONTEXT("sqlite3.context", "DBConnection::ModeConfig");
+@@ -625,7 +625,7 @@ bool DBConnectionTransactionScopeImpl::TransactionStart(const wxString& name)
+     char* errmsg = nullptr;
+ 
+     int rc = sqlite3_exec(mConnection.DB(),
+-                          wxT("SAVEPOINT ") + name + wxT(";"),
++                          (wxT("SAVEPOINT ") + name + wxT(";")).c_str(),
+                           nullptr,
+                           nullptr,
+                           &errmsg);
+@@ -649,7 +649,7 @@ bool DBConnectionTransactionScopeImpl::TransactionCommit(const wxString& name)
+     char* errmsg = nullptr;
+ 
+     int rc = sqlite3_exec(mConnection.DB(),
+-                          wxT("RELEASE ") + name + wxT(";"),
++                          (wxT("RELEASE ") + name + wxT(";")).c_str(),
+                           nullptr,
+                           nullptr,
+                           &errmsg);
+@@ -673,7 +673,7 @@ bool DBConnectionTransactionScopeImpl::TransactionRollback(const wxString& name)
+     char* errmsg = nullptr;
+ 
+     int rc = sqlite3_exec(mConnection.DB(),
+-                          wxT("ROLLBACK TO ") + name + wxT(";"),
++                          (wxT("ROLLBACK TO ") + name + wxT(";")).c_str(),
+                           nullptr,
+                           nullptr,
+                           &errmsg);
+diff --git a/au3/libraries/au3-project-file-io/ProjectFileIO.cpp b/au3/libraries/au3-project-file-io/ProjectFileIO.cpp
+index 85ffdd8..11f66d7 100644
+--- a/au3/libraries/au3-project-file-io/ProjectFileIO.cpp
++++ b/au3/libraries/au3-project-file-io/ProjectFileIO.cpp
+@@ -839,7 +839,7 @@ bool ProjectFileIO::InstallSchema(sqlite3* db, const char* schema /* = "main" */
+     sql.Printf(ProjectFileSchema, ProjectFileID, ProjectSchemaVersion.GetPacked());
+     sql.Replace("<schema>", schema);
+ 
+-    rc = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
++    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+     if (rc != SQLITE_OK) {
+         SetDBError(
+             TranslatableString("project-file-io", "Unable to initialize the project file")
+@@ -906,7 +906,7 @@ bool ProjectFileIO::DeleteBlocks(const BlockIDs& blockids, bool complement)
+     auto sql = wxString::Format(
+         "DELETE FROM sampleblocks WHERE %sinset(blockid);",
+         complement ? "NOT " : "");
+-    rc = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
++    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+     if (rc != SQLITE_OK) {
+         ADD_EXCEPTION_CONTEXT("sqlite3.query", sql.ToStdString());
+         ADD_EXCEPTION_CONTEXT("sqlite3.rc", std::to_string(rc));
+@@ -1046,7 +1046,7 @@ bool ProjectFileIO::CopyTo(const FilePath& destpath,
+     dbName.Replace("'", "''");
+     sql.Printf("ATTACH DATABASE '%s' AS outbound;", dbName.ToUTF8());
+ 
+-    rc = sqlite3_exec(db, sql, nullptr, nullptr, nullptr);
++    rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+     if (rc != SQLITE_OK) {
+         SetDBError(
+             TranslatableString("project-file-io", "Unable to attach destination database")
+@@ -1683,7 +1683,7 @@ void ProjectFileIO::SetProjectTitle(int number)
+             =/*: %1 is the project number, %2 is the project name.*/
+               TranslatableString("project-file-io", "[Project %1] Audacity “%2”")
+               .Format(number + 1,
+-                      name.empty() ? TranslatableString("project-file-io", "<untitled>") : TranslatableString::untranslatable((const char*)name))
++                      name.empty() ? TranslatableString("project-file-io", "<untitled>") : TranslatableString::untranslatable(name))
+               .Translation();
+     }
+     // If we are not showing numbers, then <untitled> shows as 'Audacity'.
+@@ -2011,7 +2011,7 @@ bool ProjectFileIO::WriteDoc(const char* table,
+     const wxString rowIDSql
+         =wxString::Format("SELECT ROWID FROM %s.%s WHERE id = 1;", schema, table);
+ 
+-    if (!GetValue(rowIDSql, rowID, true)) {
++    if (!GetValue(rowIDSql.c_str(), rowID, true)) {
+         ADD_EXCEPTION_CONTEXT("sqlite3.rc", std::to_string(sqlite3_errcode(db)));
+         ADD_EXCEPTION_CONTEXT("sqlite3.context", "ProjectGileIO::WriteDoc::rowid");
+ 
+diff --git a/au3/libraries/au3-strings/TranslatableString.h b/au3/libraries/au3-strings/TranslatableString.h
+index 94dea21..dd93e8f 100644
+--- a/au3/libraries/au3-strings/TranslatableString.h
++++ b/au3/libraries/au3-strings/TranslatableString.h
+@@ -97,7 +97,10 @@ public:
+     { return TranslatableString(nullptr, s); }
+     static TranslatableString untranslatable(const QString& s)
+     { return TranslatableString(nullptr, s); }
+-    //! wxString overload lives in WxMuseStringCompat.h.
++    //! UTF-8-correct wxString overload; defined in WxMuseStringCompat.h.
++    //! Without it, wxString arguments depend on the implicit const char*
++    //! conversion, which wxUSE_STL builds of wxWidgets do not have.
++    static TranslatableString untranslatable(const wxString& s);
+ 
+     bool isEmpty()        const { return m_source.isEmpty(); }
+     bool empty()          const { return isEmpty(); }
+diff --git a/au3/libraries/au3-strings/WxMuseStringCompat.h b/au3/libraries/au3-strings/WxMuseStringCompat.h
+index 79210d8..f18e092 100644
+--- a/au3/libraries/au3-strings/WxMuseStringCompat.h
++++ b/au3/libraries/au3-strings/WxMuseStringCompat.h
+@@ -37,6 +37,14 @@ inline ::TranslatableString untranslatable(const wxString& s)
+ {
+     return ::TranslatableString::untranslatable(wxToQt(s));
+ }
++} // namespace au3
++
++inline TranslatableString TranslatableString::untranslatable(const wxString& s)
++{
++    return untranslatable(au3::wxToQt(s));
++}
++
++namespace au3 {
+ 
+ //! Non-template overload of TranslatableString.h's argDecay so
+ //! `.arg(wxStringValue)` resolves: wxString -> QString -> Arg<QString>.
+diff --git a/au3/modules/import-export/mod-ffmpeg/ExportFFmpegOptions.cpp b/au3/modules/import-export/mod-ffmpeg/ExportFFmpegOptions.cpp
+index ebc4346..bcc21c0 100644
+--- a/au3/modules/import-export/mod-ffmpeg/ExportFFmpegOptions.cpp
++++ b/au3/modules/import-export/mod-ffmpeg/ExportFFmpegOptions.cpp
+@@ -892,7 +892,7 @@ void ExportFFmpegOptions::FetchCompatibleCodecList(const std::string& format,
+         }
+     }
+ 
+-    FetchCompatibleCodecList(selcdcid, wxString(format));
++    FetchCompatibleCodecList(selcdcid, wxString(format).wc_str());
+ 
+     return;
+ }

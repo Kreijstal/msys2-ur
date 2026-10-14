@@ -1,0 +1,228 @@
+au3: add missing standard library includes
+
+These files rely on transitive includes of the MSVC STL or libstdc++. Some
+were already guarded with "#ifdef __linux__ // Linux requires explicit
+include"; libc++ (clang64) needs them as well, so make them unconditional.
+Statement.h and MultipartData.h use int64_t without <cstdint>, which
+libstdc++ 16 no longer provides through <string>/<memory>.
+
+diff --git a/au3/libraries/au3-builtin-effects/DistortionBase.cpp b/au3/libraries/au3-builtin-effects/DistortionBase.cpp
+index 671e848..5d65799 100644
+--- a/au3/libraries/au3-builtin-effects/DistortionBase.cpp
++++ b/au3/libraries/au3-builtin-effects/DistortionBase.cpp
+@@ -17,10 +17,8 @@
+ *//*******************************************************************/
+ #include "DistortionBase.h"
+ #include "au3-command-parameters/ShuttleAutomation.h"
+-// Linux requires explicit include for std::exp, std::log, std::sin, std::pow
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::exp, std::log, std::sin, std::pow
+ #include <cmath>
+-#endif
+ #include <utility>
+ 
+ #define STEPS 1024 // number of +ve or -ve steps in lookup tabe
+diff --git a/au3/libraries/au3-dynamic-range-processor/CompressorProcessor.cpp b/au3/libraries/au3-dynamic-range-processor/CompressorProcessor.cpp
+index 5b7da65..2a39937 100644
+--- a/au3/libraries/au3-dynamic-range-processor/CompressorProcessor.cpp
++++ b/au3/libraries/au3-dynamic-range-processor/CompressorProcessor.cpp
+@@ -15,10 +15,8 @@
+ #include "SimpleCompressor/LookAheadGainReduction.h"
+ #include <algorithm>
+ #include <cassert>
+-// Linux requires explicit include for std::abs
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::abs
+ #include <cmath>
+-#endif
+ 
+ float CompressorProcessor::GetMakeupGainDb(
+     const DynamicRangeProcessorSettings& settings)
+diff --git a/au3/libraries/au3-dynamic-range-processor/SimpleCompressor/GainReductionComputer.cpp b/au3/libraries/au3-dynamic-range-processor/SimpleCompressor/GainReductionComputer.cpp
+index d062ce6..f96f4d7 100644
+--- a/au3/libraries/au3-dynamic-range-processor/SimpleCompressor/GainReductionComputer.cpp
++++ b/au3/libraries/au3-dynamic-range-processor/SimpleCompressor/GainReductionComputer.cpp
+@@ -18,10 +18,8 @@
+ 
+ #include "GainReductionComputer.h"
+ #include "au3-utility/MathApprox.h"
+-// Linux requires explicit include for std::abs
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::abs
+ #include <cmath>
+-#endif
+ 
+ namespace DanielRudrich {
+ namespace {
+diff --git a/au3/libraries/au3-import-export/LibsndfileTagger.cpp b/au3/libraries/au3-import-export/LibsndfileTagger.cpp
+index f0db993..cbfc400 100644
+--- a/au3/libraries/au3-import-export/LibsndfileTagger.cpp
++++ b/au3/libraries/au3-import-export/LibsndfileTagger.cpp
+@@ -1,6 +1,7 @@
+ #include "LibsndfileTagger.h"
+ #include "au3-file-formats/AcidizerTags.h"
+ 
++#include <algorithm>
+ #include <array>
+ #include <cassert>
+ #include <cmath>
+diff --git a/au3/libraries/au3-mixer/AudioIOSequences.h b/au3/libraries/au3-mixer/AudioIOSequences.h
+index f6850d9..b5c837a 100644
+--- a/au3/libraries/au3-mixer/AudioIOSequences.h
++++ b/au3/libraries/au3-mixer/AudioIOSequences.h
+@@ -13,6 +13,8 @@
+ #define __AUDACITY_AUDIO_IO_SEQUENCES__
+ 
+ #include "WideSampleSequence.h"
++
++#include <vector>
+ class ChannelGroup;
+ 
+ /*!
+diff --git a/au3/libraries/au3-network-manager/MultipartData.h b/au3/libraries/au3-network-manager/MultipartData.h
+index 0d07841..1e41d3d 100644
+--- a/au3/libraries/au3-network-manager/MultipartData.h
++++ b/au3/libraries/au3-network-manager/MultipartData.h
+@@ -12,6 +12,7 @@
+ #include <vector>
+ #include <memory>
+ #include <cstddef>
++#include <cstdint>
+ #include <string_view>
+ #include <string>
+ 
+diff --git a/au3/libraries/au3-snapping/Snap.cpp b/au3/libraries/au3-snapping/Snap.cpp
+index efa81b9..3ba5044 100644
+--- a/au3/libraries/au3-snapping/Snap.cpp
++++ b/au3/libraries/au3-snapping/Snap.cpp
+@@ -11,11 +11,9 @@
+ #include "Snap.h"
+ 
+ #include <algorithm>
+-// Linux requires explicit include for std::abs
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::abs
+ #include <cmath>
+ #include <cstdlib>
+-#endif
+ 
+ #include "au3-project/Project.h"
+ #include "au3-numeric-formats/ProjectNumericFormats.h"
+diff --git a/au3/libraries/au3-sqlite-helpers/sqlite/Statement.h b/au3/libraries/au3-sqlite-helpers/sqlite/Statement.h
+index 677ef40..210f879 100644
+--- a/au3/libraries/au3-sqlite-helpers/sqlite/Statement.h
++++ b/au3/libraries/au3-sqlite-helpers/sqlite/Statement.h
+@@ -6,6 +6,7 @@
+ 
+ #pragma once
+ 
++#include <cstdint>
+ #include <memory>
+ #include <optional>
+ #include <string>
+diff --git a/au3/libraries/au3-stretching-sequence/AudioSegment.h b/au3/libraries/au3-stretching-sequence/AudioSegment.h
+index 62fda35..96e95cf 100644
+--- a/au3/libraries/au3-stretching-sequence/AudioSegment.h
++++ b/au3/libraries/au3-stretching-sequence/AudioSegment.h
+@@ -11,10 +11,8 @@
+ 
+ #pragma once
+ 
+-// Linux requires explicit include for size_t
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for size_t
+ #include <cstddef>
+-#endif
+ 
+ #include <vector>
+ 
+diff --git a/au3/libraries/au3-stretching-sequence/AudioSegmentSampleView.h b/au3/libraries/au3-stretching-sequence/AudioSegmentSampleView.h
+index ff5241a..3520878 100644
+--- a/au3/libraries/au3-stretching-sequence/AudioSegmentSampleView.h
++++ b/au3/libraries/au3-stretching-sequence/AudioSegmentSampleView.h
+@@ -13,10 +13,8 @@ ranges.
+ **********************************************************************/
+ #pragma once
+ 
+-// Linux requires explicit include for size_t
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for size_t
+ #include <cstddef>
+-#endif
+ 
+ #include <fstream>
+ #include <memory>
+diff --git a/au3/libraries/au3-string-utils/ToChars.cpp b/au3/libraries/au3-string-utils/ToChars.cpp
+index fbb6d27..b47fb8b 100644
+--- a/au3/libraries/au3-string-utils/ToChars.cpp
++++ b/au3/libraries/au3-string-utils/ToChars.cpp
+@@ -10,6 +10,7 @@
+ 
+ #include "ToChars.h"
+ 
++#include <algorithm>
+ #include <array>
+ #include <cmath>
+ #include <cstdint>
+diff --git a/au3/libraries/au3-utility/MemoryX.h b/au3/libraries/au3-utility/MemoryX.h
+index a0ee9d9..5d19cb0 100644
+--- a/au3/libraries/au3-utility/MemoryX.h
++++ b/au3/libraries/au3-utility/MemoryX.h
+@@ -2,6 +2,7 @@
+ #define __AUDACITY_MEMORY_X_H__
+ 
+ // C++ standard header <memory> with a few extensions
++#include <atomic>
+ #include <memory>
+ #include <new> // align_val_t and hardware_destructive_interference_size
+ #include <cstdlib> // Needed for free.
+diff --git a/au3/libraries/au3-wave-track-paint/GraphicsDataCache.cpp b/au3/libraries/au3-wave-track-paint/GraphicsDataCache.cpp
+index 396a1ab..f3ad5c9 100644
+--- a/au3/libraries/au3-wave-track-paint/GraphicsDataCache.cpp
++++ b/au3/libraries/au3-wave-track-paint/GraphicsDataCache.cpp
+@@ -12,10 +12,8 @@
+ 
+ #include <algorithm>
+ #include <cassert>
+-// Linux requires explicit include for std::abs
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::abs
+ #include <cmath>
+-#endif
+ #include <type_traits>
+ 
+ #include "au3-screen-geometry/ZoomInfo.h"
+diff --git a/au3/libraries/au3-wave-track-paint/PixelSampleMapper.cpp b/au3/libraries/au3-wave-track-paint/PixelSampleMapper.cpp
+index 84f61f7..e904c86 100644
+--- a/au3/libraries/au3-wave-track-paint/PixelSampleMapper.cpp
++++ b/au3/libraries/au3-wave-track-paint/PixelSampleMapper.cpp
+@@ -11,11 +11,9 @@
+ #include "PixelSampleMapper.h"
+ 
+ #include <cassert>
+-// Linux requires explicit include for std::floor, std::min, std::max
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::floor, std::min, std::max
+ #include <cmath>
+ #include <algorithm>
+-#endif
+ 
+ #include "au3-math/SampleCount.h"
+ #include "au3-utility/Variant.h"
+diff --git a/au3/libraries/au3-wave-track-paint/waveform/WaveDataCache.cpp b/au3/libraries/au3-wave-track-paint/waveform/WaveDataCache.cpp
+index c00edde..5106924 100644
+--- a/au3/libraries/au3-wave-track-paint/waveform/WaveDataCache.cpp
++++ b/au3/libraries/au3-wave-track-paint/waveform/WaveDataCache.cpp
+@@ -13,11 +13,9 @@
+ 
+ #include <algorithm>
+ #include <cassert>
+-// Linux requires explicit include for std::round and std::memmove
+-#ifdef __linux__
++// Linux (and libc++) require explicit include for std::round and std::memmove
+ #include <cmath>
+ #include <cstring>
+-#endif
+ 
+ #include "au3-math/RoundUpUnsafe.h"
+ #include "au3-math/SampleFormat.h"

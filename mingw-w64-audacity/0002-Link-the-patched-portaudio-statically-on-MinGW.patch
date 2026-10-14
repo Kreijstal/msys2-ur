@@ -1,0 +1,89 @@
+Link Audacity's patched portaudio statically on MinGW
+
+Audacity needs its own portaudio build (WASAPI loopback, the portmixer
+exports and lazy ASIO enumeration), which on Windows is a DLL called
+portaudio_x64.dll. A MinGW build of it is libportaudio.dll, the same
+name as the distribution's unpatched portaudio, so the two would clash
+on disk and on PATH. Link it statically instead: add a static mode to
+the recipe (with the system libraries it then needs) and use it for
+MinGW.
+
+Also fix the PaWinDS_GetDeviceGUID() prototype added by the recipe's
+0001 patch: it is defined with a GUID** out parameter (portmixer passes
+the address of an LPGUID), but declared with GUID*. MSVC only warns about
+conflicting types in C; clang and gcc reject them.
+
+diff --git a/buildscripts/cmake/DependencyManifest.cmake b/buildscripts/cmake/DependencyManifest.cmake
+index e4e4b52..e883731 100644
+--- a/buildscripts/cmake/DependencyManifest.cmake
++++ b/buildscripts/cmake/DependencyManifest.cmake
+@@ -24,7 +24,14 @@ require_dep(wavpack)
+ require_dep(libsndfile)
+ if (OS_IS_WIN)
+     require_source_dep(asiosdk)
+-    require_dep(portaudio REBUILD)
++    if (MINGW)
++        # MinGW distributions ship their own, unpatched libportaudio.dll;
++        # link the patched build statically so it can neither clash with
++        # nor be shadowed by it.
++        require_dep(portaudio STATIC)
++    else()
++        require_dep(portaudio REBUILD)
++    endif()
+ else()
+     require_dep(portaudio)
+ endif()
+diff --git a/muse_deps/recipes/portaudio/meta.cmake b/muse_deps/recipes/portaudio/meta.cmake
+index 42036ff..2f15dce 100644
+--- a/muse_deps/recipes/portaudio/meta.cmake
++++ b/muse_deps/recipes/portaudio/meta.cmake
+@@ -2,3 +2,14 @@ set(DEP_TARGET portaudio::portaudio)
+ set(DEP_LIBS portaudio)
+ set(DEP_LIBS_WINDOWS portaudio_x64)
+ set(DEP_SYSTEM_HEADER portaudio.h)
++
++if(DEP_STATIC)
++    list(APPEND DEP_CMAKE_ARGS
++        -DPA_BUILD_SHARED=OFF
++        -DPA_BUILD_STATIC=ON
++    )
++    # the static library leaves its system libraries to the consumer
++    if(WIN32)
++        set(DEP_LINK_DEPS winmm dsound ole32 uuid)
++    endif()
++endif()
+diff --git a/muse_deps/recipes/portaudio/patch/0003-dsound-getdeviceguid-prototype.patch b/muse_deps/recipes/portaudio/patch/0003-dsound-getdeviceguid-prototype.patch
+new file mode 100644
+index 0000000..cff8cf7
+--- /dev/null
++++ b/muse_deps/recipes/portaudio/patch/0003-dsound-getdeviceguid-prototype.patch
+@@ -0,0 +1,17 @@
++PaWinDS_GetDeviceGUID() is defined with a GUID** out parameter (portmixer
++passes the address of an LPGUID), but 0001 declared it with GUID*. MSVC only
++warns about the mismatch in C; clang and gcc reject the conflicting types.
++
++diff --git a/include/pa_win_ds.h b/include/pa_win_ds.h
++index edd6b58..190d8a2 100644
++--- a/include/pa_win_ds.h
+++++ b/include/pa_win_ds.h
++@@ -86,7 +86,7 @@ typedef struct PaWinDirectSoundStreamInfo{
++ 
++ }PaWinDirectSoundStreamInfo;
++ 
++-PaError PaWinDS_GetDeviceGUID (PaDeviceIndex device, GUID* pGUID);
+++PaError PaWinDS_GetDeviceGUID (PaDeviceIndex device, GUID** pGUID);
++ 
++ #ifdef __cplusplus
++ }
+diff --git a/muse_deps/recipes/portaudio/spec.cmake b/muse_deps/recipes/portaudio/spec.cmake
+index 1568dbb..f2e299d 100644
+--- a/muse_deps/recipes/portaudio/spec.cmake
++++ b/muse_deps/recipes/portaudio/spec.cmake
+@@ -17,6 +17,7 @@ endif()
+ set(DEP_PATCHES_WINDOWS
+     patch/0001-windows-loopback-and-mixer-exports.patch
+     patch/0002-asio-lazy-device-enumeration.patch
++    patch/0003-dsound-getdeviceguid-prototype.patch
+ )
+ 
+ set(DEP_LICENSE_FILES LICENSE.txt)
