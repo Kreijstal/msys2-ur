@@ -1,0 +1,1476 @@
+diff --git a/bootstrap/m612/cppcli.sh b/bootstrap/m612/cppcli.sh
+index badf480..6dbd88c 100755
+--- a/bootstrap/m612/cppcli.sh
++++ b/bootstrap/m612/cppcli.sh
+@@ -23,10 +23,12 @@ EOF
+     "-p:BaseIntermediateOutputPath=$(cygpath -m "$build/metadata-obj")/" \
+     "-p:OutputPath=$(cygpath -m "$build/metadata")/" -p:NuGetAudit=false
+   log "Build Clang token adapter and AST emitter"
+-  /clang64/bin/python.exe "$src/fetch-clang-parse.py" "$M612/src/clang-parse-22.1.8" "$build/clang-parse"
++  local llvm_version
++  llvm_version=$(/clang64/bin/llvm-config.exe --version)
++  /clang64/bin/python.exe "$src/fetch-clang-parse.py" "$M612/src/clang-parse-$llvm_version" "$build/clang-parse" --llvm-version "$llvm_version"
+   /clang64/bin/cmake.exe -S "$src" -B "$build" -GNinja -DCMAKE_BUILD_TYPE=Release \
+     -DCMAKE_C_COMPILER=/clang64/bin/clang.exe -DCMAKE_CXX_COMPILER=/clang64/bin/clang++.exe \
+-    -DLLVM_DIR=/clang64/lib/cmake/llvm -DCPPCLI_PARSE_DIR="$build/clang-parse"
++    -DLLVM_DIR=/clang64/lib/cmake/llvm -DCPPCLI_PARSE_DIR="$build/clang-parse" -DCPPCLI_LLVM_VERSION="$llvm_version"
+   /clang64/bin/cmake.exe --build "$build" --target cli_ast -j2
+ }
+ compile() {
+diff --git a/bootstrap/m612/cppcli/CMakeLists.txt b/bootstrap/m612/cppcli/CMakeLists.txt
+index f492a1b..bf79a50 100644
+--- a/bootstrap/m612/cppcli/CMakeLists.txt
++++ b/bootstrap/m612/cppcli/CMakeLists.txt
+@@ -1,6 +1,11 @@
+ cmake_minimum_required(VERSION 3.24)
+ project(cppcli LANGUAGES C CXX)
+-find_package(LLVM 22.1.8 EXACT REQUIRED CONFIG)
++set(CPPCLI_LLVM_VERSION "22.1.8" CACHE STRING "Exact LLVM version of the private parser and Clang plugin")
++if(NOT CPPCLI_LLVM_VERSION MATCHES "^(22\\.1\\.8|23\\.1\\.3)$")
++  message(FATAL_ERROR "No checksum-locked parser port for LLVM ${CPPCLI_LLVM_VERSION}")
++endif()
++find_package(LLVM ${CPPCLI_LLVM_VERSION} EXACT REQUIRED CONFIG)
++file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/clang-version.txt" "${CPPCLI_LLVM_VERSION}\n")
+ find_path(CPPCLI_CLANG_INCLUDE clang/Frontend/FrontendPluginRegistry.h HINTS ${LLVM_INCLUDE_DIRS} REQUIRED)
+ # MSYS2 splits clang-tools-extra libraries from clang. Its ClangConfig checks
+ # every static tool library even though this plugin only needs clang-cpp.
+@@ -23,4 +28,6 @@ if(NOT WIN32)
+ endif()
+ configure_file(cli-clang.py cli-clang COPYONLY)
+ configure_file(include/vcclr.h include/vcclr.h COPYONLY)
+-configure_file(capabilities.json capabilities.json COPYONLY)
++file(READ "${CMAKE_CURRENT_SOURCE_DIR}/capabilities.json" CPPCLI_CAPABILITIES)
++string(JSON CPPCLI_CAPABILITIES SET "${CPPCLI_CAPABILITIES}" clang "\"${CPPCLI_LLVM_VERSION}\"")
++file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/capabilities.json" "${CPPCLI_CAPABILITIES}\n")
+diff --git a/bootstrap/m612/cppcli/LLVMVersions.md b/bootstrap/m612/cppcli/LLVMVersions.md
+new file mode 100644
+index 0000000..1c7a86c
+--- /dev/null
++++ b/bootstrap/m612/cppcli/LLVMVersions.md
+@@ -0,0 +1,37 @@
++# Checksum-locked Clang plugin versions
++
++The frontend supports LLVM/Clang 22.1.8 and 23.1.3 as separate, exact ABI targets.
++cppcli.sh reads llvm-config's version, selects the corresponding checksum manifest
++and CLI parser patch, and passes the version to CMake's exact LLVM lookup.
++LLVM22 retains its existing 18 parser files; LLVM23 uses 19, including the upstream
++ParseReflect.cpp translation unit. This does not add managed reflection syntax
++support to the compiler subset.
++
++The LLVM23 patch is a three-way port of the existing CLI changes against the
++original LLVM22 and LLVM23 release-tag sources. Its full-context hunks preserve
++upstream parser changes instead of inserting CLI hooks at old line numbers.
++Every input parser file is checksum-verified before patching. Offline preparation
++and switching between the two versions remove stale parser translation units.
++
++CMake records clang-version.txt beside the plugin and driver, and writes the
++selected version into generated capabilities.json. The driver verifies an exact
++Clang version before loading the plugin. A missing record retains the legacy
++LLVM22 behavior for old build trees; new packages install the generated record.
++The guard also rejects version-prefix collisions such as 23.1.30.
++
++The LLVM23 compiler builds with the trusted MSYS2 toolchain and source-built SDK.
++Its existing 18 package check groups exercise runtime behavior, metadata, arrays,
++tracking, pinning, interop and rejection cases. Original WPF DirectWriteForwarder
++and System.Printing compile with this compiler; their assembly/JIT checks and
++printing properties, native spooler enumeration and local XPS readback pass.
++
++Windows console code page is a test precondition for redirected Unicode output.
++The test session selects UTF-8 (65001) and restores the previous page on exit.
++Both the new and saved LLVM22 control applications produced replacement characters
++under code page 850; their UTF-16 IL literals were correct. No source assertion is
++removed or weakened to accommodate that host setting.
++
++This changes toolchain support, not the advertised language subset or mixed-mode
++PE capabilities. Every other LLVM version requires its own reviewed source port
++and matching plugin build; a version check must not be bypassed to load an ABI-
++incompatible plugin.
+diff --git a/bootstrap/m612/cppcli/capabilities.json b/bootstrap/m612/cppcli/capabilities.json
+index 9f7db77..0820037 100644
+--- a/bootstrap/m612/cppcli/capabilities.json
++++ b/bootstrap/m612/cppcli/capabilities.json
+@@ -2,6 +2,7 @@
+   "schema": 1,
+   "stage": "private-clang-parser-subset",
+   "clang": "22.1.8",
++  "supported_clang_versions": ["22.1.8", "23.1.3"],
+   "runtime": "net8.0-windows-x64",
+   "supported": [
+     "Clang preprocessing, macros, includes and original-source line mapping",
+@@ -18,7 +19,7 @@
+     "executable/library output with distinct assembly identities",
+     "C# consumption of generated public constructors, fields and methods",
+     "source-built ilasm assembly and source-built CoreCLR execution",
+-    "Private Clang parser built from 18 checksum-pinned LLVM source files",
++    "Private Clang parser built from 18 checksum-pinned LLVM22 files or 19 checksum-pinned LLVM23 files",
+     "Managed caret declarators resolved after real C++ scope lookup",
+     "Native XOR with shadowed managed type names",
+     "Field updates evaluate side-effectful receivers exactly once",
+@@ -297,7 +298,15 @@
+     "Managed array record typeid operands emit actual CLR vector tokens, including byte, source value and jagged String arrays; the complete original printing project now assembles a DLL, loads 235 types and prepares 2017 method bodies without failures",
+     "Original complete printing properties/dictionary and PrintServer enumeration run across GC and disposal; printer names match native Winspool. Original XpsDocumentWriter writes a vector page with checked package XML/colors/geometry and WPF readback. ReachFramework and PresentationFramework rebuild against the actual printing DLL with control/XAML/BAML/pixel regression checks passing",
+     "Ten additional WPF shipping assemblies build from 318 planned C# inputs: both automation clients, five framework extensions, System.Windows.Presentation, Ribbon and WindowsFormsIntegration. Source-derived signing keys and resource namespaces preserve identity; 674 types/6426 prepared bodies, native automation, Ribbon BAML/template, dynamic/data/XML bindings and source WPF/WinForms host lifetimes pass",
+-    "Source WindowsDesktop SDK/shared/targeting/runtime layouts now build a normal net8.0-windows UseWPF project offline with real XAML/BAML and shared-framework raster output; self-contained win-x64 publish renders the same pixels with SDK roots and toolchain PATH removed. Layout carries WPF 8 plus approved interim WinForms 7 and records partial native coverage and trusted MSYS2 libc++/ICU dependencies"
++    "Source WindowsDesktop SDK/shared/targeting/runtime layouts now build a normal net8.0-windows UseWPF project offline with real XAML/BAML and shared-framework raster output; self-contained win-x64 publish renders the same pixels with SDK roots and toolchain PATH removed. Layout carries WPF 8 plus approved interim WinForms 7 and records partial native coverage and trusted MSYS2 libc++/ICU dependencies",
++    "An experimental source-built WindowsDesktop 8.0.0 MSYS2 package is built, installed and validated: 42 managed assemblies, eight native libraries, original markup SDK, shared/targeting/runtime packs and preserved WinForms 7 framework versions. Installed WPF/WinForms offline builds, windows/pixels/events, self-contained publish and disabled-roll-forward legacy WinForms execution pass. Native text/paragraph support remains partial.",
++    "Source Line Services draws decorated retained runs through original underline/strikethrough metric and draw callbacks; native ABI, single/double geometry and callback failures pass, and public TextFormatter custom pens render underline/strikethrough/overline/baseline pixels across compacting GC. Imported native coverage remains 58/139; full bidi/paragraph layout remains incomplete. WindowsDesktop package 8.0.0-2 rebuilds this native library in its private source tree; installed-library decoration checks and normal installed WPF build/self-contained publish pass.",
++    "Source tab layout retains per-tab widths and original CP/run identity, aligns left/center/right/decimal/character fields across client runs, advances incremental stops, and calls original EnumTab/leader measurement/drawing callbacks. Native ABI/geometry/errors and public WPF alignments, leaders, caret/selection/enumeration, ordinary wrapping and compacting-GC raster checks pass. PresentationCore now generates all four original composite-font resources through source WinFX tasks. Aligned fields cut by wrapping, exact legacy leader spacing and bidi tabs remain incomplete; imported coverage remains 58/139. WindowsDesktop package 8.0.0-3 rebuilds the native engine and PresentationCore resources in its private source tree; normal installed UseWPF projects and self-contained publish pass all tab/font-resource checks with SDK roots removed.",
++    "Aligned-field wrapping evaluates each legal Unicode break with its retained tab field, then validates real remeasured/reshaped visible geometry and retries an earlier candidate when contextual advances grow. Native retained right-field/tab-cell/break-record and changed-advance checks pass; public four-alignment, whole/split-field, in/out-of-column stop, continuation/enumeration/raster/GC tests cover all source units and permit only indivisible leading-tab overflow. Release 3 reproduces NotImplemented on the new public check; full bidi/paragraph layout and exact legacy leader spacing remain incomplete. Explicit-only zero-increment stops also retain fitting prefixes when the full field has no fallback. WindowsDesktop 8.0.0-4 rebuilds this native engine privately; installed normal UseWPF build and self-contained publish/run pass the expanded wrapping/resource/GC checks.",
++    "Original inline object ID 1 uses source-generated InlineInit/ObjDim ABI and original handler/format/draw callbacks; retained dimensions contribute real metrics, atomic queries and original identity, with objects omitted from glyph enumeration. Native ABI/geometry/errors and all 16 source break-condition combinations pass; public fixed/flexible TextEmbeddedObject three-character spans, remaining width, caret/selection, atomic wrapping, callback exceptions and actual TextBlock InlineUIContainer raster/point-hit checks pass across GC. Normal offline UseWPF and self-contained publish/run pass; SDK validation now unlinks replacement desktop hardlinks and proves installed seed hashes unchanged. Position-dependent objects after aligned tabs, bidi/paragraph layout and other native behavior remain incomplete. WindowsDesktop package 8.0.0-5 rebuilds this native engine in its private source tree; installed normal WPF inline-object/UI-container consumers and portable self-contained publish/run pass.",
++    "Regular inter-word justification uses source-generated neighbor/character/glyph record ABI and original expansion callbacks with three provider capacity levels. Actual retained advances drive width/caret/selection/enumeration/drawing, while nominal glyph advances and minimum widths remain preserved. Native exact geometry, limits/errors and final-line policy pass; public Latin/Indic Ideal/Display paragraphs and justified TextBlock measure/render/hit tests pass across GC. Paragraph-final/explicit-break/no-opportunity lines stay ragged. Aligned-tab/other modes, ink insertion, compression/optimal layout and full bidi/paragraph support remain incomplete. WindowsDesktop package 8.0.0-6 rebuilds this engine privately; installed normal UseWPF consumers and self-contained publish/run pass nominal/shaped justification and actual justified TextBlock checks.",
++    "Min/max paragraph mode retains complete content, suppresses column wrapping/justification and uses shared Unicode/shaping-cluster/object-edge geometry to measure widest indivisible segments and hard-line maxima. Native exact cross-run/trailing/NBSP/tab widths and all 16 inline-object break-table combinations pass. Public nominal/Indic/NBSP/hard-break/trailing/empty/cache checks pass in Ideal/Display modes across GC, including actual FormattedText.MinWidth and intrinsic/wrapped TextBlock render/hits. Full RTL, hyphenation/compression/optimal and paragraph/natural-language behavior remain incomplete. WindowsDesktop 8.0.0-7 rebuilds this native engine privately; installed normal UseWPF consumers and portable self-contained publish/run pass paragraph width, FormattedText.MinWidth and intrinsic/wrapped TextBlock checks.",
++    "Source paragraph services implement owned installed object registration/document contexts with original generated 872-byte FSCONTEXTINFO, 136-byte FSIMETHODS and 824-byte callback ABI. Original container/subpage create/destroy callbacks, copied ownership, invalid states and failure rollback pass native tests. Original PtsContext false/true optimal configurations work across Ideal/Display modes, GC, cache release and dispatcher shutdown; owned LS penalty wrapper/internal-state/disposal APIs retain actual context state but do not claim scoring/optimal layout. Normal source SDK/shared/self-contained consumers pass. FlowDocument advances from missing registration/penalty acquisition to missing FsCreatePageFinite; native imported coverage is 65/139. Full page/paragraph/bidi/optimal/natural-language behavior remains incomplete. WindowsDesktop 8.0.0-8 rebuilds these source modules privately; installed normal SDK paragraph-context and portable publish/run checks pass, while installed FlowDocument reproduces the next absent FsCreatePageFinite entry point."
+   ],
+   "limitations": [
+     "Contextual literal adaptation covers imported qualified static calls and managed class method calls",
+@@ -313,7 +322,7 @@
+     "User finalizer declarations, value/interface destructors, covariance metadata and managed operator metadata remain unsupported",
+     "Native bridges require extern-C scalars or unmanaged pointers; bool/automatic marshalling, callbacks and automatic native partitioning are not enabled",
+     "Implicit primitive/interface boxing and multi-translation-unit linking remain unimplemented",
+-    "WPF DirectWriteForwarder and System.Printing implementation assemblies compile and have CLR/native runtime proofs; remaining native text/layout coverage and WindowsDesktop SDK/reference/runtime packaging remain incomplete",
++    "WPF DirectWriteForwarder and System.Printing implementation assemblies compile and have CLR/native runtime proofs; remaining native text/layout and full runtime coverage remain incomplete; the experimental WindowsDesktop SDK/framework package is built and installed",
+     "Value classes currently exclude bases/interfaces, virtual methods, native pointer fields and custom zero-argument constructors",
+     "Boxing covers explicit safe_cast to Object and implicit boxing into Object or matching selected value-class handles; handle upcasts, primitive boxes, constrained dispatch and boxed operator overloads remain incomplete",
+     "Tracking references exclude constructors, fields and tracking-reference returns; pin_ptr is restricted to primitive block locals and direct local assignments; general intrinsic pointer operations and interior assignments remain incomplete; arithmetic on explicitly spelled native pointers is supported for complete scalar/pointer/trivial POD or GC-free value elements",
+diff --git a/bootstrap/m612/cppcli/clang-caret-23.1.3.patch b/bootstrap/m612/cppcli/clang-caret-23.1.3.patch
+new file mode 100644
+index 0000000..55d5f13
+--- /dev/null
++++ b/bootstrap/m612/cppcli/clang-caret-23.1.3.patch
+@@ -0,0 +1,1181 @@
++--- ParseAST.cpp
+++++ ParseAST.cpp
++@@ -27,6 +27,12 @@
++ #include <memory>
++ 
++ using namespace clang;
+++
+++namespace clang {
+++void cppcliParseAST(Preprocessor &, ASTConsumer *, ASTContext &, bool,
+++                    TranslationUnitKind, CodeCompleteConsumer *, bool);
+++void cppcliParseAST(Sema &, bool, bool);
+++}
++ 
++ namespace {
++ 
++@@ -96,7 +102,7 @@
++ /// the file is parsed.  This inserts the parsed decls into the translation unit
++ /// held by Ctx.
++ ///
++-void clang::ParseAST(Preprocessor &PP, ASTConsumer *Consumer,
+++void clang::cppcliParseAST(Preprocessor &PP, ASTConsumer *Consumer,
++                      ASTContext &Ctx, bool PrintStats,
++                      TranslationUnitKind TUKind,
++                      CodeCompleteConsumer *CompletionConsumer,
++@@ -108,10 +114,10 @@
++   // Recover resources if we crash before exiting this method.
++   llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(S.get());
++ 
++-  ParseAST(*S, PrintStats, SkipFunctionBodies);
++-}
++-
++-void clang::ParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
+++  cppcliParseAST(*S, PrintStats, SkipFunctionBodies);
+++}
+++
+++void clang::cppcliParseAST(Sema &S, bool PrintStats, bool SkipFunctionBodies) {
++   // Collect global stats on Decls/Stmts (until we have a module streamer).
++   if (PrintStats) {
++     Decl::EnableStatistics();
++--- ParseDecl.cpp
+++++ ParseDecl.cpp
++@@ -11,6 +11,7 @@
++ //===----------------------------------------------------------------------===//
++ 
++ #include "clang/AST/ASTContext.h"
+++#include "clang/AST/Attr.h"
++ #include "clang/AST/DeclTemplate.h"
++ #include "clang/AST/PrettyDeclStackTrace.h"
++ #include "clang/Basic/AddressSpaces.h"
++@@ -37,6 +38,10 @@
++ #include <optional>
++ 
++ using namespace clang;
+++namespace clang {
+++ExprResult cppcliConvertReturn(Sema &, Scope *, Preprocessor &, Expr *, QualType, SourceLocation);
+++}
+++
++ 
++ //===----------------------------------------------------------------------===//
++ // C99 6.7: Declarations.
++@@ -2642,6 +2647,15 @@
++ 
++       PreferredType.enterVariableInit(Tok.getLocation(), ThisDecl);
++       ExprResult Init = ParseInitializer(ThisDecl);
+++      if(!Init.isInvalid())
+++        if(auto *Variable=dyn_cast_or_null<VarDecl>(ThisDecl)) {
+++          auto Type=Variable->getType();
+++          auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++          if(Record && (Record->getQualifiedNameAsString()=="System::Object" || Record->getQualifiedNameAsString()=="System::String") &&
+++              !Init.get()->getType().isNull() && !Init.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull))
+++            Init=cppcliConvertReturn(Actions,getCurScope(),PP,Init.get(),Type,EqualLoc);
+++        }
+++
++ 
++       // If this is the only decl in (possibly) range based for statement,
++       // our best guess is that the user meant ':' instead of '='.
++@@ -6409,7 +6423,70 @@
++   }
++ }
++ 
+++// Scalar caret handles are selected from Clang's resolved declaration type.
+++// The temporary facade is a CLR reference; source native stars retain their
+++// ordinary C++ type. Each comma declarator starts from the original base type.
+++static QualType cppcliScalarBoxElement(QualType Type) {
+++  if (Type.isNull()) return {};
+++  auto *Specialization = dyn_cast_or_null<ClassTemplateSpecializationDecl>(
+++      Type->getAsCXXRecordDecl());
+++  if (!Specialization || Specialization->getSpecializedTemplate()->getName() != "__cli_handle") return {};
+++  return Specialization->getTemplateArgs()[0].getAsType();
+++}
+++
+++static void cppcliSetDeclSpecType(Sema &Actions, DeclSpec &Spec, QualType Type,
+++    SourceLocation Loc) {
+++  Spec.ClearTypeSpecType();
+++  const char *Previous = nullptr; unsigned Diagnostic = 0;
+++  auto *Info = Actions.Context.getTrivialTypeSourceInfo(Type, Loc);
+++  Spec.SetTypeSpecType(DeclSpec::TST_typename, Loc, Previous, Diagnostic,
+++      Actions.CreateParsedType(Type, Info), Actions.Context.getPrintingPolicy());
+++}
+++
+++static bool cppcliScalarBox(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, AttributeFactory &Factory, Declarator &D, SourceLocation Loc) {
+++  // Fundamental sign/width combinations are normalized by the token adapter
+++  // to selected System primitive aliases before they reach this hook.
+++  auto &Spec = D.getMutableDeclSpec();
+++  if (Spec.getTypeSpecWidth() != TypeSpecifierWidth::Unspecified ||
+++      Spec.getTypeSpecSign() != TypeSpecifierSign::Unspecified) return false;
+++  ParsedAttributes Empty(Factory);
+++  Declarator Probe(Spec, Empty, DeclaratorContext::TypeName);
+++  auto *Info = Actions.GetTypeForDeclarator(Probe);
+++  if (!Info) return false;
+++  auto Type = Info->getType();
+++  bool Scalar = Type->isArithmeticType();
+++  if (auto *Enum = Type->getAs<EnumType>()) {
+++    auto *Decl = Enum->getDecl()->getDefinition();
+++    if (!Decl) Decl = Enum->getDecl();
+++    for (auto *Attr : Decl->specific_attrs<AnnotateAttr>())
+++      Scalar |= Attr->getAnnotation() == "cli.enum";
+++  }
+++  if (!Scalar) return false;
+++  auto *Identifier = &PP.getIdentifierTable().get("__cli_handle");
+++  LookupResult Lookup(Actions, Identifier, Loc, Sema::LookupOrdinaryName);
+++  Actions.LookupQualifiedName(Lookup, Actions.Context.getTranslationUnitDecl());
+++  auto *Template = Lookup.isSingleResult() ?
+++      dyn_cast<ClassTemplateDecl>(Lookup.getFoundDecl()) : nullptr;
+++  if (!Template) return false;
+++  TemplateArgumentListInfo Arguments(Loc, Loc);
+++  Arguments.addArgument(TemplateArgumentLoc(TemplateArgument(Type), Info));
+++  auto Box = Actions.CheckTemplateIdType(ElaboratedTypeKeyword::None,
+++      TemplateName(Template), Loc, Arguments, CurrentScope, false);
+++  if (Box.isNull()) return false;
+++  cppcliSetDeclSpecType(Actions, Spec, Box, Loc);
+++  return true;
+++}
+++
++ void Parser::ParseDeclarator(Declarator &D) {
+++  auto &Spec = D.getMutableDeclSpec();
+++  if (Spec.getTypeSpecType() == DeclSpec::TST_typename &&
+++      PP.getSourceManager().isWrittenInMainFile(Spec.getTypeSpecTypeLoc()) &&
+++      *PP.getSourceManager().getCharacterData(Spec.getTypeSpecTypeLoc()) == '^') {
+++    auto Type = Sema::GetTypeFromParser(Spec.getRepAsType());
+++    if (auto Element = cppcliScalarBoxElement(Type); !Element.isNull())
+++      cppcliSetDeclSpecType(Actions, Spec, Element, Spec.getTypeSpecTypeLoc());
+++  }
++   /// This implements the 'declarator' production in the C grammar, then checks
++   /// for well-formedness and issues diagnostics.
++   Actions.runWithSufficientStackSpace(D.getBeginLoc(), [&] {
++@@ -6430,7 +6507,7 @@
++   if (!Lang.CPlusPlus)
++     return false;
++ 
++-  if (Kind == tok::amp)
+++  if (Kind == tok::amp || Kind == tok::percent)
++     return true;
++ 
++   // We parse rvalue refs in C++03, because otherwise the errors are scary.
++@@ -6555,6 +6632,8 @@
++ 
++   // Otherwise, '*' -> pointer, '^' -> block, '&' -> lvalue reference,
++   // '&&' -> rvalue reference
+++  bool ScalarBox = Kind == tok::caret && !getLangOpts().Blocks &&
+++      cppcliScalarBox(Actions, getCurScope(), PP, AttrFactory, D, Tok.getLocation());
++   SourceLocation Loc = ConsumeToken();  // Eat the *, ^, & or &&.
++   D.SetRangeEnd(Loc);
++ 
++@@ -6575,7 +6654,13 @@
++     // Recursively parse the declarator.
++     Actions.runWithSufficientStackSpace(
++         D.getBeginLoc(), [&] { ParseDeclaratorInternal(D, DirectDeclParser); });
++-    if (Kind == tok::star)
+++    // This parser is private to the CLI frontend. Clang has already resolved
+++    // declaration/type context, so expression XOR remains untouched. Preserve
+++    // the caret source location for managed-type validation by the AST plugin.
+++    if (ScalarBox) {
+++      if (DS.getTypeQualifiers()) D.setInvalidType();
+++      // The handle is already represented by the reference facade in DeclSpec.
+++    } else if (Kind == tok::star || (Kind == tok::caret && !getLangOpts().Blocks))
++       // Remember that we parsed a pointer type, and remember the type-quals.
++       D.AddTypeInfo(DeclaratorChunk::getPointer(
++                         DS.getTypeQualifiers(), Loc, DS.getConstSpecLoc(),
++@@ -6642,7 +6727,7 @@
++ 
++     // Remember that we parsed a reference type.
++     D.AddTypeInfo(DeclaratorChunk::getReference(DS.getTypeQualifiers(), Loc,
++-                                                Kind == tok::amp),
+++                                                Kind == tok::amp || Kind == tok::percent),
++                   std::move(DS.getAttributes()), SourceLocation());
++   }
++ }
++--- ParseDeclCXX.cpp
+++++ ParseDeclCXX.cpp
++@@ -11,6 +11,7 @@
++ //===----------------------------------------------------------------------===//
++ 
++ #include "clang/AST/ASTContext.h"
+++#include "clang/AST/Attr.h"
++ #include "clang/AST/DeclTemplate.h"
++ #include "clang/AST/PrettyDeclStackTrace.h"
++ #include "clang/Basic/AttributeCommonInfo.h"
++@@ -33,6 +34,13 @@
++ #include <optional>
++ 
++ using namespace clang;
+++
+++namespace clang {
+++ExprResult cppcliConvertReturn(Sema &, Scope *, Preprocessor &, Expr *, QualType, SourceLocation);
+++bool cppcliConvertConstructorArguments(Sema &, Scope *, Preprocessor &, QualType,
+++    MutableArrayRef<Expr *>, SourceLocation);
+++}
+++
++ 
++ Parser::DeclGroupPtrTy Parser::ParseNamespace(DeclaratorContext Context,
++                                               SourceLocation &DeclEnd,
++@@ -3912,6 +3920,32 @@
++ 
++     if (TemplateTypeTy.isInvalid())
++       return true;
+++    // Resolve fields and base types in Clang before adapting managed literal
+++    // arguments. Native records/buffers retain the original C++ initializer.
+++    if(auto *Constructor=dyn_cast_or_null<CXXConstructorDecl>(ConstructorDecl)) {
+++      auto *Parent=Constructor->getParent();
+++      bool Managed=false;
+++      for(auto *Attr:Parent->specific_attrs<AnnotateAttr>())
+++        Managed |= Attr->getAnnotation()=="cli.ref" || Attr->getAnnotation()=="cli.value";
+++      if(Managed) {
+++        const FieldDecl *Field=nullptr;
+++        if(II && SS.isEmpty()) for(auto *Candidate:Parent->fields())
+++          if(Candidate->getIdentifier()==II) { Field=Candidate; break; }
+++        if(Field && ArgExprs.size()==1) {
+++          auto Converted=cppcliConvertReturn(Actions,getCurScope(),PP,ArgExprs[0],Field->getType(),IdLoc);
+++          if(Converted.isInvalid()) return true;
+++          ArgExprs[0]=Converted.get();
+++        } else if(!Field) {
+++          ParsedType Parsed=TemplateTypeTy.get();
+++          if(!Parsed && II) Parsed=Actions.getTypeName(*II,IdLoc,getCurScope(),&SS,true);
+++          auto Base=Parsed ? Sema::GetTypeFromParser(Parsed) : QualType();
+++          bool DirectBase=false;
+++          for(auto &Candidate:Parent->bases())
+++            DirectBase |= !Base.isNull() && Actions.Context.hasSameUnqualifiedType(Base,Candidate.getType());
+++          if(DirectBase && cppcliConvertConstructorArguments(Actions,getCurScope(),PP,Base,ArgExprs,IdLoc)) return true;
+++        }
+++      }
+++    }
++     return Actions.ActOnMemInitializer(
++         ConstructorDecl, getCurScope(), SS, II, TemplateTypeTy.get(), DS, IdLoc,
++         T.getOpenLocation(), ArgExprs, T.getCloseLocation(), EllipsisLoc);
++--- ParseExpr.cpp
+++++ ParseExpr.cpp
++@@ -21,6 +21,7 @@
++ //===----------------------------------------------------------------------===//
++ 
++ #include "clang/AST/ASTContext.h"
+++#include "clang/AST/Attr.h"
++ #include "clang/AST/Availability.h"
++ #include "clang/AST/ExprCXX.h"
++ #include "clang/AST/LocInfoType.h"
++@@ -31,7 +32,9 @@
++ #include "clang/Sema/DeclSpec.h"
++ #include "clang/Sema/EnterExpressionEvaluationContext.h"
++ #include "clang/Sema/ParsedTemplate.h"
+++#include "clang/Sema/Lookup.h"
++ #include "clang/Sema/Scope.h"
+++#include "clang/Sema/ScopeInfo.h"
++ #include "clang/Sema/SemaCUDA.h"
++ #include "clang/Sema/SemaCodeCompletion.h"
++ #include "clang/Sema/SemaObjC.h"
++@@ -42,6 +45,314 @@
++ #include "llvm/ADT/SmallVector.h"
++ #include <optional>
++ using namespace clang;
+++
+++// CLI enum operations retain their scoped type identity. Sema still checks
+++// explicit conversions and native operations; ordinary C++ enums are untouched.
+++static const EnumDecl *cppcliEnum(QualType Type) {
+++  auto *Enum = Type->getAs<EnumType>();
+++  if (!Enum)
+++    return nullptr;
+++  auto *Decl = Enum->getDecl();
+++  if (Decl->getDefinition())
+++    Decl = Decl->getDefinition();
+++  for (auto *Attr : Decl->specific_attrs<AnnotateAttr>())
+++    if (Attr->getAnnotation() == "cli.enum")
+++      return Decl;
+++  return nullptr;
+++}
+++
+++static const MemberExpr *cppcliEvent(Expr *Value) {
+++  auto *Member = dyn_cast<MemberExpr>(Value->IgnoreParenImpCasts());
+++  if (!Member) return nullptr;
+++  for (auto *Attr : Member->getMemberDecl()->specific_attrs<AnnotateAttr>())
+++    if (Attr->getAnnotation() == "cli.event") return Member;
+++  return nullptr;
+++}
+++
+++static ExprResult cppcliEventAccessor(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, Expr *Value, StringRef Accessor, SourceLocation Loc) {
+++  auto *Event = cppcliEvent(Value);
+++  assert(Event);
+++  std::string Name = Accessor.str() + "_" + Event->getMemberDecl()->getNameAsString();
+++  std::string Prefix = "cli.event." + Accessor.str() + ":";
+++  for (auto *Attr : Event->getMemberDecl()->specific_attrs<AnnotateAttr>())
+++    if (Attr->getAnnotation().starts_with(Prefix)) Name = Attr->getAnnotation().drop_front(Prefix.size()).str();
+++  CXXScopeSpec Scope; UnqualifiedId Member;
+++  Member.setIdentifier(&PP.getIdentifierTable().get(Name), Loc);
+++  return Actions.ActOnMemberAccessExpr(CurrentScope, Event->getBase(), Loc,
+++      Event->isArrow() ? tok::arrow : tok::period, Scope, SourceLocation(), Member, nullptr);
+++}
+++
+++// Inspect resolved managed overload declarations, including inherited methods.
+++// Literal arguments in String/Object slots become managed strings; native calls
+++// and caller-provided char/wchar buffers retain ordinary C++ semantics.
+++static bool cppcliStringSlot(const NamedDecl *Decl, unsigned Index, unsigned Count) {
+++  auto *Method = dyn_cast<CXXMethodDecl>(Decl);
+++  if (!Method || Index >= Method->getNumParams() || Count > Method->getNumParams() || Count < Method->getMinRequiredArguments()) return false;
+++  const CXXRecordDecl *Owner = Method->getParent()->getDefinition();
+++  if (!Owner) Owner = Method->getParent();
+++  bool Managed = false;
+++  for (auto *Attr : Owner->specific_attrs<AnnotateAttr>())
+++    Managed |= Attr->getAnnotation() == "cli.ref" || Attr->getAnnotation().starts_with("cli.external:");
+++  if (!Managed) return false;
+++  QualType Type = Method->getParamDecl(Index)->getType();
+++  if (!Type->isPointerType()) return false;
+++  auto *Record = Type->getPointeeType()->getAsCXXRecordDecl();
+++  return Record && (Record->getQualifiedNameAsString() == "System::String" || Record->getQualifiedNameAsString() == "System::Object");
+++}
+++
+++static bool cppcliStringArgument(Expr *Function, unsigned Index, unsigned Count) {
+++  Function = Function->IgnoreParenImpCasts();
+++  if (auto *Member = dyn_cast<MemberExpr>(Function))
+++    return cppcliStringSlot(Member->getMemberDecl(), Index, Count);
+++  if (auto *Reference = dyn_cast<DeclRefExpr>(Function))
+++    return cppcliStringSlot(Reference->getDecl(), Index, Count);
+++  if (auto *Overloads = dyn_cast<OverloadExpr>(Function))
+++    for (auto *Candidate : Overloads->decls())
+++      if (cppcliStringSlot(Candidate, Index, Count)) return true;
+++  return false;
+++}
+++
+++// Leave overload sets with typed alternatives to normal Sema. Boxing an
+++// arithmetic/enum argument is unambiguous when every arity-compatible method
+++// declares this position as System.Object, after excluding impossible scalar
+++// conversions to unrelated managed reference classes.
+++static bool cppcliObjectArgument(Sema &Actions, Expr *Function, Expr *Argument, unsigned Index, unsigned Count) {
+++  bool Found = false, AllObject = true;
+++  auto Inspect = [&](const NamedDecl *Decl) {
+++    auto *Method = dyn_cast<CXXMethodDecl>(Decl);
+++    if (!Method || Index >= Method->getNumParams() || Count > Method->getNumParams() ||
+++        Count < Method->getMinRequiredArguments()) return;
+++    auto Type = Method->getParamDecl(Index)->getType();
+++    auto *Record = Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++    // A non-null scalar cannot initialize an unrelated CLR reference class.
+++    // Keep interfaces, Enum/ValueType boxes and zero/null alternatives with
+++    // normal Sema, where broader boxing overload resolution remains pending.
+++    if(Record && Record->getQualifiedNameAsString()!="System::Object" &&
+++        Record->getQualifiedNameAsString()!="System::Enum" && Record->getQualifiedNameAsString()!="System::ValueType" &&
+++        (Argument->getType()->isArithmeticType() || Argument->getType()->isEnumeralType()) &&
+++        !Argument->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull)) {
+++      bool Reference=false,Interface=false;
+++      auto *Owner=Record->getDefinition(); if(!Owner) Owner=Record;
+++      for(auto *Attr:Owner->specific_attrs<AnnotateAttr>()) {
+++        Reference |= Attr->getAnnotation()=="cli.ref" || Attr->getAnnotation().starts_with("cli.external:");
+++        Interface |= Attr->getAnnotation()=="cli.interface" || Attr->getAnnotation()=="cli.value";
+++      }
+++      if(Reference && !Interface) return;
+++    }
+++    Found = true;
+++    AllObject &= cppcliStringSlot(Method, Index, Count) && Record &&
+++                 Record->getQualifiedNameAsString() == "System::Object";
+++  };
+++  Function = Function->IgnoreParenImpCasts();
+++  if (auto *Member = dyn_cast<MemberExpr>(Function)) Inspect(Member->getMemberDecl());
+++  else if (auto *Reference = dyn_cast<DeclRefExpr>(Function)) Inspect(Reference->getDecl());
+++  else if (auto *Overloads = dyn_cast<OverloadExpr>(Function))
+++    for (auto *Candidate : Overloads->decls()) Inspect(Candidate);
+++  return Found && AllObject;
+++}
+++
+++// A source tracking reference may receive a directly constructed ref-class
+++// temporary. Native references and ambiguous overloads keep ordinary Sema.
+++static bool cppcliTrackingTemporaryArgument(Sema &Actions, Preprocessor &PP,
+++    Expr *Function, Expr *Argument, unsigned Index, unsigned Count) {
+++  if(!Argument->isPRValue()) return false;
+++  auto *Value=Argument->IgnoreParenImpCasts();
+++  if(auto *Cast=dyn_cast<CXXFunctionalCastExpr>(Value); Cast && Cast->getCastKind()==CK_ConstructorConversion)
+++    Value=Cast->getSubExpr()->IgnoreParenImpCasts();
+++  if(auto *Temporary=dyn_cast<CXXBindTemporaryExpr>(Value)) Value=Temporary->getSubExpr()->IgnoreParenImpCasts();
+++  auto *Construction=dyn_cast<CXXConstructExpr>(Value);
+++  if(!Construction) return false;
+++  auto *Record=Construction->getType()->getAsCXXRecordDecl();
+++  if(!Record || !Record->getDefinition()) return false;
+++  bool Managed=false;
+++  for(auto *Attr:Record->getDefinition()->specific_attrs<AnnotateAttr>()) Managed |= Attr->getAnnotation()=="cli.ref";
+++  if(!Managed) return false;
+++  bool Found=false,AllTracking=true;
+++  auto Inspect=[&](const NamedDecl *Decl) {
+++    auto *Method=dyn_cast<CXXMethodDecl>(Decl);
+++    if(!Method || Index>=Method->getNumParams() || Count>Method->getNumParams() || Count<Method->getMinRequiredArguments()) return;
+++    Found=true;
+++    auto *Parameter=Method->getParamDecl(Index);
+++    auto Type=Parameter->getType();
+++    if(!Type->isLValueReferenceType() || !Actions.Context.hasSameUnqualifiedType(Type->getPointeeType(),Construction->getType()) ||
+++        !Parameter->getTypeSourceInfo()) { AllTracking=false; return; }
+++    auto Reference=Parameter->getTypeSourceInfo()->getTypeLoc().getAs<ReferenceTypeLoc>();
+++    auto Loc=Reference.isNull() ? SourceLocation() : PP.getSourceManager().getSpellingLoc(Reference.getSigilLoc());
+++    AllTracking &= Loc.isValid() && *PP.getSourceManager().getCharacterData(Loc)=='%';
+++  };
+++  Function=Function->IgnoreParenImpCasts();
+++  if(auto *Member=dyn_cast<MemberExpr>(Function)) Inspect(Member->getMemberDecl());
+++  else if(auto *Reference=dyn_cast<DeclRefExpr>(Function)) Inspect(Reference->getDecl());
+++  else if(auto *Overloads=dyn_cast<OverloadExpr>(Function)) for(auto *Candidate:Overloads->decls()) Inspect(Candidate);
+++  return Found && AllTracking;
+++}
+++
+++static QualType cppcliAssignmentType(Expr *Value) {
+++  QualType Type=Value->getType();
+++  Expr *Base=Value->IgnoreParens();
+++  while (auto *Subscript=dyn_cast<MSPropertySubscriptExpr>(Base)) Base=Subscript->getBase()->IgnoreParens();
+++  if(auto *Property=dyn_cast<MSPropertyRefExpr>(Base)) {
+++    Type=Property->getPropertyDecl()->getType();
+++    if(Type->isIncompleteArrayType()) Type=cast<ArrayType>(Type.getTypePtr())->getElementType();
+++  }
+++  return Type;
+++}
+++
+++static bool cppcliNamedHandle(QualType Type, StringRef Name) {
+++  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++  return Record && Record->getQualifiedNameAsString()==Name;
+++}
+++
+++static bool cppcliInterfaceHandle(QualType Type) {
+++  auto *Record=Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++  if(!Record) return false;
+++  if(Record->getDefinition()) Record=Record->getDefinition();
+++  for(auto *Attr:Record->specific_attrs<AnnotateAttr>()) if(Attr->getAnnotation()=="cli.interface") return true;
+++  return false;
+++}
+++
+++static ExprResult cppcliInterfaceObject(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, Expr *Argument, SourceLocation Loc) {
+++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
+++  UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_interface_object"),Loc);
+++  auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
+++  if(Helper.isInvalid()) return ExprError();
+++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
+++      MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
+++}
+++
+++// Resolve the scalar width/kind, then let the selected metadata facade carry
+++// ordinary C++ overload/access lookup for the actual CLR primitive methods.
+++static ExprResult cppcliPrimitiveReceiver(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, Expr *Value, SourceLocation Loc) {
+++  auto Type=Value->getType();
+++  if(!Type->isArithmeticType()) return Value;
+++  std::string Name;
+++  if(Type->isBooleanType()) Name="Boolean";
+++  else if(Type->isSpecificBuiltinType(BuiltinType::Char16) ||
+++      (Type->isWideCharType() && Actions.Context.getTypeSize(Type)==16)) Name="Char";
+++  else if(Type->isIntegerType()) {
+++    auto Bits=Actions.Context.getTypeSize(Type);
+++    if(Bits==8) Name=Type->isUnsignedIntegerType() ? "Byte" : "SByte";
+++    else if(Bits==16 || Bits==32 || Bits==64) Name=(Type->isUnsignedIntegerType() ? "UInt" : "Int")+std::to_string(Bits);
+++  } else if(Type->isRealFloatingType()) {
+++    auto Bits=Actions.Context.getTypeSize(Type);
+++    if(Bits==32) Name="Single";
+++    else if(Bits==64) Name="Double";
+++  }
+++  if(Name.empty()) return Value;
+++  auto *Identifier=&PP.getIdentifierTable().get("__cli_primitive_box_"+Name);
+++  LookupResult Lookup(Actions,Identifier,Loc,Sema::LookupOrdinaryName);
+++  if(!Actions.LookupQualifiedName(Lookup,Actions.Context.getTranslationUnitDecl())) return Value;
+++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
+++  UnqualifiedId Helper; Helper.setIdentifier(Identifier,Loc);
+++  auto Function=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Helper,true,false);
+++  if(Function.isInvalid()) return ExprError();
+++  return Actions.ActOnCallExpr(CurrentScope,Function.get(),Loc,
+++      MutableArrayRef<Expr *>(&Value,1),Value->getEndLoc());
+++}
+++
+++static ExprResult cppcliBoxObject(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, Expr *Argument, SourceLocation Loc) {
+++  CXXScopeSpec Global; UnqualifiedId Name;
+++  Global.MakeGlobal(Actions.Context,Loc);
+++  Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_object"),Loc);
+++  auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
+++  if(Helper.isInvalid()) return ExprError();
+++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
+++      llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
+++}
+++
+++namespace clang {
+++ExprResult cppcliTryUnbox(Sema &Actions, Scope *CurrentScope, Preprocessor &PP,
+++    Expr *Argument, Declarator &DeclaratorInfo, SourceLocation Loc) {
+++  if(!Argument || Argument->getType().isNull()) return ExprResult();
+++  if(Argument->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
+++    auto Resolved=Actions.CheckPlaceholderExpr(Argument);
+++    if(Resolved.isInvalid()) return ExprError();
+++    Argument=Resolved.get();
+++  }
+++  if(!cppcliNamedHandle(Argument->getType(),"System::Object")) return ExprResult();
+++  auto *TypeInfo=Actions.GetTypeForDeclaratorCast(DeclaratorInfo,Argument->getType());
+++  if(!TypeInfo) return ExprError();
+++  auto Target=TypeInfo->getType();
+++  bool ManagedValue=false;
+++  if(auto *Record=Target->getAsCXXRecordDecl()) {
+++    if(Record->getDefinition()) Record=Record->getDefinition();
+++    for(auto *Attr:Record->specific_attrs<AnnotateAttr>()) ManagedValue |= Attr->getAnnotation()=="cli.value";
+++  }
+++  if(!Target->isArithmeticType() && !cppcliEnum(Target) && !ManagedValue) return ExprResult();
+++  CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
+++  auto *Identifier=&PP.getIdentifierTable().get("__cli_safe_cast");
+++  LookupResult Lookup(Actions,Identifier,Loc,Sema::LookupOrdinaryName);
+++  Actions.LookupQualifiedName(Lookup,Actions.Context.getTranslationUnitDecl());
+++  TemplateArgumentListInfo Arguments(Loc,Loc);
+++  Arguments.addArgument(TemplateArgumentLoc(TemplateArgument(Target),TypeInfo));
+++  auto Helper=Actions.BuildTemplateIdExpr(Global,SourceLocation(),Lookup,false,&Arguments);
+++  if(Helper.isInvalid()) return ExprError();
+++  return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
+++      llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
+++}
+++
+++ExprResult cppcliConvertReturn(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, Expr *Argument, QualType Target, SourceLocation Loc) {
+++  bool Object=cppcliNamedHandle(Target,"System::Object");
+++  if(Object && cppcliInterfaceHandle(Argument->getType()))
+++    return cppcliInterfaceObject(Actions,CurrentScope,PP,Argument,Loc);
+++  if(Object && (Argument->getType()->isArithmeticType() || Argument->getType()->isEnumeralType()))
+++    return cppcliBoxObject(Actions,CurrentScope,PP,Argument,Loc);
+++  if((Object || cppcliNamedHandle(Target,"System::String")) && isa<StringLiteral>(Argument->IgnoreParenImpCasts())) {
+++    CXXScopeSpec Global; UnqualifiedId Name;
+++    Global.MakeGlobal(Actions.Context,Loc);
+++    Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"),Loc);
+++    auto Helper=Actions.ActOnIdExpression(CurrentScope,Global,SourceLocation(),Name,true,false);
+++    if(Helper.isInvalid()) return ExprError();
+++    return Actions.ActOnCallExpr(CurrentScope,Helper.get(),Loc,
+++        llvm::MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
+++  }
+++  return Argument;
+++}
+++
+++bool cppcliConvertConstructorArguments(Sema &Actions, Scope *CurrentScope,
+++    Preprocessor &PP, QualType Type, MutableArrayRef<Expr *> Arguments,
+++    SourceLocation Loc) {
+++  auto *Record=Type.isNull() ? nullptr : Type->getAsCXXRecordDecl();
+++  if(!Record || !Record->getDefinition()) return false;
+++  Record=Record->getDefinition();
+++  for(unsigned Index=0;Index<Arguments.size();++Index) {
+++    QualType Target;
+++    if(isa<StringLiteral>(Arguments[Index]->IgnoreParenImpCasts())) {
+++      for(auto *Constructor:Record->ctors())
+++        if(cppcliStringSlot(Constructor,Index,Arguments.size())) {
+++          Target=Constructor->getParamDecl(Index)->getType(); break;
+++        }
+++    } else if(Arguments[Index]->getType()->isArithmeticType() || Arguments[Index]->getType()->isEnumeralType()) {
+++      bool Found=false,AllObject=true;
+++      for(auto *Constructor:Record->ctors()) {
+++        if(Constructor->isCopyOrMoveConstructor() || Index>=Constructor->getNumParams() ||
+++            Arguments.size()>Constructor->getNumParams() || Arguments.size()<Constructor->getMinRequiredArguments()) continue;
+++        Found=true;
+++        auto Candidate=Constructor->getParamDecl(Index)->getType();
+++        AllObject &= cppcliStringSlot(Constructor,Index,Arguments.size()) && cppcliNamedHandle(Candidate,"System::Object");
+++        Target=Candidate;
+++      }
+++      if(!Found || !AllObject) Target={};
+++    }
+++    if(Target.isNull()) continue;
+++    auto Converted=cppcliConvertReturn(Actions,CurrentScope,PP,Arguments[Index],Target,Loc);
+++    if(Converted.isInvalid()) return true;
+++    Arguments[Index]=Converted.get();
+++  }
+++  return false;
+++}
+++}
+++
+++static ExprResult cppcliEnumCast(Sema &Actions, Expr *Value, QualType Type,
+++                                SourceLocation Loc) {
+++  return Actions.BuildCStyleCastExpr(
+++      Loc, Actions.Context.getTrivialTypeSourceInfo(Type, Loc), Loc, Value);
+++}
++ 
++ ExprResult
++ Parser::ParseExpression(TypoCorrectionTypeBehavior CorrectionBehavior) {
++@@ -179,6 +490,15 @@
++       ParseCastExpression(CastParseKind::AnyCastExpr, false,
++                           TypoCorrectionTypeBehavior::AllowNonTypes));
++   ExprResult Res(ParseRHSOfBinaryExpression(LHS, prec::Conditional));
+++  // MSVC permits CLI enum constants as labels in integral switches. Keep
+++  // that conversion local to case labels: enum-to-integer assignments and
+++  // overload resolution continue to require an explicit source conversion.
+++  auto *Function = Actions.getCurFunction();
+++  if (!Res.isInvalid() && Function && !Function->SwitchStack.empty())
+++    if (auto *Condition = Function->SwitchStack.back().getPointer()->getCond())
+++      if (Condition->getType()->isIntegerType())
+++        if (auto *Enum = cppcliEnum(Res.get()->getType()))
+++          Res = cppcliEnumCast(Actions, Res.get(), Enum->getIntegerType(), CaseLoc);
++   return Actions.ActOnCaseExpr(CaseLoc, Res);
++ }
++ 
++@@ -556,9 +876,125 @@
++                          SourceRange(Actions.getExprRange(LHS.get()).getBegin(),
++                                      Actions.getExprRange(RHS.get()).getEnd()));
++ 
+++        if(!RHS.isInvalid() && OpToken.isOneOf(tok::equalequal,tok::exclaimequal,tok::pipe,tok::caret,tok::amp)) {
+++          for(auto *Operand : {&LHS,&RHS})
+++            if(Operand->get()->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
+++              *Operand=Actions.CheckPlaceholderExpr(Operand->get());
+++              if(Operand->isInvalid()) return ExprError();
+++            }
+++        }
+++        if(!RHS.isInvalid() && OpToken.isOneOf(tok::equalequal,tok::exclaimequal)) {
+++          bool LeftString=cppcliNamedHandle(LHS.get()->getType(),"System::String");
+++          bool RightString=cppcliNamedHandle(RHS.get()->getType(),"System::String");
+++          bool LeftLiteral=isa<StringLiteral>(LHS.get()->IgnoreParenImpCasts());
+++          bool RightLiteral=isa<StringLiteral>(RHS.get()->IgnoreParenImpCasts());
+++          bool LeftNull=LHS.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull);
+++          bool RightNull=RHS.get()->isNullPointerConstant(Actions.Context,Expr::NPC_ValueDependentIsNotNull);
+++          if((LeftString && (RightString || RightLiteral || RightNull)) ||
+++              (RightString && (LeftString || LeftLiteral || LeftNull))) {
+++            QualType Target=LeftString ? LHS.get()->getType() : RHS.get()->getType();
+++            if(LeftLiteral) LHS=cppcliConvertReturn(Actions,getCurScope(),PP,LHS.get(),Target,OpToken.getLocation());
+++            if(RightLiteral) RHS=cppcliConvertReturn(Actions,getCurScope(),PP,RHS.get(),Target,OpToken.getLocation());
+++            if(LHS.isInvalid() || RHS.isInvalid()) return ExprError();
+++            CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,OpToken.getLocation());
+++            UnqualifiedId Name;
+++            Name.setIdentifier(&PP.getIdentifierTable().get(OpToken.is(tok::equalequal) ? "__cli_string_equal" : "__cli_string_not_equal"),OpToken.getLocation());
+++            auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
+++            if(Helper.isInvalid()) return ExprError();
+++            Expr *Arguments[]={LHS.get(),RHS.get()};
+++            LHS=Actions.ActOnCallExpr(getCurScope(),Helper.get(),OpToken.getLocation(),Arguments,RHS.get()->getEndLoc());
+++            if(LHS.isInvalid()) return ExprError();
+++            continue;
+++          }
+++        }
+++        if (!RHS.isInvalid() &&
+++            OpToken.isOneOf(tok::pipeequal, tok::caretequal, tok::ampequal)) {
+++          auto *Enum = cppcliEnum(LHS.get()->getType());
+++          if (Enum && !Enum->getIntegerType()->isBooleanType() &&
+++              Actions.Context.hasSameUnqualifiedType(
+++                  LHS.get()->getType(), RHS.get()->getType()) &&
+++              LHS.get()->isModifiableLvalue(Actions.Context) == Expr::MLV_Valid) {
+++            auto *OriginalLHS = LHS.get();
+++            auto Left = cppcliEnumCast(Actions, OriginalLHS,
+++                                      Enum->getIntegerType(), OpToken.getLocation());
+++            auto Right = cppcliEnumCast(Actions, RHS.get(),
+++                                       Enum->getIntegerType(), OpToken.getLocation());
+++            if (Left.isInvalid() || Right.isInvalid())
+++              return ExprError();
+++            auto BinaryToken = OpToken.is(tok::pipeequal) ? tok::pipe :
+++                               OpToken.is(tok::caretequal) ? tok::caret : tok::amp;
+++            auto Computation = Actions.ActOnBinOp(getCurScope(),
+++                OpToken.getLocation(), BinaryToken, Left.get(), Right.get());
+++            if (Computation.isInvalid())
+++              return ExprError();
+++            auto *Binary = cast<BinaryOperator>(Computation.get());
+++            auto Opcode = OpToken.is(tok::pipeequal) ? BO_OrAssign :
+++                          OpToken.is(tok::caretequal) ? BO_XorAssign : BO_AndAssign;
+++            LHS = CompoundAssignOperator::Create(Actions.Context, OriginalLHS,
+++                Binary->getRHS(), Opcode, OriginalLHS->getType(), VK_LValue,
+++                OriginalLHS->getObjectKind(), OpToken.getLocation(),
+++                FPOptionsOverride(), Binary->getLHS()->getType(),
+++                Binary->getType());
+++            continue;
+++          }
+++        }
+++        if (!RHS.isInvalid() && OpToken.is(tok::equal)) {
+++          RHS=cppcliConvertReturn(Actions,getCurScope(),PP,RHS.get(),cppcliAssignmentType(LHS.get()),OpToken.getLocation());
+++          if(RHS.isInvalid()) return ExprError();
+++        }
+++        if (!RHS.isInvalid() && OpToken.isOneOf(tok::plusequal, tok::minusequal) && cppcliEvent(LHS.get())) {
+++          auto Accessor = cppcliEventAccessor(Actions, getCurScope(), PP, LHS.get(),
+++              OpToken.is(tok::plusequal) ? "add" : "remove", OpToken.getLocation());
+++          if (Accessor.isInvalid()) return ExprError();
+++          Expr *Argument = RHS.get();
+++          LHS = Actions.ActOnCallExpr(getCurScope(), Accessor.get(), OpToken.getLocation(),
+++                                     llvm::MutableArrayRef<Expr *>(&Argument, 1), OpToken.getLocation());
+++          continue;
+++        }
+++        // Managed delegate subscription is a typed assignment, never native
+++        // pointer arithmetic. Let Sema validate conversion, constness and the
+++        // target lvalue before preserving the CLI operation in the AST.
+++        if (!RHS.isInvalid() && OpToken.isOneOf(tok::plusequal, tok::minusequal)) {
+++          auto Type = LHS.get()->getType();
+++          auto *Record = Type->isPointerType() ? Type->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++          if (Record && Record->getDefinition()) Record = Record->getDefinition();
+++          bool Delegate = false;
+++          if (Record) for (auto *Attr : Record->specific_attrs<AnnotateAttr>())
+++            Delegate |= Attr->getAnnotation() == "cli.delegate";
+++          if (Delegate) {
+++            auto Assignment = Actions.ActOnBinOp(getCurScope(), OpToken.getLocation(),
+++                                                tok::equal, LHS.get(), RHS.get());
+++            if (Assignment.isInvalid()) return ExprError();
+++            auto *Binary = cast<BinaryOperator>(Assignment.get());
+++            LHS = CompoundAssignOperator::Create(Actions.Context, Binary->getLHS(),
+++                Binary->getRHS(), OpToken.is(tok::plusequal) ? BO_AddAssign : BO_SubAssign,
+++                Binary->getType(), Binary->getValueKind(), Binary->getObjectKind(),
+++                OpToken.getLocation(), FPOptionsOverride(), Type, Type);
+++            continue;
+++          }
+++        }
+++        QualType CliResult;
+++        if (!RHS.isInvalid() &&
+++            OpToken.isOneOf(tok::pipe, tok::caret, tok::amp)) {
+++          auto *Enum = cppcliEnum(LHS.get()->getType());
+++          if (Enum && !Enum->getIntegerType()->isBooleanType() &&
+++              Actions.Context.hasSameUnqualifiedType(
+++                  LHS.get()->getType(), RHS.get()->getType())) {
+++            CliResult = LHS.get()->getType().getUnqualifiedType();
+++            LHS = cppcliEnumCast(Actions, LHS.get(), Enum->getIntegerType(),
+++                                OpToken.getLocation());
+++            RHS = cppcliEnumCast(Actions, RHS.get(), Enum->getIntegerType(),
+++                                OpToken.getLocation());
+++            if (LHS.isInvalid() || RHS.isInvalid())
+++              return ExprError();
+++          }
+++        }
++         ExprResult BinOp =
++             Actions.ActOnBinOp(getCurScope(), OpToken.getLocation(),
++                                OpToken.getKind(), LHS.get(), RHS.get());
+++        if (!BinOp.isInvalid() && !CliResult.isNull())
+++          BinOp = cppcliEnumCast(Actions, BinOp.get(), CliResult,
+++                                OpToken.getLocation());
++         if (BinOp.isInvalid())
++           BinOp = Actions.CreateRecoveryExpr(LHS.get()->getBeginLoc(),
++                                              RHS.get()->getEndLoc(),
++@@ -1105,6 +1541,19 @@
++     Res = Actions.ActOnGNUNullExpr(ConsumeToken());
++     break;
++ 
+++  case tok::percent: {
+++    if(NotPrimaryExpression) *NotPrimaryExpression=true;
+++    auto Loc=ConsumeToken();
+++    auto Value=ParseCastExpression(CastParseKind::AnyCastExpr);
+++    if(Value.isInvalid()) return ExprError();
+++    CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
+++    UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_value"),Loc);
+++    auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
+++    if(Helper.isInvalid()) return ExprError();
+++    Expr *Argument=Value.get();
+++    return Actions.ActOnCallExpr(getCurScope(),Helper.get(),Loc,
+++        MutableArrayRef<Expr *>(&Argument,1),Argument->getEndLoc());
+++  }
++   case tok::plusplus:      // unary-expression: '++' unary-expression [C99]
++   case tok::minusminus: {  // unary-expression: '--' unary-expression [C99]
++     if (NotPrimaryExpression)
++@@ -1176,8 +1625,20 @@
++     Res = ParseCastExpression(CastParseKind::AnyCastExpr);
++     if (!Res.isInvalid()) {
++       Expr *Arg = Res.get();
+++      QualType CliResult;
+++      if (SavedKind == tok::tilde)
+++        if (auto *Enum = cppcliEnum(Arg->getType()))
+++          if (!Enum->getIntegerType()->isBooleanType()) {
+++            CliResult = Arg->getType().getUnqualifiedType();
+++            Res = cppcliEnumCast(Actions, Arg, Enum->getIntegerType(), SavedLoc);
+++            if (Res.isInvalid())
+++              return ExprError();
+++            Arg = Res.get();
+++          }
++       Res = Actions.ActOnUnaryOp(getCurScope(), SavedLoc, SavedKind, Arg,
++                                  isAddressOfOperand);
+++      if (!Res.isInvalid() && !CliResult.isNull())
+++        Res = cppcliEnumCast(Actions, Res.get(), CliResult, SavedLoc);
++       if (Res.isInvalid())
++         Res = Actions.CreateRecoveryExpr(SavedLoc, Arg->getEndLoc(), Arg);
++     }
++@@ -1808,8 +2269,84 @@
++                 RLoc);
++           }
++         } else {
++-          LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
++-                                                ArgExprs, RLoc);
+++          // For a managed array handle, ask Sema to resolve the surrogate's
+++          // element operator after type/name lookup. Ordinary pointer indexing
+++          // is untouched, including identifiers shadowing managed type names.
+++          // A following bracket indexes the getter result. Completing a
+++          // previous property subscript here prevents Sema from treating a
+++          // nested list/array access as one multi-index property invocation.
+++          auto *Property = dyn_cast<MSPropertyRefExpr>(LHS.get()->IgnoreParens());
+++          if ((isa<MSPropertySubscriptExpr>(LHS.get()->IgnoreParens()) ||
+++               (Property && !Property->getPropertyDecl()->getType()->isIncompleteArrayType())) &&
+++              LHS.get()->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
+++            LHS = Actions.CheckPlaceholderExpr(LHS.get());
+++            if (LHS.isInvalid()) return ExprError();
+++          }
+++          QualType Handle = LHS.get()->getType();
+++          if (Handle->isPointerType()) {
+++            auto *Record = Handle->getPointeeType()->getAsCXXRecordDecl();
+++            // Pointer-only metadata signatures need not instantiate an array
+++            // specialization. Its primary template still carries the marker.
+++            if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Record))
+++              Record = Spec->getSpecializedTemplate()->getTemplatedDecl();
+++            if (Record && Record->getDefinition()) {
+++              for (auto *Attr : Record->getDefinition()->specific_attrs<AnnotateAttr>())
+++                if (Attr->getAnnotation() == "cli.array") {
+++                  LHS = Actions.ActOnUnaryOp(getCurScope(), Loc, tok::star, LHS.get());
+++                  break;
+++                }
+++            }
+++          }
+++          if (!LHS.isInvalid() && Handle->isPointerType()) {
+++            auto Pointee = Handle->getPointeeType();
+++            auto *Record = Pointee->getAsCXXRecordDecl();
+++            bool Managed = false;
+++            auto *Primary = Record;
+++            if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Primary))
+++              Primary = Spec->getSpecializedTemplate()->getTemplatedDecl();
+++            if (Primary && Primary->getDefinition())
+++              for (auto *Attr : Primary->getDefinition()->specific_attrs<AnnotateAttr>())
+++                Managed |= Attr->getAnnotation() == "cli.ref" ||
+++                           Attr->getAnnotation().starts_with("cli.external:");
+++            if (Managed && !Actions.RequireCompleteType(Loc, Pointee, diag::err_incomplete_type)) {
+++              Record = Pointee->getAsCXXRecordDecl()->getDefinition();
+++              auto *Identifier = &PP.getIdentifierTable().get("__cli_default");
+++              LookupResult Result(Actions, Identifier, Loc, Sema::LookupMemberName);
+++              Actions.LookupQualifiedName(Result, Record);
+++              if (Result.isSingleResult() && isa<MSPropertyDecl>(Result.getFoundDecl())) {
+++                CXXScopeSpec Scope; UnqualifiedId Member;
+++                Member.setIdentifier(Identifier, Loc);
+++                LHS = Actions.ActOnMemberAccessExpr(getCurScope(), LHS.get(), Loc,
+++                    tok::arrow, Scope, SourceLocation(), Member, nullptr);
+++              }
+++            }
+++          }
+++          if(!LHS.isInvalid())
+++            if(auto *Indexed=dyn_cast<MSPropertyRefExpr>(LHS.get()->IgnoreParens());
+++                Indexed && Indexed->getPropertyDecl()->getGetterId()) {
+++              CXXScopeSpec Scope; UnqualifiedId GetterName;
+++              GetterName.setIdentifier(Indexed->getPropertyDecl()->getGetterId(),Loc);
+++              auto Getter=Actions.ActOnMemberAccessExpr(getCurScope(),Indexed->getBaseExpr(),Loc,
+++                  Indexed->isArrow() ? tok::arrow : tok::period,Scope,SourceLocation(),GetterName,nullptr);
+++              if(Getter.isInvalid()) return ExprError();
+++              for(unsigned Index=0;Index<ArgExprs.size();++Index) {
+++                if(ArgExprs[Index]->getType()->isSpecificBuiltinType(BuiltinType::PseudoObject)) {
+++                  auto Resolved=Actions.CheckPlaceholderExpr(ArgExprs[Index]);
+++                  if(Resolved.isInvalid()) return ExprError();
+++                  ArgExprs[Index]=Resolved.get();
+++                }
+++                auto Type=ArgExprs[Index]->getType();
+++                if((Type->isArithmeticType() || Type->isEnumeralType()) &&
+++                    cppcliObjectArgument(Actions,Getter.get(),ArgExprs[Index],Index,ArgExprs.size())) {
+++                  auto Boxed=cppcliBoxObject(Actions,getCurScope(),PP,ArgExprs[Index],Loc);
+++                  if(Boxed.isInvalid()) return ExprError();
+++                  ArgExprs[Index]=Boxed.get();
+++                }
+++              }
+++            }
+++          if (!LHS.isInvalid())
+++            LHS = Actions.ActOnArraySubscriptExpr(getCurScope(), LHS.get(), Loc,
+++                                                  ArgExprs, RLoc);
++         }
++       } else {
++         LHS = ExprError();
++@@ -1868,6 +2405,31 @@
++       } else {
++         PT.consumeOpen();
++         Loc = PT.getOpenLocation();
+++      }
+++
+++      // CLI delegate handles call their runtime Invoke method. Let Sema
+++      // resolve the member and check argument conversions/arity as usual.
+++      if (!LHS.isInvalid() && OpKind == tok::l_paren && cppcliEvent(LHS.get())) {
+++        LHS = cppcliEventAccessor(Actions, getCurScope(), PP, LHS.get(), "raise", Loc);
+++      } else if (!LHS.isInvalid() && OpKind == tok::l_paren) {
+++        QualType Handle = LHS.get()->getType();
+++        if (Handle->isPointerType()) {
+++          auto Pointee = Handle->getPointeeType();
+++          auto *Record = Pointee->getAsCXXRecordDecl();
+++          auto *Primary = Record;
+++          if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Primary))
+++            Primary = Spec->getSpecializedTemplate()->getTemplatedDecl();
+++          bool Delegate = false;
+++          if (Primary && Primary->getDefinition())
+++            for (auto *Attr : Primary->getDefinition()->specific_attrs<AnnotateAttr>())
+++              Delegate |= Attr->getAnnotation() == "cli.delegate";
+++          if (Delegate && !Actions.RequireCompleteType(Loc, Pointee, diag::err_incomplete_type)) {
+++            CXXScopeSpec Scope; UnqualifiedId Member;
+++            Member.setIdentifier(&PP.getIdentifierTable().get("Invoke"), Loc);
+++            LHS = Actions.ActOnMemberAccessExpr(getCurScope(), LHS.get(), Loc,
+++                tok::arrow, Scope, SourceLocation(), Member, nullptr);
+++          }
+++        }
++       }
++ 
++       ExprVector ArgExprs;
++@@ -1922,6 +2484,56 @@
++       } else {
++         Expr *Fn = LHS.get();
++         SourceLocation RParLoc = Tok.getLocation();
+++        for(unsigned Index=0;Index<ArgExprs.size();++Index) {
+++          if(!cppcliTrackingTemporaryArgument(Actions,PP,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
+++          CXXScopeSpec Global; Global.MakeGlobal(Actions.Context,Loc);
+++          UnqualifiedId Name; Name.setIdentifier(&PP.getIdentifierTable().get("__cli_tracking_temporary"),Loc);
+++          auto Helper=Actions.ActOnIdExpression(getCurScope(),Global,SourceLocation(),Name,true,false);
+++          if(Helper.isInvalid()) return ExprError();
+++          Expr *Argument=ArgExprs[Index];
+++          auto Temporary=Actions.ActOnCallExpr(getCurScope(),Helper.get(),Loc,
+++              MutableArrayRef<Expr *>(&Argument,1),RParLoc);
+++          if(Temporary.isInvalid()) return ExprError();
+++          ArgExprs[Index]=Temporary.get();
+++        }
+++        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
+++          if (!isa<StringLiteral>(ArgExprs[Index]->IgnoreParenImpCasts()) ||
+++              !cppcliStringArgument(Fn, Index, ArgExprs.size())) continue;
+++          CXXScopeSpec ScopeSpec; UnqualifiedId Name;
+++          ScopeSpec.MakeGlobal(Actions.Context, Loc);
+++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"), Loc);
+++          auto Helper = Actions.ActOnIdExpression(getCurScope(), ScopeSpec,
+++              SourceLocation(), Name, true, false);
+++          if (Helper.isInvalid()) return ExprError();
+++          Expr *Argument = ArgExprs[Index];
+++          auto Literal = Actions.ActOnCallExpr(getCurScope(), Helper.get(), Loc,
+++              llvm::MutableArrayRef<Expr *>(&Argument, 1), RParLoc);
+++          if (Literal.isInvalid()) return ExprError();
+++          ArgExprs[Index] = Literal.get();
+++        }
+++        for(unsigned Index=0;Index<ArgExprs.size();++Index) {
+++          if(!cppcliInterfaceHandle(ArgExprs[Index]->getType()) ||
+++              !cppcliObjectArgument(Actions,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
+++          auto Converted=cppcliInterfaceObject(Actions,getCurScope(),PP,ArgExprs[Index],Loc);
+++          if(Converted.isInvalid()) return ExprError();
+++          ArgExprs[Index]=Converted.get();
+++        }
+++        for (unsigned Index=0; Index<ArgExprs.size(); ++Index) {
+++          auto Type = ArgExprs[Index]->getType();
+++          if ((!Type->isArithmeticType() && !Type->isEnumeralType()) ||
+++              !cppcliObjectArgument(Actions,Fn,ArgExprs[Index],Index,ArgExprs.size())) continue;
+++          CXXScopeSpec ScopeSpec; UnqualifiedId Name;
+++          ScopeSpec.MakeGlobal(Actions.Context, Loc);
+++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_box_object"), Loc);
+++          auto Helper = Actions.ActOnIdExpression(getCurScope(), ScopeSpec,
+++              SourceLocation(), Name, true, false);
+++          if (Helper.isInvalid()) return ExprError();
+++          Expr *Argument = ArgExprs[Index];
+++          auto Boxed = Actions.ActOnCallExpr(getCurScope(), Helper.get(), Loc,
+++              llvm::MutableArrayRef<Expr *>(&Argument, 1), RParLoc);
+++          if (Boxed.isInvalid()) return ExprError();
+++          ArgExprs[Index] = Boxed.get();
+++        }
++         LHS = Actions.ActOnCallExpr(getCurScope(), Fn, Loc, ArgExprs, RParLoc,
++                                     ExecConfig);
++         if (LHS.isInvalid()) {
++@@ -1940,6 +2552,21 @@
++       // postfix-expression: p-e '.' template[opt] id-expression
++       tok::TokenKind OpKind = Tok.getKind();
++       SourceLocation OpLoc = ConsumeToken();  // Eat the "." or "->" token.
+++      if(!LHS.isInvalid() && OpKind==tok::period && LHS.get()->getType()->isArithmeticType() && Tok.is(tok::identifier)) {
+++        LHS=Tok.getIdentifierInfo()->getName()=="GetType" ?
+++            cppcliBoxObject(Actions,getCurScope(),PP,LHS.get(),OpLoc) :
+++            cppcliPrimitiveReceiver(Actions,getCurScope(),PP,LHS.get(),OpLoc);
+++        if(LHS.isInvalid()) return ExprError();
+++        if(LHS.get()->getType()->isPointerType()) OpKind=tok::arrow;
+++      }
+++      if (!LHS.isInvalid() && OpKind==tok::period && cppcliEnum(LHS.get()->getType()) && Tok.is(tok::identifier)) {
+++        auto Name=Tok.getIdentifierInfo()->getName();
+++        if(Name=="ToString" || Name=="GetHashCode" || Name=="Equals" || Name=="GetType") {
+++          LHS=cppcliBoxObject(Actions,getCurScope(),PP,LHS.get(),OpLoc);
+++          if(LHS.isInvalid()) return ExprError();
+++          OpKind=tok::arrow;
+++        }
+++      }
++ 
++       CXXScopeSpec SS;
++       ParsedType ObjectType;
++@@ -2853,7 +3480,9 @@
++                 /*isVectorLiteral=*/true);
++ 
++             if (!Result.isInvalid()) {
++-              Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
+++              auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
+++          if(!Unboxed.isUnset()) Result=Unboxed;
+++          else Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
++                                              DeclaratorInfo, CastTy,
++                                              RParenLoc, Result.get());
++             }
++@@ -2904,7 +3533,9 @@
++             /*isAddressOfOperand=*/false,
++             TypoCorrectionTypeBehavior::AllowTypes);
++         if (!Result.isInvalid()) {
++-          Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
+++          auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpenLoc);
+++          if(!Unboxed.isUnset()) Result=Unboxed;
+++          else Result = Actions.ActOnCastExpr(getCurScope(), OpenLoc,
++                                          DeclaratorInfo, CastTy,
++                                          RParenLoc, Result.get());
++         }
++--- ParseExprCXX.cpp
+++++ ParseExprCXX.cpp
++@@ -10,6 +10,7 @@
++ //
++ //===----------------------------------------------------------------------===//
++ #include "clang/AST/ASTContext.h"
+++#include "clang/AST/Attr.h"
++ #include "clang/AST/Decl.h"
++ #include "clang/AST/DeclTemplate.h"
++ #include "clang/AST/ExprCXX.h"
++@@ -24,12 +25,19 @@
++ #include "clang/Sema/EnterExpressionEvaluationContext.h"
++ #include "clang/Sema/ParsedTemplate.h"
++ #include "clang/Sema/Scope.h"
+++#include "clang/Sema/Lookup.h"
++ #include "clang/Sema/SemaCodeCompletion.h"
++ #include "llvm/Support/Compiler.h"
++ #include "llvm/Support/ErrorHandling.h"
++ #include <numeric>
++ 
++ using namespace clang;
+++namespace clang {
+++ExprResult cppcliTryUnbox(Sema &, Scope *, Preprocessor &, Expr *, Declarator &, SourceLocation);
+++bool cppcliConvertConstructorArguments(Sema &, Scope *, Preprocessor &, QualType,
+++    MutableArrayRef<Expr *>, SourceLocation);
+++}
+++
++ 
++ static int SelectDigraphErrorMessage(tok::TokenKind Kind) {
++   switch (Kind) {
++@@ -392,6 +400,45 @@
++     if (Tok.isNot(tok::identifier))
++       break;
++ 
+++    // CLI primitive aliases remain fundamental C++ types in declarations.
+++    // Only static scope lookup selects their metadata facade, after ordinary
+++    // lookup has resolved namespace qualification and native shadowing.
+++    bool CLIPrimitiveScope = false;
+++    if (!OnlyNamespace && !ObjectType && NextToken().is(tok::coloncolon) && GetLookAheadToken(2).is(tok::identifier) && !SS.isInvalid()) {
+++      LookupResult Alias(Actions, Tok.getIdentifierInfo(), Tok.getLocation(), Sema::LookupOrdinaryName);
+++      Alias.suppressDiagnostics();
+++      Actions.LookupParsedName(Alias, getCurScope(), &SS, QualType(), false, EnteringContext);
+++      if (Alias.isSingleResult()) {
+++        auto *Found = Alias.getFoundDecl();
+++        if (auto *Shadow = dyn_cast<UsingShadowDecl>(Found)) Found = Shadow->getTargetDecl();
+++        if (auto *TypeAlias = dyn_cast<TypedefNameDecl>(Found)) {
+++          for (const auto *Attr : TypeAlias->specific_attrs<AnnotateAttr>()) {
+++            if (!Attr->getAnnotation().starts_with("cli.primitive.facade:")) continue;
+++            auto Name = Attr->getAnnotation().drop_front(21);
+++            LookupResult Facade(Actions, &PP.getIdentifierTable().get(Name), Tok.getLocation(), Sema::LookupOrdinaryName);
+++            Facade.suppressDiagnostics();
+++            Actions.LookupQualifiedName(Facade, TypeAlias->getDeclContext());
+++            if (!Facade.isSingleResult()) break;
+++            auto *Record = dyn_cast<CXXRecordDecl>(Facade.getFoundDecl());
+++            if (!Record) break;
+++            SourceLocation Begin = SS.getBeginLoc().isValid() ? SS.getBeginLoc() : Tok.getLocation();
+++            ConsumeToken();
+++            SourceLocation CCLoc = ConsumeToken();
+++            // Replace the complete scope with a fresh, well-formed location
+++            // buffer; Make on an existing namespace scope would retain stale
+++            // namespace bytes in Clang 22's type-location representation.
+++            SS.MakeTrivial(Actions.Context,
+++                NestedNameSpecifier(Actions.Context.getCanonicalTagType(Record).getTypePtr()),
+++                SourceRange(Begin, CCLoc));
+++            HasScopeSpecifier = true;
+++            CLIPrimitiveScope = true;
+++            break;
+++          }
+++        }
+++      }
+++    }
+++
+++    if (CLIPrimitiveScope) continue;
++     IdentifierInfo &II = *Tok.getIdentifierInfo();
++ 
++     // nested-name-specifier:
++@@ -1538,6 +1585,26 @@
++   // Match the ')'.
++   T.consumeClose();
++ 
+++  if (!Result.isInvalid() && Kind == tok::kw_reinterpret_cast &&
+++      DeclaratorInfo.getNumTypeObjects() &&
+++      DeclaratorInfo.getTypeObject(0).Kind == DeclaratorChunk::Pointer) {
+++    auto *Record = Result.get()->getType()->getAsCXXRecordDecl();
+++    if (auto *Spec = dyn_cast_or_null<ClassTemplateSpecializationDecl>(Record))
+++      Record = Spec->getSpecializedTemplate()->getTemplatedDecl();
+++    if (Record && Record->getDefinition())
+++      for (const auto *Attr : Record->getDefinition()->specific_attrs<AnnotateAttr>())
+++        if (Attr->getAnnotation() == "cli.pin") {
+++          // CLI pin reinterpretation invokes the explicit pointer intrinsic;
+++          // native C++ reinterpret_cast does not consider conversion members.
+++          Kind = tok::kw_static_cast;
+++          break;
+++        }
+++  }
+++
+++  if (!Result.isInvalid() && !DeclaratorInfo.isInvalidType() && Kind==tok::kw_static_cast) {
+++    auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,OpLoc);
+++    if(!Unboxed.isUnset()) return Unboxed;
+++  }
++   if (!Result.isInvalid() && !DeclaratorInfo.isInvalidType())
++     Result = Actions.ActOnCXXNamedCast(OpLoc, Kind,
++                                        LAngleBracketLoc, DeclaratorInfo,
++@@ -1836,6 +1903,41 @@
++     // TypeRep could be null, if it references an invalid typedef.
++     if (!TypeRep)
++       return ExprError();
+++
+++    // Adapt literal arguments only after Clang has resolved the actual
+++    // managed value type. Native classes and same-named functions are untouched.
+++    auto *Record = Actions.GetTypeFromParser(TypeRep)->getAsCXXRecordDecl();
+++    if (Record && Record->getDefinition()) {
+++      Record = Record->getDefinition();
+++      bool ManagedValue = false;
+++      for (const auto *Attr : Record->specific_attrs<AnnotateAttr>())
+++        ManagedValue |= Attr->getAnnotation() == "cli.value";
+++      if (ManagedValue) {
+++        for (unsigned Index = 0; Index < Exprs.size(); ++Index) {
+++          auto *Literal = dyn_cast<StringLiteral>(Exprs[Index]->IgnoreParenImpCasts());
+++          if (!Literal) continue;
+++          bool StringParameter = false;
+++          for (const auto *Ctor : Record->ctors()) {
+++            if (Ctor->getNumParams() < Exprs.size() || Ctor->getMinRequiredArguments() > Exprs.size() || Index >= Ctor->getNumParams()) continue;
+++            auto Parameter = Ctor->getParamDecl(Index)->getType();
+++            auto *Target = Parameter->isPointerType() ? Parameter->getPointeeType()->getAsCXXRecordDecl() : nullptr;
+++            StringParameter |= Target && Target->getQualifiedNameAsString() == "System::String";
+++          }
+++          if (!StringParameter) continue;
+++          CXXScopeSpec Global;
+++          Global.MakeGlobal(Actions.Context, Literal->getBeginLoc());
+++          UnqualifiedId Name;
+++          Name.setIdentifier(&PP.getIdentifierTable().get("__cli_literal"), Literal->getBeginLoc());
+++          ExprResult Function = Actions.ActOnIdExpression(getCurScope(), Global, SourceLocation(), Name, true, false);
+++          if (Function.isInvalid()) return ExprError();
+++          Expr *Argument = Exprs[Index];
+++          ExprResult Converted = Actions.ActOnCallExpr(getCurScope(), Function.get(), Literal->getBeginLoc(),
+++              MultiExprArg(&Argument, 1), Literal->getEndLoc());
+++          if (Converted.isInvalid()) return ExprError();
+++          Exprs[Index] = Converted.get();
+++        }
+++      }
+++    }
++ 
++     return Actions.ActOnCXXTypeConstructExpr(TypeRep, T.getOpenLocation(),
++                                              Exprs, T.getCloseLocation(),
++@@ -2953,6 +3055,11 @@
++       SkipUntil(tok::semi, StopAtSemi | StopBeforeMatch);
++       return ExprError();
++     }
+++    if(!DeclaratorInfo.getNumTypeObjects()) {
+++      auto *TypeInfo=Actions.GetTypeForDeclarator(DeclaratorInfo);
+++      if(TypeInfo && cppcliConvertConstructorArguments(Actions,getCurScope(),PP,
+++          TypeInfo->getType(),ConstructorArgs,ConstructorLParen)) return ExprError();
+++    }
++     Initializer = Actions.ActOnParenListExpr(ConstructorLParen,
++                                              ConstructorRParen,
++                                              ConstructorArgs);
++@@ -3652,10 +3759,13 @@
++       return ExprError();
++ 
++     // Result is what ParseCastExpression returned earlier.
++-    if (!Result.isInvalid())
++-      Result = Actions.ActOnCastExpr(getCurScope(), Tracker.getOpenLocation(),
+++    if (!Result.isInvalid()) {
+++      auto Unboxed=cppcliTryUnbox(Actions,getCurScope(),PP,Result.get(),DeclaratorInfo,Tracker.getOpenLocation());
+++      if(!Unboxed.isUnset()) Result=Unboxed;
+++      else Result = Actions.ActOnCastExpr(getCurScope(), Tracker.getOpenLocation(),
++                                     DeclaratorInfo, CastTy,
++                                     Tracker.getCloseLocation(), Result.get());
+++    }
++     return Result;
++   }
++ 
++--- ParseStmt.cpp
+++++ ParseStmt.cpp
++@@ -32,6 +32,10 @@
++ #include <optional>
++ 
++ using namespace clang;
+++namespace clang {
+++ExprResult cppcliConvertReturn(Sema &, Scope *, Preprocessor &, Expr *, QualType, SourceLocation);
+++}
+++
++ 
++ //===----------------------------------------------------------------------===//
++ // C99 6.8: Statements and Blocks.
++@@ -2495,6 +2499,10 @@
++   }
++   if (IsCoreturn)
++     return Actions.ActOnCoreturnStmt(getCurScope(), ReturnLoc, R.get());
+++  if(R.isUsable()) if(auto *Function=Actions.getCurFunctionDecl()) {
+++    R=cppcliConvertReturn(Actions,getCurScope(),PP,R.get(),Function->getReturnType(),ReturnLoc);
+++    if(R.isInvalid()) return StmtError();
+++  }
++   return Actions.ActOnReturnStmt(ReturnLoc, R.get(), getCurScope());
++ }
++ 
+diff --git a/bootstrap/m612/cppcli/clang-parse-manifest-23.1.3.json b/bootstrap/m612/cppcli/clang-parse-manifest-23.1.3.json
+new file mode 100644
+index 0000000..543b2ad
+--- /dev/null
++++ b/bootstrap/m612/cppcli/clang-parse-manifest-23.1.3.json
+@@ -0,0 +1,78 @@
++[
++  {
++    "file": "ParseAST.cpp",
++    "sha256": "733349ba89f600a8902d059bb20f6e2d15f0b4491ed7660c7f06b8ca24856d17"
++  },
++  {
++    "file": "ParseCXXInlineMethods.cpp",
++    "sha256": "7e13ffcf9a4458bcb683566d9ee31559695e0c52adae604d88204be185c3a414"
++  },
++  {
++    "file": "ParseDecl.cpp",
++    "sha256": "6e3c14424367c206a57ccac384941545fcece46b99fd8c32b347955a2a698a63"
++  },
++  {
++    "file": "ParseDeclCXX.cpp",
++    "sha256": "8109fde806aa07e1cbee87ef7973990b69ad37d101848bf629279a5c705fee77"
++  },
++  {
++    "file": "ParseExpr.cpp",
++    "sha256": "63d587d720445975e20be22431dabd6dc61bbd4aa6db6200a3d9e22ecd0af477"
++  },
++  {
++    "file": "ParseExprCXX.cpp",
++    "sha256": "9ecf98cb058c2e3f6051692121b7ae7ecd4293505ceaffdc3dce5827a2b5af40"
++  },
++  {
++    "file": "ParseHLSL.cpp",
++    "sha256": "d43ca50f127289d6c5e0379993c6f6562e56f5130ad4bd993cf6bf060bee6dd1"
++  },
++  {
++    "file": "ParseHLSLRootSignature.cpp",
++    "sha256": "11612a887d0c8e428071145bf258089f38fb26dccdd1b0ca462532deed1cc44f"
++  },
++  {
++    "file": "ParseInit.cpp",
++    "sha256": "03266313e08f3fec11054497f672e1358fdf2de09601e246a6f67a7e22478ea7"
++  },
++  {
++    "file": "ParseObjc.cpp",
++    "sha256": "633c8b0f9091372beaf23d0057876160f536064d8a4face94ddd12e597e0a0d9"
++  },
++  {
++    "file": "ParseOpenACC.cpp",
++    "sha256": "fd584d446eade6a0fa5c244b79bc94d764d1f7b44fe54fa3e90b02521875980a"
++  },
++  {
++    "file": "ParseOpenMP.cpp",
++    "sha256": "d2d47e36085cd3109c8ab812be2513b15c6e4d1e371bf17f1dc741ce8be7dfee"
++  },
++  {
++    "file": "ParsePragma.cpp",
++    "sha256": "6d3e15bca8fae606c25c2e4f1901f14cc4b8ebda58a8dd6f119805bc02ce02d4"
++  },
++  {
++    "file": "ParseStmt.cpp",
++    "sha256": "76cb5427a08c1649435ca20f4d3ca83e9fd696e67f209b05bb8c5853ea91bc25"
++  },
++  {
++    "file": "ParseStmtAsm.cpp",
++    "sha256": "3b9e1cdb7bc9954bd7491eaca53ec0bd59c69a7df7968d9c1c6552836dd9a4ec"
++  },
++  {
++    "file": "ParseTemplate.cpp",
++    "sha256": "b9742eb5de33d4a0eee309e01acf272993b5386cb3bf56464da4e2d203f6b3fc"
++  },
++  {
++    "file": "ParseTentative.cpp",
++    "sha256": "da24949a3ed41114f34ce08b3809474b712f8f1959a0d3bfa2bebb55effeaa9a"
++  },
++  {
++    "file": "Parser.cpp",
++    "sha256": "6b2af862ccb2d9636f4af7fb88345906ab5cb33326dcaca7567e16e4fc633d9f"
++  },
++  {
++    "file": "ParseReflect.cpp",
++    "sha256": "ebae8d1b43c3d5f20ea34c8cff6eca9ce65ac416b24594471bd8a5023856ce10"
++  }
++]
+diff --git a/bootstrap/m612/cppcli/cli-clang.py b/bootstrap/m612/cppcli/cli-clang.py
+index 7e98a1d..67bb646 100755
+--- a/bootstrap/m612/cppcli/cli-clang.py
++++ b/bootstrap/m612/cppcli/cli-clang.py
+@@ -87,10 +87,13 @@ def main():
+     ap.add_argument("--plugin", type=Path)
+     ap.add_argument("--metadata-tool", type=Path)
+     a = ap.parse_args(arguments)
+-    version = subprocess.check_output([a.clang, "--version"], text=True)
+-    if "clang version 22.1.8" not in version:
+-        ap.error("the frontend plugin requires Clang 22.1.8")
+     build = Path(__file__).resolve().parent
++    version_file = build / "clang-version.txt"
++    required_version = version_file.read_text().strip() if version_file.is_file() else "22.1.8"
++    version = subprocess.check_output([a.clang, "--version"], text=True)
++    match = re.search(r"clang version (\d+\.\d+\.\d+)\b", version)
++    if not match or match.group(1) != required_version:
++        ap.error("the frontend plugin requires Clang " + required_version)
+     plugin = a.plugin or build / ("cli_ast.dll" if os.name == "nt" else "cli_ast.so")
+     metadata_tool = a.metadata_tool or build / "metadata/metadata.dll"
+     if not a.sdk:
+diff --git a/bootstrap/m612/cppcli/fetch-clang-parse.py b/bootstrap/m612/cppcli/fetch-clang-parse.py
+index 5c34d31..f100c81 100644
+--- a/bootstrap/m612/cppcli/fetch-clang-parse.py
++++ b/bootstrap/m612/cppcli/fetch-clang-parse.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python3
+-"""Fetch locked LLVM 22.1.8 parser sources and apply the CLI-only patch."""
++"""Fetch checksum-locked LLVM parser sources and apply their CLI-only patch."""
++import argparse
+ import hashlib
+ import json
+ from pathlib import Path
+@@ -10,9 +11,15 @@ import tempfile
+ import urllib.request
+ 
+ here = Path(__file__).resolve().parent
+-cache, work = map(Path, sys.argv[1:3])
+-manifest = here / "clang-parse-manifest.json"
+-patch = here / "clang-caret.patch"
++ap = argparse.ArgumentParser(description=__doc__)
++ap.add_argument("cache", type=Path)
++ap.add_argument("work", type=Path)
++ap.add_argument("--llvm-version", choices=["22.1.8", "23.1.3"], default="22.1.8")
++args = ap.parse_args()
++cache, work = args.cache, args.work
++suffix = "" if args.llvm_version == "22.1.8" else "-" + args.llvm_version
++manifest = here / ("clang-parse-manifest" + suffix + ".json")
++patch = here / ("clang-caret" + suffix + ".patch")
+ fingerprint = hashlib.sha256(manifest.read_bytes() + patch.read_bytes()).hexdigest()
+ stamp = work / ".prepared"
+ if stamp.is_file() and stamp.read_text().strip() == fingerprint:
+@@ -25,7 +32,7 @@ with tempfile.TemporaryDirectory(prefix="cli-parse-", dir=work.parent) as stagin
+         name, digest = entry["file"], entry["sha256"]
+         cached = cache / name
+         if not cached.is_file() or hashlib.sha256(cached.read_bytes()).hexdigest() != digest:
+-            url = "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-22.1.8/clang/lib/Parse/" + name
++            url = "https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-" + args.llvm_version + "/clang/lib/Parse/" + name
+             data = urllib.request.urlopen(url).read()
+             if hashlib.sha256(data).hexdigest() != digest:
+                 raise SystemExit("Clang parser checksum mismatch: " + name)
+@@ -38,4 +45,9 @@ with tempfile.TemporaryDirectory(prefix="cli-parse-", dir=work.parent) as stagin
+         target = work / source.name
+         if not target.is_file() or target.read_bytes() != source.read_bytes():
+             shutil.copyfile(source, target)
++    # Switching from LLVM23 back to LLVM22 must not retain the newer
++    # reflection translation unit in CMake's parser source glob.
++    for target in work.glob("*.cpp"):
++        if not (staging / target.name).is_file():
++            target.unlink()
+ stamp.write_text(fingerprint + "\n")
