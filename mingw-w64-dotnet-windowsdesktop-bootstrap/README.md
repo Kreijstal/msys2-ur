@@ -873,3 +873,17 @@ actual source-font GSUB counts, compression beyond the final glyph's advance,
 source/caret/point/selection, glyph advances, raster and GC. The font is generated
 test data, never a binary source input or system installation. Registered SDK
 consumers increase to46; documented native conformance gaps remain unfinished.
+
+Release 8.0.0-63 adds a source software-rendering regression gate. It forces the
+SoftwareOnly policy and verifies premultiplied opacity, transformed geometry
+clipping, exact nearest-neighbor image tiling, sRGB gradients, opacity masks,
+VisualBrush tiles/source invalidation, Gaussian blur, drop-shadow placement and
+property invalidation, plus byte-identical retained raster after compacting GC.
+Generated PNGs make the tested drawing output reviewable. Shared and self-contained
+SDK runs exercise the original source-built graphics library; no renderer patch
+or rebuilt framework library is needed for these cases.
+
+Custom DrawingVisual settings use its protected visual rendering properties;
+UIElement attached-property callbacks are not assumed to run on DrawingVisual.
+Registered SDK consumers increase to47. Existing WPP/SEH translation limitations,
+hardware/multimedia conformance and other documented native gaps remain open.

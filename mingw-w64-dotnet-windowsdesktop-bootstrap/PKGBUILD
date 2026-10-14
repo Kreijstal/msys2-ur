@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=62
+pkgrel=63
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -42,7 +42,7 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            'da662d3ffaebf3266864b44aad1593eec97ff155af8ec232a4314ec2f54af9df')
+            '09bd53936921c4223f359c73fc45c69a144c500c69fb013e592416f40fa7e420')
 source+=('0001-desktop-crypto-closure.patch')
 sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
 source+=('0002-text-decorations.patch')
@@ -167,6 +167,8 @@ source+=('0061-final-candidate-height.patch')
 sha256sums+=('5639791a884a1653e10cdfd5f4df27b2730c12ac239e8f12a86dc0a825fb8f61')
 source+=('0062-complete-space-cluster-compression.patch')
 sha256sums+=('d633a955e3e8b5979dba60679613cfc935ce76d6d579db804c9d759dc4e2d787')
+source+=('0063-software-drawing-effects-gate.patch')
+sha256sums+=('c86fef618df73bd8d0bd70f199d35cabe03ed6a64a968a413885dcb84c9bda65')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
@@ -242,6 +244,7 @@ prepare() {
   patch -d "$(_tree)" -Np1 -i "$srcdir/0060-justified-dependent-objects.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0061-final-candidate-height.patch"
   patch -d "$(_tree)" -Np1 -i "$srcdir/0062-complete-space-cluster-compression.patch"
+  patch -d "$(_tree)" -Np1 -i "$srcdir/0063-software-drawing-effects-gate.patch"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do
