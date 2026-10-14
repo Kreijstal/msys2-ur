@@ -1,0 +1,3 @@
+using System;
+using SixLabors.Fonts;
+class Check {static void Main(){var collection=new FontCollection();var family=collection.Add("C:/Windows/Fonts/segoeui.ttf");var font=family.CreateFont(24);var options=new TextOptions(font);var latin=TextMeasurer.MeasureSize("Greenshot λ",options);var arabic=TextMeasurer.MeasureSize("مرحبا",options);if(latin.Width<=50||latin.Height<=10||arabic.Width<=10||arabic.Height<=10)throw new Exception("real font parsing, Unicode shaping and layout");if(TextMeasurer.MeasureSize("",options).Width!=0)throw new Exception("empty text layout");Console.WriteLine("PASS SixLabors.Fonts OS TrueType parsing and Latin/Greek/Arabic text measurement");}}

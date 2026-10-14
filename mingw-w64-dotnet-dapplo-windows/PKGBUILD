@@ -1,0 +1,63 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-dapplo-windows
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.14.4
+pkgrel=1
+pkgdesc='Source-built Dapplo.Windows libraries for the .NET 8 desktop bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dapplo/Dapplo.Windows'
+license=('spdx:MIT')
+_commit=5c92076bf9351baa99009c689ff3c6101c43e94b
+_tree=Dapplo.Windows-${_commit}
+_project=src/Dapplo.Windows/Dapplo.Windows.csproj
+_id=Dapplo.Windows
+_framework=net8.0-windows
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0-64" "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-log=3.0.22" "${MINGW_PACKAGE_PREFIX}-dotnet-reactive=7.0.0")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("dapplo-windows-5c92076bf9351baa99009c689ff3c6101c43e94b.tar.gz::https://codeload.github.com/dapplo/Dapplo.Windows/tar.gz/5c92076bf9351baa99009c689ff3c6101c43e94b" prepare.py check.cs projects.json)
+sha256sums=('49342526adf6b4f9caf9e1f00ef5049608fd5bba64cece39681fd97ca394eb2c' '3ef4c854815ac6d3b9a02e4b51b882d4014fc25eac2eb80f980d866ff86629a6' '45b395b70ba7167c42b9f1508ad9f9fb55f8905e05f4844c6e81c94ce39126dd' '6cd2049734437a1be28f53826d64cd643899d6d55511d4e8088ad6ab40b669e1')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" dapplo-windows "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  for project in Dapplo.Windows.Common Dapplo.Windows.Com Dapplo.Windows.DesktopWindowsManager Dapplo.Windows.Messages Dapplo.Windows.User32 Dapplo.Windows.Gdi32 Dapplo.Windows.Kernel32 Dapplo.Windows.Shell32 Dapplo.Windows.Dpi Dapplo.Windows.Icons Dapplo.Windows.Input Dapplo.Windows Dapplo.Windows.AppRestartManager Dapplo.Windows.Automation Dapplo.Windows.Clipboard Dapplo.Windows.Multimedia; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "src/$project/$project.csproj" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+      --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageVersion="$pkgver" -p:Version="$pkgver" \
+      -p:GeneratePackageOnBuild=false -p:TargetFrameworks=net8.0-windows -p:UseWPF=true -p:UseWindowsForms=true \
+      -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:IncludeSymbols=false \
+      -p:SolutionDir="$(cygpath -m "$srcdir/$_tree/src")/" -p:PublicSign=true \
+      -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+  done
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="Dapplo.Windows.Common" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Com" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.DesktopWindowsManager" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Messages" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.User32" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Gdi32" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Kernel32" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Shell32" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Dpi" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Icons" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Input" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.AppRestartManager" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Automation" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Clipboard" Version="[$pkgver]" /><PackageReference Include="Dapplo.Windows.Multimedia" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:RestoreAdditionalProjectSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:UseSharedCompilation=false
+}
+package() {
+  for id in Dapplo.Windows.Common Dapplo.Windows.Com Dapplo.Windows.DesktopWindowsManager Dapplo.Windows.Messages Dapplo.Windows.User32 Dapplo.Windows.Gdi32 Dapplo.Windows.Kernel32 Dapplo.Windows.Shell32 Dapplo.Windows.Dpi Dapplo.Windows.Icons Dapplo.Windows.Input Dapplo.Windows Dapplo.Windows.AppRestartManager Dapplo.Windows.Automation Dapplo.Windows.Clipboard Dapplo.Windows.Multimedia; do
+    install -Dm644 "$srcdir/feed/$id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$pkgver.nupkg"
+  done
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

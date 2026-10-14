@@ -1,0 +1,57 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-svg
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.4.8
+pkgrel=1
+pkgdesc='Source-built SVG renderer for the .NET 8 desktop bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/svg-net/SVG'
+license=('spdx:MIT')
+_commit=e74a8b0c9a1c52e02a3fe1580bde52453fd96a94
+_tree=SVG-${_commit}
+_project=Source/Svg.csproj
+_id=Svg
+_framework=net8.0-windows
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0-64" "${MINGW_PACKAGE_PREFIX}-dotnet-excss=4.2.3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("svg-e74a8b0c9a1c52e02a3fe1580bde52453fd96a94.tar.gz::https://codeload.github.com/svg-net/SVG/tar.gz/e74a8b0c9a1c52e02a3fe1580bde52453fd96a94" prepare.py check.cs)
+sha256sums=('bf0b19640207e77afd2c8b11b0b6883f07480fb1a5e67834b116074355db540f' '4b7dc148380e3496e543aa24697d579b072eaabc41b2656b62d772417e286076' 'd23a3f09e007558f7abcc089ad4ab5690e2d22ba35dff33dd2aca1b6437a0d71')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" svg "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:TargetFrameworks=net8.0-windows -p:UseWindowsForms=true -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:SolutionDir="$(cygpath -m "$srcdir/$_tree/src")/" -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:RestoreAdditionalProjectSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/license.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

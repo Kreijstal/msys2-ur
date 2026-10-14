@@ -1,0 +1,5 @@
+using System;
+using System.Linq;
+using System.Drawing;
+using Svg;
+class Check {[STAThread] static void Main(){var document=SvgDocument.FromSvg<SvgDocument>("<svg xmlns='http://www.w3.org/2000/svg' width='32' height='24'><style>.red { fill: #ff0000; }</style><g transform='translate(2,2)'><rect class='red' width='16' height='16'/></g><circle cx='26' cy='12' r='4' fill='#00ff00'/></svg>");if(document.Descendants().OfType<SvgRectangle>().Count()!=1||document.Descendants().OfType<SvgCircle>().Count()!=1)throw new Exception("source-generated SVG element factory");using var bitmap=document.Draw();var red=bitmap.GetPixel(10,10);var green=bitmap.GetPixel(26,12);var empty=bitmap.GetPixel(31,23);if(bitmap.Width!=32||bitmap.Height!=24||red.ToArgb()!=Color.Red.ToArgb()||green.ToArgb()!=Color.Lime.ToArgb()||empty.A!=0)throw new Exception($"real SVG/CSS/transform raster pixels: {red}/{green}/{empty}");Console.WriteLine("PASS SVG source-generated element factory, CSS fill, transform, shapes and GDI raster pixels");}}

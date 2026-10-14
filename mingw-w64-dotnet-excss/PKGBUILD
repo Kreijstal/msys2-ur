@@ -1,0 +1,57 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-excss
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.2.3
+pkgrel=1
+pkgdesc='Source-built ExCSS parser for the .NET 8 bootstrap offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/TylerBrinks/ExCSS'
+license=('spdx:MIT')
+_commit=fae6c5b37e8dc7320518803aba15f64638100141
+_tree=ExCSS-${_commit}
+_project=src/ExCSS/ExCSS.csproj
+_id=ExCSS
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("excss-fae6c5b37e8dc7320518803aba15f64638100141.tar.gz::https://codeload.github.com/TylerBrinks/ExCSS/tar.gz/fae6c5b37e8dc7320518803aba15f64638100141" prepare.py check.cs)
+sha256sums=('ca21dcfb0d7f0b28922f1d183c630bd544e1a168825843c635d4d33243b9c752' 'b79d428eb4a4b016e4693e919201e1aa0b53e37d59ab88952d561c688f7ba91c' 'ba6c3dde5510fc89b0c11d15e324ef9b67cf50852362e6a059ec1b6a3dab1778')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" excss "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:SolutionDir="$(cygpath -m "$srcdir/$_tree/src")/" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:TargetFrameworks=net8.0 -p:LangVersion=12.0 -p:PublicSign=true -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/license.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}
