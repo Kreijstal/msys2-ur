@@ -314,3 +314,14 @@ merge/query/height/failure/cleanup gates pass. Coverage stays 109/139. Span grou
 taller than a column still require continuation support; repeated headers/
 footers, figures, advanced/bidi/native-language behavior and other paths remain
 unfinished.
+
+Release 8.0.0-30 adds cell continuations for oversized connected vertical spans.
+Fresh columns format finite fragments; unfinished masters retain original cell
+break records, while completed cells expose null content slots. Ordinary rows
+share the available height and span constraints account for content outside each
+interval. Original WPF checks cover tall/deferred/column spans, overlapping tall
+masters and tall ordinary neighbors with exact source ownership and chunk
+regeneration. Native clone/no-progress/failure/single-owner cleanup checks pass.
+Coverage stays 109/139. More complex span/row-break layouts, repeated headers/
+footers, figures, advanced/bidi/native-language behavior and other documented
+paths remain unfinished.
