@@ -1,0 +1,95 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-winrt-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.1.1
+pkgrel=1
+pkgdesc='Source-built WinRT metadata, C#/WinRT tools and .NET 8 bindings for Greenshot'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/CsWinRT'
+license=('spdx:MIT' 'spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-libc++")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-rust" 'python' 'patch')
+options=('!strip' '!lto')
+_rs=c809589311cd6470e882db9ab98f3547a1274da1
+_cs=d4649f92300aa3cb2dfd23a66074199488d85973
+_wm=cf26c01298ff7ef704ca2824aa24a2b32f30a2ed
+source=("windows-rs-$_rs.tar.gz::https://codeload.github.com/microsoft/windows-rs/tar.gz/$_rs"
+        "cswinrt-$_cs.tar.gz::https://codeload.github.com/microsoft/CsWinRT/tar.gz/$_cs"
+        "winmd-$_wm.tar.gz::https://codeload.github.com/microsoft/winmd/tar.gz/$_wm"
+        'https://static.crates.io/crates/proc-macro2/proc-macro2-1.0.107.crate'
+        'https://static.crates.io/crates/quote/quote-1.0.47.crate'
+        'https://static.crates.io/crates/syn/syn-2.0.119.crate'
+        'https://static.crates.io/crates/unicode-ident/unicode-ident-1.0.27.crate'
+        0001-winrt-metadata.patch 0002-mingw-generator.patch prepare.py additions.py metadata-main.rs Cargo.lock check.cs README.md)
+noextract=('proc-macro2-1.0.107.crate' 'quote-1.0.47.crate' 'syn-2.0.119.crate' 'unicode-ident-1.0.27.crate')
+sha256sums=('fd0bfa531c719de5121eb7b174bc7830acef905115cbe23561362ee5cabdce06'
+            'a6585ccbcc8dea8b8759a9dee1edacc8720203b99962f910949fad6a7ae00215'
+            '9786fbe176f855f976ac25da3cd97d6f525cf2cd108a45ca274371c34f7f9197'
+            '985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9'
+            '1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001'
+            '872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297'
+            'a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563'
+            '0a15d6233e4adb0b0edc6c2544140cff3ca2798219e80585533b60bd8c9d9519'
+            '78e4b3257126f8e65c2eefd54fac0cddb392a1b6318f3536f37edafe0d9b81c7'
+            'd6b3300f34e867962dcdf721896218f477f8f3bbc6c813b5d822fc71e55bd513'
+            '67139e10b617fc57e5d853b29c178671dea44ed731cf40521d062bcf8a7ec517'
+            'c5c8be6fe5625b16b2d7937da1fe522dc90af5a47d021586093e10279268dc5e'
+            '1e92595836a74a07660ab04e7a413e6774a773ef6ad8c95e23f9914d88db0dd1'
+            '31806cc4099e094b8d4a92da2125b06f897635d519a98e878d246eeb3dd2cfad'
+            'd1b2a45a11cbb3411f98b5dc0810d810335a52ff8b5d9d8a065b4f27cb0cd6ba')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet") DOTNET_ROOT_X64=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  patch -d "$srcdir/windows-rs-$_rs" -Np1 -i "$srcdir/0001-winrt-metadata.patch"
+  patch -d "$srcdir/CsWinRT-$_cs" -Np1 -i "$srcdir/0002-mingw-generator.patch"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir"
+}
+build() {
+  _env
+  cd "$srcdir/build/metadata"
+  cargo run --release --frozen
+  cd "$srcdir/build/cswinrt"
+  clang++ -std=c++17 -O2 -DNOMINMAX -DVERSION_STRING='"2.3.2-msys2.20261015"' -Igenerator -Iwinmd \
+    generator/main.cpp -o cswinrt.exe -lshlwapi -ladvapi32 -lxmllite -lole32 -luuid
+  ./cswinrt.exe -input ../metadata/Windows.winmd -output projection @../metadata/projection-types.rsp -verbose
+  /usr/bin/python3 "$srcdir/additions.py" .
+  cat > projection/projection.csproj <<'PROJECT'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>Microsoft.Windows.SDK.NET</AssemblyName><PackageId>Msys2.Windows.WinRT</PackageId><Version>0.1.1</Version><PackageLicenseExpression>MIT</PackageLicenseExpression><AllowUnsafeBlocks>true</AllowUnsafeBlocks><LangVersion>12</LangVersion><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><DisableRuntimeMarshalling>true</DisableRuntimeMarshalling></PropertyGroup><ItemGroup><ProjectReference Include="../runtime/runtime.csproj"/><Compile Remove="ComInteropHelpers.cs"/></ItemGroup></Project>
+PROJECT
+  for project in runtime/runtime.csproj projection/projection.csproj; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+      --configfile "$(cygpath -m "$srcdir/build/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+  done
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<'PROJECT'
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="Msys2.Windows.WinRT" Version="[0.1.1]"/></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm755 "$srcdir/build/cswinrt/cswinrt.exe" "$pkgdir$MINGW_PREFIX/bin/cswinrt.exe"
+  install -Dm644 "$srcdir/build/metadata/Windows.winmd" "$pkgdir$MINGW_PREFIX/share/dotnet-winrt/Windows.winmd"
+  install -Dm644 "$srcdir/build/metadata/projection-types.rsp" "$pkgdir$MINGW_PREFIX/share/dotnet-winrt/projection-types.rsp"
+  for p in "$srcdir"/feed/*.nupkg; do
+    install -Dm644 "$p" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/$(basename "$p" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -Dm644 "$srcdir/CsWinRT-$_cs/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/CsWinRT-LICENSE"
+  install -Dm644 "$srcdir/winmd-$_wm/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/WinMD-LICENSE"
+  for license in license-mit license-apache-2.0; do
+    install -Dm644 "$srcdir/windows-rs-$_rs/$license" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$license"
+  done
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -Dm644 "$srcdir/build/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}
