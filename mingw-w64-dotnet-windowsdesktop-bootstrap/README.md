@@ -347,3 +347,15 @@ long edited content resumes across three pages with every character exactly once
 in Ideal/Display, with and without columns. ABI remains 441 fields; imported
 coverage is 111/139. This reformats a complete page; selective incremental reuse,
 advanced layout, bidi/native-language and other documented paths remain open.
+
+Release 8.0.0-33 adds horizontal bidi reversal scopes to source Line Services.
+Original managed levels drive visual run ordering, drawing origins and nested
+caret/point queries. Coalesced controls retain their scope counts; immutable
+break records preserve embedding levels through cloned/wrapped continuations.
+Controls do not alter Unicode word boundaries or intrinsic widths. Hebrew,
+Arabic, Latin mixtures, numbers, combining marks and trailing spaces pass both
+text modes/paragraph directions, including selection, glyph enumeration and
+TextBlock layout/hit/raster. Justified mixed FlowDocuments preserve exact source
+ownership across pages. ABI remains 441 fields and imported coverage 111/139.
+Full RTL paragraph/page layout, advanced bidi decorations/objects/expansion,
+selective incremental reuse and other documented paths remain unfinished.
