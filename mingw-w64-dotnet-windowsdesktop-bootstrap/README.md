@@ -582,3 +582,26 @@ framework and portable apphost. The SDK suite now contains 33 WPF consumers.
 Imported coverage remains 129/139 and paragraph ABI 479 fields; this release adds
 behavior to existing APIs. General polygon/oversized/object/table/subpage layouts
 and other documented advanced native gaps remain unfinished.
+
+Release 8.0.0-45 preserves progress when a group of individually fitting floaters
+cannot fit on an empty page. The first accepted object stays on that page; a
+naturally fitting host line is shortened at the next anchor through the original
+reconstruction callback. Its CP/break record resumes the next object on a fresh
+page. Occupied pages retain intact-group deferral and preceding source text.
+Speculative object clients/content are released without becoming source owners.
+
+A managed preparation patch uses the original fForceBroken flag to recreate
+retained lines with their recorded CP range. Rendering, caret/point and selection
+queries therefore agree with the forced anchor boundary. Original native tests
+validate callback contracts, distinct anchor/page ownership, continuation after
+page destruction, exact remaining CPs and complete accepted/speculative cleanup.
+
+Public tests cover two/three text objects, fixed-size UI content, short/long inline
+prefixes, occupied-page text and optimal formatting in both modes/directions.
+Objects have distinct source/render pages, every tested character has one owner,
+pages regenerate after disposal and pixels survive GC. Prefix/body caret and
+point queries exercise the retained line range. Shared-framework and portable
+execution join the existing floater/optimal regressions. The SDK suite now has
+34 WPF consumers. Imported coverage remains 129/139 and paragraph ABI 479 fields.
+General polygons, oversized individual objects and advanced object/table/subpage/
+column-span/footnote behavior remain unfinished.
