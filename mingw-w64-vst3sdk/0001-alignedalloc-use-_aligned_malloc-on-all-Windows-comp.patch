@@ -1,0 +1,28 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] alignedalloc: use _aligned_malloc on all Windows compilers
+
+The Windows CRT (msvcrt/UCRT) has no C11 aligned_alloc, so libc++ and
+libstdc++ on mingw-w64 do not provide std::aligned_alloc. Memory from
+_aligned_malloc must be released with _aligned_free, so both functions
+switch on _WIN32 instead of _MSC_VER.
+
+--- a/public.sdk/source/vst/utility/alignedalloc.h
++++ b/public.sdk/source/vst/utility/alignedalloc.h
+@@ -53,7 +53,7 @@
+ #if SMTG_OS_MACOS && defined(MAC_OS_X_VERSION_MIN_REQUIRED) && \
+     MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_15
+ 	posix_memalign (&data, alignment, numBytes);
+-#elif defined(_MSC_VER)
++#elif defined(_WIN32)
+ 	data = _aligned_malloc (numBytes, alignment);
+ #else
+ 	data = std::aligned_alloc (alignment, numBytes);
+@@ -68,7 +68,7 @@
+ 		std::free (addr);
+ 	else
+ 	{
+-#if defined(_MSC_VER)
++#if defined(_WIN32)
+ 		_aligned_free (addr);
+ #else
+ 		std::free (addr);
