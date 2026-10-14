@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 129 of 139
+The native text/paragraph/NLS replacement is still partial (currently 132 of 139
 imported exports). Advanced bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -621,3 +621,22 @@ disposed-page regeneration and compacting GC in shared and portable applications
 The complete SDK suite now has 35 WPF consumers. Imported coverage remains
 129/139 and paragraph ABI 479 fields. General polygon/object/table/subpage,
 column-span/footnote and other documented advanced behavior remains unfinished.
+
+Release 8.0.0-47 adds the original subpage/subtrack footnote count and subpage info
+query APIs for WPF's supported empty collections. Queries validate retained text
+CP ranges and original nested container/floater/figure/table callbacks; shared
+cells are visited once. Callback errors, negative counts, cycles and invalid
+handle/context/kind/array arguments fail with clean outputs. Empty info preserves
+the caller's starting index and array bytes and returns actual LTR/RTL direction.
+Positive footnote collections remain explicitly unsupported, as the original WPF
+text/creation callbacks do not implement them.
+
+Native tests cover cloned source ranges, original recursive object callbacks,
+shared table ownership, failure/reentry/argument paths and cleanup. Existing
+subpage/subtrack SDK consumers now exercise the original PtsHost query wrappers
+on finite, bottomless, updated and synchronized objects in shared and portable
+execution. The suite remains 35 WPF consumers. Source-derived FSFTNINFO checks
+increase paragraph ABI coverage to 482 fields. Imported coverage becomes 132/139;
+six of seven absent declarations are under upstream #if NEVER, while the native
+reverse-object handler remains absent. General polygon/object/table/subpage,
+full bidi/optimizer and other documented advanced behavior remains unfinished.
