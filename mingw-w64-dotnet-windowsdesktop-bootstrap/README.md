@@ -708,3 +708,18 @@ section SDK consumer now has 216 shared/portable case executions: its original
 coverage, regeneration, bottomless resizing and end scrolling. Paragraph ABI
 remains 482 fields; native imported coverage remains 133/139. Complex nested
 margin-collapse conformance and other documented native gaps remain open.
+
+Release 8.0.0-52 supports original NLG MultiWordMode/IsSpellSuggestingMWEs with
+Windows whole-input ComprehensiveCheck. Actual UTF-16 error spans retain context,
+including repeated words. Replacement actions return the provider's replacement;
+deletion actions return an owned empty string; other suggestions retain the
+original COM enumeration ABI. Verification and wordbreaking modes remain distinct,
+and disabling the option restores independent-word checking.
+
+Native and original managed wrapper tests cover deletion/replacement, surrogate
+and embedded-NUL offsets, source/mode changes after snapshot creation, clones,
+option validation and dictionary behavior in both independent/whole-text modes.
+Both WinRT and legacy public TextBox spelling regressions remain active. Culture
+scope, UTF-8/UTF-16 dictionaries, disposal and GC are preserved. Compound subsegment
+topology and legacy pre/post reform selection remain unsupported; imported native
+coverage remains133/139 and other documented native gaps remain unfinished.
