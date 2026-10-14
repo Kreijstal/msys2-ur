@@ -556,3 +556,29 @@ missing APIs; paragraph ABI remains 479 fields. Spelling requires an installed
 Windows provider (Windows 8 or later); legacy multiword/compound errors and
 German/French reform selection remain explicitly unsupported. Advanced layout,
 object handlers, column spans and footnote behavior remain unfinished.
+
+Release 8.0.0-44 carries floating exclusion geometry across original paragraph
+containers. Subsequent paragraphs advance by the preceding text height and wrap
+beside its remaining objects; final extent still includes outstanding objects.
+Anchor paragraphs retain object clients, drawing and source ownership. Nested
+container scopes pass geometry and transform wrap/alignment sides across changes
+of direction, while local floating-content tracks stay isolated. Bottomless
+updates/comparison/synchronization preserve the geometry snapshots.
+
+Trailing whitespace in an embedded bidi run now receives the paragraph's line-end
+level after wrapping (UAX #9 L1). Splitting and original callback measurement keep
+source positions and continuation levels while drawing/enumeration/caret queries
+share the correct visual geometry. This resolves the demonstrated opposite-
+direction paragraph caret/glyph intrusion into an earlier float's exclusion area.
+
+The public regression checks 24 finite cases across both modes/directions,
+left/center/right floats and matching/opposite following directions, including
+optimal centered paragraphs and 80 caret/point queries per case. Sixteen clearing
+cases retain None/Left/Right/Both behavior across paragraphs; four bottomless cases
+resize the preceding object 110/180/110 pixels and retain wrapping/scrolling.
+Eight short/multipage two-column cases retain one object and exact source/page
+ownership with disposed-page regeneration and GC. All run against the shared
+framework and portable apphost. The SDK suite now contains 33 WPF consumers.
+Imported coverage remains 129/139 and paragraph ABI 479 fields; this release adds
+behavior to existing APIs. General polygon/oversized/object/table/subpage layouts
+and other documented advanced native gaps remain unfinished.
