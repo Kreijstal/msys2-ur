@@ -1,0 +1,209 @@
+diff --git a/bootstrap/m612/wpf-native/NaturalLanguageSpelling.cpp b/bootstrap/m612/wpf-native/NaturalLanguageSpelling.cpp
+index a9b3447..fea048f 100644
+--- a/bootstrap/m612/wpf-native/NaturalLanguageSpelling.cpp
++++ b/bootstrap/m612/wpf-native/NaturalLanguageSpelling.cpp
+@@ -55,7 +55,7 @@ HRESULT checker(LONG locale,Com<ISpellChecker>& value,std::string& icu) {
+     ISpellChecker* raw=nullptr;result=provider->CreateSpellChecker(name,&raw);value.reset(raw);return result;
+ }
+ struct Options : Object<NlIProcessingOptions,&NL_IID_IProcessingOptions> {
+-    bool spelling=false,verify=true;
++    bool spelling=false,verify=true,multiword=false;
+     HRESULT STDMETHODCALLTYPE put_Item(VARIANT key,VARIANT value) override {return protect([&]() -> HRESULT {
+         if(key.vt!=VT_BSTR||!key.bstrVal)return E_INVALIDARG;
+         std::wstring name(key.bstrVal,SysStringLen(key.bstrVal));
+@@ -64,7 +64,7 @@ struct Options : Object<NlIProcessingOptions,&NL_IID_IProcessingOptions> {
+             bool enabled=value.boolVal!=VARIANT_FALSE;
+             if(name==L"IsSpellChecking")spelling=enabled;
+             else if(name==L"IsSpellVerifyOnly")verify=enabled;
+-            else if(enabled)return E_NOTIMPL;
++            else multiword=enabled;
+             return S_OK;
+         }
+         // The OS provider does not expose the legacy pre/post reform selector.
+@@ -175,14 +175,53 @@ struct Sentence : Object<NlISentence,&NL_IID_ISentence> {
+         *output=segments[index].get();(*output)->AddRef();return S_OK;
+     }
+ };
++HRESULT suggest_segment(ISpellChecker* provider,Segment& segment,const std::wstring& word) {
++    IEnumString* list=nullptr;HRESULT result=provider->Suggest(word.c_str(),&list);Com<IEnumString> choices(list);if(FAILED(result))return result;
++    if(choices)for(;;){LPOLESTR text=nullptr;ULONG fetched=0;result=choices->Next(1,&text,&fetched);
++        std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> allocation(text,CoTaskMemFree);if(FAILED(result))return result;if(!fetched)break;if(text)segment.suggestions.emplace_back(text);}
++    return S_OK;
++}
+ HRESULT spell_segment(ISpellChecker* provider,Segment& segment,const std::wstring& word,bool suggestions) {
+     IEnumSpellingError* raw=nullptr;HRESULT result=provider->Check(word.c_str(),&raw);Com<IEnumSpellingError> errors(raw);if(FAILED(result))return result;
+     if(!errors)return S_OK;ISpellingError* first=nullptr;result=errors->Next(&first);Com<ISpellingError> error(first);if(FAILED(result))return result;if(!error)return S_OK;
+     CORRECTIVE_ACTION action{};result=error->get_CorrectiveAction(&action);if(FAILED(result))return result;if(action==CORRECTIVE_ACTION_NONE)return S_OK;
+     segment.role=NL_ecrrIncorrect;if(!suggestions)return S_OK;
+-    IEnumString* list=nullptr;result=provider->Suggest(word.c_str(),&list);Com<IEnumString> choices(list);if(FAILED(result))return result;
+-    if(choices)for(;;){LPOLESTR text=nullptr;ULONG fetched=0;result=choices->Next(1,&text,&fetched);
+-        std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> allocation(text,CoTaskMemFree);if(FAILED(result))return result;if(!fetched)break;if(text)segment.suggestions.emplace_back(text);}
++    return suggest_segment(provider,segment,word);
++}
++HRESULT context_errors(ISpellChecker* provider,const Context& context,LONG locale,const std::wstring& input,bool suggestions,std::vector<Com<Segment>>& output) {
++    // Windows accepts NUL-terminated text. Check each explicit-input span
++    // separately so embedded NULs do not silently truncate the later source.
++    for(size_t base=0;base<input.size();) {
++        size_t limit=input.find(L'\0',base);if(limit==std::wstring::npos)limit=input.size();
++        if(limit>base) {
++            IEnumSpellingError* raw=nullptr;HRESULT result=provider->ComprehensiveCheck(input.c_str()+base,&raw);Com<IEnumSpellingError> errors(raw);if(FAILED(result))return result;
++            if(errors)for(;;) {
++                ISpellingError* item=nullptr;result=errors->Next(&item);Com<ISpellingError> error(item);if(FAILED(result))return result;if(!error)break;
++                ULONG start=0,length=0;CORRECTIVE_ACTION action{};
++                if(FAILED(result=error->get_StartIndex(&start))||FAILED(result=error->get_Length(&length))||FAILED(result=error->get_CorrectiveAction(&action)))return result;
++                if(action==CORRECTIVE_ACTION_NONE)continue;
++                if(action<CORRECTIVE_ACTION_GET_SUGGESTIONS||action>CORRECTIVE_ACTION_DELETE)return E_UNEXPECTED;
++                if(!length||start>limit-base||length>limit-base-start)return E_UNEXPECTED;
++                auto word=input.substr(base+start,length);
++                // Lexicons suppress spelling errors, while contextual deletion
++                // remains meaningful even for words accepted by a lexicon.
++                if(action!=CORRECTIVE_ACTION_DELETE&&context.accepts(word,locale))continue;
++                Com<Segment> segment{new Segment};segment->range={LONG(base+start),LONG(length)};segment->role=NL_ecrrIncorrect;
++                if(suggestions) {
++                    if(action==CORRECTIVE_ACTION_DELETE)segment->suggestions.emplace_back();
++                    else if(action==CORRECTIVE_ACTION_REPLACE) {
++                        LPWSTR raw_text=nullptr;result=error->get_Replacement(&raw_text);std::unique_ptr<WCHAR,decltype(&CoTaskMemFree)> text(raw_text,CoTaskMemFree);if(FAILED(result))return result;if(!text)return E_UNEXPECTED;
++                        segment->suggestions.emplace_back(text.get());
++                    } else if(action==CORRECTIVE_ACTION_GET_SUGGESTIONS) {result=suggest_segment(provider,*segment,word);if(FAILED(result))return result;}
++                    else return E_UNEXPECTED;
++                }
++                output.push_back(std::move(segment));
++            }
++        }
++        base=limit==input.size()?limit:limit+1;
++    }
++    std::sort(output.begin(),output.end(),[](const auto& a,const auto& b){return a->range.start<b->range.start;});
++    LONG limit=0;for(const auto& error:output){if(error->range.start<limit)return E_UNEXPECTED;limit=error->range.start+error->range.length;}
+     return S_OK;
+ }
+ struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
+@@ -194,6 +233,9 @@ struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
+         if(!context)return E_UNEXPECTED;Com<ISpellChecker> provider;std::string name;
+         if(context->options->spelling){HRESULT result=checker(locale,provider,name);if(FAILED(result))return result;}
+         else {WCHAR tag[LOCALE_NAME_MAX_LENGTH]{};if(!LCIDToLocaleName(locale?locale:GetUserDefaultLCID(),tag,LOCALE_NAME_MAX_LENGTH,LOCALE_ALLOW_NEUTRAL_NAMES))return E_INVALIDARG;for(const WCHAR* p=tag;*p;++p)name.push_back(char(*p));}
++        const bool multiword=provider&&context->options->multiword;
++        std::vector<Com<Segment>> reported;
++        if(multiword){HRESULT result=context_errors(provider.get(),*context,locale?locale:GetUserDefaultLCID(),input,!context->options->verify,reported);if(FAILED(result))return result;}
+         UErrorCode error=U_ZERO_ERROR;
+         using Break=std::unique_ptr<UBreakIterator,decltype(&ubrk_close)>;
+         Break boundary(ubrk_open(UBRK_SENTENCE,name.c_str(),reinterpret_cast<const UChar*>(input.data()),int(input.size()),&error),ubrk_close);
+@@ -207,13 +249,23 @@ struct Chunk : Object<NlITextChunk,&NL_IID_ITextChunk> {
+                 if(ubrk_getRuleStatus(words.get())>=UBRK_WORD_NUMBER) {
+                     Com<Segment> segment{new Segment};segment->range={start+left,right-left};
+                     std::wstring word=input.substr(start+left,right-left);
+-                    if(provider&&ubrk_getRuleStatus(words.get())>=UBRK_WORD_LETTER&&!context->accepts(word,locale?locale:GetUserDefaultLCID())) {
++                    if(provider&&!multiword&&ubrk_getRuleStatus(words.get())>=UBRK_WORD_LETTER&&!context->accepts(word,locale?locale:GetUserDefaultLCID())) {
+                         HRESULT result=spell_segment(provider.get(),*segment,word,!context->options->verify);if(FAILED(result))return result;
+                     }
+-                    sentence->segments.push_back(std::move(segment));
++                    if(!multiword)sentence->segments.push_back(std::move(segment));
++                    else {
++                        LONG cursor=segment->range.start,limit=cursor+segment->range.length;
++                        for(const auto& error:reported){LONG a=error->range.start,b=a+error->range.length;if(b<=cursor)continue;if(a>=limit)break;
++                            if(a>cursor){Com<Segment> piece{new Segment};piece->range={cursor,a-cursor};sentence->segments.push_back(std::move(piece));}
++                            cursor=std::min(limit,b);if(cursor==limit)break;
++                        }
++                        if(cursor<limit){Com<Segment> piece{new Segment};piece->range={cursor,limit-cursor};sentence->segments.push_back(std::move(piece));}
++                    }
+                 }
+                 left=right;
+             }
++            if(multiword){for(const auto& error:reported)if(error->range.start>=start&&error->range.start<end)sentence->segments.push_back(retain(error.get()));
++                std::sort(sentence->segments.begin(),sentence->segments.end(),[](const auto& a,const auto& b){return a->range.start<b->range.start;});}
+             if(!sentence->segments.empty())sentences.push_back(std::move(sentence));start=end;
+         }
+         return S_OK;
+diff --git a/bootstrap/m612/wpf-native/NaturalLanguageSpelling.md b/bootstrap/m612/wpf-native/NaturalLanguageSpelling.md
+index 727cfad..1fb31a4 100644
+--- a/bootstrap/m612/wpf-native/NaturalLanguageSpelling.md
++++ b/bootstrap/m612/wpf-native/NaturalLanguageSpelling.md
+@@ -27,8 +27,23 @@ Verification mode reports errors without suggestions. Word-breaking mode does no
+ check spelling. Custom lexicons decode UTF-8 and BOM-tagged UTF-16 LE/BE, match
+ words without case and honor #LID culture metadata. Contexts can add/remove
+ lexicons and release all lexicons without changing the user's persistent OS
+-dictionary. Multiword checking, compound subsegments and legacy German/French
+-pre/post reform selection remain explicitly unsupported.
++dictionary. Compound subsegments and legacy German/French pre/post reform
++selection remain explicitly unsupported.
++
++IsSpellSuggestingMWEs enables whole-input ComprehensiveCheck using the original
++Windows provider. Native UTF-16 error spans become incorrect segments, retaining
++unaffected ICU word fragments and sentence ordering. Replacement actions return
++the provider's exact replacement; deletion actions return an owned empty-string
++suggestion. Suggestion-list actions use the provider's Suggest enumeration.
++Verification mode still has no suggestions, and word-breaking-only mode does not
++invoke spelling even when multiword is enabled. Disabling the option restores the
++original independent-word checking path.
++
++Explicit input spans separated by embedded NULs are checked independently while
++preserving offsets into the original buffer. Provider ranges/actions are validated
++before publication, and overlapping errors are rejected. Culture-scoped custom
++lexicons suppress spelling errors without suppressing contextual deletion. Snapshots
++retain their original source, roles and suggestions after chunk/mode changes.
+ 
+ The companion managed patch retains a culture-aware custom-word set in each
+ WinRT provider, alongside the original Windows dictionary registration. Original
+diff --git a/bootstrap/m612/wpf-tests/SpellCheck.cs b/bootstrap/m612/wpf-tests/SpellCheck.cs
+index 97b3797..6d935c0 100644
+--- a/bootstrap/m612/wpf-tests/SpellCheck.cs
++++ b/bootstrap/m612/wpf-tests/SpellCheck.cs
+@@ -27,13 +27,23 @@ class Check {
+    type.GetMethod("SetLocale",I).Invoke(provider,new object[]{CultureInfo.GetCultureInfo("en-US")});Mode(provider,7);
+    const string text="hello speling world. 😀 Another speling sentence.";var scan=Analyze(provider,text);if(scan.Words.Count!=6||scan.Ends.Count!=2)throw new Exception("legacy sentence/word segmentation");
+    var errors=scan.Words.Where(x=>!x.Clean).ToArray();if(errors.Length!=2||errors[0].Start!=text.IndexOf("speling")||errors[1].Start!=text.LastIndexOf("speling")||errors.Any(x=>x.Length!=7||!x.Suggestions.Contains("spelling")))throw new Exception("legacy UTF-16 offsets/errors/suggestions");
++   type.GetProperty("MultiWordMode",I).SetValue(provider,true);
++   foreach(var sample in new[]{"the the","😀 the the","the\0the the"}){
++    Mode(provider,7);var contextual=Analyze(provider,sample);var bad=contextual.Words.Where(x=>!x.Clean).ToArray();if(bad.Length!=1||bad[0].Start!=sample.LastIndexOf("the",StringComparison.Ordinal)||bad[0].Length!=3||!bad[0].Suggestions.SequenceEqual(new[]{string.Empty}))throw new Exception("original multiword deletion/range/suggestion ABI");
++    Mode(provider,2);var verified=Analyze(provider,sample);if(verified.Words.Count(x=>!x.Clean)!=1||verified.Words.Any(x=>x.Suggestions.Length!=0))throw new Exception("original multiword verification-only mode");
++    Mode(provider,1);if(Analyze(provider,sample).Words.Any(x=>!x.Clean))throw new Exception("multiword flag must preserve wordbreaking-only mode");
++   }
++   Mode(provider,7);var replaced=Analyze(provider,"mispell word").Words.Where(x=>!x.Clean).ToArray();if(replaced.Length!=1||replaced[0].Start!=0||replaced[0].Length!=7||!replaced[0].Suggestions.SequenceEqual(new[]{"misspell"}))throw new Exception("original comprehensive replacement suggestion");
++   if(Analyze(provider,"",false).Words.Count!=0||Analyze(provider," \r\n 😀").Words.Count!=0)throw new Exception("multiword empty/punctuation input");
++   type.GetProperty("MultiWordMode",I).SetValue(provider,false);Mode(provider,7);if(Analyze(provider,"the the").Words.Any(x=>!x.Clean))throw new Exception("disabling multiword must restore independent-word checks");
++   Console.WriteLine("original NLG multiword context, deletion/replacement, UTF-16/surrogate/NUL ranges, modes and disable transition PASS");
+    Mode(provider,2);scan=Analyze(provider,text);if(scan.Words.Count(x=>!x.Clean)!=2||scan.Words.Any(x=>x.Suggestions.Length!=0))throw new Exception("legacy verification-only mode");
+    Mode(provider,1);scan=Analyze(provider,text);if(scan.Words.Any(x=>!x.Clean)||scan.Words.Count!=6)throw new Exception("legacy wordbreaking-only mode");
+    if(Analyze(provider," \r\n 😀").Words.Count!=0||Analyze(provider,"",false).Words.Count!=0)throw new Exception("legacy empty/punctuation-only enumeration");
+    scan=Analyze(provider,text,true);if(scan.Words.Count!=1||scan.Ends.Count!=1)throw new Exception("legacy callback cancellation");
+    Mode(provider,7);const string custom="zzbootstraplexicon";if(Analyze(provider,custom).Words.Single().Clean)throw new Exception("custom baseline unexpectedly correct");
+    lexicon=Path.Combine(Path.GetTempPath(),"wpf-bootstrap-lexicon-"+Guid.NewGuid()+".lex");File.WriteAllText(lexicon,"#LID 1033\r\n"+custom+"\r\n",iteration==0?new System.Text.UTF8Encoding(true):iteration==1?System.Text.Encoding.Unicode:System.Text.Encoding.BigEndianUnicode);
+-   var load=type.GetMethod("LoadDictionary",I,null,new[]{typeof(string)},null);var dictionary=load.Invoke(provider,new object[]{lexicon});if(!Analyze(provider,custom.ToUpperInvariant()).Words.Single().Clean)throw new Exception("legacy custom dictionary case matching");type.GetMethod("UnloadDictionary",I).Invoke(provider,new[]{dictionary});if(Analyze(provider,custom).Words.Single().Clean)throw new Exception("legacy dictionary removal");
++   var load=type.GetMethod("LoadDictionary",I,null,new[]{typeof(string)},null);var dictionary=load.Invoke(provider,new object[]{lexicon});foreach(bool contextual in new[]{false,true}){type.GetProperty("MultiWordMode",I).SetValue(provider,contextual);if(!Analyze(provider,custom.ToUpperInvariant()).Words.Single().Clean)throw new Exception("legacy custom dictionary case matching in independent/whole-text mode");}type.GetMethod("UnloadDictionary",I).Invoke(provider,new[]{dictionary});foreach(bool contextual in new[]{false,true}){type.GetProperty("MultiWordMode",I).SetValue(provider,contextual);if(Analyze(provider,custom).Words.Single().Clean)throw new Exception("legacy dictionary removal in independent/whole-text mode");}
+    File.WriteAllText(lexicon,"#LID 1031\r\n"+custom+"\r\n",System.Text.Encoding.Unicode);dictionary=load.Invoke(provider,new object[]{lexicon});if(Analyze(provider,custom).Words.Single().Clean)throw new Exception("legacy dictionary culture escaped");type.GetMethod("UnloadDictionary",I).Invoke(provider,new[]{dictionary});File.WriteAllText(lexicon,"#LID 1033\r\n"+custom+"\r\n",System.Text.Encoding.Unicode);
+    dictionary=load.Invoke(provider,new object[]{lexicon});type.GetMethod("ReleaseAllLexicons",I).Invoke(provider,null);if(Analyze(provider,custom).Words.Single().Clean)throw new Exception("legacy dictionary release-all");System.Runtime.InteropServices.Marshal.ReleaseComObject(dictionary);
+    type.GetMethod("SetLocale",I).Invoke(provider,new object[]{CultureInfo.GetCultureInfo("ja-JP")});Mode(provider,1);if(Analyze(provider,"日本語の文章です。").Words.Count==0)throw new Exception("legacy Unicode segmentation without spelling provider");
+diff --git a/bootstrap/m612/wpf-tests/SpellingNative.cpp b/bootstrap/m612/wpf-tests/SpellingNative.cpp
+index 0cab2e3..53a5df5 100644
+--- a/bootstrap/m612/wpf-tests/SpellingNative.cpp
++++ b/bootstrap/m612/wpf-tests/SpellingNative.cpp
+@@ -22,8 +22,29 @@ int main(int argc,char** argv){try{
+  NlIProcessingOptions* optionsRaw=nullptr;require(context->get_Options(&optionsRaw)==S_OK,"processing options");Com<NlIProcessingOptions> options(optionsRaw);
+  NlIProcessingOptions* unsupported=reinterpret_cast<NlIProcessingOptions*>(1);require(context->get_Capabilities(0x7fffffff,&unsupported)==E_INVALIDARG&&!unsupported,"unavailable culture rejects with cleared capability output");
+  VARIANT key{},value{};key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellChecking");value.vt=VT_BOOL;value.boolVal=VARIANT_TRUE;HRESULT result=options->put_Item(key,value);VariantClear(&key);require(result==S_OK,"VARIANT-by-value option ABI");
+- key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.boolVal=VARIANT_TRUE;result=options->put_Item(key,value);VariantClear(&key);require(result==E_NOTIMPL,"unsupported compound spelling is explicit");
++ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.boolVal=VARIANT_TRUE;result=options->put_Item(key,value);VariantClear(&key);require(result==S_OK,"whole-input multiword option is accepted");
++ value.boolVal=VARIANT_FALSE;key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");require(options->put_Item(key,value)==S_OK,"multiword can be disabled");VariantClear(&key);
+  require(chunk->SetInputArray(nullptr,1)==E_INVALIDARG&&chunk->SetInputArray(L"hello speling",-1)==E_INVALIDARG,"invalid input lengths");
++ auto option=[&](const WCHAR* name,bool enabled){VARIANT k{},v{};k.vt=VT_BSTR;k.bstrVal=SysAllocString(name);v.vt=VT_BOOL;v.boolVal=enabled?VARIANT_TRUE:VARIANT_FALSE;HRESULT hr=options->put_Item(k,v);VariantClear(&k);require(hr==S_OK,"multiword option/mode transition");};
++ auto errors=[&](const WCHAR* text,LONG length,LONG expectedStart,bool verify){
++  option(L"IsSpellSuggestingMWEs",true);option(L"IsSpellVerifyOnly",verify);require(chunk->SetInputArray(text,length)==S_OK,"explicit multiword UTF-16 input");
++  IEnumVARIANT* e=nullptr;require(chunk->GetEnumerator(&e)==S_OK&&e,"multiword snapshot");Com<IEnumVARIANT> en(e);int found=0;
++  IEnumVARIANT* duplicate=nullptr;require(en->Clone(&duplicate)==S_OK&&duplicate,"contextual snapshot clone");Com<IEnumVARIANT> snapshotClone(duplicate);
++  option(L"IsSpellSuggestingMWEs",false);option(L"IsSpellVerifyOnly",!verify);require(chunk->SetInputArray(L"changed",7)==S_OK,"replace source after snapshot");
++  for(;;){VARIANT sentenceValue{};ULONG n=0;HRESULT hr=en->Next(1,&sentenceValue,&n);require(SUCCEEDED(hr),"sentence enumeration HRESULT");if(!n)break;
++   NlISentence* sentencePointer=nullptr;require(sentenceValue.punkVal->QueryInterface(NL_IID_ISentence,reinterpret_cast<void**>(&sentencePointer))==S_OK,"sentence ABI");Com<NlISentence> sentence(sentencePointer);VariantClear(&sentenceValue);LONG size=0;require(sentence->get_Count(&size)==S_OK,"segment count");
++   for(LONG index=0;index<size;++index){NlITextSegment* pointer=nullptr;require(sentence->get_Item(index,&pointer)==S_OK,"multiword segment");Com<NlITextSegment> segment(pointer);LONG role=0;NlTextRange range{};require(segment->get_Role(&role)==S_OK&&segment->get_Range(&range)==S_OK,"multiword range/role ABI");if(role!=NL_ecrrIncorrect)continue;++found;
++    require(range.start==expectedStart&&range.length==3,"whole-text repeated-word offsets retain surrogate/NUL source coordinates");IEnumVARIANT* choices=nullptr;require(segment->get_Suggestions(&choices)==S_OK,"deletion suggestion ABI");Com<IEnumVARIANT> suggestions(choices);
++    if(verify)require(!choices,"verification mode has no suggestions");else{VARIANT choice{};ULONG got=0;require(choices&&choices->Next(1,&choice,&got)==S_OK&&got==1&&choice.vt==(VT_UI2|VT_BYREF)&&choice.puiVal&&!*choice.puiVal,"delete is an owned empty UTF-16 suggestion");}
++   }
++  }require(found==1,"one contextual repeated-word error survives source/mode changes");
++  VARIANT cloned{};ULONG cloned_count=0;require(snapshotClone->Next(1,&cloned,&cloned_count)==S_OK&&cloned_count==1,"contextual clone retains independent position and source");VariantClear(&cloned);
++ };
++ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"IsSpellSuggestingMWEs");value.vt=VT_I4;value.lVal=1;require(options->put_Item(key,value)==E_INVALIDARG,"multiword option rejects non-BOOL VARIANT");VariantClear(&key);
++ key.vt=VT_BSTR;key.bstrVal=SysAllocString(L"SpellingReform");value.vt=VT_I4;value.lVal=1;require(options->put_Item(key,value)==E_NOTIMPL,"legacy reform selector stays explicitly unsupported");VariantClear(&key);
++ errors(L"the the",7,4,false);errors(L"\U0001f600 the the",10,7,false);errors(L"the\0the the",11,8,false);errors(L"the the",7,4,true);
++ option(L"IsSpellSuggestingMWEs",false);option(L"IsSpellVerifyOnly",true);
++ std::puts("native multiword spelling: actual context, deletion suggestion, UTF-16/surrogate/embedded-NUL offsets and verification modes PASS");
+  require(chunk->SetInputArray(L"hello speling",13)==S_OK,"source input");IEnumVARIANT* enumRaw=nullptr;require(chunk->GetEnumerator(&enumRaw)==S_OK&&enumRaw,"sentences");Com<IEnumVARIANT> enumeration(enumRaw);
+  IEnumVARIANT* cloneRaw=nullptr;require(enumeration->Clone(&cloneRaw)==S_OK&&cloneRaw,"enumerator clone");Com<IEnumVARIANT> clone(cloneRaw);
+  // Enumeration must own a snapshot after the chunk and its context disappear.
