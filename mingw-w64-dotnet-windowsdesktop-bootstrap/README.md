@@ -336,3 +336,14 @@ interval. Native context/stale-query and lost/populated callback cleanup gates
 pass; ABI checks now cover 441 fields and imported coverage is 110/139. Complex
 figure collision/search policies, composite lines using both sides of an inset
 obstacle, bidi/native-language and other documented paths remain unfinished.
+
+Release 8.0.0-32 implements finite page updates with stable native page identity.
+A complete replacement layout and its outgoing checkpoint are prepared before
+commit; old section/column/text handles invalidate on success and release outside
+the registry lock. Failed callbacks retain the previous layout and reusable
+incoming checkpoint. Native lifecycle/failure/continuation/column gates pass.
+Original managed page edits preserve native identity and render changed glyphs;
+long edited content resumes across three pages with every character exactly once
+in Ideal/Display, with and without columns. ABI remains 441 fields; imported
+coverage is 111/139. This reformats a complete page; selective incremental reuse,
+advanced layout, bidi/native-language and other documented paths remain open.

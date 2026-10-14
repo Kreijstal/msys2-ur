@@ -1,0 +1,241 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index 07e6a64..5be4bb0 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -1278,6 +1278,40 @@ extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void
+     try {TrackShift plan{shift};int status=plan.collect(track);if(status)return status;std::lock_guard<std::mutex> lock(gate);plan.apply();return 0;}
+     catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
+ }
++extern "C" __declspec(dllexport) int WINAPI FsUpdateFinitePage(void* context_handle,void* handle,void* break_input,void* section,FSFMTR* formatted,void** break_output) {
++    if(!formatted||!break_output)return PTS_tserrNullOutputParameter;
++    *formatted={};*break_output=nullptr;
++    auto page=lookup_owned(pages,context_handle,handle);
++    if(!page||page->subpage||page->bottomless)return PTS_tserrInvalidQuery;
++    std::shared_ptr<BreakData> input;
++    if(break_input){input=lookup_owned(records,context_handle,break_input);if(!input||!input->page)return PTS_tserrInvalidBreakRecord;section=input->section;}
++    try {
++        // Format and register a complete replacement before touching the live
++        // page. Input positions are immutable and remain reusable after failure.
++        std::shared_ptr<PageData> replacement;
++        int status=build_page(page->context,section,false,replacement,input?input->position:nullptr);if(status)return status;
++        if(replacement->stop==fmtrNoProgressOutOfSpace)return PTS_tserrNotImplemented;
++        auto outgoing=replacement->continuation?make_record(page->context,replacement->continuation,true,section):nullptr;
++        try {register_page(replacement);}catch(...){if(outgoing)destroy_record(context_handle,outgoing.get(),true);throw;}
++        // Keep every old owner alive until after the registry lock is released.
++        // Paragraph and break destruction reenters original managed callbacks.
++        auto previous_track=page->track;auto previous_section=page->section;auto previous_position=page->continuation;
++        bool live=false;
++        {std::lock_guard<std::mutex> lock(gate);
++            auto current=pages.find(handle);live=current!=pages.end()&&current->second==page;
++            if(live){
++                if(previous_section){for(const auto& track:previous_section->columns)tracks.erase(track.get());sections.erase(previous_section.get());}
++                else tracks.erase(previous_track.get());
++                pages.erase(replacement.get());
++                page->track=replacement->track;page->section=replacement->section;page->details=replacement->details;
++                page->continuation=replacement->continuation;page->stop=replacement->stop;page->forced_progress=replacement->forced_progress;
++            }
++        }
++        if(!live){unregister_page(replacement);if(outgoing)destroy_record(context_handle,outgoing.get(),true);return PTS_tserrInvalidQuery;}
++        formatted->kstop=page->stop;formatted->fForcedProgress=page->forced_progress;
++        *break_output=outgoing?outgoing.get():nullptr;return 0;
++    }catch(const std::bad_alloc&){return PTS_tserrOutOfMemory;}
++}
+ extern "C" __declspec(dllexport) int WINAPI FsUpdateBottomlessPage(void* context_handle,void* handle,void* section,FSFMTRBL* formatted) {
+     if(!formatted)return PTS_tserrNullOutputParameter;*formatted=fmtrblGoalReached;
+     auto page=lookup_owned(pages,context_handle,handle);if(!page||page->subpage||!page->bottomless)return PTS_tserrInvalidQuery;
+diff --git a/bootstrap/m612/wpf-tests/FiniteUpdates.cs b/bootstrap/m612/wpf-tests/FiniteUpdates.cs
+new file mode 100644
+index 0000000..0e019b1
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/FiniteUpdates.cs
+@@ -0,0 +1,78 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++
++class Check {
++    const BindingFlags I=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++    static object Get(object value,string name)=>value.GetType().GetProperty(name,I)?.GetValue(value)??value.GetType().GetField(name,I)?.GetValue(value)??throw new Exception("missing member "+name);
++    static object Call(object value,string name,params object[] args)=>value.GetType().GetMethods(I).Single(m=>m.Name==name&&m.GetParameters().Length==args.Length).Invoke(value,args);
++    static byte[] Raster(DocumentPage page) {
++        var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(page.Visual);
++        var pixels=new byte[400*220*4];image.CopyPixels(pixels,1600,0);
++        int ink=0;for(int i=0;i<pixels.Length;i+=4)if(pixels[i+3]>150&&pixels[i]<100&&pixels[i+1]<100&&pixels[i+2]<100)++ink;
++        if(ink<50)throw new Exception("updated page has no real glyph ink");return pixels;
++    }
++    [STAThread]
++    static void Main() {
++        var assembly=typeof(FlowDocument).Assembly;
++        var pageType=assembly.GetType("MS.Internal.PtsHost.FlowDocumentPage",true);
++        var viewType=assembly.GetType("System.Windows.Documents.ITextView",true);
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(bool columns in new[]{false,true}) {
++            var run=new Run("Original short source text.");
++            var document=new FlowDocument(new Paragraph(run){Margin=new Thickness(0)}) {
++                FontFamily=new FontFamily("Segoe UI"),FontSize=18,PagePadding=new Thickness(10),
++                ColumnWidth=columns?180:double.PositiveInfinity,ColumnGap=20
++            };
++            TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;
++            paginator.IsBackgroundPaginationEnabled=false;paginator.PageSize=new Size(400,220);
++            var cache=Get(document,"StructuralCache");
++            // Keep an original page outside the paginator's break table: that
++            // table disposes cached pages on edits rather than updating them.
++            using var page=(DocumentPage)Activator.CreateInstance(pageType,I,null,new[]{cache},null);
++            var size=new Size(400,220);var margin=new Thickness(10);
++            Call(page,"FormatFinite",size,margin,null);Call(page,"Arrange",size);
++            var initial=Raster(page);var handle=(IntPtr)Get(Get(page,"_ptsPage"),"PageHandle");
++            if(handle==IntPtr.Zero)throw new Exception("original finite page handle missing");
++            foreach(int edit in new[]{0,1,2}) {
++                run.Text=edit==0?"Edited source with more words and visibly different glyphs.":edit==1?string.Join(" ",Enumerable.Range(0,90).Select(i=>$"word{i:D3}")):"Short final source.";
++                var result=Call(page,"FormatFinite",size,margin,null);Call(page,"Arrange",size);
++                if((IntPtr)Get(Get(page,"_ptsPage"),"PageHandle")!=handle||!(bool)Get(page,"IncrementalUpdate"))throw new Exception("original finite update must preserve its native page handle");
++                var pixels=Raster(page);if(pixels.SequenceEqual(initial))throw new Exception("finite update retained stale raster");initial=pixels;
++                var ranges=new List<(TextPointer Start,TextPointer End)>();
++                var view=((IServiceProvider)page).GetService(viewType);
++                foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)) {
++                    var t=segment.GetType();ranges.Add(((TextPointer)t.GetProperty("Start",I).GetValue(segment),(TextPointer)t.GetProperty("End",I).GetValue(segment)));
++                }
++                int covered=0;
++                for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);int count=ranges.Count(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0);if(count>1)throw new Exception("updated source character repeated");covered+=count;}
++                if(covered==0||edit!=1&&covered!=run.Text.Length||edit==1&&result==null)throw new Exception("updated source ranges and outgoing continuation disagree");
++                if(edit==1) {
++                    var extraPages=new List<DocumentPage>();var records=new List<object>();object incoming=result;int resumed=0;
++                    try {
++                        while(incoming!=null) {
++                            if(++resumed>20)throw new Exception("updated continuation must reach document end");records.Add(incoming);
++                            var next=(DocumentPage)Activator.CreateInstance(pageType,I,null,new[]{cache},null);extraPages.Add(next);
++                            incoming=Call(next,"FormatFinite",size,margin,incoming);Call(next,"Arrange",size);Raster(next);
++                            var nextView=((IServiceProvider)next).GetService(viewType);
++                            foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(nextView)){var t=segment.GetType();ranges.Add(((TextPointer)t.GetProperty("Start",I).GetValue(segment),(TextPointer)t.GetProperty("End",I).GetValue(segment)));}
++                        }
++                        for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);if(ranges.Count(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0)!=1)throw new Exception("updated/resumed pages must cover every source character exactly once");}
++                        Console.WriteLine($"original updated continuation {mode}, columns={columns}: {resumed+1} rendered pages, all {run.Text.Length} characters exactly once PASS");
++                    } finally {foreach(var extra in extraPages)extra.Dispose();foreach(var record in records)((IDisposable)record).Dispose();}
++                }
++                GC.Collect(2,GCCollectionMode.Forced,true,true);Raster(page);
++                Console.WriteLine($"original finite page update {mode}, columns={columns}, edit={edit}: stable native page, {covered}/{run.Text.Length} source characters, changed glyph raster, continuation={result!=null}, original arrange/visual/GC PASS");
++            }
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original finite page update and dispatcher cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index b24eb69..2cd4e7a 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -285,6 +285,42 @@ int main(int argc,char** argv) {
+         require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryPageDetails(context,page_handle,&details)==0&&details.fskupd==fskupdNoChange,"page update clear is retained");
+         require(FsDestroyPage(context,page_handle)==0&&lines_destroyed==4&&breaks_destroyed==4&&clients_destroyed==2&&FsDestroyPage(context,page_handle)==PTS_tserrInvalidQuery,"page teardown releases every callback handle exactly once");
+         require(FsQueryTextDetails(context,paras[0].pfspara,&text_details)==PTS_tserrInvalidQuery&&FsQueryTrackDetails(context,track,&track_details)==PTS_tserrInvalidQuery,"page teardown invalidates child queries");
++        PROC(FsDestroyPageBreakRecord,PageAction);
++        using QuerySections=int(WINAPI*)(void*,void*,int,FSSECTIONDESCRIPTION*,int*);
++        using QuerySection=int(WINAPI*)(void*,void*,FSSECTIONDETAILS*);
++        using QueryColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
++        PROC(FsQueryPageSectionList,QuerySections);PROC(FsQuerySectionDetails,QuerySection);PROC(FsQuerySectionBasicColumnList,QueryColumns);
++        using FiniteUpdate=int(WINAPI*)(void*,void*,void*,void*,FSFMTR*,void**);PROC(FsUpdateFinitePage,FiniteUpdate);
++        {
++            available_height=80;para_count=2;reset_page_counts();void* updated_record=nullptr;
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0,"finite update starts from a live page");
++            void* old_track=details.u.simple.trackdescr.pfstrack;
++            require(FsQueryTrackParaList(context,old_track,2,paras,&actual_count)==0,"finite update retains original text query handles");void* old_text=paras[0].pfspara;
++            para_count=3;
++            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==0&&!updated_record&&formatted.kstop==fmtrGoalReached&&FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack!=old_track,"finite update preserves page identity and replaces source layout");
++            require(FsQueryTrackDetails(context,details.u.simple.trackdescr.pfstrack,&track_details)==0&&track_details.cParas==3&&FsQueryTrackDetails(context,old_track,&track_details)==PTS_tserrInvalidQuery&&FsQueryTextDetails(context,old_text,&text_details)==PTS_tserrInvalidQuery&&lines_created==10&&lines_destroyed==4&&clients_destroyed==2,"accepted update invalidates old track/text and releases only superseded content");
++            old_track=details.u.simple.trackdescr.pfstrack;int retained_lines=lines_created-lines_destroyed,retained_clients=clients_created-clients_destroyed;
++            fail_line=lines_created+3;updated_record=reinterpret_cast<void*>(1);formatted.kstop=fmtrBrokenOutOfSpace;
++            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==PTS_tserrCallbackException&&!updated_record&&formatted.kstop==fmtrGoalReached&&FsQueryPageDetails(context,page_handle,&details)==0&&details.u.simple.trackdescr.pfstrack==old_track&&lines_created-lines_destroyed==retained_lines&&clients_created-clients_destroyed==retained_clients,"failed finite update clears outputs, discards speculative clients and retains the old page");fail_line=-1;
++            require(FsUpdateFinitePage(reinterpret_cast<void*>(999),page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==PTS_tserrInvalidQuery&&!updated_record&&FsUpdateFinitePage(context,page_handle,reinterpret_cast<void*>(999),nullptr,&formatted,&updated_record)==PTS_tserrInvalidBreakRecord&&!updated_record,"finite update rejects foreign contexts and unknown input records before callbacks");
++            require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"updated and failed finite pages release every original resource exactly once");
++            available_height=10;para_count=2;reset_page_counts();
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"finite continuation update starts from actual input checkpoint");void* update_input=page_break;
++            require(FsUpdateFinitePage(context,page_handle,update_input,nullptr,&formatted,&updated_record)==0&&updated_record&&updated_record!=update_input&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==5&&text_details.u.full.dcpLim==10,"updated page resumes the immutable incoming line position and creates its own output checkpoint");
++            void* independent=nullptr;void* independent_record=nullptr;
++            require(FsCreatePageFinite(context,update_input,nullptr,&formatted,&independent,&independent_record)==0&&independent_record&&FsQueryPageDetails(context,independent,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&FsQueryTextDetails(context,paras[0].pfspara,&text_details)==0&&text_details.u.full.dcpFirst==5,"accepted update does not consume or mutate its input checkpoint");
++            require(FsDestroyPage(context,page_handle)==0&&FsDestroyPage(context,independent)==0&&FsDestroyPageBreakRecord(context,updated_record)==0&&FsDestroyPageBreakRecord(context,independent_record)==0&&FsDestroyPageBreakRecord(context,update_input)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"independent update and creation branches own records and content once");
++            columns=2;available_height=20;para_count=3;reset_page_counts();
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple,"finite update creates a real multi-column section");
++            FSSECTIONDESCRIPTION before_section{};require(FsQueryPageSectionList(context,page_handle,1,&before_section,&actual_count)==0,"old multi-column section query");
++            require(FsDestroyPageBreakRecord(context,page_break)==0,"old output record remains independently owned");
++            available_height=80;
++            require(FsUpdateFinitePage(context,page_handle,nullptr,reinterpret_cast<void*>(66),&formatted,&updated_record)==0&&!updated_record&&FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple,"multi-column update preserves the public page handle");
++            FSSECTIONDETAILS old_section_details{};require(FsQuerySectionDetails(context,before_section.pfssection,&old_section_details)==PTS_tserrInvalidQuery,"replacement invalidates the old section registry");
++            require(FsDestroyPage(context,page_handle)==0&&lines_created==lines_destroyed&&clients_created==clients_destroyed&&breaks_destroyed==lines_created,"multi-column replacement owns its section/columns and releases superseded hierarchy once");
++            columns=1;available_height=80;para_count=2;
++        }
++        std::puts("native finite page update: stable identity, source replacement, stale hierarchy, immutable input records, independent branches, failed-update retention and exact cleanup PASS");
+         containers=true;reset_page_counts();
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&clients_created==4&&lines_created==4,"container callbacks recursively format real subtracks");
+         require(FsDestroyPage(context,page_handle)==0&&clients_destroyed==4&&lines_destroyed==4&&breaks_destroyed==4,"recursive container teardown releases child tracks and callback handles");
+@@ -296,7 +332,6 @@ int main(int argc,char** argv) {
+         reset_page_counts();fail_line=2;page_handle=reinterpret_cast<void*>(1);page_break=reinterpret_cast<void*>(1);
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&lines_created==lines_destroyed&&lines_created==breaks_destroyed&&clients_created==clients_destroyed,"partial callback allocation failure rolls back line/client/break ownership");
+         fail_line=-1;available_height=10;reset_page_counts();
+-        PROC(FsDestroyPageBreakRecord,PageAction);
+         void* incoming_record=nullptr;keep_mode=2;
+         for(int number=0;number<4;++number) {
+             require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle,"finite continuation formats the next real page");
+@@ -355,10 +390,6 @@ int main(int argc,char** argv) {
+         clone=reinterpret_cast<void*>(1);require(FsDuplicateSubtrackBreakRecord(context,reinterpret_cast<void*>(1),&clone)==PTS_tserrInvalidBreakRecord&&!clone,"invalid clone clears output without dereferencing");
+         std::puts("native continuation cloning: independent identities, retained resume state/context, wrong/stale records, reset-output rollback and exact teardown PASS");
+         available_height=20;columns=2;reset_page_counts();
+-        using QuerySections=int(WINAPI*)(void*,void*,int,FSSECTIONDESCRIPTION*,int*);
+-        using QuerySection=int(WINAPI*)(void*,void*,FSSECTIONDETAILS*);
+-        using QueryColumns=int(WINAPI*)(void*,void*,int,FSTRACKDESCRIPTION*,int*);
+-        PROC(FsQueryPageSectionList,QuerySections);PROC(FsQuerySectionDetails,QuerySection);PROC(FsQuerySectionBasicColumnList,QueryColumns);
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_handle&&!page_break&&formatted.kstop==fmtrGoalReached,"two-column page fills both original source tracks");
+         require(FsQueryPageDetails(context,page_handle,&details)==0&&!details.fSimple&&details.u.complex.cSections==1,"column page reports complex section hierarchy");
+         FSSECTIONDESCRIPTION section_desc{};FSSECTIONDETAILS section_details{};FSTRACKDESCRIPTION column_desc[2]{};
+diff --git a/bootstrap/m612/wpf-tests/check-finite-updates-sdk.sh b/bootstrap/m612/wpf-tests/check-finite-updates-sdk.sh
+new file mode 100755
+index 0000000..3bf92b8
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-finite-updates-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/FiniteUpdates.cs" "$work/Program.cs"
++cat > "$work/FiniteUpdatesSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/FiniteUpdatesSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/FiniteUpdatesSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/FiniteUpdatesSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/FiniteUpdatesSdkCheck.exe"
++printf 'PASS normal offline WPF SDK finite page update check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 01218e8..1766812 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -837,6 +837,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-floaters-sdk.sh" "$root" "$build/floaters-sdk-check"
+   bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
+   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
++  bash "$here/wpf-tests/check-finite-updates-sdk.sh" "$root" "$build/finite-updates-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 
