@@ -254,3 +254,15 @@ speculative split-record and collision rollback cases check exact cleanup.
 Coverage stays 103/139. Oversized/split floater content on a fresh page, later
 inline anchors, complex center/clear policies, figures/tables and the other
 listed WPF paths remain unfinished.
+
+Release 8.0.0-25 discovers floating objects inside original formatted text lines.
+Their rectangles constrain subsequent line retries. If wrapping moves an anchor
+out of its provisional line, the rectangle moves forward while retaining the
+chosen text break, preventing wide/narrow layout oscillation. Late anchors defer
+at their incoming host checkpoint when the page lacks room. Original WPF tests
+cover early, wrapping-displaced and late-page anchors with exact source/page
+ownership, glyph exclusion and page regeneration in Ideal/Display; scrolling
+edits also exercise inline anchors. Native retry, invalid-output and callback
+cleanup checks pass. Coverage stays 103/139. Oversized/split content, flow across
+paragraph boundaries, complex center/clear policies, figures/tables and the
+other documented WPF paths remain unfinished.
