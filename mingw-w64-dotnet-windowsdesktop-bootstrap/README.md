@@ -723,3 +723,19 @@ Both WinRT and legacy public TextBox spelling regressions remain active. Culture
 scope, UTF-8/UTF-16 dictionaries, disposal and GC are preserved. Compound subsegment
 topology and legacy pre/post reform selection remain unsupported; imported native
 coverage remains133/139 and other documented native gaps remain unfinished.
+
+Release 8.0.0-53 makes offline WPF imaging an additional required SDK consumer
+(38 registered WPF consumers). PNG, BMP, ZIP-compressed TIFF, lossless JPEG XR,
+JPEG and indexed GIF encode/decode their actual pixels. PNG alpha data survives
+stream disposal and a compacting collection; invalid image bytes are rejected.
+The JPEG XR quality setting and lazy CacheOption.None decoding used by current
+Greenshot are exercised at 75% and 100% quality. The GDI+ LockBits/Scan0/WPF
+Create/CopyPixels conversion sequence verifies padded rows, DPI and frozen data
+ownership after the source bitmap changes.
+
+Every imaging scenario runs against the source-built shared framework and a
+self-contained publication with SDK roots removed. This adds packaging validation;
+it does not change codec implementations. WPF uses the installed Windows WIC
+codecs as OS dependencies. Native import coverage remains 133/139, and existing
+native behavior gaps and current Greenshot's framework/dependency requirements
+remain unfinished.
