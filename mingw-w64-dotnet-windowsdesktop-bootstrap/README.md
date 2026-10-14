@@ -466,3 +466,28 @@ raggedness costs; paragraph-wide optimization and PTS optimal-line reconstructio
 remain unfinished, and unknown external penalty restrictions are explicitly
 rejected. This release supplies the original cache/breakpoint substrate for that
 remaining work, without declaring full optimal formatting support.
+
+Release 8.0.0-40 enables original FlowDocument.IsOptimalParagraphEnabled through
+source paragraph-wide dynamic programming. Original PTS session/variant callbacks
+supply all feasible source breaks and owned penalty resources. The scorer
+minimizes normalized squared raggedness plus line/hyphen/forced-break costs;
+consecutive-hyphen state preserves the configured cap. It reconstructs selected
+lines through the original callback, retaining independent records, paragraph
+metrics and the existing widow/orphan/keep/pagination behavior. New line areas
+recompute the remaining path. Candidate widths stay nominal; final mixed
+justification and dictionary-marker reconstruction use current original source
+callbacks. Prefix hyphens consume no extra source characters.
+
+An independent exhaustive six-partition check proves the chosen public paragraph
+minimum is lower than greedy wrapping in Ideal/Display and LTR/RTL. Original
+public consumers also validate five-page continuations, two-column three-page
+layout, Hebrew/Arabic mixtures, dictionary glyphs, justified column widths,
+actual pixels, source/page ownership, caret/point queries, disposed-page
+regeneration and GC in both execution modes. The SDK suite now contains 29 WPF
+consumers. Imported coverage remains 126/139 with 13 absent; generated paragraph
+ABI coverage rises to 479 fields by adding the original FSLINEVARIANT record.
+
+The source score is explicit and does not claim Microsoft's unpublished native
+optimizer behavior. Full stretchability/compression/ink insertion, globally
+optimized variable-width object constraints, external penalty restrictions,
+advanced layout/bidi, general column spans, footnotes and legacy NLS remain open.
