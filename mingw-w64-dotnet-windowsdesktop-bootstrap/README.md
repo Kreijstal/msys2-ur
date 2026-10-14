@@ -242,3 +242,15 @@ Native capacity/placement/later-failure/cleanup checks and shared-framework/
 portable SDK consumers pass. Coverage stays 103/139. Placement requiring deferred
 or split floater pages, later inline anchors, complex center/clear policies,
 figures/tables and other documented WPF paths remain unfinished.
+
+Release 8.0.0-24 defers intact before-line floaters when the occupied page
+cannot hold their content or combined collision-free rectangles. The host text
+checkpoint remains before the unconsumed anchor; speculative subpage content,
+continuation records and clients are released before retrying on a fresh page.
+Original WPF single/multiple-floater tests complete four pages with all 1000/1028
+characters covered exactly once in Ideal/Display, rendering floating content
+only on the next page and regenerating it after disposal. Native no-progress,
+speculative split-record and collision rollback cases check exact cleanup.
+Coverage stays 103/139. Oversized/split floater content on a fresh page, later
+inline anchors, complex center/clear policies, figures/tables and the other
+listed WPF paths remain unfinished.
