@@ -1,0 +1,21 @@
+pkgbase = mingw-w64-dotnet-log4net
+	pkgdesc = Source-built Apache log4net for the .NET 8 desktop bootstrap
+	pkgver = 3.5.0
+	pkgrel = 1
+	url = https://github.com/apache/logging-log4net
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap>=8.0.0-64
+	options = !strip
+	options = !lto
+	source = log4net-f7794ae187ab2e228e1754cb478568dd305d1b32.tar.gz::https://codeload.github.com/apache/logging-log4net/tar.gz/f7794ae187ab2e228e1754cb478568dd305d1b32
+	source = prepare.py
+	source = check.cs
+	sha256sums = b29918cf59a1fee9d2adef1a344390483f4b7a64c59b911a452c7a9eedae9b8e
+	sha256sums = 5c23676dedbd059838a4057d972cd6a970129e4e0582985da4dbe675d658fa1b
+	sha256sums = 34fa6f6c219af5e524a6c019c16857054f4268c3642f81c32a6f720fcbbe1e74
+
+pkgname = mingw-w64-clang-x86_64-dotnet-log4net
