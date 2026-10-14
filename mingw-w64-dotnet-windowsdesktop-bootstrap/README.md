@@ -849,3 +849,12 @@ objects, actual nominal overflow/compression, exact pixel endpoints, remaining
 width, atomic caret/point/source/selection, raster, GC and callback recovery.
 Registered SDK consumers increase to45. Final aligned-field spacing adjustments,
 ink insertion and other documented native conformance gaps remain unfinished.
+
+Release 8.0.0-61 corrects line-height metadata for optimal candidates after
+position-dependent object remeasurement. Direct lines and candidates share the
+final metric calculation, including inserted marker runs. The source native
+fixture checks the published candidate's ascent, descent and presentation/reference
+height, as well as its accepted object geometry and right edge. The same fixture
+runs against the installed native DLL. Release60's other object behavior remains
+covered by its26-case shared/portable public consumer and focused regressions.
+Registered SDK consumers remain45; other documented conformance gaps stay open.
