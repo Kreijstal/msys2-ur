@@ -1,0 +1,43 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] MinGW: link the wmain tools with -municode
+
+validator, moduleinfotool and audiohost define wmain on Windows. MSVC
+picks that entry point by itself; mingw-w64 needs -municode, otherwise
+the link fails with "undefined symbol: WinMain".
+
+--- a/public.sdk/samples/vst-hosting/audiohost/CMakeLists.txt
++++ b/public.sdk/samples/vst-hosting/audiohost/CMakeLists.txt
+@@ -58,6 +58,9 @@
+         set(target audiohost)
+ 
+         add_executable(${target} ${audiohost_sources})
++        if(MINGW) # wmain entry point
++            target_link_options(${target} PRIVATE -municode)
++        endif(MINGW)
+         set_target_properties(${target}
+             PROPERTIES
+                 ${SDK_IDE_HOSTING_EXAMPLES_FOLDER}
+--- a/public.sdk/samples/vst-hosting/validator/CMakeLists.txt
++++ b/public.sdk/samples/vst-hosting/validator/CMakeLists.txt
+@@ -117,6 +117,9 @@
+ 
+ set(target validator)
+ add_executable(${target} ${validator_sources})
++if(MINGW) # wmain entry point
++    target_link_options(${target} PRIVATE -municode)
++endif(MINGW)
+ if(SDK_IDE_HOSTING_EXAMPLES_FOLDER)
+     set_target_properties(${target}
+         PROPERTIES
+--- a/public.sdk/samples/vst-utilities/moduleinfotool/CMakeLists.txt
++++ b/public.sdk/samples/vst-utilities/moduleinfotool/CMakeLists.txt
+@@ -33,6 +33,9 @@
+ 
+ set(target moduleinfotool)
+ add_executable(${target} ${moduleinfotool_sources})
++if(MINGW) # wmain entry point
++    target_link_options(${target} PRIVATE -municode)
++endif(MINGW)
+ 
+ if(SDK_IDE_UTILITIES_FOLDER)
+     set_target_properties(${target}

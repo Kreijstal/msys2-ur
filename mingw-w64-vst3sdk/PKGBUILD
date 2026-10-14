@@ -1,0 +1,92 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=vst3sdk
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.8.1.84
+_tag=v3.8.1_build_84
+# submodule commits of the ${_tag} superproject tag
+_base=fcf9da0bd27a16f7f03773a3a39822f28f5c8477
+_pluginterfaces=4f547e8e102b47de4a8b8aaf343c73b700786372
+_public_sdk=586dc5e6c8012c3e4b01c79389375cbe96bdb1da
+_cmake=054c9143cbb8d47fc4694e473f2ee3b4d951a8f5
+_vstgui=5db272256172557818b6158cf0bb2c4410bddb25
+pkgrel=1
+pkgdesc='Steinberg VST 3 SDK: interfaces, hosting and plug-in sources, CMake modules and VSTGUI (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/steinbergmedia/vst3sdk'
+msys2_repository_url='https://github.com/steinbergmedia/vst3sdk'
+msys2_changelog_url='https://steinbergmedia.github.io/vst3_dev_portal/pages/Versions/Index.html'
+license=('spdx:MIT AND BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+source=("${_realname}-${_tag}.tar.gz::https://github.com/steinbergmedia/vst3sdk/archive/refs/tags/${_tag}.tar.gz"
+        "vst3_base-${_base}.tar.gz::https://github.com/steinbergmedia/vst3_base/archive/${_base}.tar.gz"
+        "vst3_pluginterfaces-${_pluginterfaces}.tar.gz::https://github.com/steinbergmedia/vst3_pluginterfaces/archive/${_pluginterfaces}.tar.gz"
+        "vst3_public_sdk-${_public_sdk}.tar.gz::https://github.com/steinbergmedia/vst3_public_sdk/archive/${_public_sdk}.tar.gz"
+        "vst3_cmake-${_cmake}.tar.gz::https://github.com/steinbergmedia/vst3_cmake/archive/${_cmake}.tar.gz"
+        "vstgui-${_vstgui}.tar.gz::https://github.com/steinbergmedia/vstgui/archive/${_vstgui}.tar.gz"
+        "0001-alignedalloc-use-_aligned_malloc-on-all-Windows-comp.patch"
+        "0002-MinGW-link-the-wmain-tools-with-municode.patch")
+sha256sums=('a551b95b0f39452bce0e9568b4954dc4e74e9c7f94b8af1b954b852f82af0736'
+            '3753d45a79b5e324c2843d74a18c8f1117fe0b1118fa9312658aecf6360ec603'
+            'ee70777eebb8450fc04fae2a6dd452f723d12bfb8222af443b8c1f8a9259089a'
+            '71319491b771068b8e2c5374c22830a339677e9d54c4cd33af4a0aa210e4c838'
+            'd8bddb3d87d66b5078e803d271ef82ba51bc74f941e0ca8256e7145950db409e'
+            '4749a2264c22fe92e104557bc375e6844a87d2d420226eab75897b637310f005'
+            '30aad7f62f21ad3d4556f8d01b8bf38352c6d6fb6729eb64f6a732b9c92a99b6'
+            'fff671c2a32fd77c5e0bf7f3edd373609d828440e3f0794f57ab41014c716757')
+
+prepare() {
+  local _sdk="${srcdir}/vst3sdk-${_tag#v}"
+  local _m
+  for _m in base:vst3_base-${_base} pluginterfaces:vst3_pluginterfaces-${_pluginterfaces} \
+            public.sdk:vst3_public_sdk-${_public_sdk} cmake:vst3_cmake-${_cmake} \
+            vstgui4:vstgui-${_vstgui}; do
+    rm -rf "${_sdk:?}/${_m%%:*}"
+    cp -a "${srcdir}/${_m#*:}" "${_sdk}/${_m%%:*}"
+  done
+  cd "${_sdk}"
+  patch -Np1 -i "${srcdir}/0001-alignedalloc-use-_aligned_malloc-on-all-Windows-comp.patch"
+  patch -Np1 -i "${srcdir}/0002-MinGW-link-the-wmain-tools-with-municode.patch"
+}
+
+build() {
+  # Not installed: a MinGW build of the SDK's validator and "adelay" sample,
+  # used by check() to prove the sources build and host a plug-in here.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${srcdir}/vst3sdk-${_tag#v}" \
+      -B "${srcdir}/build-${MSYSTEM}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DSMTG_ENABLE_VSTGUI_SUPPORT=OFF \
+      -DSMTG_ENABLE_VST3_PLUGIN_EXAMPLES=ON \
+      -DSMTG_ENABLE_VST3_HOSTING_EXAMPLES=ON \
+      -DSMTG_CREATE_PLUGIN_LINK=OFF \
+      -DSMTG_RUN_VST_VALIDATOR=OFF
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}" --target validator adelay
+}
+
+check() {
+  local _b="${srcdir}/build-${MSYSTEM}"
+  local _v _p
+  _v=$(find "${_b}" -name 'validator.exe' -print -quit)
+  _p=$(find "${_b}" -type d -name 'adelay.vst3' -print -quit)
+  [[ -n "${_v}" && -n "${_p}" ]] || { echo "validator or adelay.vst3 not built"; return 1; }
+  "${_v}" "${_p}"
+}
+
+package() {
+  local _sdk="${srcdir}/vst3sdk-${_tag#v}"
+  local _dst="${pkgdir}${MINGW_PREFIX}/share/vst3sdk"
+  mkdir -p "${_dst}"
+  # The SDK is consumed as source (hosts compile public.sdk themselves);
+  # this is the layout Audacity and others look for in $VST3SDK.
+  cp -a "${_sdk}"/{base,pluginterfaces,public.sdk,cmake,vstgui4,CMakeLists.txt,LICENSE.txt,README.md} "${_dst}/"
+  find "${_dst}" \( -name '.git*' -o -name '.github' \) -prune -exec rm -rf {} +
+  install -Dm644 "${_sdk}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.txt"
+  install -Dm644 "${_sdk}/vstgui4/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.vstgui"
+}
