@@ -812,3 +812,23 @@ new public consumer checks32 Ideal/Display combinations with split runs, exact
 width/caret/point/selection, earlier anchors, source completion, real raster and
 compacting GC in shared and portable execution. Registered WPF SDK consumers
 increase to43. Other documented native conformance gaps remain open.
+
+Release 8.0.0-59 uses original nominal/glyph provider compression capacity for
+optimal FullMixed inter-word spacing. Candidate enumeration admits retained
+prefixes that fit after permitted compression; reconstruction repeats the real
+adjustment, including selected terminal lines. Both sides share each advance's
+removal budget, with priority bounds and physical floors. Ordinary InterWord
+wrapping, non-space advances and trailing spaces keep their existing behavior.
+Original glyph advances remain available for drawing. Minimum widths reflect
+provider capacity, and exhausted capacity leaves real overflow.
+
+A same-level split-grapheme bidi selection fix preserves the common enclosing
+subline; per-grapheme artificial scopes had caused overlapping rectangles across
+several RTL Indic words. Native checks cover exact compression/drawing/minima,
+callback failure/negative capacity, terminal selection, candidate rollback and
+reuse. The new public consumer has32 reconstruction and16 optimal paragraph
+cases per shared/portable execution: modes/directions, Latin/Indic, split runs,
+terminal/nonterminal lines, actual previously overflowing boundaries, exact
+caret/point/selection/source/page identity, columns, raster and GC. Registered
+SDK consumers increase to44. Final aligned-field justification, ink insertion,
+broader native conformance and the other documented limitations remain open.
