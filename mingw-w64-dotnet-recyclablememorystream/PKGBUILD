@@ -1,0 +1,57 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-recyclablememorystream
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.0.1
+pkgrel=1
+pkgdesc='Source-built Microsoft.IO.RecyclableMemoryStream for the .NET 8 bootstrap offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/Microsoft.IO.RecyclableMemoryStream'
+license=('spdx:MIT')
+_commit=e29a28387da9018fa9605a1dcb3f7a0435aa9974
+_tree=Microsoft.IO.RecyclableMemoryStream-${_commit}
+_project=src/Microsoft.IO.RecyclableMemoryStream.csproj
+_id=Microsoft.IO.RecyclableMemoryStream
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("recyclablememorystream-e29a28387da9018fa9605a1dcb3f7a0435aa9974.tar.gz::https://codeload.github.com/microsoft/Microsoft.IO.RecyclableMemoryStream/tar.gz/${_commit}" prepare.py check.cs)
+sha256sums=('ac52b2b92fa1104cee48d31112b210159ce1ce41d31588b496371f7dba47e5c2' 'b79d428eb4a4b016e4693e919201e1aa0b53e37d59ab88952d561c688f7ba91c' 'bff78833f82bd3c527acb66adb0757138b43d818e79167813a3351a8b672a9ea')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" recyclablememorystream "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:PublicSign=true -p:SignedBuild=true -p:DelaySign=false -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

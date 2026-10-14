@@ -1,0 +1,4 @@
+using System;
+using Dapplo.Log;
+class Recorder:AbstractLogger {public string Last;public int Count;public override void WriteLine(LogInfo info,string template,params object[] args){Last=Format(info,template,args);Count++;}}
+class Check {static void Main(){var logger=new Recorder();LogSettings.DefaultLogger=logger;var source=LogSource.ForCustomSource("Greenshot.Packaging");source.Info().WriteLine("hello {0}","λ");if(logger.Count!=1||!logger.Last.Contains("hello λ"))throw new Exception("logger routing/formatting");source.Debug().WriteLine("hidden");if(logger.Count!=1)throw new Exception("level filtering");logger.LogLevel=LogLevels.Debug;source.Debug().WriteLine("visible");if(logger.Count!=2||!logger.Last.Contains("visible"))throw new Exception("changed log level");Console.WriteLine("PASS Dapplo.Log source routing, format, level filtering and reconfiguration");}}

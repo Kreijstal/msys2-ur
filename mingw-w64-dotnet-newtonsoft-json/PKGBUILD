@@ -1,0 +1,57 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-newtonsoft-json
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=13.0.4
+pkgrel=1
+pkgdesc='Source-built Newtonsoft.Json for the .NET 8 bootstrap offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/JamesNK/Newtonsoft.Json'
+license=('spdx:MIT')
+_commit=4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a
+_tree=Newtonsoft.Json-${_commit}
+_project=Src/Newtonsoft.Json/Newtonsoft.Json.csproj
+_id=Newtonsoft.Json
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("newtonsoft-json-4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a.tar.gz::https://codeload.github.com/JamesNK/Newtonsoft.Json/tar.gz/4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a" prepare.py check.cs Newtonsoft.pubkey.hex)
+sha256sums=('83173a8606786e1e546d2502dbd37b33ed8078a4dee5eed49e905770d1b15e56' '251e5f3369a4440dcf2590840fad3b3aa70d921c1e8f5cee41eb28dd71dd755a' '9ef96b41d6a10779775e0fc344b21b46257b1d8c832646f64048e249a0d26fc5' '45f6b263334dffb425a033083fc22ff90030f50568030f592e13b9a292829f56')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" newtonsoft-json "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:PackageLicenseExpression=MIT -p:GeneratePackageOnBuild=false \
+    -p:SolutionDir="$(cygpath -m "$srcdir/$_tree/src")/" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:TargetFrameworks=net8.0 -p:EnablePackageValidation=false -p:EnableTrimAnalyzer=false -p:EnableAotAnalyzer=false -p:EnableSingleFileAnalyzer=false -p:AssemblyVersion=13.0.0.0 -p:FileVersion=13.0.4.0 -p:VersionSuffix= -p:AdditionalConstants=SIGNED -p:SignAssembly=true -p:AssemblyOriginatorKeyFile="$(cygpath -m "$srcdir/$_tree/Newtonsoft.public.snk")" -p:PublicSign=true -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE.md" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}
