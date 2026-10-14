@@ -858,3 +858,18 @@ height, as well as its accepted object geometry and right edge. The same fixture
 runs against the installed native DLL. Release60's other object behavior remains
 covered by its26-case shared/portable public consumer and focused regressions.
 Registered SDK consumers remain45; other documented conformance gaps stay open.
+
+Release 8.0.0-62 consumes compression capacity across an entire shaped space
+cluster, even when the callback reports that capacity at a zero/small final glyph.
+Both sides share the cluster's physical advance budget. Edge removal preserves
+source maps, original glyph/nominal data, trailing spaces and nonnegative advances;
+minimum widths use the complete budget too.
+
+Native checks cover two/three glyphs, zero-width edge glyphs, both sides, exact
+caret/minimum/drawing geometry and excessive capacities. The public consumer builds
+a tiny TrueType/OpenType font from Python standard-library source. Its ccmp rule
+maps one source space to two blank glyphs. Ideal/Display shared/portable tests check
+actual source-font GSUB counts, compression beyond the final glyph's advance,
+source/caret/point/selection, glyph advances, raster and GC. The font is generated
+test data, never a binary source input or system installation. Registered SDK
+consumers increase to46; documented native conformance gaps remain unfinished.
