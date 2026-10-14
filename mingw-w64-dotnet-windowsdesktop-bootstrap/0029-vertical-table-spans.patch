@@ -1,0 +1,210 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index ee72ad8..4b4d208 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -247,6 +247,7 @@ struct TableRowData {
+     std::shared_ptr<Context> context;
+     FSTABLEROWDESCRIPTION description{};FSTABLEROWDETAILS details{};
+     std::vector<std::shared_ptr<TableCellData>> cells;
++    std::vector<FSTABLEKCELLMERGE> merges;
+     explicit TableRowData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
+     ~TableRowData(){erase_table_row(this);cells.clear();--context->resources;}
+ };
+@@ -680,6 +681,64 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
+     return 0;
+ }
+ 
++struct SpanRowInput {void* name=nullptr;FSTABLEROWPROPS props{};std::vector<void*> names;std::vector<FSTABLEKCELLMERGE> merges;};
++int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_ptr<TableData>& data,uint32_t direction,const FSRECT& rect,
++    int top,int& used,bool bottomless,bool empty_ok,bool first_table,SpanRowInput first,void*& next,int& found,std::shared_ptr<Continuation>& output) {
++    auto context=para->context;void* client=context->info.pfsclient;auto& fetch=data->callbacks.tablecbkfetch;auto& cb=data->callbacks.tablecbkcell;
++    if(!cb.pfnFormatCellBottomless)return PTS_tserrNotImplemented;
++    struct Master {void* name;size_t first,last;std::shared_ptr<TableCellData> cell;};
++    std::vector<SpanRowInput> inputs;std::vector<Master> masters;std::unordered_map<void*,size_t> active;std::unordered_set<void*> seen_rows;
++    inputs.push_back(std::move(first));
++    for(size_t r=0;r<inputs.size();++r){
++        auto& input=inputs[r];if(!input.name||!seen_rows.insert(input.name).second)return PTS_tserrInvalidClientOutput;
++        std::unordered_set<void*> row_names;
++        for(size_t i=0;i<input.names.size();++i){void* name=input.names[i];auto merge=input.merges[i];if(!name||!row_names.insert(name).second)return PTS_tserrInvalidClientOutput;
++            if(merge==fskcellmergeNo||merge==fskcellmergeFirst){if(active.count(name))return PTS_tserrInvalidClientOutput;masters.push_back({name,r,r,nullptr});if(merge==fskcellmergeFirst)active[name]=masters.size()-1;}
++            else if(merge==fskcellmergeMiddle||merge==fskcellmergeLast){auto at=active.find(name);if(at==active.end())return PTS_tserrInvalidClientOutput;masters[at->second].last=r;if(merge==fskcellmergeLast)active.erase(at);}
++            else return PTS_tserrInvalidClientOutput;
++        }
++        int status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,input.name,&found,&next);if(status)return status;
++        if(active.empty())break;if(!found||!next)return PTS_tserrInvalidClientOutput;
++        SpanRowInput added;added.name=next;status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,next,direction,&added.props);if(status)return status;
++        if(added.props.cCells<0)return PTS_tserrInvalidClientOutput;
++        added.names.resize(added.props.cCells);added.merges.resize(added.props.cCells);status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,next,added.props.cCells,added.names.data(),added.merges.data());if(status)return status;inputs.push_back(std::move(added));
++    }
++    std::vector<int> heights(inputs.size()),above(inputs.size()),below(inputs.size());
++    for(size_t r=0;r<inputs.size();++r){auto& props=inputs[r].props;
++        if(props.fskrowheight!=fskrowheightNatural&&!(props.fskrowheight==fskrowheightExactNoBreak&&props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
++        above[r]=r==0&&data->rows.empty()?(first_table?props.dvrAboveTopRow:props.dvrAboveRowBreak):props.dvrAboveRow;
++        below[r]=r+1==inputs.size()&&!found?props.dvrBelowBottomRow:props.dvrBelowRow;
++        if(above[r]<0||below[r]<0)return PTS_tserrInvalidClientOutput;
++    }
++    for(auto& master:masters){auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cb;cell->name=master.name;CallbackTracks pending;FSFMTRBL formatted{};
++        int status=reinterpret_cast<PtsFormatCellBottomless>(cb.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,master.name,direction,&formatted,&cell->handle,&cell->height);
++        pending.claimed_pages=cell->handle!=nullptr;if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
++        if(status)return status;if(formatted!=fmtrblGoalReached)return PTS_tserrNotImplemented;if(!cell->handle||cell->height<0)return PTS_tserrInvalidClientOutput;
++        master.cell=cell;if(master.first==master.last)heights[master.first]=std::max(heights[master.first],cell->height);
++    }
++    // Natural heights come from ordinary cells. A spanning cell contributes
++    // only the additional height missing from its complete row interval.
++    for(const auto& master:masters)if(master.first!=master.last){int64_t span=0;for(size_t r=master.first;r<=master.last;++r){span+=heights[r];if(r<master.last)span+=int64_t(below[r])+above[r+1];}
++        if(span<master.cell->height){int64_t value=int64_t(heights[master.last])+master.cell->height-span;if(value>INT32_MAX)return PTS_tserrInvalidGeometry;heights[master.last]=int(value);}
++    }
++    int64_t total=0;for(size_t r=0;r<inputs.size();++r)total+=int64_t(above[r])+heights[r]+below[r];
++    if(int64_t(rect.v)+top+used+total>INT32_MAX)return PTS_tserrInvalidGeometry;
++    if(!bottomless&&int64_t(top)+used+total>rect.dv){
++        if(!empty_ok&&data->rows.empty())return PTS_tserrNotImplemented;
++        output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;
++        if(!data->rows.empty())data->rows.back()->details.fskboundaryBelow=fsktablerowboundaryBreak;return 0;
++    }
++    for(const auto& master:masters){int64_t span=0;for(size_t r=master.first;r<=master.last;++r){span+=heights[r];if(r<master.last)span+=int64_t(below[r])+above[r+1];}if(span>INT32_MAX)return PTS_tserrInvalidGeometry;
++        int status=reinterpret_cast<PtsSetCellHeight>(cb.pfnSetCellHeight)(master.cell->handle,para->desc.pfsparaclient,nullptr,master.name,0,direction,int(span));if(status)return status;
++    }
++    for(size_t r=0;r<inputs.size();++r){auto row=std::make_shared<TableRowData>(context);auto& input=inputs[r];row->description.fsnmRow=input.name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;row->description.u.dvrRow=above[r]+heights[r]+below[r];
++        row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
++        row->details.fskboundaryBelow=r+1==inputs.size()&&!found?fsktablerowboundaryOuter:fsktablerowboundaryInner;row->details.dvrAbove=above[r];row->details.dvrBelow=below[r];row->details.cCells=int(input.names.size());row->merges=input.merges;
++        for(void* name:input.names){auto master=std::find_if(masters.begin(),masters.end(),[&](const Master& value){return value.name==name&&value.first<=r&&value.last>=r;});if(master==masters.end())return PTS_tserrInvalidClientOutput;row->cells.push_back(master->cell);}
++        data->rows.push_back(row);
++    }
++    used+=int(total);return 0;
++}
+ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,void* input_margin,
+     bool bottomless,bool empty_ok,int suppress,const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,void** margin_output) {
+     auto context=para->context;void* client=context->info.pfsclient;auto& obj=context->info.fscbk.cbkobj;
+@@ -705,7 +764,6 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const
+         void* next=nullptr;int has_next=0;status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,name,&has_next,&next);if(status)return status;if(has_next&&!next)return PTS_tserrInvalidClientOutput;
+         FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,direction,&row_props);if(status)return status;
+         if(row_props.cCells<0||(row_props.cCells>0&&width==0))return PTS_tserrInvalidClientOutput;
+-        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
+         int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
+         int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
+         if(above<0||below<0||int64_t(used)+above+below+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
+@@ -715,6 +773,12 @@ int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const
+         auto row=std::make_shared<TableRowData>(context);row->description.fsnmRow=name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;
+         std::vector<void*> names(row_props.cCells);std::vector<FSTABLEKCELLMERGE> merge(row_props.cCells);
+         status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
++        if(std::any_of(merge.begin(),merge.end(),[](FSTABLEKCELLMERGE value){return value!=fskcellmergeNo;})){
++            if(resumed)return PTS_tserrNotImplemented;
++            SpanRowInput group{name,row_props,names,merge};status=format_span_group(para,data,direction,rect,top,used,bottomless,empty_ok,first_table,std::move(group),next,has_next,output);if(status)return status;
++            if(output)break;name=next;found=has_next;continue;
++        }
++        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
+         if(resumed&&input->table_cells.size()!=names.size())return PTS_tserrInvalidBreakRecord;
+         for(int i=0;i<row_props.cCells;++i){
+             if(!names[i]||merge[i]!=fskcellmergeNo)return PTS_tserrNotImplemented;
+@@ -1192,7 +1256,7 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowDetails(void* cont
+ extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* context,void* handle,int capacity,FSKUPDATE* updates,void** handles,FSTABLEKCELLMERGE* merges,int* count) {
+     if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;
+     if(capacity<0||size_t(capacity)<data->cells.size()||((!updates||!handles||!merges)&&!data->cells.empty()))return PTS_tserrInvalidParameter;
+-    for(const auto& cell:data->cells){updates[*count]=cell?cell->update:fskupdNoChange;handles[*count]=cell?cell->handle:nullptr;merges[*count]=fskcellmergeNo;++*count;}return 0;
++    for(const auto& cell:data->cells){updates[*count]=cell?cell->update:fskupdNoChange;handles[*count]=cell?cell->handle:nullptr;merges[*count]=data->merges.empty()?fskcellmergeNo:data->merges[*count];++*count;}return 0;
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
+     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index e5bfc82..96dfa6e 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -19,7 +19,8 @@ static bool containers=false,lose_subtrack=false;
+ static bool structural_line=false;
+ static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
+ static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
+-static bool split_table_cells=false,short_table_cell=false;
++static bool split_table_cells=false,short_table_cell=false,table_spans=false,span_prefix=false,malformed_span=false;
++static int span_set_height=0;
+ static int table_records_created=0,table_records_destroyed=0;
+ static int(WINAPI* table_handler)(const FSTABLEOBJINIT*,void*)=nullptr;
+ static int(WINAPI* clear_cell_subpage)(void*,void*)=nullptr;
+@@ -72,7 +73,7 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
+ static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
+ static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+ static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
+-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
++static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell&&!(span_prefix&&name==reinterpret_cast<void*>(101))?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+ static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+ static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+ static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
+@@ -117,7 +118,7 @@ static int WINAPI table_fit(void*,void*,void*,uint32_t,int width,int* output){*o
+ static int WINAPI table_first(void*,void*,int* found,void** name){*found=table_rows_count>0;*name=*found?reinterpret_cast<void*>(501):nullptr;return 0;}
+ static int WINAPI table_next(void*,void*,void* current,int* found,void** name){auto n=reinterpret_cast<uintptr_t>(current);*found=n<uintptr_t(500+table_rows_count);*name=*found?reinterpret_cast<void*>(n+1):nullptr;return 0;}
+ static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
+-static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(601+(n-501)*2+i);merge[i]=fskcellmergeNo;}return 0;}
++static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(table_spans?(i==0?602+n-501:601):601+(n-501)*2+i);merge[i]=table_spans&&i==1?(n==501?(malformed_span?fskcellmergeMiddle:fskcellmergeFirst):n==503?fskcellmergeLast:fskcellmergeMiddle):fskcellmergeNo;}return 0;}
+ static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
+     *formatted={};*output=*br=nullptr;*height=0;if((input&&!split_table_cells)||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
+     FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
+@@ -128,11 +129,12 @@ static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int
+     if(lose_table_cell){delete cell;++table_cells_destroyed;*output=*br=nullptr;return PTS_tserrCallbackException;}
+     return table_cells_created==table_fail_cell?PTS_tserrCallbackException:0;
+ }
++static int WINAPI table_cell_bottomless(void* client,void* table,void* name,uint32_t direction,FSFMTRBL* formatted,void** output,int* height){FSFMTR finite{};void* br=nullptr;int status=table_cell_format(client,table,nullptr,name,nullptr,0,direction,0,80,&finite,output,&br,height);*formatted=fmtrblGoalReached;if(br)return PTS_tserrInvalidClientOutput;if(!status&&name==reinterpret_cast<void*>(601))*height=45;return status;}
+ static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
+-static int WINAPI table_set_height(void*,void*,void*,void*,int,uint32_t,int height){return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
++static int WINAPI table_set_height(void*,void*,void*,void* name,int,uint32_t,int height){if(table_spans){if(name==reinterpret_cast<void*>(601))span_set_height=height;return height==(name==reinterpret_cast<void*>(601)?64:20)?0:PTS_tserrInvalidClientOutput;}return (split_table_cells?height>=0&&height<=20:height==20)?0:PTS_tserrInvalidClientOutput;}
+ static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
+ static int WINAPI table_destroy_record(void*,void* record){int status=destroy_subpage_record(page_context,record);if(!status)++table_records_destroyed;return status;}
+-static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
++static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnFormatCellBottomless=reinterpret_cast<void*>(table_cell_bottomless);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(table_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
+ static int WINAPI block_handler(void*,int id,void* output) {
+     if(id==3&&table_mode)return table_object_handler(output);
+     if(id!=2)return PTS_tserrInvalidParameter;
+@@ -600,6 +602,18 @@ int main(int argc,char** argv) {
+         }
+         require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split/cloned/failed/no-progress/terminal row cases release every cell/record/client/line once");split_table_cells=false;table_rows_count=3;
+         std::puts("native split tables: actual cell records, completed-cell omission, immutable cloned resumes, no-progress preservation, populated failure and exact final teardown PASS");
++        table_spans=true;table_rows_count=3;available_height=80;reset_page_counts();table_cells_created=table_cells_destroyed=0;span_set_height=0;
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&paras[0].dvrUsed==66&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==3,"connected span group uses natural ordinary row heights and internal spacing");
++        void* spanning_handle=nullptr;for(int r=0;r<3;++r){require(FsQueryTableObjCellList(context,table_rows[r].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&actual_count==2&&cell_merges[1]==(r==0?fskcellmergeFirst:r==2?fskcellmergeLast:fskcellmergeMiddle),"original first/middle/last merge states are returned");if(r==0)spanning_handle=cell_handles[1];else require(cell_handles[1]==spanning_handle,"spanning rows share one actual cell client");}
++        require(span_set_height==64&&table_cells_created==4&&FsDestroyPage(context,page_handle)==0&&table_cells_destroyed==4&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"span height includes all constituent rows and shared cell content releases once");
++        span_prefix=true;para_count=2;available_height=80;reset_page_counts();table_cells_created=table_cells_destroyed=0;
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break&&table_cells_created==table_cells_destroyed&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,2,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==-1,"span group that does not fit remaining space defers intact and releases measured cells");incoming_record=page_break;
++        require(FsDestroyPage(context,page_handle)==0&&FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"deferred span group resumes after prior page release with exact cell ownership");span_prefix=false;para_count=1;
++        for(int failure:{0,1}){reset_page_counts();table_cells_created=table_cells_destroyed=0;table_fail_cell=failure==0?2:-1;malformed_span=failure==1;
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==(failure==0?PTS_tserrCallbackException:PTS_tserrInvalidClientOutput)&&!page_handle&&!page_break&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"span partial callback failure or missing master releases all temporary native resources");
++        }
++        table_fail_cell=-1;malformed_span=table_spans=false;
++        std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
+         table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
+         std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
+         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
+diff --git a/bootstrap/m612/wpf-tests/Tables.cs b/bootstrap/m612/wpf-tests/Tables.cs
+index da23c75..6ba7fe6 100644
+--- a/bootstrap/m612/wpf-tests/Tables.cs
++++ b/bootstrap/m612/wpf-tests/Tables.cs
+@@ -45,6 +45,19 @@ class Check {
+             foreach(int n in leftPages){using var page=paginator.GetPage(n);if(Ink(Raster(page.Visual)).Green<30)throw new Exception("disposed split table chunk must regenerate original cell content");}
+             Console.WriteLine($"original split table {mode}, scenario={scenario}: {pages} pages, left/right source pages={leftPages.Count}/{rightPages.Count}, {runs.Sum(r=>r.Text.Length)} characters covered exactly once, {greenTotal} green glyph pixels, original page mapping/regeneration/GC PASS");
+         }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(int scenario in new[]{0,1,2,3,4,5}){
++            var spanRun=new Run(string.Join("\n",Enumerable.Range(0,scenario==3?8:4).Select(i=>$"span{i:D2}")));var runs=new List<Run>{spanRun};var table=new Table(){Margin=new Thickness(0),CellSpacing=2};var group=new TableRowGroup();table.RowGroups.Add(group);
++            for(int r=0;r<3;++r){var row=new TableRow();group.Rows.Add(row);if(r==0)row.Cells.Add(new TableCell(new Paragraph(spanRun){Margin=new Thickness(0)}){RowSpan=3,Padding=new Thickness(4),Background=Brushes.Red,BorderBrush=Brushes.Black,BorderThickness=new Thickness(1)});if(scenario!=4){var run=new Run($"neighbor{r}");runs.Add(run);row.Cells.Add(new TableCell(new Paragraph(run){Margin=new Thickness(0)}){Padding=new Thickness(4),Background=Brushes.Blue,BorderBrush=Brushes.Black,BorderThickness=new Thickness(1)});}}
++            if(scenario!=4)for(int r=0;r<8;++r){var row=new TableRow();group.Rows.Add(row);for(int c=0;c<2;++c){var run=new Run($"following{r}{c}");runs.Add(run);row.Cells.Add(new TableCell(new Paragraph(run){Margin=new Thickness(0)}){Padding=new Thickness(4),Background=c==0?Brushes.Red:Brushes.Blue});}}
++            if(scenario==5){var cell=group.Rows[1].Cells[0];var run=(Run)((Paragraph)cell.Blocks.FirstBlock).Inlines.FirstInline;run.Text="stagger zero\nstagger one\nstagger two\nstagger three";cell.RowSpan=3;var removed=(Run)((Paragraph)group.Rows[2].Cells[0].Blocks.FirstBlock).Inlines.FirstInline;runs.Remove(removed);group.Rows[2].Cells.Clear();var row=new TableRow();var following=new Run("neighbor3");runs.Add(following);row.Cells.Add(new TableCell(new Paragraph(following){Margin=new Thickness(0)}){Padding=new Thickness(4),Background=Brushes.Red,BorderBrush=Brushes.Black,BorderThickness=new Thickness(1)});group.Rows.Insert(3,row);}
++            var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=16,Foreground=Brushes.Lime,PagePadding=new Thickness(10),ColumnWidth=scenario==2?160:double.PositiveInfinity,ColumnGap=20};if(scenario==1){var prefix=new Run("prefix zero\nprefix one\nprefix two\nprefix three\nprefix four\nprefix five");runs.Add(prefix);document.Blocks.InsertBefore(table,new Paragraph(prefix){Margin=new Thickness(0),LineHeight=24});}TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,maxRedHeight=0;
++            for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var bytes=Raster(page.Visual);var ink=Ink(bytes);if(ink.Green<30)throw new Exception("rowspan page must render actual original glyphs");if(pages==(scenario==1?1:0)){int streak=0;for(int y=0;y<220;++y){int i=(y*400+14)*4;if(bytes[i+3]>150&&bytes[i+2]>200&&bytes[i]<70&&bytes[i+1]<70){++streak;maxRedHeight=Math.Max(maxRedHeight,streak);}else streak=0;}if(maxRedHeight<(scenario==3?140:70))throw new Exception("spanned cell background must cover its actual combined row height");}
++                var view=((IServiceProvider)page).GetService(viewType);foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);
++            }
++            if(pages==0||pages>=20||!paginator.IsPageCountValid)throw new Exception("rowspan table pagination must complete");var spanPages=new HashSet<int>();foreach(var run in runs)for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("rowspan exact source/page coverage at "+at);if(run==spanRun)spanPages.Add(owners[0].Page);}
++            if(spanPages.Count!=1||spanPages.Single()!=(scenario==1?1:0))throw new Exception("intact connected span group must preserve source/page ownership");using(var page=paginator.GetPage(spanPages.Single()))if(Ink(Raster(page.Visual)).Green<30)throw new Exception("rowspan page regeneration must retain original content");Console.WriteLine($"original vertical span {mode}, scenario={scenario}: {pages} pages, {runs.Sum(r=>r.Text.Length)} characters covered exactly once, spanning red height={maxRedHeight}, original glyphs/page mapping/regeneration/GC PASS");
++        }
+         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}){
+             var run=new Run("large zero\nlarge one\nlarge two");var table=new Table(){CellSpacing=0,Margin=new Thickness(0)};var group=new TableRowGroup();table.RowGroups.Add(group);var row=new TableRow();group.Rows.Add(row);row.Cells.Add(new TableCell(new Paragraph(run){Margin=new Thickness(0)}){Padding=new Thickness(0)});
+             var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=32,PagePadding=new Thickness(0),ColumnWidth=double.PositiveInfinity};TextOptions.SetTextFormattingMode(document,mode);var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,10);var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0;
+@@ -54,9 +67,9 @@ class Check {
+         foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}){
+             var document=new FlowDocument(new Table(){Margin=new Thickness(0)}){PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);var paginator=((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);using var page=paginator.GetPage(0);if(page==DocumentPage.Missing||paginator.GetPage(1)!=DocumentPage.Missing)throw new Exception("empty table completes exactly one page");Console.WriteLine($"original empty table {mode}: finite empty content completes without a phantom continuation PASS");
+         }
+-        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}){
+-            var runs=new List<Run>();var table=Make(runs,18,false);var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=16,Foreground=Brushes.Lime,PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);
+-            var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=260,ShowInTaskbar=false};window.Show();Pump(window);var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);double old=scroll.ExtentHeight;var before=Raster(viewer);runs[0].Text+="\nnew cell line\nmore cell text";Pump(window);double afterHeight=scroll.ExtentHeight;var after=Raster(viewer);if(afterHeight<=old||before.SequenceEqual(after))throw new Exception("bottomless table cell edit must update row height, full extent and raster");scroll.ScrollToEnd();Pump(window);if(scroll.VerticalOffset<=0)throw new Exception("table must scroll through its full content");window.Close();Console.WriteLine($"original scrolling table {mode}: cell edit changes row height/extent {old:F1}->{afterHeight:F1}, glyph raster and end scrolling PASS");
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(bool spans in new[]{false,true}){
++            var runs=new List<Run>();var table=Make(runs,18,false);if(spans){table.RowGroups[0].Rows[0].Cells[0].RowSpan=3;table.RowGroups[0].Rows[1].Cells.RemoveAt(0);table.RowGroups[0].Rows[2].Cells.RemoveAt(0);runs[0].Text=string.Join("\n",Enumerable.Range(0,6).Select(i=>$"scrollspan{i}"));}var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=16,Foreground=Brushes.Lime,PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);
++            var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=260,ShowInTaskbar=false};window.Show();Pump(window);var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);double old=scroll.ExtentHeight;var before=Raster(viewer);runs[0].Text+="\nnew cell line\nmore cell text";Pump(window);double afterHeight=scroll.ExtentHeight;var after=Raster(viewer);if(afterHeight<=old||before.SequenceEqual(after))throw new Exception("bottomless table cell edit must update row height, full extent and raster");scroll.ScrollToEnd();Pump(window);if(scroll.VerticalOffset<=0)throw new Exception("table must scroll through its full content");window.Close();Console.WriteLine($"original scrolling table {mode}, spans={spans}: cell edit changes row height/extent {old:F1}->{afterHeight:F1}, glyph raster and end scrolling PASS");
+         }
+         Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original public table layout, pagination, scrolling and dispatcher cleanup PASS");
+     }

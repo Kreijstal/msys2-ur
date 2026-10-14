@@ -302,3 +302,15 @@ page ownership and chunk regeneration. Tiny pages force actual line progress.
 Native clone/failure/lifetime and shared-framework/portable SDK gates pass.
 Coverage stays 109/139. Vertical spans, repeated headers/footers, figures,
 advanced/bidi/native-language behavior and other documented paths remain open.
+
+Release 8.0.0-29 adds connected vertical table spans that fit a fresh column.
+Original first/middle/last merge flags retain one actual cell client across rows.
+Natural ordinary-cell heights and span content constraints determine geometry;
+shared clients release once. Connected groups defer intact when remaining page
+space is insufficient. Public WPF checks cover natural/growing/span-only groups,
+staggered overlapping spans, columns, initial deferral, exact source ownership,
+actual glyph/background geometry and scrolling edits. Native shared-handle,
+merge/query/height/failure/cleanup gates pass. Coverage stays 109/139. Span groups
+taller than a column still require continuation support; repeated headers/
+footers, figures, advanced/bidi/native-language behavior and other paths remain
+unfinished.
