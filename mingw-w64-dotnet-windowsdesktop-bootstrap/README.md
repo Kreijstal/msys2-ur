@@ -753,3 +753,18 @@ padding cases and eight bottomless live-edit cases, each in shared and portable
 execution. The registered WPF SDK suite now has39 consumers. Existing block UI,
 floater and section clearing regressions remain required. Native import coverage
 remains133/139; the other documented native behavior gaps remain unfinished.
+
+Release 8.0.0-55 keeps a Unicode grapheme in one caret cell when client buffers,
+font/style runs or internal bidi reversal controls divide it. Native queries retain
+the actual requested source-run identity while joined geometry uses a stable cell
+subline. PresentationCore recognizes cross-run cells and maps internal LSCP lengths
+back to source CPs, preserving ordinary same-run character carets.
+
+Native tests cover combining marks, split surrogate pairs, ZWJ emoji and flags,
+exact cell bounds, distinct per-CP run metadata, point edges, tiny wrapping and
+stale handles. The new required SDK consumer checks 64 cases per execution across
+Ideal/Display, LTR/RTL, style changes and tiny/full widths, with forward/backward
+and interior caret queries, hit testing, selection, source glyph coverage and GC/
+raster output. Shared and portable execution bring registered WPF consumers to40.
+Noncontiguous cell geometry and nonmonotonic glyph maps remain explicit gaps;
+native import coverage stays133/139 and full WPF conformance remains unfinished.
