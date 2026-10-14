@@ -1,0 +1,501 @@
+diff --git a/bootstrap/m612/tools/wpf-pts-header.py b/bootstrap/m612/tools/wpf-pts-header.py
+index e35a00e..de082ae 100644
+--- a/bootstrap/m612/tools/wpf-pts-header.py
++++ b/bootstrap/m612/tools/wpf-pts-header.py
+@@ -116,7 +116,8 @@ for name in ('FSIMETHODS', 'FSCONTEXTINFO', 'FSRECT', 'FSPOINT', 'FSBBOX',
+              'FSTRACKDETAILS', 'FSTRACKDESCRIPTION', 'FSPAGEDETAILS',
+              'FSSECTIONDESCRIPTION', 'FSSECTIONDETAILS', 'FSTEXTDETAILS',
+              'FSLINEDESCRIPTIONSINGLE', 'FSSUBTRACKDETAILS', 'FSCOLUMNINFO',
+-             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS', 'FSATTACHEDOBJECTDESCRIPTION'):
++             'FSFLOATERINIT', 'FSFLOATERPROPS', 'FSFLOATERDETAILS', 'FSSUBPAGEDETAILS', 'FSATTACHEDOBJECTDESCRIPTION', 'FSTABLEOBJINIT', 'FSTABLEOBJPROPS',
++             'FSTABLEROWPROPS', 'FSTABLEOBJDETAILS', 'FSTABLEDETAILS', 'FSTABLEROWDESCRIPTION', 'FSTABLEROWDETAILS'):
+     emit(name)
+ # Derive callback function signatures from the same source declarations.
+ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
+@@ -128,7 +129,11 @@ for name in ('GetPageDimensions', 'GetSectionProperties', 'GetMainTextSegment',
+              'FormatFloaterContentFinite', 'FormatFloaterContentBottomless',
+              'DestroyFloaterContent', 'DestroyFloaterContentBreakRecord', 'GetMCSClientAfterFloater',
+              'GetNumberAttachedObjectsBeforeTextLine', 'GetAttachedObjectsBeforeTextLine',
+-             'GetNumberAttachedObjectsInTextLine', 'GetAttachedObjectsInTextLine'):
++             'GetNumberAttachedObjectsInTextLine', 'GetAttachedObjectsInTextLine',
++             'GetTableProperties', 'AutofitTable', 'GetMCSClientAfterTable', 'GetFirstHeaderRow', 'GetFirstFooterRow',
++             'GetFirstRow', 'GetNextRow', 'GetDistributionKind', 'GetRowProperties', 'GetCells',
++             'FormatCellFinite', 'FormatCellBottomless', 'SetCellHeight', 'DestroyCell', 'DestroyCellBreakRecord',
++             'ClearUpdateInfoInCell', 'CalcHorizontalBBoxOfRow'):
+     match = re.search(r'\bdelegate\s+int\s+' + name + r'\s*\((.*?)\)\s*;', text, re.S)
+     if not match:
+         raise SystemExit('Missing source callback: ' + name)
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index 517de2e..952a0e5 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -16,6 +16,8 @@ struct InstalledObjects { FSIMETHODS methods[2]; };
+ // consumer belong to this replacement; its callback table comes from Pts.cs.
+ struct FloaterHandler { uint32_t magic=0; FSFLOATERINIT init{}; };
+ constexpr uint32_t floater_magic=0x464c5431;
++constexpr uint32_t table_magic=0x54424c31;
++struct TableHandler {uint32_t magic=table_magic;FSTABLEOBJINIT init{};};
+ struct Context {
+     FSCONTEXTINFO info{};
+     std::shared_ptr<InstalledObjects> installed;
+@@ -42,6 +44,10 @@ extern "C" __declspec(dllexport) int WINAPI GetFloaterHandlerInfo(const FSFLOATE
+     if(!init)return PTS_tserrInvalidParameter;
+     auto handler=static_cast<FloaterHandler*>(output);handler->init=*init;handler->magic=floater_magic;return 0;
+ }
++extern "C" __declspec(dllexport) int WINAPI GetTableObjHandlerInfo(const FSTABLEOBJINIT* init,void* output) {
++    if(!output)return PTS_tserrNullOutputParameter;if(!init)return PTS_tserrInvalidParameter;
++    TableHandler handler{};handler.init=*init;std::memcpy(output,&handler,sizeof(handler));return 0;
++}
+ extern "C" __declspec(dllexport) int WINAPI CreateInstalledObjectsInfo(const FSIMETHODS* subtrack,const FSIMETHODS* subpage,void** output,int* count) {
+     if(!output||!count)return PTS_tserrNullOutputParameter;*output=nullptr;*count=0;
+     if(!subtrack||!subpage||!subtrack->pfnCreateContext||!subtrack->pfnDestroyContext||!subpage->pfnCreateContext||!subpage->pfnDestroyContext)return PTS_tserrInvalidParameter;
+@@ -164,6 +170,7 @@ struct Continuation {
+     std::shared_ptr<LineBreakData> line_break;
+     std::shared_ptr<BreakData> child;
+     int child_object=0;
++    void* table_row=nullptr;
+     bool text_ended=false;
+     std::vector<PendingFloater> floaters;
+     ~Continuation();
+@@ -217,12 +224,39 @@ struct FloaterData {
+         --context->resources;
+     }
+ };
++struct TableData;
++struct TableRowData;
++void erase_table(void*);
++void erase_table_row(void*);
++struct TableCellData {
++    std::shared_ptr<Context> context;
++    FSTABLECBKCELL callbacks{};
++    void* name=nullptr;void* handle=nullptr;void* record=nullptr;int height=0;
++    FSKUPDATE update=fskupdNew;
++    explicit TableCellData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
++    ~TableCellData(){if(record)reinterpret_cast<PtsDestroyCellBreakRecord>(callbacks.pfnDestroyCellBreakRecord)(context->info.pfsclient,record);if(handle)reinterpret_cast<PtsDestroyCell>(callbacks.pfnDestroyCell)(handle);--context->resources;}
++};
++struct TableRowData {
++    std::shared_ptr<Context> context;
++    FSTABLEROWDESCRIPTION description{};FSTABLEROWDETAILS details{};
++    std::vector<std::shared_ptr<TableCellData>> cells;
++    explicit TableRowData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
++    ~TableRowData(){erase_table_row(this);cells.clear();--context->resources;}
++};
++struct TableData {
++    std::shared_ptr<Context> context;FSTABLEOBJINIT callbacks{};
++    FSTABLEOBJDETAILS details{};FSTABLEDETAILS proper{};
++    std::vector<std::shared_ptr<TableRowData>> rows;
++    explicit TableData(std::shared_ptr<Context> value):context(std::move(value)){++context->resources;}
++    ~TableData(){erase_table(this);rows.clear();--context->resources;}
++};
+ struct ParaData {
+     std::shared_ptr<Context> context;
+     FSPARADESCRIPTION desc{};
+     bool forced_progress=false;
+     std::shared_ptr<TextData> text;
+     std::shared_ptr<FloaterData> floater;
++    std::shared_ptr<TableData> table;
+     ~ParaData();
+ };
+ struct TrackData {
+@@ -259,6 +293,7 @@ struct PageData {
+     FSPAGEDETAILS details{};
+     bool bottomless=false;
+     bool subpage=false;
++    bool inherit_updates=false;
+     FSSUBPAGEDETAILS subpage_details{};
+     std::shared_ptr<Continuation> continuation;
+     FSFMTRKSTOP stop=fmtrGoalReached;
+@@ -270,6 +305,10 @@ std::unordered_map<void*,std::weak_ptr<FloaterData>> floaters;
+ std::unordered_map<void*,std::shared_ptr<PageData>> pages;
+ std::unordered_map<void*,std::shared_ptr<BreakData>> records;
+ std::unordered_map<void*,std::weak_ptr<SectionData>> sections;
++std::unordered_map<void*,std::weak_ptr<TableData>> tables;
++std::unordered_map<void*,std::weak_ptr<TableRowData>> table_rows;
++void erase_table(void* handle){std::lock_guard<std::mutex> lock(gate);tables.erase(handle);}
++void erase_table_row(void* handle){std::lock_guard<std::mutex> lock(gate);table_rows.erase(handle);}
+ void erase_section(void* handle){std::lock_guard<std::mutex> lock(gate);sections.erase(handle);}
+ void erase_text(void* handle){std::lock_guard<std::mutex> lock(gate);texts.erase(handle);}
+ void erase_floater(void* handle){std::lock_guard<std::mutex> lock(gate);floaters.erase(handle);}
+@@ -281,7 +320,7 @@ ParaData::~ParaData() {
+     bool destroy_subpage=false;
+     if(desc.idobj==1&&desc.pfspara){std::lock_guard<std::mutex> lock(gate);auto found=pages.find(desc.pfspara);destroy_subpage=found!=pages.end()&&found->second->subpage&&found->second->context==context;}
+     if(desc.pfspara&&(desc.idobj==0||destroy_subpage))reinterpret_cast<PtsObjDestroyPara>(context->installed->methods[desc.idobj].pfnDestroyPara)(desc.pfspara);
+-    text.reset();floater.reset();
++    text.reset();floater.reset();table.reset();
+     if(desc.pfsparaclient)reinterpret_cast<PtsDestroyParaclient>(context->info.fscbk.cbkgen.pfnDestroyParaclient)(context->info.pfsclient,desc.pfsparaclient);
+ }
+ // A managed object callback may successfully format a native subtrack and then
+@@ -295,6 +334,7 @@ struct CallbackTracks {
+     std::vector<std::shared_ptr<TrackData>> created;
+     std::vector<std::shared_ptr<TrackData>>* previous;
+     void* claimed=nullptr;
++    bool claimed_pages=false;
+     std::vector<std::shared_ptr<BreakData>> created_records;
+     void* claimed_record=nullptr;
+     std::vector<std::shared_ptr<BreakData>>* previous_records;
+@@ -311,7 +351,7 @@ struct CallbackTracks {
+             {std::lock_guard<std::mutex> lock(gate);tracks.erase(track.get());}
+             track.reset();
+         }
+-        for(auto& page:created_pages)if(page.get()!=claimed){unregister_page(page);page.reset();}
++        for(auto& page:created_pages)if(!claimed_pages&&page.get()!=claimed){unregister_page(page);page.reset();}
+     }
+ };
+ 
+@@ -633,6 +673,69 @@ int format_block_ui(const std::shared_ptr<ParaData>& para,uint32_t direction,con
+     return 0;
+ }
+ 
++int format_table(const std::shared_ptr<ParaData>& para,uint32_t direction,const FSRECT& rect,void* input_margin,
++    bool bottomless,bool empty_ok,int suppress,const std::shared_ptr<Continuation>& input,std::shared_ptr<Continuation>& output,void** margin_output) {
++    auto context=para->context;void* client=context->info.pfsclient;auto& obj=context->info.fscbk.cbkobj;
++    if(!obj.pfnGetObjectHandlerInfo||!obj.pfnConvertMcsclient)return PTS_tserrInvalidParameter;
++    TableHandler handler{};int status=reinterpret_cast<PtsGetObjectHandlerInfo>(obj.pfnGetObjectHandlerInfo)(client,3,&handler);if(status)return status;
++    if(handler.magic!=table_magic)return PTS_tserrInvalidClientOutput;
++    auto& cb=handler.init;auto& fetch=cb.tablecbkfetch;auto& cells=cb.tablecbkcell;auto& table=cb.tableobjcbk;
++    if(!table.pfnGetTableProperties||!table.pfnAutofitTable||!table.pfnGetMCSClientAfterTable||!fetch.pfnGetFirstRow||!fetch.pfnGetNextRow||!fetch.pfnGetRowProperties||!fetch.pfnGetCells||!cells.pfnDestroyCell||!cells.pfnDestroyCellBreakRecord||!cells.pfnSetCellHeight||!(bottomless?cells.pfnFormatCellBottomless:cells.pfnFormatCellFinite))return PTS_tserrInvalidParameter;
++    FSTABLEOBJPROPS props{};status=reinterpret_cast<PtsGetTableProperties>(table.pfnGetTableProperties)(client,para->desc.nmp,direction,&props);if(status)return status;
++    if(props.fFloat||props.fskclear!=fskclearNone||props.fswdirTable!=direction||props.ktablealignment!=fsktableobjAlignLeft||props.dvrCaptionTop||props.dvrCaptionBottom||props.durCaptionLeft||props.durCaptionRight)return PTS_tserrNotImplemented;
++    for(int which=0;which<2;++which){void* callback=which?fetch.pfnGetFirstFooterRow:fetch.pfnGetFirstHeaderRow;if(callback){int found=0;void* name=nullptr;status=reinterpret_cast<PtsGetFirstHeaderRow>(callback)(client,para->desc.nmp,0,&found,&name);if(status)return status;if(found)return PTS_tserrNotImplemented;}}
++    if(fetch.pfnGetDistributionKind){FSKTABLEHEIGHTDISTRIBUTION distribution{};status=reinterpret_cast<PtsGetDistributionKind>(fetch.pfnGetDistributionKind)(client,para->desc.nmp,direction,&distribution);if(status)return status;if(distribution!=fskdistributeUnchanged)return PTS_tserrNotImplemented;}
++    int width=0,top=0;status=reinterpret_cast<PtsAutofitTable>(table.pfnAutofitTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,rect.du,&width);if(status)return status;
++    if(width<0||int64_t(rect.u)+width>INT32_MAX)return PTS_tserrInvalidClientOutput;
++    status=reinterpret_cast<PtsConvertMcsclient>(obj.pfnConvertMcsclient)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,suppress,&top);if(status)return status;
++    if(top<0||int64_t(rect.v)+top>INT32_MAX)return PTS_tserrInvalidGeometry;
++    auto data=std::make_shared<TableData>(context);data->callbacks=cb;para->table=data;
++    int found=1;void* name=input?input->table_row:nullptr;bool first_table=!name;
++    if(!name){status=reinterpret_cast<PtsGetFirstRow>(fetch.pfnGetFirstRow)(client,para->desc.nmp,&found,&name);if(status)return status;}
++    int used=0;std::unordered_set<void*> visited;
++    while(found){
++        if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
++        void* next=nullptr;int has_next=0;status=reinterpret_cast<PtsGetNextRow>(fetch.pfnGetNextRow)(client,para->desc.nmp,name,&has_next,&next);if(status)return status;if(has_next&&!next)return PTS_tserrInvalidClientOutput;
++        FSTABLEROWPROPS row_props{};status=reinterpret_cast<PtsGetRowProperties>(fetch.pfnGetRowProperties)(client,name,direction,&row_props);if(status)return status;
++        if(row_props.cCells<0||(row_props.cCells>0&&width==0))return PTS_tserrInvalidClientOutput;
++        if(row_props.fskrowheight!=fskrowheightNatural&&!(row_props.cCells==0&&row_props.fskrowheight==fskrowheightExactNoBreak&&row_props.dvrRowHeightRestriction==0))return PTS_tserrNotImplemented;
++        int above=data->rows.empty()?(first_table?row_props.dvrAboveTopRow:row_props.dvrAboveRowBreak):row_props.dvrAboveRow;
++        int below=has_next?row_props.dvrBelowRow:row_props.dvrBelowBottomRow;
++        if(above<0||below<0||int64_t(used)+above+below+top>INT32_MAX)return PTS_tserrInvalidClientOutput;
++        int available=std::max(0,rect.dv-top-used-above-below),height=0;bool defer=false;bool row_empty_ok=empty_ok||!data->rows.empty();
++        auto row=std::make_shared<TableRowData>(context);row->description.fsnmRow=name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;
++        std::vector<void*> names(row_props.cCells);std::vector<FSTABLEKCELLMERGE> merge(row_props.cCells);
++        status=reinterpret_cast<PtsGetCells>(fetch.pfnGetCells)(client,name,row_props.cCells,names.data(),merge.data());if(status)return status;
++        for(int i=0;i<row_props.cCells;++i){
++            if(!names[i]||merge[i]!=fskcellmergeNo)return PTS_tserrNotImplemented;
++            auto cell=std::make_shared<TableCellData>(context);cell->callbacks=cells;cell->name=names[i];CallbackTracks pending;
++            if(bottomless){FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cells.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,names[i],direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
++            else {FSFMTR formatted{};status=reinterpret_cast<PtsFormatCellFinite>(cells.pfnFormatCellFinite)(client,para->desc.pfsparaclient,nullptr,names[i],nullptr,row_empty_ok,direction,0,available,&formatted,&cell->handle,&cell->record,&cell->height);
++                if(!status&&(cell->record||formatted.kstop!=fmtrGoalReached)){if(row_empty_ok)defer=true;else status=PTS_tserrNotImplemented;}
++            }
++            // The callback reports a managed CellParaClient handle. Its original
++            // DestroyCell callback owns the native subpage(s) created inside it.
++            pending.claimed_pages=cell->handle!=nullptr;pending.claimed_record=cell->record;
++            if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
++            if(status)return status;if(defer)break;
++            if(!cell->handle||cell->height<0)return PTS_tserrInvalidClientOutput;
++            height=std::max(height,cell->height);row->cells.push_back(cell);
++        }
++        if(int64_t(rect.v)+top+used+above+height+below>INT32_MAX)return PTS_tserrInvalidGeometry;
++        if(!bottomless&&int64_t(top)+used+above+height+below>rect.dv){if(row_empty_ok)defer=true;else return PTS_tserrNotImplemented;}
++        if(defer){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=name;if(!data->rows.empty()){auto& last=data->rows.back();last->details.fskboundaryBelow=fsktablerowboundaryBreak;}break;}
++        for(const auto& cell:row->cells){status=reinterpret_cast<PtsSetCellHeight>(cells.pfnSetCellHeight)(cell->handle,para->desc.pfsparaclient,nullptr,cell->name,0,direction,height);if(status)return status;}
++        row->description.u.dvrRow=above+height+below;row->details.fskboundaryAbove=data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
++        row->details.fskboundaryBelow=has_next?fsktablerowboundaryInner:fsktablerowboundaryOuter;row->details.dvrAbove=above;row->details.dvrBelow=below;row->details.cCells=int(row->cells.size());
++        used+=row->description.u.dvrRow;data->rows.push_back(row);name=next;found=has_next;
++    }
++    data->details.fsnmTable=para->desc.nmp;data->details.fsrcTableObj={rect.u,rect.v+top,width,used};data->details.fswdirTable=direction;data->details.fskupdTableProper=fskupdNew;data->details.pfstableProper=data.get();data->proper={used,int(data->rows.size())};
++    para->desc.pfspara=data.get();para->desc.dvrTopSpace=top;para->desc.dvrUsed=data->rows.empty()&&output?0:top+used;
++    if(used)para->desc.fsbbox={1,data->details.fsrcTableObj};
++    if(!output){status=reinterpret_cast<PtsGetMCSClientAfterTable>(table.pfnGetMCSClientAfterTable)(client,para->desc.pfsparaclient,para->desc.nmp,direction,input_margin,margin_output);if(status)return status;}
++    {std::lock_guard<std::mutex> lock(gate);tables[data.get()]=data;for(const auto& row:data->rows)table_rows[row.get()]=row;}
++    return 0;
++}
+ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t direction,const FSRECT& rect,
+     int suppress,void* incoming,std::shared_ptr<TrackData>& result,void** margin_output,bool bottomless=false,const std::shared_ptr<Continuation>& input={},bool empty_ok=false,bool previous_page=true,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA suppress_break=fsksuppresshardbreakbeforefirstparaPageAndColumn,bool keep_self=false) {
+     auto& cb=context->info.fscbk.cbkgen;void* client=context->info.pfsclient;
+@@ -652,9 +755,9 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+     while(found) {
+         if(!name||!visited.insert(name).second)return PTS_tserrInvalidClientOutput;
+         FSPAP props{};status=reinterpret_cast<PtsGetParaProperties>(cb.pfnGetParaProperties)(client,name,&props);if(status)return status;
+-        if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=1&&props.idobj!=2)return PTS_tserrNotImplemented;
++        if(props.idobj!=-1&&props.idobj!=0&&props.idobj!=1&&props.idobj!=2&&props.idobj!=3)return PTS_tserrNotImplemented;
+         bool first=track->paras.empty();
+-        bool continued=input&&first&&(input->child||input->dcp>0||input->text_ended||!input->floaters.empty());
++        bool continued=input&&first&&(input->child||input->table_row||input->dcp>0||input->text_ended||!input->floaters.empty());
+         bool page_break=!bottomless&&!continued&&props.fBreakPageBefore&&!(first&&suppress_break==fsksuppresshardbreakbeforefirstparaPageAndColumn);
+         bool column_break=!bottomless&&!continued&&props.fBreakColumnBefore&&!(first&&suppress_break!=fsksuppresshardbreakbeforefirstparaNone);
+         if(page_break||column_break) {
+@@ -681,6 +784,12 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+         std::shared_ptr<Continuation> next_position;FSFMTRKSTOP next_stop=fmtrBrokenOutOfSpace;
+         auto resume=(input&&track->paras.empty())?input:std::shared_ptr<Continuation>{};
+         if(props.idobj==-1)status=format_text(para,direction,available,resume,next_position,bottomless,!empty_ok&&track->paras.empty(),keep_self||props.fKeepWithNext,previous_page);
++        else if(props.idobj==3) {
++            void* margin_next=nullptr;
++            status=format_table(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,resume,next_position,&margin_next);
++            if(!next_position){margin.reset();margin.value=margin_next;input_margin=margin.value;}
++            else if(margin_next)reinterpret_cast<PtsDestroyMcsclient>(context->info.fscbk.cbkobj.pfnDestroyMcsclient)(client,margin_next);
++        }
+         else if(props.idobj==2) {
+             void* margin_next=nullptr;
+             status=format_block_ui(para,direction,available,input_margin,bottomless,empty_ok||!track->paras.empty(),suppress&&first,first?suppress_break:fsksuppresshardbreakbeforefirstparaNone,next_position,&margin_next);
+@@ -729,7 +838,7 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+             margin.reset();margin.value=chain_margin.value;chain_margin.value=nullptr;
+             track->continuation=chain_position;track->stop=track->paras.empty()?fmtrNoProgressOutOfSpace:fmtrBrokenOutOfSpace;break;
+         }
+-        bool source_progress=para->text&&!para->text->lines.empty();
++        bool source_progress=(para->text&&!para->text->lines.empty())||(para->table&&!para->table->rows.empty());
+         if(props.idobj==0&&para->desc.pfspara){auto child=lookup_owned(tracks,context.get(),para->desc.pfspara);source_progress=child&&!child->paras.empty();}
+         if(props.idobj==1&&para->desc.pfspara){auto child=lookup_owned(pages,context.get(),para->desc.pfspara);if(child){source_progress=!child->track->paras.empty();if(child->section)for(const auto& column:child->section->columns)source_progress=source_progress||!column->paras.empty();}}
+         if(para->desc.dvrUsed>0||!next_position||para->forced_progress||source_progress){track->forced_progress=track->forced_progress||para->forced_progress;track->used+=para->desc.dvrUsed;status=merge_bbox(track->bbox,para->desc.fsbbox);if(status)return status;track->paras.push_back(para);}
+@@ -743,14 +852,15 @@ int format_track(const std::shared_ptr<Context>& context,void* segment,uint32_t
+     result=track;*margin_output=margin.value;margin.value=nullptr;return 0;
+ }
+ void clear_subpage(const std::shared_ptr<PageData>& page);
+-void clear_track(const std::shared_ptr<TrackData>& track) {
+-    track->update=fskupdNoChange;
++void clear_track(const std::shared_ptr<TrackData>& track,bool inherited=false) {
++    auto update=inherited?fskupdInherited:fskupdNoChange;track->update=update;
+     for(const auto& para:track->paras) {
+-        para->desc.fsupdinf.fskupd=fskupdNoChange;
+-        if(para->floater)para->floater->details.fskupdContent=fskupdNoChange;
+-        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNoChange;object.para->floater->details.fskupdContent=fskupdNoChange;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage)clear_subpage(content);}
+-        if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child);}
+-        if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage)clear_subpage(child);}
++        para->desc.fsupdinf.fskupd=update;
++        if(para->floater)para->floater->details.fskupdContent=update;
++        if(para->table){para->table->details.fskupdTableProper=update;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=update;for(const auto& cell:row->cells){cell->update=update;if(cell->callbacks.pfnClearUpdateInfoInCell)reinterpret_cast<PtsClearUpdateInfoInCell>(cell->callbacks.pfnClearUpdateInfoInCell)(cell->handle);}}}
++        if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=update;object.para->floater->details.fskupdContent=update;auto content=lookup_owned(pages,track->context.get(),object.para->floater->details.pfsFloaterContent);if(content&&content->subpage){content->inherit_updates=content->inherit_updates||inherited;clear_subpage(content);}}
++        if(para->desc.idobj==0){auto child=lookup_owned(tracks,track->context.get(),para->desc.pfspara);if(child)clear_track(child,inherited);}
++        if(para->desc.idobj==1){auto child=lookup_owned(pages,track->context.get(),para->desc.pfspara);if(child&&child->subpage){child->inherit_updates=child->inherit_updates||inherited;clear_subpage(child);}}
+     }
+ }
+ }
+@@ -964,7 +1074,7 @@ struct TrackShift {
+         }
+         return 0;
+     }
+-    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
++    void apply(){for(const auto& item:values)*item.first=item.second;for(const auto& track:owners){track->update=fskupdNew;for(const auto& para:track->paras){para->desc.fsupdinf.fskupd=fskupdNew;if(para->floater)para->floater->details.fskupdContent=fskupdNew;if(para->table){para->table->details.fskupdTableProper=fskupdNew;for(const auto& row:para->table->rows){row->description.fsupdinf.fskupd=fskupdNew;for(const auto& cell:row->cells)cell->update=fskupdNew;}}if(para->text)for(const auto& object:para->text->attached){object.para->desc.fsupdinf.fskupd=fskupdNew;object.para->floater->details.fskupdContent=fskupdNew;}}}}
+ };
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsSynchronizeBottomlessSubtrack(void* context_handle,void* handle,void* geometry,uint32_t direction,int shift) {
+@@ -1027,6 +1137,32 @@ extern "C" __declspec(dllexport) int WINAPI FsQueryFloaterDetails(void* context,
+     if(!data||data->context.get()!=context)return PTS_tserrInvalidQuery;
+     *output=data->details;return 0;
+ }
++namespace {
++template<class T> std::shared_ptr<T> lookup_weak_owned(std::unordered_map<void*,std::weak_ptr<T>>& map,void* context,void* handle) {
++    std::shared_ptr<T> value;
++    {std::lock_guard<std::mutex> lock(gate);if(contexts.find(context)==contexts.end())return {};auto found=map.find(handle);if(found==map.end())return {};value=found->second.lock();if(!value)map.erase(found);}
++    return value&&value->context.get()==context?value:nullptr;
++}
++}
++extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjDetails(void* context,void* handle,FSTABLEOBJDETAILS* output) {
++    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->details;return 0;
++}
++extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjTableProperDetails(void* context,void* handle,FSTABLEDETAILS* output) {
++    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->proper;return 0;
++}
++extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowList(void* context,void* handle,int capacity,FSTABLEROWDESCRIPTION* output,int* count) {
++    if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(tables,context,handle);if(!data)return PTS_tserrInvalidQuery;
++    if(capacity<0||size_t(capacity)<data->rows.size()||(!output&&!data->rows.empty()))return PTS_tserrInvalidParameter;
++    for(const auto& row:data->rows)output[(*count)++]=row->description;return 0;
++}
++extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjRowDetails(void* context,void* handle,FSTABLEROWDETAILS* output) {
++    if(!output)return PTS_tserrNullOutputParameter;*output={};auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;*output=data->details;return 0;
++}
++extern "C" __declspec(dllexport) int WINAPI FsQueryTableObjCellList(void* context,void* handle,int capacity,FSKUPDATE* updates,void** handles,FSTABLEKCELLMERGE* merges,int* count) {
++    if(!count)return PTS_tserrNullOutputParameter;*count=0;auto data=lookup_weak_owned(table_rows,context,handle);if(!data)return PTS_tserrInvalidQuery;
++    if(capacity<0||size_t(capacity)<data->cells.size()||((!updates||!handles||!merges)&&!data->cells.empty()))return PTS_tserrInvalidParameter;
++    for(const auto& cell:data->cells){updates[*count]=cell->update;handles[*count]=cell->handle;merges[*count]=fskcellmergeNo;++*count;}return 0;
++}
+ extern "C" __declspec(dllexport) int WINAPI FsQueryTextDetails(void* context,void* handle,FSTEXTDETAILS* output) {
+     if(!output)return PTS_tserrNullOutputParameter;*output={};auto text=find_text(context,handle);if(!text)return PTS_tserrInvalidQuery;
+     output->fsktd=fsktdFull;auto& value=output->u.full;value.fswdir=text->direction;value.fsklines=fsklinesNormal;value.cLines=int(text->lines.size());
+@@ -1109,8 +1245,8 @@ int build_subpage(const std::shared_ptr<Context>& context,void* segment,uint32_t
+     result=page;return 0;
+ }
+ void clear_subpage(const std::shared_ptr<PageData>& page) {
+-    if(page->section)for(const auto& track:page->section->columns)clear_track(track);
+-    else {clear_track(page->track);page->subpage_details.u.simple.trackdescr.fsupdinf.fskupd=fskupdNoChange;}
++    if(page->section)for(const auto& track:page->section->columns)clear_track(track,page->inherit_updates);
++    else {clear_track(page->track,page->inherit_updates);page->subpage_details.u.simple.trackdescr.fsupdinf.fskupd=page->inherit_updates?fskupdInherited:fskupdNoChange;}
+ }
+ }
+ extern "C" __declspec(dllexport) int WINAPI FsCreateSubpageFinite(void* context_handle,void* break_input,int previous,void* segment,
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 8b35985..3c7155f 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -17,7 +17,11 @@ static int WINAPI destroy_object(void* value){if(value!=reinterpret_cast<void*>(
+ static int lines_created=0,lines_destroyed=0,breaks_destroyed=0,clients_created=0,clients_destroyed=0,fail_line=-1,columns=1,available_height=80,invalid_columns=false,hard_break=0,keep_mode=0,keep_next=0,para_count=2;
+ static bool containers=false,lose_subtrack=false;
+ static bool structural_line=false;
+-static bool subpage_parent=false;
++static bool subpage_parent=false,table_mode=false,inside_table_cell=false,lose_table_cell=false;
++static int table_cells_created=0,table_cells_destroyed=0,table_fail_cell=-1,table_rows_count=3;
++static int(WINAPI* table_handler)(const FSTABLEOBJINIT*,void*)=nullptr;
++static int(WINAPI* clear_cell_subpage)(void*,void*)=nullptr;
++struct MockTableCell {void* page;};
+ using NativeSubpageFinite=int(WINAPI*)(void*,void*,int,void*,void*,int,int,uint32_t,int,int,const FSRECT*,int,const FSCOLUMNINFO*,int,int,void* const*,const int*,int,const int*,const int*,int,FSKSUPPRESSHARDBREAKBEFOREFIRSTPARA,FSFMTR*,void**,void**,int*,FSBBOX*,void**,int*);
+ static NativeSubpageFinite create_subpage=nullptr;
+ static int(WINAPI* destroy_subpage)(void*,void*)=nullptr;
+@@ -64,9 +68,9 @@ static int WINAPI column_info(void*,void*,uint32_t,int capacity,FSCOLUMNINFO* ou
+     if(capacity!=2)return PTS_tserrInvalidParameter;output[0]={0,100};output[1]={10,invalid_columns?250:100};*actual=2;return 0;
+ }
+ static int WINAPI main_segment(void*,void*,void** segment){*segment=reinterpret_cast<void*>(77);return 0;}
+-static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
++static int WINAPI first_para(void*,void* segment,int* found,void** name){if(segment!=reinterpret_cast<void*>(77)&&!containers&&!subpage_parent&&!inside_table_cell)return PTS_tserrInvalidParameter;*found=1;*name=segment==reinterpret_cast<void*>(77)?reinterpret_cast<void*>(101):reinterpret_cast<void*>(201);return 0;}
+ static int WINAPI next_para(void*,void* segment,void* current,int* found,void** next){*found=segment==reinterpret_cast<void*>(77)&&reinterpret_cast<uintptr_t>(current)<uintptr_t(100+para_count);*next=*found?reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(current)+1):nullptr;return 0;}
+-static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
++static int WINAPI para_properties(void*,void* name,FSPAP* pap){*pap={};pap->idobj=table_mode&&!inside_table_cell?3:subpage_parent&&reinterpret_cast<uintptr_t>(name)<200?1:block_ui&&name==reinterpret_cast<void*>(102)?2:containers&&reinterpret_cast<uintptr_t>(name)<200?0:-1;pap->fKeepWithNext=keep_next&&name==reinterpret_cast<void*>(102);if(name==reinterpret_cast<void*>(102)){pap->fBreakPageBefore=hard_break==1;pap->fBreakColumnBefore=hard_break==2;}return 0;}
+ static int WINAPI para_client(void*,void* name,void** output){++clients_created;*output=name;return 0;}
+ static int WINAPI destroy_para_client(void*,void*){++clients_destroyed;return 0;}
+ static int WINAPI text_properties(void*,void* name,int,FSTXTPROPS* props){*props={};props->fKeepTogether=keep_mode==2||(keep_mode==1&&name==reinterpret_cast<void*>(102));return 0;}
+@@ -105,7 +109,27 @@ static int WINAPI block_finite(void*,void* para,void* input,int previous,void*,v
+     }
+     return (fail_float||float_created==float_fail_at)?PTS_tserrCallbackException:0;
+ }
++static int WINAPI table_props(void*,void*,uint32_t direction,FSTABLEOBJPROPS* props){*props={};props->fswdirTable=direction;return 0;}
++static int WINAPI table_fit(void*,void*,void*,uint32_t,int width,int* output){*output=width;return 0;}
++static int WINAPI table_first(void*,void*,int* found,void** name){*found=table_rows_count>0;*name=*found?reinterpret_cast<void*>(501):nullptr;return 0;}
++static int WINAPI table_next(void*,void*,void* current,int* found,void** name){auto n=reinterpret_cast<uintptr_t>(current);*found=n<uintptr_t(500+table_rows_count);*name=*found?reinterpret_cast<void*>(n+1):nullptr;return 0;}
++static int WINAPI table_row_props(void*,void*,uint32_t,FSTABLEROWPROPS* props){*props={};props->cCells=2;props->dvrAboveRow=props->dvrBelowRow=props->dvrAboveTopRow=props->dvrBelowBottomRow=props->dvrAboveRowBreak=props->dvrBelowRowBreak=1;return 0;}
++static int WINAPI table_get_cells(void*,void* row,int count,void** names,FSTABLEKCELLMERGE* merge){if(count!=2)return PTS_tserrInvalidParameter;auto n=reinterpret_cast<uintptr_t>(row);for(int i=0;i<2;++i){names[i]=reinterpret_cast<void*>(601+(n-501)*2+i);merge[i]=fskcellmergeNo;}return 0;}
++static int WINAPI table_cell_format(void*,void*,void* input,void* name,void*,int empty,uint32_t direction,int extra,int available,FSFMTR* formatted,void** output,void** br,int* height){
++    *formatted={};*output=*br=nullptr;*height=0;if(input||extra)return PTS_tserrInvalidParameter;if(empty&&available<20){formatted->kstop=fmtrNoProgressOutOfSpace;return 0;}
++    FSRECT rect{10,20,100,available};FSCOLUMNINFO column{0,100};FSBBOX bbox{};void* margin=nullptr;int top=0;void* page=nullptr;
++    inside_table_cell=true;int status=create_subpage(page_context,nullptr,0,name,nullptr,empty,1,direction,200,20+available,&rect,1,&column,0,0,nullptr,nullptr,0,nullptr,nullptr,0,fsksuppresshardbreakbeforefirstparaNone,formatted,&page,br,height,&bbox,&margin,&top);inside_table_cell=false;
++    if(status)return status;if(margin)return PTS_tserrInvalidClientOutput;
++    auto cell=new MockTableCell{page};++table_cells_created;*output=cell;
++    if(lose_table_cell){delete cell;++table_cells_destroyed;*output=*br=nullptr;return PTS_tserrCallbackException;}
++    return table_cells_created==table_fail_cell?PTS_tserrCallbackException:0;
++}
++static int WINAPI table_destroy_cell(void* handle){auto cell=static_cast<MockTableCell*>(handle);int status=destroy_subpage(page_context,cell->page);delete cell;++table_cells_destroyed;return status;}
++static int WINAPI table_set_height(void*,void*,void*,void*,int,uint32_t,int height){return height==20?0:PTS_tserrInvalidClientOutput;}
++static int WINAPI table_clear_cell(void* handle){return clear_cell_subpage(page_context,static_cast<MockTableCell*>(handle)->page);}
++static int WINAPI table_object_handler(void* output){FSTABLEOBJINIT init{};init.tableobjcbk.pfnGetTableProperties=reinterpret_cast<void*>(table_props);init.tableobjcbk.pfnAutofitTable=reinterpret_cast<void*>(table_fit);init.tableobjcbk.pfnGetMCSClientAfterTable=reinterpret_cast<void*>(block_after);auto& fetch=init.tablecbkfetch;fetch.pfnGetFirstRow=reinterpret_cast<void*>(table_first);fetch.pfnGetNextRow=reinterpret_cast<void*>(table_next);fetch.pfnGetRowProperties=reinterpret_cast<void*>(table_row_props);fetch.pfnGetCells=reinterpret_cast<void*>(table_get_cells);auto& cells=init.tablecbkcell;cells.pfnFormatCellFinite=reinterpret_cast<void*>(table_cell_format);cells.pfnDestroyCell=reinterpret_cast<void*>(table_destroy_cell);cells.pfnDestroyCellBreakRecord=reinterpret_cast<void*>(subpage_destroy_record);cells.pfnSetCellHeight=reinterpret_cast<void*>(table_set_height);cells.pfnClearUpdateInfoInCell=reinterpret_cast<void*>(table_clear_cell);return table_handler(&init,output);}
+ static int WINAPI block_handler(void*,int id,void* output) {
++    if(id==3&&table_mode)return table_object_handler(output);
+     if(id!=2)return PTS_tserrInvalidParameter;
+     FSFLOATERINIT init{};auto& cb=init.fsfloatercbk;cb.pfnGetFloaterProperties=reinterpret_cast<void*>(block_props);
+     cb.pfnFormatFloaterContentFinite=reinterpret_cast<void*>(block_finite);cb.pfnDestroyFloaterContent=reinterpret_cast<void*>(block_destroy);
+@@ -536,6 +560,27 @@ int main(int argc,char** argv) {
+         require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&float_created==float_destroyed&&lines_created==lines_destroyed&&clients_created==clients_destroyed,"populated attached-content callback failure tears down all owned objects");
+         fail_float=attached_float=attached_right=false;para_count=2;
+         std::puts("native attached floaters: original callbacks, multiple collision-free placements/later failure, left/right rectangular wrapping, attached count/query/update/capacity, stale handles, partial failure and exact cleanup PASS");
++        using QueryTable=int(WINAPI*)(void*,void*,FSTABLEOBJDETAILS*);using QueryTableProper=int(WINAPI*)(void*,void*,FSTABLEDETAILS*);using QueryTableRows=int(WINAPI*)(void*,void*,int,FSTABLEROWDESCRIPTION*,int*);using QueryTableRow=int(WINAPI*)(void*,void*,FSTABLEROWDETAILS*);using QueryTableCells=int(WINAPI*)(void*,void*,int,FSKUPDATE*,void**,FSTABLEKCELLMERGE*,int*);
++        PROC(GetTableObjHandlerInfo,int(WINAPI*)(const FSTABLEOBJINIT*,void*));table_handler=GetTableObjHandlerInfo;clear_cell_subpage=FsClearUpdateInfoInSubpage;
++        PROC(FsQueryTableObjDetails,QueryTable);PROC(FsQueryTableObjTableProperDetails,QueryTableProper);PROC(FsQueryTableObjRowList,QueryTableRows);PROC(FsQueryTableObjRowDetails,QueryTableRow);PROC(FsQueryTableObjCellList,QueryTableCells);
++        table_mode=true;para_count=1;available_height=48;reset_page_counts();table_cells_created=table_cells_destroyed=0;
++        FSTABLEOBJDETAILS table_details{};FSTABLEDETAILS table_proper{};FSTABLEROWDESCRIPTION table_rows[3]{};FSTABLEROWDETAILS table_row{};void* cell_handles[2]{};FSKUPDATE cell_updates[2]{};FSTABLEKCELLMERGE cell_merges[2]{};
++        require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&page_break,"table formats real owned cell subpages and defers an intact later row");
++        require(FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&actual_count==1&&paras[0].idobj==3&&paras[0].dvrUsed==44,"table paragraph uses actual maximum cell heights and row spacing");
++        void* table_handle=paras[0].pfspara;
++        require(FsQueryTableObjDetails(context,table_handle,&table_details)==0&&table_details.fsrcTableObj.v==20&&table_details.fsrcTableObj.du==100&&FsQueryTableObjTableProperDetails(context,table_details.pfstableProper,&table_proper)==0&&table_proper.cRows==2&&table_proper.dvrTable==44,"actual table geometry and proper-table query records");
++        require(FsQueryTableObjRowList(context,table_handle,1,table_rows,&actual_count)==PTS_tserrInvalidParameter&&!actual_count&&FsQueryTableObjRowList(context,table_handle,3,table_rows,&actual_count)==0&&actual_count==2&&table_rows[0].fsnmRow==reinterpret_cast<void*>(501)&&table_rows[1].fsnmRow==reinterpret_cast<void*>(502),"table row query capacity and original row identities");
++        require(FsQueryTableObjRowDetails(context,table_rows[1].pfstablerow,&table_row)==0&&table_row.cCells==2&&table_row.fskboundaryBelow==fsktablerowboundaryBreak&&FsQueryTableObjCellList(context,table_rows[0].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&actual_count==2&&cell_handles[0]&&cell_handles[1]&&cell_merges[0]==fskcellmergeNo,"row continuation boundary and original opaque cell handles");
++        require(FsClearUpdateInfoInPage(context,page_handle)==0&&FsQueryTableObjDetails(context,table_handle,&table_details)==0&&table_details.fskupdTableProper==fskupdNoChange&&FsQueryTableObjCellList(context,table_rows[0].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&cell_updates[0]==fskupdNoChange,"table and cell update clearing follows owned original callbacks");
++        incoming_record=page_break;
++        require(FsDestroyPage(context,page_handle)==0&&FsQueryTableObjDetails(context,table_handle,&table_details)==PTS_tserrInvalidQuery&&FsQueryTableObjRowDetails(context,table_rows[0].pfstablerow,&table_row)==PTS_tserrInvalidQuery,"destroyed table and row handles reject stale queries");
++        require(FsCreatePageFinite(context,incoming_record,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==0&&!page_break&&FsQueryPageDetails(context,page_handle,&details)==0&&FsQueryTrackParaList(context,details.u.simple.trackdescr.pfstrack,1,paras,&actual_count)==0&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==1&&table_rows[0].fsnmRow==reinterpret_cast<void*>(503),"table continuation resumes the unconsumed row after old page destruction");
++        require(FsDestroyPageBreakRecord(context,incoming_record)==0&&FsDestroyPage(context,page_handle)==0&&table_cells_created==6&&table_cells_destroyed==6&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"table/cell/subpage/text resources release exactly once across pages");
++        for(bool lost:{false,true}){reset_page_counts();table_cells_created=table_cells_destroyed=0;table_fail_cell=lost?-1:2;lose_table_cell=lost;
++            require(FsCreatePageFinite(context,nullptr,reinterpret_cast<void*>(66),&formatted,&page_handle,&page_break)==PTS_tserrCallbackException&&!page_handle&&!page_break&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"failed populated or lost cell outputs release every prior and speculative native subpage");
++        }
++        table_fail_cell=-1;lose_table_cell=table_mode=false;para_count=2;available_height=80;
++        std::puts("native tables: original cell/subpage callbacks, exact rows/heights/spacing, typed queries/capacity/update/stale state, row resume and populated/lost-output cleanup PASS");
+         columns=1;require(DestroyDocContext(context)==0&&DestroyInstalledObjectsInfo(installed)==0,"failed page creation leaves no retained resources");
+         std::puts("native finite pages: actual callback geometry/ranges/break records, query/update state, foreign/stale handles, exact teardown, partial failure rollback and unsupported paths PASS");
+         std::printf("native paragraph records: context=%zu, methods=%zu, callbacks=%zu; copied ownership, callbacks, rollback, invalid states and teardown PASS\n",sizeof(FSCONTEXTINFO),sizeof(FSIMETHODS),sizeof(FSCBK));return 0;
+diff --git a/bootstrap/m612/wpf-tests/Tables.cs b/bootstrap/m612/wpf-tests/Tables.cs
+new file mode 100644
+index 0000000..a42ba7a
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/Tables.cs
+@@ -0,0 +1,40 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Controls;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    static void Pump(FrameworkElement element){element.UpdateLayout();var frame=new DispatcherFrame();Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ContextIdle,new Action(()=>frame.Continue=false));Dispatcher.PushFrame(frame);element.UpdateLayout();}
++    static byte[] Raster(Visual visual){var image=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);image.Render(visual);var bytes=new byte[400*220*4];image.CopyPixels(bytes,1600,0);return bytes;}
++    static (int Red,int Blue,int Black,int Green) Ink(byte[] bytes){int red=0,blue=0,black=0,green=0;for(int i=0;i<bytes.Length;i+=4){if(bytes[i+3]<150)continue;if(bytes[i+2]>200&&bytes[i]<70&&bytes[i+1]<70)++red;if(bytes[i]>180&&bytes[i+2]<70&&bytes[i+1]<70)++blue;if(bytes[i]<70&&bytes[i+1]<70&&bytes[i+2]<70)++black;if(bytes[i+1]>180&&bytes[i]<70&&bytes[i+2]<70)++green;}return(red,blue,black,green);}
++    static Table Make(List<Run> runs,int rows,bool explicitColumns,int scenario=0){var table=new Table(){CellSpacing=2,Margin=new Thickness(0)};if(explicitColumns){table.Columns.Add(new TableColumn(){Width=new GridLength(120)});table.Columns.Add(new TableColumn(){Width=new GridLength(260)});}if(scenario==2){table.Margin=new Thickness(6,4,6,4);table.BorderBrush=Brushes.Black;table.BorderThickness=new Thickness(2);table.Padding=new Thickness(6);}
++        var group=new TableRowGroup();table.RowGroups.Add(group);for(int r=0;r<rows;++r){if(scenario==2&&r==6){group=new TableRowGroup();table.RowGroups.Add(group);}var row=new TableRow();group.Rows.Add(row);for(int c=0;c<(scenario==2&&r==0?1:2);++c){var run=new Run($"{(c==0?"left":"right")}{r:D2}");runs.Add(run);row.Cells.Add(new TableCell(new Paragraph(run){Margin=new Thickness(0)}){ColumnSpan=scenario==2&&r==0?2:1,Padding=new Thickness(4),Background=c==0?Brushes.Red:Brushes.Blue,BorderBrush=Brushes.Black,BorderThickness=new Thickness(1)});}}return table;}
++    [STAThread] static void Main(){var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})foreach(int scenario in new[]{0,1,2,3,4,5}){
++            bool explicitColumns=scenario==1;
++            var runs=new List<Run>();var table=Make(runs,12,explicitColumns,scenario);if(scenario==5)table.RowGroups[0].Rows[0].Cells[0].Blocks.Add(Make(runs,2,false));var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=16,Foreground=Brushes.Lime,PagePadding=new Thickness(10),ColumnWidth=scenario==4?160:double.PositiveInfinity,ColumnGap=20};if(scenario==3){var prefix=new Run("prefix zero\nprefix one\nprefix two\nprefix three\nprefix four\nprefix five");runs.Add(prefix);document.Blocks.InsertBefore(table,new Paragraph(prefix){Margin=new Thickness(0),LineHeight=24});}TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();int pages=0,totalInk=0;
++            for(;pages<20;++pages){using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;var ink=Ink(Raster(page.Visual));if((scenario!=3||pages>0)&&(ink.Red<500||ink.Blue<500||ink.Black<50||ink.Green<30))throw new Exception("table cells must render actual backgrounds, borders and glyphs");totalInk+=ink.Black+ink.Green;
++                var view=((IServiceProvider)page).GetService(viewType);foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)){var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));}GC.Collect(2,GCCollectionMode.Forced,true,true);
++            }
++            if(pages<(scenario==4?1:2)||pages>=20||!paginator.IsPageCountValid)throw new Exception("table row pagination must complete");
++            foreach(var run in runs)for(int at=0;at<run.Text.Length;++at){var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception("table exact cell-character coverage/page mapping at "+at);}
++            using(var page=paginator.GetPage(scenario==3?1:0)){var ink=Ink(Raster(page.Visual));if(ink.Red<500||ink.Blue<500||ink.Black<50||ink.Green<30)throw new Exception("disposed table page must regenerate original cells");}
++            Console.WriteLine($"original public table {mode}, scenario={scenario}: {pages} pages, {runs.Sum(r=>r.Text.Length)} cell characters covered exactly once, {totalInk} border/glyph pixels, original source/page mapping/regeneration/GC PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}){
++            var document=new FlowDocument(new Table(){Margin=new Thickness(0)}){PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);var paginator=((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,220);using var page=paginator.GetPage(0);if(page==DocumentPage.Missing||paginator.GetPage(1)!=DocumentPage.Missing)throw new Exception("empty table completes exactly one page");Console.WriteLine($"original empty table {mode}: finite empty content completes without a phantom continuation PASS");
++        }
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display}){
++            var runs=new List<Run>();var table=Make(runs,18,false);var document=new FlowDocument(table){FontFamily=new FontFamily("Segoe UI"),FontSize=16,Foreground=Brushes.Lime,PagePadding=new Thickness(10)};TextOptions.SetTextFormattingMode(document,mode);
++            var viewer=new FlowDocumentScrollViewer{Document=document,IsToolBarVisible=false};var window=new Window{Content=viewer,Width=420,Height=260,ShowInTaskbar=false};window.Show();Pump(window);var scroll=(ScrollViewer)viewer.Template.FindName("PART_ContentHost",viewer);double old=scroll.ExtentHeight;var before=Raster(viewer);runs[0].Text+="\nnew cell line\nmore cell text";Pump(window);double afterHeight=scroll.ExtentHeight;var after=Raster(viewer);if(afterHeight<=old||before.SequenceEqual(after))throw new Exception("bottomless table cell edit must update row height, full extent and raster");scroll.ScrollToEnd();Pump(window);if(scroll.VerticalOffset<=0)throw new Exception("table must scroll through its full content");window.Close();Console.WriteLine($"original scrolling table {mode}: cell edit changes row height/extent {old:F1}->{afterHeight:F1}, glyph raster and end scrolling PASS");
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original public table layout, pagination, scrolling and dispatcher cleanup PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-tables-sdk.sh b/bootstrap/m612/wpf-tests/check-tables-sdk.sh
+new file mode 100755
+index 0000000..94fee3a
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-tables-sdk.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/Tables.cs" "$work/Program.cs"
++cat > "$work/TablesSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/TablesSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/TablesSdkCheck.dll")"
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/TablesSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/TablesSdkCheck.exe"
++printf 'PASS normal offline WPF SDK table layout check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 70fcee6..954dac0 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -835,6 +835,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-subpages-sdk.sh" "$root" "$build/subpages-sdk-check"
+   bash "$here/wpf-tests/check-subtracks-sdk.sh" "$root" "$build/subtracks-sdk-check"
+   bash "$here/wpf-tests/check-floaters-sdk.sh" "$root" "$build/floaters-sdk-check"
++  bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
+   bash "$here/winforms-tests/check-sdk.sh" "$root" "$build/winforms-sdk-check"
+ }
+ 

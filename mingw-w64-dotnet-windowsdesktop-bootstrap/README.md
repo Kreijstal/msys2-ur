@@ -6,7 +6,7 @@ version is `8.0.0-bootstrap.wpf.8.0.0`. It includes the desktop SDK/markup tasks
 targeting/runtime packs, all managed shipping implementations, native graphics,
 pen input and the source PresentationNative replacement.
 
-The native text/paragraph/NLS replacement is still partial (currently 103 of 139
+The native text/paragraph/NLS replacement is still partial (currently 109 of 139
 imported exports). Bidi, full paragraph/pagination layout and other documented text behavior
 remain unfinished. This experimental package is part of the ongoing bootstrap;
 it does not establish complete upstream WPF compatibility. WinForms 8 awaits its
@@ -278,3 +278,16 @@ real chunk glyph raster, page regeneration and GC. Native clone/error/lifetime
 checks pass. Coverage stays 103/139. Colliding multi-floater splits beyond one
 placement area, cross-paragraph flow, complex center/clear policies, figures/
 tables and the other documented WPF paths remain unfinished.
+
+Release 8.0.0-27 adds public tables through original width, row and cell callbacks.
+Cells retain their actual managed clients and source-built subpages; maximum
+cell height and original spacing determine each row. Whole rows defer to the
+next column/page and typed queries return real table/row/cell data. Cell-owned
+subpages inherit visual updates after arrangement, allowing original glyph
+initialization. Public WPF checks cover auto/fixed widths, borders/padding,
+horizontal spans, row groups, preceding text, columns, nested/empty tables and
+scrolling edits with exact source ownership and page regeneration. Native query,
+row-resume and populated/lost-output cleanup gates pass; ABI checks cover 429
+fields. Coverage rises to 109/139. Splitting cells/rows, vertical spans, repeated
+headers/footers, figures, advanced/bidi/native-language behavior and other
+listed paths remain unfinished.
