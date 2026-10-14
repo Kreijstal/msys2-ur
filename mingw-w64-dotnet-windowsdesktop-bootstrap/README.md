@@ -678,3 +678,19 @@ scrolling, across shared and portable execution (312 scenario executions).
 Paragraph ABI remains 482 fields and imported native coverage remains 133/139.
 Vertical directions, floating tables, native non-default alignment and other
 advanced table behavior remain unsupported or unproven.
+
+Release 8.0.0-50 accepts ClearFloaters on original container subtrack callbacks.
+It transforms inherited obstacles into the container direction, clears only the
+requested side, and preserves consumed gap/top-space/content-origin geometry.
+Empty or deferred containers consume no clearance. Bottomless updates retain
+exported identity and publish clearing with the replacement source tree; invalid
+parameters preserve prior content. Track comparison retains gap differences.
+
+Native checks verify exact selective child positions/widths/heights, no-progress
+source deferral/resume, all valid/invalid clear values and exact callback ownership.
+The new normal SDK consumer checks 64 finite and four bottomless cases in each
+shared/portable execution, including opposite container/page direction, background
+placement, source/page coverage, regeneration, GC and resize/clear-property edits.
+check-sdk now includes this additional consumer (37 registered WPF consumers).
+The ABI remains 482 fields and imported coverage remains 133/139. Styled margin/
+border conformance and the other documented advanced native gaps remain open.
