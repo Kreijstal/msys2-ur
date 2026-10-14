@@ -784,3 +784,18 @@ selection cases in each shared/portable execution. Both formatting modes/directi
 single/multiple columns, glyph clusters, source/page coverage, GC and raster output
 are covered. Registered WPF SDK consumers increase to41. Full compression, ink
 insertion, aligned-tab justification and other native conformance gaps remain open.
+
+Release 8.0.0-57 supports position-dependent inline objects after aligned tabs.
+Field layout remeasures flexible objects at the current pen until native positions
+and widths agree, within64 passes. Wrapped fields settle their retained prefixes.
+Callback failures/nonconvergence cannot be mistaken for ordinary missing-tab fits,
+and accepted line heights reflect the final object metrics.
+
+The source TextStore cache now includes pen/margin for flexible objects; fixed-size
+metrics keep their existing cache behavior. Native checks cover exact four-way tab
+anchors, integer fixed points, final heights/drawing, callback failure, oscillation
+bounds and context reuse. Public Ideal/Display checks cover complete/wrapped fields,
+remaining widths, source/caret/selection/raster/GC, pixel rounding, initial/reformat/
+draw exceptions and reuse in both shared and portable execution. Registered WPF SDK
+consumers increase to42. Aligned-tab justification and other documented native
+conformance gaps remain unfinished.
