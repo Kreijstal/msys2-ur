@@ -1,0 +1,300 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 205cdfe5..f38f2106 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,6 +49,7 @@ project(x64dbg
+ )
+ 
+ include("cmake/VSFlags.cmake")
++include("cmake/MinGW.cmake")
+ 
+ # Packages
+ find_package(Qt5 REQUIRED
+@@ -469,7 +470,7 @@ target_link_libraries(dbg PRIVATE
+ 	Iphlpapi
+ )
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x86
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # x86-msvc
+ 	target_link_libraries(dbg PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/dbghelp/dbghelp_x86.lib"
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/DeviceNameResolver/DeviceNameResolver_x86.lib"
+@@ -482,7 +483,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x86
+ 	)
+ endif()
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8) # x64-msvc
+ 	target_link_libraries(dbg PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/dbghelp/dbghelp_x64.lib"
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/DeviceNameResolver/DeviceNameResolver_x64.lib"
+@@ -495,6 +496,13 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
+ 	)
+ endif()
+ 
++if(MINGW) # mingw
++	target_link_libraries(dbg PRIVATE
++		x64dbg_mingw_deps
++		TitanEngine
++	)
++endif()
++
+ if(MSVC) # msvc
+ 	target_link_options(dbg PUBLIC
+ 		"/DELAYLOAD:TitanEngine.dll"
+@@ -904,18 +912,24 @@ target_link_libraries(gui PRIVATE
+ 	dwmapi
+ )
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x86
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # x86-msvc
+ 	target_link_libraries(gui PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/gui/Src/ThirdPartyLibs/ldconvert/ldconvert_x86.lib"
+ 	)
+ endif()
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8) # x64-msvc
+ 	target_link_libraries(gui PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/gui/Src/ThirdPartyLibs/ldconvert/ldconvert_x64.lib"
+ 	)
+ endif()
+ 
++if(MINGW) # mingw
++	target_link_libraries(gui PRIVATE
++		ldconvert
++	)
++endif()
++
+ if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x86
+ 	set_target_properties(gui PROPERTIES
+ 		OUTPUT_NAME
+@@ -1060,18 +1074,24 @@ add_executable(loaddll)
+ target_sources(loaddll PRIVATE ${loaddll_SOURCES})
+ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${loaddll_SOURCES})
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x86
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # x86-msvc
+ 	target_link_libraries(loaddll PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/ntdll/ntdll_x86.lib"
+ 	)
+ endif()
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8) # x64-msvc
+ 	target_link_libraries(loaddll PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/src/dbg/ntdll/ntdll_x64.lib"
+ 	)
+ endif()
+ 
++if(MINGW) # mingw
++	target_link_libraries(loaddll PRIVATE
++		ntdll
++	)
++endif()
++
+ if(MSVC) # msvc
+ 	target_link_libraries(loaddll PRIVATE
+ 		Delayimp
+diff --git a/cmake/MinGW.cmake b/cmake/MinGW.cmake
+new file mode 100644
+index 00000000..092d018d
+--- /dev/null
++++ b/cmake/MinGW.cmake
+@@ -0,0 +1,113 @@
++# MinGW-w64 (GCC or Clang) build support.
++#
++# The MSVC build links the prebuilt import libraries checked into src/ and
++# copies the prebuilt DLLs from deps/. A MinGW build uses none of them:
++#  - ntdll, dbghelp: the toolchain's import libraries (the DLLs of Windows)
++#  - jansson, lz4, XEDParse: system libraries (pkg-config / find_library)
++#  - DeviceNameResolver, LLVMDemangle, ldconvert, asmjit (asmjit_xedparse):
++#    built here from their x64dbg source repositories, found in
++#    X64DBG_DEPS_SOURCE_DIR
++if(NOT MINGW)
++    return()
++endif()
++
++# DLLs keep their upstream names (x64dbg.dll, not libx64dbg.dll): the
++# executables and plugins load them by name.
++set(CMAKE_SHARED_LIBRARY_PREFIX "")
++set(CMAKE_SHARED_MODULE_PREFIX "")
++
++set(X64DBG_DEPS_SOURCE_DIR "${PROJECT_SOURCE_DIR}/deps-src" CACHE PATH
++    "Directory with the DeviceNameResolver, LLVMDemangle, ldconvert, asmjit_xedparse and lz4 sources")
++set(_deps "${X64DBG_DEPS_SOURCE_DIR}")
++
++add_compile_options(
++    # The code relies on MSVC's permissive defaults
++    $<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>
++    $<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>
++    -Wno-unknown-pragmas
++    -Wno-multichar
++)
++if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
++    add_compile_options(-Wno-microsoft -Wno-unknown-warning-option -Wno-nonportable-include-path
++        -Wno-writable-strings -Wno-format-security -Wno-switch)
++endif()
++
++# x64dbg.exe restricts the DLL search path to its own and the system
++# directory (src/exe/signaturecheck.cpp). A packaged build whose
++# dependencies live elsewhere names that directory here, relative to the
++# executable, for example ../../../bin for <prefix>/lib/x64dbg/x64.
++set(X64DBG_EXTRA_DLL_DIRECTORY "" CACHE STRING
++    "Additional DLL directory for x64dbg.exe, relative to its directory")
++if(X64DBG_EXTRA_DLL_DIRECTORY)
++    add_compile_definitions(X64DBG_EXTRA_DLL_DIRECTORY="${X64DBG_EXTRA_DLL_DIRECTORY}")
++endif()
++
++# All binaries go to one directory, like the MSVC build (bin/x64)
++if(NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
++    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
++    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
++    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
++endif()
++
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(JANSSON REQUIRED IMPORTED_TARGET jansson>=2.9)
++pkg_check_modules(LZ4 REQUIRED IMPORTED_TARGET liblz4)
++find_library(XEDPARSE_LIBRARY NAMES XEDParse REQUIRED)
++
++# x64dbg's LZ4_compress_file and friends (lz4file.cpp of its lz4 fork, which
++# upstream builds into its lz4.dll) on top of the system liblz4
++add_library(lz4file SHARED "${_deps}/lz4/lz4file.cpp")
++target_compile_definitions(lz4file PRIVATE LZ4_DISABLE_DEPRECATE_WARNINGS)
++target_link_libraries(lz4file PRIVATE PkgConfig::LZ4)
++
++add_library(DeviceNameResolver SHARED
++    "${_deps}/DeviceNameResolver/DeviceNameResolver.cpp"
++    "${_deps}/DeviceNameResolver/DeviceNameResolverInternal.cpp"
++    "${_deps}/DeviceNameResolver/NativeWinApi.cpp"
++)
++# A Unicode (TCHAR = wchar_t) project upstream
++target_compile_definitions(DeviceNameResolver PRIVATE UNICODE _UNICODE)
++
++add_library(LLVMDemangle SHARED
++    "${_deps}/LLVMDemangle/LLVMDemangle.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/DLangDemangle.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/Demangle.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/ItaniumDemangle.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/MicrosoftDemangle.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/MicrosoftDemangleNodes.cpp"
++    "${_deps}/LLVMDemangle/llvm/lib/Demangle/RustDemangle.cpp"
++)
++target_include_directories(LLVMDemangle PRIVATE "${_deps}/LLVMDemangle/include")
++target_compile_features(LLVMDemangle PRIVATE cxx_std_17)
++
++# 80-bit long double <-> string. MinGW's long double is the x87 type, which
++# is why upstream builds this one DLL with MinGW even for the MSVC release.
++add_library(ldconvert SHARED "${_deps}/ldconvert/ldconvert.cpp" "${_deps}/ldconvert/ldconvert.def")
++target_compile_features(ldconvert PRIVATE cxx_std_17)
++
++# asmjit.dll: XEDParseAssemble on top of asmjit/asmtk, loaded at run time
++set(_aj "${_deps}/asmjit_xedparse/asmjit")
++file(GLOB_RECURSE _asmjit_sources CONFIGURE_DEPENDS
++    "${_aj}/asmjit/src/asmjit/*.cpp"
++    "${_aj}/asmtk/src/asmtk/*.cpp"
++)
++add_library(asmjit SHARED "${_aj}/XEDParseEmulator.cpp" ${_asmjit_sources})
++target_include_directories(asmjit PRIVATE "${_aj}" "${_aj}/asmjit/src" "${_aj}/asmtk/src")
++target_compile_definitions(asmjit PRIVATE ASMJIT_STATIC ASMJIT_NO_JIT XEDPARSE_BUILD)
++target_compile_features(asmjit PRIVATE cxx_std_17)
++
++add_library(x64dbg_mingw_deps INTERFACE)
++target_link_libraries(x64dbg_mingw_deps INTERFACE
++    PkgConfig::JANSSON
++    lz4file
++    DeviceNameResolver
++    LLVMDemangle
++    "${XEDPARSE_LIBRARY}"
++    dbghelp
++    ntdll
++)
++
++# deps.cmake (windeployqt and the prebuilt DLLs) is MSVC only
++if(NOT TARGET deps)
++    add_custom_target(deps)
++endif()
+diff --git a/cmake/deps.cmake b/cmake/deps.cmake
+index a0931b69..6a580e36 100644
+--- a/cmake/deps.cmake
++++ b/cmake/deps.cmake
+@@ -88,6 +88,11 @@ if(NOT WIN32)
+     return()
+ endif()
+ 
++# MinGW builds use no prebuilt DLLs; cmake/MinGW.cmake defines an empty deps
++if(MINGW)
++    return()
++endif()
++
+ if(NOT TARGET Qt5::windeployqt)
+     if(Qt5_FOUND AND TARGET Qt5::qmake)
+         get_target_property(_qt5_qmake_location Qt5::qmake IMPORTED_LOCATION)
+diff --git a/src/tests/CMakeLists.txt b/src/tests/CMakeLists.txt
+index 1b48fa3b..9f2c6060 100644
+--- a/src/tests/CMakeLists.txt
++++ b/src/tests/CMakeLists.txt
+@@ -83,6 +83,13 @@ function(x64dbg_add_test)
+ 
+     add_executable(${test_target} "${test_target_source_path}")
+     x64dbg_apply_test_defaults(${test_target})
++    if(MINGW)
++        # MinGW picks the entry point by name: wide ones need -municode
++        file(READ "${test_target_source_path}" test_target_text)
++        if(test_target_text MATCHES "wWinMain|wmain")
++            target_link_options(${test_target} PRIVATE -municode)
++        endif()
++    endif()
+     if(TEST_TARGET_COMPILE_DEFINITIONS)
+         target_compile_definitions(${test_target} PRIVATE ${TEST_TARGET_COMPILE_DEFINITIONS})
+     endif()
+@@ -186,6 +193,9 @@ foreach(test_name IN LISTS X64DBG_STANDARD_TESTS)
+     x64dbg_add_test(NAME "${test_name}")
+ endforeach()
+ 
+-x64dbg_add_membp_test()
++# membp's debuggee is linked with link.exe options (/entry, /merge, /section)
++if(MSVC)
++    x64dbg_add_membp_test()
++endif()
+ 
+ # random_dll intentionally remains excluded while its scaffold stays disabled.
+diff --git a/src/third_party/CMakeLists.txt b/src/third_party/CMakeLists.txt
+index 271e71c4..ec5a4edf 100644
+--- a/src/third_party/CMakeLists.txt
++++ b/src/third_party/CMakeLists.txt
+@@ -5,3 +5,9 @@ add_subdirectory(TitanEngine)
+ 
+ set(GLEEBUG_RESOURCES OFF CACHE BOOL "" FORCE)
+ add_subdirectory(GleeBug)
++
++if(MINGW)
++    foreach(target TitanEngine GleeBugTitanEngine GleeBugStaticEngine)
++        target_compile_options(${target} PRIVATE "SHELL:-include ${CMAKE_CURRENT_SOURCE_DIR}/mingw_compat.h")
++    endforeach()
++endif()
+diff --git a/src/third_party/mingw_compat.h b/src/third_party/mingw_compat.h
+new file mode 100644
+index 00000000..1b5bfb1c
+--- /dev/null
++++ b/src/third_party/mingw_compat.h
+@@ -0,0 +1,18 @@
++// Forced include for TitanEngine and GleeBug when built with MinGW.
++#pragma once
++// MSVC's windows.h pulls in the SAL annotations (__in, __out_opt, ...)
++#include <sal.h>
++#ifdef __cplusplus
++// They use the min/max macros of MSVC's windows.h; libc++ #undefs those
++// macros, so provide functions accepting mixed argument types like the
++// macros did.
++#include <type_traits>
++#ifndef max
++template<class A, class B>
++static inline typename std::common_type<A, B>::type max(A a, B b) { return a > b ? a : b; }
++#endif
++#ifndef min
++template<class A, class B>
++static inline typename std::common_type<A, B>::type min(A a, B b) { return a < b ? a : b; }
++#endif
++#endif

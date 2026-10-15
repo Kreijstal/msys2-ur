@@ -1,0 +1,33 @@
+diff --git a/src/dbg/TitanEngine/TitanEngine.h b/src/dbg/TitanEngine/TitanEngine.h
+index 928a06f4..48501e28 100644
+--- a/src/dbg/TitanEngine/TitanEngine.h
++++ b/src/dbg/TitanEngine/TitanEngine.h
+@@ -281,6 +281,11 @@ typedef struct
+     BYTE RegisterArea[80];
+     x87FPU_t x87fpu;
+     DWORD MxCsr;
++#if defined(__GNUC__) && !defined(_MSC_VER)
++    // MSVC aligns the __declspec(align(16)) XMM registers despite
++    // pack(1); GCC and Clang do not, so pad to the same layout
++    BYTE AlignXmmRegisters[6];
++#endif
+ #ifdef _WIN64
+     XmmRegister_t XmmRegisters[16];
+     YmmRegister_t YmmRegisters[16];
+diff --git a/src/dbg/_global.h b/src/dbg/_global.h
+index c169c4a5..d0356975 100644
+--- a/src/dbg/_global.h
++++ b/src/dbg/_global.h
+@@ -15,6 +15,12 @@
+ 
+ #include "ntdll/ntdll.h"
+ 
++// MSVC's standard headers include these transitively; libc++ and
++// libstdc++ do not
++#include <atomic>
++#include <cmath>
++#include <iterator>
++
+ #include "../dbg_types.h"
+ #include "../dbg_assert.h"
+ #include "../bridge/bridgemain.h"

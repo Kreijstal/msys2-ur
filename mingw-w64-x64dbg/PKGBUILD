@@ -1,0 +1,281 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=x64dbg
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2026.05.27
+pkgrel=2
+pkgdesc='Open-source user mode debugger for Windows, built from source with MinGW-w64 (mingw-w64)'
+arch=('any')
+# x64 only: x32dbg needs a 32-bit environment
+mingw_arch=('clang64')
+url='https://x64dbg.com'
+msys2_repository_url='https://github.com/x64dbg/x64dbg'
+msys2_references=('x64dbg')
+license=('spdx:GPL-3.0-only AND LGPL-3.0-only AND MIT AND MPL-2.0 AND Zlib AND Apache-2.0 WITH LLVM-exception AND BSD-2-Clause AND GPL-2.0-or-later')
+# x64dbg upstream ships prebuilt DLLs and import libraries for all of these
+# (deps/, src/dbg/*/*.lib) and downloads Qt 5.12 for MSVC. Here:
+#  - system packages: Qt 5 (widgets, winextras; lrelease for the
+#    translations), jansson, lz4, XEDParse (msys2-ur, ported to the
+#    open-source Intel XED), msdia140.dll (openmsdia, msys2-ur), the
+#    toolchain's ntdll and dbghelp import libraries for the DLLs of Windows
+#  - built here from pinned sources: TitanEngine, GleeBug, btparser (git
+#    submodules), DeviceNameResolver, LLVMDemangle, ldconvert, x64dbg's lz4
+#    file helpers and asmjit.dll (asmjit_xedparse with its asmjit and asmtk)
+#  - not used: the MSVC runtime DLLs, Microsoft's dbghelp.dll (Windows'
+#    own is used) and msdia140.dll, cmkr.exe, AStyle, Scylla.dll (needs ATL;
+#    not packaged, the StartScylla command reports it missing)
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-jansson"
+         "${MINGW_PACKAGE_PREFIX}-lz4"
+         "${MINGW_PACKAGE_PREFIX}-openmsdia"
+         "${MINGW_PACKAGE_PREFIX}-qt5-base"
+         "${MINGW_PACKAGE_PREFIX}-qt5-winextras"
+         "${MINGW_PACKAGE_PREFIX}-xedparse")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-qt5-tools"
+             "unzip")
+_btparser=6daea14014e4c07b70a7d4ee14eca997a05576b3
+_titanengine=ec7a8b9352c47eb0f8cc63f033d36f705d658743
+_gleebug=1ee94ba319d7c03f518dfbdc77ec22e8ca1087a5
+_devicenameresolver=0850d88fa6a759d79b3c859933870d9aa602aa79
+_llvmdemangle=e49f98db6e2990b7fb3a06531d4c86f4ffc81ae8
+_ldconvert=5da30241f63e0bf42e0ee14a54231a754a559fbe
+_lz4=1b305bd1ac594e5dd26903f2d0517fb5bcf1457a
+_asmjit_xedparse=27d88a739680e2255b6484b6dfaba5c48d812089
+_asmjit=3577608cab0bc509f856ebf6e41b2f9d9f71acc4
+_asmtk=b3a52029831cbdabc4ecd0ed9da8bb8f0c7a4b87
+# Translations: the .ts sources x64dbg's CI turns into .qm files (the
+# release asset is updated in place, hence the dated local name)
+_tsdate=20260927
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/x64dbg/x64dbg/archive/refs/tags/${pkgver}.tar.gz"
+        "btparser-${_btparser}.tar.gz::https://github.com/x64dbg/btparser/archive/${_btparser}.tar.gz"
+        "TitanEngine-${_titanengine}.tar.gz::https://github.com/x64dbg/TitanEngine/archive/${_titanengine}.tar.gz"
+        "GleeBug-${_gleebug}.tar.gz::https://github.com/x64dbg/GleeBug/archive/${_gleebug}.tar.gz"
+        "DeviceNameResolver-${_devicenameresolver}.tar.gz::https://github.com/x64dbg/DeviceNameResolver/archive/${_devicenameresolver}.tar.gz"
+        "LLVMDemangle-${_llvmdemangle}.tar.gz::https://github.com/x64dbg/LLVMDemangle/archive/${_llvmdemangle}.tar.gz"
+        "ldconvert-${_ldconvert}.tar.gz::https://github.com/x64dbg/ldconvert/archive/${_ldconvert}.tar.gz"
+        "lz4-${_lz4}.tar.gz::https://github.com/x64dbg/lz4/archive/${_lz4}.tar.gz"
+        "asmjit_xedparse-${_asmjit_xedparse}.tar.gz::https://github.com/x64dbg/asmjit_xedparse/archive/${_asmjit_xedparse}.tar.gz"
+        "asmjit-${_asmjit}.tar.gz::https://github.com/asmjit/asmjit/archive/${_asmjit}.tar.gz"
+        "asmtk-${_asmtk}.tar.gz::https://github.com/asmjit/asmtk/archive/${_asmtk}.tar.gz"
+        "x64dbg-translations-ts-${_tsdate}.zip::https://github.com/x64dbg/translations/releases/download/translations/ts.zip"
+        "0001-Build-with-MinGW-w64-and-source-built-dependencies.patch"
+        "0002-Fix-the-debugger-core-for-GCC-and-Clang.patch"
+        "0003-Find-dependencies-outside-the-application-directory.patch"
+        "0101-TitanEngine-build-with-MinGW-w64.patch"
+        "0201-GleeBug-build-with-MinGW-w64.patch"
+        "0301-DeviceNameResolver-include-string.patch"
+        "0302-LLVMDemangle-build-with-libc++-23.patch"
+        "0303-asmjit_xedparse-cast-the-callback-to-void-pointer.patch"
+        "x64dbg-launcher.c")
+noextract=("${_realname}-${pkgver}.tar.gz"
+           "x64dbg-translations-ts-${_tsdate}.zip")
+sha256sums=('cd2ac05b0d75436460c4b7ba1bafbb0e72bc95ffba622466ccd1ab006a058f83'
+            '3f4a8f32b66189ae8edff1d21cbd1586af386ea958fd9d4e0d2dc258e1366fcd'
+            'dcfee9bb0ae064576ea6f870adce97be77ad01929ec35f8db1e3f887f27da4e9'
+            '908ed8349cccb38b8415503bbb75846ff3dd789be06c5cb25b560c63c0483ca6'
+            'ce39baec6e35ef57bfcb45ab1fe78f18cf656a25425181b25bf1a579b0865945'
+            '9de1bec60f792fdb693ccbc8640e24844a94239c31ca23cd75ff3130e3b7504b'
+            '787d80049ce33a1e8df8054073b490f000ea2da3ad5a6efc8ec8f70b944609bf'
+            'f3c84c32ca502ef80dfd5fb16766e48abf7c2c26d965e283e8f1249ad4715089'
+            '6cdeccb094a665c660ae6e875d09242a5892006cd828bc3386f01895f5687c55'
+            'b617a31ba91d4ef8863ee7929e36bdae71dbffb248b2ededd5ea66b9a890224b'
+            '15443fb87691dcb2a31d054eecbe813e09e2da0e1c655c55d09cb7318e72d708'
+            'e3bc778337ddc428b03c2660ac3aae0ea56948e27689c0cbe97d4313b414563c'
+            'b7aca9bde175216c8a262711e8f68f7c27b8cb84ca9b1278dbaf524c7039de6f'
+            '2c26e2fe62103c5dac4754a8de4ca65e6b08ca4e1285cd4cb2dcdf84bd757391'
+            'bcae24d827977bd5826cca7ffa6ce348637dc69025f2f3a28fbc6c95ece47235'
+            'dda6fdd1d7c9df9d7d769fe9d4c2ac466bff120a2bc3b99f4fd8b24ae18bf0c1'
+            '94fa67bd2335b9eab75d51a958316c3122592ebd6b787898bd9b079c9d19eb90'
+            '480facdd5cdb538227f37bef732f32d14c87c69f18c2744e2b03f8eb712f4d73'
+            'a080158b1d892dfa5a9647b139deaa89c13fc247aeabd25ee4e32faee388ea1d'
+            '8679c4cf655631b088bced8d6149b702f695bd46a650232763c29bab8975b81c'
+            'c97253c06e128569181b06988fbdd711bc07233c46ea756a6b52112ee3139570')
+
+# Sources use CRLF line endings: MSYS patch needs --binary to keep them
+_patch() {
+  local _p
+  for _p in "$@"; do
+    msg2 "Applying ${_p}"
+    patch --binary -Np1 -i "${srcdir}/${_p}"
+  done
+}
+
+prepare() {
+  local _src="${srcdir}/${_realname}-${pkgver}"
+
+  # Symlinks of the Wine helper scripts and the (unused) cross-platform GUI
+  # cannot be created on Windows
+  rm -rf "${_src}"
+  bsdtar -xf "${srcdir}/${_realname}-${pkgver}.tar.gz" -C "${srcdir}" \
+    --exclude "${_realname}-${pkgver}/cmake/wine" \
+    --exclude "${_realname}-${pkgver}/src/cross"
+
+  # Submodules (the GitHub tarball has empty directories)
+  rmdir "${_src}/src/dbg/btparser" "${_src}/src/third_party/TitanEngine" \
+        "${_src}/src/third_party/GleeBug" "${_src}/deps" 2>/dev/null || true
+  rm -rf "${_src}/src/dbg/btparser" "${_src}/src/third_party/TitanEngine" "${_src}/src/third_party/GleeBug"
+  cp -a "${srcdir}/btparser-${_btparser}" "${_src}/src/dbg/btparser"
+  cp -a "${srcdir}/TitanEngine-${_titanengine}" "${_src}/src/third_party/TitanEngine"
+  cp -a "${srcdir}/GleeBug-${_gleebug}" "${_src}/src/third_party/GleeBug"
+
+  # Sources of the small dependencies upstream ships as binaries
+  rm -rf "${srcdir}/deps-src"
+  mkdir -p "${srcdir}/deps-src"
+  cp -a "${srcdir}/DeviceNameResolver-${_devicenameresolver}" "${srcdir}/deps-src/DeviceNameResolver"
+  cp -a "${srcdir}/LLVMDemangle-${_llvmdemangle}" "${srcdir}/deps-src/LLVMDemangle"
+  cp -a "${srcdir}/ldconvert-${_ldconvert}" "${srcdir}/deps-src/ldconvert"
+  cp -a "${srcdir}/lz4-${_lz4}" "${srcdir}/deps-src/lz4"
+  cp -a "${srcdir}/asmjit_xedparse-${_asmjit_xedparse}" "${srcdir}/deps-src/asmjit_xedparse"
+  rmdir "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmjit" "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmtk"
+  cp -a "${srcdir}/asmjit-${_asmjit}" "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmjit"
+  cp -a "${srcdir}/asmtk-${_asmtk}" "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmtk"
+  # lz4file.cpp builds on the system lz4, not on the fork's 2015 copy
+  rm -f "${srcdir}/deps-src/lz4/"lz4{,hc}.{c,h}
+
+  # No prebuilt binaries: import libraries (MSVC, x64dbg's dependencies,
+  # ntdll), loaders, formatters and the cmkr executable. cmkr.cmake would run
+  # cmkr.exe and git; the checked-in generated CMakeLists.txt is used as is.
+  find "${_src}" "${srcdir}/deps-src" -type f \
+    \( -iname '*.lib' -o -iname '*.dll' -o -iname '*.exe' -o -iname '*.pdb' \) -print -delete
+  rm -f "${_src}/cmake/cmkr.cmake"
+
+  cd "${_src}"
+  _patch 0001-Build-with-MinGW-w64-and-source-built-dependencies.patch \
+         0002-Fix-the-debugger-core-for-GCC-and-Clang.patch \
+         0003-Find-dependencies-outside-the-application-directory.patch
+  cd "${_src}/src/third_party/TitanEngine"
+  _patch 0101-TitanEngine-build-with-MinGW-w64.patch
+  cd "${_src}/src/third_party/GleeBug"
+  _patch 0201-GleeBug-build-with-MinGW-w64.patch
+  cd "${srcdir}/deps-src/DeviceNameResolver"
+  _patch 0301-DeviceNameResolver-include-string.patch
+  cd "${srcdir}/deps-src/LLVMDemangle"
+  _patch 0302-LLVMDemangle-build-with-libc++-23.patch
+  cd "${srcdir}/deps-src/asmjit_xedparse"
+  _patch 0303-asmjit_xedparse-cast-the-callback-to-void-pointer.patch
+
+  # The bundled jansson 2.9 and lz4 headers forward to the system ones
+  # (they are also the plugin SDK's)
+  cd "${_src}/src/dbg"
+  local _h
+  for _h in jansson/jansson.h jansson/jansson_config.h lz4/lz4.h lz4/lz4hc.h; do
+    printf '// MinGW package: the system header\n#include_next <%s>\n' "${_h#*/}" > "${_h}"
+  done
+
+  rm -rf "${srcdir}/translations"
+  bsdtar -xf "${srcdir}/x64dbg-translations-ts-${_tsdate}.zip" -C "${srcdir}"
+}
+
+build() {
+  local _src="${srcdir}/${_realname}-${pkgver}"
+  local _b="${srcdir}/build-${MSYSTEM}"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${_src}" \
+      -B "${_b}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DX64DBG_BUILD_IN_TREE=OFF \
+      -DX64DBG_DEPS_SOURCE_DIR="$(cygpath -m "${srcdir}/deps-src")" \
+      -DX64DBG_EXTRA_DLL_DIRECTORY=../../../bin
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${_b}"
+
+  # Translations
+  mkdir -p "${_b}/translations"
+  local _ts
+  for _ts in "${srcdir}"/translations/x64dbg_*.ts; do
+    "${MINGW_PREFIX}/bin/lrelease.exe" -silent "${_ts}" \
+      -qm "${_b}/translations/$(basename "${_ts%.ts}").qm"
+  done
+
+  # Launchers for ${MINGW_PREFIX}/bin
+  ${CC:-cc} -O2 -municode -mwindows -DTARGET='L"x64dbg.exe"' \
+    "${srcdir}/x64dbg-launcher.c" -o "${_b}/x64dbg-launcher.exe"
+  ${CC:-cc} -O2 -municode -DLAUNCHER_CONSOLE -DTARGET='L"headless.exe"' \
+    "${srcdir}/x64dbg-launcher.c" -o "${_b}/x64dbg-headless-launcher.exe"
+}
+
+check() {
+  # Upstream's headless regression tests (debuggee programs and test plugins
+  # built against the plugin SDK) with both debug engines CI tests
+  local _src="${srcdir}/${_realname}-${pkgver}"
+  cp -a "${srcdir}/build-${MSYSTEM}/bin/." "${_src}/bin/x64/"
+  # run.py passes paths to headless.exe, which wants Windows separators
+  sed -e 's|        str(userdir),|        str(userdir).replace("/", "\\\\"),|' \
+      -e 's|        return os.path.relpath(path, cwd)$|        return os.path.relpath(path, cwd).replace("/", "\\\\")|' \
+      "${_src}/src/tests/run.py" > "${_src}/src/tests/run_mingw.py"
+  local _tests=(cmdline_init cmdline_setcommandline guard_page issue3803 issue3808 issue3865
+                script_run_exit scriptcmd_call scriptcmd_call_threads)
+  local _engine
+  for _engine in TitanEngine GleeBug; do
+    "${MINGW_PREFIX}/bin/python.exe" "${_src}/src/tests/run_mingw.py" --arch x64 \
+      --engine ${_engine} --timeout 120 "${_tests[@]}"
+  done
+}
+
+package() {
+  local _src="${srcdir}/${_realname}-${pkgver}"
+  local _b="${srcdir}/build-${MSYSTEM}"
+  local _dest="${pkgdir}${MINGW_PREFIX}/lib/x64dbg"
+
+  # Upstream's release layout: data files beside the x64 directory
+  install -d "${_dest}/x64/plugins" "${_dest}/translations"
+  cp -a "${_b}/bin/." "${_dest}/x64/"
+  install -m644 "${_b}"/translations/*.qm "${_dest}/translations/"
+  install -m644 "${_src}"/bin/{errordb.txt,exceptiondb.txt,ntstatusdb.txt,winconstants.txt,mnemdb.json} "${_dest}/"
+  cp -a "${_src}/bin/themes" "${_dest}/themes"
+  # An empty userdir file moves x64dbg.ini, the databases and the symbol
+  # cache from the (read-only) program directory to %APPDATA%\x64dbg
+  : > "${_dest}/x64/userdir"
+
+  install -Dm755 "${_b}/x64dbg-launcher.exe" "${pkgdir}${MINGW_PREFIX}/bin/x64dbg.exe"
+  install -Dm755 "${_b}/x64dbg-headless-launcher.exe" "${pkgdir}${MINGW_PREFIX}/bin/x64dbg-headless.exe"
+
+  # Plugin SDK (upstream's pluginsdk folder): headers and import libraries
+  local _sdk="${pkgdir}${MINGW_PREFIX}/include/x64dbg/pluginsdk"
+  install -d "${_sdk}/jansson" "${_sdk}/lz4" "${_sdk}/XEDParse" "${_sdk}/dbghelp" "${_sdk}/TitanEngine"
+  install -m644 "${_src}"/src/dbg/{_plugin_types.h,_plugins.h,_dbgfunctions.h} "${_sdk}/"
+  install -m644 "${_src}"/src/dbg/_scriptapi*.h "${_sdk}/"
+  install -m644 "${_src}"/src/bridge/bridge*.h "${_sdk}/"
+  install -m644 "${_src}"/src/dbg/jansson/*.h "${_sdk}/jansson/"
+  install -m644 "${_src}"/src/dbg/lz4/*.h "${_sdk}/lz4/"
+  # The SDK's jansson and lz4 headers stand for the system ones; in the
+  # installed tree #include_next would start after ${MINGW_PREFIX}/include
+  local _h
+  for _h in jansson/jansson.h jansson/jansson_config.h lz4/lz4.h lz4/lz4hc.h; do
+    printf '// MinGW package: the system header\n#include <%s>\n' "${_h#*/}" > "${_sdk}/${_h}"
+  done
+  install -m644 "${_src}"/src/dbg/XEDParse/*.h "${_sdk}/XEDParse/"
+  install -m644 "${_src}"/src/dbg/dbghelp/*.h "${_sdk}/dbghelp/"
+  install -m644 "${_src}"/src/dbg/TitanEngine/TitanEngine.h "${_sdk}/TitanEngine/"
+  install -Dm644 -t "${pkgdir}${MINGW_PREFIX}/lib" "${_b}"/lib/libx64bridge.dll.a "${_b}"/lib/libx64dbg.dll.a
+
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+  install -Dm644 "${_src}/src/third_party/TitanEngine/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.TitanEngine"
+  install -Dm644 "${_src}/src/third_party/GleeBug/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.GleeBug"
+  install -Dm644 "${_src}/src/dbg/btparser/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.btparser"
+  install -Dm644 "${srcdir}/deps-src/LLVMDemangle/LICENSE.TXT" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.LLVMDemangle"
+  install -Dm644 "${srcdir}/deps-src/ldconvert/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.ldconvert"
+  install -Dm644 "${srcdir}/deps-src/lz4/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.lz4"
+  install -Dm644 "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmjit/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.asmjit"
+  install -Dm644 "${srcdir}/deps-src/asmjit_xedparse/asmjit/asmtk/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.asmtk"
+  # DeviceNameResolver has no license file; its readme names the licenses
+  # of the projects its code comes from (Scylla: GPL-3.0, TitanEngine: LGPL-3.0)
+  install -Dm644 "${srcdir}/deps-src/DeviceNameResolver/readme.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.DeviceNameResolver"
+  # asmjit_xedparse has no license file either; it is a component of x64dbg
+  # by the same author and is distributed here under x64dbg's license
+  printf '%s\n' \
+    'asmjit_xedparse (https://github.com/x64dbg/asmjit_xedparse) ships no' \
+    'license file. It is part of the x64dbg project, by the same author, and' \
+    'is distributed with x64dbg under the same license: GPL-3.0-only (see' \
+    'LICENSE). Its XEDParse.h comes from XEDParse (LGPL-3.0); asmjit and asmtk' \
+    'are Zlib (LICENSE.asmjit, LICENSE.asmtk).' \
+    > "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.asmjit_xedparse"
+}

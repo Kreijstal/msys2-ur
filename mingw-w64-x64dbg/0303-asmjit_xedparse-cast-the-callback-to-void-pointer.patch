@@ -1,0 +1,13 @@
+diff --git a/asmjit/XEDParseEmulator.cpp b/asmjit/XEDParseEmulator.cpp
+index 03dd830..c35b970 100644
+--- a/asmjit/XEDParseEmulator.cpp
++++ b/asmjit/XEDParseEmulator.cpp
+@@ -54,7 +54,7 @@ XEDPARSE_EXPORT XEDPARSE_STATUS XEDPARSE_CALL XEDParseAssemble(XEDPARSE* XEDPars
+     // Create AsmParser that will emit to X86Assembler.
+     AsmParser p(&a);
+     if (XEDParse->cbUnknown)
+-        p.setUnknownSymbolHandler(unknownSymbolHandler, XEDParse->cbUnknown);
++        p.setUnknownSymbolHandler(unknownSymbolHandler, (void*)XEDParse->cbUnknown);
+ 
+     // Parse some assembly.
+     err = p.parse(XEDParse->instr);

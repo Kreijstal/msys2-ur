@@ -1,0 +1,102 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=xedparse
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.0.26
+pkgrel=1
+# XEDParse was written against Intel's binary-only XED2 kit (its tarball still
+# carries xed2/lib/libxed_*.lib). It is ported here to the open-source XED and
+# links it statically like the upstream DLL: XEDParse walks XED's instruction
+# tables (xed_inst_table_base, xed_iform_map), which MSYS2's intel-xed DLL does
+# not export (that libxed.dll exports no symbols at all). XED is pinned to the
+# release MSYS2 packages, built with MSYS2's mbuild patches.
+_xedver=2026.06.29
+_mbuildver=2026.05.19
+pkgdesc='MASM-like single-line x86/x64 assembler on Intel XED, used by x64dbg (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/x64dbg/XEDParse'
+msys2_repository_url='https://github.com/x64dbg/XEDParse'
+license=('spdx:LGPL-3.0-or-later' 'spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python")
+source=("XEDParse-${pkgver}.tar.gz::https://github.com/x64dbg/XEDParse/archive/refs/tags/${pkgver}.tar.gz"
+        "xed-${_xedver}.tar.gz::https://github.com/intelxed/xed/archive/refs/tags/v${_xedver}.tar.gz"
+        "mbuild-${_mbuildver}.tar.gz::https://github.com/intelxed/mbuild/archive/refs/tags/v${_mbuildver}.tar.gz"
+        "0001-Port-to-open-source-Intel-XED.patch"
+        "xed-001-mbuild-shared.patch"
+        "xed-002-xed-build.patch"
+        "xed-003-mbuild-remove-m64.patch"
+        "CMakeLists.txt")
+sha256sums=('fb8b7f569ea9b3b4063df80914151114ea8423b60ef5ed8d40d186a004dee2e0'
+            '149c496819c990d7330d2d03c221a9614689b62182e9fc22d9bb03191aca66f7'
+            'ba1390340dee7324c23a89604d08b1d5be5ec8babfc61695d3e96517a12ad0ce'
+            '08a2fec629d928aa47e407b9fb8de0f96d5947888ddc2f2f24f81792f76763ef'
+            '97fc30e07fcc9912515087a52ffbe2f17caa6409ae2843dca2079c131cc82680'
+            '2b0f746faa343d078815be96f1dce10f3625946d862a0213792a192a0a4957f0'
+            '994db2654d484c7da80075a01743d45c7e79c7800ae4be8bff2e481b0ce6baf7'
+            '855f55fa53af379df2243571df4325a5cf803f7ef939fe014af45a93dc12926c')
+
+prepare() {
+  cd "${srcdir}/XEDParse-${pkgver}"
+  # Prebuilt binaries in the tarball: Intel's XED2 kit libraries and the
+  # AStyle formatter. None of them is used.
+  rm -rf xed2 AStyle.dll AStyleWhore.exe
+  # CRLF sources: MSYS patch needs --binary to keep the line endings
+  patch --binary -Np1 -i "${srcdir}/0001-Port-to-open-source-Intel-XED.patch"
+  cp "${srcdir}/CMakeLists.txt" .
+
+  # Intel XED: MSYS2's mbuild patches (mingw-w64-intel-xed)
+  rm -rf "${srcdir}/mbuild"
+  mv "${srcdir}/mbuild-${_mbuildver}" "${srcdir}/mbuild"
+  cd "${srcdir}/mbuild"
+  patch -Np1 -i "${srcdir}/xed-001-mbuild-shared.patch"
+  patch -Np1 -i "${srcdir}/xed-003-mbuild-remove-m64.patch"
+  cd "${srcdir}/xed-${_xedver}"
+  patch -Np1 -i "${srcdir}/xed-002-xed-build.patch"
+}
+
+build() {
+  local _xedcc=gnu
+  [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]] && _xedcc=clang
+
+  # Static XED kit (headers + libxed.a) in obj/wkit
+  cd "${srcdir}/xed-${_xedver}"
+  # XED's asserts carry __FILE__: keep the build directory out of the DLL
+  local _map="-ffile-prefix-map=${srcdir}=. -ffile-prefix-map=$(cygpath -m "${srcdir}")=."
+  python ./mfile.py --opt=2 --compiler=${_xedcc} --static-stripped --jobs=$(nproc) \
+    --extra-flags="${_map}"
+  CXXFLAGS+=" ${_map}"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${srcdir}/XEDParse-${pkgver}" \
+      -B "${srcdir}/build-${MSYSTEM}" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DXED_KIT="$(cygpath -m "${srcdir}/xed-${_xedver}/obj/wkit")"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}"
+}
+
+check() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  # 149 encodings from upstream's test table; then it assembles one line
+  # from stdin and waits for a key
+  printf 'xchg rax, rbx\n\n' | ./XEDParseTest.exe > test.log 2>&1 || true
+  cat test.log
+  grep -q '^149/149 tests were successful!' test.log
+  grep -q '^48 87 D8' test.log || grep -q '^48 93' test.log
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}"
+  install -Dm644 "${srcdir}/XEDParse-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+  install -Dm644 "${srcdir}/xed-${_xedver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.xed"
+}
