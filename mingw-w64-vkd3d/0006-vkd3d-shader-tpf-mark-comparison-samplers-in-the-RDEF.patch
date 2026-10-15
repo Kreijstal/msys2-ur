@@ -1,0 +1,19 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] vkd3d-shader/hlsl: Mark comparison samplers in the RDEF.
+
+fxc sets D3D_SIF_COMPARISON_SAMPLER in the bound-resource flags of a
+SamplerComparisonState, which D3DReflect() reports in
+D3D11_SHADER_INPUT_BIND_DESC.uFlags.
+---
+--- a/libs/vkd3d-shader/hlsl_codegen.c
++++ b/libs/vkd3d-shader/hlsl_codegen.c
+@@ -15294,6 +15294,9 @@
+ 
+         if (resource->is_user_packed)
+             flags |= D3D_SIF_USERPACKED;
++        if (resource->regset == HLSL_REGSET_SAMPLERS
++                && resource->component_type->sampler_dim == HLSL_SAMPLER_DIM_COMPARISON)
++            flags |= D3D_SIF_COMPARISON_SAMPLER;
+ 
+         put_u32(buffer, 0); /* name */
+         if (resource->buffer)

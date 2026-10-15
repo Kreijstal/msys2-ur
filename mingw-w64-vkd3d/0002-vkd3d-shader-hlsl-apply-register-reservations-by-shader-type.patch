@@ -1,0 +1,188 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] vkd3d-shader/hlsl: Apply register reservations by shader type.
+
+register(vs, c0) / register(ps, s1) apply only when compiling a shader of
+that type and are ignored otherwise. D3DX9-era effects (e.g. MonoGame's
+stock effects, via its _vs()/_ps() macros) give one uniform different
+registers in the vertex and pixel shader this way:
+
+    float4 DiffuseColor : register(vs, c0) : register(ps, c1);
+
+Implement this for bare shader-type targets before shader model 5.1.
+Profile-name targets (ps_4_0) and the 5.1 behaviour, where fxc takes the
+first reservation whatever its target, are left as fixmes. Update the
+todo markers of the tests this fixes.
+---
+--- a/libs/vkd3d-shader/hlsl.y
++++ b/libs/vkd3d-shader/hlsl.y
+@@ -1455,6 +1455,48 @@
+     return !ascii_strncasecmp(string, "space", 5) && sscanf(string + 5, "%u", space);
+ }
+ 
++/* register(<target>, <register>) with a shader type as <target> ("vs",
++ * "ps", ...): before shader model 5.1 the reservation only applies when
++ * compiling that type of shader and is ignored otherwise. Effects use this to
++ * give one uniform different registers in their vertex and pixel shaders.
++ * Profile names as targets ("ps_4_0") and shader model 5.1+, where fxc takes
++ * the first reservation whatever its target, are not implemented.
++ * Returns false if the target is not handled; otherwise sets "matches". */
++static bool parse_reservation_target(struct hlsl_ctx *ctx, const char *target,
++        const struct vkd3d_shader_location *loc, bool *matches)
++{
++    static const struct
++    {
++        const char *name;
++        enum vkd3d_shader_type type;
++    }
++    targets[] =
++    {
++        {"vs", VKD3D_SHADER_TYPE_VERTEX},
++        {"ps", VKD3D_SHADER_TYPE_PIXEL},
++        {"gs", VKD3D_SHADER_TYPE_GEOMETRY},
++        {"hs", VKD3D_SHADER_TYPE_HULL},
++        {"ds", VKD3D_SHADER_TYPE_DOMAIN},
++        {"cs", VKD3D_SHADER_TYPE_COMPUTE},
++    };
++    unsigned int i;
++
++    if (ctx->profile->type != VKD3D_SHADER_TYPE_EFFECT && hlsl_version_lt(ctx, 5, 1))
++    {
++        for (i = 0; i < ARRAY_SIZE(targets); ++i)
++        {
++            if (!strcmp(target, targets[i].name))
++            {
++                *matches = ctx->profile->type == targets[i].type;
++                return true;
++            }
++        }
++    }
++
++    hlsl_fixme(ctx, loc, "Reservation shader target %s.", target);
++    return false;
++}
++
+ static struct hlsl_reg_reservation parse_packoffset(struct hlsl_ctx *ctx, const char *reg_string,
+         const char *swizzle, const struct vkd3d_shader_location *loc)
+ {
+@@ -7984,12 +8026,16 @@
+         }
+     | colon_attributes register_reservation
+         {
+-            if ($$.reg_reservation.reg_type)
+-                hlsl_fixme(ctx, &@2, "Multiple register() reservations.");
++            /* Reservations for another shader type have no register type. */
++            if ($2.reg_type)
++            {
++                if ($$.reg_reservation.reg_type)
++                    hlsl_fixme(ctx, &@2, "Multiple register() reservations.");
+ 
+-            $$.reg_reservation.reg_type = $2.reg_type;
+-            $$.reg_reservation.reg_index = $2.reg_index;
+-            $$.reg_reservation.reg_space = $2.reg_space;
++                $$.reg_reservation.reg_type = $2.reg_type;
++                $$.reg_reservation.reg_index = $2.reg_index;
++                $$.reg_reservation.reg_space = $2.reg_space;
++            }
+         }
+     | colon_attributes packoffset_reservation
+         {
+@@ -8061,10 +8107,13 @@
+         }
+     | ':' KW_REGISTER '(' any_identifier ',' any_identifier ')'
+         {
++            bool matches;
++
+             memset(&$$, 0, sizeof($$));
+             if (parse_reservation_index(ctx, $6, 0, &$$))
+             {
+-                hlsl_fixme(ctx, &@4, "Reservation shader target %s.", $4);
++                if (parse_reservation_target(ctx, $4, &@4, &matches) && !matches)
++                    memset(&$$, 0, sizeof($$));
+             }
+             else if (parse_reservation_space($6, &$$.reg_space))
+             {
+@@ -8101,7 +8150,7 @@
+         }
+     | ':' KW_REGISTER '(' any_identifier ',' any_identifier '[' expr ']' ')'
+         {
+-            hlsl_fixme(ctx, &@4, "Reservation shader target %s.", $4);
++            bool matches;
+ 
+             memset(&$$, 0, sizeof($$));
+             if (!parse_reservation_index(ctx, $6, evaluate_static_expression_as_uint(ctx, $8, &@8), &$$))
+@@ -8109,6 +8158,8 @@
+                 hlsl_error(ctx, &@6, VKD3D_SHADER_ERROR_HLSL_INVALID_RESERVATION,
+                         "Invalid register reservation '%s'.", $6);
+             }
++            if (parse_reservation_target(ctx, $4, &@4, &matches) && !matches)
++                memset(&$$, 0, sizeof($$));
+ 
+             vkd3d_free($4);
+             vkd3d_free($6);
+--- a/tests/hlsl/register-reservations-profile.shader_test
++++ b/tests/hlsl/register-reservations-profile.shader_test
+@@ -15,7 +15,7 @@
+ size (2d, 1, 1)
+ 2.0 2.0 2.0 99.0
+ 
+-[pixel shader todo]
++[pixel shader todo(sm>=5.1)]
+ Texture2D tex1 : register(vs, t1);
+ 
+ float4 main() : sv_target
+@@ -24,12 +24,12 @@
+ }
+ 
+ [test]
+-todo(sm<6) draw quad
++todo(sm>=5.1 & sm<6) draw quad
+ % sm6 seems to ignore profile qualifiers entirely.
+ if(sm>=6) probe (0,0) f32(1, 1, 1, 99)
+ if(sm<6)  probe (0,0) f32(0, 0, 0, 99)
+ 
+-[pixel shader todo]
++[pixel shader todo(sm>=5.1)]
+ Texture2D tex1 : register(cs, t1);
+ 
+ float4 main() : sv_target
+@@ -38,11 +38,11 @@
+ }
+ 
+ [test]
+-todo(sm<6) draw quad
++todo(sm>=5.1 & sm<6) draw quad
+ if(sm>=6) probe (0,0) f32(1, 1, 1, 99)
+ if(sm<6)  probe (0,0) f32(0, 0, 0, 99)
+ 
+-[pixel shader todo]
++[pixel shader todo(sm>=5.1)]
+ Texture2D tex1 : register(ps, t1);
+ 
+ float4 main() : sv_target
+@@ -51,7 +51,7 @@
+ }
+ 
+ [test]
+-todo(sm<6) draw quad
++todo(sm>=5.1 & sm<6) draw quad
+ probe (0, 0) f32(1, 1, 1, 99)
+ 
+ [pixel shader fail todo]
+@@ -253,7 +253,7 @@
+ 
+ % Bracket exprs should still parse correctly.
+ 
+-[pixel shader todo]
++[pixel shader todo(sm>=5.1)]
+ Texture2D tex1 : register(ps, t[1]);
+ 
+ float4 main() : sv_target
+@@ -262,7 +262,7 @@
+ }
+ 
+ [test]
+-todo(sm<6) draw quad
++todo(sm>=5.1 & sm<6) draw quad
+ if(sm>=6) probe (0, 0) f32(0, 0, 0, 99)
+ if(sm<6) probe (0, 0) f32(1, 1, 1, 99)
+ 

@@ -1,0 +1,37 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] vkd3d-shader/hlsl: Write the target profile in the CTAB.
+
+The CTAB target field was 0, so it pointed at the start of the table.
+fxc writes the profile name (e.g. "ps_2_0"); D3DX and MojoShader read it.
+---
+--- a/libs/vkd3d-shader/hlsl_codegen.c
++++ b/libs/vkd3d-shader/hlsl_codegen.c
+@@ -12022,7 +12022,7 @@
+ 
+ static void ctab_write_uniforms(struct ctab_ctx *ctab)
+ {
+-    size_t ctab_start, vars_offset, vars_start, creator_offset, offset;
++    size_t ctab_start, vars_offset, vars_start, creator_offset, target_offset, offset;
+     struct vkd3d_bytecode_buffer *buffer = &ctab->buffer;
+     unsigned int uniform_count = 0, r;
+     struct hlsl_ctx *ctx = ctab->hlsl;
+@@ -12062,7 +12062,7 @@
+     put_u32(buffer, uniform_count);
+     vars_offset = put_u32(buffer, 0);
+     put_u32(buffer, 0); /* FIXME: flags */
+-    put_u32(buffer, 0); /* FIXME: target string */
++    target_offset = put_u32(buffer, 0);
+ 
+     vars_start = bytecode_align(buffer);
+     set_u32(buffer, vars_offset, vars_start - ctab_start);
+@@ -12188,6 +12188,10 @@
+ 
+     offset = put_string(buffer, vkd3d_shader_get_version(NULL, NULL));
+     set_u32(buffer, creator_offset, offset - ctab_start);
++
++    /* The target profile, e.g. "ps_2_0", as written by fxc. */
++    offset = put_string(buffer, ctx->profile->name);
++    set_u32(buffer, target_offset, offset - ctab_start);
+ }
+ 
+ static void ctab_ctx_cleanup(struct ctab_ctx *ctab)

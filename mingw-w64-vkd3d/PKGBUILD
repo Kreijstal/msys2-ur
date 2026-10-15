@@ -2,9 +2,10 @@
 
 _realname=vkd3d
 pkgbase=mingw-w64-${_realname}
-pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}"
+         "${MINGW_PACKAGE_PREFIX}-${_realname}-d3dcompiler")
 pkgver=2.1
-pkgrel=1
+pkgrel=2
 pkgdesc='Direct3D 12 to Vulkan translation library and vkd3d-shader (HLSL/DXBC/D3DBC compiler) (mingw-w64)'
 arch=('any')
 mingw_arch=('ucrt64' 'clang64')
@@ -12,53 +13,188 @@ url='https://gitlab.winehq.org/wine/vkd3d'
 msys2_repository_url='https://gitlab.winehq.org/wine/vkd3d'
 msys2_changelog_url='https://gitlab.winehq.org/wine/vkd3d/-/blob/master/ANNOUNCE'
 license=('spdx:LGPL-2.1-or-later')
-depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
 makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-autotools"
              "${MINGW_PACKAGE_PREFIX}-spirv-headers"
+             "${MINGW_PACKAGE_PREFIX}-spirv-tools"
              "${MINGW_PACKAGE_PREFIX}-vulkan-headers"
              "${MINGW_PACKAGE_PREFIX}-tools"
              "bison"
              "flex"
              "perl"
              "perl-json")
-source=("https://dl.winehq.org/vkd3d/source/${_realname}-${pkgver}.tar.xz")
-sha256sums=('7510146aff2adfb4ae07ab890701a607e5ff7c66e57100cfc9f630ec92eeda6a')
+source=("https://dl.winehq.org/vkd3d/source/${_realname}-${pkgver}.tar.xz"
+        "0001-tests-run-the-shader-runner-in-a-native-Windows-build.patch"
+        "0002-vkd3d-shader-hlsl-apply-register-reservations-by-shader-type.patch"
+        "0003-vkd3d-shader-hlsl-reject-SampleCmp-before-shader-model-4.patch"
+        "0004-vkd3d-shader-hlsl-write-the-target-profile-in-the-CTAB.patch"
+        "0005-vkd3d-shader-d3dbc-legalize-texld-and-texkill-operands.patch"
+        "0006-vkd3d-shader-tpf-mark-comparison-samplers-in-the-RDEF.patch"
+        "d3dcompiler_47-extra.c"
+        "d3dcompiler_47.def"
+        "README.d3dcompiler"
+        "d3dctest.c"
+        "test-ps.hlsl"
+        "test-effect.fx"
+        "test-reservations.hlsl"
+        "check-jobs.txt")
+sha256sums=('7510146aff2adfb4ae07ab890701a607e5ff7c66e57100cfc9f630ec92eeda6a'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP')
 
-build() {
-  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  local _p
+  for _p in "${srcdir}"/00*.patch; do
+    patch -Np1 -i "${_p}"
+  done
+}
 
+_configure() {
   # vulkan-1.dll is loaded at run time; no import library needed.
   # Do not pick up mingw-w64-dlfcn: libvkd3d uses LoadLibrary on Windows.
-  ../${_realname}-${pkgver}/configure \
+  # pass_all: libtool's file-magic test rejects SPIRV-Tools' import library
+  # and would otherwise build libvkd3d-shader as a static library only.
+  "${srcdir}/${_realname}-${pkgver}/configure" \
     --prefix="${MINGW_PREFIX}" \
     --build="${MINGW_CHOST}" \
     --host="${MINGW_CHOST}" \
-    --disable-tests \
     --disable-demos \
     --disable-doxygen-doc \
     --without-ncurses \
     --without-opengl \
     --without-xcb \
-    --without-spirv-tools \
     SONAME_LIBVULKAN=vulkan-1.dll \
     ac_cv_lib_dl_dlopen=no \
-    WIDL="${MINGW_PREFIX}/bin/widl"
+    lt_cv_deplibs_check_method=pass_all \
+    WIDL="${MINGW_PREFIX}/bin/widl" \
+    "$@"
+}
 
+build() {
+  # Main build: shared libraries, tools, test programs; SPIR-V text
+  # output and validation through the system SPIRV-Tools.
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+  _configure --with-spirv-tools
   make
+  make check TESTS=
+
+  # Second, static-only build without SPIRV-Tools for the self-contained
+  # d3dcompiler_47.dll (no C++ runtime, no dependency on other DLLs).
+  # No LTO, so that objcopy can edit the objects below. The *_SOURCE macros
+  # declare the vkd3d APIs without dllimport, which lld will not resolve
+  # against static definitions. The programs need the import libraries.
+  mkdir -p "${srcdir}/build-${MSYSTEM}-static" && cd "${srcdir}/build-${MSYSTEM}-static"
+  _configure --without-spirv-tools --disable-tests --disable-shared \
+    CFLAGS="${CFLAGS} -fno-lto" \
+    CPPFLAGS="${CPPFLAGS} -DLIBVKD3D_SOURCE -DLIBVKD3D_SHADER_SOURCE -DLIBVKD3D_UTILS_SOURCE"
+  make bin_PROGRAMS=
+
+  # The static objects carry dllexport directives for every vkd3d API;
+  # drop them so that only the d3dcompiler_47 names in the .def are exported.
+  local _a
+  for _a in libvkd3d-utils libvkd3d-shader libvkd3d; do
+    objcopy --remove-section=.drectve .libs/${_a}.a ${_a}-noexport.a
+  done
+  ${CC:-cc} ${CFLAGS} -Wall -c -o d3dcompiler_47-extra.o "${srcdir}/d3dcompiler_47-extra.c"
+  ${CC:-cc} -shared -o d3dcompiler_47.dll "${srcdir}/d3dcompiler_47.def" \
+    d3dcompiler_47-extra.o \
+    -Wl,--whole-archive libvkd3d-utils-noexport.a -Wl,--no-whole-archive \
+    libvkd3d-noexport.a libvkd3d-shader-noexport.a \
+    ${LDFLAGS} -static -Wl,--no-insert-timestamp
+
+  ${CC:-cc} ${CFLAGS} -o d3dctest.exe "${srcdir}/d3dctest.c"
 }
 
 check() {
+  # vkd3d's own tests. tests/shader_runner compiles every tests/hlsl and
+  # tests/d3dbc file with vkd3d and, on Windows, executes the results on the
+  # native d3d9/d3d11 runtimes (WARP when there is no GPU); the d3d12 tests
+  # need Vulkan and skip without it. Results depend on the host's drivers, so
+  # the log is kept but failures do not abort the package.
   cd "${srcdir}/build-${MSYSTEM}"
-  # smoke test: compile an SM2 pixel shader to D3D9 bytecode
-  printf 'float4 c : register(c0);\nfloat4 main() : COLOR0 { return c; }\n' > smoke.hlsl
-  ./vkd3d-compiler.exe -x hlsl -b d3dbc -p ps_2_0 -o smoke.bin smoke.hlsl
-  ./vkd3d-compiler.exe -x d3dbc -b d3d-asm smoke.bin
+  make -k check > "${srcdir}/check-${MSYSTEM}.log" 2>&1 || true
+  sed -n '/^# TOTAL/,/^# ERROR/p' "${srcdir}/check-${MSYSTEM}.log" || true
+  grep -E '^(# |FAIL|XPASS|ERROR)' tests/test-suite.log 2>/dev/null | head -n 100 || true
+
+  # vkd3d-compiler: SM2 / SM4 / fx_2_0 round trips.
+  cd "${srcdir}"
+  local _vc="${srcdir}/build-${MSYSTEM}/vkd3d-compiler.exe"
+  "${_vc}" -x hlsl -b d3dbc -p ps_2_0 -o ps20.bin test-ps.hlsl
+  "${_vc}" -x d3dbc -b d3d-asm ps20.bin
+  { echo '#define SM4 1'; cat test-ps.hlsl; } > test-ps-sm4.hlsl
+  "${_vc}" -x hlsl -b dxbc-tpf -p ps_4_0 -o ps40.bin test-ps-sm4.hlsl
+  "${_vc}" -x dxbc-tpf -b d3d-asm ps40.bin
+  "${_vc}" -x dxbc-tpf -b spirv-text ps40.bin > /dev/null
+  { echo '#define FX_PARAMS_ONLY 1'; cat test-effect.fx; } > test-effect-params.fx
+  "${_vc}" -x hlsl -b fx -p fx_2_0 -o fx20.bin test-effect-params.fx
+  "${_vc}" -x fx -b d3d-asm fx20.bin
+
+  # d3dcompiler_47.dll replacement: D3DCompile + D3DReflect +
+  # D3DStripShader as MonoGame's mgfxc calls them. Every job except the
+  # xfail-* ones must compile.
+  local _static="${srcdir}/build-${MSYSTEM}-static"
+  "${_static}/d3dctest.exe" "$(cygpath -m "${_static}/d3dcompiler_47.dll")" \
+    "$(cygpath -m "${_static}/d3dcompiler_47.dll")" check-jobs.txt | tee d3dctest-vkd3d.txt
+  awk '/^JOB /{job=$2} /result: FAIL/ && job !~ /^xfail-/ {bad=1; print "unexpected failure: " job}
+       END {exit bad}' d3dctest-vkd3d.txt
+  grep -q '^# total=11 ok=10$' d3dctest-vkd3d.txt
+  # register(vs, ...) / register(ps, ...) reservations (patch 0002) and
+  # the CTAB target string (0004).
+  awk '/^JOB /{job=$2} /const: name=A /{print job, $4}' d3dctest-vkd3d.txt > reservations.txt
+  grep -qx 'regvs reg=3' reservations.txt
+  grep -qx 'regps reg=5' reservations.txt
+  grep -q 'ctab: .* target=ps_2_0$' d3dctest-vkd3d.txt
+  # The DLL must stand alone next to an executable.
+  if objdump -p "${_static}/d3dcompiler_47.dll" | grep 'DLL Name' \
+      | grep -viE 'kernel32|api-ms-win-crt|msvcrt|ucrtbase'; then
+    echo "d3dcompiler_47.dll has unexpected DLL dependencies"; return 1
+  fi
 }
 
-package() {
+package_vkd3d() {
+  depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+           "${MINGW_PACKAGE_PREFIX}-spirv-tools")
+
   cd "${srcdir}/build-${MSYSTEM}"
   make DESTDIR="${pkgdir}" install
   install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" \
     "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
 }
+
+package_vkd3d-d3dcompiler() {
+  pkgdesc='Drop-in d3dcompiler_47.dll built from vkd3d-shader (HLSL compiler, reflection) (mingw-w64)'
+
+  cd "${srcdir}/build-${MSYSTEM}-static"
+  # Not in bin/: it must not shadow Windows' own d3dcompiler_47.dll for every
+  # program on PATH. Copy it next to the executable that should use it.
+  install -Dm755 d3dcompiler_47.dll \
+    "${pkgdir}${MINGW_PREFIX}/lib/vkd3d-d3dcompiler/d3dcompiler_47.dll"
+  install -Dm644 "${srcdir}/README.d3dcompiler" \
+    "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}-d3dcompiler/README"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-d3dcompiler/COPYING"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;
