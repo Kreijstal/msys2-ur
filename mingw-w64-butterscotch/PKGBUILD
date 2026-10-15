@@ -1,0 +1,84 @@
+# Maintainer: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=butterscotch
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.r20261015.gf3db244
+pkgrel=1
+pkgdesc="Open-source runner for GameMaker: Studio games (mingw-w64)"
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/ButterscotchRunner/Butterscotch'
+msys2_repository_url="${url}"
+license=('spdx:AGPL-3.0-only' 'spdx:MIT' 'spdx:MIT-0' 'spdx:Unlicense'
+         'spdx:Zlib' 'spdx:bzip2-1.0.6' 'spdx:RSA-MD')
+depends=("${MINGW_PACKAGE_PREFIX}-SDL2"
+         "${MINGW_PACKAGE_PREFIX}-ffmpeg")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf")
+_commit=f3db244910b4ddf20596dd918cc2bbd061745957
+_commit_date='2026-10-15T21:03:12+01:00'
+source=("${_realname}-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        'README.md')
+sha256sums=('48155ac8d8a108e753f67ac1fbbda27e76ec13246200797efe2cd0ac364418f0'
+            '9d7cf83ff24e193564b078eb069c144b0b0e6e9606a568b66f69e308f516dc79')
+
+build() {
+  # Keep assertion messages useful without embedding the build host's paths.
+  export CFLAGS="${CFLAGS} -ffile-prefix-map=$(cygpath -m "${srcdir}")=."
+  # Upstream otherwise silently disables video playback if FFmpeg is missing.
+  ${MINGW_PREFIX}/bin/pkg-config --exists \
+    libavformat libavcodec libavutil libswscale libswresample sdl2
+
+  ${MINGW_PREFIX}/bin/cmake -S "${srcdir}/Butterscotch-${_commit}" \
+    -B "${srcdir}/build-${MSYSTEM}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_C_FLAGS="${CFLAGS}" \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+    -DPLATFORM=cli \
+    -DBACKEND=sdl2 \
+    -DAUDIO_BACKEND=miniaudio \
+    -DVIDEO_BACKEND=ffmpeg \
+    -DENABLE_PHYSICS=ON \
+    -DBUTTERSCOTCH_COMMIT_HASH="${_commit}" \
+    -DBUTTERSCOTCH_COMMIT_DATE="${_commit_date}"
+  ${MINGW_PREFIX}/bin/cmake --build "${srcdir}/build-${MSYSTEM}"
+}
+
+check() {
+  "${srcdir}/build-${MSYSTEM}/butterscotch.exe" --help
+}
+
+package() {
+  cd "${srcdir}/Butterscotch-${_commit}"
+  # Upstream has no CMake install target.
+  install -Dm755 "${srcdir}/build-${MSYSTEM}/butterscotch.exe" \
+    "${pkgdir}${MINGW_PREFIX}/bin/butterscotch.exe"
+  install -Dm644 README.md "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.md"
+  install -Dm644 "${srcdir}/README.md" \
+    "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.package.md"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+  install -Dm644 vendor/box2d/LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/box2d-LICENSE"
+  install -Dm644 vendor/miniz/LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/miniz-LICENSE"
+  local path
+  for path in src/android/frontend/app/src/main/res/raw/license_*.txt; do
+    install -Dm644 "${path}" \
+      "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/${path##*/}"
+  done
+  # Keep the copyright notices from the bundled libraries as well as the
+  # upstream Android frontend's collection of license texts.
+  sed -n '/^This software is available as a choice of the following licenses/,$p' \
+    vendor/miniaudio/miniaudio.h \
+    > "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/miniaudio-LICENSE"
+  for path in vendor/stb/ds/stb_ds.h vendor/stb/image/stb_image.h \
+              vendor/stb/image/stb_image_write.h vendor/stb/vorbis/stb_vorbis.c; do
+    sed -n '/^This software is available under 2 licenses/,$p' "${path}" \
+      > "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/${path##*/}.LICENSE"
+  done
+  install -m644 vendor/glad/include/KHR/khrplatform.h \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/khrplatform.h"
+}
