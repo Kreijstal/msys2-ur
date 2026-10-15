@@ -7,13 +7,16 @@ pkgver=0.r20261015.gf3db244
 pkgrel=1
 pkgdesc="Open-source runner for GameMaker: Studio games (mingw-w64)"
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('ucrt64' 'clang64')
 url='https://github.com/ButterscotchRunner/Butterscotch'
 msys2_repository_url="${url}"
 license=('spdx:AGPL-3.0-only' 'spdx:MIT' 'spdx:MIT-0' 'spdx:Unlicense'
          'spdx:Zlib' 'spdx:bzip2-1.0.6' 'spdx:RSA-MD')
 depends=("${MINGW_PACKAGE_PREFIX}-SDL2"
          "${MINGW_PACKAGE_PREFIX}-ffmpeg")
+if [[ ${MSYSTEM} == UCRT64 ]]; then
+  depends+=("${MINGW_PACKAGE_PREFIX}-gcc-libs")
+fi
 makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja"
@@ -23,7 +26,7 @@ _commit_date='2026-10-15T21:03:12+01:00'
 source=("${_realname}-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
         'README.md')
 sha256sums=('48155ac8d8a108e753f67ac1fbbda27e76ec13246200797efe2cd0ac364418f0'
-            '9d7cf83ff24e193564b078eb069c144b0b0e6e9606a568b66f69e308f516dc79')
+            '6cfcd041f31c166b8c279a991ad51cf508ff2924a2589e94d3f67dcbf6c73ddb')
 
 build() {
   # Keep assertion messages useful without embedding the build host's paths.

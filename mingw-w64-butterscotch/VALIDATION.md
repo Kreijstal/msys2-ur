@@ -1,4 +1,6 @@
-# Windows CLANG64 validation, 2026-10-16
+# Windows validation, 2026-10-16
+
+## CLANG64
 
 Package: `mingw-w64-clang-x86_64-butterscotch-0.r20261015.gf3db244-1`.
 Upstream commit: `f3db244910b4ddf20596dd918cc2bbd061745957`.
@@ -15,7 +17,8 @@ pacman -Qkk mingw-w64-clang-x86_64-butterscotch
 Results: clean build and `check()` passed, installation passed, 27 package files
 checked with zero altered files. FFmpeg was detected and linked. The installed
 executable contains no build-directory paths. Its `.BUILDINFO` recipe hash
-matches this PKGBUILD.
+matches the PKGBUILD in the original CLANG64 build-source bundle (recipe
+repository commit `cf4d3bdadb60e5f07d5034d7dcd3df8dbc339b16`).
 
 `validate-dlls.py` recursively checked imports from the executable and all
 third-party libraries, then loaded each library through the Windows loader:
@@ -55,3 +58,33 @@ software OpenGL.
 
 The published build-source bundle includes the exact recipe, upstream source
 archive, build log, test scripts, test output and screenshot.
+
+## UCRT64
+
+Package: `mingw-w64-ucrt-x86_64-butterscotch-0.r20261015.gf3db244-1`.
+Same pinned upstream commit, built natively on Windows 11 with GCC 16.2.0,
+CMake 4.4.4, SDL2 2.32.10 and FFmpeg 9.0.2. No upstream source patches were
+needed. This variant depends on UCRT64 SDL2, FFmpeg and `gcc-libs`.
+
+```sh
+MAKEFLAGS=-j4 CMAKE_BUILD_PARALLEL_LEVEL=4 makepkg --cleanbuild --force --noconfirm
+pacman -U --noconfirm mingw-w64-ucrt-x86_64-butterscotch-0.r20261015.gf3db244-1-any.pkg.tar.zst
+pacman -Qkk mingw-w64-ucrt-x86_64-butterscotch
+```
+
+Results: build, `check()`, installation and package integrity checks passed
+(27 files, zero altered). The binary's `.BUILDINFO` matches the current
+PKGBUILD, and no build-host paths remain in the executable.
+
+The same three upstream game tests listed above passed against the installed
+UCRT64 executable with the same expected output and frame-1 exit. The
+1024 by 768 screenshot passed PNG CRC and decompression checks. Help and
+game tests used a PATH restricted to UCRT64 and Windows System32. Game tests
+used UCRT64 Mesa software OpenGL with the same environment settings described
+above, pointing to `/ucrt64/bin/opengl32.dll`.
+
+The dependency checker used UCRT64 `objdump` to inspect imports and the Windows
+loader to check DLL loading: 98 third-party DLLs resolved and loaded, with no
+unresolved third-party imports. The UCRT64 source bundle includes the exact
+recipe, source archive, build and installation logs, test scripts, test output
+and screenshot. The untested features listed for CLANG64 also apply here.
