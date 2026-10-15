@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-assimpnetter
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.0.5
+pkgrel=1
+pkgdesc='Source-built AssimpNetter .NET wrapper for the Open Asset Import Library, using MSYS2 assimp, for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Saalvage/AssimpNetter'
+license=('spdx:MIT')
+_commit=161363c3528c3ba388151e9e796d16ccf9f58913
+_tree=AssimpNetter-${_commit}
+_project=AssimpNet/AssimpNet.csproj
+_id=AssimpNetter
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-assimp")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("assimpnetter-161363c3528c3ba388151e9e796d16ccf9f58913.tar.gz::https://codeload.github.com/Saalvage/AssimpNetter/tar.gz/161363c3528c3ba388151e9e796d16ccf9f58913"
+        0001-load-the-MSYS2-assimp-DLL-on-Windows.patch prepare.py check.cs)
+sha256sums=('b6278e6ad21d68a3853f3d25fca6736ca3dc10b906b4436272f533872bd3a217'
+            '889775aa807bdb6f7d3199f7da315601bfff93427268a56722a6e5c158d76809'
+            '1baf1e37eb666acd04c7826e7a1c637c73f824ac5ba58db5808a61c95cc98cf4'
+            '3b8a33906c36b2daa04a87f2c2f519a1987522d48c5be863b377a73c594267a6')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  patch -d "$srcdir/$_tree" -Np1 -i "$srcdir/0001-load-the-MSYS2-assimp-DLL-on-Windows.patch"
+  /usr/bin/python3 "$srcdir/prepare.py" assimpnetter "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version=6.0.5.0 -p:GeneratePackageOnBuild=false -p:TargetFrameworks=net8.0 \
+    -p:SignAssembly=true -p:AssemblyOriginatorKeyFile="$(cygpath -m "$srcdir/$_tree/AssimpNet/AssimpKey.snk")" \
+    -p:AssemblyVersion=6.0.5.0 -p:FileVersion=6.0.5.0 -p:InformationalVersion="6.0.5.0+$_commit" \
+    -p:RepositoryCommit="$_commit" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:EnablePackageValidation=false -p:WarningsAsErrors= -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false -- "$(cygpath -m "$MINGW_PREFIX/bin")"
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

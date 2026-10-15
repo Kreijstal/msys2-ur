@@ -1,0 +1,65 @@
+MonoGame for MSYS2 (CLANG64, .NET 8 bootstrap SDK)
+===================================================
+
+Everything here is built from source. No MonoGame.Library.* / MonoGame.Tool.*
+native packages, no SharpDX and no precompiled effects from upstream are used.
+
+Installed
+---------
+- lib/dotnet/library-packs: MonoGame.Framework.DesktopGL,
+  MonoGame.Framework.Content.Pipeline, MonoGame.Content.Builder.Task and the
+  dotnet-mgcb / dotnet-mgfxc tool packages (offline NuGet feed of the SDK).
+- lib/dotnet/templates/8.0.131: MonoGame.Templates.CSharp, so
+  `dotnet new mgdesktopgl -o MyGame` works without `dotnet new install`.
+- lib/monogame/{mgcb,mgfxc}: the content builder and effect compiler,
+  with `mgcb` and `mgfxc` wrappers in bin/.
+
+Creating a game
+---------------
+    dotnet new mgdesktopgl -o MyGame
+    cd MyGame && dotnet build && dotnet run
+
+MonoGame.Content.Builder.Task uses lib/monogame/mgcb/mgcb.dll instead of
+restoring the dotnet-mgcb tool from nuget.org (set MGCBCommand to override).
+The template's .config/dotnet-tools.json only lists dotnet-mgcb; the
+mgcb-editor tools are not built.
+
+Native libraries
+----------------
+- DesktopGL games copy SDL2.dll and libopenal-1.dll (and the MSYS2 DLLs they
+  link, e.g. libc++.dll) from $MINGW_PREFIX/bin into the output directory
+  (MonoGameCopyNativeLibraries=false to disable, MonoGameNativeLibraryDir to
+  take them from elsewhere). At runtime a DLL next to the game wins, then the
+  MSYS2 prefix of the running .NET runtime.
+- mgfxc and the content pipeline compile HLSL with the vkd3d-based
+  d3dcompiler_47.dll from mingw-w64-clang-x86_64-vkd3d-d3dcompiler
+  ($MINGW_PREFIX/lib/vkd3d-d3dcompiler, never System32; MGFXC_D3DCOMPILER
+  overrides the path) and translate to GLSL with libmojoshader.dll
+  (monogame-mojoshader). Fonts use libfreetype-6.dll, models use Assimp
+  (dotnet-assimpnetter on mingw-w64-assimp), textures use mgpipeline.dll built
+  here with stb from the MSYS2 stb package. Audio/video content runs
+  ffmpeg/ffprobe from the MSYS2 ffmpeg package (optional dependency).
+
+Not available
+-------------
+- crunch (DXT3, ETC1, ETC2A texture compression) and basisu (ASTC, PVRTC,
+  ATC, BC7 and other mobile formats) have no MSYS2 packages; those texture
+  formats fail with a "not found" error unless crunch.exe / basisu.exe are on
+  PATH. DXT1/DXT5 ("Compressed" on DesktopGL) use the managed BCnEncoder.
+- dxc (DirectX 12 and Vulkan shader profiles) is not packaged. The OpenGL and
+  DirectX_11 profiles work.
+- The MGCB editor (mgcb-editor, Eto.Forms) is not built.
+
+Shaders
+-------
+On the OpenGL profile mgfxc does not carry HLSL initializers (`float x = 1;`)
+into the effect (upstream MonoGame behaviour: MojoShader exposes no default
+values); set such parameters from code. DirectX_11 output has no "Aon9"
+(feature level 9) chunk, as vkd3d does not emit one.
+
+The stock effects embedded in MonoGame.Framework.dll are compiled from their
+.fx sources during the build. vkd3d's shader model 2 register allocator needs
+13 temporaries for several SkinnedEffect vertex shaders (vs_2_0 allows 12),
+so SkinnedEffect's vertex shaders are compiled as vs_3_0 for OpenGL. Custom
+effects that fit vs_2_0/ps_2_0 with fxc may need vs_3_0/ps_3_0 here for the
+same reason.

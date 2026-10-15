@@ -1,0 +1,28 @@
+Subject: Content.Builder.Task: use the installed mgcb
+
+diff --git a/Tools/MonoGame.Content.Builder.Task/MonoGame.Content.Builder.Task.targets b/Tools/MonoGame.Content.Builder.Task/MonoGame.Content.Builder.Task.targets
+index 5cf466a..9f2b4cc 100644
+--- a/Tools/MonoGame.Content.Builder.Task/MonoGame.Content.Builder.Task.targets
++++ b/Tools/MonoGame.Content.Builder.Task/MonoGame.Content.Builder.Task.targets
+@@ -1,5 +1,21 @@
+ ﻿<Project>
+ 
++  <!--
++    MSYS2 packaging: mgcb is installed next to the .NET SDK
++    ($MINGW_PREFIX/lib/monogame/mgcb/mgcb.dll) instead of being restored as a
++    dotnet tool from nuget.org, so content builds work offline. It is used
++    unless the project sets MGCBCommand itself, and runs on the dotnet host
++    that runs the build.
++  -->
++  <PropertyGroup>
++    <_MonoGameDotnetRoot Condition="'$(NetCoreRoot)' != ''">$(NetCoreRoot)</_MonoGameDotnetRoot>
++    <_MonoGameDotnetRoot Condition="'$(_MonoGameDotnetRoot)' == '' And '$(DOTNET_HOST_PATH)' != ''">$([System.IO.Path]::GetDirectoryName('$(DOTNET_HOST_PATH)'))</_MonoGameDotnetRoot>
++    <_MonoGameMsys2MGCB Condition="'$(_MonoGameDotnetRoot)' != ''">$([MSBuild]::NormalizePath('$(_MonoGameDotnetRoot)', '..', 'monogame', 'mgcb', 'mgcb.dll'))</_MonoGameMsys2MGCB>
++    <AutoRestoreMGCBTool Condition="'$(MGCBCommand)' == 'mgcb' And '$(_MonoGameMsys2MGCB)' != '' And Exists('$(_MonoGameMsys2MGCB)')">false</AutoRestoreMGCBTool>
++    <MGCBCommand Condition="'$(MGCBCommand)' == 'mgcb' And '$(_MonoGameMsys2MGCB)' != '' And Exists('$(_MonoGameMsys2MGCB)')">$(_MonoGameMsys2MGCB)</MGCBCommand>
++    <DotnetCommand Condition="'$(DotnetCommand)' == 'dotnet' And '$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</DotnetCommand>
++  </PropertyGroup>
++
+   <!-- Add MonoGameContentReference to item type selection in Visual Studio -->
+   <ItemGroup>
+     <AvailableItemName Include="MonoGameContentReference" />

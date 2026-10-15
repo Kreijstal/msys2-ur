@@ -1,0 +1,275 @@
+Subject: ContentBuilderParams: port to System.CommandLine 3
+
+diff --git a/MonoGame.Framework.Content.Pipeline/Builder/ContentBuilderParams.cs b/MonoGame.Framework.Content.Pipeline/Builder/ContentBuilderParams.cs
+index be8d2b6..b5fe703 100644
+--- a/MonoGame.Framework.Content.Pipeline/Builder/ContentBuilderParams.cs
++++ b/MonoGame.Framework.Content.Pipeline/Builder/ContentBuilderParams.cs
+@@ -3,8 +3,6 @@
+ // file 'LICENSE.txt', which is part of this source code package.
+ 
+ using System.CommandLine;
+-using System.CommandLine.Binding;
+-using System.CommandLine.Builder;
+ using System.CommandLine.Parsing;
+ using System.Reflection;
+ using Microsoft.Xna.Framework.Content.Pipeline;
+@@ -19,91 +17,58 @@ namespace MonoGame.Framework.Content.Pipeline.Builder;
+ /// </summary>
+ public class ContentBuilderParams
+ {
+-    class RootOptions : BinderBase<ContentBuilderParams>
++    // Ported from the System.CommandLine 2.0 beta4 binder API to the
++    // System.CommandLine 3 API (no BinderBase/CommandLineBuilder).
++    class RootOptions
+     {
+-        private readonly Func<BindingContext, ContentBuilderParams> _contentBuilderArgsFunc;
++        private readonly Func<ParseResult, ContentBuilderParams> _contentBuilderArgsFunc;
++
++        private static Option<T> Global<T>(RootCommand rootCommand, string name, string alias, string description, T defaultValue)
++        {
++            var option = alias.Length > 0 ? new Option<T>(name, alias) : new Option<T>(name);
++            option.Description = description;
++            option.DefaultValueFactory = _ => defaultValue;
++            option.Recursive = true;
++            rootCommand.Options.Add(option);
++            return option;
++        }
+ 
+         public RootOptions(RootCommand rootCommand)
+         {
+             var defaultValues = new ContentBuilderParams();
+ 
+-            var workingDirectoryOption = new Option<string>(
+-                name: "--workingDir",
+-                description: "The working directory of the content builder.",
+-                getDefaultValue: () => defaultValues.WorkingDirectory);
+-            rootCommand.AddGlobalOption(workingDirectoryOption);
+-
+-            var srcDirectoryOptions = new Option<string>(
+-                name: "--src",
+-                description: "The source asset directory.",
+-                getDefaultValue: () => defaultValues.SourceDirectory);
+-            srcDirectoryOptions.AddAlias("-s");
+-            rootCommand.AddGlobalOption(srcDirectoryOptions);
+-
+-            var outputDirectoryOption = new Option<string>(
+-                name: "--output",
+-                description: "The output content directory.",
+-                getDefaultValue: () => defaultValues.OutputDirectory);
+-            outputDirectoryOption.AddAlias("-o");
+-            rootCommand.AddGlobalOption(outputDirectoryOption);
+-
+-            var intermediateDirectoryOption = new Option<string>(
+-                name: "--intermediate",
+-                description: "The intermediate content directory.",
+-                getDefaultValue: () => defaultValues.IntermediateDirectory);
+-            intermediateDirectoryOption.AddAlias("-i");
+-            rootCommand.AddGlobalOption(intermediateDirectoryOption);
+-
+-            var platformOption = new Option<TargetPlatform>(
+-                name: "--platform",
+-                description: "The content target platform.",
+-                getDefaultValue: () => defaultValues.Platform);
+-            platformOption.AddAlias("-p");
+-            rootCommand.AddGlobalOption(platformOption);
+-
+-            var graphicsProfileOption = new Option<GraphicsProfile>(
+-                name: "--graphics-profile",
+-                description: "The content graphics profile.",
+-                getDefaultValue: () => defaultValues.GraphicsProfile);
+-            graphicsProfileOption.AddAlias("-g");
+-            rootCommand.AddGlobalOption(graphicsProfileOption);
+-
+-            var compressContentOption = new Option<bool>(
+-                name: "--compress",
+-                description: "Compress the build content files.",
+-                getDefaultValue: () => defaultValues.CompressContent);
+-            rootCommand.AddGlobalOption(compressContentOption);
+-
+-            var logLevelOption = new Option<LogLevel>(
+-                name: "--loglevel",
+-                description: "The log level of messages that get outputed to the console.",
+-                getDefaultValue: () => defaultValues.LogLevel);
+-            logLevelOption.AddAlias("-l");
+-            rootCommand.AddGlobalOption(logLevelOption);
+-
+-            _contentBuilderArgsFunc = (bindingContext) =>
++            var workingDirectoryOption = Global(rootCommand, "--workingDir", "", "The working directory of the content builder.", defaultValues.WorkingDirectory);
++            var srcDirectoryOptions = Global(rootCommand, "--src", "-s", "The source asset directory.", defaultValues.SourceDirectory);
++            var outputDirectoryOption = Global(rootCommand, "--output", "-o", "The output content directory.", defaultValues.OutputDirectory);
++            var intermediateDirectoryOption = Global(rootCommand, "--intermediate", "-i", "The intermediate content directory.", defaultValues.IntermediateDirectory);
++            var platformOption = Global(rootCommand, "--platform", "-p", "The content target platform.", defaultValues.Platform);
++            var graphicsProfileOption = Global(rootCommand, "--graphics-profile", "-g", "The content graphics profile.", defaultValues.GraphicsProfile);
++            var compressContentOption = Global(rootCommand, "--compress", "", "Compress the build content files.", defaultValues.CompressContent);
++            var logLevelOption = Global(rootCommand, "--loglevel", "-l", "The log level of messages that get outputed to the console.", defaultValues.LogLevel);
++
++            _contentBuilderArgsFunc = (parseResult) =>
+             {
+-                var workingDir = bindingContext.ParseResult.GetValueForOption(workingDirectoryOption) ?? defaultValues.WorkingDirectory;
++                var workingDir = parseResult.GetValue(workingDirectoryOption) ?? defaultValues.WorkingDirectory;
+                 return new ContentBuilderParams
+                 {
+                     WorkingDirectory = workingDir,
+-                    SourceDirectory = MakeRelative(workingDir, bindingContext.ParseResult.GetValueForOption(srcDirectoryOptions) ?? defaultValues.SourceDirectory),
+-                    OutputDirectory = MakeRelative(workingDir, bindingContext.ParseResult.GetValueForOption(outputDirectoryOption) ?? defaultValues.OutputDirectory),
+-                    IntermediateDirectory = MakeRelative(workingDir, bindingContext.ParseResult.GetValueForOption(intermediateDirectoryOption) ?? defaultValues.IntermediateDirectory),
+-                    Platform = bindingContext.ParseResult.GetValueForOption(platformOption),
+-                    GraphicsProfile = bindingContext.ParseResult.GetValueForOption(graphicsProfileOption),
+-                    CompressContent = bindingContext.ParseResult.GetValueForOption(compressContentOption),
+-                    LogLevel = bindingContext.ParseResult.GetValueForOption(logLevelOption)
++                    SourceDirectory = MakeRelative(workingDir, parseResult.GetValue(srcDirectoryOptions) ?? defaultValues.SourceDirectory),
++                    OutputDirectory = MakeRelative(workingDir, parseResult.GetValue(outputDirectoryOption) ?? defaultValues.OutputDirectory),
++                    IntermediateDirectory = MakeRelative(workingDir, parseResult.GetValue(intermediateDirectoryOption) ?? defaultValues.IntermediateDirectory),
++                    Platform = parseResult.GetValue(platformOption),
++                    GraphicsProfile = parseResult.GetValue(graphicsProfileOption),
++                    CompressContent = parseResult.GetValue(compressContentOption),
++                    LogLevel = parseResult.GetValue(logLevelOption)
+                 };
+             };
+         }
+ 
+-        protected override ContentBuilderParams GetBoundValue(BindingContext bindingContext) => _contentBuilderArgsFunc(bindingContext);
++        public ContentBuilderParams Bind(ParseResult parseResult) => _contentBuilderArgsFunc(parseResult);
+     }
+ 
+-    class ServerOptions : BinderBase<List<ContentServer>>
++    class ServerOptions
+     {
+-        private readonly Func<BindingContext, List<ContentServer>> _contentBuilderArgsFunc;
++        private readonly Func<ParseResult, List<ContentServer>> _contentBuilderArgsFunc;
+ 
+         public ServerOptions(Command rootCommand)
+         {
+@@ -118,25 +83,31 @@ public class ContentBuilderParams
+                     var optionType = typeof(Option<>).MakeGenericType(propertyInfo.PropertyType);
+                     var option = (Option)Activator.CreateInstance(optionType, new object[] {
+                         "--" + attribute.Name,
+-                        attribute.Description
++                        Array.Empty<string>()
+                     })!;
+-                    option.SetDefaultValueFactory(() => propertyInfo.GetValue(contentServer));
+-                    rootCommand.AddGlobalOption(option);
++                    option.Description = attribute.Description;
++                    option.Recursive = true;
++                    rootCommand.Options.Add(option);
+ 
+                     options.Add((serverType, propertyInfo, option));
+                 }
+                 contentServers.Add(contentServer);
+             }
+ 
+-            _contentBuilderArgsFunc = (bindingContext) =>
++            _contentBuilderArgsFunc = (parseResult) =>
+             {
+                 foreach (var (type, propInfo, option) in options)
+                 {
+-                    var value = bindingContext.ParseResult.GetValueForOption(option);
+-                    if (value != null)
++                    // Only options given on the command line override the server's defaults.
++                    var result = parseResult.GetResult(option);
++                    if (result != null && !result.Implicit)
+                     {
+-                        var server = contentServers.Find(s => s.GetType() == type);
+-                        propInfo.SetValue(server, value);
++                        var value = result.GetValueOrDefault<object>();
++                        if (value != null)
++                        {
++                            var server = contentServers.Find(s => s.GetType() == type);
++                            propInfo.SetValue(server, value);
++                        }
+                     }
+                 }
+ 
+@@ -144,7 +115,7 @@ public class ContentBuilderParams
+             };
+         }
+ 
+-        protected override List<ContentServer> GetBoundValue(BindingContext bindingContext) => _contentBuilderArgsFunc(bindingContext);
++        public List<ContentServer> Bind(ParseResult parseResult) => _contentBuilderArgsFunc(parseResult);
+     }
+ 
+     /// <summary>
+@@ -249,53 +220,40 @@ public class ContentBuilderParams
+         var rootOptions = new RootOptions(rootCommand);
+ 
+         var buildCommand = new Command("build", "Build all the content.");
+-        var rebuildOption = new Option<bool>(
+-                name: "--rebuild",
+-                description: "Should the builder rebuild all the assets and ignore the content cache.",
+-                getDefaultValue: () => defaultValues.Rebuild);
+-        buildCommand.AddOption(rebuildOption);
+-        var skipCleanOption = new Option<bool>(
+-                name: "--skip-clean",
+-                description: "Should the builder skip cleaning up old content cache data after the build is finished.",
+-                getDefaultValue: () => defaultValues.SkipClean);
+-        buildCommand.AddOption(skipCleanOption);
+-        buildCommand.SetHandler(
+-            (contentBuilder, rebuildOption, skipCleanOption) =>
+-            {
+-                ret = contentBuilder;
+-                ret.Mode = ContentBuilderMode.Builder;
+-                ret.Rebuild = rebuildOption;
+-                ret.SkipClean = skipCleanOption;
+-            },
+-            rootOptions,
+-            rebuildOption,
+-            skipCleanOption);
+-        rootCommand.AddCommand(buildCommand);
++        var rebuildOption = new Option<bool>("--rebuild")
++        {
++            Description = "Should the builder rebuild all the assets and ignore the content cache.",
++            DefaultValueFactory = _ => defaultValues.Rebuild
++        };
++        buildCommand.Options.Add(rebuildOption);
++        var skipCleanOption = new Option<bool>("--skip-clean")
++        {
++            Description = "Should the builder skip cleaning up old content cache data after the build is finished.",
++            DefaultValueFactory = _ => defaultValues.SkipClean
++        };
++        buildCommand.Options.Add(skipCleanOption);
++        buildCommand.SetAction(parseResult =>
++        {
++            ret = rootOptions.Bind(parseResult);
++            ret.Mode = ContentBuilderMode.Builder;
++            ret.Rebuild = parseResult.GetValue(rebuildOption);
++            ret.SkipClean = parseResult.GetValue(skipCleanOption);
++        });
++        rootCommand.Subcommands.Add(buildCommand);
+ 
+         var serverCommand = new Command("server", "Start a content server.");
+         var sererOptions = new ServerOptions(serverCommand);
+-        serverCommand.SetHandler(
+-            (contentBuilder, sererOptions) =>
+-            {
+-                ret = contentBuilder;
+-                ret.Mode = ContentBuilderMode.Server;
+-                ret.Servers = sererOptions;
+-            },
+-            rootOptions,
+-            sererOptions);
+-        rootCommand.AddCommand(serverCommand);
+-
+-        bool helpShown = false;
+-        var parser = new CommandLineBuilder(rootCommand)
+-            .UseDefaults()
+-            .UseHelp(ctx => helpShown = true)
+-            .Build();
+-        parser.Invoke(args);
+-
+-        if (helpShown)
++        serverCommand.SetAction(parseResult =>
+         {
+-            ret.Mode = ContentBuilderMode.None;
+-        }
++            ret = rootOptions.Bind(parseResult);
++            ret.Mode = ContentBuilderMode.Server;
++            ret.Servers = sererOptions.Bind(parseResult);
++        });
++        rootCommand.Subcommands.Add(serverCommand);
++
++        // Help, version and parse errors run their own actions and leave
++        // ret.Mode at ContentBuilderMode.None, like the old UseHelp hook.
++        rootCommand.Parse(args).Invoke();
+ 
+         return ret;
+     }
