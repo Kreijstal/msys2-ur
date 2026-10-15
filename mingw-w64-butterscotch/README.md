@@ -1,9 +1,17 @@
-# Butterscotch for MSYS2 CLANG64
+# Butterscotch for MSYS2 UCRT64 and CLANG64
 
 Native Windows runner for compatible GameMaker: Studio game data. The source
 snapshot is pinned to `f3db244910b4ddf20596dd918cc2bbd061745957` (2026-10-15).
 
-Build in a CLANG64 shell:
+Build in a UCRT64 shell:
+
+```sh
+pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,pkgconf,SDL2,ffmpeg}
+makepkg --cleanbuild --syncdeps --noconfirm
+pacman -U mingw-w64-ucrt-x86_64-butterscotch-*.pkg.tar.zst
+```
+
+Alternatively, build in a CLANG64 shell:
 
 ```sh
 pacman -S --needed mingw-w64-clang-x86_64-{clang,cmake,ninja,pkgconf,SDL2,ffmpeg}
@@ -11,7 +19,7 @@ makepkg --cleanbuild --syncdeps --noconfirm
 pacman -U mingw-w64-clang-x86_64-butterscotch-*.pkg.tar.zst
 ```
 
-Run from the CLANG64 shell:
+Run from the corresponding MSYS2 shell:
 
 ```sh
 butterscotch --help
