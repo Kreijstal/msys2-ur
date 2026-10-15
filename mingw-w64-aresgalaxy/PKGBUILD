@@ -1,0 +1,171 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+#
+# Ares Galaxy, the Ares/Gnutella-style P2P file-sharing client, built as a
+# native 64-bit Windows program with the source-bootstrapped Free Pascal
+# (fpc-kgpc) and the Lazarus LCL (win32 widgetset).  The source is the Win64
+# Free Pascal port on the fpc-win64 branch of Kreijstal/AresGalaxy (a fork of
+# the Delphi 7 sources released on SourceForge), pinned to a commit.
+#
+# Layout:
+#   lib/aresgalaxy/Ares.exe     the program
+#   lib/aresgalaxy/Data/        skins (GUI/), filters, bootstrap node lists, web template
+#   lib/aresgalaxy/Lang/        translations
+#   bin/aresgalaxy.exe          launcher -> ../lib/aresgalaxy/Ares.exe
+# Ares locates Data\ and Lang\ next to its own executable (read-only) and
+# writes all state to %LOCALAPPDATA%\Ares and HKCU\Software\Ares, so it runs
+# unmodified from the package directory.  The default shared/download folder
+# is "My Shared Folder" on the user's desktop (upstream behaviour).
+
+_realname=aresgalaxy
+pkgbase="mingw-w64-${_realname}"
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=2.4.6.3072
+pkgrel=1
+_commit=4e52d48624e503a397c34e331ae20d90838a34bd   # fpc-win64 branch
+_datarel=AresRegular246_082217                    # upstream release the port is based on
+pkgdesc="Ares Galaxy peer-to-peer file-sharing client (Free Pascal/LCL build) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://aresgalaxy.sourceforge.net/'
+msys2_repository_url='https://github.com/Kreijstal/AresGalaxy'
+license=('spdx:GPL-2.0-or-later')
+depends=()   # Ares.exe and the launcher import only Windows system DLLs
+makedepends=("${MINGW_PACKAGE_PREFIX}-fpc-kgpc"
+             "${MINGW_PACKAGE_PREFIX}-lazarus"
+             "${MINGW_PACKAGE_PREFIX}-7zip")
+options=('!strip' '!debug')   # FPC-built PEs; debug info is left out at link time (-g- -Xs)
+# The runtime data (skins, language files, node lists) is not in any source
+# release; it is taken from the upstream 2.4.6 installer.  Only Data\ and Lang\
+# are extracted -- none of the installer's executables or DLLs (bass, libfaad2,
+# opus, AsyncEx/MP3Source DirectShow filters, chat client/server) are shipped.
+source=("${_realname}-${_commit}.tar.gz::https://codeload.github.com/Kreijstal/AresGalaxy/tar.gz/${_commit}"
+        "https://downloads.sourceforge.net/project/aresgalaxy/aresgalaxy/${_datarel}/aresregular246_installer.exe"
+        "0001-uflvplayer-do-not-embed-flash-swf-under-fpc.patch"
+        "aresgalaxy-launcher.pas")
+noextract=("aresregular246_installer.exe")
+sha256sums=('cd20fce85abc96d3471872b329c39e943e4c15506b1d1f6244afe67cff47fdc5'
+            '54a88fdb30b8685c94637221af3e910fe1ab81200b06ffa4df3e95ae55212513'
+            'c0cd39a995725c5b7a3b28dfb83887327a6da1cd27f7d117457850ecb8365796'
+            '9c715ec4b5ec5bcf0427d3ca0df81526ba396fe339a4326a7788d0f1f182fefa')
+
+prepare() {
+  cd "${srcdir}/AresGalaxy-${_commit}"
+
+  # Delphi-only prebuilt objects/resources: the bcc32 zlib objects ({$L} under
+  # !FPC only; FPC uses paszlib) and the Flash SWF players (see 0001).  Remove
+  # them so nothing prebuilt can be linked in.
+  rm -f ./*.obj flvplayer.RES
+  patch -Np1 -i "${srcdir}/0001-uflvplayer-do-not-embed-flash-swf-under-fpc.patch"
+
+  # Runtime data from the installer (NSIS): Data\ and Lang\ only.
+  cd "${srcdir}"
+  rm -rf "${srcdir:?}/installer"
+  7z x -y -o"installer" aresregular246_installer.exe 'data' 'lang' >/dev/null
+}
+
+build() {
+  cd "${srcdir}/AresGalaxy-${_commit}"
+  # The fork's build script: fpc -Mdelphi -WG -O1 with the LCL win32 units of
+  # $MINGW_PREFIX/lib/lazarus.  Rebuild everything (-B), no debug info.
+  bash ./build-fpc.sh -B -g- -Xs
+
+  cd "${srcdir}"
+  rm -rf "${srcdir:?}/launcher"
+  mkdir -p launcher/units
+  MSYS2_ARG_CONV_EXCL="*" fpc -O2 -Xs -FUlauncher/units -olauncher/aresgalaxy.exe aresgalaxy-launcher.pas
+}
+
+check() {
+  local _exe="${srcdir}/AresGalaxy-${_commit}/Ares.exe"
+  local _objdump="${MINGW_PREFIX}/bin/objdump"
+  [ -x "${_objdump}" ] || _objdump="${MINGW_PREFIX}/bin/llvm-objdump"
+
+  # 1. a PE32+ x86-64 GUI executable was produced
+  "${_objdump}" -f "${_exe}" | grep -Eq 'file format (pei-x86-64|coff-x86-64)' \
+    || { error "Ares.exe is not a PE32+ x86-64 image"; return 1; }
+
+  # 2. every imported DLL is a Windows system DLL (or would be in the prefix)
+  local _sys32; _sys32="$(cygpath -u "${SYSTEMROOT:-C:\\Windows}")/System32"
+  local _f _dll _bad=0
+  for _f in "${_exe}" "${srcdir}/launcher/aresgalaxy.exe"; do
+    while read -r _dll; do
+      if [ -f "${_sys32}/${_dll}" ] || [ -f "${MINGW_PREFIX}/bin/${_dll}" ]; then
+        msg2 "$(basename "${_f}"): ${_dll}"
+      else
+        error "$(basename "${_f}"): unresolved import ${_dll}"; _bad=1
+      fi
+    done < <("${_objdump}" -p "${_f}" | sed -n 's/^[[:space:]]*DLL Name: //p' | tr -d '\r')
+  done
+  [ "${_bad}" = 0 ] || return 1
+
+  # 3. the runtime data Ares looks for next to the exe
+  local _d
+  for _d in data/GUI/General/prefs.txt data/GUI/General/mainbitmap.bmp \
+            data/SNodes.dat data/DHTnodes.dat data/P2PFilter.txt lang/German.txt; do
+    [ -f "${srcdir}/installer/${_d}" ] || { error "missing runtime file ${_d}"; return 1; }
+  done
+
+  # 4. the launcher finds ..\lib\aresgalaxy\Ares.exe, passes the command line
+  #    tail through verbatim and returns the child's exit code (probe stand-in)
+  local _t="${srcdir}/launcher-test"
+  rm -rf "${_t:?}"
+  mkdir -p "${_t}/bin" "${_t}/lib/aresgalaxy" "${_t}/u"
+  cat > "${_t}/probe.pas" <<'EOF'
+program probe;
+{$mode objfpc}{$H+}{$APPTYPE CONSOLE}
+uses Windows;
+var F: Text;
+begin
+  Assign(F, ParamStr(0) + '.cmdline');
+  Rewrite(F);
+  Write(F, UTF8Encode(UnicodeString(GetCommandLineW)));
+  Close(F);
+  Halt(42);
+end.
+EOF
+  MSYS2_ARG_CONV_EXCL="*" fpc -FU"launcher-test/u" -o"launcher-test/lib/aresgalaxy/Ares.exe" launcher-test/probe.pas >/dev/null
+  cp "${srcdir}/launcher/aresgalaxy.exe" "${_t}/bin/"
+  local _rc=0
+  MSYS2_ARG_CONV_EXCL="*" "${_t}/bin/aresgalaxy.exe" -h "magnet:?xt=urn:sha1:X&dn=a b" || _rc=$?
+  [ "${_rc}" = 42 ] || { error "launcher returned ${_rc}, expected 42"; return 1; }
+  local _want; _want="\"$(cygpath -w "${_t}/lib/aresgalaxy/Ares.exe")\" -h \"magnet:?xt=urn:sha1:X&dn=a b\""
+  local _got; _got="$(cat "${_t}/lib/aresgalaxy/Ares.exe.cmdline")"
+  [ "${_got}" = "${_want}" ] || { error "launcher command line: got [${_got}] want [${_want}]"; return 1; }
+
+  # 5. optional start-up smoke test (ARESGALAXY_RUNTEST=1): run Ares.exe from
+  #    an installed-like tree for a few seconds and require it to stay alive.
+  #    Off by default: it creates HKCU\Software\Ares, %LOCALAPPDATA%\Ares and a
+  #    "My Shared Folder" on the desktop, and briefly contacts the P2P network.
+  if [ "${ARESGALAXY_RUNTEST:-0}" = 1 ]; then
+    local _r="${srcdir}/runtest"
+    rm -rf "${_r:?}"
+    mkdir -p "${_r}"
+    cp "${_exe}" "${_r}/"
+    cp -r "${srcdir}/installer/data" "${_r}/Data"
+    cp -r "${srcdir}/installer/lang" "${_r}/Lang"
+    "${_r}/Ares.exe" -h &
+    local _pid=$!
+    sleep 10
+    if kill -0 "${_pid}" 2>/dev/null; then
+      msg2 "Ares.exe still running after 10 s, stopping it"
+      kill -9 "${_pid}"; wait "${_pid}" 2>/dev/null || true
+    else
+      wait "${_pid}"; _rc=$?
+      error "Ares.exe exited during start-up (status ${_rc})"; return 1
+    fi
+  fi
+}
+
+package() {
+  local _lib="${pkgdir}${MINGW_PREFIX}/lib/${_realname}"
+  install -d "${_lib}" "${pkgdir}${MINGW_PREFIX}/bin"
+  install -m755 "${srcdir}/AresGalaxy-${_commit}/Ares.exe" "${_lib}/Ares.exe"
+  cp -r "${srcdir}/installer/data" "${_lib}/Data"
+  cp -r "${srcdir}/installer/lang" "${_lib}/Lang"
+  find "${_lib}/Data" "${_lib}/Lang" -type d -exec chmod 755 {} +
+  find "${_lib}/Data" "${_lib}/Lang" -type f -exec chmod 644 {} +
+  install -m755 "${srcdir}/launcher/aresgalaxy.exe" "${pkgdir}${MINGW_PREFIX}/bin/aresgalaxy.exe"
+
+  install -Dm644 "${srcdir}/AresGalaxy-${_commit}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}
