@@ -1,0 +1,150 @@
+Give header constants internal linkage
+
+With clang on MinGW, a namespace-scope inline variable gets its own
+COMDAT .ctors entry, emitted before the translation unit's own
+initializer; the MinGW CRT runs .ctors backwards, so ordinary globals of
+the same TU (e.g. DEFAULT_AUDIO_RESOURCE_ATTRIBUTES in
+audioengineconfiguration.cpp, which uses SOUNDFONT_NAME_ATTRIBUTE) are
+constructed before the inline variables they read, and MuseScore crashed
+in a static initializer before main().
+
+Make these header constants 'static const': they are then part of each
+TU's ordered dynamic initialization.
+
+diff --git a/src/engraving/playback/utils/expressionutils.h b/src/engraving/playback/utils/expressionutils.h
+index b3ba9801..cb656112 100644
+--- a/src/engraving/playback/utils/expressionutils.h
++++ b/src/engraving/playback/utils/expressionutils.h
+@@ -30,7 +30,7 @@
+ namespace mu::engraving {
+ constexpr muse::mpe::dynamic_level_t NATURAL_DYNAMIC_LEVEL = muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::Natural);
+ 
+-inline const std::unordered_map<DynamicType, muse::mpe::dynamic_level_t> ORDINARY_DYNAMIC_LEVELS {
++static const std::unordered_map<DynamicType, muse::mpe::dynamic_level_t> ORDINARY_DYNAMIC_LEVELS {
+     { DynamicType::N, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::ppppppppp) },
+     { DynamicType::PPPPPP, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::pppppp) },
+     { DynamicType::PPPPP, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::ppppp) },
+@@ -64,7 +64,7 @@ inline muse::mpe::dynamic_level_t dynamicLevelFromOrdinaryType(const DynamicType
+     return defLevel;
+ }
+ 
+-inline const std::unordered_map<DynamicType, muse::mpe::dynamic_level_t> SINGLE_NOTE_DYNAMIC_LEVELS {
++static const std::unordered_map<DynamicType, muse::mpe::dynamic_level_t> SINGLE_NOTE_DYNAMIC_LEVELS {
+     { DynamicType::SF, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::f) },
+     { DynamicType::SFZ, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::f) },
+     { DynamicType::SFF, muse::mpe::dynamicLevelFromType(muse::mpe::DynamicType::ff) },
+@@ -101,7 +101,7 @@ struct CompoundDynamic {
+     }
+ };
+ 
+-inline const std::unordered_map<DynamicType, CompoundDynamic> COMPOUND_DYNAMICS {
++static const std::unordered_map<DynamicType, CompoundDynamic> COMPOUND_DYNAMICS {
+     { DynamicType::FP, { DynamicType::F, DynamicType::P } },
+     { DynamicType::PF, { DynamicType::P, DynamicType::F } },
+     { DynamicType::SFP, { DynamicType::F, DynamicType::P } },
+diff --git a/src/framework/audio/common/audiotypes.h b/src/framework/audio/common/audiotypes.h
+index 1ba7d772..944393b7 100644
+--- a/src/framework/audio/common/audiotypes.h
++++ b/src/framework/audio/common/audiotypes.h
+@@ -266,7 +266,7 @@ enum class AudioFxCategory {
+     FxOther,
+ };
+ 
+-inline const std::unordered_map<AudioFxCategory, String> AUDIO_FX_CATEGORY_TO_STRING_MAP {
++static const std::unordered_map<AudioFxCategory, String> AUDIO_FX_CATEGORY_TO_STRING_MAP {
+     { AudioFxCategory::FxEqualizer, u"EQ" },
+     { AudioFxCategory::FxAnalyzer, u"Analyzer" },
+     { AudioFxCategory::FxDelay, u"Delay" },
+diff --git a/src/framework/audio/common/soundfonttypes.h b/src/framework/audio/common/soundfonttypes.h
+index 1b3b09a5..52401bd5 100644
+--- a/src/framework/audio/common/soundfonttypes.h
++++ b/src/framework/audio/common/soundfonttypes.h
+@@ -56,10 +56,10 @@ struct SoundFontMeta
+ 
+ using SoundFontsMap = std::map<SoundFontUri, SoundFontMeta>;
+ 
+-inline const String SOUNDFONT_NAME_ATTRIBUTE(u"soundFontName");
+-inline const String PRESET_NAME_ATTRIBUTE(u"presetName");
+-inline const String PRESET_BANK_ATTRIBUTE(u"presetBank");
+-inline const String PRESET_PROGRAM_ATTRIBUTE(u"presetProgram");
++static const String SOUNDFONT_NAME_ATTRIBUTE(u"soundFontName");
++static const String PRESET_NAME_ATTRIBUTE(u"presetName");
++static const String PRESET_BANK_ATTRIBUTE(u"presetBank");
++static const String PRESET_PROGRAM_ATTRIBUTE(u"presetProgram");
+ }
+ 
+ #endif // MUSE_AUDIO_SOUNDFONTTYPES_H
+diff --git a/src/framework/ui/uitypes.h b/src/framework/ui/uitypes.h
+index b1544e96..f36e426e 100644
+--- a/src/framework/ui/uitypes.h
++++ b/src/framework/ui/uitypes.h
+@@ -177,7 +177,7 @@ struct ContainerMeta
+ };
+ 
+ // workspaces
+-inline const workspace::DataKey WS_UiSettings("ui_settings");
+-inline const workspace::DataKey WS_UiStates("ui_states");
+-inline const workspace::DataKey WS_UiToolConfigs("ui_toolconfigs");
++static const workspace::DataKey WS_UiSettings("ui_settings");
++static const workspace::DataKey WS_UiStates("ui_states");
++static const workspace::DataKey WS_UiToolConfigs("ui_toolconfigs");
+ }
+diff --git a/src/palette/palettetypes.h b/src/palette/palettetypes.h
+index e647ecdc..b34b8f29 100644
+--- a/src/palette/palettetypes.h
++++ b/src/palette/palettetypes.h
+@@ -25,7 +25,7 @@
+ #include "workspace/workspacetypes.h"
+ 
+ namespace mu::palette {
+-inline const muse::workspace::DataKey WS_Palettes("palettes");
++static const muse::workspace::DataKey WS_Palettes("palettes");
+ }
+ 
+ #endif // MU_PALETTE_PALETTETYPES_H
+diff --git a/src/project/types/projectmeta.h b/src/project/types/projectmeta.h
+index 0e907828..87710bad 100644
+--- a/src/project/types/projectmeta.h
++++ b/src/project/types/projectmeta.h
+@@ -96,26 +96,26 @@ struct ProjectMeta
+ using ProjectMetaList = QList<ProjectMeta>;
+ 
+ // Tags
+-inline const QString WORK_TITLE_TAG("workTitle");
+-inline const QString WORK_NUMBER_TAG("workNumber");
+-inline const QString SUBTITLE_TAG("subtitle");
+-inline const QString COMPOSER_TAG("composer");
+-inline const QString ARRANGER_TAG("arranger");
+-inline const QString LYRICIST_TAG("lyricist");
+-inline const QString COPYRIGHT_TAG("copyright");
+-inline const QString TRANSLATOR_TAG("translator");
+-inline const QString MOVEMENT_TITLE_TAG("movementTitle");
+-inline const QString MOVEMENT_NUMBER_TAG("movementNumber");
+-inline const QString CREATION_DATE_TAG("creationDate");
+-inline const QString PLATFORM_TAG("platform");
++static const QString WORK_TITLE_TAG("workTitle");
++static const QString WORK_NUMBER_TAG("workNumber");
++static const QString SUBTITLE_TAG("subtitle");
++static const QString COMPOSER_TAG("composer");
++static const QString ARRANGER_TAG("arranger");
++static const QString LYRICIST_TAG("lyricist");
++static const QString COPYRIGHT_TAG("copyright");
++static const QString TRANSLATOR_TAG("translator");
++static const QString MOVEMENT_TITLE_TAG("movementTitle");
++static const QString MOVEMENT_NUMBER_TAG("movementNumber");
++static const QString CREATION_DATE_TAG("creationDate");
++static const QString PLATFORM_TAG("platform");
+ 
+ // Cloud-related tags
+ // TODO: don't use the score's meta tags to use this information
+ // https://github.com/musescore/MuseScore/issues/17560
+ // https://github.com/musescore/MuseScore/issues/17561
+-inline const QString SOURCE_TAG("source");
+-inline const QString SOURCE_REVISION_ID_TAG("sourceRevisionId");
+-inline const QString AUDIO_COM_URL_TAG("audioComUrl");
++static const QString SOURCE_TAG("source");
++static const QString SOURCE_REVISION_ID_TAG("sourceRevisionId");
++static const QString AUDIO_COM_URL_TAG("audioComUrl");
+ 
+ inline bool isStandardTag(const QString& tag)
+ {

@@ -1,0 +1,158 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=musescore
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.7.5
+pkgrel=1
+pkgdesc='Music notation and composition software (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://musescore.org/'
+msys2_repository_url='https://github.com/musescore/MuseScore'
+msys2_changelog_url='https://github.com/musescore/MuseScore/releases'
+license=('spdx:GPL-3.0-only AND GPL-2.0-or-later AND LGPL-2.1-or-later AND MIT AND OFL-1.1')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-fdk-aac"
+         "${MINGW_PACKAGE_PREFIX}-flac"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-harfbuzz"
+         "${MINGW_PACKAGE_PREFIX}-lame"
+         "${MINGW_PACKAGE_PREFIX}-libopusenc"
+         "${MINGW_PACKAGE_PREFIX}-mnxdom"
+         "${MINGW_PACKAGE_PREFIX}-opus"
+         "${MINGW_PACKAGE_PREFIX}-pugixml"
+         "${MINGW_PACKAGE_PREFIX}-qt6-5compat"
+         "${MINGW_PACKAGE_PREFIX}-qt6-base"
+         "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
+         "${MINGW_PACKAGE_PREFIX}-qt6-networkauth"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-cppwinrt"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-qt6-shadertools"
+             "${MINGW_PACKAGE_PREFIX}-qt6-tools"
+             "${MINGW_PACKAGE_PREFIX}-utf8cpp"
+             "${MINGW_PACKAGE_PREFIX}-vst3sdk")
+optdepends=("${MINGW_PACKAGE_PREFIX}-ffmpeg: video export")
+_patches=("0001-Do-not-fetch-the-MSVC-prebuilt-dependencies-on-MinGW.patch"
+          "0002-Fix-the-MinGW-compiler-flags.patch"
+          "0003-Install-into-a-shared-prefix-on-MinGW.patch"
+          "0004-muse-fix-MinGW-builds-of-the-framework.patch"
+          "0005-Give-header-constants-internal-linkage.patch"
+          "0006-audio-do-not-use-an-inline-thread-local-member-in-RpcPacker.patch"
+          "0007-app-compile-the-icon-resource-with-clang-based-MinGW-toolchains-too.patch"
+          "0008-async-do-not-call-back-into-receivers-that-already-disconnected.patch"
+          "0009-audio-add-MUE-COMPILE-USE-SYSTEM-FDKAAC.patch")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/musescore/MuseScore/archive/refs/tags/v${pkgver}.tar.gz"
+        # GPLv3-licensed ASIO SDK, the version muse_deps would download
+        "https://raw.githubusercontent.com/musescore/muse_deps/c9a299e19df04e40435d1c4649548c69ce152bd8/asiosdk/ASIO-SDK_2.3.4_2025-10-15/ASIO-SDK_2.3.4_2025-10-15.zip"
+        "${_patches[@]}")
+sha256sums=('b9db52e139e925adfc56e3ab59244f44da4db7e5e133d5084c5da5dfc3dfb9d1'
+            'd5ebf0c20dd2c5f43771fd0c1418f4b361bf52434ee670097cfa6b3a335e2eca'
+            'd2f9c44ef0ed7252f09544dfe29f625e09f8a0ddf83a43f905a3ac1f8bb85f0c'
+            '6a82888fe764eaccfb04acc49d0dff48b33530ff4cb91913fe81f04008d1dd3b'
+            '30031e6420d240780f4758e42a6ab6702fc7e566243ea865b475f8eb23cbbac7'
+            '45e7aede03fb9ef229733f21252eb8fea0fd451a8fbb00a607f9e73089bc5002'
+            '769895db8a7d37d9048c98633324df4ac8bcb51ad133fccf076b3067d7647ae3'
+            '6648d877098236a168335ce429fbd94e59228ae8445b9a03b8e9d54c61571bfe'
+            'a28d7c0acb81e85a41e893a89c526a64ef3bf443ee61c67435061927d308e8fb'
+            'f54d68b3c3ccf8ac6ac96ffb81d0c84eaa2566c7c8255699093c3b12d896157e'
+            '971d6eb388b7d576206cc99d920cfbb015efe58c747c635985db3c844726b2ba')
+
+prepare() {
+  cd "${srcdir}/MuseScore-${pkgver}"
+  local _p
+  for _p in "${_patches[@]}"; do
+    patch -Np1 -i "${srcdir}/${_p}"
+  done
+
+  # fdk-aac comes from the system package (0009); make sure the bundled copy
+  # cannot be used
+  rm -rf "${srcdir:?}/MuseScore-${pkgver}/src/framework/audio/thirdparty/fdk-aac"
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # __FILE__ is used in log and assert messages; do not embed the build path
+  CFLAGS+=" -ffile-prefix-map=$(cygpath -m "${srcdir}")=."
+  CXXFLAGS+=" -ffile-prefix-map=$(cygpath -m "${srcdir}")=."
+
+  # Dependencies come from MSYS2 packages wherever MuseScore offers a
+  # MUE_COMPILE_USE_SYSTEM_* switch (all of them are on; fdk-aac's is added
+  # by 0009); fluidsynth, KDDockWidgets, liblouis and the other
+  # forked/bundled libraries are compiled in. FetchContent may not download anything.
+  # The soundfont (MS Basic.sf3) is part of the release tarball.
+  # Off, as in Linux distributions: update checks and crash reporting
+  # (crashpad, which does not build with MinGW anyway). Unit tests are not
+  # built.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${srcdir}/MuseScore-${pkgver}" \
+      -B "${srcdir}/build-${MSYSTEM}" \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DMUSESCORE_BUILD_CONFIGURATION=app \
+      -DMUSE_APP_BUILD_MODE=release \
+      -DMUSE_ENABLE_UNIT_TESTS=OFF \
+      -DMUSE_COMPILE_USE_COMPILER_CACHE=OFF \
+      -DMUSE_MODULE_UPDATE=OFF \
+      -DMUSE_MODULE_DIAGNOSTICS_CRASHPAD_CLIENT=OFF \
+      -DMUSE_MODULE_VST=ON \
+      -DMUSE_MODULE_VST_VST3_SDK_PATH="${MINGW_PREFIX}/share/vst3sdk" \
+      -DMUSE_MODULE_AUDIO_ASIO_SDK_PATH="$(cygpath -m "${srcdir}")" \
+      -DMUE_DOWNLOAD_SOUNDFONT=OFF \
+      -DMUE_COMPILE_USE_SYSTEM_FDKAAC=ON \
+      -DMUE_COMPILE_USE_SYSTEM_FLAC=ON \
+      -DMUE_COMPILE_USE_SYSTEM_FREETYPE=ON \
+      -DMUE_COMPILE_USE_SYSTEM_HARFBUZZ=ON \
+      -DMUE_COMPILE_USE_SYSTEM_LAME=ON \
+      -DMUE_COMPILE_USE_SYSTEM_MNXDOM=ON \
+      -DMUE_COMPILE_USE_SYSTEM_OPUS=ON \
+      -DMUE_COMPILE_USE_SYSTEM_OPUSENC=ON \
+      -DMUE_COMPILE_USE_SYSTEM_PUGIXML=ON \
+      -DMUE_COMPILE_USE_SYSTEM_UTF8CPP=ON \
+      -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+      "${_extra_config[@]}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}"
+}
+
+check() {
+  local _root="${srcdir}/check-${MSYSTEM}"
+  rm -rf "${_root:?}"
+  DESTDIR="${_root}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}" >/dev/null
+  local _exe="${_root}${MINGW_PREFIX}/bin/MuseScore4.exe"
+  local _demo="${srcdir}/MuseScore-${pkgver}/demos/Amazing_grace.mscz"
+  cd "${srcdir}"
+  rm -f check.{pdf,mid,wav}
+
+  "${_exe}" --version | tr -d '\r' > version.txt
+  grep -qx "MuseScore4 ${pkgver}" version.txt || { cat version.txt; return 1; }
+
+  # the converter engraves (PDF), exports MIDI and renders audio through the
+  # bundled fluidsynth with the soundfont from <prefix>/share/mscore-x.y (0003)
+  local _out
+  for _out in check.pdf check.mid check.wav; do
+    QT_QPA_PLATFORM=offscreen "${_exe}" -o "$(cygpath -m "${srcdir}/${_out}")" "$(cygpath -m "${_demo}")"
+  done
+  [[ "$(head -c 5 check.pdf)" == "%PDF-" ]]
+  [[ "$(head -c 4 check.mid)" == "MThd" ]]
+  [[ $(stat -c %s check.wav) -gt 1000000 ]]
+  rm -rf "${_root:?}" check.{pdf,mid,wav}
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}"
+
+  install -Dm644 "${srcdir}/MuseScore-${pkgver}/LICENSE.txt" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.txt"
+}

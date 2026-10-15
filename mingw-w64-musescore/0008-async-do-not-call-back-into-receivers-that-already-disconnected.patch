@@ -1,0 +1,42 @@
+async: do not call back into receivers that already disconnected
+
+When an Asyncable is destroyed on another thread than the one it
+subscribed to a channel on, ChannelImpl::disconnect() disconnects it on
+the Asyncable side at once, but only queues the removal of its receiver
+record to the subscribing thread. If that thread never handles the
+message (e.g. an audio worker during shutdown), the record keeps a
+dangling Asyncable pointer, and ~ChannelImpl() -> clearReceivers() calls
+async_disconnect() on the freed object, locking its freed std::mutex.
+
+glibc and the SRWLOCK-based libc++ mutex usually get away with it; with
+libstdc++ on winpthreads the lock fails with EINVAL, std::system_error is
+thrown from a destructor and MuseScore aborts while tearing down the
+global IoC container at exit (seen intermittently with MuseScore4 -o
+x.mnx on UCRT64: 'terminate called after throwing an instance of
+std::system_error, what(): Invalid argument').
+
+The channel's IConnectable::asyncables set is exactly the set of
+receivers still connected (Asyncable::async_disconnect() and
+async_disconnectAll() remove themselves from it synchronously), so only
+call back into receivers that are still in it.
+
+diff --git a/src/framework/global/thirdparty/kors_async/async/internal/channelimpl.h b/src/framework/global/thirdparty/kors_async/async/internal/channelimpl.h
+index b4f6821e..deee5108 100644
+--- a/src/framework/global/thirdparty/kors_async/async/internal/channelimpl.h
++++ b/src/framework/global/thirdparty/kors_async/async/internal/channelimpl.h
+@@ -213,7 +213,14 @@ private:
+         {
+             auto deleteAll = [](std::vector<Receiver*>& recs, Asyncable::IConnectable* conn) {
+                 for (Receiver* r : recs) {
+-                    if (r->receiver) {
++                    // Only call back into receivers that are still connected.
++                    // An Asyncable destroyed on another thread than the one it
++                    // subscribed on has already removed itself from
++                    // conn->asyncables, but its removal from this list is only
++                    // queued to that thread and may never have run; then
++                    // r->receiver dangles.
++                    if (r->receiver
++                        && conn->asyncables.count(r->receiver) > 0) {
+                         r->receiver->async_disconnect(conn);
+                     }
+                     delete r;

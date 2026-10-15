@@ -1,0 +1,38 @@
+audio: do not use an inline thread_local member in RpcPacker
+
+GCC on MinGW emits the TLS init function of an inline thread_local
+variable with dynamic initialization outside a COMDAT, so each object
+file that uses RpcPacker::buffer defines 'TLS init function for
+muse::audio::rpc::RpcPacker::buffer' and the link fails with multiple
+definitions. Use a function-local thread_local instead.
+
+diff --git a/src/framework/audio/common/rpc/rpcpacker.h b/src/framework/audio/common/rpc/rpcpacker.h
+index ee4b7389..314e57f0 100644
+--- a/src/framework/audio/common/rpc/rpcpacker.h
++++ b/src/framework/audio/common/rpc/rpcpacker.h
+@@ -654,6 +654,7 @@ public:
+     template<class ... Types>
+     static ByteArray pack(const Options& opt, const Types&... args)
+     {
++        std::vector<uint8_t>& buffer = threadBuffer();
+         // clear but keep capacity
+         buffer.clear();
+         // makes sense if the reserve is greater than the current capacity
+@@ -680,6 +681,16 @@ public:
+     }
+ 
+     static constexpr size_t DEFAULT_CAPACITY = 1024 * 200;
+-    static inline thread_local std::vector<uint8_t> buffer = {};
++
++private:
++    //! A function-local thread_local rather than an inline thread_local
++    //! member: GCC on MinGW emits the TLS init function of an inline
++    //! thread_local variable outside a COMDAT, so every object file that
++    //! uses it defines it (multiple definition at link time).
++    static std::vector<uint8_t>& threadBuffer()
++    {
++        static thread_local std::vector<uint8_t> buffer;
++        return buffer;
++    }
+ };
+ }

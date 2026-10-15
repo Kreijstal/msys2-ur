@@ -1,0 +1,68 @@
+Install into a shared prefix on MinGW
+
+The Windows build installs a self-contained application directory: data
+files next to bin/ (prefix/sound, prefix/templates, ...) plus the GCC
+runtime DLLs. Neither fits a MinGW distribution such as MSYS2, where
+MuseScore shares the prefix with Qt and everything else.
+
+- MinGW uses the Linux data layout (share/mscore-4.7/), and
+  GlobalConfiguration::appDataPath() looks there.
+- Do not install libgcc_s/libstdc++/libwinpthread: they are packages of
+  the distribution.
+
+diff --git a/SetupConfigure.cmake b/SetupConfigure.cmake
+index 91d42f4e..ec2f7f71 100644
+--- a/SetupConfigure.cmake
++++ b/SetupConfigure.cmake
+@@ -74,6 +74,10 @@ endif()
+ if (OS_IS_MAC)
+     set(Mscore_INSTALL_NAME    "Contents/Resources/")
+     set(Mscore_SHARE_NAME      "mscore.app/")
++elseif (OS_IS_WIN AND MINGW)
++    # MinGW distributions (MSYS2) install into a shared Unix-like prefix
++    set(Mscore_INSTALL_NAME  "mscore${MUSE_APP_INSTALL_SUFFIX}-${MUSE_APP_VERSION_MAJ_MIN}/")
++    set(Mscore_SHARE_NAME    "share/")
+ elseif (OS_IS_WIN)
+     set(Mscore_INSTALL_NAME  "")
+     set(Mscore_SHARE_NAME    "./")
+diff --git a/src/app/CMakeLists.txt b/src/app/CMakeLists.txt
+index 978c170a..ddfc5835 100644
+--- a/src/app/CMakeLists.txt
++++ b/src/app/CMakeLists.txt
+@@ -321,17 +321,8 @@ install(TARGETS MuseScoreStudio
+ if (OS_IS_WIN)
+     include(GetCompilerInfo)
+ 
+-    if (CC_IS_MINGW)
+-        get_filename_component(COMPILER_DIR ${CMAKE_CXX_COMPILER} DIRECTORY)
+-        get_filename_component (MINGW_ROOT ${COMPILER_DIR} DIRECTORY)
+-
+-        install( FILES
+-               ${MINGW_ROOT}/bin/libgcc_s_seh-1.dll
+-               ${MINGW_ROOT}/bin/libstdc++-6.dll
+-               ${MINGW_ROOT}/bin/libwinpthread-1.dll
+-               DESTINATION bin)
+-
+-    endif(CC_IS_MINGW)
++    # MinGW: the compiler runtime is a shared system package of the
++    # distribution, so it is not copied next to the executable.
+ 
+     if (SNDFILE_DLL)
+         install(FILES ${SNDFILE_DLL} DESTINATION bin)
+diff --git a/src/framework/global/internal/globalconfiguration.cpp b/src/framework/global/internal/globalconfiguration.cpp
+index ba665b0f..0c0c28ab 100644
+--- a/src/framework/global/internal/globalconfiguration.cpp
++++ b/src/framework/global/internal/globalconfiguration.cpp
+@@ -68,7 +68,11 @@ io::path_t GlobalConfiguration::appDataPath() const
+ 
+ QString GlobalConfiguration::resolveAppDataPath() const
+ {
+-#ifdef Q_OS_WIN
++#if defined(Q_OS_WIN) && defined(__MINGW32__)
++    // MinGW distributions keep the data in <prefix>/share/mscore-x.y
++    QDir dir(QCoreApplication::applicationDirPath() + QString("/../share/" MUSE_APP_INSTALL_NAME));
++    return dir.absolutePath() + "/";
++#elif defined(Q_OS_WIN)
+     QDir dir(QCoreApplication::applicationDirPath() + QString("/../"));
+     return dir.absolutePath() + "/";
+ #elif defined(Q_OS_MAC)
