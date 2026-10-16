@@ -1,0 +1,44 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=error-prone-annotations
+pkgbase=mingw-w64-java-error-prone-annotations
+pkgname="${MINGW_PACKAGE_PREFIX}-java-error-prone-annotations"
+pkgver=2.47.0
+pkgrel=1
+pkgdesc="Error Prone annotations, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://errorprone.info/'
+msys2_repository_url='https://github.com/google/error-prone'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("error-prone-${pkgver}.tar.gz::https://github.com/google/error-prone/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('8d870a5af3655579c84439bc6c6d683f7ef07d6e4648a8ec6c39ae5b64b66d91')
+
+_src=error-prone-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # only the annotations module; the compiler plugin is not needed
+  jb_module com.google.errorprone:error_prone_annotations:${pkgver} annotations/src/main/java \
+    -u annotations/pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # annotations only, no upstream tests in this module
+  jb_loadcheck com.google.errorprone:error_prone_annotations
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.errorprone:error_prone_annotations
+  install -Dm644 "${_src}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-error-prone-annotations/COPYING"
+}

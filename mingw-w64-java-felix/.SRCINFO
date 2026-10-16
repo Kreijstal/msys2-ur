@@ -1,0 +1,46 @@
+pkgbase = mingw-w64-java-felix
+	pkgdesc = Apache Felix SCR and Gogo for Equinox (mingw-w64)
+	pkgver = 2.2.18
+	pkgrel = 1
+	url = https://felix.apache.org/
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-annotation
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-core
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-namespace-extender
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-namespace-service
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component-annotations
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-cm
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-event
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-metatype
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-promise
+	noextract = felix-scr-2.2.18.tar.gz
+	noextract = felix-gogo-runtime-1.1.6.tar.gz
+	noextract = felix-gogo-shell-1.1.4.tar.gz
+	noextract = felix-gogo-command-1.1.2.tar.gz
+	source = felix-scr-2.2.18.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.scr-2.2.18.tar.gz
+	source = felix-gogo-runtime-1.1.6.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.runtime-1.1.6.tar.gz
+	source = felix-gogo-shell-1.1.4.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.shell-1.1.4.tar.gz
+	source = felix-gogo-command-1.1.2.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.command-1.1.2.tar.gz
+	sha256sums = 0afb33c2908f7b128f88faf0ab9a1a203093906624b1f2775c00ab76d6c1295c
+	sha256sums = ee279a2a942fbca76b989061f261bfd57219af160ea26ea431da86069c47d12f
+	sha256sums = 3343a2a2527be4bef51d71a67d0815a3c409f557f410a7955fed600c9064c84f
+	sha256sums = a28b4efa8bae25ca3d3fb896fb6e0a6dc5ae4ec7b89226e7a00d477d389f013b
+
+pkgname = mingw-w64-ucrt-x86_64-java-felix-gogo-runtime
+	pkgdesc = Apache Felix Gogo runtime 1.1.6, OSGi shell runtime (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-java-felix-gogo-shell
+	pkgdesc = Apache Felix Gogo shell 1.1.4, OSGi console (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-felix-gogo-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-java-felix-gogo-command
+	pkgdesc = Apache Felix Gogo command 1.1.2, basic OSGi shell commands (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-felix-gogo-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-java-felix-scr
+	pkgdesc = Apache Felix Service Component Runtime 2.2.18, OSGi Declarative Services (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-component
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-promise

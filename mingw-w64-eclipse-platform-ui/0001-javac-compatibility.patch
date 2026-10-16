@@ -1,0 +1,12 @@
+diff -ruN a/eclipse.platform-R4_41/team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelEnablementPreferencePage.java b/eclipse.platform-R4_41/team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelEnablementPreferencePage.java
+--- a/eclipse.platform-R4_41/team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelEnablementPreferencePage.java
++++ b/eclipse.platform-R4_41/team/bundles/org.eclipse.team.ui/src/org/eclipse/team/internal/ui/mapping/ModelEnablementPreferencePage.java
+@@ -174,7 +174,7 @@
+ 	public boolean performOk() {
+ 		Object[] checked = tableViewer.getCheckedElements();
+ 		Set<ITeamContentProviderDescriptor> nowEnabled = new HashSet<>();
+-		nowEnabled.addAll((Collection<? extends ITeamContentProviderDescriptor>) Arrays.asList(checked));
++		nowEnabled.addAll((Collection<? extends ITeamContentProviderDescriptor>) (Collection<?>) Arrays.asList(checked));
+ 		if (hasDescriptorEnablementChanged(checked)) {
+ 			TeamUI.getTeamContentProviderManager().setEnabledDescriptors(
+ 					nowEnabled.toArray(new ITeamContentProviderDescriptor[nowEnabled.size()]));

@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+set -euo pipefail
+
+prefix=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+export PATH="$prefix/bin:$PATH"
+plugins=$prefix/lib/eclipse/plugins
+java=$prefix/bin/java.exe
+workspace=$HOME/eclipse-workspace
+app_args=()
+jvm_args=()
+while (($#)); do
+  case $1 in
+    -h|--help)
+      printf '%s\n' 'Usage: eclipse-foundation [-data WORKSPACE] [Eclipse options] [-vmargs JVM options]'
+      exit 0 ;;
+    -data)
+      [[ $# -ge 2 ]] || { printf '%s\n' '-data requires a workspace directory' >&2; exit 2; }
+      workspace=$2; shift 2 ;;
+    -vmargs) shift; jvm_args=("$@"); break ;;
+    *) app_args+=("$1"); shift ;;
+  esac
+done
+
+if [[ -n ${XDG_STATE_HOME:-} ]]; then
+  state=$XDG_STATE_HOME
+elif [[ -n ${LOCALAPPDATA:-} ]]; then
+  state=$(cygpath -u "$LOCALAPPDATA")
+else
+  state=$HOME/.local/state
+fi
+state=$state/msys2-ur/eclipse-foundation
+config=$state/configuration
+user_plugins=$state/plugins
+mkdir -p "$config/org.eclipse.equinox.simpleconfigurator" "$user_plugins"
+
+plugin() {
+  local files=("$plugins/$1"_*)
+  [[ -e ${files[0]} ]] || { printf 'Missing Eclipse bundle: %s\n' "$1" >&2; exit 1; }
+  printf '%s\n' "${files[@]}" | sort -V | tail -1
+}
+
+# ASCII file URIs also work with spaces and non-ASCII Windows user names.
+property_uri() {
+  local LC_ALL=C path encoded= char hex i
+  path=$(cygpath -am "$1")
+  for ((i=0; i<${#path}; i++)); do
+    char=${path:i:1}
+    case $char in
+      [a-zA-Z0-9/_.:~-]) encoded+=$char ;;
+      *) printf -v hex '%02X' "'$char"; encoded+="%$hex" ;;
+    esac
+  done
+  printf 'file\\:/%s' "${encoded//:/\\:}"
+}
+
+bundles=$config/org.eclipse.equinox.simpleconfigurator/bundles.info
+temporary=$(mktemp "$config/bundles.XXXXXX")
+trap 'rm -f -- "$temporary"' EXIT
+"$java" -cp "$(cygpath -am "$prefix/share/java-build-helper/javabuild.jar")" \
+  jb.Osgi bundlesinfo --dirs "$(cygpath -am "$plugins");$(cygpath -am "$user_plugins")" --all \
+  --start org.eclipse.equinox.simpleconfigurator@1:true \
+  --start org.apache.felix.scr@2:true --start org.eclipse.equinox.common@2:true \
+  --start org.eclipse.equinox.event@2:true \
+  --start org.apache.aries.spifly.dynamic.bundle@2:true \
+  --start org.eclipse.core.runtime@4:true --start org.eclipse.osgi@-1:true \
+  "$(cygpath -am "$temporary")"
+if ! cmp -s "$temporary" "$bundles"; then mv -f -- "$temporary" "$bundles"; fi
+rm -f -- "$temporary"
+trap - EXIT
+
+simple=$(plugin org.eclipse.equinox.simpleconfigurator)
+cat > "$config/config.ini" <<EOF
+osgi.framework=$(property_uri "$(plugin org.eclipse.osgi)")
+osgi.bundles=reference\:$(property_uri "$simple")@1\:start
+org.eclipse.equinox.simpleconfigurator.configUrl=file\:org.eclipse.equinox.simpleconfigurator/bundles.info
+osgi.bundles.defaultStartLevel=4
+eclipse.application=org.eclipse.ui.ide.workbench
+EOF
+
+java_home=$("$java" -XshowSettings:properties -version 2>&1 |
+  sed -n 's/^ *java.home = //p' | tr -d '\r')
+[[ -n $java_home ]] || { printf '%s\n' 'Cannot locate the packaged Java runtime' >&2; exit 1; }
+exec "$prefix/lib/eclipse/eclipse.exe" \
+  -startup "$(cygpath -am "$(plugin org.eclipse.equinox.launcher)")" \
+  --launcher.library "$(cygpath -am "$(plugin org.eclipse.equinox.launcher.win32.win32.x86_64)")" \
+  -configuration "$(cygpath -am "$config")" -data "$(cygpath -am "$workspace")" \
+  -vm "$(cygpath -am "$java_home/bin/server/jvm.dll")" "${app_args[@]}" \
+  -vmargs --enable-native-access=ALL-UNNAMED --enable-final-field-mutation=ALL-UNNAMED \
+  "${jvm_args[@]}"

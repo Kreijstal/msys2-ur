@@ -1,0 +1,95 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# JSVG, the SVG renderer behind SWT's SVG image support (org.eclipse.swt.svg),
+# built with javac instead of Gradle.  The OSGi manifest is the one the bnd
+# Gradle plugin writes from the bundle annotations: every package exported,
+# and the Service Loader Mediator requirements of @ServiceConsumer (served
+# by Apache Aries SPI Fly at run time).
+
+_realname=jsvg
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=2.1.0
+pkgrel=2
+pkgdesc="JSVG, a Java SVG renderer, OSGi bundle com.github.weisj.jsvg (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/weisJ/jsvg'
+license=('spdx:MIT')
+# the bundle requires the Service Loader Mediator (osgi.serviceloader.processor)
+depends=("${MINGW_PACKAGE_PREFIX}-java-aries-spifly-dynamic-bundle")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jetbrains-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-error-prone-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-bnd-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation")
+source=("jsvg-${pkgver}.tar.gz::https://github.com/weisJ/jsvg/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('10d0c55cbfe150cf6dc4b0856cabc974a7c33f0c068383642dbeb0285d8125b0')
+
+_src=jsvg-${pkgver}
+
+prepare() {
+  find "${_src}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local JB_RELEASE=8
+  local -a ann=(-c org.jetbrains:annotations -c com.google.errorprone:error_prone_annotations
+                -c biz.aQute.bnd:biz.aQute.bnd.annotation -c org.osgi:osgi.annotation)
+  # the project's own annotations (compileOnly upstream)
+  jb_module com.github.weisj:jsvg-annotations:${pkgver} annotations/src/main/java "${ann[@]}"
+  local exports
+  # the packages whose package-info carries @org.osgi.annotation.bundle.Export
+  exports=$(cd jsvg/src/main/java && grep -l '@org.osgi.annotation.bundle.Export' $(find com -name package-info.java) \
+    | xargs -n1 dirname | sort -u | tr / . | sed "s/\$/;version=${pkgver}/" | paste -sd, -)
+  cat > "${srcdir}/jsvg.bnd" <<EOF
+Bundle-SymbolicName: com.github.weisj.jsvg
+Bundle-Version: ${pkgver}
+Bundle-Name: com.github.weisj.jsvg
+Bundle-License: MIT
+Export-Package: ${exports}
+Import-Package: !com.google.errorprone.annotations,!com.google.errorprone.annotations.*,!org.jetbrains.annotations,!org.jetbrains.annotations.*,!com.github.weisj.jsvg.annotations,!com.github.weisj.jsvg.annotations.*,!org.osgi.annotation.bundle,!org.osgi.annotation.bundle.*,!biz.aQute.bnd.annotation,!biz.aQute.bnd.annotation.*,*
+-noee: true
+Require-Capability: osgi.extender;filter:="(&(osgi.extender=osgi.serviceloader.processor)(version>=1.0.0)(!(version>=2.0.0)))",osgi.serviceloader;filter:="(osgi.serviceloader=com.github.weisj.jsvg.logging.LogManager)";osgi.serviceloader="com.github.weisj.jsvg.logging.LogManager",osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+EOF
+  rm -rf "${srcdir}/res" && mkdir -p "${srcdir}/res/META-INF"
+  cp LICENSE "${srcdir}/res/META-INF/LICENSE"
+  jb_module com.github.weisj:jsvg:${pkgver} jsvg/src/main/java -r "${srcdir}/res" -b "${srcdir}/jsvg.bnd" \
+    "${ann[@]}" -c com.github.weisj:jsvg-annotations -m 'Automatic-Module-Name: com.github.weisj.jsvg'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck com.github.weisj:jsvg
+  # parse and render a small SVG
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import com.github.weisj.jsvg.SVGDocument;
+import com.github.weisj.jsvg.parser.SVGLoader;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    String svg = "<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><rect width='16' height='16' fill='#ff0000'/></svg>";
+    SVGDocument doc = new SVGLoader().load(new ByteArrayInputStream(svg.getBytes("UTF-8")), null,
+        com.github.weisj.jsvg.parser.LoaderContext.createDefault());
+    BufferedImage img = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+    java.awt.Graphics2D g = img.createGraphics(); doc.render(null, g); g.dispose();
+    if ((img.getRGB(8, 8) & 0xffffff) != 0xff0000) throw new AssertionError(Integer.toHexString(img.getRGB(8, 8)));
+    System.out.println("jsvg smoke test ok: " + doc.size());
+  }
+}
+JAVA
+  cp=$(jb_cp com.github.weisj:jsvg)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -Djava.awt.headless=true -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin com.github.weisj:jsvg
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE"
+}

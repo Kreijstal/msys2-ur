@@ -1,0 +1,221 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse Platform 4.41 (2026-09), core layer: the Equinox OSGi framework and
+# its services (github.com/eclipse-equinox/equinox) with the non-UI bundles of
+# github.com/eclipse-platform/eclipse.platform (runtime, jobs, content types,
+# expressions, e4 DI, resources, debug/team/compare core, net, help,
+# update.configurator), plus the native launcher (eclipse.exe and the
+# launcher library) built from the equinox executable feature's C sources.
+#
+# Both repositories are one pkgbase because their bundles depend on each
+# other (org.eclipse.equinox.registry/.security need org.eclipse.core.jobs and
+# .runtime, which need Equinox).  The UI bundles of eclipse.platform are built
+# by mingw-w64-eclipse-platform-ui, after SWT, p2 and EMF.
+#
+# Bundles are compiled with javac from their MANIFEST.MF and build.properties
+# (javabuild.sh's jb_bundle); ".qualifier" becomes the release's build id.
+
+_realname=eclipse-platform-core
+pkgbase=mingw-w64-${_realname}
+pkgver=4.41
+pkgrel=1
+_tag=R${pkgver/./_}
+_qualifier=v20260828-1142
+_eq=equinox-${_tag}
+_pl=eclipse.platform-${_tag}
+
+# bundle symbolic name | directory | split packages it depends on
+_bundles=(
+  "org.eclipse.osgi|${_eq}/bundles/org.eclipse.osgi|"
+  "org.eclipse.osgi.compatibility.state|${_eq}/bundles/org.eclipse.osgi.compatibility.state|eclipse-osgi"
+  "org.eclipse.equinox.supplement|${_eq}/bundles/org.eclipse.osgi/supplement|eclipse-osgi"
+  "org.eclipse.osgi.util|${_eq}/bundles/org.eclipse.osgi.util|java-osgi-util-function java-osgi-util-promise java-osgi-util-measurement java-osgi-util-position java-osgi-util-xml"
+  "org.eclipse.equinox.common|${_eq}/bundles/org.eclipse.equinox.common|eclipse-osgi"
+  "org.eclipse.equinox.registry|${_eq}/bundles/org.eclipse.equinox.registry|eclipse-equinox-common eclipse-osgi"
+  "org.eclipse.equinox.preferences|${_eq}/bundles/org.eclipse.equinox.preferences|eclipse-equinox-common java-osgi-service-prefs eclipse-osgi"
+  "org.eclipse.equinox.app|${_eq}/bundles/org.eclipse.equinox.app|eclipse-equinox-registry eclipse-equinox-common eclipse-osgi"
+  "org.eclipse.equinox.event|${_eq}/bundles/org.eclipse.equinox.event|eclipse-osgi java-osgi-service-event java-felix-scr"
+  "org.eclipse.equinox.security|${_eq}/bundles/org.eclipse.equinox.security|eclipse-core-runtime eclipse-core-jobs eclipse-equinox-preferences eclipse-osgi java-osgi-service-prefs"
+  "org.eclipse.equinox.security.win32|${_eq}/bundles/org.eclipse.equinox.security.win32|eclipse-equinox-security java-jna-platform"
+  "org.eclipse.equinox.launcher|${_eq}/bundles/org.eclipse.equinox.launcher|"
+  "org.eclipse.equinox.launcher.win32.win32.x86_64|${_eq}/bundles/org.eclipse.equinox.launcher.win32.win32.x86_64|eclipse-equinox-launcher"
+  "org.eclipse.equinox.console|${_eq}/bundles/org.eclipse.equinox.console|java-felix-gogo-runtime eclipse-osgi"
+  "org.eclipse.equinox.bidi|${_eq}/bundles/org.eclipse.equinox.bidi|eclipse-equinox-common eclipse-equinox-registry eclipse-osgi"
+  "org.eclipse.core.runtime|${_pl}/runtime/bundles/org.eclipse.core.runtime|eclipse-osgi eclipse-equinox-common eclipse-core-jobs eclipse-equinox-registry eclipse-equinox-preferences eclipse-core-contenttype eclipse-equinox-app"
+  "org.eclipse.core.contenttype|${_pl}/runtime/bundles/org.eclipse.core.contenttype|eclipse-equinox-preferences eclipse-equinox-registry eclipse-equinox-common eclipse-osgi java-felix-scr"
+  "org.eclipse.core.jobs|${_pl}/runtime/bundles/org.eclipse.core.jobs|eclipse-equinox-common eclipse-osgi"
+  "org.eclipse.core.expressions|${_pl}/runtime/bundles/org.eclipse.core.expressions|eclipse-core-runtime"
+  "org.eclipse.e4.core.contexts|${_pl}/runtime/bundles/org.eclipse.e4.core.contexts|eclipse-e4-core-di java-jakarta-inject-api eclipse-osgi java-osgi-service-event"
+  "org.eclipse.e4.core.di|${_pl}/runtime/bundles/org.eclipse.e4.core.di|eclipse-e4-core-di-annotations eclipse-osgi"
+  "org.eclipse.e4.core.di.annotations|${_pl}/runtime/bundles/org.eclipse.e4.core.di.annotations|java-jakarta-inject-api"
+  "org.eclipse.e4.core.di.extensions|${_pl}/runtime/bundles/org.eclipse.e4.core.di.extensions|java-jakarta-inject-api eclipse-osgi"
+  "org.eclipse.e4.core.di.extensions.supplier|${_pl}/runtime/bundles/org.eclipse.e4.core.di.extensions.supplier|java-jakarta-annotation-api eclipse-equinox-preferences eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-core-di-annotations eclipse-e4-core-di-extensions eclipse-osgi java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.core.services|${_pl}/runtime/bundles/org.eclipse.e4.core.services|eclipse-equinox-common eclipse-equinox-preferences eclipse-core-jobs eclipse-e4-core-di eclipse-e4-core-contexts java-jakarta-annotation-api java-jakarta-inject-api eclipse-osgi java-felix-scr"
+  "org.eclipse.core.resources|${_pl}/resources/bundles/org.eclipse.core.resources|eclipse-core-expressions eclipse-core-filesystem eclipse-core-runtime java-jna eclipse-osgi"
+  "org.eclipse.core.filesystem|${_pl}/resources/bundles/org.eclipse.core.filesystem|eclipse-core-runtime java-jna java-jna-platform"
+  "org.eclipse.core.variables|${_pl}/debug/org.eclipse.core.variables|eclipse-core-runtime"
+  "org.eclipse.debug.core|${_pl}/debug/org.eclipse.debug.core|eclipse-core-resources eclipse-core-variables eclipse-core-runtime eclipse-core-filesystem eclipse-core-expressions"
+  "org.eclipse.team.core|${_pl}/team/bundles/org.eclipse.team.core|eclipse-core-resources eclipse-core-runtime eclipse-core-filesystem eclipse-compare-core"
+  "org.eclipse.compare.core|${_pl}/team/bundles/org.eclipse.compare.core|eclipse-core-runtime"
+  "org.eclipse.core.net|${_pl}/team/bundles/org.eclipse.core.net|eclipse-equinox-security eclipse-equinox-common eclipse-equinox-preferences eclipse-osgi eclipse-equinox-registry java-jna java-jna-platform"
+  "org.eclipse.help|${_pl}/ua/org.eclipse.help|eclipse-core-runtime eclipse-core-expressions"
+  "org.eclipse.update.configurator|${_pl}/update/org.eclipse.update.configurator|eclipse-core-runtime"
+)
+
+_pn() { local b=${1#org.eclipse.}; echo "eclipse-${b//./-}"; }
+
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-equinox-executable")
+for _e in "${_bundles[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-$(_pn "${_e%%|*}")"); done
+pkgdesc="Eclipse Platform core bundles: Equinox and the platform runtime (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/eclipse/'
+msys2_repository_url='https://github.com/eclipse-platform/eclipse.platform'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-cm"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-event"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-prefs"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-metatype"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-function"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-promise"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-measurement"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-position"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-xml"
+             "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-runtime"
+             "${MINGW_PACKAGE_PREFIX}-java-felix-scr"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-inject-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-annotation-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jna-platform")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-shell"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-command")
+source=("equinox-${_tag}.tar.gz::https://github.com/eclipse-equinox/equinox/archive/refs/tags/${_tag}.tar.gz"
+        "eclipse.platform-${_tag}.tar.gz::https://github.com/eclipse-platform/eclipse.platform/archive/refs/tags/${_tag}.tar.gz")
+sha256sums=('995e801eca5f8ebb0471d731226c2e4eab421e7933bec7c01280abe2c4e78304'
+            '235ea1a33d2388962b90179f64a66a48013ffe576a68210da970557870785b09')
+
+prepare() {
+  # org.eclipse.osgi compiles against stubs of OpenJ9's shared classes API,
+  # which upstream keeps (sources and classes) in osgi/j9stubs.jar
+  rm -rf j9stubs && mkdir -p j9stubs
+  (cd j9stubs && jar --extract --file "$(cygpath -m "${srcdir}/${_eq}/bundles/org.eclipse.osgi/osgi/j9stubs.jar")")
+  find j9stubs ! -name '*.java' -type f -delete
+  # no prebuilt binaries: jars, classes, native libraries and launchers
+  find "${_eq}" "${_pl}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' -o -name '*.a' -o -name '*.lib' -o -name '*.o' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_QUALIFIER=${_qualifier}
+  mkdir -p j9stubs-classes
+  JB_RELEASE=8 jb_javac -d "$(jb_w j9stubs-classes)" -- j9stubs
+
+  # --- the launcher library and executables (library/win32/make_win64.mak)
+  local lib="${_eq}/features/org.eclipse.equinox.executable.feature/library" jh v out="${srcdir}/launcher"
+  jh=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.home = //p' | tr -d '\r')
+  v=$(sed -n 's/^maj_ver=//p' "${lib}/make_version.mak")$(sed -n 's/^min_ver=//p' "${lib}/make_version.mak")
+  rm -rf "${out}" && mkdir -p "${out}"
+  local -a cf=(-O2 -DNDEBUG -DUNICODE -D_UNICODE -DCOBJMACROS -DWIN64 -D_WIN64 -DUSE_ASSEMBLER
+               -DDEFAULT_OS='"win32"' -DDEFAULT_OS_ARCH='"x86_64"' -DDEFAULT_WS='"win32"'
+               -I"${lib}" -I"${jh}/include" -I"${jh}/include/win32" -municode
+               # GCC >= 14 rejects the TIMERPROC with UINT instead of UINT_PTR that MSVC accepts
+               -Wno-error=incompatible-pointer-types)
+  local f
+  for f in eclipse eclipseUtil eclipseConfig eclipseCommon eclipseJNI eclipseShm; do
+    gcc "${cf[@]}" -c "${lib}/${f}.c" -o "${out}/${f}.o"
+  done
+  for f in eclipseWin eclipseWinCommon; do
+    gcc "${cf[@]}" -c "${lib}/win32/${f}.c" -o "${out}/${f}.o"
+  done
+  gcc "${cf[@]}" -c "${lib}/eclipseMain.c" -o "${out}/eclipseMain.o"
+  gcc "${cf[@]}" -D_WIN32_CONSOLE -c "${lib}/eclipseMain.c" -o "${out}/eclipseMainConsole.o"
+  windres -I"${lib}/win32" "${lib}/win32/eclipse.rc" -O coff -o "${out}/eclipse.res.o"
+  local common=("${out}"/{eclipseConfig,eclipseCommon,eclipseWinCommon}.o)
+  gcc -municode -mwindows -o "${out}/eclipse.exe" "${out}/eclipseMain.o" "${common[@]}" "${out}/eclipse.res.o" \
+    -static-libgcc -lcomctl32 -lole32 -lwindowscodecs
+  gcc -municode -o "${out}/eclipsec.exe" "${out}/eclipseMainConsole.o" "${common[@]}" "${out}/eclipse.res.o" \
+    -static-libgcc -lcomctl32 -lole32 -lwindowscodecs
+  gcc -shared -o "${out}/eclipse_${v}.dll" "${out}"/{eclipse,eclipseWin,eclipseUtil,eclipseJNI,eclipseShm}.o \
+    "${common[@]}" -static-libgcc -lcomctl32 -lgdi32 -ladvapi32 -lversion -lole32 -lwindowscodecs
+
+  # --- the bundles, in dependency order
+  local -a dirs=()
+  local e
+  for e in "${_bundles[@]}"; do
+    e=${e#*|}
+    dirs+=("${e%%|*}")
+  done
+  local -a JB_BUNDLE_OPTS_org_eclipse_osgi=(-C j9stubs-classes)
+  # the Ant tasks (ant_tasks/resources-ant.jar) need org.eclipse.ant.core, not packaged
+  local -a JB_BUNDLE_OPTS_org_eclipse_core_resources=(-L ant_tasks/resources-ant.jar)
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_launcher_win32_win32_x86_64=(-a "${out}/eclipse_${v}.dll=eclipse_${v}.dll")
+  jb_bundles -- "${dirs[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local e b
+  for e in "${_bundles[@]}"; do
+    b=${e%%|*}
+    case $b in
+      # the OpenJ9 shared classes support (only loaded on OpenJ9)
+      org.eclipse.osgi) jb_bundle_loadcheck --ignore 'org\.eclipse\.osgi\.internal\.cds\.' "$b" ;;
+      *) jb_bundle_loadcheck "$b" ;;
+    esac
+  done
+  # every bundle resolves in Equinox, with the installed third-party bundles
+  jb_osgi_resolvecheck
+  # upstream JUnit 4 tests of org.eclipse.equinox.common that run without a
+  # framework (the others need the test harness bundle or a running OSGi)
+  local -a cx=()
+  for b in org.eclipse.equinox.common org.eclipse.osgi org.eclipse.core.runtime org.eclipse.core.jobs \
+           org.eclipse.equinox.registry; do
+    cx+=(-C "$(jb_bundle_jar "$b")")
+  done
+  (cd "${_eq}/bundles/org.eclipse.equinox.common.tests" && JB_RELEASE=17 jb_test equinox.common src \
+    -g 'org\.eclipse\.core\.tests\.harness|FrameworkUtil|BundleContext|ServiceCaller|FileLocator|AdapterManager|IAdapterManager|PlatformLogWriter|RuntimeTests|AllTests|AdaptableTests' \
+    -X org.eclipse.equinox.common.tests.URLTest "${cx[@]}" --)
+}
+
+_package_bundle() {
+  local bsn=$1 n
+  n=$(_pn "${bsn}")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+  install -Dm644 "${srcdir}/${_pl}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${n}/LICENSE"
+}
+
+package_eclipse-equinox-executable() {
+  pkgdesc="Eclipse native launcher, eclipse.exe and eclipsec.exe (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-equinox-launcher-win32-win32-x86_64")
+  install -Dm755 "${srcdir}/launcher/eclipse.exe" "${pkgdir}${MINGW_PREFIX}/lib/eclipse/eclipse.exe"
+  install -Dm755 "${srcdir}/launcher/eclipsec.exe" "${pkgdir}${MINGW_PREFIX}/lib/eclipse/eclipsec.exe"
+  install -Dm644 "${srcdir}/${_pl}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-equinox-executable/LICENSE"
+}
+
+for _e in "${_bundles[@]}"; do
+  _b=${_e%%|*}
+  _d=${_e##*|}
+  eval "package_$(_pn "${_b}")() {
+    pkgdesc='Eclipse ${_b} bundle (mingw-w64)'
+    depends=($(for _x in ${_d}; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "${_x}"; done))
+    _package_bundle ${_b}
+  }"
+done
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

@@ -1,0 +1,64 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=junit4
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=4.13.2
+pkgrel=1
+pkgdesc="JUnit 4, the unit testing framework for Java, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://junit.org/junit4/'
+msys2_repository_url='https://github.com/junit-team/junit4'
+license=('spdx:EPL-1.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-hamcrest-core")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-hamcrest-library")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/junit-team/junit4/archive/refs/tags/r${pkgver}.tar.gz")
+sha256sums=('1b6d700fc374c82951d247f6d80238951d87c61661ceb151f9fbf40f65413561')
+
+_src=junit4-r${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # bundled hamcrest-core and the maven wrapper
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # LICENSE-junit.txt goes into the jar too (upstream's resources)
+  install -Dm644 LICENSE-junit.txt "${srcdir}/license-res/LICENSE-junit.txt"
+  jb_module junit:junit:${pkgver} src/main/java -r src/main/resources -r "${srcdir}/license-res" -u pom.xml \
+    -m "Automatic-Module-Name: junit" \
+    -- org.hamcrest:hamcrest-core
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_loadcheck junit:junit
+  # upstream test suite
+  local t="${srcdir}/test-classes"
+  rm -rf "${t}"
+  mkdir -p "${t}"
+  cp -r src/test/resources/. "${t}/"
+  local cp
+  cp=$(jb_cp junit:junit org.hamcrest:hamcrest-library)
+  jb_javac -d "$(jb_w "${t}")" -cp "${cp}" -proc:none -- src/test/java
+  # excluded: tests that install a SecurityManager (removed in JDK 24) or
+  # expect ThreadGroup.destroy() to work (a no-op since JDK 21)
+  jb_junit4 "${t}" "${cp}" \
+    -x 'CommandLineTest#runATest' \
+    -x JUnitCoreReturnsCorrectExitCodeTest \
+    -x 'FailOnTimeoutTest#lookingForStuckThread_threadGroupNotLeaked' \
+    org.junit.tests.AllTests
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install junit:junit
+  install -Dm644 "${_src}/LICENSE-junit.txt" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE-junit.txt"
+}

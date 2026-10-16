@@ -1,0 +1,24 @@
+pkgbase = mingw-w64-eclipse-lsp4j
+	pkgdesc = Eclipse LSP4J, Java bindings for the Language Server Protocol (mingw-w64)
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/eclipse-lsp4j/lsp4j
+	arch = any
+	license = spdx:EPL-2.0 OR BSD-3-Clause
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-gson
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-orbit-gson
+	noextract = org.eclipse.lsp4j-1.0.0-sources.jar
+	source = lsp4j-1.0.0.tar.gz::https://github.com/eclipse-lsp4j/lsp4j/archive/refs/tags/v1.0.0.tar.gz
+	source = https://repo1.maven.org/maven2/org/eclipse/lsp4j/org.eclipse.lsp4j/1.0.0/org.eclipse.lsp4j-1.0.0-sources.jar
+	sha256sums = 3e6e495edff5cdaf61078bc6bb6f9c6b860280573bd96b67c0a0c863d26c9e80
+	sha256sums = e5a5ed6ddc23508af07700b79217212376ddcd45f7e8dffbd29c8aecf8de8944
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-lsp4j-jsonrpc
+	pkgdesc = Eclipse LSP4J JSON-RPC, bundle org.eclipse.lsp4j.jsonrpc (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-gson
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-gson
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-lsp4j
+	pkgdesc = Eclipse LSP4J Language Server Protocol bindings, bundle org.eclipse.lsp4j (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-lsp4j-jsonrpc

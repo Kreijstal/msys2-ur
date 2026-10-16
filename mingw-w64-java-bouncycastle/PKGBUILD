@@ -1,0 +1,160 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Bouncy Castle Java APIs (bcprov, bcutil, bcpg), the jdk18on artifacts,
+# built with javac instead of Gradle: the main sources for Java 8 and the
+# Multi-Release overlays (META-INF/versions/N) as prov/util/pg's build.gradle
+# define them; the module-info classes are not built.  The OSGi headers are
+# those of the build.gradle files, processed by jb.Bnd (bnd's builder
+# upstream).  r1rv85v2 is the 1.85.2 bcprov fix release; util and pg are
+# unchanged there and keep version 1.85, as in the Eclipse 2026-09 release.
+
+_realname=bouncycastle
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-bcprov"
+         "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+         "${MINGW_PACKAGE_PREFIX}-java-bcpg")
+pkgver=1.85.2
+pkgrel=1
+_bcver=1.85
+pkgdesc="Bouncy Castle Java cryptography APIs (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.bouncycastle.org/'
+msys2_repository_url='https://github.com/bcgit/bc-java'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("bc-java-r1rv85v2.tar.gz::https://github.com/bcgit/bc-java/archive/refs/tags/r1rv85v2.tar.gz")
+sha256sums=('a47d9dc38ae82c76db8150b656d06a1c8a8f3ca398c13d20632fc436ed7a265b')
+
+_src=bc-java-r1rv85v2
+
+prepare() {
+  cd "${_src}"
+  find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' \) -delete
+}
+
+_headers() {
+  cat <<EOF
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Permissions: all-permissions
+Codebase: *
+Application-Library-Allowable-Codebase: *
+Caller-Allowable-Codebase: *
+Trusted-Library: true
+EOF
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local JB_RELEASE=8 res="${srcdir}/res"
+  rm -rf "${res}" && mkdir -p "${res}/prov/META-INF" "${res}/util/META-INF" "${res}/pg/META-INF"
+  for d in prov util pg; do cp LICENSE.md "${res}/${d}/META-INF/"; done
+  cp -r core/src/main/resources/. prov/src/main/resources/. "${res}/prov/"
+
+  { _headers; cat <<EOF
+Bundle-Name: bcprov
+Bundle-SymbolicName: bcprov
+Bundle-Version: ${pkgver}
+Export-Package: !org.bouncycastle.internal.*,org.bouncycastle.*;version=${pkgver}
+Import-Package: java.*;resolution:=optional,javax.*;resolution:=optional
+-noee: true
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+EOF
+  } > "${srcdir}/bcprov.bnd"
+  jb_module org.bouncycastle:bcprov-jdk18on:${pkgver} core/src/main/java -s prov/src/main/java \
+    -r "${res}/prov" -b "${srcdir}/bcprov.bnd" \
+    -v 9:prov/src/main/jdk1.9 -v 11:prov/src/main/jdk1.11 \
+    -v 15:prov/src/main/jdk1.15 -v 17t:prov/src/main/jdk17 -v 25:prov/src/main/jdk25
+
+  local up='org.bouncycastle.asn1.{bsi|cmc|cmp|cms|crmf|cryptlib|dvcs|eac|edec|esf|ess|est|gnu|icao|isara|isismtt|iso|kisa|microsoft|misc|mod|mozilla|nsri|ntt|oiw|rosstandart|smime|tsp}.*'
+  { _headers; cat <<EOF
+Bundle-Name: bcutil
+Bundle-SymbolicName: bcutil
+Bundle-Version: ${_bcver}
+Export-Package: ${up};version=${_bcver},org.bouncycastle.oer.*;version=${_bcver}
+Import-Package: java.*;resolution:=optional,javax.*;resolution:=optional,!${up},!org.bouncycastle.oer.*,org.bouncycastle.*;version="[${_bcver},1.86)"
+-noee: true
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+EOF
+  } > "${srcdir}/bcutil.bnd"
+  jb_module org.bouncycastle:bcutil-jdk18on:${_bcver} util/src/main/java -r "${res}/util" -b "${srcdir}/bcutil.bnd" \
+    -v 9:util/src/main/jdk1.9 -- org.bouncycastle:bcprov-jdk18on
+
+  { _headers; cat <<EOF
+Bundle-Name: bcpg
+Bundle-SymbolicName: bcpg
+Bundle-Version: ${_bcver}
+Export-Package: org.bouncycastle.{apache|bcpg|gpg|openpgp}.*;version=${_bcver}
+Import-Package: java.*;resolution:=optional,javax.*;resolution:=optional,!org.bouncycastle.{apache|bcpg|gpg|openpgp|}.*,org.bouncycastle.*;version="[${_bcver},1.86)"
+-noee: true
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+EOF
+  } > "${srcdir}/bcpg.bnd"
+  jb_module org.bouncycastle:bcpg-jdk18on:${_bcver} pg/src/main/java -r "${res}/pg" -b "${srcdir}/bcpg.bnd" \
+    -v 9:pg/src/main/jdk1.9 -- org.bouncycastle:bcprov-jdk18on org.bouncycastle:bcutil-jdk18on
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.bouncycastle:bcprov-jdk18on org.bouncycastle:bcutil-jdk18on org.bouncycastle:bcpg-jdk18on
+  # a provider round trip and an OpenPGP armour
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.security.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.bcpg.ArmoredOutputStream;
+import org.bouncycastle.util.encoders.Hex;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    Security.addProvider(new BouncyCastleProvider());
+    byte[] d = MessageDigest.getInstance("SHA3-256", "BC").digest("abc".getBytes("UTF-8"));
+    String h = Hex.toHexString(d);
+    if (!h.equals("3a985da74fe225b2045c172d6bd390bd855f086e3e9d525b46bfe24511431532")) throw new AssertionError(h);
+    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+    try (ArmoredOutputStream ao = new ArmoredOutputStream(bo)) { ao.write(d); }
+    if (!bo.toString("US-ASCII").contains("BEGIN PGP MESSAGE")) throw new AssertionError(bo);
+    System.out.println("bouncycastle smoke test ok: " + new BouncyCastleProvider().getInfo());
+  }
+}
+JAVA
+  cp=$(jb_cp org.bouncycastle:bcpg-jdk18on)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package_java-bcprov() {
+  pkgdesc="Bouncy Castle provider and lightweight crypto API, bcprov ${pkgver} (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar bcprov --plugin org.bouncycastle:bcprov-jdk18on
+  install -Dm644 "${srcdir}/${_src}/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-bcprov/LICENSE.md"
+}
+
+package_java-bcutil() {
+  pkgdesc="Bouncy Castle ASN.1 extension and utility APIs, bcutil ${_bcver} (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-bcprov")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar bcutil --plugin org.bouncycastle:bcutil-jdk18on
+  install -Dm644 "${srcdir}/${_src}/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-bcutil/LICENSE.md"
+}
+
+package_java-bcpg() {
+  pkgdesc="Bouncy Castle OpenPGP API, bcpg ${_bcver} (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-bcutil")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar bcpg --plugin org.bouncycastle:bcpg-jdk18on
+  install -Dm644 "${srcdir}/${_src}/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-bcpg/LICENSE.md"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

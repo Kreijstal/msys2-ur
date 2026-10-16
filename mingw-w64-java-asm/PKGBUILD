@@ -1,0 +1,110 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# ASM is built with Gradle upstream; here each module is compiled with javac.
+# The upstream jars additionally get module-info.class from ASM's
+# "retrofitter"; these jars carry Automatic-Module-Name instead.
+
+_realname=asm
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-asm"
+         "${MINGW_PACKAGE_PREFIX}-java-asm-tree"
+         "${MINGW_PACKAGE_PREFIX}-java-asm-analysis"
+         "${MINGW_PACKAGE_PREFIX}-java-asm-commons"
+         "${MINGW_PACKAGE_PREFIX}-java-asm-util")
+pkgver=9.9.1
+pkgrel=1
+pkgdesc="ASM Java bytecode manipulation framework (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://asm.ow2.io/'
+msys2_repository_url='https://gitlab.ow2.org/asm/asm'
+license=('spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://gitlab.ow2.org/asm/asm/-/archive/ASM_${pkgver//./_}/asm-ASM_${pkgver//./_}.tar.gz")
+sha256sums=('8cd806938681afa5de1f387798f9708bc836fc42c4c4948317deea6047bb599f')
+
+_src=asm-ASM_${pkgver//./_}
+
+prepare() {
+  cd "${_src}"
+  # gradle wrapper, benchmark libraries, tools/jdk8-api.jar
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream compiles against the current JDK API (@Deprecated(forRemoval))
+  # and lowers the class files afterwards; emit Java 8 class files directly
+  local JB_TARGET=8
+  jb_module org.ow2.asm:asm:${pkgver} asm/src/main/java \
+    -m 'Automatic-Module-Name: org.objectweb.asm'
+  jb_module org.ow2.asm:asm-tree:${pkgver} asm-tree/src/main/java \
+    -m 'Automatic-Module-Name: org.objectweb.asm.tree' -- org.ow2.asm:asm
+  jb_module org.ow2.asm:asm-analysis:${pkgver} asm-analysis/src/main/java \
+    -m 'Automatic-Module-Name: org.objectweb.asm.tree.analysis' -- org.ow2.asm:asm-tree
+  jb_module org.ow2.asm:asm-commons:${pkgver} asm-commons/src/main/java \
+    -m 'Automatic-Module-Name: org.objectweb.asm.commons' -- org.ow2.asm:asm org.ow2.asm:asm-tree
+  jb_module org.ow2.asm:asm-util:${pkgver} asm-util/src/main/java \
+    -m 'Automatic-Module-Name: org.objectweb.asm.util' \
+    -- org.ow2.asm:asm org.ow2.asm:asm-tree org.ow2.asm:asm-analysis
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5 (Jupiter); smoke-test the jars instead and
+  # let asm-util's Textifier disassemble a class through the reader (one of
+  # ASM's own: ASM 9.9 does not read JDK 28 class files, major version 72)
+  jb_loadcheck org.ow2.asm:asm org.ow2.asm:asm-tree org.ow2.asm:asm-analysis \
+    org.ow2.asm:asm-commons org.ow2.asm:asm-util
+  local cp out
+  cp=$(jb_cp org.ow2.asm:asm-util)
+  out=$(java -cp "${cp}" org.objectweb.asm.util.Textifier org.objectweb.asm.ClassVisitor)
+  grep -q 'public visitEnd()V' <<< "${out}"
+}
+
+package_java-asm() {
+  pkgdesc="ASM Java bytecode manipulation framework, core (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ow2.asm:asm
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-asm/LICENSE.txt"
+}
+
+package_java-asm-tree() {
+  pkgdesc="ASM Java bytecode manipulation framework, tree API (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ow2.asm:asm-tree
+}
+
+package_java-asm-analysis() {
+  pkgdesc="ASM Java bytecode manipulation framework, analysis (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm-tree")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ow2.asm:asm-analysis
+}
+
+package_java-asm-commons() {
+  pkgdesc="ASM Java bytecode manipulation framework, common adapters (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm-tree")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ow2.asm:asm-commons
+}
+
+package_java-asm-util() {
+  pkgdesc="ASM Java bytecode manipulation framework, utilities (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm-analysis")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ow2.asm:asm-util
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

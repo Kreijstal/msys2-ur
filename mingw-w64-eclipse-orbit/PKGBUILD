@@ -1,0 +1,166 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# OSGi bundles of third-party jars that are packaged without OSGi metadata,
+# as Eclipse Orbit (github.com/eclipse-orbit) provides them for the Eclipse
+# release: the jars of the source-built java-* packages get the manifest of
+# the upstream bundle (from the projects' own bnd instructions), computed by
+# jb.Bnd.  The classes are those of the java-* packages, unchanged.
+
+_realname=eclipse-orbit
+pkgbase=mingw-w64-${_realname}
+_asm=(asm asm-tree asm-analysis asm-commons asm-util)
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-gson"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-xz")
+for _a in "${_asm[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-${_a}"); done
+pkgver=2026.09
+pkgrel=1
+pkgdesc="OSGi bundles of source-built third-party jars for Eclipse (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/eclipse-orbit/orbit-simrel'
+license=('spdx:Apache-2.0' 'spdx:0BSD' 'spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-gson"
+             "${MINGW_PACKAGE_PREFIX}-java-xz"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-util"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-commons")
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local gv xv
+  gv=$(jb_version com.google.code.gson:gson)
+  xv=$(jb_version org.tukaani:xz)
+  # gson/bnd.bnd of the gson project
+  cat > gson.bnd <<EOF
+Bundle-SymbolicName: com.google.gson
+Bundle-Version: ${gv}
+Bundle-Name: Gson
+Bundle-Description: Gson JSON library
+Bundle-Vendor: Google Gson Project
+Bundle-ContactAddress: https://github.com/google/gson
+Bundle-DocURL: https://github.com/google/gson
+Bundle-License: "Apache-2.0";link="https://www.apache.org/licenses/LICENSE-2.0.txt"
+Export-Package: com.google.gson, com.google.gson.annotations, com.google.gson.reflect, com.google.gson.stream
+-exportversion: ${gv}
+Import-Package: sun.misc;resolution:=optional, com.google.errorprone.annotations;resolution:=optional, *
+Java-Version: 8
+EOF
+  jb_wrap com.google.code.gson:gson gson.bnd
+  # xz-java's build.xml manifest
+  cat > xz.bnd <<EOF
+Bundle-SymbolicName: org.tukaani.xz
+Bundle-Version: ${xv}
+Bundle-Name: XZ data compression
+Bundle-DocURL: https://tukaani.org/xz/xz-javadoc/
+Bundle-Copyright: The XZ for Java authors and contributors
+Bundle-License: 0BSD
+Implementation-Title: XZ data compression
+Implementation-Version: ${xv}
+Implementation-URL: https://tukaani.org/xz/java.html
+Export-Package: org.tukaani.xz
+Sealed: true
+Multi-Release: true
+-noee: true
+EOF
+  jb_wrap org.tukaani:xz xz.bnd
+  # ASM's Gradle build (the manifests of the ASM jars on Maven Central)
+  local av nv a bsn title imp req
+  av=$(jb_version org.ow2.asm:asm)
+  nv=$(awk -F. '{print $1 "." $2+1}' <<< "${av}")
+  for a in "${_asm[@]}"; do
+    case $a in
+      asm) bsn=org.objectweb.asm; title="ASM, a very small and fast Java bytecode manipulation framework"
+           imp="org.objectweb.asm, org.objectweb.asm.signature"; req= ;;
+      asm-tree) bsn=org.objectweb.asm.tree; title="Tree API of ASM, a very small and fast Java bytecode manipulation framework"
+           imp="org.objectweb.asm.tree"; req="org.objectweb.asm;transitive=true" ;;
+      asm-analysis) bsn=org.objectweb.asm.tree.analysis; title="Static code analysis API of ASM, a very small and fast Java bytecode manipulation framework"
+           imp="org.objectweb.asm.tree.analysis"; req="org.objectweb.asm;transitive=true,org.objectweb.asm.tree;transitive=true" ;;
+      asm-commons) bsn=org.objectweb.asm.commons; title="Usefull class adapters based on ASM, a very small and fast Java bytecode manipulation framework"
+           imp="org.objectweb.asm.commons"; req="org.objectweb.asm;transitive=true,org.objectweb.asm.tree;transitive=true" ;;
+      asm-util) bsn=org.objectweb.asm.util; title="Utilities for ASM, a very small and fast Java bytecode manipulation framework"
+           imp="org.objectweb.asm.util"; req="org.objectweb.asm;transitive=true,org.objectweb.asm.tree;transitive=true,org.objectweb.asm.tree.analysis;transitive=true" ;;
+    esac
+    {
+      echo "Bundle-SymbolicName: ${bsn}"
+      echo "Bundle-Version: ${av}"
+      echo "Bundle-Name: ${bsn}"
+      echo "Bundle-DocURL: http://asm.ow2.org"
+      echo "Bundle-License: BSD-3-Clause;link=https://asm.ow2.io/LICENSE.txt"
+      echo "Bundle-RequiredExecutionEnvironment: J2SE-1.5"
+      echo "Implementation-Title: ${title}"
+      echo "Implementation-Version: ${av}"
+      echo "Export-Package: ${imp//,/;version=${av},};version=${av}"
+      echo "Import-Package: org.objectweb.asm.*;version=\"[${av},${nv})\""
+      [[ -n $req ]] && echo "Module-Requires: ${req}"
+      echo "-noee: true"
+    } > "${a}.bnd"
+    jb_wrap "org.ow2.asm:${a}" "${a}.bnd"
+  done
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_bundle_loadcheck com.google.gson org.tukaani.xz org.objectweb.asm org.objectweb.asm.tree \
+    org.objectweb.asm.tree.analysis org.objectweb.asm.commons org.objectweb.asm.util
+}
+
+package_eclipse-orbit-gson() {
+  pkgdesc="Gson as the OSGi bundle com.google.gson (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install com.google.gson
+}
+
+package_eclipse-orbit-xz() {
+  pkgdesc="XZ for Java as the OSGi bundle org.tukaani.xz (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.tukaani.xz
+}
+
+_package_asm() {
+  local a=$1 bsn
+  case $a in
+    asm) bsn=org.objectweb.asm ;;
+    asm-tree) bsn=org.objectweb.asm.tree ;;
+    asm-analysis) bsn=org.objectweb.asm.tree.analysis ;;
+    asm-commons) bsn=org.objectweb.asm.commons ;;
+    asm-util) bsn=org.objectweb.asm.util ;;
+  esac
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+}
+
+package_eclipse-orbit-asm() {
+  pkgdesc="ASM as the OSGi bundle org.objectweb.asm (mingw-w64)"
+  _package_asm asm
+}
+package_eclipse-orbit-asm-tree() {
+  pkgdesc="ASM tree API as the OSGi bundle org.objectweb.asm.tree (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm")
+  _package_asm asm-tree
+}
+package_eclipse-orbit-asm-analysis() {
+  pkgdesc="ASM analysis API as the OSGi bundle org.objectweb.asm.tree.analysis (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-tree")
+  _package_asm asm-analysis
+}
+package_eclipse-orbit-asm-commons() {
+  pkgdesc="ASM commons as the OSGi bundle org.objectweb.asm.commons (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-tree")
+  _package_asm asm-commons
+}
+package_eclipse-orbit-asm-util() {
+  pkgdesc="ASM util as the OSGi bundle org.objectweb.asm.util (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-analysis")
+  _package_asm asm-util
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

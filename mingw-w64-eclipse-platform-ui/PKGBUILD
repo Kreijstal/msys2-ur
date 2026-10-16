@@ -1,0 +1,188 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse Platform 4.41 (2026-09), UI layer: the bundles of
+# github.com/eclipse-platform/eclipse.platform.ui (JFace, text, the e4
+# workbench and its CSS theming, the 3.x workbench, IDE, editors, views,
+# navigator, search, LTK, data binding), the UI bundles of
+# github.com/eclipse-platform/eclipse.platform (debug, console, team, compare,
+# net) and the org.eclipse.rcp branding bundle of
+# github.com/eclipse-platform/eclipse.platform.releng.aggregator.
+#
+# The UI bundles of eclipse.platform are built here, after JFace and the
+# workbench, because they depend on them; the rest of eclipse.platform is
+# mingw-w64-eclipse-platform-core.  Bundles are compiled with javac from their
+# MANIFEST.MF and build.properties (javabuild.sh's jb_bundle); OSGi
+# Declarative Services descriptions are generated from the @Component
+# annotations as PDE/bnd do.
+
+_realname=eclipse-platform-ui
+pkgbase=mingw-w64-${_realname}
+pkgver=4.41
+pkgrel=1
+_tag=R${pkgver/./_}
+_qualifier=v20260828-1142
+_ui=eclipse.platform.ui-${_tag}
+_pl=eclipse.platform-${_tag}
+_rel=eclipse.platform.releng.aggregator-${_tag}
+
+# bundle symbolic name | directory | split packages it depends on
+_bundles=(
+  "org.eclipse.core.commands|${_ui}/bundles/org.eclipse.core.commands|eclipse-equinox-common"
+  "org.eclipse.core.databinding|${_ui}/bundles/org.eclipse.core.databinding|eclipse-equinox-common eclipse-core-databinding-observable eclipse-core-databinding-property eclipse-osgi"
+  "org.eclipse.core.databinding.beans|${_ui}/bundles/org.eclipse.core.databinding.beans|eclipse-equinox-common eclipse-core-databinding-observable eclipse-core-databinding-property"
+  "org.eclipse.core.databinding.observable|${_ui}/bundles/org.eclipse.core.databinding.observable|eclipse-equinox-common"
+  "org.eclipse.core.databinding.property|${_ui}/bundles/org.eclipse.core.databinding.property|eclipse-equinox-common eclipse-core-databinding-observable"
+  "org.eclipse.core.filebuffers|${_ui}/bundles/org.eclipse.core.filebuffers|eclipse-core-runtime eclipse-text eclipse-core-filesystem"
+  "org.eclipse.e4.core.commands|${_ui}/bundles/org.eclipse.e4.core.commands|eclipse-equinox-common eclipse-e4-core-di java-jakarta-annotation-api java-jakarta-inject-api eclipse-core-commands eclipse-core-expressions eclipse-e4-core-contexts eclipse-e4-core-services"
+  "org.eclipse.e4.emf.xpath|${_ui}/bundles/org.eclipse.e4.emf.xpath|eclipse-emf-ecore eclipse-core-runtime eclipse-emf-ecore-xmi"
+  "org.eclipse.e4.ui.bindings|${_ui}/bundles/org.eclipse.e4.ui.bindings|eclipse-swt eclipse-core-commands eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-ui-services eclipse-e4-core-services eclipse-e4-ui-model-workbench java-jakarta-annotation-api java-jakarta-inject-api eclipse-e4-core-commands eclipse-jface"
+  "org.eclipse.e4.ui.css.core|${_ui}/bundles/org.eclipse.e4.ui.css.core|eclipse-equinox-common eclipse-core-runtime"
+  "org.eclipse.e4.ui.css.swt|${_ui}/bundles/org.eclipse.e4.ui.css.swt|eclipse-e4-ui-css-core eclipse-swt eclipse-core-runtime eclipse-jface"
+  "org.eclipse.e4.ui.css.swt.theme|${_ui}/bundles/org.eclipse.e4.ui.css.swt.theme|eclipse-swt eclipse-e4-ui-css-swt eclipse-e4-ui-css-core eclipse-core-runtime eclipse-osgi java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.ui.di|${_ui}/bundles/org.eclipse.e4.ui.di|java-jakarta-inject-api eclipse-e4-core-contexts eclipse-e4-core-di-annotations eclipse-e4-core-di-extensions-supplier eclipse-e4-core-di java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.ui.dialogs|${_ui}/bundles/org.eclipse.e4.ui.dialogs|eclipse-jface eclipse-core-runtime"
+  "org.eclipse.e4.ui.ide|${_ui}/bundles/org.eclipse.e4.ui.ide|eclipse-core-runtime eclipse-swt"
+  "org.eclipse.e4.ui.model.workbench|${_ui}/bundles/org.eclipse.e4.ui.model.workbench|eclipse-core-runtime eclipse-e4-core-services eclipse-e4-core-contexts eclipse-core-commands eclipse-e4-core-di eclipse-emf-ecore eclipse-e4-emf-xpath"
+  "org.eclipse.e4.ui.progress|${_ui}/bundles/org.eclipse.e4.ui.progress|eclipse-e4-core-di eclipse-e4-ui-di eclipse-jface eclipse-e4-ui-workbench eclipse-e4-core-commands eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-ui-model-workbench eclipse-e4-ui-workbench-swt eclipse-core-runtime eclipse-e4-ui-services java-jakarta-annotation-api java-jakarta-inject-api"
+  "org.eclipse.e4.ui.services|${_ui}/bundles/org.eclipse.e4.ui.services|eclipse-core-commands eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-ui-di java-jakarta-annotation-api java-jakarta-inject-api eclipse-osgi java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.ui.widgets|${_ui}/bundles/org.eclipse.e4.ui.widgets|eclipse-swt"
+  "org.eclipse.e4.ui.workbench|${_ui}/bundles/org.eclipse.e4.ui.workbench|eclipse-e4-ui-model-workbench eclipse-e4-ui-services eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-core-di eclipse-core-commands eclipse-e4-core-commands eclipse-emf-ecore-change eclipse-core-expressions eclipse-e4-ui-di eclipse-emf-ecore-xmi eclipse-e4-core-di-extensions eclipse-core-runtime java-jakarta-annotation-api java-jakarta-inject-api java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.ui.workbench.addons.swt|${_ui}/bundles/org.eclipse.e4.ui.workbench.addons.swt|eclipse-e4-ui-model-workbench eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-ui-workbench eclipse-e4-core-services eclipse-e4-ui-workbench-renderers-swt eclipse-e4-ui-widgets eclipse-swt eclipse-jface eclipse-core-runtime eclipse-e4-ui-di eclipse-e4-ui-services eclipse-emf-ecore-xmi java-jakarta-annotation-api java-jakarta-inject-api eclipse-e4-ui-workbench-swt eclipse-osgi java-osgi-service-event"
+  "org.eclipse.e4.ui.workbench.renderers.swt|${_ui}/bundles/org.eclipse.e4.ui.workbench.renderers.swt|eclipse-e4-ui-workbench eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-ui-services eclipse-swt eclipse-jface eclipse-e4-ui-workbench-swt eclipse-e4-ui-model-workbench eclipse-e4-core-commands eclipse-e4-ui-bindings eclipse-core-expressions eclipse-e4-ui-css-core eclipse-e4-ui-di eclipse-emf-ecore eclipse-e4-ui-css-swt eclipse-e4-core-di-extensions eclipse-core-runtime java-jakarta-annotation-api java-jakarta-inject-api java-osgi-service-event"
+  "org.eclipse.e4.ui.workbench.swt|${_ui}/bundles/org.eclipse.e4.ui.workbench.swt|eclipse-e4-ui-workbench eclipse-e4-core-services eclipse-e4-ui-services eclipse-jface eclipse-e4-ui-dialogs eclipse-core-databinding eclipse-jface-databinding eclipse-e4-ui-css-core eclipse-e4-ui-css-swt eclipse-e4-ui-bindings eclipse-e4-core-contexts eclipse-e4-ui-workbench3 eclipse-e4-core-di eclipse-e4-ui-css-swt-theme eclipse-core-expressions eclipse-core-runtime eclipse-e4-core-commands eclipse-e4-ui-widgets eclipse-e4-ui-di eclipse-emf-ecore-xmi eclipse-e4-ui-model-workbench eclipse-e4-core-di-extensions eclipse-urischeme java-jakarta-annotation-api java-jakarta-inject-api eclipse-osgi java-osgi-service-event java-felix-scr"
+  "org.eclipse.e4.ui.workbench3|${_ui}/bundles/org.eclipse.e4.ui.workbench3|eclipse-equinox-common eclipse-swt eclipse-equinox-registry eclipse-core-runtime"
+  "org.eclipse.jface|${_ui}/bundles/org.eclipse.jface|eclipse-swt eclipse-core-commands eclipse-equinox-common eclipse-osgi"
+  "org.eclipse.jface.databinding|${_ui}/bundles/org.eclipse.jface.databinding|eclipse-swt eclipse-jface eclipse-equinox-common eclipse-core-databinding-observable eclipse-core-databinding-property eclipse-core-databinding"
+  "org.eclipse.jface.notifications|${_ui}/bundles/org.eclipse.jface.notifications|eclipse-core-runtime eclipse-jface"
+  "org.eclipse.jface.text|${_ui}/bundles/org.eclipse.jface.text|eclipse-core-runtime eclipse-text eclipse-swt eclipse-jface"
+  "org.eclipse.ltk.core.refactoring|${_ui}/bundles/org.eclipse.ltk.core.refactoring|eclipse-core-runtime eclipse-core-expressions eclipse-core-filesystem eclipse-core-filebuffers eclipse-core-resources eclipse-core-commands eclipse-text"
+  "org.eclipse.ltk.ui.refactoring|${_ui}/bundles/org.eclipse.ltk.ui.refactoring|eclipse-core-runtime eclipse-core-expressions eclipse-core-filebuffers eclipse-core-filesystem eclipse-core-resources eclipse-ltk-core-refactoring eclipse-jface-text eclipse-ui eclipse-ui-navigator eclipse-compare eclipse-team-core eclipse-team-ui"
+  "org.eclipse.search|${_ui}/bundles/org.eclipse.search|eclipse-core-runtime eclipse-core-resources eclipse-core-filesystem eclipse-core-filebuffers eclipse-ui eclipse-ui-ide eclipse-ui-workbench-texteditor eclipse-jface-text eclipse-ui-forms eclipse-ltk-core-refactoring eclipse-ltk-ui-refactoring eclipse-search-core"
+  "org.eclipse.search.core|${_ui}/bundles/org.eclipse.search.core|eclipse-core-runtime eclipse-core-resources eclipse-core-filesystem eclipse-core-filebuffers eclipse-ltk-core-refactoring eclipse-text"
+  "org.eclipse.text|${_ui}/bundles/org.eclipse.text|eclipse-core-commands eclipse-equinox-common eclipse-equinox-preferences eclipse-core-runtime"
+  "org.eclipse.ui|${_ui}/bundles/org.eclipse.ui|eclipse-core-runtime eclipse-swt eclipse-jface eclipse-ui-workbench eclipse-core-expressions"
+  "org.eclipse.ui.browser|${_ui}/bundles/org.eclipse.ui.browser|eclipse-core-runtime eclipse-ui eclipse-urischeme"
+  "org.eclipse.ui.editors|${_ui}/bundles/org.eclipse.ui.editors|eclipse-core-runtime eclipse-core-expressions eclipse-swt eclipse-ui-ide eclipse-ui eclipse-jface-text eclipse-ui-workbench eclipse-ui-workbench-texteditor eclipse-core-filebuffers eclipse-core-resources eclipse-core-filesystem"
+  "org.eclipse.ui.forms|${_ui}/bundles/org.eclipse.ui.forms|eclipse-core-runtime eclipse-jface eclipse-e4-ui-css-core eclipse-e4-ui-css-swt"
+  "org.eclipse.ui.ide|${_ui}/bundles/org.eclipse.ui.ide|eclipse-core-runtime eclipse-core-filesystem eclipse-help eclipse-ui eclipse-jface-text eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-bidi eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-ui-workbench eclipse-e4-core-commands eclipse-e4-ui-ide eclipse-e4-core-di eclipse-e4-core-di-extensions eclipse-e4-ui-dialogs eclipse-ui-navigator java-jakarta-annotation-api java-jakarta-inject-api java-osgi-service-event"
+  "org.eclipse.ui.ide.application|${_ui}/bundles/org.eclipse.ui.ide.application|eclipse-ui-ide eclipse-core-runtime eclipse-core-resources eclipse-ui eclipse-ui-navigator-resources eclipse-core-net eclipse-core-filesystem eclipse-e4-ui-workbench eclipse-e4-ui-model-workbench eclipse-e4-core-di eclipse-e4-core-di-extensions eclipse-e4-core-services eclipse-e4-core-contexts eclipse-urischeme eclipse-e4-ui-di java-jakarta-inject-api java-osgi-service-event"
+  "org.eclipse.ui.navigator|${_ui}/bundles/org.eclipse.ui.navigator|eclipse-core-runtime eclipse-ui eclipse-core-expressions eclipse-jface"
+  "org.eclipse.ui.navigator.resources|${_ui}/bundles/org.eclipse.ui.navigator.resources|eclipse-ui-ide eclipse-core-resources eclipse-jface eclipse-ui eclipse-ui-navigator eclipse-core-runtime eclipse-ui-views-properties-tabbed eclipse-ui-workbench-texteditor eclipse-ltk-core-refactoring eclipse-ltk-ui-refactoring eclipse-core-expressions"
+  "org.eclipse.ui.themes|${_ui}/bundles/org.eclipse.ui.themes|eclipse-e4-ui-css-swt-theme"
+  "org.eclipse.ui.views|${_ui}/bundles/org.eclipse.ui.views|eclipse-core-runtime eclipse-help eclipse-ui eclipse-jface"
+  "org.eclipse.ui.views.log|${_ui}/bundles/org.eclipse.ui.views.log|eclipse-core-runtime eclipse-ui eclipse-e4-ui-dialogs"
+  "org.eclipse.ui.views.properties.tabbed|${_ui}/bundles/org.eclipse.ui.views.properties.tabbed|eclipse-ui-forms eclipse-ui-views eclipse-ui eclipse-core-runtime eclipse-e4-ui-css-core eclipse-e4-ui-css-swt eclipse-jface"
+  "org.eclipse.ui.win32|${_ui}/bundles/org.eclipse.ui.win32|eclipse-ui-ide"
+  "org.eclipse.ui.workbench|${_ui}/bundles/org.eclipse.ui.workbench|eclipse-core-runtime eclipse-help eclipse-jface eclipse-jface-databinding eclipse-core-databinding-property eclipse-core-databinding-observable eclipse-e4-core-services eclipse-e4-core-contexts eclipse-e4-core-di eclipse-e4-ui-workbench-swt eclipse-e4-ui-di eclipse-e4-ui-model-workbench eclipse-e4-ui-css-swt-theme eclipse-e4-ui-bindings eclipse-e4-ui-css-swt eclipse-e4-ui-workbench3 eclipse-e4-ui-workbench-addons-swt eclipse-e4-ui-services eclipse-emf-ecore-xmi eclipse-e4-core-di-extensions eclipse-swt java-jakarta-annotation-api java-jakarta-inject-api eclipse-e4-core-commands eclipse-e4-ui-workbench eclipse-e4-ui-workbench-renderers-swt java-osgi-service-event java-felix-scr"
+  "org.eclipse.ui.workbench.texteditor|${_ui}/bundles/org.eclipse.ui.workbench.texteditor|eclipse-core-runtime eclipse-compare-core eclipse-core-expressions eclipse-jface-text eclipse-swt eclipse-ui eclipse-jface-notifications"
+  "org.eclipse.urischeme|${_ui}/bundles/org.eclipse.urischeme|eclipse-equinox-common eclipse-equinox-registry eclipse-core-runtime java-jna java-jna-platform"
+  "org.eclipse.debug.ui|${_pl}/debug/org.eclipse.debug.ui|eclipse-core-variables eclipse-ui eclipse-ui-console eclipse-help eclipse-debug-core eclipse-jface-text eclipse-ui-workbench-texteditor eclipse-ui-ide eclipse-ui-editors eclipse-core-runtime eclipse-core-filesystem eclipse-e4-ui-services eclipse-ui-forms"
+  "org.eclipse.ui.console|${_pl}/debug/org.eclipse.ui.console|eclipse-ui eclipse-jface-text eclipse-ui-workbench-texteditor eclipse-core-runtime eclipse-core-expressions eclipse-core-variables eclipse-debug-core"
+  "org.eclipse.team.ui|${_pl}/team/bundles/org.eclipse.team.ui|eclipse-core-resources eclipse-core-runtime eclipse-team-core eclipse-ui eclipse-compare eclipse-ui-forms eclipse-ui-navigator eclipse-jface-text eclipse-ui-editors eclipse-core-expressions"
+  "org.eclipse.compare|${_pl}/team/bundles/org.eclipse.compare|eclipse-ui eclipse-core-resources eclipse-jface-text eclipse-ui-ide eclipse-ui-views eclipse-ui-workbench-texteditor eclipse-core-runtime eclipse-core-expressions eclipse-ui-editors eclipse-ui-forms eclipse-compare-core"
+  "org.eclipse.compare.win32|${_pl}/team/bundles/org.eclipse.compare.win32|eclipse-compare eclipse-core-filesystem eclipse-ui-forms eclipse-ui-workbench eclipse-jface eclipse-core-runtime eclipse-core-resources"
+  "org.eclipse.ui.net|${_pl}/team/bundles/org.eclipse.ui.net|eclipse-ui eclipse-core-runtime eclipse-core-net"
+  "org.eclipse.rcp|${_rel}/eclipse.platform.releng/bundles/org.eclipse.rcp|"
+)
+
+_pn() { local b=${1#org.eclipse.}; echo "eclipse-${b//./-}"; }
+
+pkgname=()
+for _e in "${_bundles[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-$(_pn "${_e%%|*}")"); done
+pkgdesc="Eclipse Platform UI bundles (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/eclipse/'
+msys2_repository_url='https://github.com/eclipse-platform/eclipse.platform.ui'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-pde-api-tools-annotations"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-jdt-annotation"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-swt"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-swt-svg"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-resources"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-net"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-debug-core"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-team-core"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-help"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-services"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-di-extensions-supplier"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-bidi"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-engine"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-emf-ecore-change"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-emf-ecore-xmi"
+             "${MINGW_PACKAGE_PREFIX}-java-jna-platform")
+# SWT's SVG support (JSVG) needs the Service Loader Mediator to resolve
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-aries-spifly-dynamic-bundle"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-scr")
+source=("eclipse.platform.ui-${_tag}.tar.gz::https://github.com/eclipse-platform/eclipse.platform.ui/archive/refs/tags/${_tag}.tar.gz"
+        "eclipse.platform-${_tag}.tar.gz::https://github.com/eclipse-platform/eclipse.platform/archive/refs/tags/${_tag}.tar.gz"
+        "eclipse.platform.releng.aggregator-${_tag}.tar.gz::https://github.com/eclipse-platform/eclipse.platform.releng.aggregator/archive/refs/tags/${_tag}.tar.gz"
+        "0001-javac-compatibility.patch")
+sha256sums=('5c70484fcbc01d3d8950db8e2afeea4ebdc3c05ed65940c22ef36dcfb35863d7'
+            '235ea1a33d2388962b90179f64a66a48013ffe576a68210da970557870785b09'
+            'f43b389cc2edf029a344f22f9819876347712105da18d3c088d189cdadd73ec1'
+            '38aab7555bf93a0ca45cf14f44562a5eb52db107f9891fe1624803ba9f1947d0')
+noextract=("eclipse.platform.releng.aggregator-${_tag}.tar.gz")
+
+prepare() {
+  # code that ECJ accepts and javac does not
+  patch -p1 -i "${srcdir}/0001-javac-compatibility.patch"
+  # only the branding bundle is needed from the aggregator
+  tar -xzf "${_rel}.tar.gz" "${_rel}/eclipse.platform.releng/bundles/org.eclipse.rcp" "${_rel}/LICENSE"
+  # the build id shown in the about dialog (Maven resource filtering upstream)
+  sed -i "s/\${buildId}/I${_qualifier#v}/" "${_rel}/eclipse.platform.releng/bundles/org.eclipse.rcp/about.mappings"
+  find "${_ui}" "${_pl}" "${_rel}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' \
+    -o -name '*.exe' -o -name '*.dylib' -o -name '*.jnilib' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local -a dirs=()
+  local e
+  for e in "${_bundles[@]}"; do
+    e=${e#*|}
+    dirs+=("${e%%|*}")
+  done
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${dirs[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local e
+  for e in "${_bundles[@]}"; do
+    jb_bundle_loadcheck "${e%%|*}"
+  done
+  jb_osgi_resolvecheck
+}
+
+_package_bundle() {
+  local bsn=$1 n lic="${srcdir}/${_ui}/LICENSE"
+  n=$(_pn "${bsn}")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+  install -Dm644 "${lic}" "${pkgdir}${MINGW_PREFIX}/share/licenses/${n}/LICENSE"
+}
+
+for _e in "${_bundles[@]}"; do
+  _b=${_e%%|*}
+  _d=${_e##*|}
+  eval "package_$(_pn "${_b}")() {
+    pkgdesc='Eclipse ${_b} bundle (mingw-w64)'
+    depends=($(for _x in ${_d}; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "${_x}"; done))
+    _package_bundle ${_b}
+  }"
+done
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

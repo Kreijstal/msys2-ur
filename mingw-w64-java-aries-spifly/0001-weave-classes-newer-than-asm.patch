@@ -1,0 +1,48 @@
+diff -ruN a/spi-fly/spi-fly-dynamic-bundle/src/main/java/org/apache/aries/spifly/dynamic/OSGiFriendlyClassWriter.java b/spi-fly/spi-fly-dynamic-bundle/src/main/java/org/apache/aries/spifly/dynamic/OSGiFriendlyClassWriter.java
+--- a/spi-fly/spi-fly-dynamic-bundle/src/main/java/org/apache/aries/spifly/dynamic/OSGiFriendlyClassWriter.java
++++ b/spi-fly/spi-fly-dynamic-bundle/src/main/java/org/apache/aries/spifly/dynamic/OSGiFriendlyClassWriter.java
+@@ -81,8 +81,7 @@
+         if(aRunning) {
+           is = loader.getResourceAsStream(arg00 + ".class");
+           if(is != null) {
+-            ClassReader cr = new ClassReader(is);
+-            arg00 = cr.getSuperName();
++            arg00 = superName(is, arg00);
+             if(arg00 == null) {
+               if (names.size() == 2) {
+                 return OBJECT_INTERNAL_NAME; //arg0 is an interface
+@@ -99,8 +98,7 @@
+         if(bRunning) {
+           is = loader.getResourceAsStream(arg11 + ".class");
+           if(is != null) {
+-            ClassReader cr = new ClassReader(is);
+-            arg11 = cr.getSuperName();
++            arg11 = superName(is, arg11);
+             if(arg11 == null) {
+               if (names.size() == 3) {
+                 return OBJECT_INTERNAL_NAME;  //arg1 is an interface
+@@ -120,4 +118,24 @@
+       throw new RuntimeException(e);
+     }
+   }
++
++  /**
++   * The super class of a class file; for class files newer than ASM supports
++   * (the JDK's own classes on a newer JDK), from the loaded class instead.
++   */
++  private String superName(InputStream is, String name) throws IOException {
++    try {
++      return new ClassReader(is).getSuperName();
++    } catch (IllegalArgumentException e) {
++      try {
++        Class<?> c = Class.forName(name.replace('/', '.'), false, loader);
++        Class<?> s = c.getSuperclass();
++        return s == null ? null : s.getName().replace('.', '/');
++      } catch (ClassNotFoundException cnfe) {
++        throw e;
++      }
++    } finally {
++      is.close();
++    }
++  }
+ }

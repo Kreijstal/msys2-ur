@@ -1,0 +1,75 @@
+Subject: explicit type arguments for Java 8+ type inference
+
+---
+
+--- a/hamcrest-core/src/main/java/org/hamcrest/core/AllOf.java
++++ b/hamcrest-core/src/main/java/org/hamcrest/core/AllOf.java
+@@ -57,7 +57,7 @@
+      */
+     @Factory
+     public static <T> Matcher<T> allOf(Matcher<? super T>... matchers) {
+-        return allOf(Arrays.asList(matchers));
++        return allOf(Arrays.<Matcher<? super T>>asList(matchers));
+     }
+ 
+     /**
+
+--- a/hamcrest-core/src/main/java/org/hamcrest/core/AnyOf.java
++++ b/hamcrest-core/src/main/java/org/hamcrest/core/AnyOf.java
+@@ -47,7 +47,7 @@
+      */
+     @Factory
+     public static <T> AnyOf<T> anyOf(Matcher<? super T>... matchers) {
+-        return anyOf(Arrays.asList(matchers));
++        return anyOf(Arrays.<Matcher<? super T>>asList(matchers));
+     }
+ 
+     /**
+
+--- a/hamcrest-library/src/main/java/org/hamcrest/collection/IsArrayContainingInAnyOrder.java
++++ b/hamcrest-library/src/main/java/org/hamcrest/collection/IsArrayContainingInAnyOrder.java
+@@ -55,7 +55,7 @@
+      */
+     @Factory
+     public static <E> Matcher<E[]> arrayContainingInAnyOrder(Matcher<? super E>... itemMatchers) {
+-        return arrayContainingInAnyOrder(Arrays.asList(itemMatchers));
++        return arrayContainingInAnyOrder(Arrays.<Matcher<? super E>>asList(itemMatchers));
+     }
+ 
+     /**
+
+--- a/hamcrest-library/src/main/java/org/hamcrest/collection/IsArrayContainingInOrder.java
++++ b/hamcrest-library/src/main/java/org/hamcrest/collection/IsArrayContainingInOrder.java
+@@ -69,7 +69,7 @@
+      */
+     @Factory
+     public static <E> Matcher<E[]> arrayContaining(Matcher<? super E>... itemMatchers) {
+-        return arrayContaining(asList(itemMatchers));
++        return arrayContaining(java.util.Arrays.<Matcher<? super E>>asList(itemMatchers));
+     }
+ 
+     /**
+
+--- a/hamcrest-library/src/main/java/org/hamcrest/collection/IsIterableContainingInAnyOrder.java
++++ b/hamcrest-library/src/main/java/org/hamcrest/collection/IsIterableContainingInAnyOrder.java
+@@ -122,7 +122,7 @@
+      */
+     @Factory
+     public static <T> Matcher<Iterable<? extends T>> containsInAnyOrder(Matcher<? super T>... itemMatchers) {
+-        return containsInAnyOrder(Arrays.asList(itemMatchers));
++        return containsInAnyOrder(Arrays.<Matcher<? super T>>asList(itemMatchers));
+     }
+ 
+     /**
+
+--- a/hamcrest-library/src/main/java/org/hamcrest/collection/IsIterableContainingInOrder.java
++++ b/hamcrest-library/src/main/java/org/hamcrest/collection/IsIterableContainingInOrder.java
+@@ -138,7 +138,7 @@
+      */
+     @Factory
+     public static <E> Matcher<Iterable<? extends E>> contains(Matcher<? super E>... itemMatchers) {
+-        return contains(asList(itemMatchers));
++        return contains(java.util.Arrays.<Matcher<? super E>>asList(itemMatchers));
+     }
+ 
+     /**

@@ -1,0 +1,101 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Apache Aries SPI Fly 1.3.7, the OSGi Service Loader Mediator, as the
+# dynamic weaving bundle Eclipse ships (JSVG, and with it SWT's SVG support,
+# requires it).  Like the bnd-maven-plugin build upstream, the bundle holds
+# spi-fly-core, spi-fly-weaver and spi-fly-dynamic-bundle plus the bnd
+# utility packages they use (-conditionalpackage): javac compiles those from
+# the bnd 7.1.0 sources on the source path (-implicit:class), so only what
+# is referenced is included.  bnd 7 needs Java 17, so the bundle does too
+# (upstream embeds bnd 6.4's Java 8 classes).
+
+_realname=aries-spifly
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-aries-spifly-dynamic-bundle"
+pkgver=1.3.7
+pkgrel=1
+_bnd=7.1.0
+pkgdesc="Apache Aries SPI Fly dynamic weaving bundle, OSGi Service Loader Mediator (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://aries.apache.org/documentation/modules/spi-fly.html'
+msys2_repository_url='https://github.com/apache/aries'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-commons"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-util")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-commons"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-util"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-core"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-bnd-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+source=("aries-spifly-${pkgver}.tar.gz::https://github.com/apache/aries/archive/refs/tags/spifly-${pkgver}.tar.gz"
+        "bnd-${_bnd}.tar.gz::https://github.com/bndtools/bnd/archive/refs/tags/${_bnd}.tar.gz"
+        "0001-weave-classes-newer-than-asm.patch")
+sha256sums=('ca5fb2607fc401c43b1983808dfe9cdcf85939f810c781e77eaaa1edefc22420'
+            'b05582689830949329a6cb5178dec6768c78bef286aebf807831f5458f5e8e6c'
+            '90198f38b18077a07a9926777d96159094d6f4a1f987290768194717d47a7da5')
+noextract=("bnd-${_bnd}.tar.gz")
+
+_src=aries-spifly-${pkgver}/spi-fly
+_bndsrc=bnd-${_bnd}
+
+prepare() {
+  # weaving computes stack frames from the class files of super classes; the
+  # JDK's own classes (major 72 on JDK 28) are newer than ASM 9.9 reads
+  # (--binary: the sources have CRLF line ends)
+  (cd "aries-spifly-${pkgver}" && patch --binary -p1 -i "${srcdir}/0001-weave-classes-newer-than-asm.patch")
+  tar -xzf "bnd-${_bnd}.tar.gz" "${_bndsrc}/aQute.libg/src" "${_bndsrc}/biz.aQute.bndlib/src" \
+    "${_bndsrc}/biz.aQute.bnd.util/src"
+  find "aries-spifly-${pkgver}" "${_bndsrc}" -type f \( -name '*.jar' -o -name '*.class' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local sp
+  sp="$(jb_w "${_bndsrc}/aQute.libg/src");$(jb_w "${_bndsrc}/biz.aQute.bndlib/src");$(jb_w "${_bndsrc}/biz.aQute.bnd.util/src")"
+  cat > spifly.bnd <<EOF
+Bundle-SymbolicName: org.apache.aries.spifly.dynamic.bundle
+Bundle-Version: ${pkgver}
+Bundle-Name: Apache Aries SPI Fly Dynamic Weaving Bundle
+Bundle-Description: This bundle contains an extender that facilitates the use of JRE SPI providers (components typically plugged in to the JRE through META-INF/services resources).
+Bundle-Vendor: The Apache Software Foundation
+Bundle-DocURL: https://www.apache.org/spifly/org.apache.aries.spifly.dynamic.bundle/
+Bundle-License: "Apache-2.0";link="https://www.apache.org/licenses/LICENSE-2.0.txt"
+Bundle-SCM: url="https://gitbox.apache.org/repos/asf?p=aries.git;a=summary",connection="scm:git:https://gitbox.apache.org/repos/asf/aries.git",developer-connection="scm:git:https://gitbox.apache.org/repos/asf/aries.git",tag="spifly-${pkgver}"
+Bundle-Activator: org.apache.aries.spifly.dynamic.DynamicWeavingActivator
+Implementation-Title: Apache Aries SPI Fly Dynamic Weaving Bundle
+Implementation-Version: ${pkgver}
+Implementation-Vendor: The Apache Software Foundation
+Specification-Title: Apache Aries SPI Fly Dynamic Weaving Bundle
+Specification-Vendor: The Apache Software Foundation
+Specification-Version: 1.3
+Export-Package: org.apache.aries.spifly.*;version=${pkgver}
+Import-Package: !aQute.*, org.objectweb.asm.*;version="[9.6,10)", *
+Provide-Capability: osgi.extender;osgi.extender=osgi.serviceloader.registrar;version:Version=1.0,osgi.extender;osgi.extender=osgi.serviceloader.processor;version:Version=1.0;uses:="org.apache.aries.spifly"
+EOF
+  rm -rf res && mkdir -p res/META-INF
+  cp "${_src}/spi-fly-dynamic-bundle/LICENSE" "${_src}/spi-fly-dynamic-bundle/NOTICE" res/META-INF/
+  cp -r "${_src}/spi-fly-core/src/main/resources"/. res/
+  local JB_RELEASE=17
+  jb_module org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle:${pkgver} \
+    "${_src}/spi-fly-core/src/main/java" -s "${_src}/spi-fly-weaver/src/main/java" \
+    -s "${_src}/spi-fly-dynamic-bundle/src/main/java" -r res -b spifly.bnd \
+    -j -sourcepath -j "${sp}" -j -implicit:class \
+    -c org.osgi:osgi.core -c org.osgi:osgi.annotation -c biz.aQute.bnd:biz.aQute.bnd.annotation \
+    -c org.slf4j:slf4j-api \
+    -- org.ow2.asm:asm-commons org.ow2.asm:asm-util
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.osgi:osgi.core org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar aries-spifly-dynamic-bundle --plugin org.apache.aries.spifly:org.apache.aries.spifly.dynamic.bundle
+  install -Dm644 "${srcdir}/${_src}/spi-fly-dynamic-bundle/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/java-aries-spifly-dynamic-bundle/LICENSE"
+}

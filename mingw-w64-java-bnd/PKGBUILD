@@ -1,0 +1,68 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# bnd 7.1.0 (github.com/bndtools/bnd).  Only the bnd annotations
+# (biz.aQute.bnd.annotation: @ServiceConsumer, @ExportTo, ...) are packaged
+# for now, to compile JSVG; bnd itself is not built.
+
+_realname=bnd
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-bnd-annotation")
+pkgver=7.1.0
+pkgrel=1
+pkgdesc="bnd OSGi tooling (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://bnd.bndtools.org/'
+msys2_repository_url='https://github.com/bndtools/bnd'
+license=('spdx:Apache-2.0 OR EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-core"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-namespace-service"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-namespace-extender"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-serviceloader")
+source=("bnd-${pkgver}.tar.gz::https://github.com/bndtools/bnd/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('b05582689830949329a6cb5178dec6768c78bef286aebf807831f5458f5e8e6c')
+noextract=("bnd-${pkgver}.tar.gz")
+
+_src=bnd-${pkgver}
+
+prepare() {
+  tar -xzf "bnd-${pkgver}.tar.gz" "${_src}/biz.aQute.bnd.annotation" "${_src}/LICENSE"
+  find "${_src}" -type f \( -name '*.jar' -o -name '*.class' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=17
+  jb_module biz.aQute.bnd:biz.aQute.bnd.annotation:${pkgver} "${_src}/biz.aQute.bnd.annotation/src" \
+    -c org.osgi:osgi.annotation -c org.osgi:osgi.core -c org.osgi:org.osgi.namespace.service \
+    -c org.osgi:org.osgi.namespace.extender -c org.osgi:org.osgi.service.component.annotations \
+    -c org.osgi:org.osgi.service.serviceloader \
+    -m 'Automatic-Module-Name: biz.aQute.bnd.annotation'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.osgi:osgi.annotation --with org.osgi:osgi.core \
+    --with org.osgi:org.osgi.service.component.annotations biz.aQute.bnd:biz.aQute.bnd.annotation
+}
+
+package_java-bnd-annotation() {
+  pkgdesc="bnd annotations, biz.aQute.bnd.annotation (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar bnd-annotation biz.aQute.bnd:biz.aQute.bnd.annotation
+  install -Dm644 "${srcdir}/${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-bnd-annotation/LICENSE"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

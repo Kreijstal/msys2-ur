@@ -1,0 +1,206 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse SWT 4.41 (Eclipse 2026-09) for win32/x86_64: the org.eclipse.swt host
+# bundle and the win32 fragment with all classes, compiled with javac, and
+# the JNI libraries built from "Eclipse SWT PI/win32/library" etc. with MinGW
+# GCC instead of MSVC (make_win32.mak).  The libraries committed to the
+# repository (binaries/*/*.dll, *.so, *.jnilib) are deleted; WebView2Loader.dll,
+# which upstream ships next to them for the Edge browser, comes from MSYS2's
+# webview2-loader package.  org.eclipse.swt.svg (SVG images, which JFace
+# requires) uses JSVG.
+
+_realname=eclipse-swt
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-swt"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-swt-win32-win32-x86_64"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-swt-svg")
+pkgver=4.41
+pkgrel=1
+_tag=R${pkgver/./_}
+_qualifier=v20260828-1142
+pkgdesc="Eclipse SWT, the Standard Widget Toolkit (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/eclipse/swt/'
+msys2_repository_url='https://github.com/eclipse-platform/eclipse.platform.swt'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-webview2-loader"
+             "${MINGW_PACKAGE_PREFIX}-java-jsvg")
+source=("eclipse.platform.swt-${_tag}.tar.gz::https://github.com/eclipse-platform/eclipse.platform.swt/archive/refs/tags/${_tag}.tar.gz"
+        "0001-mingw-gcc-natives.patch")
+sha256sums=('4dae25b05a6431d28e7bb18297a89222e2f5d8b4acb797c7ba692e4dcff5bbd9'
+            'f806167a62a2b5c384540375b2048ec9a316ec30bfdc40cfb8b459ecf673ba0a')
+
+_src=eclipse.platform.swt-${_tag}
+_frag=${_src}/binaries/org.eclipse.swt.win32.win32.x86_64
+
+prepare() {
+  cd "${_src}"
+  # MinGW GCC: a goto across an initialisation in com_custom.cpp, and three
+  # GDI+ C++ methods that the MinGW-w64 gdiplus headers lack
+  patch -p1 -i "${srcdir}/0001-mingw-gcc-natives.patch"
+  find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' -o -name '*.a' -o -name '*.lib' -o -name '*.o' \) -delete
+  # binaries/pom.xml's prepare-translation-files: *._properties -> *.properties
+  local f
+  find bundles/org.eclipse.swt -name '*._properties' | while read -r f; do mv "$f" "${f%._properties}.properties"; done
+}
+
+# the JNI libraries (make_win32.mak's targets) with MinGW GCC
+_natives() {
+  local out=$1
+  local B="${srcdir}/${_src}/bundles/org.eclipse.swt"
+  local LIB="${B}/Eclipse SWT PI/win32/library" COM="${B}/Eclipse SWT/common/library"
+  local PIC="${B}/Eclipse SWT PI/common/library" AWT="${B}/Eclipse SWT AWT/win32/library"
+  local WGL="${B}/Eclipse SWT OpenGL/win32/library"
+  local maj min rev
+  maj=$(sed -n 's/^maj_ver=//p' "${COM}/make_common.mak")
+  min=$(sed -n 's/^min_ver=//p' "${COM}/make_common.mak")
+  rev=$(sed -n 's/^rev=//p' "${COM}/make_common.mak")
+  local V=${maj}${min}r${rev} jh W="${srcdir}/natives-obj"
+  jh=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.home = //p' | tr -d '\r')
+  rm -rf "${W}" && mkdir -p "${W}" "${out}"
+  local -a cf=(-O2 -DNDEBUG -DUNICODE -D_UNICODE -DUSE_ASSEMBLER -I"${jh}/include" -I"${jh}/include/win32"
+               -I"${LIB}" -I"${COM}" -I"${PIC}" -I"${AWT}" -I"${WGL}")
+  _cc() {
+    case $1 in
+      # MSVC accepts the const conversions of the generated gdip.cpp
+      # (the MinGW-w64 GDI+ headers lack const on some parameters)
+      *.cpp) g++ "${cf[@]}" -fpermissive -c "$1" -o "$2" ;;
+      *) gcc "${cf[@]}" -c "$1" -o "$2" ;;
+    esac
+  }
+  _rc() {
+    windres -I"${LIB}" -I"${AWT}" -I"${WGL}" "-DSWT_ORG_FILENAME=\\\"$2\\\"" \
+      "-DSWT_FILE_VERSION=\\\"${maj}.${min}.${rev}.0\\\"" "-DSWT_COMMA_VERSION=${maj},${min},${rev},0" \
+      "$1" -O coff -o "$3"
+  }
+  local -a objs
+  local f o
+  # swt-win32
+  objs=()
+  for f in "${COM}/swt.c" "${COM}/callback.c" "${PIC}/c.c" "${PIC}/c_stats.c" "${LIB}/os.c" "${LIB}/os_structs.c" \
+           "${LIB}/os_custom.c" "${LIB}/os_stats.c" "${LIB}/com_structs.c" "${LIB}/com.c" "${LIB}/com_stats.c" \
+           "${LIB}/com_custom.cpp"; do
+    o="${W}/$(basename "${f%.*}").o"
+    _cc "$f" "$o"
+    objs+=("$o")
+  done
+  _rc "${LIB}/swt.rc" "swt-win32-${V}.dll" "${W}/swt.res.o"
+  g++ -shared -static -o "${out}/swt-win32-${V}.dll" "${objs[@]}" "${W}/swt.res.o" \
+    -lcomctl32 -lshell32 -limm32 -loleacc -lusp10 -lwininet -lshlwapi -luxtheme -lpropsys -lurlmon -lmsimg32 \
+    -ldwmapi -lole32 -luuid -loleaut32 -lkernel32 -lws2_32 -lmswsock -ladvapi32 -luser32 -lgdi32 -lcomdlg32 -lwinspool
+  # swt-osversion
+  objs=()
+  for f in osversion osversion_structs osversion_stats; do _cc "${LIB}/${f}.c" "${W}/${f}.o"; objs+=("${W}/${f}.o"); done
+  _rc "${LIB}/swt_osversion.rc" "swt-osversion-win32-${V}.dll" "${W}/osversion.res.o"
+  gcc -shared -static -o "${out}/swt-osversion-win32-${V}.dll" "${objs[@]}" "${W}/osversion.res.o" -lkernel32 -luser32 -ladvapi32
+  # swt-gdip
+  objs=()
+  for f in gdip gdip_structs gdip_stats gdip_custom; do _cc "${LIB}/${f}.cpp" "${W}/${f}.o"; objs+=("${W}/${f}.o"); done
+  _rc "${LIB}/swt_gdip.rc" "swt-gdip-win32-${V}.dll" "${W}/gdip.res.o"
+  g++ -shared -static -o "${out}/swt-gdip-win32-${V}.dll" "${objs[@]}" "${W}/gdip.res.o" -lgdiplus -lgdi32 -luser32 -lkernel32
+  # swt-wgl
+  objs=()
+  for f in wgl wgl_structs wgl_stats; do _cc "${WGL}/${f}.c" "${W}/${f}.o"; objs+=("${W}/${f}.o"); done
+  _rc "${WGL}/swt_wgl.rc" "swt-wgl-win32-${V}.dll" "${W}/wgl.res.o"
+  gcc -shared -static -o "${out}/swt-wgl-win32-${V}.dll" "${objs[@]}" "${W}/wgl.res.o" -lopengl32 -lgdi32 -luser32
+  # swt-awt (links jawt.dll directly; the JDK has no import library)
+  _cc "${AWT}/swt_awt.c" "${W}/swt_awt.o"
+  _rc "${AWT}/swt_awt.rc" "swt-awt-win32-${V}.dll" "${W}/awt.res.o"
+  gcc -shared -static-libgcc -o "${out}/swt-awt-win32-${V}.dll" "${W}/swt_awt.o" "${W}/awt.res.o" \
+    "${jh}/bin/jawt.dll" -luser32
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  _natives "${srcdir}/${_frag}"
+  cp "${MINGW_PREFIX}/bin/WebView2Loader.dll" "${srcdir}/${_frag}/"
+  # binaries/pom.xml adds Eclipse-Version to the fragment's manifest
+  local -a JB_BUNDLE_OPTS_org_eclipse_swt_win32_win32_x86_64=(-H "Eclipse-Version: ${pkgver}")
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${_src}/bundles/org.eclipse.swt" "${_frag}" \
+    "${_src}/bundles/org.eclipse.swt.svg"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_bundle_loadcheck --ignore 'org\.eclipse\.swt\.awt\.' org.eclipse.swt.win32.win32.x86_64
+  jb_bundle_loadcheck org.eclipse.swt.svg
+  # a shell with widgets, rendered into an image with Control.print
+  local t="${srcdir}/swt-smoke" jar
+  mkdir -p "${t}"
+  jar=$(jb_bundle_jar org.eclipse.swt.win32.win32.x86_64)
+  cat > "${t}/Smoke.java" <<'JAVA'
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.*;
+import org.eclipse.swt.layout.*;
+import org.eclipse.swt.widgets.*;
+public class Smoke {
+  public static void main(String[] a) {
+    Display d = new Display();
+    Shell s = new Shell(d);
+    s.setText("SWT smoke test");
+    s.setLayout(new GridLayout(2, false));
+    new Label(s, SWT.NONE).setText("Name:");
+    Text t = new Text(s, SWT.BORDER); t.setText("SWT " + SWT.getVersion() + " " + SWT.getPlatform());
+    Button b = new Button(s, SWT.CHECK); b.setText("checked"); b.setSelection(true);
+    Combo c = new Combo(s, SWT.READ_ONLY); c.setItems("one", "two"); c.select(1);
+    Table tb = new Table(s, SWT.BORDER); new TableItem(tb, 0).setText("row");
+    s.setSize(400, 250);
+    s.open();
+    long end = System.currentTimeMillis() + 1500;
+    while (System.currentTimeMillis() < end) { if (!d.readAndDispatch()) d.sleep(); }
+    // Control.print renders the window itself (PrintWindow), also when the
+    // desktop is not visible (e.g. a service or ssh session)
+    Image img = new Image(d, s.getSize().x, s.getSize().y);
+    GC gc = new GC(img); boolean printed = s.print(gc); gc.dispose();
+    if (!printed) throw new AssertionError("Shell.print failed");
+    ImageLoader l = new ImageLoader(); l.data = new ImageData[] {img.getImageData()};
+    l.save(a[0], SWT.IMAGE_PNG);
+    System.out.println("SWT " + SWT.getVersion() + " (" + SWT.getPlatform() + "): " + s.getChildren().length + " widgets, saved " + a[0]);
+    img.dispose(); s.dispose(); d.dispose();
+  }
+}
+JAVA
+  javac -nowarn -d "$(jb_w "${t}")" -cp "$(jb_w "${jar}")" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");$(jb_w "${jar}")" Smoke "$(jb_w "${t}/smoke.png")"
+  [[ -s ${t}/smoke.png ]]
+}
+
+package_eclipse-swt() {
+  pkgdesc="Eclipse SWT host bundle org.eclipse.swt (mingw-w64)"
+  # JFace and the workbench require the SVG support (eclipse.swt;image.format=svg)
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-swt-win32-win32-x86_64" "${MINGW_PACKAGE_PREFIX}-eclipse-swt-svg")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.eclipse.swt
+  install -Dm644 "${srcdir}/${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-swt/LICENSE"
+}
+
+package_eclipse-swt-svg() {
+  pkgdesc="Eclipse SWT SVG image support, fragment org.eclipse.swt.svg (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-swt" "${MINGW_PACKAGE_PREFIX}-java-jsvg")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.eclipse.swt.svg
+  install -Dm644 "${srcdir}/${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-swt-svg/LICENSE"
+}
+
+package_eclipse-swt-win32-win32-x86_64() {
+  pkgdesc="Eclipse SWT for win32 x86_64, classes and JNI libraries (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.eclipse.swt.win32.win32.x86_64
+  install -Dm644 "${srcdir}/${_src}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-swt-win32-win32-x86_64/LICENSE"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

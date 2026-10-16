@@ -1,0 +1,99 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# GEF Classic 3.29 (Eclipse 2026-09): Draw2d and the Graphical Editing
+# Framework.  Zest and the examples are not packaged.  The qualifier is the
+# one of the 3.29 release build.
+
+_realname=eclipse-gef-classic
+pkgbase=mingw-w64-${_realname}
+pkgver=3.29
+pkgrel=1
+_tag=R_${pkgver/./_}
+_qualifier=202608071137
+_gef=gef-classic-${_tag}
+
+# bundle symbolic name | directory | split packages it depends on
+_bundles=(
+  "org.eclipse.draw2d|${_gef}/org.eclipse.draw2d|eclipse-swt"
+  "org.eclipse.gef|${_gef}/org.eclipse.gef|eclipse-draw2d eclipse-core-runtime eclipse-ui-workbench eclipse-jface eclipse-ui-views"
+)
+
+_pn() { local b=${1#org.eclipse.}; echo "eclipse-${b//./-}"; }
+
+pkgname=()
+for _e in "${_bundles[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-$(_pn "${_e%%|*}")"); done
+pkgdesc="GEF Classic: Draw2d and the Graphical Editing Framework (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/eclipse-gef/gef-classic'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-pde-api-tools-annotations"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-workbench"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-views")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-aries-spifly-dynamic-bundle"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-scr")
+source=("gef-classic-${_tag}.tar.gz::https://github.com/eclipse-gef/gef-classic/archive/refs/tags/${_tag}.tar.gz")
+sha256sums=('b402b8e91d54070ca331d2c1c28faf40f66e5fbe33c11dd868532c91cb7cc4a4')
+
+prepare() {
+  # the release build puts its build id into about.mappings
+  sed -i "s/@build@/${_qualifier}/" "${_gef}"/org.eclipse.{draw2d,gef}/about.mappings
+  find "${_gef}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local -a dirs=()
+  local e
+  for e in "${_bundles[@]}"; do
+    e=${e#*|}
+    dirs+=("${e%%|*}")
+  done
+  # GEF's build keeps package.html; its manifests are processed by bnd,
+  # which turns the execution environment into an osgi.ee requirement and
+  # adds the optional SVG and (for org.eclipse.gef) the DS requirements
+  local ee='osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=17))"' svg='eclipse.swt;filter:="(image.format=svg)";resolution:=optional'
+  local -a JB_BUNDLE_OPTS_org_eclipse_draw2d=(-H "Require-Capability: ${svg},${ee}")
+  local -a JB_BUNDLE_OPTS_org_eclipse_gef=(-H "Require-Capability: ${svg},osgi.extender;filter:=\"(&(osgi.extender=osgi.component)(version>=1.5.0)(!(version>=2.0.0)))\",${ee}")
+  JB_QUALIFIER=${_qualifier} JB_RESOURCE_EXCLUDES= jb_bundles -R Bundle-RequiredExecutionEnvironment \
+    -H 'Java-Version: 17' -- "${dirs[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local e
+  for e in "${_bundles[@]}"; do
+    jb_bundle_loadcheck "${e%%|*}"
+  done
+  jb_osgi_resolvecheck
+}
+
+_package_bundle() {
+  local bsn=$1 n
+  n=$(_pn "${bsn}")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+  install -Dm644 "${srcdir}/${_gef}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${n}/LICENSE"
+}
+
+for _e in "${_bundles[@]}"; do
+  _b=${_e%%|*}
+  _d=${_e##*|}
+  eval "package_$(_pn "${_b}")() {
+    pkgdesc='GEF Classic ${_b} bundle (mingw-w64)'
+    depends=($(for _x in ${_d}; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "${_x}"; done))
+    _package_bundle ${_b}
+  }"
+done
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

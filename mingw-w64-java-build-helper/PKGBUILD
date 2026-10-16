@@ -1,0 +1,67 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build helper for the source-bootstrapped Java libraries and Apache Maven:
+# javac/jar wrappers, a flattened-POM writer and a system Maven repository
+# layout, plus annotation processors that generate the metadata Maven's own
+# build would add (plugin.xml, Plexus components.xml).  It plays the part of
+# GNU Guix's ant-build-system / maven helpers; see javabuild.sh.
+
+_realname=java-build-helper
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.0.0
+pkgrel=2
+pkgdesc="javac/jar build helper and Maven metadata generators for source-built Java packages (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Kreijstal/msys2-ur'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk")
+source=('javabuild.sh'
+        'MojoDescriptorProcessor.java'
+        'PlexusComponentsProcessor.java'
+        'LoadCheck.java'
+        'JUnit4Runner.java'
+        'ModelloRunner.java'
+        'Relocate.java'
+        'Osgi.java'
+        'DsProcessor.java'
+        'Bnd.java'
+        'ResolveCheck.java'
+        'selftest.sh')
+sha256sums=('80b55027ea603d97c95ffe94003876ece1758aa088a86f1d6e6b69cc556e31f1'
+            '49a13511b69a8c1145b5e465a6751df854df8ce0befd438eab7b9bcad13b30ce'
+            '0c181fe4054a0541ca69798216980b47bb2b94abb4205ed05197a7dea512f43c'
+            '935058fd248c8f726a447d695f8d3531de0b6e51edd22bbecc6564c28372ef5f'
+            '310c6c1440d39685ebba90563d0e5214d28d21dc8ef096000a199a7476aca814'
+            '2cc03347cabc3c5abd58ae6e1415aee28fa9628031fb15144e858eee70d199de'
+            'c7719ce2a45bc9d4e4f2f527e11b126c491fbcf22cc6d2347dd43793f0349fe1'
+            'fdb612e4ae2c9ebdb746d27b8eef8f703ba5b950c43235942d9425738b3b61be'
+            'f4a91d7fbb6d629162e5e81ced8e4e62a07e75de282eebd0f3a60f32691ce3c9'
+            'fdedae042c44b1edb394abfa7cebb46df6ff79bdca9b801248dd56b96ad2d0d9'
+            '93f6fd8f7fea2a1d49a06f85df279989be2a96873e51389288f045f3ca061e23'
+            'f4b7f63520bba1b637bb9fe950e61eb8763796fe05910309da63efaf9361760f')
+
+build() {
+  rm -rf classes
+  mkdir -p classes
+  javac --release 11 -nowarn -d classes \
+    MojoDescriptorProcessor.java PlexusComponentsProcessor.java LoadCheck.java ModelloRunner.java \
+    Osgi.java DsProcessor.java Bnd.java
+  jar --create --file javabuild.jar -C classes .
+}
+
+check() {
+  bash selftest.sh "${srcdir}/javabuild.jar" "${srcdir}/selftest"
+}
+
+package() {
+  local d="${pkgdir}${MINGW_PREFIX}/share/${_realname}"
+  install -Dm644 javabuild.sh "${d}/javabuild.sh"
+  install -Dm644 javabuild.jar "${d}/javabuild.jar"
+  install -Dm644 JUnit4Runner.java "${d}/JUnit4Runner.java"
+  install -Dm644 Relocate.java "${d}/Relocate.java"
+  install -Dm644 ResolveCheck.java "${d}/ResolveCheck.java"
+  install -d "${pkgdir}${MINGW_PREFIX}/share/maven-repo" "${pkgdir}${MINGW_PREFIX}/share/java" \
+    "${pkgdir}${MINGW_PREFIX}/lib/eclipse/plugins"
+}

@@ -1,0 +1,21 @@
+pkgbase = mingw-w64-java-bouncycastle
+	pkgdesc = Bouncy Castle Java cryptography APIs (mingw-w64)
+	pkgver = 1.85.2
+	pkgrel = 1
+	url = https://www.bouncycastle.org/
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	source = bc-java-r1rv85v2.tar.gz::https://github.com/bcgit/bc-java/archive/refs/tags/r1rv85v2.tar.gz
+	sha256sums = a47d9dc38ae82c76db8150b656d06a1c8a8f3ca398c13d20632fc436ed7a265b
+
+pkgname = mingw-w64-ucrt-x86_64-java-bcprov
+	pkgdesc = Bouncy Castle provider and lightweight crypto API, bcprov 1.85.2 (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-java-bcutil
+	pkgdesc = Bouncy Castle ASN.1 extension and utility APIs, bcutil 1.85 (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-bcprov
+
+pkgname = mingw-w64-ucrt-x86_64-java-bcpg
+	pkgdesc = Bouncy Castle OpenPGP API, bcpg 1.85 (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-bcutil
