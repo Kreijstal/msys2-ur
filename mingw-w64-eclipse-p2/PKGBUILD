@@ -1,0 +1,101 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Equinox p2 4.41 (github.com/eclipse-equinox/p2): the provisioning core that
+# org.eclipse.ui.ide requires (core, metadata, engine, repositories) and the
+# simpleconfigurator that installs the bundles listed in bundles.info.  The
+# p2 UI, director and publisher are not packaged yet.
+
+_realname=eclipse-p2
+pkgbase=mingw-w64-${_realname}
+pkgver=4.41
+pkgrel=1
+_tag=R${pkgver/./_}
+_qualifier=v20260828-1142
+_p2=p2-${_tag}
+
+# bundle symbolic name | directory | split packages it depends on
+_bundles=(
+  "org.eclipse.equinox.p2.core|${_p2}/bundles/org.eclipse.equinox.p2.core|java-bcpg eclipse-core-runtime eclipse-osgi java-felix-scr"
+  "org.eclipse.equinox.p2.metadata|${_p2}/bundles/org.eclipse.equinox.p2.metadata|eclipse-equinox-common eclipse-equinox-p2-core eclipse-osgi"
+  "org.eclipse.equinox.p2.repository|${_p2}/bundles/org.eclipse.equinox.p2.repository|eclipse-equinox-common eclipse-equinox-registry java-bcpg java-bcprov eclipse-equinox-preferences eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-security eclipse-osgi java-osgi-service-prefs"
+  "org.eclipse.equinox.p2.metadata.repository|${_p2}/bundles/org.eclipse.equinox.p2.metadata.repository|eclipse-equinox-common eclipse-equinox-registry eclipse-orbit-xz eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-osgi"
+  "org.eclipse.equinox.p2.artifact.repository|${_p2}/bundles/org.eclipse.equinox.p2.artifact.repository|eclipse-equinox-common eclipse-equinox-registry eclipse-equinox-p2-metadata eclipse-orbit-xz java-bcpg eclipse-core-jobs eclipse-equinox-p2-core eclipse-equinox-p2-repository eclipse-osgi"
+  "org.eclipse.equinox.p2.engine|${_p2}/bundles/org.eclipse.equinox.p2.engine|eclipse-core-runtime java-bcpg eclipse-equinox-preferences eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-repository eclipse-osgi java-osgi-service-prefs"
+  "org.eclipse.equinox.simpleconfigurator|${_p2}/bundles/org.eclipse.equinox.simpleconfigurator|eclipse-osgi"
+)
+
+_pn() { local b=${1#org.eclipse.}; echo "eclipse-${b//./-}"; }
+
+pkgname=()
+for _e in "${_bundles[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-$(_pn "${_e%%|*}")"); done
+pkgdesc="Equinox p2 provisioning core (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/equinox/p2/'
+msys2_repository_url='https://github.com/eclipse-equinox/p2'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-runtime"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-xz"
+             "${MINGW_PACKAGE_PREFIX}-java-bcpg"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations")
+source=("p2-${_tag}.tar.gz::https://github.com/eclipse-equinox/p2/archive/refs/tags/${_tag}.tar.gz")
+sha256sums=('6849d6cadd839c6f87612b03ddc39784332cc532398ce2c76ef8dd06790becab')
+
+prepare() {
+  find "${_p2}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' -o -name '*.zip' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local -a dirs=()
+  local e
+  for e in "${_bundles[@]}"; do
+    e=${e#*|}
+    dirs+=("${e%%|*}")
+  done
+  # the Ant tasks need org.eclipse.ant.core and Ant as bundles, not packaged
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_p2_metadata_repository=(-L ant_tasks/metadataRepository-ant.jar)
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${dirs[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local e
+  for e in "${_bundles[@]}"; do
+    jb_bundle_loadcheck "${e%%|*}"
+  done
+  jb_osgi_resolvecheck
+}
+
+_package_bundle() {
+  local bsn=$1 n
+  n=$(_pn "${bsn}")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+  install -Dm644 "${srcdir}/${_p2}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${n}/LICENSE"
+}
+
+for _e in "${_bundles[@]}"; do
+  _b=${_e%%|*}
+  _d=${_e##*|}
+  eval "package_$(_pn "${_b}")() {
+    pkgdesc='Equinox p2 ${_b} bundle (mingw-w64)'
+    depends=($(for _x in ${_d}; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "${_x}"; done))
+    _package_bundle ${_b}
+  }"
+done
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

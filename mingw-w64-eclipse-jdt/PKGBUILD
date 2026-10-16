@@ -1,0 +1,60 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse JDT Core 4.41 (github.com/eclipse-jdt/eclipse.jdt.core).  Only the
+# null analysis annotations (org.eclipse.jdt.annotation) are packaged for now:
+# org.eclipse.ui.editors compiles against them.  The Java compiler and the
+# rest of JDT are not packaged yet.
+
+_realname=eclipse-jdt
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-jdt-annotation")
+pkgver=4.41
+pkgrel=1
+_tag=R${pkgver/./_}
+_qualifier=v20260828-1142
+pkgdesc="Eclipse JDT (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/jdt/'
+msys2_repository_url='https://github.com/eclipse-jdt/eclipse.jdt.core'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("eclipse.jdt.core-${_tag}.tar.gz::https://github.com/eclipse-jdt/eclipse.jdt.core/archive/refs/tags/${_tag}.tar.gz")
+sha256sums=('7844a4a8cfb8c8aa4a6af6fba083897258b5ee28d5f24294d304c4059b3b39b4')
+noextract=("eclipse.jdt.core-${_tag}.tar.gz")
+
+_src=eclipse.jdt.core-${_tag}
+_ann=${_src}/org.eclipse.jdt.annotation
+
+prepare() {
+  tar -xzf "eclipse.jdt.core-${_tag}.tar.gz" "${_ann}" "${_src}/LICENSE"
+  find "${_src}" -type f \( -name '*.jar' -o -name '*.class' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  JB_QUALIFIER=${_qualifier} jb_bundle "${_ann}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_bundle_loadcheck org.eclipse.jdt.annotation
+}
+
+package_eclipse-jdt-annotation() {
+  pkgdesc="Eclipse JDT null analysis annotations (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.eclipse.jdt.annotation
+  install -Dm644 "${srcdir}/${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-jdt-annotation/LICENSE"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

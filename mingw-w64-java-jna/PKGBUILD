@@ -1,0 +1,179 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Java Native Access, built with javac; the jnidispatch JNI library is
+# compiled from native/*.c with MinGW and linked statically against the
+# system libffi (upstream links its bundled copy of libffi statically).  The
+# repository's prebuilt libraries (lib/native/*.jar) are deleted, so the jar
+# only carries win32-x86-64/jnidispatch.dll and Bundle-NativeCode lists only
+# that one.  OSGi headers are those of build.xml / contrib/platform/build.xml.
+
+_realname=jna
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-jna"
+         "${MINGW_PACKAGE_PREFIX}-java-jna-platform")
+pkgver=5.19.1
+pkgrel=1
+_jni=7.0.4
+pkgdesc="Java Native Access (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/java-native-access/jna'
+license=('spdx:LGPL-2.1-or-later OR Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-libffi")
+source=("jna-${pkgver}.tar.gz::https://github.com/java-native-access/jna/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('33a9e27b5a6eaa024bb117325392d1ccba7ca63f95d201230ad7c33d60f54c23')
+
+_src=jna-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # prebuilt native libraries and tools; the bundled libffi sources are not used
+  find . -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' -o -name '*.a' -o -name '*.lib' \) -delete
+  rm -rf native/libffi
+  # what build.xml's replaceregexp does
+  sed -i -e "s/VERSION = \"TEMPLATE\"/VERSION = \"${pkgver}\"/" \
+         -e "s/VERSION_NATIVE = \"TEMPLATE\"/VERSION_NATIVE = \"${_jni}\"/" src/com/sun/jna/Version.java
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local md5
+  md5=$(sed -n 's/.*name="jni.md5" value="\([0-9a-f]*\)".*/\1/p' common.xml)
+
+  # --- Java, with the JNI headers for the native part
+  local hdr="${srcdir}/headers"
+  rm -rf "${hdr}" "${srcdir}/res-jna"
+  mkdir -p "${hdr}" "${srcdir}/res-jna/META-INF"
+  cp LICENSE LGPL2.1 AL2.0 "${srcdir}/res-jna/META-INF/"
+  local JB_RELEASE=8
+  jb_module net.java.dev.jna:jna:${pkgver} src -j -h -j "$(jb_w "${hdr}")" -r "${srcdir}/res-jna"
+
+  # --- jnidispatch.dll (native/Makefile's MinGW rules)
+  local nb="${srcdir}/native-build" jh
+  rm -rf "${nb}" && mkdir -p "${nb}"
+  jh=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.home = //p' | tr -d '\r')
+  local -a cflags=(-O2 -fno-omit-frame-pointer -fno-strict-aliasing -Wno-implicit-function-declaration
+                   -W -Wall -Wno-unused -Wno-parentheses
+                   -DPSAPI_VERSION=1 -DFFI_BUILDING -DUNICODE -D_UNICODE
+                   "-DJNA_JNI_VERSION=\"${_jni}\"" "-DCHECKSUM=\"${md5}\""
+                   -I"${jh}/include" -I"${jh}/include/win32" -I"${hdr}" -Inative)
+  gcc "${cflags[@]}" -c native/dispatch.c -o "${nb}/dispatch.o"
+  gcc "${cflags[@]}" -c native/callback.c -o "${nb}/callback.o"
+  sed -e "s/FILEVERSION.*/FILEVERSION ${_jni//./,},0/" \
+      -e "s/PRODUCTVERSION.*/PRODUCTVERSION ${pkgver//./,},0/" \
+      -e "s/\"FileVersion\",.*/\"FileVersion\",\"${_jni}\"/" \
+      -e "s/\"Full Version\",.*/\"Full Version\",\"${_jni} b0\"/" \
+      -e "s/\"ProductVersion\",.*/\"ProductVersion\",\"5\"/" native/jnidispatch.rc > "${nb}/jnidispatch.rc"
+  windres -i "${nb}/jnidispatch.rc" -o "${nb}/rsrc.o"
+  gcc -shared -o "${nb}/jnidispatch.dll" "${nb}"/{dispatch,callback,rsrc}.o \
+    -Wl,--add-stdcall-alias -static-libgcc -Wl,-Bstatic -lffi -Wl,-Bdynamic -lpsapi -lkernel32
+  mkdir -p classes-native/com/sun/jna/win32-x86-64
+  cp "${nb}/jnidispatch.dll" classes-native/com/sun/jna/win32-x86-64/
+
+  # --- the jna jar with build.xml's manifest
+  local out="${srcdir}/jb-build/jna"
+  cp -r classes-native/. "${out}/classes/"
+  cat > "${out}/classes/META-INF/MANIFEST.MF" <<EOF
+Main-Class: com.sun.jna.Native
+Implementation-Vendor: JNA Development Team
+Specification-Title: Java Native Access (JNA)
+Specification-Vendor: JNA Development Team
+Specification-Version: 5
+Bundle-Category: jni
+Bundle-ManifestVersion: 2
+Bundle-Name: jna
+Bundle-Description: JNA Library
+Bundle-SymbolicName: com.sun.jna
+Bundle-Version: ${pkgver}
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Vendor: JNA Development Team
+Bundle-ActivationPolicy: lazy
+Export-Package: com.sun.jna;version="${pkgver}",
+ com.sun.jna.ptr;version="${pkgver}";uses:="com.sun.jna",
+ com.sun.jna.win32;version="${pkgver}";uses:="com.sun.jna"
+Bundle-NativeCode: com/sun/jna/win32-x86-64/jnidispatch.dll;processor=x86-64;osname=win32,
+ com/sun/jna/win32-x86-64/jnidispatch.dll;processor=x86-64;osname=win
+ModuleMainClass: com.sun.jna.Native
+Automatic-Module-Name: com.sun.jna
+EOF
+  JB_GAV=net.java.dev.jna:jna:${pkgver} jb_jar "${out}/jna.jar" "${out}/classes"
+  jb_stage net.java.dev.jna:jna:${pkgver} "${out}/jna.pom" "${out}/jna.jar"
+
+  # --- jna-platform (contrib/platform/build.xml's headers, uses: computed)
+  cat > "${srcdir}/jna-platform.bnd" <<EOF
+Implementation-Vendor: JNA Development Team
+Specification-Title: Java Native Access (JNA)
+Specification-Vendor: JNA Development Team
+Specification-Version: 5
+Bundle-Category: jni
+Bundle-Name: jna-platform
+Bundle-Description: JNA Platform Library
+Bundle-SymbolicName: com.sun.jna.platform
+Bundle-Version: ${pkgver}
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Bundle-Vendor: JNA Development Team
+Require-Bundle: com.sun.jna;bundle-version="${pkgver}"
+Export-Package: com.sun.jna.platform.*;version=${pkgver}
+Import-Package: !*
+Automatic-Module-Name: com.sun.jna.platform
+-noee: true
+EOF
+  jb_module net.java.dev.jna:jna-platform:${pkgver} contrib/platform/src -b "${srcdir}/jna-platform.bnd" \
+    -- net.java.dev.jna:jna
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --ignore '^com\.sun\.jna\.platform\.(mac|linux|unix|bsd|wince)\.|\.dnd\.' \
+    net.java.dev.jna:jna net.java.dev.jna:jna-platform
+  # jnidispatch from the jar: version check and a few calls through libffi
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import com.sun.jna.Native;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.Kernel32Util;
+public class Smoke {
+  public static void main(String[] a) {
+    int pid = Kernel32.INSTANCE.GetCurrentProcessId();
+    if (pid != ProcessHandle.current().pid()) throw new AssertionError(pid);
+    String host = Kernel32Util.getComputerName();
+    System.out.println("jna " + Native.VERSION + " native " + Native.VERSION_NATIVE + ": pid " + pid + " host " + host);
+  }
+}
+JAVA
+  cp=$(jb_cp net.java.dev.jna:jna-platform)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -Djna.nosys=true -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package_java-jna() {
+  pkgdesc="Java Native Access, com.sun.jna (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin net.java.dev.jna:jna
+  install -Dm644 "${srcdir}/${_src}/LICENSE" "${srcdir}/${_src}/AL2.0" "${srcdir}/${_src}/LGPL2.1" \
+    -t "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jna/"
+}
+
+package_java-jna-platform() {
+  pkgdesc="Java Native Access platform mappings, com.sun.jna.platform (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-jna")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin net.java.dev.jna:jna-platform
+  install -Dm644 "${srcdir}/${_src}/LICENSE" -t "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jna-platform/"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

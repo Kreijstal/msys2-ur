@@ -1,0 +1,98 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse Modeling Framework 2.47 (Eclipse 2026-09): the EMF runtime bundles
+# the e4 application model needs (common, ecore, ecore.change, ecore.xmi).
+# EMF has no 2.47 release tag; the release build of 2026-07-04 12:56 (the
+# qualifier of all EMF bundles in the 2026-09 release) is this commit, which
+# is used directly, as is its qualifier.
+
+_realname=eclipse-emf
+pkgbase=mingw-w64-${_realname}
+pkgver=2.47.0
+pkgrel=1
+_commit=09588723fd782c3ff2bb932723f37159552418f7
+_qualifier=v20260704-1256
+_emf=org.eclipse.emf-${_commit}
+
+# bundle symbolic name | directory | split packages it depends on
+_bundles=(
+  "org.eclipse.emf.common|${_emf}/plugins/org.eclipse.emf.common|eclipse-core-runtime"
+  "org.eclipse.emf.ecore|${_emf}/plugins/org.eclipse.emf.ecore|eclipse-emf-common"
+  "org.eclipse.emf.ecore.change|${_emf}/plugins/org.eclipse.emf.ecore.change|eclipse-emf-ecore"
+  "org.eclipse.emf.ecore.xmi|${_emf}/plugins/org.eclipse.emf.ecore.xmi|eclipse-emf-ecore"
+)
+
+_pn() { local b=${1#org.eclipse.}; echo "eclipse-${b//./-}"; }
+
+pkgname=()
+for _e in "${_bundles[@]}"; do pkgname+=("${MINGW_PACKAGE_PREFIX}-$(_pn "${_e%%|*}")"); done
+pkgdesc="Eclipse Modeling Framework runtime (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/modeling/emf/'
+msys2_repository_url='https://github.com/eclipse-emf/org.eclipse.emf'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-resources")
+source=("org.eclipse.emf-${_commit}.tar.gz::https://github.com/eclipse-emf/org.eclipse.emf/archive/${_commit}.tar.gz")
+sha256sums=('c5b2312790a4162b5428915e40637a5d5528fe381cbbdd055acb3228412c4044')
+
+prepare() {
+  # Maven resource filtering of about.mappings
+  sed -i -e "s/\${build.id}/${_qualifier#v}/" -e "s/\${commit.id}/${_commit}/" \
+    "${_emf}"/plugins/org.eclipse.emf.{common,ecore}/about.mappings
+  find "${_emf}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \
+    -o -name '*.dylib' -o -name '*.jnilib' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local -a dirs=()
+  local e
+  for e in "${_bundles[@]}"; do
+    e=${e#*|}
+    dirs+=("${e%%|*}")
+  done
+  # EMF's build keeps package.html, and its manifests carry osgi.ee
+  # requirements instead of Bundle-RequiredExecutionEnvironment
+  JB_QUALIFIER=${_qualifier} JB_RESOURCE_EXCLUDES= jb_bundles -R Bundle-RequiredExecutionEnvironment \
+    -H 'Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"' -- "${dirs[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local e
+  for e in "${_bundles[@]}"; do
+    jb_bundle_loadcheck "${e%%|*}"
+  done
+  jb_osgi_resolvecheck
+}
+
+_package_bundle() {
+  local bsn=$1 n
+  n=$(_pn "${bsn}")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "${bsn}"
+  install -Dm644 "${srcdir}/${_emf}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${n}/LICENSE"
+}
+
+for _e in "${_bundles[@]}"; do
+  _b=${_e%%|*}
+  _d=${_e##*|}
+  eval "package_$(_pn "${_b}")() {
+    pkgdesc='EMF ${_b} bundle (mingw-w64)'
+    depends=($(for _x in ${_d}; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "${_x}"; done))
+    _package_bundle ${_b}
+  }"
+done
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

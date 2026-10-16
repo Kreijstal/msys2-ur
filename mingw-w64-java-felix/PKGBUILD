@@ -1,0 +1,225 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Apache Felix bundles of the Eclipse RCP: Service Component Runtime (the
+# Declarative Services implementation used by Equinox) and the Gogo shell
+# (OSGi console).  felix-dev keeps every subproject in one repository and tags
+# them separately, so each one comes from its own release tag.  The bundles
+# are compiled with javac; maven-bundle-plugin's instructions (pom.xml /
+# scr/bnd.bnd) and the manifest headers Gogo declares through bundle
+# annotations (@Header/@Capability/@Requirement) are given to jb.Bnd.
+
+_realname=felix
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-felix-gogo-runtime"
+         "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-shell"
+         "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-command"
+         "${MINGW_PACKAGE_PREFIX}-java-felix-scr")
+pkgver=2.2.18
+pkgrel=1
+_runtime=1.1.6
+_shell=1.1.4
+_command=1.1.2
+pkgdesc="Apache Felix SCR and Gogo for Equinox (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://felix.apache.org/'
+msys2_repository_url='https://github.com/apache/felix-dev'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-core"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-namespace-extender"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-namespace-service"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-cm"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-event"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-metatype"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-util-promise")
+source=("felix-scr-${pkgver}.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.scr-${pkgver}.tar.gz"
+        "felix-gogo-runtime-${_runtime}.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.runtime-${_runtime}.tar.gz"
+        "felix-gogo-shell-${_shell}.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.shell-${_shell}.tar.gz"
+        "felix-gogo-command-${_command}.tar.gz::https://github.com/apache/felix-dev/archive/refs/tags/org.apache.felix.gogo.command-${_command}.tar.gz")
+sha256sums=('0afb33c2908f7b128f88faf0ab9a1a203093906624b1f2775c00ab76d6c1295c'
+            'ee279a2a942fbca76b989061f261bfd57219af160ea26ea431da86069c47d12f'
+            '3343a2a2527be4bef51d71a67d0815a3c409f557f410a7955fed600c9064c84f'
+            'a28b4efa8bae25ca3d3fb896fb6e0a6dc5ae4ec7b89226e7a00d477d389f013b')
+noextract=("${source[@]%%::*}")
+
+_scr=felix-dev-org.apache.felix.scr-${pkgver}/scr
+_rt=felix-dev-org.apache.felix.gogo.runtime-${_runtime}/gogo/runtime
+_sh=felix-dev-org.apache.felix.gogo.shell-${_shell}/gogo/shell
+_cmd=felix-dev-org.apache.felix.gogo.command-${_command}/gogo/command
+
+prepare() {
+  # only the subprojects are needed from the four copies of the repository
+  tar -xzf "felix-scr-${pkgver}.tar.gz" "${_scr}"
+  tar -xzf "felix-gogo-runtime-${_runtime}.tar.gz" "${_rt}"
+  tar -xzf "felix-gogo-shell-${_shell}.tar.gz" "${_sh}"
+  tar -xzf "felix-gogo-command-${_command}.tar.gz" "${_cmd}"
+  find felix-dev-* -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' \
+    -o -name '*.exe' -o -name '*.dylib' -o -name '*.jnilib' \) -delete
+}
+
+_meta() {
+  # LICENSE/NOTICE/DEPENDENCIES of maven-remote-resources-plugin
+  local dir=$1 out=$2
+  mkdir -p "${out}/META-INF"
+  cp "${dir}"/{LICENSE,NOTICE,DEPENDENCIES} "${out}/META-INF/"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=8
+  mkdir -p bnd res
+
+  cat > bnd/runtime.bnd <<EOF
+Bundle-SymbolicName: org.apache.felix.gogo.runtime
+Bundle-Version: ${_runtime}
+Bundle-Name: Apache Felix Gogo Runtime
+Bundle-Description: Apache Felix Gogo Subproject
+Bundle-Vendor: The Apache Software Foundation
+Bundle-DocURL: https://www.apache.org/
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Activator: org.apache.felix.gogo.runtime.activator.Activator
+Export-Package: !org.apache.felix.gogo.runtime.util.function, org.apache.felix.gogo.runtime.*;version=${_runtime}, org.apache.felix.service.command, org.apache.felix.service.command.annotations, org.apache.felix.service.threadio
+Import-Package: org.osgi.service.event.*;resolution:=optional, *
+Provide-Capability: org.apache.felix.gogo;org.apache.felix.gogo="runtime.implementation";version:Version="1.0.0",osgi.service;objectClass="org.apache.felix.service.command.CommandProcessor",osgi.service;objectClass="org.apache.felix.service.threadio.ThreadIO"
+Require-Capability: org.apache.felix.gogo;filter:="(&(org.apache.felix.gogo=shell.implementation)(version>=1.0.0)(!(version>=2.0.0)))";effective:=active
+EOF
+  _meta "${_rt}" res/runtime
+  jb_module "org.apache.felix:org.apache.felix.gogo.runtime:${_runtime}" "${_rt}/src/main/java" \
+    -r res/runtime -u "${_rt}/pom.xml" -b bnd/runtime.bnd \
+    -c org.osgi:osgi.annotation -c org.osgi:osgi.core -c org.osgi:org.osgi.namespace.service \
+    -c org.osgi:org.osgi.service.event -c org.osgi:org.osgi.service.component.annotations
+
+  cat > bnd/shell.bnd <<EOF
+Bundle-SymbolicName: org.apache.felix.gogo.shell
+Bundle-Version: ${_shell}
+Bundle-Name: Apache Felix Gogo Shell
+Bundle-Description: Apache Felix Gogo Subproject
+Bundle-Vendor: The Apache Software Foundation
+Bundle-DocURL: https://www.apache.org/
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Activator: org.apache.felix.gogo.shell.Activator
+Export-Package:
+Provide-Capability: org.apache.felix.gogo;org.apache.felix.gogo="shell.implementation";version:Version="1.0.0";implementation.name="gogo.shell"
+Require-Capability: org.apache.felix.gogo;filter:="(&(org.apache.felix.gogo=command.implementation)(version>=1.0.0)(!(version>=2.0.0)))";effective:=active
+EOF
+  _meta "${_sh}" res/shell
+  cp -r "${_sh}/src/main/resources"/. res/shell/
+  jb_module "org.apache.felix:org.apache.felix.gogo.shell:${_shell}" "${_sh}/src/main/java" \
+    -r res/shell -u "${_sh}/pom.xml" -b bnd/shell.bnd \
+    -c org.osgi:osgi.annotation -c org.osgi:osgi.core \
+    -- org.apache.felix:org.apache.felix.gogo.runtime
+
+  cat > bnd/command.bnd <<EOF
+Bundle-SymbolicName: org.apache.felix.gogo.command
+Bundle-Version: ${_command}
+Bundle-Name: Apache Felix Gogo Command
+Bundle-Description: Provides basic shell commands for Gogo.
+Bundle-Vendor: The Apache Software Foundation
+Bundle-DocURL: https://www.apache.org/
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-Activator: org.apache.felix.gogo.command.Activator
+Export-Package: org.apache.felix.gogo.command;version=${_command}
+Import-Package: !org.osgi.service.log, org.apache.felix.service.command, *
+DynamicImport-Package: org.osgi.service.log
+Provide-Capability: org.apache.felix.gogo;org.apache.felix.gogo="command.implementation";version:Version="1.0.0"
+Require-Capability: org.apache.felix.gogo;filter:="(&(org.apache.felix.gogo=runtime.implementation)(version>=1.0.0)(!(version>=2.0.0)))";effective:=active
+EOF
+  _meta "${_cmd}" res/command
+  jb_module "org.apache.felix:org.apache.felix.gogo.command:${_command}" "${_cmd}/src/main/java" \
+    -r res/command -u "${_cmd}/pom.xml" -b bnd/command.bnd \
+    -c org.osgi:osgi.annotation -c org.osgi:osgi.core \
+    -- org.apache.felix:org.apache.felix.gogo.runtime
+
+  # animal-sniffer's marker annotation (CLASS retention, compile time only)
+  mkdir -p stub/org/codehaus/mojo/animal_sniffer stub-classes
+  cat > stub/org/codehaus/mojo/animal_sniffer/IgnoreJRERequirement.java <<'EOF'
+package org.codehaus.mojo.animal_sniffer;
+import java.lang.annotation.*;
+@Retention(RetentionPolicy.CLASS)
+@Target({ElementType.METHOD, ElementType.CONSTRUCTOR, ElementType.TYPE})
+public @interface IgnoreJRERequirement {}
+EOF
+  jb_javac -d "$(jb_w stub-classes)" -- stub
+
+  # scr/bnd.bnd plus the pom's bundle headers
+  {
+    cat <<EOF
+Bundle-SymbolicName: org.apache.felix.scr
+Bundle-Version: ${pkgver}
+Bundle-Name: Apache Felix Declarative Services
+Bundle-Description: Implementation of the Declarative Services specification 1.5
+Bundle-Vendor: The Apache Software Foundation
+Bundle-License: https://www.apache.org/licenses/LICENSE-2.0.txt
+-noee: true
+EOF
+    cat "${_scr}/bnd.bnd"
+  } > bnd/scr.bnd
+  mkdir -p res/scr/META-INF
+  cp -r "${_scr}/src/main/appended-resources/META-INF"/. res/scr/META-INF/
+  cp "${_scr}/changelog.txt" res/scr/META-INF/
+  jb_module "org.apache.felix:org.apache.felix.scr:${pkgver}" "${_scr}/src/main/java" \
+    -r res/scr -u "${_scr}/pom.xml" -b bnd/scr.bnd \
+    -c org.osgi:osgi.annotation -c org.osgi:osgi.core -c org.osgi:org.osgi.namespace.extender \
+    -c org.osgi:org.osgi.service.cm -c org.osgi:org.osgi.service.metatype \
+    -c org.apache.felix:org.apache.felix.gogo.runtime -C stub-classes \
+    -- org.osgi:org.osgi.service.component org.osgi:org.osgi.util.promise
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local core=org.osgi:osgi.core
+  jb_loadcheck --with "${core}" --with org.osgi:org.osgi.service.event \
+    org.apache.felix:org.apache.felix.gogo.runtime
+  jb_loadcheck --with "${core}" org.apache.felix:org.apache.felix.gogo.shell \
+    org.apache.felix:org.apache.felix.gogo.command
+  jb_loadcheck --with "${core}" --with org.osgi:org.osgi.service.cm --with org.osgi:org.osgi.service.metatype \
+    --with org.apache.felix:org.apache.felix.gogo.runtime org.apache.felix:org.apache.felix.scr
+}
+
+package_java-felix-gogo-runtime() {
+  pkgdesc="Apache Felix Gogo runtime ${_runtime}, OSGi shell runtime (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar felix-gogo-runtime --plugin org.apache.felix:org.apache.felix.gogo.runtime
+  install -Dm644 "${srcdir}/${_rt}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-felix-gogo-runtime/LICENSE"
+}
+
+package_java-felix-gogo-shell() {
+  pkgdesc="Apache Felix Gogo shell ${_shell}, OSGi console (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-felix-gogo-runtime")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar felix-gogo-shell --plugin org.apache.felix:org.apache.felix.gogo.shell
+  install -Dm644 "${srcdir}/${_sh}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-felix-gogo-shell/LICENSE"
+}
+
+package_java-felix-gogo-command() {
+  pkgdesc="Apache Felix Gogo command ${_command}, basic OSGi shell commands (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-felix-gogo-runtime")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar felix-gogo-command --plugin org.apache.felix:org.apache.felix.gogo.command
+  install -Dm644 "${srcdir}/${_cmd}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-felix-gogo-command/LICENSE"
+}
+
+package_java-felix-scr() {
+  pkgdesc="Apache Felix Service Component Runtime ${pkgver}, OSGi Declarative Services (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-osgi-service-component"
+           "${MINGW_PACKAGE_PREFIX}-java-osgi-util-promise")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar felix-scr --plugin org.apache.felix:org.apache.felix.scr
+  install -Dm644 "${srcdir}/${_scr}/src/main/appended-resources/META-INF/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/java-felix-scr/LICENSE"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

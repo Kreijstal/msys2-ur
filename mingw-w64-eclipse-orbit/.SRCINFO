@@ -1,0 +1,39 @@
+pkgbase = mingw-w64-eclipse-orbit
+	pkgdesc = OSGi bundles of source-built third-party jars for Eclipse (mingw-w64)
+	pkgver = 2026.09
+	pkgrel = 1
+	url = https://github.com/eclipse-orbit/orbit-simrel
+	arch = any
+	license = spdx:Apache-2.0
+	license = spdx:0BSD
+	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-gson
+	makedepends = mingw-w64-ucrt-x86_64-java-xz
+	makedepends = mingw-w64-ucrt-x86_64-java-asm-util
+	makedepends = mingw-w64-ucrt-x86_64-java-asm-commons
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-gson
+	pkgdesc = Gson as the OSGi bundle com.google.gson (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-xz
+	pkgdesc = XZ for Java as the OSGi bundle org.tukaani.xz (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-asm
+	pkgdesc = ASM as the OSGi bundle org.objectweb.asm (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-tree
+	pkgdesc = ASM tree API as the OSGi bundle org.objectweb.asm.tree (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-asm
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-analysis
+	pkgdesc = ASM analysis API as the OSGi bundle org.objectweb.asm.tree.analysis (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-tree
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-commons
+	pkgdesc = ASM commons as the OSGi bundle org.objectweb.asm.commons (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-tree
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-util
+	pkgdesc = ASM util as the OSGi bundle org.objectweb.asm.util (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-asm-analysis

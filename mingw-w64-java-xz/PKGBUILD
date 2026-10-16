@@ -1,0 +1,66 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=xz
+pkgbase=mingw-w64-java-xz
+pkgname="${MINGW_PACKAGE_PREFIX}-java-xz"
+pkgver=1.10
+pkgrel=1
+pkgdesc="XZ for Java: LZMA2 and XZ compression, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://tukaani.org/xz/java.html'
+msys2_repository_url='https://github.com/tukaani-project/xz-java'
+license=('spdx:0BSD')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("xz-java-${pkgver}.tar.gz::https://github.com/tukaani-project/xz-java/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('0e12a54261b1112e9b4c4dbff8cb2b440ed40eec27374f15e9d8f2822b2f4b72')
+
+_src=xz-java-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  sed -i "s/@VERSION@/${pkgver}/" maven/pom_template.xml
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # src/ also holds demo programs; the library is src/org, plus the
+  # multi-release Java 9 classes of src9 (as upstream's build.xml)
+  jb_module org.tukaani:xz:${pkgver} src/org -v 9:src9 -u maven/pom_template.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream has no unit tests; round-trip data through XZ
+  jb_loadcheck org.tukaani:xz
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.io.*;
+import java.util.Arrays;
+import org.tukaani.xz.*;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    byte[] data = new byte[200000];
+    for (int i = 0; i < data.length; i++) data[i] = (byte) (i * 31 % 251);
+    ByteArrayOutputStream bo = new ByteArrayOutputStream();
+    try (XZOutputStream x = new XZOutputStream(bo, new LZMA2Options())) { x.write(data); }
+    byte[] back = new byte[data.length];
+    try (DataInputStream in = new DataInputStream(new XZInputStream(new ByteArrayInputStream(bo.toByteArray())))) { in.readFully(back); }
+    if (!Arrays.equals(data, back)) throw new AssertionError();
+    System.out.println("xz smoke test ok: " + data.length + " -> " + bo.size() + " bytes");
+  }
+}
+JAVA
+  cp=$(jb_cp org.tukaani:xz)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.tukaani:xz
+  install -Dm644 "${_src}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-xz/COPYING"
+}

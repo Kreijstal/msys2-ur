@@ -1,0 +1,29 @@
+pkgbase = mingw-w64-java-asm
+	pkgdesc = ASM Java bytecode manipulation framework (mingw-w64)
+	pkgver = 9.9.1
+	pkgrel = 1
+	url = https://asm.ow2.io/
+	arch = any
+	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	source = asm-9.9.1.tar.gz::https://gitlab.ow2.org/asm/asm/-/archive/ASM_9_9_1/asm-ASM_9_9_1.tar.gz
+	sha256sums = 8cd806938681afa5de1f387798f9708bc836fc42c4c4948317deea6047bb599f
+
+pkgname = mingw-w64-ucrt-x86_64-java-asm
+	pkgdesc = ASM Java bytecode manipulation framework, core (mingw-w64)
+
+pkgname = mingw-w64-ucrt-x86_64-java-asm-tree
+	pkgdesc = ASM Java bytecode manipulation framework, tree API (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-asm
+
+pkgname = mingw-w64-ucrt-x86_64-java-asm-analysis
+	pkgdesc = ASM Java bytecode manipulation framework, analysis (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-asm-tree
+
+pkgname = mingw-w64-ucrt-x86_64-java-asm-commons
+	pkgdesc = ASM Java bytecode manipulation framework, common adapters (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-asm-tree
+
+pkgname = mingw-w64-ucrt-x86_64-java-asm-util
+	pkgdesc = ASM Java bytecode manipulation framework, utilities (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-asm-analysis

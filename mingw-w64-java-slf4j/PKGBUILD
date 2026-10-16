@@ -1,0 +1,100 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=slf4j
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple"
+         "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j")
+pkgver=1.7.36
+pkgrel=1
+pkgdesc="Simple Logging Facade for Java (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.slf4j.org/'
+msys2_repository_url='https://github.com/qos-ch/slf4j'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/qos-ch/slf4j/archive/refs/tags/v_${pkgver}.tar.gz")
+sha256sums=('a2deaffa191c81abbf830d4060eb84129f31b9b3b945b7791344e8875b595286')
+
+_src=${_realname}-v_${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # old slf4j/log4j/junit jars used by the integration tests
+  find . -name '*.jar' -print -delete
+  # resource filtering done by Maven upstream
+  sed -i -e "s/\${parsedVersion.osgiVersion}/${pkgver}/g" \
+         -e 's/\${slf4j.api.minimum.compatible.version}/1.6.0/g' \
+    slf4j-api/src/main/resources/META-INF/MANIFEST.MF \
+    slf4j-simple/src/main/resources/META-INF/MANIFEST.MF \
+    jcl-over-slf4j/src/main/resources/META-INF/MANIFEST.MF
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # the org.slf4j.impl placeholders only exist to compile the API against;
+  # upstream deletes them from the jar too
+  jb_module org.slf4j:slf4j-api:${pkgver} slf4j-api/src/main/java \
+    -r slf4j-api/src/main/resources -u slf4j-api/pom.xml -e org/slf4j/impl
+  jb_module org.slf4j:slf4j-simple:${pkgver} slf4j-simple/src/main/java \
+    -r slf4j-simple/src/main/resources -u slf4j-simple/pom.xml -- org.slf4j:slf4j-api
+  jb_module org.slf4j:jcl-over-slf4j:${pkgver} jcl-over-slf4j/src/main/java \
+    -r jcl-over-slf4j/src/main/resources -u jcl-over-slf4j/pom.xml -- org.slf4j:slf4j-api
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_loadcheck org.slf4j:slf4j-api org.slf4j:slf4j-simple org.slf4j:jcl-over-slf4j
+  # upstream JUnit 4 tests of the API and of slf4j-simple
+  local m t cp
+  for m in slf4j-api slf4j-simple; do
+    t="${srcdir}/test-${m}"
+    rm -rf "${t}"
+    mkdir -p "${t}"
+    [[ -d ${m}/src/test/resources ]] && cp -r ${m}/src/test/resources/. "${t}/"
+    cp=$(jb_cp org.slf4j:${m} junit:junit)
+    # slf4j-simple's tests extend the API's test classes (test-jar upstream)
+    [[ ${m} == slf4j-simple ]] && cp="${cp};$(jb_w "${srcdir}/test-slf4j-api")"
+    jb_javac -d "$(jb_w "${t}")" -cp "${cp}" -proc:none -- ${m}/src/test/java
+    jb_junit4 "${t}" "${cp}"
+  done
+}
+
+package_java-slf4j-api() {
+  pkgdesc="Simple Logging Facade for Java, API (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.slf4j:slf4j-api
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-slf4j-api/LICENSE.txt"
+}
+
+package_java-slf4j-simple() {
+  pkgdesc="Simple Logging Facade for Java, simple System.err binding (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.slf4j:slf4j-simple
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-slf4j-simple/LICENSE.txt"
+}
+
+package_java-jcl-over-slf4j() {
+  pkgdesc="Jakarta Commons Logging API implemented over SLF4J (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  license=('spdx:Apache-2.0')
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.slf4j:jcl-over-slf4j
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jcl-over-slf4j/LICENSE.txt"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

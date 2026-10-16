@@ -1,0 +1,245 @@
+Subject: hamcrest-generator: generate sugar without QDox, in a stable order
+
+---
+
+--- a/hamcrest-generator/src/main/java/org/hamcrest/generator/config/XmlConfigurator.java
++++ b/hamcrest-generator/src/main/java/org/hamcrest/generator/config/XmlConfigurator.java
+@@ -1,12 +1,10 @@
+ package org.hamcrest.generator.config;
+ 
+ import org.hamcrest.generator.HamcrestFactoryWriter;
+-import org.hamcrest.generator.QDoxFactoryReader;
+ import org.hamcrest.generator.QuickReferenceWriter;
+ import org.hamcrest.generator.ReflectiveFactoryReader;
+ import org.hamcrest.generator.SugarConfiguration;
+ import org.hamcrest.generator.SugarGenerator;
+-import org.hamcrest.generator.QDox;
+ import org.xml.sax.Attributes;
+ import org.xml.sax.InputSource;
+ import org.xml.sax.SAXException;
+@@ -24,18 +22,17 @@
+     private final SugarConfiguration sugarConfiguration;
+     private final ClassLoader classLoader;
+     private final SAXParserFactory saxParserFactory;
+-    private final QDox qdox;
+ 
+     public XmlConfigurator(SugarConfiguration sugarConfiguration, ClassLoader classLoader) {
+         this.sugarConfiguration = sugarConfiguration;
+         this.classLoader = classLoader;
+         saxParserFactory = SAXParserFactory.newInstance();
+         saxParserFactory.setNamespaceAware(true);
+-        qdox = new QDox();
+     }
+ 
+     public void addSourceDir(File sourceDir) {
+-        qdox.addSourceTree(sourceDir);
++        // QDox (parameter names and javadoc for the generated source) is
++        // not used: the generated class compiles to the same code without it
+     }
+ 
+     public void load(InputSource inputSource)
+@@ -58,8 +55,7 @@
+ 
+     private void addClass(String className) throws ClassNotFoundException {
+         Class<?> cls = classLoader.loadClass(className);
+-        sugarConfiguration.addFactoryMethods(
+-                new QDoxFactoryReader(new ReflectiveFactoryReader(cls), qdox, className));
++        sugarConfiguration.addFactoryMethods(new ReflectiveFactoryReader(cls));
+     }
+ 
+ 
+
+--- a/hamcrest-generator/src/main/java/org/hamcrest/generator/QDoxFactoryReader.java
++++ b/hamcrest-generator/src/main/java/org/hamcrest/generator/QDoxFactoryReader.java
+@@ -1,116 +0,0 @@
+-package org.hamcrest.generator;
+-
+-import com.thoughtworks.qdox.model.DocletTag;
+-import com.thoughtworks.qdox.model.JavaClass;
+-import com.thoughtworks.qdox.model.JavaMethod;
+-import com.thoughtworks.qdox.model.JavaParameter;
+-import com.thoughtworks.qdox.model.Type;
+-
+-import java.util.Iterator;
+-import java.util.List;
+-import java.util.regex.Pattern;
+-
+-/**
+- * Wraps an existing sequence of FactoryMethods, and attempts to pull in
+- * parameter names and JavaDoc (which aren't available using reflection) using
+- * QDox.
+- *
+- * @see <a href="http://qdox.codehaus.org/">QDox</a>
+- * @author Joe Walnes
+- */
+-public class QDoxFactoryReader implements Iterable<FactoryMethod> {
+-
+-    private final Iterable<FactoryMethod> wrapped;
+-    private final JavaClass classSource;
+-
+-    private static final Pattern GENERIC_REGEX = Pattern.compile("<.*>");
+-    private static final Pattern VARARGS_REGEX = Pattern.compile("...", Pattern.LITERAL);
+-
+-    public QDoxFactoryReader(Iterable<FactoryMethod> wrapped, QDox qdox, String className) {
+-        this.wrapped = wrapped;
+-        this.classSource = qdox.getClassByName(className);
+-    }
+-
+-    @Override
+-    public Iterator<FactoryMethod> iterator() {
+-        final Iterator<FactoryMethod> iterator = wrapped.iterator();
+-        return new Iterator<FactoryMethod>() {
+-            @Override
+-            public boolean hasNext() {
+-                return iterator.hasNext();
+-            }
+-
+-            @Override
+-            public FactoryMethod next() {
+-                return enhance(iterator.next());
+-            }
+-
+-            @Override
+-            public void remove() {
+-                iterator.remove();
+-            }
+-        };
+-    }
+-
+-    private FactoryMethod enhance(FactoryMethod factoryMethod) {
+-        JavaMethod methodSource = findMethodInSource(factoryMethod);
+-        if (methodSource != null) {
+-            factoryMethod.setJavaDoc(createJavaDocComment(methodSource));
+-            JavaParameter[] parametersFromSource
+-                    = methodSource.getParameters();
+-            List<FactoryMethod.Parameter> parametersFromReflection
+-                    = factoryMethod.getParameters();
+-
+-            if (parametersFromReflection.size() == parametersFromSource.length) {
+-                for (int i = 0; i < parametersFromSource.length; i++) {
+-                    parametersFromReflection.get(i).setName(
+-                            parametersFromSource[i].getName());
+-                }
+-            }
+-        }
+-        return factoryMethod;
+-    }
+-
+-    /**
+-     * Attempts to locate the source code for a specific method, by cross-referencing
+-     * the signature returned by reflection with the list of methods parsed by QDox.
+-     */
+-    private JavaMethod findMethodInSource(FactoryMethod factoryMethod) {
+-        // Note, this doesn't always work - it struggles with some kinds of generics.
+-        // This seems to cover most cases though.
+-        List<FactoryMethod.Parameter> params = factoryMethod.getParameters();
+-        Type[] types = new Type[params.size()];
+-        boolean varArgs = false;
+-        for (int i = 0; i < types.length; i++) {
+-            String type = params.get(i).getType();
+-            varArgs = VARARGS_REGEX.matcher(type).find();
+-            // QDox ignores varargs and generics, so we strip them out to help QDox.
+-            type = GENERIC_REGEX.matcher(type).replaceAll("");
+-            type = VARARGS_REGEX.matcher(type).replaceAll("");
+-            types[i] = new Type(type);
+-        }
+-        JavaMethod[] methods = classSource.getMethodsBySignature(factoryMethod.getName(), types, false, varArgs);
+-        return methods.length == 1 ?  methods[0] : null;
+-    }
+-
+-    /**
+-     * Reconstructs the JavaDoc as a string for a particular method.
+-     */
+-    private static String createJavaDocComment(JavaMethod methodSource) {
+-        String comment = methodSource.getComment();
+-        DocletTag[] tags = methodSource.getTags();
+-        if ((comment == null || comment.trim().length() == 0) && tags.length == 0) {
+-            return null;
+-        }
+-        StringBuilder result = new StringBuilder();
+-        result.append(comment);
+-        result.append("\n\n");
+-        for (DocletTag tag : tags) {
+-            result.append('@').append(tag.getName())
+-                    .append(' ').append(tag.getValue())
+-                    .append('\n');
+-        }
+-        return result.toString();
+-    }
+-
+-}
+
+--- a/hamcrest-generator/src/main/java/org/hamcrest/generator/QDox.java
++++ b/hamcrest-generator/src/main/java/org/hamcrest/generator/QDox.java
+@@ -1,32 +0,0 @@
+-package org.hamcrest.generator;
+-
+-import com.thoughtworks.qdox.JavaDocBuilder;
+-import com.thoughtworks.qdox.model.JavaClass;
+-
+-import java.io.File;
+-import java.io.Reader;
+-
+-/**
+- * Wraps QDox library. This is because to ease distribution, QDox is bundled into
+- * hamcrest-generator.jar and has its package renamed to ensure there is no conflict
+- * (using Jar Jar Links). This wrapper class removes all traces of QDox from Hamcrest's
+- * public API, so there aren't any compatibility problems.
+- *
+- * @author Joe Walnes
+- */
+-public class QDox {
+-
+-    private final JavaDocBuilder javaDocBuilder = new JavaDocBuilder();
+-
+-    public void addSourceTree(File sourceDir) {
+-        javaDocBuilder.addSourceTree(sourceDir);
+-    }
+-
+-    public void addSource(Reader reader) {
+-        javaDocBuilder.addSource(reader);
+-    }
+-
+-    JavaClass getClassByName(String className) {
+-        return javaDocBuilder.getClassByName(className);
+-    }
+-}
+
+--- a/hamcrest-generator/src/main/java/org/hamcrest/generator/ReflectiveFactoryReader.java
++++ b/hamcrest-generator/src/main/java/org/hamcrest/generator/ReflectiveFactoryReader.java
+@@ -7,6 +7,8 @@
+ import java.lang.reflect.ParameterizedType;
+ import java.lang.reflect.Type;
+ import java.lang.reflect.TypeVariable;
++import java.util.Arrays;
++import java.util.Comparator;
+ import java.util.Iterator;
+ 
+ /**
+@@ -28,6 +30,17 @@
+  */
+ public class ReflectiveFactoryReader implements Iterable<FactoryMethod> {
+ 
++    // getMethods() has no defined order; sort for reproducible output
++    private static Method[] sorted(Method[] methods) {
++        Arrays.sort(methods, new Comparator<Method>() {
++            @Override
++            public int compare(Method a, Method b) {
++                return a.toString().compareTo(b.toString());
++            }
++        });
++        return methods;
++    }
++
+     private final Class<?> cls;
+ 
+     private final ClassLoader classLoader;
+@@ -42,7 +55,7 @@
+         return new Iterator<FactoryMethod>() {
+ 
+             private int currentMethod = -1;
+-            private Method[] allMethods = cls.getMethods();
++            private Method[] allMethods = sorted(cls.getMethods());
+ 
+             @Override
+             public boolean hasNext() {

@@ -1,0 +1,124 @@
+diff -ruN "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/com_custom.cpp" "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/com_custom.cpp"
+--- "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/com_custom.cpp"
++++ "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/com_custom.cpp"
+@@ -212,6 +212,7 @@
+ 		jmethodID methodID = env->GetMethodID(cls, "CallJava", "(IJJ)J");
+ 		jobject object = env->NewGlobalRef(host);
+ 		ITypeInfo *pTypeInfo = nullptr;
++		HRESULT hr;
+ 		if (object == nullptr) goto error;
+ 
+ 		// NB: CreateDispTypeInfo doesn't support parameters
+@@ -222,7 +223,7 @@
+ 			{L"CallJava", params, 1, 7, CC_STDCALL, ARRAYSIZE(params), DISPATCH_METHOD, VT_BSTR},
+ 		};
+ 		static INTERFACEDATA iface = {methods, 1};
+-		HRESULT hr = CreateDispTypeInfo(&iface, LOCALE_NEUTRAL, &pTypeInfo);
++		hr = CreateDispTypeInfo(&iface, LOCALE_NEUTRAL, &pTypeInfo);
+ 		if (hr != S_OK) goto error;
+ 
+ 		return new SwtWebView2Host(object, methodID, pTypeInfo);
+diff -ruN "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip.cpp" "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip.cpp"
+--- "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip.cpp"
++++ "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip.cpp"
+@@ -18,6 +18,9 @@
+ #include "swt.h"
+ #include "gdip_structs.h"
+ #include "gdip_stats.h"
++#ifdef __MINGW32__
++#include "gdip_mingw.h"
++#endif
+ 
+ #ifndef Gdip_NATIVE
+ #define Gdip_NATIVE(func) Java_org_eclipse_swt_internal_gdip_Gdip_##func
+@@ -2037,7 +2040,7 @@
+ {
+ 	jint rc = 0;
+ 	Gdip_NATIVE_ENTER(env, that, PathGradientBrush_1SetGraphicsPath_FUNC);
+-	rc = (jint)((PathGradientBrush *)arg0)->SetGraphicsPath((GraphicsPath *)arg1);
++	rc = (jint)SWT_GDIP_PathGradientBrush_SetGraphicsPath((PathGradientBrush *)arg0, (GraphicsPath *)arg1);
+ 	Gdip_NATIVE_EXIT(env, that, PathGradientBrush_1SetGraphicsPath_FUNC);
+ 	return rc;
+ }
+@@ -2127,7 +2130,7 @@
+ {
+ 	jlong rc = 0;
+ 	Gdip_NATIVE_ENTER(env, that, Pen_1GetBrush_FUNC);
+-	rc = (jlong)((Pen *)arg0)->GetBrush();
++	rc = (jlong)SWT_GDIP_Pen_GetBrush((Pen *)arg0);
+ 	Gdip_NATIVE_EXIT(env, that, Pen_1GetBrush_FUNC);
+ 	return rc;
+ }
+@@ -2543,7 +2546,7 @@
+ {
+ 	jlong rc = 0;
+ 	Gdip_NATIVE_ENTER(env, that, TextureBrush_1GetImage_FUNC);
+-	rc = (jlong)((TextureBrush *)arg0)->GetImage();
++	rc = (jlong)SWT_GDIP_TextureBrush_GetImage((TextureBrush *)arg0);
+ 	Gdip_NATIVE_EXIT(env, that, TextureBrush_1GetImage_FUNC);
+ 	return rc;
+ }
+diff -ruN "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip_mingw.h" "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip_mingw.h"
+--- "a/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip_mingw.h"
++++ "b/bundles/org.eclipse.swt/Eclipse SWT PI/win32/library/gdip_mingw.h"
+@@ -0,0 +1,60 @@
++/*
++ * GDI+ C++ API methods that the MinGW-w64 gdiplus headers do not implement
++ * (TextureBrush::GetImage, Pen::GetBrush, PathGradientBrush::SetGraphicsPath),
++ * written against the flat API like Microsoft's headers.  The wrapper classes
++ * keep their GDI+ handles in private members; they are reached through
++ * explicit template instantiation, which C++ exempts from access checking.
++ *
++ * SPDX-License-Identifier: EPL-2.0
++ */
++#ifndef SWT_GDIP_MINGW_H
++#define SWT_GDIP_MINGW_H
++
++namespace swt_mingw {
++template <typename Tag, typename Tag::type M> struct Rob {
++	friend typename Tag::type get(Tag) { return M; }
++};
++struct BrushNative { typedef Gdiplus::GpBrush *Gdiplus::Brush::*type; friend type get(BrushNative); };
++template struct Rob<BrushNative, &Gdiplus::Brush::nativeBrush>;
++struct PenNative { typedef Gdiplus::GpPen *Gdiplus::Pen::*type; friend type get(PenNative); };
++template struct Rob<PenNative, &Gdiplus::Pen::nativePen>;
++struct PathNative { typedef Gdiplus::GpPath *Gdiplus::GraphicsPath::*type; friend type get(PathNative); };
++template struct Rob<PathNative, &Gdiplus::GraphicsPath::nativePath>;
++struct ImageNative { typedef Gdiplus::GpImage *Gdiplus::Image::*type; friend type get(ImageNative); };
++template struct Rob<ImageNative, &Gdiplus::Image::nativeImage>;
++}
++
++/* PathGradientBrush::SetGraphicsPath */
++static inline Gdiplus::Status SWT_GDIP_PathGradientBrush_SetGraphicsPath(Gdiplus::PathGradientBrush *brush, Gdiplus::GraphicsPath *path)
++{
++	using namespace swt_mingw;
++	if (path == NULL) return Gdiplus::InvalidParameter;
++	return Gdiplus::DllExports::GdipSetPathGradientPath((Gdiplus::GpPathGradient *)(brush->*get(BrushNative())),
++		path->*get(PathNative()));
++}
++
++/* Pen::GetBrush: a new Brush object that owns the pen's brush fill */
++static inline Gdiplus::Brush *SWT_GDIP_Pen_GetBrush(Gdiplus::Pen *pen)
++{
++	using namespace swt_mingw;
++	Gdiplus::GpBrush *native = NULL;
++	if (Gdiplus::DllExports::GdipGetPenBrushFill(pen->*get(PenNative()), &native) != Gdiplus::Ok || native == NULL) return NULL;
++	Gdiplus::SolidBrush *brush = new Gdiplus::SolidBrush(Gdiplus::Color());
++	Gdiplus::DllExports::GdipDeleteBrush(brush->*get(BrushNative()));
++	brush->*get(BrushNative()) = native;
++	return brush;
++}
++
++/* TextureBrush::GetImage: a new Image object that owns the texture's image */
++static inline Gdiplus::Image *SWT_GDIP_TextureBrush_GetImage(Gdiplus::TextureBrush *brush)
++{
++	using namespace swt_mingw;
++	Gdiplus::GpImage *native = NULL;
++	if (Gdiplus::DllExports::GdipGetTextureImage((Gdiplus::GpTexture *)(brush->*get(BrushNative())), &native) != Gdiplus::Ok || native == NULL) return NULL;
++	Gdiplus::Bitmap *image = new Gdiplus::Bitmap(1, 1, PixelFormat32bppARGB);
++	Gdiplus::DllExports::GdipDisposeImage(image->*get(ImageNative()));
++	image->*get(ImageNative()) = native;
++	return image;
++}
++
++#endif

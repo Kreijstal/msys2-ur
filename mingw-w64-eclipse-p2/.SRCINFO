@@ -1,0 +1,81 @@
+pkgbase = mingw-w64-eclipse-p2
+	pkgdesc = Equinox p2 provisioning core (mingw-w64)
+	pkgver = 4.41
+	pkgrel = 1
+	url = https://eclipse.dev/equinox/p2/
+	arch = any
+	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-equinox-security
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-orbit-xz
+	makedepends = mingw-w64-ucrt-x86_64-java-bcpg
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-annotation
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component-annotations
+	source = p2-R4_41.tar.gz::https://github.com/eclipse-equinox/p2/archive/refs/tags/R4_41.tar.gz
+	sha256sums = 6849d6cadd839c6f87612b03ddc39784332cc532398ce2c76ef8dd06790becab
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.core bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-bcpg
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-felix-scr
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.metadata bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-repository
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.repository bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-java-bcpg
+	depends = mingw-w64-ucrt-x86_64-java-bcprov
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-security
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-prefs
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata-repository
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.metadata.repository bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-xz
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-repository
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-artifact-repository
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.artifact.repository bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-xz
+	depends = mingw-w64-ucrt-x86_64-java-bcpg
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-repository
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-engine
+	pkgdesc = Equinox p2 org.eclipse.equinox.p2.engine bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-java-bcpg
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-artifact-repository
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-metadata-repository
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-p2-repository
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-prefs
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-simpleconfigurator
+	pkgdesc = Equinox p2 org.eclipse.equinox.simpleconfigurator bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi

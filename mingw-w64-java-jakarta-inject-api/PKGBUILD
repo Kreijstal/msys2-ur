@@ -1,0 +1,59 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=jakarta-inject-api
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=2.0.1
+pkgrel=1
+pkgdesc="Jakarta Dependency Injection API (jakarta.inject), OSGi bundle (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/jakartaee/inject'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("inject-${pkgver}.tar.gz::https://github.com/jakartaee/inject/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('51df7e4b118f67f37eb55128dfe475a55b702581609987b06908d744bc5ee33c')
+
+_src=inject-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # maven-bundle-plugin with the pom's instructions
+  cat > "${srcdir}/inject.bnd" <<EOF
+Bundle-SymbolicName: jakarta.inject.jakarta.inject-api
+Bundle-Version: ${pkgver}
+Bundle-Name: Jakarta Dependency Injection
+Bundle-Description: Jakarta Dependency Injection
+Bundle-Vendor: Eclipse Foundation
+Bundle-DocURL: https://www.eclipse.org
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Implementation-Version: 2.0
+Export-Package: jakarta.inject.*;version=${pkgver}
+EOF
+  rm -rf "${srcdir}/res" && mkdir -p "${srcdir}/res/META-INF"
+  cp LICENSE.txt NOTICE.md "${srcdir}/res/META-INF/"
+  local JB_RELEASE=8
+  jb_module jakarta.inject:jakarta.inject-api:${pkgver} src/main/java -r "${srcdir}/res" -u pom.xml \
+    -b "${srcdir}/inject.bnd"
+  # module-info.class as in the upstream jar (Java 9, the rest Java 8)
+  local mi="${srcdir}/jb-build/jakarta.inject-api/mi"
+  mkdir -p "${mi}"
+  javac --release 9 -nowarn -d "$(jb_w "${mi}")" $(find src/main/java -name '*.java' | while read -r f; do jb_w "$f"; done)
+  cp "${mi}/module-info.class" "${srcdir}/jb-build/jakarta.inject-api/classes/"
+  jar --update --file "$(jb_w "${srcdir}/jb-build/jakarta.inject-api/jakarta.inject-api.jar")" \
+    -C "$(jb_w "${mi}")" module-info.class
+  jb_stage jakarta.inject:jakarta.inject-api:${pkgver} "${srcdir}/jb-build/jakarta.inject-api/jakarta.inject-api.pom" \
+    "${srcdir}/jb-build/jakarta.inject-api/jakarta.inject-api.jar"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck jakarta.inject:jakarta.inject-api
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin jakarta.inject:jakarta.inject-api
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE.txt"
+}

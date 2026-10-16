@@ -1,0 +1,244 @@
+pkgbase = mingw-w64-eclipse-platform-core
+	pkgdesc = Eclipse Platform core bundles: Equinox and the platform runtime (mingw-w64)
+	pkgver = 4.41
+	pkgrel = 1
+	url = https://eclipse.dev/eclipse/
+	arch = any
+	license = spdx:EPL-2.0
+	checkdepends = mingw-w64-ucrt-x86_64-java-junit4
+	checkdepends = mingw-w64-ucrt-x86_64-java-felix-gogo-shell
+	checkdepends = mingw-w64-ucrt-x86_64-java-felix-gogo-command
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-annotation
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component-annotations
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-cm
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-event
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-prefs
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-metatype
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-function
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-promise
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-measurement
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-position
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-util-xml
+	makedepends = mingw-w64-ucrt-x86_64-java-felix-gogo-runtime
+	makedepends = mingw-w64-ucrt-x86_64-java-felix-scr
+	makedepends = mingw-w64-ucrt-x86_64-java-jakarta-inject-api
+	makedepends = mingw-w64-ucrt-x86_64-java-jakarta-annotation-api
+	makedepends = mingw-w64-ucrt-x86_64-java-jna-platform
+	source = equinox-R4_41.tar.gz::https://github.com/eclipse-equinox/equinox/archive/refs/tags/R4_41.tar.gz
+	source = eclipse.platform-R4_41.tar.gz::https://github.com/eclipse-platform/eclipse.platform/archive/refs/tags/R4_41.tar.gz
+	sha256sums = 995e801eca5f8ebb0471d731226c2e4eab421e7933bec7c01280abe2c4e78304
+	sha256sums = 235ea1a33d2388962b90179f64a66a48013ffe576a68210da970557870785b09
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-executable
+	pkgdesc = Eclipse native launcher, eclipse.exe and eclipsec.exe (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-launcher-win32-win32-x86_64
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-osgi
+	pkgdesc = Eclipse org.eclipse.osgi bundle (mingw-w64)
+	depends = 
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-osgi-compatibility-state
+	pkgdesc = Eclipse org.eclipse.osgi.compatibility.state bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-supplement
+	pkgdesc = Eclipse org.eclipse.equinox.supplement bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-osgi-util
+	pkgdesc = Eclipse org.eclipse.osgi.util bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-function
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-promise
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-measurement
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-position
+	depends = mingw-w64-ucrt-x86_64-java-osgi-util-xml
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	pkgdesc = Eclipse org.eclipse.equinox.common bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	pkgdesc = Eclipse org.eclipse.equinox.registry bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	pkgdesc = Eclipse org.eclipse.equinox.preferences bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-prefs
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-app
+	pkgdesc = Eclipse org.eclipse.equinox.app bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-event
+	pkgdesc = Eclipse org.eclipse.equinox.event bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-event
+	depends = mingw-w64-ucrt-x86_64-java-felix-scr
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-security
+	pkgdesc = Eclipse org.eclipse.equinox.security bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-prefs
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-security-win32
+	pkgdesc = Eclipse org.eclipse.equinox.security.win32 bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-security
+	depends = mingw-w64-ucrt-x86_64-java-jna-platform
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-launcher
+	pkgdesc = Eclipse org.eclipse.equinox.launcher bundle (mingw-w64)
+	depends = 
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-launcher-win32-win32-x86_64
+	pkgdesc = Eclipse org.eclipse.equinox.launcher.win32.win32.x86_64 bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-launcher
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-console
+	pkgdesc = Eclipse org.eclipse.equinox.console bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-felix-gogo-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-bidi
+	pkgdesc = Eclipse org.eclipse.equinox.bidi bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	pkgdesc = Eclipse org.eclipse.core.runtime bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-contenttype
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-app
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-contenttype
+	pkgdesc = Eclipse org.eclipse.core.contenttype bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-felix-scr
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	pkgdesc = Eclipse org.eclipse.core.jobs bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-expressions
+	pkgdesc = Eclipse org.eclipse.core.expressions bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-contexts
+	pkgdesc = Eclipse org.eclipse.e4.core.contexts bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-inject-api
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-event
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-di
+	pkgdesc = Eclipse org.eclipse.e4.core.di bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-annotations
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-annotations
+	pkgdesc = Eclipse org.eclipse.e4.core.di.annotations bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-inject-api
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-extensions
+	pkgdesc = Eclipse org.eclipse.e4.core.di.extensions bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-inject-api
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-extensions-supplier
+	pkgdesc = Eclipse org.eclipse.e4.core.di.extensions.supplier bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-annotation-api
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-contexts
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-annotations
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di-extensions
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-osgi-service-event
+	depends = mingw-w64-ucrt-x86_64-java-felix-scr
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-e4-core-services
+	pkgdesc = Eclipse org.eclipse.e4.core.services bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-di
+	depends = mingw-w64-ucrt-x86_64-eclipse-e4-core-contexts
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-annotation-api
+	depends = mingw-w64-ucrt-x86_64-java-jakarta-inject-api
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-java-felix-scr
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-resources
+	pkgdesc = Eclipse org.eclipse.core.resources bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-expressions
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-filesystem
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-java-jna
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-filesystem
+	pkgdesc = Eclipse org.eclipse.core.filesystem bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-java-jna
+	depends = mingw-w64-ucrt-x86_64-java-jna-platform
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-variables
+	pkgdesc = Eclipse org.eclipse.core.variables bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-debug-core
+	pkgdesc = Eclipse org.eclipse.debug.core bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-resources
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-variables
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-filesystem
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-expressions
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-team-core
+	pkgdesc = Eclipse org.eclipse.team.core bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-resources
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-filesystem
+	depends = mingw-w64-ucrt-x86_64-eclipse-compare-core
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-compare-core
+	pkgdesc = Eclipse org.eclipse.compare.core bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-core-net
+	pkgdesc = Eclipse org.eclipse.core.net bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-security
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-preferences
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-java-jna
+	depends = mingw-w64-ucrt-x86_64-java-jna-platform
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-help
+	pkgdesc = Eclipse org.eclipse.help bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-expressions
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-update-configurator
+	pkgdesc = Eclipse org.eclipse.update.configurator bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime

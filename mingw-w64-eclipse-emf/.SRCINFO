@@ -1,0 +1,27 @@
+pkgbase = mingw-w64-eclipse-emf
+	pkgdesc = Eclipse Modeling Framework runtime (mingw-w64)
+	pkgver = 2.47.0
+	pkgrel = 1
+	url = https://eclipse.dev/modeling/emf/
+	arch = any
+	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-resources
+	source = org.eclipse.emf-09588723fd782c3ff2bb932723f37159552418f7.tar.gz::https://github.com/eclipse-emf/org.eclipse.emf/archive/09588723fd782c3ff2bb932723f37159552418f7.tar.gz
+	sha256sums = c5b2312790a4162b5428915e40637a5d5528fe381cbbdd055acb3228412c4044
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-emf-common
+	pkgdesc = EMF org.eclipse.emf.common bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-emf-ecore
+	pkgdesc = EMF org.eclipse.emf.ecore bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-emf-common
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-emf-ecore-change
+	pkgdesc = EMF org.eclipse.emf.ecore.change bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-emf-ecore
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-emf-ecore-xmi
+	pkgdesc = EMF org.eclipse.emf.ecore.xmi bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-emf-ecore

@@ -1,0 +1,27 @@
+pkgbase = mingw-w64-eclipse-gef-classic
+	pkgdesc = GEF Classic: Draw2d and the Graphical Editing Framework (mingw-w64)
+	pkgver = 3.29
+	pkgrel = 1
+	url = https://github.com/eclipse-gef/gef-classic
+	arch = any
+	license = spdx:EPL-2.0
+	checkdepends = mingw-w64-ucrt-x86_64-java-aries-spifly-dynamic-bundle
+	checkdepends = mingw-w64-ucrt-x86_64-java-felix-scr
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-pde-api-tools-annotations
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-ui-workbench
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-ui-views
+	source = gef-classic-R_3_29.tar.gz::https://github.com/eclipse-gef/gef-classic/archive/refs/tags/R_3_29.tar.gz
+	sha256sums = b402b8e91d54070ca331d2c1c28faf40f66e5fbe33c11dd868532c91cb7cc4a4
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-draw2d
+	pkgdesc = GEF Classic org.eclipse.draw2d bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-swt
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-gef
+	pkgdesc = GEF Classic org.eclipse.gef bundle (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-eclipse-draw2d
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-ui-workbench
+	depends = mingw-w64-ucrt-x86_64-eclipse-jface
+	depends = mingw-w64-ucrt-x86_64-eclipse-ui-views

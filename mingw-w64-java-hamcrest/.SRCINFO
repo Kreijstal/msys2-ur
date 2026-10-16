@@ -1,0 +1,22 @@
+pkgbase = mingw-w64-java-hamcrest
+	pkgdesc = Hamcrest matchers for Java (mingw-w64)
+	pkgver = 1.3
+	pkgrel = 1
+	url = https://hamcrest.org/JavaHamcrest/
+	arch = any
+	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	source = hamcrest-1.3.tar.gz::https://github.com/hamcrest/JavaHamcrest/archive/refs/tags/hamcrest-java-1.3.tar.gz
+	source = 0001-generator-build-without-QDox.patch
+	source = 0002-core-explicit-type-arguments-for-Java-8-inference.patch
+	sha256sums = 6ac31de50c6f3b047a7bd7f62ab7ca3e88b2a8449d22b0978c9f575740d0e085
+	sha256sums = b3ac9824d629574913b6b91d57efd132ece07b3fbcbe4f569dfd9fdc55acb5aa
+	sha256sums = a28628e69c1ae90fc221f0e2d43ee9a885a3b44f742e2b1e5aede4f444f3b85e
+
+pkgname = mingw-w64-ucrt-x86_64-java-hamcrest-core
+	pkgdesc = Hamcrest core matchers for Java (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-openjdk
+
+pkgname = mingw-w64-ucrt-x86_64-java-hamcrest-library
+	pkgdesc = Hamcrest library of matchers for Java (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-hamcrest-core
