@@ -1,23 +1,28 @@
-# DBeaver CE dependency bootstrap (UCRT64)
+# DBeaver CE library integration checks (UCRT64)
 
-Source-built runtime libraries for the DBeaver CE 26.2.2 source tree. The
-`dbeaver-dependencies` package installs Eclipse 4.41, DBeaver common APIs,
-third-party OSGi bundles and DBeaver's nine composite library bundles.
-The DBeaver application itself is a separate packaging step.
+Validation fixtures for the source-built Java libraries, Eclipse bundles and
+DBeaver common APIs used by DBeaver CE 26.2.2. Libraries are packaged
+individually; there is no aggregate dependency package. The DBeaver application
+package will declare its own dependencies.
 
-Install from the msys2-ur rolling repository in a UCRT64 shell:
+Run these checks in a UCRT64 shell after installing the individual runtime
+packages in `runtime-packages.txt` and these test tools:
 
+```bash
+mapfile -t packages < runtime-packages.txt
+pacman -S --needed "${packages[@]}" \
+  mingw-w64-ucrt-x86_64-java-build-helper \
+  mingw-w64-ucrt-x86_64-java-h2 \
+  mingw-w64-ucrt-x86_64-java-mfl-ejml \
+  mingw-w64-ucrt-x86_64-java-saxon-he \
+  mingw-w64-ucrt-x86_64-java-org-ow2-sat4j-core
+bash check-dependencies.sh "$PWD"
 ```
-pacman -S mingw-w64-ucrt-x86_64-dbeaver-dependencies
-```
-
-The existing repository is
-`https://github.com/Kreijstal/msys2-ur/releases/tag/x11-shared-20260731`.
 
 Build with the source-bootstrapped OpenJDK package and `java-build-helper`.
 Build the `java-*` recipes before `dbeaver-orbit` and `dbeaver-bundles`;
 build `eclipse-orbit-ant`, `eclipse-platform-extra`, `eclipse-ecf` and
-`eclipse-p2-extra` before this aggregate recipe. Each PKGBUILD records its
+`eclipse-p2-extra` before running these checks. Each PKGBUILD records its
 exact package prerequisites and SHA-256-pinned source inputs.
 
 No downloaded library bytecode is used. Maven Central `*-sources.jar`
@@ -75,11 +80,10 @@ Build profiles:
   check excludes that one class on the OpenJDK 28 build host, where Applet
   no longer exists.
 
-`makepkg --cleanbuild --force --noconfirm` runs the checks in this recipe.
+`bash check-dependencies.sh "$PWD"` runs these checks.
 They exercise SQL/JEXL, JDBC pooling, XLSX/Unicode/schema data and the
 temp-backed streaming reader, geometry,
 EPSG resources, matrix inversion/MAT files, PNG chart rendering, XPath,
 SAT solving, SSH cryptography, GraphQL and an actual loopback Jetty HTTP
 request. A separate consumer runs representative operations inside Equinox
-and rejects unresolved installed bundles. Build-only test prerequisites
-are listed in `makedepends`.
+and rejects unresolved installed bundles. Additional test tools are listed above.
