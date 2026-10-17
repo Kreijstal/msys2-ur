@@ -1,0 +1,755 @@
+--- a/upstream/ejml-core/org/ejml/MapPrintFormat.java
++++ b/upstream/ejml-core/org/ejml/MapPrintFormat.java
+@@ -17,8 +17,6 @@
+  */
+ package org.ejml;
+ 
+-import lombok.Getter;
+-import lombok.Setter;
+ import org.jetbrains.annotations.Nullable;
+ 
+ /// Describes how to format an object when it's converted into a map style string.
+@@ -80,23 +78,23 @@
+             .withKeyPrefix("\"").withKeySuffix("\"");
+ 
+     /// Separator that splits key-value pairs
+-    @Getter @Setter public String valueSeparator = ": ";
++    public String valueSeparator = ": ";
+     /// Separator between two key-value pairs
+-    @Getter @Setter public String pairSeparator = ", ";
++    public String pairSeparator = ", ";
+     /// Prefix for an item in the list. If a single item, this is still applied.
+-    @Getter @Setter public String itemPrefix = "{";
++    public String itemPrefix = "{";
+     /// Suffix for an item in the list. If a single item, this is still applied.
+-    @Getter @Setter public String itemSuffix = "}";
++    public String itemSuffix = "}";
+     /// Separator applied after each item in the list
+-    @Getter @Setter public String itemSeparator = ",\n";
++    public String itemSeparator = ",\n";
+     /// Prefix applied before the list
+-    @Getter @Setter public String listPrefix = "[";
++    public String listPrefix = "[";
+     /// Prefix applied after the list
+-    @Getter @Setter public String listSuffix = "]";
++    public String listSuffix = "]";
+     /// Prefix added before each key. Use to quote keys for languages that require it.
+-    @Getter @Setter public String keyPrefix = "";
++    public String keyPrefix = "";
+     /// Suffix added after each key.
+-    @Getter @Setter public String keySuffix = "";
++    public String keySuffix = "";
+ 
+     public MapPrintFormat() {}
+ 
+@@ -256,4 +254,41 @@
+         this.keySuffix = src.keySuffix;
+         return this;
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public String getValueSeparator() { return this.valueSeparator; }
++
++    public void setValueSeparator(String valueSeparator) { this.valueSeparator = valueSeparator; }
++
++    public String getPairSeparator() { return this.pairSeparator; }
++
++    public void setPairSeparator(String pairSeparator) { this.pairSeparator = pairSeparator; }
++
++    public String getItemPrefix() { return this.itemPrefix; }
++
++    public void setItemPrefix(String itemPrefix) { this.itemPrefix = itemPrefix; }
++
++    public String getItemSuffix() { return this.itemSuffix; }
++
++    public void setItemSuffix(String itemSuffix) { this.itemSuffix = itemSuffix; }
++
++    public String getItemSeparator() { return this.itemSeparator; }
++
++    public void setItemSeparator(String itemSeparator) { this.itemSeparator = itemSeparator; }
++
++    public String getListPrefix() { return this.listPrefix; }
++
++    public void setListPrefix(String listPrefix) { this.listPrefix = listPrefix; }
++
++    public String getListSuffix() { return this.listSuffix; }
++
++    public void setListSuffix(String listSuffix) { this.listSuffix = listSuffix; }
++
++    public String getKeyPrefix() { return this.keyPrefix; }
++
++    public void setKeyPrefix(String keyPrefix) { this.keyPrefix = keyPrefix; }
++
++    public String getKeySuffix() { return this.keySuffix; }
++
++    public void setKeySuffix(String keySuffix) { this.keySuffix = keySuffix; }
+ }
+--- a/upstream/ejml-core/org/ejml/MatrixPrintFormat.java
++++ b/upstream/ejml-core/org/ejml/MatrixPrintFormat.java
+@@ -16,9 +16,6 @@
+  * limitations under the License.
+  */
+ package org.ejml;
+-
+-import lombok.Getter;
+-import lombok.Setter;
+ 
+ import static org.ejml.UtilEjml.fancy2LengthExp;
+ 
+@@ -77,15 +74,15 @@
+     /// ```
+     public final static MatrixPrintFormat MATLAB = new MatrixPrintFormat(DEFAULT_PRECISION, "  ", ";\n", "", "", "[", "]");
+ 
+-    @Getter @Setter public String colSeparator = ", ";
+-    @Getter @Setter public String rowSeparator = ",\n";
+-    @Getter @Setter public String rowPrefix = "{";
+-    @Getter @Setter public String rowSuffix = "}";
+-    @Getter @Setter public String prefix = "[";
+-    @Getter @Setter public String suffix = "]";
++    public String colSeparator = ", ";
++    public String rowSeparator = ",\n";
++    public String rowPrefix = "{";
++    public String rowSuffix = "}";
++    public String prefix = "[";
++    public String suffix = "]";
+ 
+     /// If true it will align the columns
+-    @Getter @Setter public boolean aligned = true;
++    public boolean aligned = true;
+ 
+     public MatrixPrintFormat() {}
+ 
+@@ -199,4 +196,33 @@
+     @FunctionalInterface public interface RowAccess {
+         double get( int i );
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public String getColSeparator() { return this.colSeparator; }
++
++    public void setColSeparator(String colSeparator) { this.colSeparator = colSeparator; }
++
++    public String getRowSeparator() { return this.rowSeparator; }
++
++    public void setRowSeparator(String rowSeparator) { this.rowSeparator = rowSeparator; }
++
++    public String getRowPrefix() { return this.rowPrefix; }
++
++    public void setRowPrefix(String rowPrefix) { this.rowPrefix = rowPrefix; }
++
++    public String getRowSuffix() { return this.rowSuffix; }
++
++    public void setRowSuffix(String rowSuffix) { this.rowSuffix = rowSuffix; }
++
++    public String getPrefix() { return this.prefix; }
++
++    public void setPrefix(String prefix) { this.prefix = prefix; }
++
++    public String getSuffix() { return this.suffix; }
++
++    public void setSuffix(String suffix) { this.suffix = suffix; }
++
++    public boolean isAligned() { return this.aligned; }
++
++    public void setAligned(boolean aligned) { this.aligned = aligned; }
+ }
+--- a/upstream/ejml-core/org/ejml/PrintFormat.java
++++ b/upstream/ejml-core/org/ejml/PrintFormat.java
+@@ -17,8 +17,6 @@
+  */
+ package org.ejml;
+ 
+-import lombok.Getter;
+-import lombok.Setter;
+ import org.jetbrains.annotations.Nullable;
+ 
+ /// Base class for print formatting
+@@ -27,10 +25,10 @@
+     public static final char DEFAULT_DECIMAL = '.';
+ 
+     /// Number of significant digits it will display when converting a float
+-    @Getter @Setter public int precision = DEFAULT_PRECISION;
++    public int precision = DEFAULT_PRECISION;
+ 
+     /// Character which indicates a decimal in floating point numbers
+-    @Getter @Setter public char decimal = DEFAULT_DECIMAL;
++    public char decimal = DEFAULT_DECIMAL;
+ 
+     /// Applies standard formatting to the double
+     public String f( double value ) {
+@@ -73,4 +71,13 @@
+         }
+         builder.append(f(values[values.length - 1]));
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public int getPrecision() { return this.precision; }
++
++    public void setPrecision(int precision) { this.precision = precision; }
++
++    public char getDecimal() { return this.decimal; }
++
++    public void setDecimal(char decimal) { this.decimal = decimal; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/ComplexPolar_F32.java
++++ b/upstream/ejml-core/org/ejml/data/ComplexPolar_F32.java
+@@ -18,7 +18,6 @@
+ package org.ejml.data;
+ 
+ import javax.annotation.Generated;
+-import lombok.Data;
+ import org.ejml.MapPrintFormat;
+ import org.ejml.MatrixPrintFormat;
+ import org.ejml.UtilEjml;
+@@ -33,7 +32,6 @@
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ @Generated("org.ejml.data.ComplexPolar_F64")
+ public class ComplexPolar_F32 {
+     public float r;
+@@ -82,4 +80,31 @@
+     }
+ 
+     @Override public String toString() {return format(MapPrintFormat.DEFAULT);}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public float getR() { return this.r; }
++
++    public void setR(float r) { this.r = r; }
++
++    public float getTheta() { return this.theta; }
++
++    public void setTheta(float theta) { this.theta = theta; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof ComplexPolar_F32)) return false;
++        ComplexPolar_F32 other = (ComplexPolar_F32) object;
++        if (!other.canEqual(this)) return false;
++        if (Float.compare(this.getR(), other.getR()) != 0) return false;
++        if (Float.compare(this.getTheta(), other.getTheta()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof ComplexPolar_F32; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + Float.floatToIntBits(this.getR());
++        result = result * 59 + Float.floatToIntBits(this.getTheta());
++        return result;
++    }
+ }
+--- a/upstream/ejml-core/org/ejml/data/ComplexPolar_F64.java
++++ b/upstream/ejml-core/org/ejml/data/ComplexPolar_F64.java
+@@ -17,7 +17,6 @@
+  */
+ package org.ejml.data;
+ 
+-import lombok.Data;
+ import org.ejml.MapPrintFormat;
+ import org.ejml.MatrixPrintFormat;
+ import org.ejml.UtilEjml;
+@@ -32,7 +31,6 @@
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ public class ComplexPolar_F64 {
+     public double r;
+     public double theta;
+@@ -80,4 +78,33 @@
+     }
+ 
+     @Override public String toString() {return format(MapPrintFormat.DEFAULT);}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public double getR() { return this.r; }
++
++    public void setR(double r) { this.r = r; }
++
++    public double getTheta() { return this.theta; }
++
++    public void setTheta(double theta) { this.theta = theta; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof ComplexPolar_F64)) return false;
++        ComplexPolar_F64 other = (ComplexPolar_F64) object;
++        if (!other.canEqual(this)) return false;
++        if (Double.compare(this.getR(), other.getR()) != 0) return false;
++        if (Double.compare(this.getTheta(), other.getTheta()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof ComplexPolar_F64; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        long rBits = Double.doubleToLongBits(this.getR());
++        result = result * 59 + (int) (rBits ^ (rBits >>> 32));
++        long thetaBits = Double.doubleToLongBits(this.getTheta());
++        result = result * 59 + (int) (thetaBits ^ (thetaBits >>> 32));
++        return result;
++    }
+ }
+--- a/upstream/ejml-core/org/ejml/data/Complex_F32.java
++++ b/upstream/ejml-core/org/ejml/data/Complex_F32.java
+@@ -18,7 +18,6 @@
+ package org.ejml.data;
+ 
+ import javax.annotation.Generated;
+-import lombok.Data;
+ import org.ejml.MapPrintFormat;
+ import org.ejml.MatrixPrintFormat;
+ import org.ejml.UtilEjml;
+@@ -30,7 +29,6 @@
+  * real and imaginary components.
+  * </p>
+  */
+-@Data
+ @Generated("org.ejml.data.Complex_F64")
+ public class Complex_F32 {
+     public float real;
+@@ -105,4 +103,31 @@
+     }
+ 
+     @Override public String toString() {return format(MapPrintFormat.DEFAULT);}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public float getReal() { return this.real; }
++
++    public void setReal(float real) { this.real = real; }
++
++    public float getImaginary() { return this.imaginary; }
++
++    public void setImaginary(float imaginary) { this.imaginary = imaginary; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof Complex_F32)) return false;
++        Complex_F32 other = (Complex_F32) object;
++        if (!other.canEqual(this)) return false;
++        if (Float.compare(this.getReal(), other.getReal()) != 0) return false;
++        if (Float.compare(this.getImaginary(), other.getImaginary()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof Complex_F32; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + Float.floatToIntBits(this.getReal());
++        result = result * 59 + Float.floatToIntBits(this.getImaginary());
++        return result;
++    }
+ }
+--- a/upstream/ejml-core/org/ejml/data/Complex_F64.java
++++ b/upstream/ejml-core/org/ejml/data/Complex_F64.java
+@@ -17,7 +17,6 @@
+  */
+ package org.ejml.data;
+ 
+-import lombok.Data;
+ import org.ejml.MapPrintFormat;
+ import org.ejml.MatrixPrintFormat;
+ import org.ejml.UtilEjml;
+@@ -29,7 +28,6 @@
+  * real and imaginary components.
+  * </p>
+  */
+-@Data
+ public class Complex_F64 {
+     public double real;
+     public double imaginary;
+@@ -103,4 +101,33 @@
+     }
+ 
+     @Override public String toString() {return format(MapPrintFormat.DEFAULT);}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public double getReal() { return this.real; }
++
++    public void setReal(double real) { this.real = real; }
++
++    public double getImaginary() { return this.imaginary; }
++
++    public void setImaginary(double imaginary) { this.imaginary = imaginary; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof Complex_F64)) return false;
++        Complex_F64 other = (Complex_F64) object;
++        if (!other.canEqual(this)) return false;
++        if (Double.compare(this.getReal(), other.getReal()) != 0) return false;
++        if (Double.compare(this.getImaginary(), other.getImaginary()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof Complex_F64; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        long realBits = Double.doubleToLongBits(this.getReal());
++        result = result * 59 + (int) (realBits ^ (realBits >>> 32));
++        long imaginaryBits = Double.doubleToLongBits(this.getImaginary());
++        result = result * 59 + (int) (imaginaryBits ^ (imaginaryBits >>> 32));
++        return result;
++    }
+ }
+--- a/upstream/ejml-core/org/ejml/data/DEigenpair.java
++++ b/upstream/ejml-core/org/ejml/data/DEigenpair.java
+@@ -18,15 +18,12 @@
+ 
+ package org.ejml.data;
+ 
+-import lombok.Data;
+-
+ /**
+  * An eigenpair is a set composed of an eigenvalue and an eigenvector. In this library since only real
+  * matrices are supported, all eigenpairs are real valued.
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ public class DEigenpair {
+     public double value;
+     public DMatrixRMaj vector;
+@@ -35,4 +32,34 @@
+         this.value = value;
+         this.vector = vector;
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public double getValue() { return this.value; }
++
++    public void setValue(double value) { this.value = value; }
++
++    public DMatrixRMaj getVector() { return this.vector; }
++
++    public void setVector(DMatrixRMaj vector) { this.vector = vector; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof DEigenpair)) return false;
++        DEigenpair other = (DEigenpair) object;
++        if (!other.canEqual(this)) return false;
++        if (Double.compare(this.getValue(), other.getValue()) != 0) return false;
++        if (!java.util.Objects.equals(this.getVector(), other.getVector())) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof DEigenpair; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        long valueBits = Double.doubleToLongBits(this.getValue());
++        result = result * 59 + (int) (valueBits ^ (valueBits >>> 32));
++        result = result * 59 + (this.getVector() == null ? 43 : this.getVector().hashCode());
++        return result;
++    }
++
++    @Override public String toString() { return "DEigenpair(" + "value=" + this.getValue() + ", " + "vector=" + this.getVector() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/DMatrixD1.java
++++ b/upstream/ejml-core/org/ejml/data/DMatrixD1.java
+@@ -17,7 +17,6 @@
+  */
+ package org.ejml.data;
+ 
+-import lombok.Getter;
+ import org.ejml.UtilEjml;
+ import org.ejml.ops.MatrixIO;
+ 
+@@ -28,7 +27,7 @@
+ /// and block row major are all common formats.
+ public abstract class DMatrixD1 implements ReshapeMatrix, DMatrix {
+     /// Where the raw data for the matrix is stored. The format is type dependent.
+-    @Getter public double[] data = UtilEjml.ZERO_LENGTH_F64;
++    public double[] data = UtilEjml.ZERO_LENGTH_F64;
+ 
+     /// Number of rows in the matrix.
+     public int numRows;
+@@ -225,4 +224,7 @@
+     /// @return String representation of the matrix.
+     @Override public String toString() {
+         return getClass().getSimpleName() + " " + getNumRows() + "x" + getNumCols() + "\n" + format();}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public double[] getData() { return this.data; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/DScalar.java
++++ b/upstream/ejml-core/org/ejml/data/DScalar.java
+@@ -18,14 +18,35 @@
+ 
+ package org.ejml.data;
+ 
+-import lombok.Data;
+-
+ /**
+  * Scalar value. Useful when a function needs more than one output.
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ public class DScalar {
+     public double value;
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public double getValue() { return this.value; }
++
++    public void setValue(double value) { this.value = value; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof DScalar)) return false;
++        DScalar other = (DScalar) object;
++        if (!other.canEqual(this)) return false;
++        if (Double.compare(this.getValue(), other.getValue()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof DScalar; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        long valueBits = Double.doubleToLongBits(this.getValue());
++        result = result * 59 + (int) (valueBits ^ (valueBits >>> 32));
++        return result;
++    }
++
++    @Override public String toString() { return "DScalar(" + "value=" + this.getValue() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/ElementLocation.java
++++ b/upstream/ejml-core/org/ejml/data/ElementLocation.java
+@@ -18,14 +18,11 @@
+ 
+ package org.ejml.data;
+ 
+-import lombok.Data;
+-
+ /**
+  * The row and column of an element in a Matrix
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ public class ElementLocation {
+     /** Row coordinate of an element */
+     public int row;
+@@ -49,4 +46,33 @@
+         this.row = row;
+         this.col = col;
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public int getRow() { return this.row; }
++
++    public void setRow(int row) { this.row = row; }
++
++    public int getCol() { return this.col; }
++
++    public void setCol(int col) { this.col = col; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof ElementLocation)) return false;
++        ElementLocation other = (ElementLocation) object;
++        if (!other.canEqual(this)) return false;
++        if (this.getRow() != other.getRow()) return false;
++        if (this.getCol() != other.getCol()) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof ElementLocation; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + this.getRow();
++        result = result * 59 + this.getCol();
++        return result;
++    }
++
++    @Override public String toString() { return "ElementLocation(" + "row=" + this.getRow() + ", " + "col=" + this.getCol() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/FEigenpair.java
++++ b/upstream/ejml-core/org/ejml/data/FEigenpair.java
+@@ -19,15 +19,12 @@
+ package org.ejml.data;
+ 
+ import javax.annotation.Generated;
+-import lombok.Data;
+-
+ /**
+  * An eigenpair is a set composed of an eigenvalue and an eigenvector. In this library since only real
+  * matrices are supported, all eigenpairs are real valued.
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ @Generated("org.ejml.data.DEigenpair")
+ public class FEigenpair {
+     public float value;
+@@ -37,4 +34,33 @@
+         this.value = value;
+         this.vector = vector;
+     }
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public float getValue() { return this.value; }
++
++    public void setValue(float value) { this.value = value; }
++
++    public FMatrixRMaj getVector() { return this.vector; }
++
++    public void setVector(FMatrixRMaj vector) { this.vector = vector; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof FEigenpair)) return false;
++        FEigenpair other = (FEigenpair) object;
++        if (!other.canEqual(this)) return false;
++        if (Float.compare(this.getValue(), other.getValue()) != 0) return false;
++        if (!java.util.Objects.equals(this.getVector(), other.getVector())) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof FEigenpair; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + Float.floatToIntBits(this.getValue());
++        result = result * 59 + (this.getVector() == null ? 43 : this.getVector().hashCode());
++        return result;
++    }
++
++    @Override public String toString() { return "FEigenpair(" + "value=" + this.getValue() + ", " + "vector=" + this.getVector() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/FMatrixD1.java
++++ b/upstream/ejml-core/org/ejml/data/FMatrixD1.java
+@@ -18,7 +18,6 @@
+ package org.ejml.data;
+ 
+ import javax.annotation.Generated;
+-import lombok.Getter;
+ import org.ejml.UtilEjml;
+ import org.ejml.ops.MatrixIO;
+ 
+@@ -30,7 +29,7 @@
+ @Generated("org.ejml.data.DMatrixD1")
+ public abstract class FMatrixD1 implements ReshapeMatrix, FMatrix {
+     /// Where the raw data for the matrix is stored. The format is type dependent.
+-    @Getter public float[] data = UtilEjml.ZERO_LENGTH_F32;
++    public float[] data = UtilEjml.ZERO_LENGTH_F32;
+ 
+     /// Number of rows in the matrix.
+     public int numRows;
+@@ -227,4 +226,7 @@
+     /// @return String representation of the matrix.
+     @Override public String toString() {
+         return getClass().getSimpleName() + " " + getNumRows() + "x" + getNumCols() + "\n" + format();}
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public float[] getData() { return this.data; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/FScalar.java
++++ b/upstream/ejml-core/org/ejml/data/FScalar.java
+@@ -19,15 +19,35 @@
+ package org.ejml.data;
+ 
+ import javax.annotation.Generated;
+-import lombok.Data;
+-
+ /**
+  * Scalar value. Useful when a function needs more than one output.
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ @Generated("org.ejml.data.DScalar")
+ public class FScalar {
+     public float value;
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public float getValue() { return this.value; }
++
++    public void setValue(float value) { this.value = value; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof FScalar)) return false;
++        FScalar other = (FScalar) object;
++        if (!other.canEqual(this)) return false;
++        if (Float.compare(this.getValue(), other.getValue()) != 0) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof FScalar; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + Float.floatToIntBits(this.getValue());
++        return result;
++    }
++
++    @Override public String toString() { return "FScalar(" + "value=" + this.getValue() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/data/IScalar.java
++++ b/upstream/ejml-core/org/ejml/data/IScalar.java
+@@ -18,14 +18,34 @@
+ 
+ package org.ejml.data;
+ 
+-import lombok.Data;
+-
+ /**
+  * Scalar value. Useful when a function needs more than one output.
+  *
+  * @author Peter Abeles
+  */
+-@Data
+ public class IScalar {
+     public int value;
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public int getValue() { return this.value; }
++
++    public void setValue(int value) { this.value = value; }
++
++    @Override public boolean equals(Object object) {
++        if (object == this) return true;
++        if (!(object instanceof IScalar)) return false;
++        IScalar other = (IScalar) object;
++        if (!other.canEqual(this)) return false;
++        if (this.getValue() != other.getValue()) return false;
++        return true;
++    }
++    protected boolean canEqual(Object other) { return other instanceof IScalar; }
++
++    @Override public int hashCode() {
++        int result = 1;
++        result = result * 59 + this.getValue();
++        return result;
++    }
++
++    @Override public String toString() { return "IScalar(" + "value=" + this.getValue() + ")"; }
+ }
+--- a/upstream/ejml-core/org/ejml/masks/Mask.java
++++ b/upstream/ejml-core/org/ejml/masks/Mask.java
+@@ -17,7 +17,6 @@
+  */
+ package org.ejml.masks;
+ 
+-import lombok.Getter;
+ import org.ejml.MatrixDimensionException;
+ import org.ejml.data.Matrix;
+ 
+@@ -29,7 +28,6 @@
+      * Whether the mask entries should be negated.
+      * This avoids materializing the actual negated matrix.
+      */
+-    @Getter
+     public final boolean negated;
+ 
+     protected Mask( boolean negated ) {
+@@ -99,4 +97,7 @@
+      * @return Maximum number of set entries in mask
+      */
+     public abstract int maxMaskedEntries();
++
++    // Explicit source equivalents of the upstream Lombok-generated methods.
++    public boolean isNegated() { return this.negated; }
+ }

@@ -1,100 +1,120 @@
 # Maintainer: Kreijstal <rainb@tfwno.gf>
 
-_realname=slf4j
-pkgbase=mingw-w64-java-${_realname}
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-slf4j
 pkgname=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
          "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple"
          "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j")
-pkgver=1.7.36
+pkgver=2.0.17
 pkgrel=1
-pkgdesc="Simple Logging Facade for Java (mingw-w64)"
+pkgdesc="slf4j Java libraries, built from source"
 arch=('any')
 mingw_arch=('ucrt64')
-url='https://www.slf4j.org/'
-msys2_repository_url='https://github.com/qos-ch/slf4j'
+url='http://www.slf4j.org'
 license=('spdx:MIT')
 makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
-checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4")
-source=("${_realname}-${pkgver}.tar.gz::https://github.com/qos-ch/slf4j/archive/refs/tags/v_${pkgver}.tar.gz")
-sha256sums=('a2deaffa191c81abbf830d4060eb84129f31b9b3b945b7791344e8875b595286')
-
-_src=${_realname}-v_${pkgver}
+source=('https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.pom'
+         'https://repo.maven.apache.org/maven2/org/slf4j/slf4j-simple/2.0.17/slf4j-simple-2.0.17-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/slf4j/slf4j-simple/2.0.17/slf4j-simple-2.0.17.pom'
+         'https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17.pom')
+noextract=('slf4j-api-2.0.17-sources.jar'
+         'slf4j-api-2.0.17.pom'
+         'slf4j-simple-2.0.17-sources.jar'
+         'slf4j-simple-2.0.17.pom'
+         'jcl-over-slf4j-2.0.17-sources.jar'
+         'jcl-over-slf4j-2.0.17.pom')
+sha256sums=('db0d08d8efa05ad19d174d747bd9d8e68dbb02b596812fe7b3a681656e346694'
+         '150c40287f7cecdc21b9380caac98e928c4f33c023db6b348df1c5ac977026bf'
+         '30b660e79419bfcebd678e75bdfe3644eaf325f50253a68395d93634da5953df'
+         'fb30e8e2f6aea2d29842798677ed4541b9b2255715c158350ca2c5f5c7b864b0'
+         '197984bfbccbf5c9201b8152c98d0d8f77253fb4ef1c59a57cf3e28d5ecf119c'
+         '61a4468aa3c1f33c9f7925111f26e23392d9f5ab71ee0cbc287183fc1b52afc5')
+_artifacts=('org.slf4j:slf4j-api:2.0.17'
+         'org.slf4j:slf4j-simple:2.0.17'
+         'org.slf4j:jcl-over-slf4j:2.0.17')
 
 prepare() {
-  cd "${_src}"
-  # old slf4j/log4j/junit jars used by the integration tests
-  find . -name '*.jar' -print -delete
-  # resource filtering done by Maven upstream
-  sed -i -e "s/\${parsedVersion.osgiVersion}/${pkgver}/g" \
-         -e 's/\${slf4j.api.minimum.compatible.version}/1.6.0/g' \
-    slf4j-api/src/main/resources/META-INF/MANIFEST.MF \
-    slf4j-simple/src/main/resources/META-INF/MANIFEST.MF \
-    jcl-over-slf4j/src/main/resources/META-INF/MANIFEST.MF
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
 }
 
 build() {
   source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
-  cd "${_src}"
-  # the org.slf4j.impl placeholders only exist to compile the API against;
-  # upstream deletes them from the jar too
-  jb_module org.slf4j:slf4j-api:${pkgver} slf4j-api/src/main/java \
-    -r slf4j-api/src/main/resources -u slf4j-api/pom.xml -e org/slf4j/impl
-  jb_module org.slf4j:slf4j-simple:${pkgver} slf4j-simple/src/main/java \
-    -r slf4j-simple/src/main/resources -u slf4j-simple/pom.xml -- org.slf4j:slf4j-api
-  jb_module org.slf4j:jcl-over-slf4j:${pkgver} jcl-over-slf4j/src/main/java \
-    -r jcl-over-slf4j/src/main/resources -u jcl-over-slf4j/pom.xml -- org.slf4j:slf4j-api
+  local JB_RELEASE=21
+  jb_module org.slf4j:slf4j-api:2.0.17 upstream/slf4j-api \
+    -r resources/slf4j-api -u slf4j-api-2.0.17.pom
+  jb_module org.slf4j:slf4j-simple:2.0.17 upstream/slf4j-simple \
+    -r resources/slf4j-simple -u slf4j-simple-2.0.17.pom -- \
+    org.slf4j:slf4j-api
+  jb_module org.slf4j:jcl-over-slf4j:2.0.17 upstream/jcl-over-slf4j \
+    -r resources/jcl-over-slf4j -u jcl-over-slf4j-2.0.17.pom -- \
+    org.slf4j:slf4j-api
 }
 
 check() {
   source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
-  cd "${_src}"
-  jb_loadcheck org.slf4j:slf4j-api org.slf4j:slf4j-simple org.slf4j:jcl-over-slf4j
-  # upstream JUnit 4 tests of the API and of slf4j-simple
-  local m t cp
-  for m in slf4j-api slf4j-simple; do
-    t="${srcdir}/test-${m}"
-    rm -rf "${t}"
-    mkdir -p "${t}"
-    [[ -d ${m}/src/test/resources ]] && cp -r ${m}/src/test/resources/. "${t}/"
-    cp=$(jb_cp org.slf4j:${m} junit:junit)
-    # slf4j-simple's tests extend the API's test classes (test-jar upstream)
-    [[ ${m} == slf4j-simple ]] && cp="${cp};$(jb_w "${srcdir}/test-slf4j-api")"
-    jb_javac -d "$(jb_w "${t}")" -cp "${cp}" -proc:none -- ${m}/src/test/java
-    jb_junit4 "${t}" "${cp}"
-  done
+  jb_loadcheck org.slf4j:slf4j-api
+  jb_loadcheck --with org.slf4j:slf4j-api org.slf4j:slf4j-simple
+  jb_loadcheck --with org.slf4j:slf4j-api org.slf4j:jcl-over-slf4j
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
 }
 
 package_java-slf4j-api() {
-  pkgdesc="Simple Logging Facade for Java, API (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
   source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
   jb_install org.slf4j:slf4j-api
-  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-slf4j-api/LICENSE.txt"
+  _license slf4j-api 2.0.17
 }
 
 package_java-slf4j-simple() {
-  pkgdesc="Simple Logging Facade for Java, simple System.err binding (mingw-w64)"
-  depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
   source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
   jb_install org.slf4j:slf4j-simple
-  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-slf4j-simple/LICENSE.txt"
+  _license slf4j-simple 2.0.17
 }
 
 package_java-jcl-over-slf4j() {
-  pkgdesc="Jakarta Commons Logging API implemented over SLF4J (mingw-w64)"
-  depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
-  license=('spdx:Apache-2.0')
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
   source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
   jb_install org.slf4j:jcl-over-slf4j
-  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jcl-over-slf4j/LICENSE.txt"
+  _license jcl-over-slf4j 2.0.17
 }
 
-# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
-# vim: set ft=bash :
-
-# generate wrappers
 for _name in "${pkgname[@]}"; do
   _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
   _func="$(declare -f "${_short}")"
   eval "${_func/#${_short}/package_${_name}}"
 done
-# template end;

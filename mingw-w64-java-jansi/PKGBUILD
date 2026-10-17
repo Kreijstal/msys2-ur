@@ -1,0 +1,68 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Jansi ships prebuilt JNI libraries for every platform inside its source
+# tree; they are deleted and the Windows x86_64 one is compiled from
+# src/main/native with the flags of upstream's Makefile.common.
+
+_realname=jansi
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=2.4.3
+pkgrel=1
+pkgdesc="Jansi ANSI escape sequences for Java consoles, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://fusesource.github.io/jansi/'
+msys2_repository_url='https://github.com/fusesource/jansi'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/fusesource/jansi/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('2a1f5db720a179c7d6c447d1aa871633f0d63158d19ee3b396eadd600952e588')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # prebuilt libjansi.so / jansi.dll / libjansi.jnilib for 15 platforms
+  find src/main/resources/org/fusesource/jansi/internal/native -type f -print -delete
+  sed -i "s/\${project.version}/${pkgver}/" src/main/resources/org/fusesource/jansi/jansi.properties
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local inc out=src/main/resources/org/fusesource/jansi/internal/native/Windows/x86_64
+  inc=$(ls -d "${MINGW_PREFIX}"/lib/jvm/*/include | head -1)
+  mkdir -p "${out}" build-native
+  local c
+  for c in src/main/native/*.c; do
+    # jint* is passed for DWORD* (both 32 bit on Windows); GCC 14+ makes
+    # that an error by default
+    ${CC:-gcc} -D_JNI_IMPLEMENTATION_ -I"${inc}" -I"${inc}/win32" -Os \
+      -Wno-error=incompatible-pointer-types -Wno-error=int-conversion \
+      -c "${c}" -o "build-native/$(basename "${c%.c}").o"
+  done
+  ${CC:-gcc} -Wl,--kill-at -shared -static-libgcc -o "${out}/jansi.dll" build-native/*.o
+  strip "${out}/jansi.dll"
+  jb_module org.fusesource.jansi:jansi:${pkgver} src/main/java -r src/main/resources -u pom.xml \
+    -m 'Automatic-Module-Name: org.fusesource.jansi' \
+    -m 'Main-Class: org.fusesource.jansi.AnsiMain'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5; check the classes and that the freshly
+  # built JNI library is found and loads
+  jb_loadcheck org.fusesource.jansi:jansi
+  local out
+  out=$(java -jar "$(jb_w "$(jb_jarpath org.fusesource.jansi:jansi)")" 2>&1 < /dev/null)
+  echo "${out}" | head -8
+  grep -q 'Jansi native library loaded from' <<< "${out}"
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.fusesource.jansi:jansi
+  install -Dm644 "${_src}/license.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/license.txt"
+}

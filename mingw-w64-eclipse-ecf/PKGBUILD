@@ -1,0 +1,92 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-eclipse-ecf
+pkgver=3.13.100.r20260715.ga512085
+pkgrel=1
+_qualifier=v20260715
+pkgdesc="Source-built Eclipse ECF file transfers"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.org/'
+license=('spdx:EPL-2.0')
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-ecf"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-filetransfer"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer-ssl"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-ssl"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer-httpclientjava"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-identity")
+makedepends=("${MINGW_PACKAGE_PREFIX}-eclipse-core-jobs"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-common"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-concurrent"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-registry"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations")
+source=('LICENSE.EPL-2.0'
+        'ecf-a512085c8abe32ceb930178a4c85284c0691d46f.tar.gz::https://github.com/eclipse-ecf/ecf/archive/a512085c8abe32ceb930178a4c85284c0691d46f.tar.gz')
+sha256sums=('0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303'
+            'df13a8ce971e76fc588a099f7b044bbb827315cbe92c4ce9b178b2a278f468fd')
+_bundles=('org.eclipse.ecf|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/framework/bundles/org.eclipse.ecf|eclipse-core-jobs eclipse-ecf-identity eclipse-equinox-common eclipse-equinox-concurrent eclipse-osgi'
+          'org.eclipse.ecf.filetransfer|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/framework/bundles/org.eclipse.ecf.filetransfer|eclipse-core-jobs eclipse-ecf eclipse-equinox-common eclipse-equinox-registry eclipse-osgi'
+          'org.eclipse.ecf.provider.filetransfer|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/providers/bundles/org.eclipse.ecf.provider.filetransfer|eclipse-core-jobs eclipse-ecf eclipse-ecf-filetransfer eclipse-equinox-common eclipse-equinox-registry eclipse-osgi'
+          'org.eclipse.ecf.provider.filetransfer.ssl|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/providers/bundles/org.eclipse.ecf.provider.filetransfer.ssl|eclipse-ecf-provider-filetransfer eclipse-osgi'
+          'org.eclipse.ecf.ssl|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/framework/bundles/org.eclipse.ecf.ssl|eclipse-ecf eclipse-osgi'
+          'org.eclipse.ecf.provider.filetransfer.httpclientjava|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/providers/bundles/org.eclipse.ecf.provider.filetransfer.httpclientjava|eclipse-core-jobs eclipse-ecf eclipse-ecf-filetransfer eclipse-ecf-provider-filetransfer eclipse-equinox-common eclipse-osgi'
+          'org.eclipse.ecf.identity|ecf-a512085c8abe32ceb930178a4c85284c0691d46f/framework/bundles/org.eclipse.ecf.identity|eclipse-equinox-common eclipse-osgi')
+
+_pn() { local b=${1#org.eclipse.}; printf 'eclipse-%s\n' "${b//./-}"; }
+
+prepare() {
+  local row directory
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directory=${directory%%|*}
+    find "$directory" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \) -delete
+  done
+  # Match this project's declared Eclipse source encoding, then use UTF-8
+  # consistently with the other bundles in this split build.
+  local java_file
+  while IFS= read -r java_file; do
+    iconv -f ISO-8859-1 -t UTF-8 "$java_file" > "$java_file.utf8"
+    mv "$java_file.utf8" "$java_file"
+  done < <(find ecf-a512085c8abe32ceb930178a4c85284c0691d46f/providers/bundles/org.eclipse.ecf.provider.filetransfer.httpclientjava/src -name '*.java')
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row directory
+  local -a directories=()
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directories+=("${directory%%|*}")
+  done
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${directories[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row
+  for row in "${_bundles[@]}"; do jb_bundle_loadcheck "${row%%|*}"; done
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+  install -Dm644 "${srcdir}/LICENSE.EPL-2.0" "${pkgdir}${MINGW_PREFIX}/share/licenses/$(_pn "$1")/LICENSE"
+}
+
+for _row in "${_bundles[@]}"; do
+  _bsn=${_row%%|*}; _deps=${_row##*|}
+  eval "package_$(_pn "$_bsn")() {
+    pkgdesc='Eclipse $_bsn bundle, built from source'
+    depends=($(for _dep in $_deps; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "$_dep"; done))
+    _package $_bsn
+  }"
+done
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

@@ -1,0 +1,11 @@
+--- a/upstream/poi/org/apache/poi/hssf/record/EscherAggregate.java
++++ b/upstream/poi/org/apache/poi/hssf/record/EscherAggregate.java
+@@ -1038,7 +1038,7 @@
+ 
+         void addBytes(byte[] data) {
+             try {
+-                buffer.write(data);
++                ((java.io.OutputStream) buffer).write(data);
+             } catch (IOException e) {
+                 throw new IllegalStateException("Couldn't get data from drawing/continue records", e);
+             }

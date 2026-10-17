@@ -199,7 +199,12 @@ jb_javac() {
     fi
   done | { if [[ ${JB_MODULE_INFO:-0} == 1 ]]; then cat; else grep -v '/module-info\.java$'; fi; } \
        | { if [[ -n ${JB_SRC_EXCLUDE:-} ]]; then grep -Ev "$JB_SRC_EXCLUDE"; else cat; fi; } \
-       | while read -r s; do jb_w "$s"; done | sed 's/.*/"&"/' > "$list"
+       > "$list"
+  # Convert the source list in one process; spawning cygpath once per Java
+  # file dominates large source builds on Windows. Keep javac's quoting for
+  # paths containing spaces or non-ASCII characters.
+  cygpath -m -f "$list" | sed 's/.*/"&"/' > "$list.windows"
+  mv -f "$list.windows" "$list"
   if [[ ! -s $list ]]; then
     rm -f "$list"
     _jb_die "jb_javac: no Java sources in ${srcs[*]}"

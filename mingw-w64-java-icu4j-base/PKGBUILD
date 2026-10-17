@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Orbit's ICU4J Base is the small JDK-backed implementation shipped by DBeaver.
+pkgbase=mingw-w64-java-icu4j-base
+pkgname="${MINGW_PACKAGE_PREFIX}-java-icu4j-base"
+pkgver=58.2.0
+pkgrel=1
+pkgdesc="Eclipse Orbit ICU4J Base compatibility APIs, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.eclipse.org/orbit/'
+license=('spdx:Unicode-DFS-2016')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://download.eclipse.org/tools/orbit/downloads/drops2/R20180606145124/repository/plugins/com.ibm.icu.base.source_58.2.0.v20170418-1837.jar')
+noextract=('com.ibm.icu.base.source_58.2.0.v20170418-1837.jar')
+sha256sums=('238f18c30017fef056f6fb40e6bcecac17ca5b1091a9459aceb4d578fc49bf1b')
+
+prepare() {
+  mkdir -p upstream resources/about_files
+  bsdtar -xf com.ibm.icu.base.source_58.2.0.v20170418-1837.jar -C upstream
+  cp -r upstream/about_files upstream/about.html resources/
+  rm -f upstream/META-INF/MANIFEST.MF upstream/META-INF/*.SF upstream/META-INF/*.RSA
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cat > icu-base.bnd <<'BND'
+Bundle-SymbolicName: com.ibm.icu.base
+Bundle-Version: 58.2.0.v20170418-1837
+Bundle-Name: ICU4J Base
+Export-Package: com.ibm.icu.*;version=58.2.0
+Import-Package: *
+BND
+  JB_RELEASE=8 jb_module com.ibm.icu:com.ibm.icu.base:${pkgver} upstream/com \
+    -r resources -b icu-base.bnd
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck com.ibm.icu:com.ibm.icu.base
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin com.ibm.icu:com.ibm.icu.base
+  install -Dm644 upstream/about_files/UNICODE_ICU_LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-icu4j-base/LICENSE"
+  install -m644 upstream/about_files/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/java-icu4j-base/EPL-1.0"
+}

@@ -1,0 +1,151 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-eclipse-p2-extra
+pkgver=4.41
+pkgrel=1
+_qualifier=v20260828-1142
+pkgdesc="Source-built Eclipse p2 provisioning extensions"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.org/'
+license=('spdx:EPL-2.0')
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-importexport"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-sdk"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-updatesite"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-console"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-director"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-garbagecollector"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-touchpoint-eclipse"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-touchpoint-natives"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-simpleconfigurator-manipulator"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-frameworkadmin"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-frameworkadmin-equinox"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-jarprocessor"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-transport-ecf"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-operations"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-discovery"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-discovery-compatibility"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-discovery"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-director-app"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-directorywatcher"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-reconciler-dropins"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-publisher"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-extensionlocation"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-repository-tools"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-publisher-eclipse")
+makedepends=("${MINGW_PACKAGE_PREFIX}-eclipse-core-expressions"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-jobs"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-runtime"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-dialogs"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-progress"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-filetransfer"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer-httpclientjava"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer-ssl"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-ssl"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-app"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-common"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-artifact-repository"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-core"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-engine"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-metadata"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-metadata-repository"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-repository"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-registry"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security-ui"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-simpleconfigurator"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi-compatibility-state"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-browser"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-forms"
+             "${MINGW_PACKAGE_PREFIX}-java-bcpg"
+             "${MINGW_PACKAGE_PREFIX}-java-bcprov"
+             "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-core"
+             "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-pb"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-xz")
+source=('p2-R4_41.tar.gz::https://github.com/eclipse-equinox/p2/archive/refs/tags/R4_41.tar.gz')
+sha256sums=('6849d6cadd839c6f87612b03ddc39784332cc532398ce2c76ef8dd06790becab')
+_bundles=('org.eclipse.equinox.p2.ui|p2-R4_41/bundles/org.eclipse.equinox.p2.ui|eclipse-core-expressions eclipse-core-runtime eclipse-e4-ui-dialogs eclipse-e4-ui-progress eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-engine eclipse-equinox-p2-extensionlocation eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-operations eclipse-equinox-p2-repository eclipse-equinox-security-ui eclipse-equinox-simpleconfigurator eclipse-osgi eclipse-ui java-bcpg java-bcprov java-bcutil'
+          'org.eclipse.equinox.p2.ui.importexport|p2-R4_41/bundles/org.eclipse.equinox.p2.ui.importexport|eclipse-core-runtime eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-extensionlocation eclipse-equinox-p2-metadata eclipse-equinox-p2-operations eclipse-equinox-p2-repository eclipse-equinox-p2-ui eclipse-osgi eclipse-ui eclipse-ui-forms'
+          'org.eclipse.equinox.p2.ui.sdk|p2-R4_41/bundles/org.eclipse.equinox.p2.ui.sdk|eclipse-core-runtime eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-operations eclipse-equinox-p2-repository eclipse-equinox-p2-ui eclipse-osgi eclipse-ui java-bcpg java-bcprov java-bcutil'
+          'org.eclipse.equinox.p2.updatesite|p2-R4_41/bundles/org.eclipse.equinox.p2.updatesite|eclipse-equinox-common eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-publisher eclipse-equinox-p2-publisher-eclipse eclipse-equinox-p2-repository eclipse-osgi eclipse-osgi-compatibility-state'
+          'org.eclipse.equinox.p2.console|p2-R4_41/bundles/org.eclipse.equinox.p2.console|eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-osgi'
+          'org.eclipse.equinox.p2.director|p2-R4_41/bundles/org.eclipse.equinox.p2.director|eclipse-core-jobs eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-simpleconfigurator eclipse-osgi java-org-ow2-sat4j-core java-org-ow2-sat4j-pb'
+          'org.eclipse.equinox.p2.garbagecollector|p2-R4_41/bundles/org.eclipse.equinox.p2.garbagecollector|eclipse-equinox-app eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-equinox-registry eclipse-osgi'
+          'org.eclipse.equinox.p2.touchpoint.eclipse|p2-R4_41/bundles/org.eclipse.equinox.p2.touchpoint.eclipse|eclipse-equinox-common eclipse-equinox-frameworkadmin eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-garbagecollector eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-equinox-simpleconfigurator-manipulator eclipse-osgi'
+          'org.eclipse.equinox.p2.touchpoint.natives|p2-R4_41/bundles/org.eclipse.equinox.p2.touchpoint.natives|eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-osgi'
+          'org.eclipse.equinox.simpleconfigurator.manipulator|p2-R4_41/bundles/org.eclipse.equinox.simpleconfigurator.manipulator|eclipse-equinox-common eclipse-equinox-frameworkadmin eclipse-equinox-frameworkadmin-equinox eclipse-equinox-simpleconfigurator eclipse-osgi'
+          'org.eclipse.equinox.frameworkadmin|p2-R4_41/bundles/org.eclipse.equinox.frameworkadmin|eclipse-equinox-common eclipse-osgi'
+          'org.eclipse.equinox.frameworkadmin.equinox|p2-R4_41/bundles/org.eclipse.equinox.frameworkadmin.equinox|eclipse-equinox-common eclipse-equinox-frameworkadmin eclipse-osgi'
+          'org.eclipse.equinox.p2.jarprocessor|p2-R4_41/bundles/org.eclipse.equinox.p2.jarprocessor|eclipse-equinox-common eclipse-osgi'
+          'org.eclipse.equinox.p2.transport.ecf|p2-R4_41/bundles/org.eclipse.equinox.p2.transport.ecf|eclipse-core-jobs eclipse-ecf eclipse-ecf-filetransfer eclipse-ecf-provider-filetransfer eclipse-ecf-provider-filetransfer-httpclientjava eclipse-ecf-provider-filetransfer-ssl eclipse-ecf-ssl eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-repository eclipse-osgi'
+          'org.eclipse.equinox.p2.operations|p2-R4_41/bundles/org.eclipse.equinox.p2.operations|eclipse-core-jobs eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-repository eclipse-equinox-simpleconfigurator eclipse-osgi'
+          'org.eclipse.equinox.p2.discovery|p2-R4_41/bundles/org.eclipse.equinox.p2.discovery|eclipse-core-runtime eclipse-equinox-p2-core eclipse-osgi'
+          'org.eclipse.equinox.p2.discovery.compatibility|p2-R4_41/bundles/org.eclipse.equinox.p2.discovery.compatibility|eclipse-core-runtime eclipse-equinox-p2-core eclipse-equinox-p2-discovery eclipse-equinox-p2-repository eclipse-equinox-p2-transport-ecf eclipse-osgi'
+          'org.eclipse.equinox.p2.ui.discovery|p2-R4_41/bundles/org.eclipse.equinox.p2.ui.discovery|eclipse-core-runtime eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-discovery eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-operations eclipse-equinox-p2-repository eclipse-equinox-p2-ui eclipse-osgi eclipse-ui eclipse-ui-browser'
+          'org.eclipse.equinox.p2.director.app|p2-R4_41/bundles/org.eclipse.equinox.p2.director.app|eclipse-equinox-app eclipse-equinox-common eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-publisher eclipse-equinox-p2-repository eclipse-osgi java-bcpg java-bcprov java-bcutil'
+          'org.eclipse.equinox.p2.directorywatcher|p2-R4_41/bundles/org.eclipse.equinox.p2.directorywatcher|eclipse-equinox-common eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-publisher eclipse-equinox-p2-publisher-eclipse eclipse-equinox-p2-repository eclipse-equinox-p2-touchpoint-eclipse eclipse-osgi eclipse-osgi-compatibility-state'
+          'org.eclipse.equinox.p2.reconciler.dropins|p2-R4_41/bundles/org.eclipse.equinox.p2.reconciler.dropins|eclipse-equinox-app eclipse-equinox-common eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-directorywatcher eclipse-equinox-p2-engine eclipse-equinox-p2-extensionlocation eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-repository eclipse-equinox-p2-touchpoint-eclipse eclipse-equinox-simpleconfigurator eclipse-osgi'
+          'org.eclipse.equinox.p2.publisher|p2-R4_41/bundles/org.eclipse.equinox.p2.publisher|eclipse-equinox-common eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-repository eclipse-osgi eclipse-osgi-compatibility-state'
+          'org.eclipse.equinox.p2.extensionlocation|p2-R4_41/bundles/org.eclipse.equinox.p2.extensionlocation|eclipse-equinox-common eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-directorywatcher eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-publisher-eclipse eclipse-equinox-p2-repository eclipse-equinox-p2-touchpoint-eclipse eclipse-osgi eclipse-osgi-compatibility-state'
+          'org.eclipse.equinox.p2.repository.tools|p2-R4_41/bundles/org.eclipse.equinox.p2.repository.tools|eclipse-equinox-app eclipse-equinox-common eclipse-equinox-frameworkadmin eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-director eclipse-equinox-p2-engine eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-publisher-eclipse eclipse-equinox-p2-repository eclipse-equinox-registry eclipse-equinox-simpleconfigurator-manipulator eclipse-osgi java-xz'
+          'org.eclipse.equinox.p2.publisher.eclipse|p2-R4_41/bundles/org.eclipse.equinox.p2.publisher.eclipse|eclipse-equinox-app eclipse-equinox-common eclipse-equinox-frameworkadmin eclipse-equinox-frameworkadmin-equinox eclipse-equinox-p2-artifact-repository eclipse-equinox-p2-core eclipse-equinox-p2-metadata eclipse-equinox-p2-metadata-repository eclipse-equinox-p2-publisher eclipse-equinox-p2-repository eclipse-equinox-simpleconfigurator-manipulator eclipse-osgi eclipse-osgi-compatibility-state')
+
+_pn() { local b=${1#org.eclipse.}; printf 'eclipse-%s\n' "${b//./-}"; }
+
+prepare() {
+  local row directory
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directory=${directory%%|*}
+    find "$directory" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \) -delete
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row directory
+  local -a directories=()
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_p2_jarprocessor=(-L lib/jarprocessor-ant.jar)
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_p2_director_app=(-L ant_tasks/director-ant.jar)
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_p2_repository_tools=(-L lib/repository-tools-ant.jar)
+  local -a JB_BUNDLE_OPTS_org_eclipse_equinox_p2_publisher_eclipse=(-L ant_tasks/pdepublishing-ant.jar)
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directories+=("${directory%%|*}")
+  done
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${directories[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row
+  for row in "${_bundles[@]}"; do jb_bundle_loadcheck "${row%%|*}"; done
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+  install -Dm644 "${srcdir}/p2-R4_41/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/$(_pn "$1")/LICENSE"
+}
+
+for _row in "${_bundles[@]}"; do
+  _bsn=${_row%%|*}; _deps=${_row##*|}
+  eval "package_$(_pn "$_bsn")() {
+    pkgdesc='Eclipse $_bsn bundle, built from source'
+    depends=($(for _dep in $_deps; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "$_dep"; done))
+    _package $_bsn
+  }"
+done
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

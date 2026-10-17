@@ -1,0 +1,45 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=commons-io
+pkgbase=mingw-w64-java-commons-io
+pkgname="${MINGW_PACKAGE_PREFIX}-java-commons-io"
+pkgver=2.22.0
+pkgrel=1
+pkgdesc="Apache Commons IO utilities, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://commons.apache.org/proper/commons-io/'
+msys2_repository_url='https://github.com/apache/commons-io'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/commons/io/source/commons-io-${pkgver}-src.tar.gz")
+sha256sums=('9a8e6d731e06edb10a35e2221aeea7f539b3ff4d5b90538bf119726e72644ff4')
+
+_src=commons-io-${pkgver}-src
+
+prepare() {
+  cd "${_src}"
+  # src/test/resources/org/apache/commons/io/test.jar (test fixture)
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module commons-io:commons-io:${pkgver} src/main/java -u pom.xml \
+    -m 'Automatic-Module-Name: org.apache.commons.io'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream tests need JUnit 5 (Jupiter) and mocking libraries, which are not packaged
+  jb_loadcheck commons-io:commons-io
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install commons-io:commons-io
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-io/LICENSE.txt"
+  install -Dm644 "${_src}/NOTICE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-io/NOTICE.txt"
+}

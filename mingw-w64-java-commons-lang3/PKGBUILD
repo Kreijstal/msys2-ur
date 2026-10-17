@@ -1,0 +1,39 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=commons-lang3
+pkgbase=mingw-w64-java-commons-lang3
+pkgname="${MINGW_PACKAGE_PREFIX}-java-commons-lang3"
+pkgver=3.20.0
+pkgrel=1
+pkgdesc="Apache Commons Lang extensions to java.lang, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://commons.apache.org/proper/commons-lang/'
+msys2_repository_url='https://github.com/apache/commons-lang3'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/commons/lang/source/commons-lang3-${pkgver}-src.tar.gz")
+sha256sums=('ca736b78a140fdc83a8d23572ad0521a30d0239c5f8c7ddcb7cbf8c0abfb6215')
+
+_src=commons-lang3-${pkgver}-src
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.commons:commons-lang3:${pkgver} src/main/java -u pom.xml \
+    -m 'Automatic-Module-Name: org.apache.commons.lang3'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream tests need JUnit 5 (Jupiter) and mocking libraries, which are not packaged
+  jb_loadcheck org.apache.commons:commons-lang3
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.commons:commons-lang3
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-lang3/LICENSE.txt"
+  install -Dm644 "${_src}/NOTICE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-lang3/NOTICE.txt"
+}

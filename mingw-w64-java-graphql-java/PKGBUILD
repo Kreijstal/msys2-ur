@@ -1,0 +1,131 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-graphql-java
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-graphql-java")
+pkgver=22.2
+pkgrel=1
+pkgdesc="graphql-java Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/graphql-java/graphql-java'
+license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-guava-failureaccess"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+             "${MINGW_PACKAGE_PREFIX}-java-guava"
+             "${MINGW_PACKAGE_PREFIX}-java-java-dataloader"
+             "${MINGW_PACKAGE_PREFIX}-java-jetbrains-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-reactive-streams")
+source=('LICENSE.antlr'
+         'LICENSE.graphql'
+         'https://repo.maven.apache.org/maven2/com/graphql-java/graphql-java/22.2/graphql-java-22.2-sources.jar'
+         'https://repo.maven.apache.org/maven2/com/graphql-java/graphql-java/22.2/graphql-java-22.2.pom')
+noextract=('graphql-java-22.2-sources.jar'
+         'graphql-java-22.2.pom')
+sha256sums=('3db1fb3ee79a4b4f9918fc4d0f6133bf18a3cf787f126cd22f8aa9b862281c0c'
+         '10a80a97a975ab4dc13d8a3bc39f286cd0c96a7991045777a01381252f8e732d'
+         'a9d3df0b1cc5324e5bc57636193987edd14ec19f3433631c1d7664236ea82a13'
+         '45203c98c70be242346166ddb7fde06636f2b594c9a5ba9b88846fe5d8602e7f')
+_artifacts=('com.graphql-java:graphql-java:22.2')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module com.graphql-java:graphql-java:22.2 upstream/graphql-java \
+    -r resources/graphql-java -u graphql-java-22.2.pom -- \
+    com.graphql-java:java-dataloader org.reactivestreams:reactive-streams com.google.guava:guava org.antlr:antlr4-runtime org.jetbrains:annotations/provided
+  # Upstream shades Guava and ANTLR into private GraphQL namespaces.
+  jb_relocate "${srcdir}/graphql-shaded.jar" \
+    -r com.google.common=graphql.com.google.common \
+    -r com.google.thirdparty=graphql.com.google.thirdparty \
+    -r org.antlr.v4.runtime=graphql.org.antlr.v4.runtime -- \
+    com.graphql-java:graphql-java com.google.guava:guava com.google.guava:failureaccess org.antlr:antlr4-runtime
+  mkdir -p "${srcdir}/graphql-shaded"
+  (cd "${srcdir}/graphql-shaded" && jar --extract --file "$(jb_w "${srcdir}/graphql-shaded.jar")")
+  JB_GAV=com.graphql-java:graphql-java:22.2 JB_UPSTREAM_POM="${srcdir}/graphql-java-22.2.pom" \
+    jb_jar "${srcdir}/graphql-final.jar" "${srcdir}/graphql-shaded"
+  jb_pom "${srcdir}/graphql-final.pom" com.graphql-java graphql-java 22.2 -- \
+    com.graphql-java:java-dataloader org.reactivestreams:reactive-streams
+  jb_stage com.graphql-java:graphql-java:22.2 "${srcdir}/graphql-final.pom" "${srcdir}/graphql-final.jar"
+
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with com.graphql-java:java-dataloader --with org.reactivestreams:reactive-streams --with com.google.guava:guava --with org.antlr:antlr4-runtime --with org.jetbrains:annotations com.graphql-java:graphql-java
+  mkdir -p smoke
+  cat > smoke/GraphqlQuery.java <<'JAVA'
+import graphql.GraphQL;
+import graphql.ExecutionResult;
+import graphql.schema.idl.*;
+public class GraphqlQuery {
+  public static void main(String[] args) {
+    TypeDefinitionRegistry types = new SchemaParser().parse("type Query { answer: Int }");
+    RuntimeWiring wiring = RuntimeWiring.newRuntimeWiring()
+        .type("Query", builder -> builder.dataFetcher("answer", environment -> 42)).build();
+    GraphQL graph = GraphQL.newGraphQL(new SchemaGenerator().makeExecutableSchema(types, wiring)).build();
+    ExecutionResult result = graph.execute("{ answer }");
+    if (!result.getErrors().isEmpty()) throw new AssertionError(result.getErrors());
+    if (!result.getData().toString().equals("{answer=42}")) throw new AssertionError(result.getData().toString());
+    System.out.println("GraphQL schema parsing, shaded libraries and query execution passed");
+  }
+}
+JAVA
+  local cp=$(jb_cp com.graphql-java:graphql-java)
+  javac --release 21 -d "$(jb_w smoke)" -cp "$cp" "$(jb_w smoke/GraphqlQuery.java)"
+  java -cp "$(jb_w smoke);$cp" GraphqlQuery
+
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-graphql-java() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-java-dataloader"
+           "${MINGW_PACKAGE_PREFIX}-java-reactive-streams")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.graphql-java:graphql-java
+  _license graphql-java 22.2
+  install -m644 "${srcdir}/LICENSE.graphql" "${srcdir}/LICENSE.antlr" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-graphql-java/"
+  install -m644 "${MINGW_PREFIX}/share/licenses/java-guava/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-graphql-java/LICENSE.guava"
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

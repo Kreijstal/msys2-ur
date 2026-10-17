@@ -1,0 +1,108 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# The optional Brotli API is compiled from upstream's published sources for
+# type checking. It is not shipped here; the optional decoder remains a
+# separately installable dependency.
+
+_realname=commons-compress
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=1.28.0
+pkgrel=1
+pkgdesc="Apache Commons Compress archive and compression formats, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://commons.apache.org/proper/commons-compress/'
+msys2_repository_url='https://github.com/apache/commons-compress'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-lang3")
+optdepends=("${MINGW_PACKAGE_PREFIX}-java-xz: LZMA, XZ and 7z LZMA support"
+            "${MINGW_PACKAGE_PREFIX}-java-zstd-jni: Zstandard support"
+            "${MINGW_PACKAGE_PREFIX}-java-asm: Pack200 support")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-xz"
+             "${MINGW_PACKAGE_PREFIX}-java-zstd-jni"
+             "${MINGW_PACKAGE_PREFIX}-java-asm")
+source=('https://repo.maven.apache.org/maven2/org/brotli/dec/0.1.2/dec-0.1.2-sources.jar'
+        "${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/commons/compress/source/commons-compress-${pkgver}-src.tar.gz")
+noextract=('dec-0.1.2-sources.jar')
+sha256sums=('064ac1e41f475c1fd0479b6505f44b6e3bb044b948bddc75d56a496ebb85fbc3'
+            '5c870fa454221b24c81d10a28031a9183d55f2baab92c160ecc985e51a387662')
+
+_src=${_realname}-${pkgver}-src
+
+prepare() {
+  # test fixtures (src/test/resources)
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local brotli_api="${srcdir}/brotli-api"
+  mkdir -p "${brotli_api}/src" "${brotli_api}/classes"
+  bsdtar -xf "${srcdir}/dec-0.1.2-sources.jar" -C "${brotli_api}/src"
+  find "${brotli_api}/src" -type f \( -name '*.class' -o -name '*.jar' \) -delete
+  jb_javac -d "$(jb_w "${brotli_api}/classes")" -- "${brotli_api}/src"
+  jb_module org.apache.commons:commons-compress:${pkgver} src/main/java -u pom.xml \
+    -m 'Automatic-Module-Name: org.apache.commons.compress' -C "${brotli_api}/classes" \
+    -- commons-codec:commons-codec commons-io:commons-io org.apache.commons:commons-lang3 \
+       'org.tukaani:xz?' 'com.github.luben:zstd-jni?' 'org.ow2.asm:asm?' 'org.brotli:dec=0.1.2?'
+  # The optional decoder is a separate dependency, never embedded.
+  if unzip -l "${JB_OUT}/commons-compress.jar" | grep -q 'org/brotli/'; then
+    echo "org.brotli classes in the jar" >&2
+    return 1
+  fi
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5, Mockito, Pax Exam and more; load the
+  # classes (Brotli users excepted) and round-trip tar + gz/bz2/xz/zstd
+  jb_loadcheck --ignore 'compressors\.brotli\.BrotliCompressorInputStream' \
+    --with org.tukaani:xz --with com.github.luben:zstd-jni --with org.ow2.asm:asm \
+    org.apache.commons:commons-compress
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.io.*;
+import java.util.Arrays;
+import org.apache.commons.compress.archivers.tar.*;
+import org.apache.commons.compress.compressors.*;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    byte[] data = "hello commons-compress\n".getBytes("UTF-8");
+    for (String fmt : new String[] {"gz", "bzip2", "xz", "zstd", "lz4-framed"}) {
+      ByteArrayOutputStream bo = new ByteArrayOutputStream();
+      try (TarArchiveOutputStream t = new TarArchiveOutputStream(
+             new CompressorStreamFactory().createCompressorOutputStream(fmt, bo))) {
+        TarArchiveEntry e = new TarArchiveEntry("hello.txt");
+        e.setSize(data.length);
+        t.putArchiveEntry(e); t.write(data); t.closeArchiveEntry();
+      }
+      try (TarArchiveInputStream t = new TarArchiveInputStream(new CompressorStreamFactory()
+             .createCompressorInputStream(new BufferedInputStream(new ByteArrayInputStream(bo.toByteArray()))))) {
+        TarArchiveEntry e = t.getNextEntry();
+        byte[] back = new byte[(int) e.getSize()];
+        new DataInputStream(t).readFully(back);
+        if (!e.getName().equals("hello.txt") || !Arrays.equals(back, data)) throw new AssertionError(fmt);
+      }
+      System.out.println("commons-compress tar." + fmt + " ok (" + bo.size() + " bytes)");
+    }
+    System.out.println("brotli available: " + org.apache.commons.compress.compressors.brotli.BrotliUtils.isBrotliCompressionAvailable());
+  }
+}
+JAVA
+  cp=$(jb_cp org.apache.commons:commons-compress org.tukaani:xz com.github.luben:zstd-jni)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java --enable-native-access=ALL-UNNAMED -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.commons:commons-compress
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE.txt"
+  install -Dm644 "${_src}/NOTICE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/NOTICE.txt"
+}

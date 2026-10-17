@@ -1,0 +1,20 @@
+pkgbase = mingw-w64-dbeaver-common
+	pkgdesc = DBeaver shared utilities and JDBC/REST APIs, built from source
+	pkgver = 2.9.0.r20261004.g5658d540
+	pkgrel = 1
+	url = https://github.com/dbeaver/dbeaver-common
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-orbit-gson
+	source = dbeaver-common-5658d5409f14f6d99aa76d42692960666029ede9.tar.gz::https://github.com/dbeaver/dbeaver-common/archive/5658d5409f14f6d99aa76d42692960666029ede9.tar.gz
+	sha256sums = d8c2adfd5cfe04f5630fdaaea5c74bb168d36fc51da45d4bbbf8e612df7262b3
+
+pkgname = mingw-w64-ucrt-x86_64-dbeaver-utils
+	depends = mingw-w64-ucrt-x86_64-eclipse-orbit-gson
+
+pkgname = mingw-w64-ucrt-x86_64-dbeaver-jdbc-api
+	depends = mingw-w64-ucrt-x86_64-dbeaver-utils
+
+pkgname = mingw-w64-ucrt-x86_64-dbeaver-rest-client
+	depends = mingw-w64-ucrt-x86_64-dbeaver-utils

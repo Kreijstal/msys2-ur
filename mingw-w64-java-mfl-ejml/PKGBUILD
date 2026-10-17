@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# The optional MFL adapter is separate from EJML so its upstream version is
+# represented correctly in both the package and Maven metadata.
+pkgbase=mingw-w64-java-mfl-ejml
+pkgname="${MINGW_PACKAGE_PREFIX}-java-mfl-ejml"
+pkgver=0.5.15
+pkgrel=1
+pkgdesc="MAT file adapter for EJML matrices, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/HebiRobotics/MFL'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-ejml-core" "${MINGW_PACKAGE_PREFIX}-java-mfl-core")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/us/hebi/matlab/mat/mfl-ejml/0.5.15/mfl-ejml-0.5.15-sources.jar'
+        'https://repo.maven.apache.org/maven2/us/hebi/matlab/mat/mfl-ejml/0.5.15/mfl-ejml-0.5.15.pom')
+noextract=('mfl-ejml-0.5.15-sources.jar' 'mfl-ejml-0.5.15.pom')
+sha256sums=('02cf6352dd0f087c32497f59a7b14dfb86492d34f07ea3329cca943b5e3f71b6'
+            'a88919472f84fff227392c6d5971cfe19f89e19e93cff4be62f3113f57adffbb')
+
+prepare() {
+  mkdir -p upstream resources
+  bsdtar -xf mfl-ejml-0.5.15-sources.jar -C upstream
+  find upstream -type f \( -name '*.class' -o -name '*.jar' \) -delete
+  cp -r upstream/. resources/
+  find resources -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+  rm -f resources/META-INF/MANIFEST.MF
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  JB_RELEASE=21 jb_module us.hebi.matlab.mat:mfl-ejml:${pkgver} upstream -r resources \
+    -u mfl-ejml-${pkgver}.pom -- us.hebi.matlab.mat:mfl-core org.ejml:ejml-core
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck us.hebi.matlab.mat:mfl-ejml
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install us.hebi.matlab.mat:mfl-ejml
+  install -Dm644 mfl-ejml-${pkgver}.pom "${pkgdir}${MINGW_PREFIX}/share/licenses/java-mfl-ejml/UPSTREAM.pom"
+  find upstream -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ { if (header != "" && !seen[header]++) print header; collecting=0 }
+    collecting { header=header $0 "\n" }
+  ' {} + > SOURCE-COPYRIGHTS.txt
+  install -m644 SOURCE-COPYRIGHTS.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-mfl-ejml/SOURCE-COPYRIGHTS.txt"
+}

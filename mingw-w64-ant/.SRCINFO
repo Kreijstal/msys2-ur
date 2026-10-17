@@ -1,0 +1,26 @@
+pkgbase = mingw-w64-ant
+	pkgdesc = Apache Ant Java build tool (mingw-w64)
+	pkgver = 1.10.15
+	pkgrel = 1
+	url = https://ant.apache.org/
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-junit4
+	makedepends = mingw-w64-ucrt-x86_64-java-hamcrest-library
+	makedepends = mingw-w64-ucrt-x86_64-java-xz
+	source = https://archive.apache.org/dist/ant/source/apache-ant-1.10.15-src.tar.gz
+	source = 0001-bootstrap-treat-MSYS2-like-Cygwin.patch
+	sha256sums = a22b495b9c05482841f919d3440d2b38213ae223e039859b73aabcde444199b1
+	sha256sums = 65934b365ea264f46a4475f79d89b2c51bab4d7902b42eac83294a593428601c
+
+pkgname = mingw-w64-ucrt-x86_64-ant
+	pkgdesc = Apache Ant Java build tool, built from source (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-openjdk
+	optdepends = mingw-w64-ucrt-x86_64-ant-junit: <junit> task
+	optdepends = mingw-w64-ucrt-x86_64-java-xz: <xz> and <unxz> tasks
+
+pkgname = mingw-w64-ucrt-x86_64-ant-junit
+	pkgdesc = Apache Ant JUnit 3/4 tasks, built from source (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-ant
+	depends = mingw-w64-ucrt-x86_64-java-junit4

@@ -1,0 +1,68 @@
+pkgbase = mingw-w64-eclipse-ecf
+	pkgdesc = Source-built Eclipse ECF file transfers
+	pkgver = 3.13.100.r20260715.ga512085
+	pkgrel = 1
+	url = https://eclipse.org/
+	arch = any
+	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-equinox-concurrent
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-osgi
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-annotation
+	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component-annotations
+	source = LICENSE.EPL-2.0
+	source = ecf-a512085c8abe32ceb930178a4c85284c0691d46f.tar.gz::https://github.com/eclipse-ecf/ecf/archive/a512085c8abe32ceb930178a4c85284c0691d46f.tar.gz
+	sha256sums = 0becf16567beb77fa252b7664631dd177c8f9a1889e48995b45379c7130e5303
+	sha256sums = df13a8ce971e76fc588a099f7b044bbb827315cbe92c4ce9b178b2a278f468fd
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf
+	pkgdesc = Eclipse org.eclipse.ecf bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf-identity
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-concurrent
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-filetransfer
+	pkgdesc = Eclipse org.eclipse.ecf.filetransfer bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-provider-filetransfer
+	pkgdesc = Eclipse org.eclipse.ecf.provider.filetransfer bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf-filetransfer
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-registry
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-provider-filetransfer-ssl
+	pkgdesc = Eclipse org.eclipse.ecf.provider.filetransfer.ssl bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf-provider-filetransfer
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-ssl
+	pkgdesc = Eclipse org.eclipse.ecf.ssl bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-provider-filetransfer-httpclientjava
+	pkgdesc = Eclipse org.eclipse.ecf.provider.filetransfer.httpclientjava bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf-filetransfer
+	depends = mingw-w64-ucrt-x86_64-eclipse-ecf-provider-filetransfer
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-ecf-identity
+	pkgdesc = Eclipse org.eclipse.ecf.identity bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-equinox-common
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi

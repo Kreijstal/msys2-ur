@@ -4,6 +4,7 @@
 # plugin.xml and components.xml.
 #   selftest.sh <javabuild.jar> <workdir>
 set -euo pipefail
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 jar=$1
 w=$2
 rm -rf "${w:?}"
@@ -260,5 +261,29 @@ java -cp "$(win "$jar")" jb.Bnd "$(win "$PWD/ds/d.jar")" "$(win "$PWD/ds/d.bnd")
 expect ds/MANIFEST.MF 'Bundle-SymbolicName: d'
 tr -d '\r' < ds/MANIFEST.MF | sed ':a;N;$!ba;s/\n //g' | grep -q 'Export-Package: d;version="1.2.3"' \
   || { echo "selftest: jb.Bnd export"; cat ds/MANIFEST.MF; fail=1; }
+
+
+# Compile and execute a real module from paths with spaces and Unicode. This
+# exercises the bulk POSIX-to-Windows conversion used by large source builds.
+export srcdir="$w/source list ü"
+mkdir -p "$srcdir/source space/paths" "$srcdir/resources/paths"
+printf '%s' 'hello ü' > "$srcdir/resources/paths/message.txt"
+cat > "$srcdir/source space/paths/Grüße.java" <<'JAVA'
+package paths;
+import java.nio.charset.StandardCharsets;
+public class Grüße {
+    public static void main(String[] args) throws Exception {
+        try (java.io.InputStream input = Grüße.class.getResourceAsStream("message.txt")) {
+            String text = new String(input.readAllBytes(), StandardCharsets.UTF_8);
+            if (!text.equals("hello ü")) throw new AssertionError(text);
+        }
+    }
+}
+JAVA
+source "$script_dir/javabuild.sh"
+JB_RELEASE=11 jb_module org.msys2ur.tests:source-paths:1.2.3 "$srcdir/source space" -r "$srcdir/resources"
+grep -q '<version>1.2.3</version>' "$JB_STAGE/org/msys2ur/tests/source-paths/1.2.3/source-paths-1.2.3.pom"
+java -cp "$(jb_w "$JB_STAGE/org/msys2ur/tests/source-paths/1.2.3/source-paths-1.2.3.jar")" paths.Grüße
+echo 'source list conversion, resource loading and module metadata: ok'
 
 exit $fail

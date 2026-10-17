@@ -1,0 +1,26 @@
+--- a/upstream/jsch/com/jcraft/jsch/SSHAgentConnector.java
++++ b/upstream/jsch/com/jcraft/jsch/SSHAgentConnector.java
+@@ -93,21 +93,8 @@
+   }
+ 
+   private static USocketFactory getUSocketFactory() throws AgentProxyException {
+-    try {
+-      return new UnixDomainSocketFactory();
+-    } catch (AgentProxyException e) {
+-      try {
+-        return new JUnixSocketFactory();
+-      } catch (LinkageError ee) {
+-        AgentProxyException eee = new AgentProxyException("junixsocket library unavailable");
+-        eee.addSuppressed(e);
+-        eee.addSuppressed(ee);
+-        throw eee;
+-      } catch (AgentProxyException ee) {
+-        ee.addSuppressed(e);
+-        throw e;
+-      }
+-    }
++    // Our supported Java 21+ runtime provides the JDK Unix-domain transport.
++    return new UnixDomainSocketFactory();
+   }
+ 
+   private static Path getSshAuthSocket() throws AgentProxyException {

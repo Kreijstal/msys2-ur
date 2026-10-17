@@ -1,0 +1,42 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-eclipse-orbit-ant
+pkgname="${MINGW_PACKAGE_PREFIX}-eclipse-orbit-ant"
+pkgver=1.10.15
+pkgrel=1
+pkgdesc="OSGi bundle of the source-built Apache Ant core and launcher"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://ant.apache.org/'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-ant"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-commons"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi")
+source=('ant.bnd')
+sha256sums=('144a9e7350b23546546870d1824deda008397eda03de9caa97a78a5a7e98a359')
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_relocate "${srcdir}/ant-merged.jar" -- org.apache.ant:ant org.apache.ant:ant-launcher
+  mkdir -p "${srcdir}/ant-root"
+  (cd "${srcdir}/ant-root" && jar --extract --file "$(jb_w "${srcdir}/ant-merged.jar")")
+  jb_bnd "${srcdir}/ant-root" "${srcdir}/ant.bnd" "${srcdir}/ant-root/META-INF/MANIFEST.MF" \
+    "$(jb_cp org.apache.ant:ant)"
+  mkdir -p "$JB_PSTAGE"
+  jb_jar "$JB_PSTAGE/org.apache.ant_${pkgver}.jar" "${srcdir}/ant-root"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_bundle_loadcheck org.apache.ant
+  jb_osgi_resolvecheck
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install org.apache.ant
+  install -Dm644 "${MINGW_PREFIX}/share/licenses/ant/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-orbit-ant/LICENSE"
+  install -m644 "${MINGW_PREFIX}/share/licenses/ant/NOTICE" "${pkgdir}${MINGW_PREFIX}/share/licenses/eclipse-orbit-ant/NOTICE"
+}

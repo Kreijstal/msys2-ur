@@ -1,0 +1,85 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-eclipse-platform-extra
+pkgver=4.41
+pkgrel=1
+_qualifier=v20260828-1142
+pkgdesc="Source-built Eclipse security UI, concurrency and quick search"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.org/'
+license=('spdx:EPL-2.0')
+pkgname=("${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security-ui"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-text-quicksearch"
+         "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-concurrent")
+makedepends=("${MINGW_PACKAGE_PREFIX}-eclipse-core-expressions"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-jobs"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-resources"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-core-runtime"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-jface"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-jface-text"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-ant"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-search"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-editors"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-ui-ide"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component-annotations")
+source=('equinox-R4_41.tar.gz::https://github.com/eclipse-equinox/equinox/archive/refs/tags/R4_41.tar.gz'
+        'eclipse.platform.ui-R4_41.tar.gz::https://github.com/eclipse-platform/eclipse.platform.ui/archive/refs/tags/R4_41.tar.gz')
+sha256sums=('995e801eca5f8ebb0471d731226c2e4eab421e7933bec7c01280abe2c4e78304'
+            '5c70484fcbc01d3d8950db8e2afeea4ebdc3c05ed65940c22ef36dcfb35863d7')
+_bundles=('org.eclipse.equinox.security.ui|equinox-R4_41/bundles/org.eclipse.equinox.security.ui|eclipse-core-runtime eclipse-equinox-security eclipse-osgi eclipse-ui'
+          'org.eclipse.text.quicksearch|eclipse.platform.ui-R4_41/bundles/org.eclipse.text.quicksearch|eclipse-core-expressions eclipse-core-jobs eclipse-core-resources eclipse-jface eclipse-jface-text eclipse-orbit-ant eclipse-osgi eclipse-search eclipse-ui eclipse-ui-editors eclipse-ui-ide'
+          'org.eclipse.equinox.concurrent|equinox-R4_41/bundles/org.eclipse.equinox.concurrent|eclipse-osgi')
+
+_pn() { local b=${1#org.eclipse.}; printf 'eclipse-%s\n' "${b//./-}"; }
+
+prepare() {
+  local row directory
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directory=${directory%%|*}
+    find "$directory" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' -o -name '*.so' -o -name '*.exe' \) -delete
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row directory
+  local -a directories=()
+  for row in "${_bundles[@]}"; do
+    directory=${row#*|}; directories+=("${directory%%|*}")
+  done
+  JB_QUALIFIER=${_qualifier} jb_bundles -- "${directories[@]}"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row
+  for row in "${_bundles[@]}"; do jb_bundle_loadcheck "${row%%|*}"; done
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+  install -Dm644 "${srcdir}/equinox-R4_41/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/$(_pn "$1")/LICENSE"
+}
+
+for _row in "${_bundles[@]}"; do
+  _bsn=${_row%%|*}; _deps=${_row##*|}
+  eval "package_$(_pn "$_bsn")() {
+    pkgdesc='Eclipse $_bsn bundle, built from source'
+    depends=($(for _dep in $_deps; do printf '"${MINGW_PACKAGE_PREFIX}-%s" ' "$_dep"; done))
+    _package $_bsn
+  }"
+done
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

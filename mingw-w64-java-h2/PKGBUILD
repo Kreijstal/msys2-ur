@@ -1,0 +1,90 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-h2
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-h2")
+pkgver=2.2.224
+pkgrel=1
+pkgdesc="h2 Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:MPL-2.0 OR EPL-1.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-servlet-api"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-servlet-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jts-core"
+             "${MINGW_PACKAGE_PREFIX}-java-lucene-analysis-common"
+             "${MINGW_PACKAGE_PREFIX}-java-lucene-core"
+             "${MINGW_PACKAGE_PREFIX}-java-lucene-queryparser"
+             "${MINGW_PACKAGE_PREFIX}-java-org-osgi-service-jdbc"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-core"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+source=('https://repo.maven.apache.org/maven2/com/h2database/h2/2.2.224/h2-2.2.224-sources.jar'
+         'https://repo.maven.apache.org/maven2/com/h2database/h2/2.2.224/h2-2.2.224.pom')
+noextract=('h2-2.2.224-sources.jar'
+         'h2-2.2.224.pom')
+sha256sums=('a9ef0da88c18389008358558d401d75c7f49dd142855717d4e28bb4756aaf8d6'
+         '0d4503a01a4c7a62f91ae1a6271339cf806f2a462defe0beff5effd5a611e398')
+_artifacts=('com.h2database:h2:2.2.224')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module com.h2database:h2:2.2.224 upstream/h2 \
+    -r resources/h2 -u h2-2.2.224.pom -- \
+    org.locationtech.jts:jts-core? org.slf4j:slf4j-api? javax.servlet:javax.servlet-api? jakarta.servlet:jakarta.servlet-api? org.osgi:osgi.core? org.osgi:org.osgi.service.jdbc? org.apache.lucene:lucene-core? org.apache.lucene:lucene-queryparser? org.apache.lucene:lucene-analysis-common?
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.locationtech.jts:jts-core --with org.slf4j:slf4j-api --with javax.servlet:javax.servlet-api --with jakarta.servlet:jakarta.servlet-api --with org.osgi:osgi.core --with org.osgi:org.osgi.service.jdbc --with org.apache.lucene:lucene-core --with org.apache.lucene:lucene-queryparser --with org.apache.lucene:lucene-analysis-common com.h2database:h2
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-h2() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.h2database:h2
+  _license h2 2.2.224
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

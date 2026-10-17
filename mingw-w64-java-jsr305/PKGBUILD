@@ -1,0 +1,41 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# com.google.code.findbugs:jsr305 3.0.2 was released from the JSR-305
+# reference implementation repository (ri/ module) mirrored at
+# github.com/amaembo/jsr-305; its pom.xml there carries version 3.0.2.
+
+_realname=jsr305
+pkgbase=mingw-w64-java-jsr305
+pkgname="${MINGW_PACKAGE_PREFIX}-java-jsr305"
+pkgver=3.0.2
+pkgrel=1
+pkgdesc="JSR-305 annotations for software defect detection, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://jcp.org/en/jsr/detail?id=305'
+msys2_repository_url='https://github.com/amaembo/jsr-305'
+license=('spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('jsr-305-d7734b13c61492982784560ed5b4f4bd6cf9bb2c.tar.gz::https://github.com/amaembo/jsr-305/archive/d7734b13c61492982784560ed5b4f4bd6cf9bb2c.tar.gz')
+sha256sums=('8af3a7cf71c365163eb0409491ac7f8c28b0db61da1e35935ad1c6d50afc6df5')
+
+_src=jsr-305-d7734b13c61492982784560ed5b4f4bd6cf9bb2c/ri
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module com.google.code.findbugs:jsr305:${pkgver} src/main/java -u pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # annotations only, no upstream tests
+  jb_loadcheck com.google.code.findbugs:jsr305
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.code.findbugs:jsr305
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jsr305/LICENSE"
+}

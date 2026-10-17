@@ -1,0 +1,125 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-ejml
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-ejml-core"
+         "${MINGW_PACKAGE_PREFIX}-java-ejml-ddense")
+pkgver=0.46.0
+pkgrel=1
+pkgdesc="ejml Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://ejml.org/'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-annotation-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jetbrains-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-mfl-core")
+source=('https://repo.maven.apache.org/maven2/org/ejml/ejml-core/0.46.0/ejml-core-0.46.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/ejml/ejml-core/0.46.0/ejml-core-0.46.0.pom'
+         'https://repo.maven.apache.org/maven2/org/ejml/ejml-ddense/0.46.0/ejml-ddense-0.46.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/ejml/ejml-ddense/0.46.0/ejml-ddense-0.46.0.pom'
+         'https://repo.maven.apache.org/maven2/us/hebi/matlab/mat/mfl-ejml/0.5.15/mfl-ejml-0.5.15-sources.jar'
+         'https://repo.maven.apache.org/maven2/us/hebi/matlab/mat/mfl-ejml/0.5.15/mfl-ejml-0.5.15.pom'
+         '0001-expand-lombok-methods.patch')
+noextract=('ejml-core-0.46.0-sources.jar'
+         'ejml-core-0.46.0.pom'
+         'ejml-ddense-0.46.0-sources.jar'
+         'ejml-ddense-0.46.0.pom')
+noextract+=('mfl-ejml-0.5.15-sources.jar')
+noextract+=('mfl-ejml-0.5.15.pom')
+sha256sums=('0be56c178fdc82552e49ce1fea3455ab2de70baaa75d2daf04fb04b57484e1c8'
+         '23b2781c4dc16049d80e97ed2f2ea701b21214ef725bb187af77fb38f2886814'
+         'd7f0a25f56d084e9bd1f13b693c1b70aa9a314e7127750360b7060a05481c580'
+         'a7a6bc51f8113d6d1761bedf7c83eb44497a38ac84508f4037c1a9bf761b26fe'
+         '02cf6352dd0f087c32497f59a7b14dfb86492d34f07ea3329cca943b5e3f71b6'
+         'a88919472f84fff227392c6d5971cfe19f89e19e93cff4be62f3113f57adffbb'
+         'a477839c8db5123304ac25e949985c8301a8ca473f34d90c1c31c375ca91f02c')
+_artifacts=('us.hebi.matlab.mat:mfl-ejml:0.5.15'
+         'org.ejml:ejml-core:0.46.0'
+         'org.ejml:ejml-ddense:0.46.0')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+  patch -p1 -i "${srcdir}/0001-expand-lombok-methods.patch"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  mkdir -p bootstrap-mat
+  jb_javac -d "$(jb_w bootstrap-mat)" -cp "$(jb_cp org.jetbrains:annotations javax.annotation:javax.annotation-api us.hebi.matlab.mat:mfl-core)" -- upstream/ejml-core upstream/mfl-ejml
+  mkdir -p bootstrap-adapter/us/hebi/matlab/mat
+  cp -r bootstrap-mat/us/hebi/matlab/mat/ejml bootstrap-adapter/us/hebi/matlab/mat/
+  jb_jar bootstrap-mfl.jar bootstrap-adapter
+  jb_pom bootstrap-mfl.pom us.hebi.matlab.mat mfl-ejml 0.5.15 -- us.hebi.matlab.mat:mfl-core
+  jb_stage us.hebi.matlab.mat:mfl-ejml:0.5.15 bootstrap-mfl.pom bootstrap-mfl.jar
+  jb_module org.ejml:ejml-core:0.46.0 upstream/ejml-core \
+    -r resources/ejml-core -u ejml-core-0.46.0.pom -- \
+    org.jetbrains:annotations/provided? javax.annotation:javax.annotation-api/provided? us.hebi.matlab.mat:mfl-core? us.hebi.matlab.mat:mfl-ejml?
+  jb_module org.ejml:ejml-ddense:0.46.0 upstream/ejml-ddense \
+    -r resources/ejml-ddense -u ejml-ddense-0.46.0.pom -- \
+    org.ejml:ejml-core org.jetbrains:annotations/provided? javax.annotation:javax.annotation-api/provided?
+  jb_module us.hebi.matlab.mat:mfl-ejml:0.5.15 upstream/mfl-ejml -r resources/mfl-ejml -u mfl-ejml-0.5.15.pom -- \
+    org.ejml:ejml-core us.hebi.matlab.mat:mfl-core
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.jetbrains:annotations --with javax.annotation:javax.annotation-api --with us.hebi.matlab.mat:mfl-core --with us.hebi.matlab.mat:mfl-ejml org.ejml:ejml-core
+  jb_loadcheck --with org.ejml:ejml-core --with org.jetbrains:annotations --with javax.annotation:javax.annotation-api org.ejml:ejml-ddense
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-ejml-core() {
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-mfl-ejml: MATLAB file IO")
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ejml:ejml-core
+  _license ejml-core 0.46.0
+}
+
+package_java-ejml-ddense() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-ejml-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.ejml:ejml-ddense
+  _license ejml-ddense 0.46.0
+}
+
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

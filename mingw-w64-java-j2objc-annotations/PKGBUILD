@@ -1,0 +1,44 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=j2objc-annotations
+pkgbase=mingw-w64-java-j2objc-annotations
+pkgname="${MINGW_PACKAGE_PREFIX}-java-j2objc-annotations"
+pkgver=3.1
+pkgrel=1
+pkgdesc="J2ObjC annotations, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://developers.google.com/j2objc'
+msys2_repository_url='https://github.com/google/j2objc'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("j2objc-${pkgver}.tar.gz::https://github.com/google/j2objc/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('f19e77e8a83113323f1701139701978ceb579e6f997bcb5638d15faee3e192b4')
+
+_src=j2objc-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # only the annotations module of the J2ObjC tree
+  jb_module com.google.j2objc:j2objc-annotations:${pkgver} annotations/src/main/java \
+    -u annotations/pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # annotations only, no upstream tests in this module
+  jb_loadcheck com.google.j2objc:j2objc-annotations
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.j2objc:j2objc-annotations
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-j2objc-annotations/LICENSE"
+}

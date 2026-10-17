@@ -1,0 +1,30 @@
+Subject: bootstrap.sh, build.sh: treat MSYS2 (MINGW*/MSYS*) like Cygwin
+
+The JDK is a Windows program: class paths must be converted to Windows
+form with cygpath, as is done for Cygwin.
+
+---
+
+--- a/bootstrap.sh
++++ b/bootstrap.sh
+@@ -19,7 +19,7 @@
+ cygwin=false
+ darwin=false
+ case "`uname`" in
+-  CYGWIN*)
++  CYGWIN*|MINGW*|MSYS*)
+     cygwin=true
+     ;;
+   Darwin*)
+
+--- a/build.sh
++++ b/build.sh
+@@ -19,7 +19,7 @@
+ cygwin=false
+ darwin=false
+ case "`uname`" in
+-  CYGWIN*)
++  CYGWIN*|MINGW*|MSYS*)
+     cygwin=true
+     ;;
+   Darwin*)

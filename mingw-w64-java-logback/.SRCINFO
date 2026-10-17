@@ -1,0 +1,36 @@
+pkgbase = mingw-w64-java-logback
+	pkgdesc = logback Java libraries, built from source
+	pkgver = 1.5.32
+	pkgrel = 1
+	url = https://github.com/dbeaver/dbeaver-deps-ce
+	arch = any
+	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-commons-compiler
+	makedepends = mingw-w64-ucrt-x86_64-java-jakarta-activation-api
+	makedepends = mingw-w64-ucrt-x86_64-java-jakarta-mail-api
+	makedepends = mingw-w64-ucrt-x86_64-java-jakarta-servlet-api
+	makedepends = mingw-w64-ucrt-x86_64-java-janino
+	makedepends = mingw-w64-ucrt-x86_64-java-jansi
+	makedepends = mingw-w64-ucrt-x86_64-java-slf4j-api
+	makedepends = mingw-w64-ucrt-x86_64-java-xz
+	noextract = logback-core-1.5.32-sources.jar
+	noextract = logback-core-1.5.32.pom
+	noextract = logback-classic-1.5.32-sources.jar
+	noextract = logback-classic-1.5.32.pom
+	source = https://repo.maven.apache.org/maven2/ch/qos/logback/logback-core/1.5.32/logback-core-1.5.32-sources.jar
+	source = https://repo.maven.apache.org/maven2/ch/qos/logback/logback-core/1.5.32/logback-core-1.5.32.pom
+	source = https://repo.maven.apache.org/maven2/ch/qos/logback/logback-classic/1.5.32/logback-classic-1.5.32-sources.jar
+	source = https://repo.maven.apache.org/maven2/ch/qos/logback/logback-classic/1.5.32/logback-classic-1.5.32.pom
+	sha256sums = a73a40370a2a086a36b626b71f16c529e54e2a75845faf08134b689c607508e1
+	sha256sums = 1f393c4414458569b53b52eb3297bfe861b00066f59d6d2babf227eb65da3fb8
+	sha256sums = be553204e18ce1f628c535bb063a1e611182854d15154382b00afd4968ce591f
+	sha256sums = d23b272e705760f835711076441e6a8a9b12ed0900e1ba618a0cd6bcf7a1626a
+
+pkgname = mingw-w64-ucrt-x86_64-java-logback-core
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+
+pkgname = mingw-w64-ucrt-x86_64-java-logback-classic
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-logback-core
+	depends = mingw-w64-ucrt-x86_64-java-slf4j-api

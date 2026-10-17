@@ -1,0 +1,39 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=commons-codec
+pkgbase=mingw-w64-java-commons-codec
+pkgname="${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+pkgver=1.19.0
+pkgrel=1
+pkgdesc="Apache Commons Codec encoders and decoders, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://commons.apache.org/proper/commons-codec/'
+msys2_repository_url='https://github.com/apache/commons-codec'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/commons/codec/source/commons-codec-${pkgver}-src.tar.gz")
+sha256sums=('ec8e16c8614550a076f3c06b52b6d4c8c9fce2c6da691376bdbd882f3db57449')
+
+_src=commons-codec-${pkgver}-src
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module commons-codec:commons-codec:${pkgver} src/main/java -r src/main/resources -u pom.xml \
+    -m 'Automatic-Module-Name: org.apache.commons.codec'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream tests need JUnit 5 (Jupiter) and mocking libraries, which are not packaged
+  jb_loadcheck commons-codec:commons-codec
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install commons-codec:commons-codec
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-codec/LICENSE.txt"
+  install -Dm644 "${_src}/NOTICE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-commons-codec/NOTICE.txt"
+}

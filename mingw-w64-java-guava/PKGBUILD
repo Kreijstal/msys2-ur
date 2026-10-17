@@ -1,0 +1,104 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Guava and its failureaccess helper come from the same repository; the
+# failureaccess sources at the v33.6.0 tag are those of failureaccess 1.0.3.
+
+_realname=guava
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-guava"
+         "${MINGW_PACKAGE_PREFIX}-java-guava-failureaccess")
+pkgver=33.6.0
+_faver=1.0.3
+pkgrel=1
+pkgdesc="Google core libraries for Java (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/google/guava'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jspecify"
+             "${MINGW_PACKAGE_PREFIX}-java-error-prone-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-j2objc-annotations")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/google/guava/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('bc2480f60c985e1d69998e47e6bd17a347a50093c829dd497cd66cfb7c0461b3')
+
+_src=${_realname}-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # gradle wrapper of the integration tests
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream: -source/-target 1.8 against the current JDK API (VarHandle,
+  # Reference.reachabilityFence are used when available)
+  local JB_TARGET=8
+  jb_module com.google.guava:failureaccess:${_faver} futures/failureaccess/src \
+    -u futures/failureaccess/pom.xml
+  # the annotation artifacts are compile-time only (Maven itself excludes
+  # them from guava's dependencies); they stay in the POM as optional
+  jb_module com.google.guava:guava:${pkgver} guava/src -u guava/pom.xml \
+    -- com.google.guava:failureaccess \
+       'org.jspecify:jspecify?' \
+       'com.google.errorprone:error_prone_annotations?' \
+       'com.google.j2objc:j2objc-annotations?'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # guava-tests need Truth, guava-testlib, JUnit and more; smoke tests only
+  jb_loadcheck com.google.guava:failureaccess com.google.guava:guava
+  local t="${srcdir}/smoke"
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.SettableFuture;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    SettableFuture<String> f = SettableFuture.create();
+    f.setException(new IllegalStateException("x"));
+    if (!f.isDone()) throw new AssertionError();
+    String s = Joiner.on(',').join(ImmutableList.of("a", "b"));
+    if (!s.equals("a,b")) throw new AssertionError(s);
+    System.out.println("guava smoke test ok");
+  }
+}
+JAVA
+  local cp
+  cp=$(jb_cp com.google.guava:guava)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package_java-guava() {
+  pkgdesc="Google core libraries for Java (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-guava-failureaccess")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-jspecify: nullness annotations"
+              "${MINGW_PACKAGE_PREFIX}-java-error-prone-annotations: static analysis annotations"
+              "${MINGW_PACKAGE_PREFIX}-java-j2objc-annotations: J2ObjC annotations")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.guava:guava
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-guava/LICENSE"
+}
+
+package_java-guava-failureaccess() {
+  pkgdesc="Guava InternalFutureFailureAccess and InternalFutures (failureaccess ${_faver}) (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.guava:failureaccess
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-guava-failureaccess/LICENSE"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

@@ -1,0 +1,155 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Apache Ant bootstrapped from source with its own bootstrap.sh (javac only),
+# then built by that bootstrap Ant (build.sh dist-lite).  The bundled JUnit
+# and Hamcrest jars are deleted; the packaged ones are copied in instead.
+# Optional tasks whose libraries are not packaged are skipped by Ant's
+# build.xml itself.
+
+_realname=ant
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-ant"
+         "${MINGW_PACKAGE_PREFIX}-ant-junit")
+pkgver=1.10.15
+pkgrel=1
+pkgdesc="Apache Ant Java build tool (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://ant.apache.org/'
+msys2_repository_url='https://github.com/apache/ant'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-junit4"
+             "${MINGW_PACKAGE_PREFIX}-java-hamcrest-library"
+             "${MINGW_PACKAGE_PREFIX}-java-xz")
+source=("https://archive.apache.org/dist/ant/source/apache-ant-${pkgver}-src.tar.gz"
+        '0001-bootstrap-treat-MSYS2-like-Cygwin.patch')
+sha256sums=('a22b495b9c05482841f919d3440d2b38213ae223e039859b73aabcde444199b1'
+            '65934b365ea264f46a4475f79d89b2c51bab4d7902b42eac83294a593428601c')
+
+_src=apache-ant-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # lib/optional/{junit,hamcrest-*}.jar and signed test fixtures
+  find . -name '*.jar' -print -delete
+  patch -p1 -i "${srcdir}/0001-bootstrap-treat-MSYS2-like-Cygwin.patch"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  export JAVA_HOME=$(ls -d "${MINGW_PREFIX}"/lib/jvm/* | head -1)
+  unset ANT_HOME CLASSPATH
+  # build.xml looks for JUnit in lib/optional (where fetch.xml would put it)
+  local j
+  # (and XZ for Java, for the <xz>/<unxz> tasks of ant-xz)
+  for j in junit:junit org.hamcrest:hamcrest-core org.hamcrest:hamcrest-library org.tukaani:xz; do
+    cp -v "$(jb_jarpath ${j})" lib/optional/
+  done
+  ./bootstrap.sh
+  ./build.sh -Ddist.dir="$(cygpath -m "${srcdir}/dist")" dist-lite
+}
+
+check() {
+  cd "${_src}"
+  export JAVA_HOME=$(ls -d "${MINGW_PREFIX}"/lib/jvm/* | head -1)
+  # run the built Ant on a small build file: javac, jar and a JUnit 4 test
+  local t="${srcdir}/smoke"
+  rm -rf "${t}"
+  mkdir -p "${t}/src/p" "${t}/test/p"
+  echo 'package p; public class Hi { public static String hi() { return "hi"; } }' > "${t}/src/p/Hi.java"
+  cat > "${t}/test/p/HiTest.java" <<'JAVA'
+package p;
+public class HiTest {
+  @org.junit.Test public void hi() { org.junit.Assert.assertEquals("hi", Hi.hi()); }
+}
+JAVA
+  cat > "${t}/build.xml" <<'XML'
+<project name="smoke" default="test">
+  <target name="test">
+    <mkdir dir="classes"/>
+    <javac srcdir="src:test" destdir="classes" includeantruntime="true" release="8"/>
+    <jar destfile="smoke.jar" basedir="classes"/>
+    <junit haltonfailure="true" fork="true">
+      <classpath><pathelement location="classes"/><pathelement path="${junit.cp}"/></classpath>
+      <formatter type="brief" usefile="false"/>
+      <test name="p.HiTest"/>
+    </junit>
+  </target>
+</project>
+XML
+  local junit
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  junit=$(jb_cp junit:junit)
+  ( cd "${t}" && "${srcdir}/dist/bin/ant" -noinput -lib "${junit}" "-Djunit.cp=${junit}" )
+  test -f "${t}/smoke.jar"
+}
+
+package_ant() {
+  pkgdesc="Apache Ant Java build tool, built from source (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-ant-junit: <junit> task"
+              "${MINGW_PACKAGE_PREFIX}-java-xz: <xz> and <unxz> tasks")
+  local home="${pkgdir}${MINGW_PREFIX}/share/ant" f n
+  install -d "${home}/lib" "${home}/bin"
+  cp -r dist/bin/. "${home}/bin/"
+  # optional-task jars without classes (their libraries are not packaged)
+  # and the JUnit ones (ant-junit package; junitlauncher needs JUnit 5)
+  for f in dist/lib/ant-*.jar; do
+    n=$(basename "${f}" .jar)
+    case ${n} in
+      ant-launcher|ant-junit|ant-junit4|ant-testutil|ant-junitlauncher) continue ;;
+    esac
+    unzip -Z1 "${f}" | grep -q '\.class$' || continue
+    install -m644 "${f}" "${home}/lib/"
+  done
+  # launchers on PATH (bin/ant finds ANT_HOME from its own location)
+  install -d "${pkgdir}${MINGW_PREFIX}/bin"
+  printf '#!/usr/bin/env sh\nexec "$(dirname "$0")/../share/ant/bin/ant" "$@"\n' > "${pkgdir}${MINGW_PREFIX}/bin/ant"
+  chmod 755 "${pkgdir}${MINGW_PREFIX}/bin/ant"
+  printf '@"%%~dp0..\\share\\ant\\bin\\ant.bat" %%*\r\n' > "${pkgdir}${MINGW_PREFIX}/bin/ant.bat"
+  # ant.jar and ant-launcher.jar: Maven repository entries, linked into lib/
+  _repo ant ant-launcher
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/ant/LICENSE"
+  install -Dm644 "${_src}/NOTICE" "${pkgdir}${MINGW_PREFIX}/share/licenses/ant/NOTICE"
+}
+
+package_ant-junit() {
+  pkgdesc="Apache Ant JUnit 3/4 tasks, built from source (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-ant" "${MINGW_PACKAGE_PREFIX}-java-junit4")
+  install -d "${pkgdir}${MINGW_PREFIX}/share/ant/lib"
+  _repo ant-junit ant-junit4 ant-testutil
+}
+
+# the jars also go into the system Maven repository, with flattened POMs
+_repo() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local a deps
+  for a in "$@"; do
+    case ${a} in
+      ant) deps=(org.apache.ant:ant-launcher=${pkgver}) ;;
+      ant-launcher) deps=() ;;
+      ant-junit|ant-testutil) deps=(org.apache.ant:ant=${pkgver} junit:junit/provided) ;;
+      ant-junit4) deps=(org.apache.ant:ant=${pkgver} org.apache.ant:ant-junit=${pkgver} junit:junit/provided) ;;
+    esac
+    jb_pom "${srcdir}/${a}.pom" org.apache.ant ${a} ${pkgver} -- "${deps[@]}"
+    jb_stage org.apache.ant:${a}:${pkgver} "${srcdir}/${a}.pom" "${srcdir}/dist/lib/${a}.jar"
+    jb_install org.apache.ant:${a}
+    # one file: share/ant/lib/<a>.jar is a hard link to the repository jar
+    install -d "${pkgdir}${MINGW_PREFIX}/share/ant/lib"
+    ln -f "${pkgdir}${JB_SYSREPO}/org/apache/ant/${a}/${pkgver}/${a}-${pkgver}.jar" \
+      "${pkgdir}${MINGW_PREFIX}/share/ant/lib/${a}.jar"
+  done
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

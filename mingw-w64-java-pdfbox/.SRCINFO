@@ -1,0 +1,44 @@
+pkgbase = mingw-w64-java-pdfbox
+	pkgdesc = pdfbox Java libraries, built from source
+	pkgver = 3.0.3
+	pkgrel = 1
+	url = https://github.com/dbeaver/dbeaver-deps-ce
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-bcpkix-jdk18on
+	makedepends = mingw-w64-ucrt-x86_64-java-bcprov
+	makedepends = mingw-w64-ucrt-x86_64-java-commons-logging
+	noextract = pdfbox-io-3.0.3-sources.jar
+	noextract = pdfbox-io-3.0.3.pom
+	noextract = fontbox-3.0.3-sources.jar
+	noextract = fontbox-3.0.3.pom
+	noextract = pdfbox-3.0.3-sources.jar
+	noextract = pdfbox-3.0.3.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox-io/3.0.3/pdfbox-io-3.0.3-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox-io/3.0.3/pdfbox-io-3.0.3.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/3.0.3/fontbox-3.0.3-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/fontbox/3.0.3/fontbox-3.0.3.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/3.0.3/pdfbox-3.0.3-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/pdfbox/pdfbox/3.0.3/pdfbox-3.0.3.pom
+	sha256sums = 064de22969dc6002458401e3513743f0c7db2ecc1ee8a455f8d6573ea0f98bd5
+	sha256sums = 11701bb8c5a735a4b3140f73ae833a281cea09e3bc3f9f3791b9a97a745e90d4
+	sha256sums = 93e34b6e84ab26ea944943f0bd18f7de977dcb5605af4671082f913aeb36b5bf
+	sha256sums = b2293e503aa77043061150f884683d7f614ccf5163be2d0f052ca29f3c7677e2
+	sha256sums = eb81f296d88843ac94f0ae170a5ab281fc4d07ed71b4784b1ffeef339f23ff22
+	sha256sums = be0895f6b2c20f311d6235c96a6fd2aac102b31904d3f4c39ea5259775b07008
+
+pkgname = mingw-w64-ucrt-x86_64-java-pdfbox-io
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-commons-logging
+
+pkgname = mingw-w64-ucrt-x86_64-java-fontbox
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-pdfbox-io
+	depends = mingw-w64-ucrt-x86_64-java-commons-logging
+
+pkgname = mingw-w64-ucrt-x86_64-java-pdfbox
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-pdfbox-io
+	depends = mingw-w64-ucrt-x86_64-java-fontbox
+	depends = mingw-w64-ucrt-x86_64-java-commons-logging
