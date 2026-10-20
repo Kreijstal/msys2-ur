@@ -1,0 +1,20 @@
+pkgbase = mingw-w64-libretro-genesis-plus-gx
+	pkgdesc = Sega Master System / Game Gear / Mega Drive / Genesis libretro core (Genesis Plus GX) (mingw-w64)
+	pkgver = r2317.1656ce52
+	pkgrel = 1
+	url = https://www.libretro.com/
+	arch = any
+	groups = mingw-w64-ucrt-x86_64-libretro
+	license = custom:non-commercial
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = git
+	makedepends = make
+	depends = mingw-w64-ucrt-x86_64-cc-libs
+	optdepends = mingw-w64-ucrt-x86_64-retroarch: frontend that loads this core
+	optdepends = mingw-w64-ucrt-x86_64-libretro-core-info: required for the core to show up in the menu
+	source = Genesis-Plus-GX::git+https://github.com/libretro/Genesis-Plus-GX.git#commit=1656ce52ea42c15aa179e776eb0d6bcd59d6ae91
+	source = 0001-Makefile-libretro-drop-Wl-version-script-for-PE-COFF.patch
+	sha256sums = 4cd27e8951f937e624f2fb583085b0d4f95796dab07805470a228574a46e8b97
+	sha256sums = 9d141a01d9c407886a496e64a0a78dbceb9a019b883b1a35bf0b3d1fdcd1b10d
+
+pkgname = mingw-w64-ucrt-x86_64-libretro-genesis-plus-gx

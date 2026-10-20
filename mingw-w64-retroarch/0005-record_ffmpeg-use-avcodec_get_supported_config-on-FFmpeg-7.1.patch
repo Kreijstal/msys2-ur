@@ -1,0 +1,137 @@
+From 9dec4186a695754557a959cb77df33cacf1eff67 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 21:42:41 +0200
+Subject: [PATCH 1/2] record_ffmpeg: use avcodec_get_supported_config() on
+ FFmpeg 7.1+
+
+FFmpeg 8 removed AVCodec.sample_fmts and AVCodec.supported_samplerates.
+---
+ record/drivers/record_ffmpeg.c | 55 ++++++++++++++++++++++++++++------
+ 1 file changed, 46 insertions(+), 9 deletions(-)
+
+diff --git a/record/drivers/record_ffmpeg.c b/record/drivers/record_ffmpeg.c
+index cfe0b6acd0..e9e714a1c1 100644
+--- a/record/drivers/record_ffmpeg.c
++++ b/record/drivers/record_ffmpeg.c
+@@ -210,11 +210,45 @@ typedef struct ffmpeg
+ 
+ AVFormatContext *ctx;
+ 
++/* FFmpeg 8 (lavc 62) removed AVCodec.sample_fmts and
++ * AVCodec.supported_samplerates; avcodec_get_supported_config()
++ * replaces them since lavc 61.13.100. */
++static const enum AVSampleFormat *ffmpeg_codec_sample_fmts(
++      const AVCodec *codec)
++{
++#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
++   const void *fmts = NULL;
++   if (avcodec_get_supported_config(NULL, codec,
++            AV_CODEC_CONFIG_SAMPLE_FORMAT, 0, &fmts, NULL) < 0)
++      return NULL;
++   return (const enum AVSampleFormat*)fmts;
++#else
++   return codec->sample_fmts;
++#endif
++}
++
++static const int *ffmpeg_codec_sample_rates(const AVCodec *codec)
++{
++#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
++   const void *rates = NULL;
++   if (avcodec_get_supported_config(NULL, codec,
++            AV_CODEC_CONFIG_SAMPLE_RATE, 0, &rates, NULL) < 0)
++      return NULL;
++   return (const int*)rates;
++#else
++   return codec->supported_samplerates;
++#endif
++}
++
+ static bool ffmpeg_codec_has_sample_format(enum AVSampleFormat fmt,
+       const enum AVSampleFormat *fmts)
+ {
+    unsigned i;
+ 
++   /* NULL means the codec accepts any sample format */
++   if (!fmts)
++      return true;
++
+    for (i = 0; fmts[i] != AV_SAMPLE_FMT_NONE; i++)
+       if (fmt == fmts[i])
+          return true;
+@@ -224,30 +258,32 @@ static bool ffmpeg_codec_has_sample_format(enum AVSampleFormat fmt,
+ static void ffmpeg_audio_resolve_format(struct ff_audio_info *audio,
+       const AVCodec *codec)
+ {
++   const enum AVSampleFormat *sample_fmts = ffmpeg_codec_sample_fmts(codec);
++
+    audio->codec->sample_fmt = AV_SAMPLE_FMT_NONE;
+ 
+-   if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_FLTP, codec->sample_fmts))
++   if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_FLTP, sample_fmts))
+    {
+       audio->codec->sample_fmt = AV_SAMPLE_FMT_FLTP;
+       audio->use_float         = true;
+       audio->is_planar         = true;
+       RARCH_LOG("[FFmpeg] Using sample format FLTP.\n");
+    }
+-   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_FLT, codec->sample_fmts))
++   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_FLT, sample_fmts))
+    {
+       audio->codec->sample_fmt = AV_SAMPLE_FMT_FLT;
+       audio->use_float         = true;
+       audio->is_planar         = false;
+       RARCH_LOG("[FFmpeg] Using sample format FLT.\n");
+    }
+-   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_S16P, codec->sample_fmts))
++   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_S16P, sample_fmts))
+    {
+       audio->codec->sample_fmt = AV_SAMPLE_FMT_S16P;
+       audio->use_float         = false;
+       audio->is_planar         = true;
+       RARCH_LOG("[FFmpeg] Using sample format S16P.\n");
+    }
+-   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_S16, codec->sample_fmts))
++   else if (ffmpeg_codec_has_sample_format(AV_SAMPLE_FMT_S16, sample_fmts))
+    {
+       audio->codec->sample_fmt = AV_SAMPLE_FMT_S16;
+       audio->use_float         = false;
+@@ -262,21 +298,22 @@ static void ffmpeg_audio_resolve_sample_rate(ffmpeg_t *handle,
+ {
+    struct ff_config_param *params  = &handle->config;
+    struct record_params *param     = &handle->params;
++   const int *supported_samplerates = ffmpeg_codec_sample_rates(codec);
+ 
+    /* We'll have to force resampling to some supported sampling rate. */
+-   if (codec->supported_samplerates && !params->sample_rate)
++   if (supported_samplerates && !params->sample_rate)
+    {
+       unsigned i;
+       int input_rate = (int)param->samplerate;
+ 
+       /* Favor closest sampling rate, but always prefer ratio > 1.0. */
+-      int best_rate  = codec->supported_samplerates[0];
++      int best_rate  = supported_samplerates[0];
+       int best_diff  = best_rate - input_rate;
+ 
+-      for (i = 1; codec->supported_samplerates[i]; i++)
++      for (i = 1; supported_samplerates[i]; i++)
+       {
+          bool better_rate = false;
+-         int diff         = codec->supported_samplerates[i] - input_rate;
++         int diff         = supported_samplerates[i] - input_rate;
+ 
+          if (best_diff < 0)
+             better_rate   = (diff > best_diff);
+@@ -285,7 +322,7 @@ static void ffmpeg_audio_resolve_sample_rate(ffmpeg_t *handle,
+ 
+          if (better_rate)
+          {
+-            best_rate = codec->supported_samplerates[i];
++            best_rate = supported_samplerates[i];
+             best_diff = diff;
+          }
+       }
+-- 
+2.56.0
+

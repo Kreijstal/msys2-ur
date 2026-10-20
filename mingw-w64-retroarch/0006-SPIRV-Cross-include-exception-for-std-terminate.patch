@@ -1,0 +1,25 @@
+From 8ec585a1f9a699d2e880c2c44a2667b830c54f3f Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 21:42:42 +0200
+Subject: [PATCH 2/2] SPIRV-Cross: include <exception> for std::terminate
+
+Newer libc++ no longer pulls it in through <string>.
+---
+ deps/SPIRV-Cross/spirv_cross_error_handling.hpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/deps/SPIRV-Cross/spirv_cross_error_handling.hpp b/deps/SPIRV-Cross/spirv_cross_error_handling.hpp
+index e96ebb9a79..61ba2a9a4a 100644
+--- a/deps/SPIRV-Cross/spirv_cross_error_handling.hpp
++++ b/deps/SPIRV-Cross/spirv_cross_error_handling.hpp
+@@ -27,6 +27,7 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string>
++#include <exception>
+ #ifndef SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS
+ #include <stdexcept>
+ #endif
+-- 
+2.56.0
+
