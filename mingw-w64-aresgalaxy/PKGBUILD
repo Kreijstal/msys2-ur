@@ -20,7 +20,7 @@ _realname=aresgalaxy
 pkgbase="mingw-w64-${_realname}"
 pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
 pkgver=2.4.6.3072
-pkgrel=1
+pkgrel=2
 _commit=4e52d48624e503a397c34e331ae20d90838a34bd   # fpc-win64 branch
 _datarel=AresRegular246_082217                    # upstream release the port is based on
 pkgdesc="Ares Galaxy peer-to-peer file-sharing client (Free Pascal/LCL build) (mingw-w64)"
@@ -41,11 +41,15 @@ options=('!strip' '!debug')   # FPC-built PEs; debug info is left out at link ti
 source=("${_realname}-${_commit}.tar.gz::https://codeload.github.com/Kreijstal/AresGalaxy/tar.gz/${_commit}"
         "https://downloads.sourceforge.net/project/aresgalaxy/aresgalaxy/${_datarel}/aresregular246_installer.exe"
         "0001-uflvplayer-do-not-embed-flash-swf-under-fpc.patch"
+        "0002-synsock-use-the-win64-winsock-structure-layouts.patch"
+        "0003-dht-speak-the-ares-2.4-obfuscated-packet-format.patch"
         "aresgalaxy-launcher.pas")
 noextract=("aresregular246_installer.exe")
 sha256sums=('cd20fce85abc96d3471872b329c39e943e4c15506b1d1f6244afe67cff47fdc5'
             '54a88fdb30b8685c94637221af3e910fe1ab81200b06ffa4df3e95ae55212513'
             'c0cd39a995725c5b7a3b28dfb83887327a6da1cd27f7d117457850ecb8365796'
+            '632a5201d7c68a5e76347f2ba50847d139d5652813b19e2533b2f3e2f3dd5a6a'
+            '580b8236a2b100430478c687aab8e7d365a53f149bdcebe3faddd548d1fd2823'
             '9c715ec4b5ec5bcf0427d3ca0df81526ba396fe339a4326a7788d0f1f182fefa')
 
 prepare() {
@@ -56,6 +60,12 @@ prepare() {
   # them so nothing prebuilt can be linked in.
   rm -f ./*.obj flvplayer.RES
   patch -Np1 -i "${srcdir}/0001-uflvplayer-do-not-embed-flash-swf-under-fpc.patch"
+  # Win64 winsock ABI: fd_set/WSADATA/hostent layouts (select() always failed,
+  # so no socket was ever reported readable -- the DHT never read a packet).
+  patch -Np1 -i "${srcdir}/0002-synsock-use-the-win64-winsock-structure-layouts.patch"
+  # The 2.4.6 binary's DHT wire format ($98 obfuscation), absent from the
+  # published sources; 2.4.x peers drop plain DHT packets since 2015-11-15.
+  patch -Np1 -i "${srcdir}/0003-dht-speak-the-ares-2.4-obfuscated-packet-format.patch"
 
   # Runtime data from the installer (NSIS): Data\ and Lang\ only.
   cd "${srcdir}"

@@ -1,0 +1,381 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] DHT: speak the Ares 2.4.x obfuscated packet format
+
+The released Ares 2.4.6 binary does not send the plain $E9/$EA DHT
+packets built by the published dhtsocket.pas: it wraps every one of them
+in an obfuscation layer (header byte $98, SHA-1 of the body, an
+XTEA-like block cipher keyed from that hash, a CRC-32 and a byte stream
+cipher) that is missing from the source release.  Since 15 Nov 2015
+(EncodeDate(2015,11,15) < Now in the DHT thread constructor at 0x0058a25a)
+the binary also drops every DHT packet that is not obfuscated, so a build
+from the published sources is ignored by every Ares peer on the network.
+
+Recovered from the 2.4.6.3072 binary (send 0x0058996c, receive 0x0058b200)
+and checked against packets captured from two copies of it talking to each
+other: dhtobfuscate.pas decodes them, and they decode ours.  DHT_send now
+always obfuscates; udp_Receive unwraps $98 packets before dispatching them
+(plain packets are still accepted).
+
+---
+diff --git a/DHT/dhtobfuscate.pas b/DHT/dhtobfuscate.pas
+new file mode 100644
+index 0000000..e077496
+--- /dev/null
++++ b/DHT/dhtobfuscate.pas
+@@ -0,0 +1,298 @@
++{
++ this file is part of Ares
++ Aresgalaxy ( http://aresgalaxy.sourceforge.net )
++
++  This program is free software; you can redistribute it and/or
++  modify it under the terms of the GNU General Public License
++  as published by the Free Software Foundation; either
++  version 2 of the License, or (at your option) any later version.
++
++  This program is distributed in the hope that it will be useful,
++  but WITHOUT ANY WARRANTY; without even the implied warranty of
++  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++  GNU General Public License for more details.
++
++  You should have received a copy of the GNU General Public License
++  along with this program; if not, write to the Free Software
++  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
++ }
++
++{
++Description:
++DHT packet obfuscation used by Ares 2.4.x on the wire.
++
++The released 2.4.6 binary wraps every Ares DHT UDP packet (the $E9/$EA
++packets built by dhtsocket) in an obfuscation layer that is missing from the
++published sources; since 15 Nov 2015 it also drops any DHT packet that does
++not carry it.  The layout, recovered from the 2.4.6.3072 binary
++(send: 0x0058996C, receive: 0x0058B200):
++
++  body   := u16 len(plain) + plain + random pad + u32 crc
++            (pad makes len(plain)+6 a multiple of 16; crc is CRC-32 with the
++             $EDB88320 table, init $FFFFFFFF, no final xor, over everything
++             before it)
++  hash   := SHA-1(body)
++  key    := dwords of hash at offsets 0,4,8,12 (k1) and 16,2,10,6 (k2)
++  body is enciphered in 16 byte blocks with an XTEA-like 4 word cipher
++  (rounds = hash[5] mod 10 + 5), then
++  packet := $98 + stream(hash + body)
++  where stream XORs each byte with key shr 8 and updates
++  key := ((key + cipherbyte) * $D413 + $46CD) and $FFFF, key starting at $3E00.
++}
++
++unit dhtobfuscate;
++
++interface
++
++const
++  OP_DHT_OBFUSCATED_HEADER = $98;
++  DHT_OBFUSCATION_OVERHEAD = 1+20+2+15+4; // worst case growth of a packet
++
++// Wrap the plain packet (header byte included) into Dest; returns the length
++// written, or 0 when DestSize is too small.
++function DHT_Obfuscate(const Plain; PlainLen: Integer; var Dest; DestSize: Integer): Integer;
++
++// Unwrap an obfuscated packet in place; on success Buf holds the plain packet
++// and Len its length.
++function DHT_Deobfuscate(var Buf; var Len: Integer): Boolean;
++
++implementation
++
++uses
++  SysUtils, securehash;
++
++type
++  TObfBytes = array [0..MaxInt div 2] of Byte;
++  PObfBytes = ^TObfBytes;
++  TObfBlock = array [0..3] of Cardinal;
++  TObfKey = record
++    k1, k2: TObfBlock;
++  end;
++
++var
++  crc_table: array [0..255] of Cardinal;
++
++procedure init_crc_table;
++var
++  i, j: Integer;
++  c: Cardinal;
++begin
++  for i := 0 to 255 do
++  begin
++    c := i;
++    for j := 0 to 7 do
++      if (c and 1)<>0 then c := (c shr 1) xor $EDB88320
++       else c := c shr 1;
++    crc_table[i] := c;
++  end;
++end;
++
++function obf_crc(p: PObfBytes; len: Integer): Cardinal;
++var
++  i: Integer;
++begin
++  Result := $FFFFFFFF;
++  for i := 0 to len-1 do
++    Result := crc_table[(p^[i] xor Result) and $FF] xor (Result shr 8);
++end;
++
++function rotl(x: Cardinal; n: Cardinal): Cardinal;
++begin
++  n := n and 31;
++  if n=0 then Result := x
++   else Result := (x shl n) or (x shr (32-n));
++end;
++
++function get_dword(p: PObfBytes; offset: Integer): Cardinal;
++begin
++  Move(p^[offset], Result, 4);
++end;
++
++procedure make_key(const hash: string; var key: TObfKey);
++var
++  h: PObfBytes;
++begin
++  h := PObfBytes(@hash[1]);
++  key.k1[0] := get_dword(h,0);
++  key.k1[1] := get_dword(h,4);
++  key.k1[2] := get_dword(h,8);
++  key.k1[3] := get_dword(h,12);
++  key.k2[0] := get_dword(h,16);
++  key.k2[1] := get_dword(h,2);
++  key.k2[2] := get_dword(h,10);
++  key.k2[3] := get_dword(h,6);
++end;
++
++{$Q-}{$R-}
++procedure encipher_block(p: PObfBytes; rounds: Integer; const key: TObfKey);
++var
++  b: TObfBlock;
++  s, v1, v2, u5, u6, l10, l14, i3, i4: Cardinal;
++begin
++  Move(p^[0], b, 16);
++  s := 0;
++  v2 := b[1]+key.k1[1];
++  v1 := b[3]+key.k1[3];
++  l14 := b[2]+key.k1[2];
++  l10 := b[0]+key.k1[0];
++  u5 := 0;
++  u6 := 0;
++  while rounds>0 do
++  begin
++    u6 := v1;
++    u5 := v2;
++    i3 := rotl(key.k2[s and 3], u5);
++    i4 := rotl(key.k1[s and 3], u5 shr 27);
++    v1 := l10 + ((i3 + (u5 shl 4)) xor (s + u6) xor (i4 + (u5 shr 5)));
++    s := s + $9E3779B9;
++    i3 := rotl(key.k2[(s shr 11) and 3], u6);
++    i4 := rotl(key.k1[(s shr 11) and 3], u6 shr 27);
++    v2 := l14 + ((i3 + (u6 shl 4)) xor (s + u5) xor (i4 + (u6 shr 5)));
++    l14 := u6;
++    l10 := u5;
++    dec(rounds);
++  end;
++  b[0] := key.k2[0] xor u5;
++  b[1] := v2 xor key.k2[1];
++  b[2] := key.k2[2] xor u6;
++  b[3] := v1 xor key.k2[3];
++  Move(b, p^[0], 16);
++end;
++
++procedure decipher_block(p: PObfBytes; rounds: Integer; const key: TObfKey);
++var
++  b: TObfBlock;
++  s, v1, v2, v5, v6, l10, l14, i3, i4: Cardinal;
++begin
++  Move(p^[0], b, 16);
++  s := Cardinal(rounds) * $9E3779B9;
++  v5 := b[1] xor key.k2[1];
++  v6 := b[3] xor key.k2[3];
++  v1 := b[2] xor key.k2[2];
++  v2 := b[0] xor key.k2[0];
++  l10 := v2;
++  l14 := v1;
++  while rounds>0 do
++  begin
++    l10 := v2;
++    l14 := v1;
++    i3 := rotl(key.k2[(s shr 11) and 3], l14);
++    i4 := rotl(key.k1[(s shr 11) and 3], l14 shr 27);
++    v1 := v5 - ((i3 + (l14 shl 4)) xor (s + l10) xor (i4 + (l14 shr 5)));
++    s := s + $61C88647;
++    i3 := rotl(key.k2[s and 3], l10);
++    i4 := rotl(key.k1[s and 3], l10 shr 27);
++    v2 := v6 - ((i3 + (l10 shl 4)) xor (s + l14) xor (i4 + (l10 shr 5)));
++    v5 := l10;
++    v6 := l14;
++    dec(rounds);
++  end;
++  b[0] := v2 - key.k1[0];
++  b[1] := l10 - key.k1[1];
++  b[2] := v1 - key.k1[2];
++  b[3] := l14 - key.k1[3];
++  Move(b, p^[0], 16);
++end;
++
++function DHT_Obfuscate(const Plain; PlainLen: Integer; var Dest; DestSize: Integer): Integer;
++var
++  body: string;
++  hash: string;
++  key: TObfKey;
++  pad, bodyLen, i, rounds: Integer;
++  crc, skey: Cardinal;
++  len16: Word;
++  d: PObfBytes;
++begin
++  Result := 0;
++  if (PlainLen<1) or (PlainLen>$FFFF) then exit;
++  pad := (PlainLen+6) mod 16;
++  if pad<>0 then pad := 16-pad;
++  bodyLen := 2+PlainLen+pad+4;
++  if 1+20+bodyLen>DestSize then exit;
++
++  SetLength(body, bodyLen);
++  len16 := PlainLen;
++  Move(len16, body[1], 2);
++  Move(Plain, body[3], PlainLen);
++  for i := 0 to pad-1 do
++    body[3+PlainLen+i] := Chr(Random(255));
++  crc := obf_crc(PObfBytes(@body[1]), bodyLen-4);
++  Move(crc, body[bodyLen-3], 4);
++
++  hash := sha1str(body);
++  make_key(hash, key);
++  rounds := (Ord(hash[6]) mod 10)+5;
++  i := 0;
++  while i+16<=bodyLen do
++  begin
++    encipher_block(PObfBytes(@body[1+i]), rounds, key);
++    inc(i,16);
++  end;
++
++  d := PObfBytes(@Dest);
++  d^[0] := OP_DHT_OBFUSCATED_HEADER;
++  Move(hash[1], d^[1], 20);
++  Move(body[1], d^[21], bodyLen);
++  Result := 1+20+bodyLen;
++
++  skey := $3E00;
++  for i := 1 to Result-1 do
++  begin
++    d^[i] := d^[i] xor Byte(skey shr 8);
++    skey := (((skey + d^[i]) and $FFFF) * $D413 + $46CD) and $FFFF;
++  end;
++end;
++
++function DHT_Deobfuscate(var Buf; var Len: Integer): Boolean;
++var
++  data, hash, body: string;
++  key: TObfKey;
++  p: PObfBytes;
++  i, dataLen, bodyLen, rounds: Integer;
++  skey, crc: Cardinal;
++  c: Byte;
++  plainLen: Word;
++begin
++  Result := False;
++  p := PObfBytes(@Buf);
++  if Len<$1C then exit;
++  if p^[0]<>OP_DHT_OBFUSCATED_HEADER then exit;
++
++  dataLen := Len-1;
++  SetLength(data, dataLen);
++  skey := $3E00;
++  for i := 0 to dataLen-1 do
++  begin
++    c := p^[1+i];
++    data[1+i] := Chr(c xor Byte(skey shr 8));
++    skey := (((skey + c) and $FFFF) * $D413 + $46CD) and $FFFF;
++  end;
++
++  hash := Copy(data, 1, 20);
++  make_key(hash, key);
++  rounds := (Ord(hash[6]) mod 10)+5;
++  bodyLen := dataLen-20;
++  body := Copy(data, 21, bodyLen);
++  i := 0;
++  while i+16<=bodyLen do
++  begin
++    decipher_block(PObfBytes(@body[1+i]), rounds, key);
++    inc(i,16);
++  end;
++
++  if sha1str(body)<>hash then exit;
++  crc := obf_crc(PObfBytes(@body[1]), bodyLen-4);
++  if not CompareMem(@crc, @body[bodyLen-3], 4) then exit;
++  Move(body[1], plainLen, 2);
++  if Integer(plainLen)>bodyLen-6 then exit;
++
++  Move(body[3], p^[0], plainLen);
++  Len := plainLen;
++  Result := True;
++end;
++
++initialization
++  init_crc_table;
++
++end.
+diff --git a/DHT/dhtsocket.pas b/DHT/dhtsocket.pas
+index f1257ac..f9dd424 100644
+--- a/DHT/dhtsocket.pas
++++ b/DHT/dhtsocket.pas
+@@ -43,7 +43,7 @@ procedure DHT_flush_outpackets;
+ implementation
+ 
+ uses
+-  vars_global, zlib, thread_dht, helper_ipfunc;
++  vars_global, zlib, thread_dht, helper_ipfunc, dhtobfuscate;
+ 
+ 
+ procedure DHT_SendBackPublishHashAck(ip: Cardinal; port: Word; load: Byte);
+@@ -88,6 +88,8 @@ var
+  buff: Pointer;
+  outsize: Integer;
+  outpacket:precord_dht_outpacket;
++ obfuscated: array [0..SizeOf(DHT_buffer)+DHT_OBFUSCATION_OVERHEAD-1] of Byte;
++ obfuscated_len: Integer;
+ begin
+   if DHT_len_tosend<1 then exit;
+   if DHT_outpackets.count>2000 then exit;
+@@ -113,7 +115,10 @@ begin
+    DHT_RemoteSin.sin_family := AF_INET;
+    DHT_RemoteSin.sin_port := synsock.htons(DestinationPort);
+    DHT_RemoteSin.sin_addr.s_addr := DestinationIP;
+-   synsock.SendTo(DHT_socket,DHT_buffer,DHT_len_tosend,0,@DHT_RemoteSin,SizeOf(DHT_RemoteSin));
++   // Ares 2.4.x peers only accept obfuscated DHT packets (see dhtobfuscate)
++   obfuscated_len := DHT_Obfuscate(DHT_buffer,DHT_len_tosend,obfuscated,SizeOf(obfuscated));
++   if obfuscated_len>0 then
++    synsock.SendTo(DHT_socket,obfuscated,obfuscated_len,0,@DHT_RemoteSin,SizeOf(DHT_RemoteSin));
+    exit;
+  // end;
+ 
+diff --git a/DHT/thread_dht.pas b/DHT/thread_dht.pas
+index 269ee23..286e32f 100644
+--- a/DHT/thread_dht.pas
++++ b/DHT/thread_dht.pas
+@@ -172,7 +172,7 @@ uses
+  helper_strings,securehash,helper_stringfinal,dhtkeywords,
+  helper_share_misc,helper_search_gui,helper_visual_headers,mysupernodes,
+  ufrmmain,comettrees,helper_download_misc,helper_diskio,helper_fakes,
+- helper_crypt,helper_urls;
++ helper_crypt,helper_urls,dhtobfuscate;
+ 
+ 
+ procedure tthread_dht.fill_random_id; //synch
+@@ -533,6 +533,10 @@ begin
+                                  Len);
+ 
+  if DHT_len_recvd<2 then exit;
++ if DHT_buffer[0]=OP_DHT_OBFUSCATED_HEADER then begin // Ares 2.4.x wire format
++  if not DHT_Deobfuscate(DHT_buffer,DHT_len_recvd) then exit;
++  if DHT_len_recvd<2 then exit;
++ end;
+  if (DHT_buffer[0]=OP_MDHT_HEADER) or
+     (DHT_buffer[0]=OP_MDHT_ENCRYPTED_HEADER) or
+     (DHT_buffer[0]=OP_MDHT_UKNOWN) then exit;
