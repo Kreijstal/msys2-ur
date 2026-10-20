@@ -1,0 +1,144 @@
+From 18eb94d747281f8ca3861c78396b4f82597b96ac Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 04:32:13 +0200
+Subject: [PATCH] win32: optionally take the prefix from the executable
+ location
+
+With NGX_PREFIX_FROM_EXE and an empty --prefix, the prefix is the parent
+of the directory holding nginx.exe, so a package installed as
+<root>/bin/nginx.exe finds <root>/etc/nginx/nginx.conf wherever the
+root is.
+---
+ src/core/nginx.c         |  9 +++++++
+ src/core/ngx_log.c       |  5 ++++
+ src/os/win32/ngx_files.c | 57 ++++++++++++++++++++++++++++++++++++++++
+ src/os/win32/ngx_files.h |  5 ++++
+ 4 files changed, 76 insertions(+)
+
+diff --git a/src/core/nginx.c b/src/core/nginx.c
+index 0deb27b..570a7dd 100644
+--- a/src/core/nginx.c
++++ b/src/core/nginx.c
+@@ -1020,10 +1020,19 @@ ngx_process_options(ngx_cycle_t *cycle)
+             return NGX_ERROR;
+         }
+ 
++#if (NGX_PREFIX_FROM_EXE)
++        /* the parent of the directory holding nginx.exe */
++        if (ngx_get_exe_prefix(p, NGX_MAX_PATH) == 0) {
++            ngx_log_stderr(ngx_errno, "[emerg]: " ngx_get_exe_prefix_n
++                           " failed");
++            return NGX_ERROR;
++        }
++#else
+         if (ngx_getcwd(p, NGX_MAX_PATH) == 0) {
+             ngx_log_stderr(ngx_errno, "[emerg]: " ngx_getcwd_n " failed");
+             return NGX_ERROR;
+         }
++#endif
+ 
+         len = ngx_strlen(p);
+ 
+diff --git a/src/core/ngx_log.c b/src/core/ngx_log.c
+index 0c09426..105609c 100644
+--- a/src/core/ngx_log.c
++++ b/src/core/ngx_log.c
+@@ -350,6 +350,11 @@ ngx_log_init(u_char *prefix, u_char *error_log)
+ #ifdef NGX_PREFIX
+             prefix = (u_char *) NGX_PREFIX;
+             plen = ngx_strlen(prefix);
++#elif (NGX_PREFIX_FROM_EXE)
++            static u_char  exe_prefix[NGX_MAX_PATH];
++
++            plen = ngx_get_exe_prefix(exe_prefix, NGX_MAX_PATH);
++            prefix = exe_prefix;
+ #else
+             plen = 0;
+ #endif
+diff --git a/src/os/win32/ngx_files.c b/src/os/win32/ngx_files.c
+index 90644ad..61de7e1 100644
+--- a/src/os/win32/ngx_files.c
++++ b/src/os/win32/ngx_files.c
+@@ -597,6 +597,63 @@ ngx_getcwd(u_char *buf, size_t size)
+ }
+ 
+ 
++#if (NGX_PREFIX_FROM_EXE)
++
++size_t
++ngx_get_exe_prefix(u_char *buf, size_t size)
++{
++    u_char   *p;
++    size_t    n, i;
++    u_short   utf16[NGX_MAX_PATH];
++
++    n = GetModuleFileNameW(NULL, utf16, NGX_MAX_PATH);
++
++    if (n == 0) {
++        return 0;
++    }
++
++    if (n >= NGX_MAX_PATH) {
++        ngx_set_errno(ERROR_INSUFFICIENT_BUFFER);
++        return 0;
++    }
++
++    /* strip the executable name and the directory holding it */
++
++    for (i = 0; i < 2; i++) {
++        while (n && utf16[n - 1] != '\\' && utf16[n - 1] != '/') {
++            n--;
++        }
++
++        if (n) {
++            n--;
++        }
++    }
++
++    if (n == 0) {
++        ngx_set_errno(ERROR_BAD_PATHNAME);
++        return 0;
++    }
++
++    utf16[n] = 0;
++
++    p = ngx_utf16_to_utf8(buf, utf16, &size, NULL);
++
++    if (p == NULL) {
++        return 0;
++    }
++
++    if (p != buf) {
++        ngx_free(p);
++        ngx_set_errno(ERROR_INSUFFICIENT_BUFFER);
++        return 0;
++    }
++
++    return size - 1;
++}
++
++#endif
++
++
+ ngx_int_t
+ ngx_open_dir(ngx_str_t *name, ngx_dir_t *dir)
+ {
+diff --git a/src/os/win32/ngx_files.h b/src/os/win32/ngx_files.h
+index 78ba13a..f749f92 100644
+--- a/src/os/win32/ngx_files.h
++++ b/src/os/win32/ngx_files.h
+@@ -176,6 +176,11 @@ u_char *ngx_realpath(u_char *path, u_char *resolved);
+ size_t ngx_getcwd(u_char *buf, size_t size);
+ #define ngx_getcwd_n                "GetCurrentDirectory()"
+ 
++#if (NGX_PREFIX_FROM_EXE)
++size_t ngx_get_exe_prefix(u_char *buf, size_t size);
++#define ngx_get_exe_prefix_n        "GetModuleFileName()"
++#endif
++
+ 
+ #define ngx_path_separator(c)       ((c) == '/' || (c) == '\\')
+ 
+-- 
+2.56.0
+
