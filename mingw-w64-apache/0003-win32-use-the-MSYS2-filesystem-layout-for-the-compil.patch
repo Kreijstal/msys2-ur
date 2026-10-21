@@ -1,0 +1,47 @@
+From 6eed81f1646d553b5acaa6f387ea73e58f9dcca7 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 22:39:47 +0200
+Subject: [PATCH 3/6] win32: use the MSYS2 filesystem layout for the
+ compiled-in defaults
+
+httpd on Windows takes ServerRoot from the location of httpd.exe (its
+parent, or the parent of bin\), so the compiled-in defaults only need
+to be correct relative to it.  Point them at the layout used by the
+MSYS2 package: etc/httpd/httpd.conf, etc/httpd/mime.types,
+var/log/httpd and var/run/httpd below the MinGW prefix.
+---
+ os/win32/win32_config_layout.h | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/os/win32/win32_config_layout.h b/os/win32/win32_config_layout.h
+index 5f770a2..7a22eef 100644
+--- a/os/win32/win32_config_layout.h
++++ b/os/win32/win32_config_layout.h
+@@ -23,9 +23,23 @@
+ #ifndef AP_CONFIG_LAYOUT_H
+ #define AP_CONFIG_LAYOUT_H
+ 
++/* MSYS2 layout: ServerRoot is the MinGW prefix (the parent of bin\httpd.exe,
++ * see mpm_winnt's rewrite_args), and everything else lives below it in the
++ * usual Unix-style directories.  All of these are relative to ServerRoot.
++ */
++#ifndef SERVER_CONFIG_FILE
++#define SERVER_CONFIG_FILE "etc/httpd/httpd.conf"
++#endif
++#ifndef AP_TYPES_CONFIG_FILE
++#define AP_TYPES_CONFIG_FILE "etc/httpd/mime.types"
++#endif
++#ifndef DEFAULT_ERRORLOG
++#define DEFAULT_ERRORLOG "var/log/httpd/error_log"
++#endif
++
+ /* Check for definition of DEFAULT_REL_RUNTIMEDIR */
+ #ifndef DEFAULT_REL_RUNTIMEDIR
+-#define DEFAULT_REL_RUNTIMEDIR "logs"
++#define DEFAULT_REL_RUNTIMEDIR "var/run/httpd"
+ #endif
+ 
+ #endif /* AP_CONFIG_LAYOUT_H */
+-- 
+2.55.0
+

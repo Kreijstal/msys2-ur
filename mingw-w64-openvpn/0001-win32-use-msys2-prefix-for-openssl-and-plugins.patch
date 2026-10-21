@@ -1,0 +1,96 @@
+--- a/src/openvpn/win32.c
++++ b/src/openvpn/win32.c
+@@ -1504,32 +1504,48 @@
+     return status == ERROR_SUCCESS;
+ }
+ 
+-static void
+-set_openssl_env_vars(void)
++/*
++ * MSYS2: the installation prefix is the parent of the directory holding
++ * openvpn.exe (i.e. ${MINGW_PREFIX} wherever MSYS2 is installed).  Using
++ * it instead of the OpenVPN installer's registry key keeps a side-by-side
++ * official OpenVPN install from injecting its OpenSSL config/modules.
++ */
++static bool
++get_msys2_prefix(WCHAR *prefix, DWORD size)
+ {
+-    const WCHAR *ssl_fallback_dir = L"C:\\Windows\\System32";
+-
+-    WCHAR install_path[MAX_PATH] = { 0 };
+-    if (!get_openvpn_reg_value(NULL, install_path, _countof(install_path)))
++    DWORD len = GetModuleFileNameW(NULL, prefix, size);
++    if (len == 0 || len >= size)
+     {
+-        /* if we cannot find installation path from the registry,
+-         * use Windows directory as a fallback
+-         */
+-        swprintf(install_path, _countof(install_path), L"%ls", ssl_fallback_dir);
++        return false;
+     }
++    for (int i = 0; i < 2; ++i)
++    {
++        WCHAR *sep = wcsrchr(prefix, L'\\');
++        if (!sep)
++        {
++            return false;
++        }
++        *sep = L'\0';
++    }
++    return wcslen(prefix) > 0;
++}
+ 
+-    if ((install_path[wcslen(install_path) - 1]) == L'\\')
++static void
++set_openssl_env_vars(void)
++{
++    WCHAR prefix[MAX_PATH] = { 0 };
++    if (!get_msys2_prefix(prefix, _countof(prefix)))
+     {
+-        install_path[wcslen(install_path) - 1] = L'\0';
++        return;
+     }
+ 
+     static struct
+     {
+         WCHAR *name;
+         WCHAR *value;
+-    } ossl_env[] = { { L"OPENSSL_CONF", L"openssl.cnf" },
+-                     { L"OPENSSL_ENGINES", L"engines" },
+-                     { L"OPENSSL_MODULES", L"modules" } };
++    } ossl_env[] = { { L"OPENSSL_CONF", L"etc\\ssl\\openssl.cnf" },
++                     { L"OPENSSL_ENGINES", L"lib\\engines-3" },
++                     { L"OPENSSL_MODULES", L"lib\\ossl-modules" } };
+ 
+     for (size_t i = 0; i < SIZE(ossl_env); ++i)
+     {
+@@ -1539,7 +1555,7 @@
+         if (size == 0)
+         {
+             WCHAR val[MAX_PATH] = { 0 };
+-            swprintf(val, _countof(val), L"%ls\\ssl\\%ls", install_path, ossl_env[i].value);
++            swprintf(val, _countof(val), L"%ls\\%ls", prefix, ossl_env[i].value);
+             _wputenv_s(ossl_env[i].name, val);
+         }
+     }
+@@ -1609,6 +1625,20 @@
+         msg(M_WARN, "Installation path could not be determined.");
+     }
+ 
++    /* MSYS2: also trust ${MINGW_PREFIX}\lib\openvpn\plugins */
++    WCHAR msys2_plugin_dir[MAX_PATH] = { 0 };
++    if (get_msys2_prefix(msys2_plugin_dir, _countof(msys2_plugin_dir))
++        && wcslen(msys2_plugin_dir) + 20 < _countof(msys2_plugin_dir))
++    {
++        WCHAR normalized[MAX_PATH] = { 0 };
++        wcscat(msys2_plugin_dir, L"\\lib\\openvpn\\plugins");
++        if (GetFullPathNameW(msys2_plugin_dir, MAX_PATH, normalized, NULL)
++            && win_path_in_dir(plugin_path, normalized))
++        {
++            return true;
++        }
++    }
++
+     /* Get the system directory */
+     WCHAR system_dir[MAX_PATH] = { 0 };
+     if (GetSystemDirectoryW(system_dir, _countof(system_dir)) == 0)

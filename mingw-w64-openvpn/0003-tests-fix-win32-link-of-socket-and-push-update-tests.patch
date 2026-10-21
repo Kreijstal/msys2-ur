@@ -1,0 +1,18 @@
+--- a/tests/unit_tests/openvpn/Makefile.am
++++ b/tests/unit_tests/openvpn/Makefile.am
+@@ -390,6 +390,7 @@
+ 	mock_msg.c \
+ 	mock_get_random.c \
+ 	$(top_srcdir)/src/openvpn/buffer.c \
++	$(top_srcdir)/src/openvpn/win32-util.c \
+ 	$(top_srcdir)/src/openvpn/platform.c \
+ 	$(top_srcdir)/src/openvpn/options_util.c \
+ 	$(top_srcdir)/src/openvpn/otime.c \
+@@ -403,6 +404,7 @@
+ 
+ socket_testdriver_SOURCES = test_socket.c \
+ 	mock_msg.c test_common.h  \
++	mock_win32_execve.c \
+ 	mock_get_random.c \
+ 	mock_management.c \
+ 	$(top_srcdir)/src/openvpn/buffer.c \

@@ -1,0 +1,62 @@
+From d1cf0ee66212eb36420a4e7d1311b72663b00be5 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 23:21:06 +0200
+Subject: [PATCH 5/6] winnt: let apr-util find its driver DLLs in
+ lib\apr-util-1
+
+MSYS2's apr-util loads its crypto, dbd, dbm and ldap drivers
+(apr_crypto_openssl-1.dll and friends) with apu_dso_load(), which tries
+the bare file name first and then the compiled-in APU_DSO_LIBDIR.  The
+drivers live in <prefix>\lib\apr-util-1, which is not on the DLL search
+path, and APU_DSO_LIBDIR is an MSYS-style path (/ucrt64/lib/apr-util-1)
+that native Windows resolves against the root of the current drive.  So
+mod_session_crypto, mod_dbd, the DBM modules and mod_ldap all fail to
+load their drivers.
+
+Add <prefix>\lib\apr-util-1, found relative to bin\httpd.exe, to the
+DLL search path with SetDllDirectoryW() early in winnt_rewrite_args(),
+which runs in both the parent and the child process.
+---
+ server/mpm/winnt/mpm_winnt.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/server/mpm/winnt/mpm_winnt.c b/server/mpm/winnt/mpm_winnt.c
+index 1b8962e..db13992 100644
+--- a/server/mpm/winnt/mpm_winnt.c
++++ b/server/mpm/winnt/mpm_winnt.c
+@@ -1028,6 +1028,32 @@ static void winnt_rewrite_args(process_rec *process)
+ 
+     pconf = process->pconf;
+ 
++#ifdef __MINGW32__
++    /* MSYS2's apr-util loads its crypto, dbd, dbm and ldap drivers
++     * (apr_crypto_openssl-1.dll etc.) by bare file name, but installs them
++     * in <prefix>\lib\apr-util-1, which is not on the DLL search path; its
++     * compiled-in fallback is an MSYS-style path that native Windows cannot
++     * resolve.  Add <prefix>\lib\apr-util-1 (relative to bin\httpd.exe)
++     * to the DLL search path, in the parent and in the child process.
++     */
++    {
++        WCHAR dlldir[MAX_PATH + 32];
++        DWORD len = GetModuleFileNameW(NULL, dlldir, MAX_PATH);
++        WCHAR *sep = NULL;
++
++        if (len && len < MAX_PATH) {
++            if ((sep = wcsrchr(dlldir, L'\\')) != NULL) {
++                *sep = L'\0';
++                sep = wcsrchr(dlldir, L'\\');
++            }
++        }
++        if (sep) {
++            wcscpy(sep, L"\\lib\\apr-util-1");
++            SetDllDirectoryW(dlldir);
++        }
++    }
++#endif
++
+     osver.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+     GetVersionEx(&osver);
+ 
+-- 
+2.55.0
+
