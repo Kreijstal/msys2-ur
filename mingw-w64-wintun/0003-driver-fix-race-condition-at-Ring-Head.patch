@@ -1,0 +1,64 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Simon Rozman <simon.rozman@amebis.si>
+Date: Thu, 19 Feb 2026 20:32:54 +0100
+Subject: [PATCH 3/8] driver: fix race condition at Ring->Head
+
+This PR fixes a critical race condition in the Wintun driver that causes
+ring buffer overruns when multiple UDP senders operate in parallel. The
+issue occurred because multiple threads could read the same Ring->Head
+value without synchronization, leading to concurrent modifications that
+corrupted the ring buffer and resulted in ERROR_INVALID_DATA errors.
+
+In order to prevent buffer overrun (which was observed while sending
+multiple high throughput UDP streams from different threads) I move the
+driver spinlock to protect Ring buffer Head.
+
+I observed that the Ring->Head was taken and manipulated later on with
+just a `ReadULongAcquire` which isn't OK when 2 are trying to manipulate
+it later on based on the same received value.
+
+A fix was provided in 4fc590853b8281552631b79dacda484a5782f3bf, but it
+didn't solve the issue.
+
+Reported-by: odedkatz <katz.oded@gmail.com>
+Reference: https://lists.zx2c4.com/pipermail/wireguard/2026-February/009489.html
+Reference: https://lists.zx2c4.com/pipermail/wireguard/2026-February/009510.html
+Signed-off-by: Simon Rozman <simon.rozman@amebis.si>
+(cherry picked from commit dd050927f42081dce7c2ae262be55ffd8210c11a)
+---
+ driver/wintun.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/driver/wintun.c b/driver/wintun.c
+index 4ec76eb..797eaee 100644
+--- a/driver/wintun.c
++++ b/driver/wintun.c
+@@ -284,14 +284,13 @@ TunSendNetBufferLists(
+     TUN_RING *Ring = Ctx->Device.Send.Ring;
+     ULONG RingCapacity = Ctx->Device.Send.Capacity;
+ 
+-    /* Allocate space for packets in the ring. */
+-    ULONG RingHead = ReadULongAcquire(&Ring->Head);
+-    if (Status = NDIS_STATUS_ADAPTER_NOT_READY, RingHead >= RingCapacity)
+-        goto skipNbl;
+-
+     KLOCK_QUEUE_HANDLE LockHandle;
+     KeAcquireInStackQueuedSpinLock(&Ctx->Device.Send.Lock, &LockHandle);
+ 
++    /* Allocate space for packets in the ring. */
++    ULONG RingHead = ReadULongAcquire(&Ring->Head);
++    if (Status = NDIS_STATUS_ADAPTER_NOT_READY, RingHead >= RingCapacity)
++        goto cleanupKeReleaseInStackQueuedSpinLock;
+     ULONG RingTail = Ctx->Device.Send.RingTail;
+     ASSERT(RingTail < RingCapacity);
+ 
+@@ -419,8 +418,8 @@ TunReturnNetBufferLists(NDIS_HANDLE MiniportAdapterContext, PNET_BUFFER_LIST Net
+             Ctx->Device.Receive.ActiveNbls.Head = NET_BUFFER_LIST_NEXT_NBL_EX(CompletedNbl);
+             if (!Ctx->Device.Receive.ActiveNbls.Head)
+                 KeSetEvent(&Ctx->Device.Receive.ActiveNbls.Empty, IO_NO_INCREMENT, FALSE);
+-            KeReleaseInStackQueuedSpinLock(&LockHandle);
+             WriteULongRelease(&Ring->Head, TunNblGetOffset(CompletedNbl));
++            KeReleaseInStackQueuedSpinLock(&LockHandle);
+             const MDL *TargetMdl = Ctx->Device.Receive.Mdl;
+             for (MDL *Mdl = NET_BUFFER_FIRST_MDL(NET_BUFFER_LIST_FIRST_NB(CompletedNbl)); Mdl; Mdl = Mdl->Next)
+             {

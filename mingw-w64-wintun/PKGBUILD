@@ -1,0 +1,132 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Wintun (wintun.sys NDIS 6 miniport + wintun.dll API) built from source with
+# GCC against the ReactOS DDK headers and import libraries.
+#
+# The result is an unsigned kernel driver, embedded in wintun.dll and installed
+# on demand: it loads on ReactOS, or on Windows only in test-signing mode once
+# the files are signed locally. Normal Windows installs need WireGuard's signed
+# wintun.dll instead.
+#
+# Build inputs from ReactOS (as for mingw-w64-ovpn-dco-win):
+#   - the DDK, the generated xdk/psdk headers, the ntoskrnl, hal and ndis
+#     import libraries, librtlver and the gcc_plugin_seh host plugin of a
+#     configured ReactOS amd64 build tree (branch "wintun")
+# Point REACTOS_SOURCE_DIR at the ReactOS source tree and REACTOS_BUILD_DIR at
+# a build tree where "ninja xdk psdk bugcodes ntoskrnl hal ndis rtlver
+# native-gcc_plugin_seh" has run.
+
+_realname=wintun
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.14.1
+pkgrel=1
+pkgdesc="Wintun layer-3 TUN driver for Windows, unsigned GCC build (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'mingw64')
+url='https://www.wintun.net/'
+license=('spdx:GPL-2.0-only AND (GPL-2.0-only OR MIT)')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             'git')
+install=${_realname}.install
+source=("git+https://github.com/WireGuard/wintun.git#tag=${pkgver}"
+        0001-driver-introduce-NET_BUFFER_LIST_OFFSET-helper.patch
+        0002-driver-explicitly-terminate-NBL.patch
+        0003-driver-fix-race-condition-at-Ring-Head.patch
+        0004-driver-fix-missed-wakeup-race-in-ring-buffer-Alertab.patch
+        0005-Use-portable-include-and-resource-paths.patch
+        0006-api-Build-with-GCC.patch
+        0007-driver-Build-with-GCC.patch
+        0008-api-Allow-embedding-a-driver-package-without-a-catal.patch
+        CMakeLists.txt
+        stampinf.py
+        mkdelaylib.py
+        wintun-gcc-compat.h
+        wdmsec.h
+        wintun.install)
+sha256sums=('SKIP'
+            '6b162040814273a141b3b53e77f1d34f1547ee1302b9e048f9a542dc6665ef23'
+            'bc9f5888a988bd116b49178558f07d8c3db2ebe186decb06edc73e1b1b2518d4'
+            '87c91ad0a527ce579607249dcb41fd3d863f34f339311701cbe0bf45b04d3201'
+            '85a3aebc5434bcda3d8a4972c9380ab3c3540555c4ff72378c78f67f2a63d7e0'
+            '408f767f8ec1c1b9bf4feb28e4ab08193de27b6b02b0f47162270efe8acbe26d'
+            'ba2ce16d65361907b2c1db0e9005a45effe24e96e5410adf05aebd5814119865'
+            '188e20640067ccf485a6a0ee9955dd68b8717e0b14d5b4b85f05dee379716f28'
+            'c7789c21d9b68775657c9318a11b0bd25fdb582ac203f2293169a217b6150e75'
+            '95ac5cd99f11bba3f80d36659c46f407aa3d20ce486c32b5be13d9e1289db401'
+            'f19a9e57c9dc747e02e459912f616199021bee7d579123088cd2c4b30989d494'
+            'c424168842d28d326d27659c193348631c5927bec3cf6cfe5a3756d26b8336c4'
+            '1a96cdd985d46dd0e97ee7ef2f0c5649391773e164d3df26f830ef9c7dc6f3c6'
+            '6e91d5a867f34447d8ed875707c796f4c2a837930624f23461f2c915218d12f5'
+            '7978d8fece2774ddf7778d2e25e6d8e46e4a67334b7f88bea41b4f80c09ba7e7')
+
+prepare() {
+  cd "${srcdir}/${_realname}"
+
+  git apply --whitespace=nowarn \
+    "${srcdir}"/0001-*.patch \
+    "${srcdir}"/0002-*.patch \
+    "${srcdir}"/0003-*.patch \
+    "${srcdir}"/0004-*.patch \
+    "${srcdir}"/0005-*.patch \
+    "${srcdir}"/0006-*.patch \
+    "${srcdir}"/0007-*.patch \
+    "${srcdir}"/0008-*.patch
+
+  cp "${srcdir}/CMakeLists.txt" .
+  mkdir -p gcc/ddk
+  cp "${srcdir}"/{stampinf.py,mkdelaylib.py,wintun-gcc-compat.h} gcc/
+  cp "${srcdir}/wdmsec.h" gcc/ddk/
+}
+
+build() {
+  : "${REACTOS_SOURCE_DIR:=${MINGW_PREFIX}/share/reactos/source}"
+  : "${REACTOS_BUILD_DIR:=${MINGW_PREFIX}/share/reactos/build-amd64}"
+
+  # DriverVer follows the upstream release date unless overridden
+  local _date="${WINTUN_DRIVER_DATE:-10/17/2021}"
+
+  cmake -S "${srcdir}/${_realname}" -B "${srcdir}/build" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DREACTOS_SOURCE_DIR="${REACTOS_SOURCE_DIR}" \
+    -DREACTOS_BUILD_DIR="${REACTOS_BUILD_DIR}" \
+    ${NTOSKRNL_IMPLIB:+-DNTOSKRNL_IMPLIB="${NTOSKRNL_IMPLIB}"} \
+    -DWINTUN_VERSION=${pkgver} \
+    -DDRIVER_DATE="${_date}"
+  cmake --build "${srcdir}/build"
+}
+
+check() {
+  local _sys="${srcdir}/build/driver/wintun.sys"
+  local _dll="${srcdir}/build/wintun.dll"
+
+  # wintun.sys: a native-subsystem NDIS miniport, no KMDF
+  objdump -p "${_sys}" 2>/dev/null | grep -q 'Subsystem.*(NT native)'
+  objdump -p "${_sys}" 2>/dev/null | grep -qi 'DLL Name: ndis.sys'
+  objdump -p "${_sys}" 2>/dev/null | grep -qi 'DLL Name: ntoskrnl.exe'
+  ! objdump -p "${_sys}" 2>/dev/null | grep -qi 'DLL Name: wdfldr.sys'
+
+  # wintun.dll: the user-mode API, with the driver embedded as a resource
+  objdump -x "${_dll}" 2>/dev/null | grep -q 'WintunCreateAdapter'
+}
+
+package() {
+  install -Dm755 "${srcdir}/build/wintun.dll" \
+    "${pkgdir}${MINGW_PREFIX}/bin/wintun.dll"
+  install -Dm644 "${srcdir}/build/libwintun.dll.a" \
+    "${pkgdir}${MINGW_PREFIX}/lib/libwintun.dll.a"
+  install -Dm644 "${srcdir}/${_realname}/api/wintun.h" \
+    "${pkgdir}${MINGW_PREFIX}/include/wintun.h"
+
+  # The standalone driver package
+  install -Dm644 "${srcdir}/build/driver/wintun.sys" \
+    "${pkgdir}${MINGW_PREFIX}/lib/${_realname}/wintun.sys"
+  install -Dm644 "${srcdir}/build/driver/wintun.inf" \
+    "${pkgdir}${MINGW_PREFIX}/lib/${_realname}/wintun.inf"
+
+  install -Dm644 "${srcdir}/${_realname}/COPYING" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

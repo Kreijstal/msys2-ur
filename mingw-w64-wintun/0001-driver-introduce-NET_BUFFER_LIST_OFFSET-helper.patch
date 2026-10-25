@@ -1,0 +1,59 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Simon Rozman <simon.rozman@amebis.si>
+Date: Mon, 9 Feb 2026 12:39:51 +0100
+Subject: [PATCH 1/8] driver: introduce NET_BUFFER_LIST_OFFSET helper
+
+Since NET_BUFFER_LIST_MINIPORT_RESERVED[1] is assigned our next NBL
+pointer and we have a macro for it (NET_BUFFER_LIST_NEXT_NBL_EX), let's
+have a macro for NET_BUFFER_LIST_MINIPORT_RESERVED[0], we assigned NBL
+offset and flags to, too.
+
+Signed-off-by: Simon Rozman <simon.rozman@amebis.si>
+(cherry picked from commit d36f37582da4c0cc7b3cd49ccc38fe2fc18f17b3)
+---
+ driver/wintun.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/driver/wintun.c b/driver/wintun.c
+index 1969854..2d2d533 100644
+--- a/driver/wintun.c
++++ b/driver/wintun.c
+@@ -216,6 +216,8 @@ TunIndicateStatus(_In_ NDIS_HANDLE MiniportAdapterHandle, _In_ NDIS_MEDIA_CONNEC
+     NdisMIndicateStatusEx(MiniportAdapterHandle, &Indication);
+ }
+ 
++#define NET_BUFFER_LIST_OFFSET(Nbl) (NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[0])
++
+ /* Send: We should not modify NET_BUFFER_LIST_NEXT_NBL(Nbl) to prevent fragmented NBLs to separate.
+  * Receive: NDIS may change NET_BUFFER_LIST_NEXT_NBL(Nbl) at will between the NdisMIndicateReceiveNetBufferLists() and
+  * MINIPORT_RETURN_NET_BUFFER_LISTS calls. Therefore, we use our own ->Next pointer for book-keeping. */
+@@ -225,25 +227,25 @@ static VOID
+ TunNblSetOffsetAndMarkActive(_Inout_ NET_BUFFER_LIST *Nbl, _In_ ULONG Offset)
+ {
+     ASSERT(TUN_IS_ALIGNED(Offset)); /* Alignment ensures bit 0 will be 0 (0=active, 1=completed). */
+-    NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[0] = (VOID *)Offset;
++    NET_BUFFER_LIST_OFFSET(Nbl) = (VOID *)Offset;
+ }
+ 
+ static ULONG
+ TunNblGetOffset(_In_ NET_BUFFER_LIST *Nbl)
+ {
+-    return (ULONG)((ULONG_PTR)(NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[0]) & ~((ULONG_PTR)TUN_ALIGNMENT - 1));
++    return (ULONG)((ULONG_PTR)NET_BUFFER_LIST_OFFSET(Nbl) & ~((ULONG_PTR)TUN_ALIGNMENT - 1));
+ }
+ 
+ static VOID
+ TunNblMarkCompleted(_Inout_ NET_BUFFER_LIST *Nbl)
+ {
+-    *(ULONG_PTR *)&NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[0] |= 1;
++    *(ULONG_PTR *)&NET_BUFFER_LIST_OFFSET(Nbl) |= 1;
+ }
+ 
+ static BOOLEAN
+ TunNblIsCompleted(_In_ NET_BUFFER_LIST *Nbl)
+ {
+-    return (ULONG_PTR)(NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[0]) & 1;
++    return (ULONG_PTR)NET_BUFFER_LIST_OFFSET(Nbl) & 1;
+ }
+ 
+ static MINIPORT_SEND_NET_BUFFER_LISTS TunSendNetBufferLists;

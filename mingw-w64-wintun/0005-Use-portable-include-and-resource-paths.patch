@@ -1,0 +1,368 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 25 Oct 2026 05:57:44 +0100
+Subject: [PATCH 5/8] Use portable include and resource paths
+
+Header names as the mingw-w64 and Windows SDK headers spell them, and
+forward slashes in resources.rc, which both rc.exe and windres accept,
+so the sources also build on a case-sensitive file system.
+---
+ api/adapter.c     |  6 +++---
+ api/adapter.h     |  6 +++---
+ api/driver.c      |  6 +++---
+ api/driver.h      |  4 ++--
+ api/logger.c      |  2 +-
+ api/logger.h      |  2 +-
+ api/main.c        |  2 +-
+ api/main.h        |  2 +-
+ api/namespace.c   |  2 +-
+ api/namespace.h   |  2 +-
+ api/nci.h         |  2 +-
+ api/ntdll.h       |  2 +-
+ api/registry.c    |  2 +-
+ api/registry.h    |  2 +-
+ api/resource.c    |  6 +++---
+ api/resource.h    |  2 +-
+ api/resources.rc  | 22 +++++++++++-----------
+ api/rundll32.c    |  4 ++--
+ api/rundll32.h    |  4 ++--
+ api/session.c     |  2 +-
+ example/example.c |  2 +-
+ 21 files changed, 42 insertions(+), 42 deletions(-)
+
+diff --git a/api/adapter.c b/api/adapter.c
+index 0dd8c42..53952f0 100644
+--- a/api/adapter.c
++++ b/api/adapter.c
+@@ -3,15 +3,15 @@
+  * Copyright (C) 2018-2021 WireGuard LLC. All Rights Reserved.
+  */
+ 
+-#include <Windows.h>
++#include <windows.h>
+ #include <winternl.h>
+ #include <cfgmgr32.h>
+ #include <devguid.h>
+ #include <iphlpapi.h>
+ #include <objbase.h>
+ #include <ndisguid.h>
+-#include <SetupAPI.h>
+-#include <Shlwapi.h>
++#include <setupapi.h>
++#include <shlwapi.h>
+ #include <devioctl.h>
+ #include <wchar.h>
+ #include <initguid.h> /* Keep these two at bottom in this order, so that we only generate extra GUIDs for devpkey. The other keys we'll get from uuid.lib like usual. */
+diff --git a/api/adapter.h b/api/adapter.h
+index cfa22fd..ae8d0e4 100644
+--- a/api/adapter.h
++++ b/api/adapter.h
+@@ -6,10 +6,10 @@
+ #pragma once
+ 
+ #include "wintun.h"
+-#include <IPExport.h>
+-#include <SetupAPI.h>
++#include <ipexport.h>
++#include <setupapi.h>
+ #include <cfgmgr32.h>
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #define WINTUN_HWID L"Wintun"
+ #define WINTUN_ENUMERATOR (IsWindows7 ? L"ROOT\\" WINTUN_HWID : L"SWD\\" WINTUN_HWID)
+diff --git a/api/driver.c b/api/driver.c
+index 4ed0d76..f3e67eb 100644
+--- a/api/driver.c
++++ b/api/driver.c
+@@ -3,13 +3,13 @@
+  * Copyright (C) 2018-2021 WireGuard LLC. All Rights Reserved.
+  */
+ 
+-#include <Windows.h>
++#include <windows.h>
+ #include <winternl.h>
+ #include <cfgmgr32.h>
+-#include <SetupAPI.h>
++#include <setupapi.h>
+ #include <devguid.h>
+ #include <ndisguid.h>
+-#include <Shlwapi.h>
++#include <shlwapi.h>
+ #include <shellapi.h>
+ #include <wchar.h>
+ 
+diff --git a/api/driver.h b/api/driver.h
+index dae4e9b..fa8b046 100644
+--- a/api/driver.h
++++ b/api/driver.h
+@@ -6,8 +6,8 @@
+ #pragma once
+ 
+ #include "wintun.h"
+-#include <Windows.h>
+-#include <SetupAPI.h>
++#include <windows.h>
++#include <setupapi.h>
+ 
+ #define WINTUN_HWID L"Wintun"
+ 
+diff --git a/api/logger.c b/api/logger.c
+index 94ce525..8f394a6 100644
+--- a/api/logger.c
++++ b/api/logger.c
+@@ -6,7 +6,7 @@
+ #include "logger.h"
+ #include "adapter.h"
+ #include "ntdll.h"
+-#include <Windows.h>
++#include <windows.h>
+ #include <iphlpapi.h>
+ #include <winternl.h>
+ #include <wchar.h>
+diff --git a/api/logger.h b/api/logger.h
+index d83839e..94a50a9 100644
+--- a/api/logger.h
++++ b/api/logger.h
+@@ -8,7 +8,7 @@
+ #include "wintun.h"
+ #include "main.h"
+ #include "registry.h"
+-#include <Windows.h>
++#include <windows.h>
+ #include <intsafe.h>
+ #include <stdarg.h>
+ #include <wchar.h>
+diff --git a/api/main.c b/api/main.c
+index 032225e..32d04d1 100644
+--- a/api/main.c
++++ b/api/main.c
+@@ -10,7 +10,7 @@
+ #include "registry.h"
+ #include "ntdll.h"
+ 
+-#include <Windows.h>
++#include <windows.h>
+ #include <delayimp.h>
+ #include <sddl.h>
+ #include <winefs.h>
+diff --git a/api/main.h b/api/main.h
+index 04ba7dd..2dbc2fe 100644
+--- a/api/main.h
++++ b/api/main.h
+@@ -5,7 +5,7 @@
+ 
+ #pragma once
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #if defined(_M_IX86)
+ #    define IMAGE_FILE_PROCESS IMAGE_FILE_MACHINE_I386
+diff --git a/api/namespace.c b/api/namespace.c
+index 3248edb..ae055d6 100644
+--- a/api/namespace.c
++++ b/api/namespace.c
+@@ -7,7 +7,7 @@
+ #include "main.h"
+ #include "namespace.h"
+ 
+-#include <Windows.h>
++#include <windows.h>
+ #include <winternl.h>
+ #include <winefs.h>
+ #include <wchar.h>
+diff --git a/api/namespace.h b/api/namespace.h
+index a0397be..636ebc5 100644
+--- a/api/namespace.h
++++ b/api/namespace.h
+@@ -5,7 +5,7 @@
+ 
+ #pragma once
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ _Must_inspect_result_
+ _Return_type_success_(return != NULL)
+diff --git a/api/nci.h b/api/nci.h
+index ba99fa6..dfbabd2 100644
+--- a/api/nci.h
++++ b/api/nci.h
+@@ -5,7 +5,7 @@
+ 
+ #pragma once
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #ifdef GENERATE_LIB
+ #    define DECLSPEC __declspec(dllexport)
+diff --git a/api/ntdll.h b/api/ntdll.h
+index 2eb2786..9b924c0 100644
+--- a/api/ntdll.h
++++ b/api/ntdll.h
+@@ -5,7 +5,7 @@
+ 
+ #pragma once
+ 
+-#include <Windows.h>
++#include <windows.h>
+ 
+ enum
+ {
+diff --git a/api/registry.c b/api/registry.c
+index 4f1001c..73e2ffe 100644
+--- a/api/registry.c
++++ b/api/registry.c
+@@ -5,7 +5,7 @@
+ 
+ #include "logger.h"
+ #include "registry.h"
+-#include <Windows.h>
++#include <windows.h>
+ #include <wchar.h>
+ #include <stdlib.h>
+ #include <strsafe.h>
+diff --git a/api/registry.h b/api/registry.h
+index 6beed2f..3188d67 100644
+--- a/api/registry.h
++++ b/api/registry.h
+@@ -6,7 +6,7 @@
+ #pragma once
+ 
+ #include "wintun.h"
+-#include <Windows.h>
++#include <windows.h>
+ 
+ #define MAX_REG_PATH \
+     256 /* Maximum registry path length \
+diff --git a/api/resource.c b/api/resource.c
+index 648f568..242716c 100644
+--- a/api/resource.c
++++ b/api/resource.c
+@@ -6,9 +6,9 @@
+ #include "logger.h"
+ #include "main.h"
+ #include "resource.h"
+-#include <Windows.h>
+-#include <Shlwapi.h>
+-#include <NTSecAPI.h>
++#include <windows.h>
++#include <shlwapi.h>
++#include <ntsecapi.h>
+ 
+ _Use_decl_annotations_
+ const VOID *
+diff --git a/api/resource.h b/api/resource.h
+index ae1210b..3ca7e4c 100644
+--- a/api/resource.h
++++ b/api/resource.h
+@@ -6,7 +6,7 @@
+ #pragma once
+ 
+ #include "wintun.h"
+-#include <Windows.h>
++#include <windows.h>
+ 
+ /**
+  * Locates RT_RCDATA resource memory address and size.
+diff --git a/api/resources.rc b/api/resources.rc
+index e7fab9c..03b473d 100644
+--- a/api/resources.rc
++++ b/api/resources.rc
+@@ -8,26 +8,26 @@
+ 
+ #pragma code_page(1252)
+ 
+-wintun.cat RCDATA "driver\\wintun.cat"
+-wintun.inf RCDATA "driver\\wintun.inf"
+-wintun.sys RCDATA "driver\\wintun.sys"
++wintun.cat RCDATA "driver/wintun.cat"
++wintun.inf RCDATA "driver/wintun.inf"
++wintun.sys RCDATA "driver/wintun.sys"
+ 
+ #if defined(WANT_AMD64_WOW64)
+ #    if defined(BUILT_AMD64_WOW64)
+-wintun-amd64.cat RCDATA "amd64\\driver\\wintun.cat"
+-wintun-amd64.inf RCDATA "amd64\\driver\\wintun.inf"
+-wintun-amd64.sys RCDATA "amd64\\driver\\wintun.sys"
+-setupapihost-amd64.dll RCDATA "amd64\\setupapihost.dll"
++wintun-amd64.cat RCDATA "amd64/driver/wintun.cat"
++wintun-amd64.inf RCDATA "amd64/driver/wintun.inf"
++wintun-amd64.sys RCDATA "amd64/driver/wintun.sys"
++setupapihost-amd64.dll RCDATA "amd64/setupapihost.dll"
+ #    else
+ #        pragma message("AMD64 wintun.sys was not built, so this will not work from WOW64")
+ #    endif
+ #endif
+ #if defined(WANT_ARM64_WOW64)
+ #    if defined(BUILT_ARM64_WOW64)
+-wintun-arm64.cat RCDATA "arm64\\driver\\wintun.cat"
+-wintun-arm64.inf RCDATA "arm64\\driver\\wintun.inf"
+-wintun-arm64.sys RCDATA "arm64\\driver\\wintun.sys"
+-setupapihost-arm64.dll RCDATA "arm64\\setupapihost.dll"
++wintun-arm64.cat RCDATA "arm64/driver/wintun.cat"
++wintun-arm64.inf RCDATA "arm64/driver/wintun.inf"
++wintun-arm64.sys RCDATA "arm64/driver/wintun.sys"
++setupapihost-arm64.dll RCDATA "arm64/setupapihost.dll"
+ #    else
+ #        pragma message("ARM64 wintun.sys was not built, so this will not work from WOW64")
+ #    endif
+diff --git a/api/rundll32.c b/api/rundll32.c
+index 5ea2b15..a547747 100644
+--- a/api/rundll32.c
++++ b/api/rundll32.c
+@@ -8,9 +8,9 @@
+ #include "main.h"
+ #include "logger.h"
+ #include "resource.h"
+-#include <Windows.h>
++#include <windows.h>
+ #include <shellapi.h>
+-#include <Shlwapi.h>
++#include <shlwapi.h>
+ #include <cfgmgr32.h>
+ #include <objbase.h>
+ #include <assert.h>
+diff --git a/api/rundll32.h b/api/rundll32.h
+index 762bfcf..aae5584 100644
+--- a/api/rundll32.h
++++ b/api/rundll32.h
+@@ -5,8 +5,8 @@
+ 
+ #pragma once
+ 
+-#include <Windows.h>
+-#include <SetupAPI.h>
++#include <windows.h>
++#include <setupapi.h>
+ #include "adapter.h"
+ 
+ _Return_type_success_(return != FALSE)
+diff --git a/api/session.c b/api/session.c
+index 13d5bca..b6ad21a 100644
+--- a/api/session.c
++++ b/api/session.c
+@@ -7,7 +7,7 @@
+ #include "logger.h"
+ #include "main.h"
+ #include "wintun.h"
+-#include <Windows.h>
++#include <windows.h>
+ #include <devioctl.h>
+ #include <stdlib.h>
+ 
+diff --git a/example/example.c b/example/example.c
+index 3642355..61ade16 100644
+--- a/example/example.c
++++ b/example/example.c
+@@ -4,7 +4,7 @@
+  */
+ 
+ #include <winsock2.h>
+-#include <Windows.h>
++#include <windows.h>
+ #include <ws2ipdef.h>
+ #include <iphlpapi.h>
+ #include <mstcpip.h>

@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Simon Rozman <simon.rozman@amebis.si>
+Date: Mon, 9 Feb 2026 12:13:01 +0100
+Subject: [PATCH 2/8] driver: explicitly terminate NBL
+
+The ActiveNbls list uses MINIPORT_RESERVED[1] as the next pointer, but
+never NULL-terminates the tail entry. It was never observed the
+allocated NBL would contain a non-zero MiniportReserved array, but this
+being unspecified in the official documentation, let's stay out of
+"unspecified" area.
+
+Reference: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/nbl/ns-nbl-net_buffer_list
+Signed-off-by: Simon Rozman <simon.rozman@amebis.si>
+(cherry picked from commit 4fc590853b8281552631b79dacda484a5782f3bf)
+---
+ driver/wintun.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/driver/wintun.c b/driver/wintun.c
+index 2d2d533..4ec76eb 100644
+--- a/driver/wintun.c
++++ b/driver/wintun.c
+@@ -224,10 +224,11 @@ TunIndicateStatus(_In_ NDIS_HANDLE MiniportAdapterHandle, _In_ NDIS_MEDIA_CONNEC
+ #define NET_BUFFER_LIST_NEXT_NBL_EX(Nbl) (NET_BUFFER_LIST_MINIPORT_RESERVED(Nbl)[1])
+ 
+ static VOID
+-TunNblSetOffsetAndMarkActive(_Inout_ NET_BUFFER_LIST *Nbl, _In_ ULONG Offset)
++TunNblInitialize(_Inout_ NET_BUFFER_LIST *Nbl, _In_ ULONG Offset)
+ {
+     ASSERT(TUN_IS_ALIGNED(Offset)); /* Alignment ensures bit 0 will be 0 (0=active, 1=completed). */
+     NET_BUFFER_LIST_OFFSET(Nbl) = (VOID *)Offset;
++    NET_BUFFER_LIST_NEXT_NBL_EX(Nbl) = NULL;
+ }
+ 
+ static ULONG
+@@ -299,7 +300,7 @@ TunSendNetBufferLists(
+         goto cleanupKeReleaseInStackQueuedSpinLock;
+ 
+     Ctx->Device.Send.RingTail = TUN_RING_WRAP(RingTail + RequiredRingSpace, RingCapacity);
+-    TunNblSetOffsetAndMarkActive(NetBufferLists, Ctx->Device.Send.RingTail);
++    TunNblInitialize(NetBufferLists, Ctx->Device.Send.RingTail);
+     *(Ctx->Device.Send.ActiveNbls.Head ? &NET_BUFFER_LIST_NEXT_NBL_EX(Ctx->Device.Send.ActiveNbls.Tail)
+                                        : &Ctx->Device.Send.ActiveNbls.Head) = NetBufferLists;
+     Ctx->Device.Send.ActiveNbls.Tail = NetBufferLists;
+@@ -539,7 +540,7 @@ TunProcessReceiveData(_Inout_ TUN_CTX *Ctx)
+         NdisSetNblFlag(Nbl, NblFlags);
+         NET_BUFFER_LIST_INFO(Nbl, NetBufferListFrameType) = (PVOID)NblProto;
+         NET_BUFFER_LIST_STATUS(Nbl) = NDIS_STATUS_SUCCESS;
+-        TunNblSetOffsetAndMarkActive(Nbl, RingHead);
++        TunNblInitialize(Nbl, RingHead);
+ 
+         KIRQL Irql = ExAcquireSpinLockShared(&Ctx->TransitionLock);
+         if (!ReadAcquire(&Ctx->Running))
