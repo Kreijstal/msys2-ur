@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 22 Oct 2026 11:49:34 +0200
+Subject: [PATCH] trace: Build the logging macros with GCC
+
+GCC has no __FUNCTIONW__ and its __FUNCTION__ is not a string literal,
+so log the function name as an ANSI string there. Build the wide
+expression string with token pasting instead of L#x, which only MSVC
+turns into a wide literal.
+---
+ trace.h | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/trace.h b/trace.h
+index 65b436c..a27180e 100644
+--- a/trace.h
++++ b/trace.h
+@@ -37,7 +37,15 @@ TRACELOGGING_DECLARE_PROVIDER(g_hOvpnEtwProvider);
+ 
+ #if defined(_KERNEL_MODE)
+ 
++#define OVPN_WIDE_(x) L ## x
++#define OVPN_WIDE(x) OVPN_WIDE_(x)
++
++#if defined(__GNUC__)
++// GCC has no __FUNCTIONW__ and __FUNCTION__ is not a string literal
++#define TraceLoggingFunctionName() TraceLoggingString(__FUNCTION__, "Func")
++#else
+ #define TraceLoggingFunctionName() TraceLoggingWideString(__FUNCTIONW__, "Func")
++#endif
+ 
+ #define LOG_NTSTATUS(Status, ...) do {\
+         TraceLoggingWrite( \
+@@ -108,7 +116,7 @@ TRACELOGGING_DECLARE_PROVIDER(g_hOvpnEtwProvider);
+     if (!NT_SUCCESS(p_status)) \
+     { \
+         LOG_NTSTATUS(p_status, \
+-            TraceLoggingWideString(L#Expression, "Expression"), \
++            TraceLoggingWideString(OVPN_WIDE(#Expression), "Expression"), \
+             __VA_ARGS__); \
+     } \
+ } while(0,0)

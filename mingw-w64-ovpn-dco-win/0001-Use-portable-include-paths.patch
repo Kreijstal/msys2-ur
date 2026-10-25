@@ -1,0 +1,180 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 22 Oct 2026 11:49:34 +0200
+Subject: [PATCH] Use portable include paths
+
+Include Driver.h, ndisguid.h and uapi/ovpn-dco.h with the case and the
+path separator the files actually have, so the sources also build on
+case-sensitive file systems and with GCC.
+---
+ Driver.cpp    | 4 ++--
+ Driver.h      | 4 ++--
+ adapter.cpp   | 2 +-
+ control.cpp   | 2 +-
+ crypto.h      | 2 +-
+ peer.h        | 4 ++--
+ rxqueue.cpp   | 2 +-
+ rxworkers.cpp | 2 +-
+ socket.cpp    | 2 +-
+ timer.cpp     | 2 +-
+ txqueue.cpp   | 2 +-
+ 11 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/Driver.cpp b/Driver.cpp
+index 428e410..79f78a5 100644
+--- a/Driver.cpp
++++ b/Driver.cpp
+@@ -28,10 +28,10 @@
+ 
+ #include "bufferpool.h"
+ #include "control.h"
+-#include "driver.h"
++#include "Driver.h"
+ #include "trace.h"
+ #include "peer.h"
+-#include "uapi\ovpn-dco.h"
++#include "uapi/ovpn-dco.h"
+ #include "socket.h"
+ 
+ TRACELOGGING_DEFINE_PROVIDER(g_hOvpnEtwProvider,
+diff --git a/Driver.h b/Driver.h
+index 5e3362c..0ba964d 100644
+--- a/Driver.h
++++ b/Driver.h
+@@ -25,7 +25,7 @@
+ #include <wdf.h>
+ #include <netadaptercx.h>
+ #include <initguid.h>
+-#include <Ndisguid.h>
++#include <ndisguid.h>
+ #include <wsk.h>
+ 
+ #include "adapter.h"
+@@ -35,7 +35,7 @@
+ #include "rxworkers.h"
+ #include "socket.h"
+ #include "trie.h"
+-#include "uapi\ovpn-dco.h"
++#include "uapi/ovpn-dco.h"
+ 
+ extern "C" {
+     DRIVER_INITIALIZE DriverEntry;
+diff --git a/adapter.cpp b/adapter.cpp
+index 5047761..c762601 100644
+--- a/adapter.cpp
++++ b/adapter.cpp
+@@ -23,7 +23,7 @@
+ #include "txqueue.h"
+ #include "rxqueue.h"
+ #include "trace.h"
+-#include "driver.h"
++#include "Driver.h"
+ 
+ // maximum link speed for send and recv in bps
+ #define OVPN_MEDIA_MAX_SPEED 1'000'000'000
+diff --git a/control.cpp b/control.cpp
+index 32f30a5..7a5edf2 100644
+--- a/control.cpp
++++ b/control.cpp
+@@ -21,7 +21,7 @@
+ 
+ #include "control.h"
+ #include "Driver.h"
+-#include "uapi\ovpn-dco.h"
++#include "uapi/ovpn-dco.h"
+ #include "trace.h"
+ 
+ _Use_decl_annotations_
+diff --git a/crypto.h b/crypto.h
+index 9baea80..098b626 100644
+--- a/crypto.h
++++ b/crypto.h
+@@ -27,7 +27,7 @@
+ 
+ #include "crypto_epoch.h"
+ #include "pktid.h"
+-#include "uapi\ovpn-dco.h"
++#include "uapi/ovpn-dco.h"
+ #include "socket.h"
+ 
+ struct OvpnPeerContext;
+diff --git a/peer.h b/peer.h
+index 8f625d2..a9f86c6 100644
+--- a/peer.h
++++ b/peer.h
+@@ -24,8 +24,8 @@
+ 
+ #include <ntddk.h>
+ 
+-#include "driver.h"
+-#include "uapi\ovpn-dco.h"
++#include "Driver.h"
++#include "uapi/ovpn-dco.h"
+ 
+ struct OvpnPeerContext
+ {
+diff --git a/rxqueue.cpp b/rxqueue.cpp
+index b45de18..79af327 100644
+--- a/rxqueue.cpp
++++ b/rxqueue.cpp
+@@ -25,7 +25,7 @@
+ #include <net/virtualaddress.h>
+ #include <net/checksum.h>
+ 
+-#include "driver.h"
++#include "Driver.h"
+ #include "bufferpool.h"
+ #include "peer.h"
+ #include "rxqueue.h"
+diff --git a/rxworkers.cpp b/rxworkers.cpp
+index cd6e3c5..5624e77 100644
+--- a/rxworkers.cpp
++++ b/rxworkers.cpp
+@@ -23,7 +23,7 @@
+ #include <wdf.h>
+ 
+ #include "bufferpool.h"
+-#include "driver.h"
++#include "Driver.h"
+ #include "peer.h"
+ #include "rxworkers.h"
+ #include "socket.h"
+diff --git a/socket.cpp b/socket.cpp
+index 13b5e45..e7a3d45 100644
+--- a/socket.cpp
++++ b/socket.cpp
+@@ -25,7 +25,7 @@
+ 
+ #include "adapter.h"
+ #include "crypto.h"
+-#include "driver.h"
++#include "Driver.h"
+ #include "mss.h"
+ #include "trace.h"
+ #include "rxqueue.h"
+diff --git a/timer.cpp b/timer.cpp
+index d5c95d8..43a8bf6 100644
+--- a/timer.cpp
++++ b/timer.cpp
+@@ -23,7 +23,7 @@
+ #include <ntddk.h>
+ 
+ #include "bufferpool.h"
+-#include "driver.h"
++#include "Driver.h"
+ #include "trace.h"
+ #include "timer.h"
+ #include "socket.h"
+diff --git a/txqueue.cpp b/txqueue.cpp
+index 08a7182..28702d9 100644
+--- a/txqueue.cpp
++++ b/txqueue.cpp
+@@ -27,7 +27,7 @@
+ #include <net/virtualaddress.h>
+ 
+ #include "crypto.h"
+-#include "driver.h"
++#include "Driver.h"
+ #include "mss.h"
+ #include "trace.h"
+ #include "netringiterator.h"
