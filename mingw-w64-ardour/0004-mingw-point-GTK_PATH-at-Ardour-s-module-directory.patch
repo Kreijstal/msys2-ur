@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:27:24 +0100
+Subject: [PATCH 4/4] mingw: point GTK_PATH at Ardour's module directory
+
+On Linux the ardour.sh wrapper exports GTK_PATH=@CONFDIR@:@LIBDIR@ so
+that ytk loads the bundled clearlooks engine from LIBDIR/engines. The
+Windows build has no wrapper script, and the upstream installer works
+around it by copying clearlooks.dll to lib/gtk-2.0/engines.
+
+When Ardour is installed into a shared prefix (e.g. an MSYS2 package)
+that directory belongs to the system gtk2 and may contain a GTK2
+clearlooks engine linked against libgtk-win32-2.0, which must never be
+loaded into ytk. Set GTK_PATH to ardour_dll_directory() in
+fixup_bundle_environment() so the engine `waf install` places in
+<dll-dir>/engines is found first, mirroring the Linux wrapper.
+---
+ gtk2_ardour/bundle_env_mingw.cc | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/gtk2_ardour/bundle_env_mingw.cc b/gtk2_ardour/bundle_env_mingw.cc
+index d4b3fbe..b5bba59 100644
+--- a/gtk2_ardour/bundle_env_mingw.cc
++++ b/gtk2_ardour/bundle_env_mingw.cc
+@@ -90,6 +90,20 @@ fixup_bundle_environment (int, char* [], string & localedir)
+ 
+ 	Glib::setenv ("SUIL_MODULE_DIR", Glib::build_filename(ardour_dll_directory(), "suil"), true);
+ 
++	/* Let ytk find Ardour's own clearlooks engine (installed as
++	 * <dll-dir>/engines/clearlooks.dll) before any GTK2 theme engine
++	 * of the same name that a system gtk2 installation may provide
++	 * in <prefix>/lib/gtk-2.0; those are linked against the real
++	 * libgtk-win32-2.0 and must not be loaded into ytk.
++	 */
++	cstr = getenv ("GTK_PATH");
++	path = ardour_dll_directory ();
++	if (cstr) {
++		path += G_SEARCHPATH_SEPARATOR;
++		path += cstr;
++	}
++	Glib::setenv ("GTK_PATH", path, true);
++
+ 	/* XXX this should really be PRODUCT_EXE see tools/x-win/package.sh
+ 	 * ardour on windows does not have a startup wrapper script.
+ 	 *

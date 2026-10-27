@@ -1,0 +1,431 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+# DBeaver Community Edition built from source without Maven/Tycho: every
+# plug-in of the CE product (org.jkiss.dbeaver.ce.feature) is compiled with
+# the source-bootstrapped OpenJDK by java-build-helper, against the Eclipse
+# 4.41 platform and the DBeaver dependency bundles of the msys2-ur packages.
+# The product runs from ${MINGW_PREFIX}/lib/dbeaver on the shared Eclipse
+# platform bundles in ${MINGW_PREFIX}/lib/eclipse/plugins, started by the
+# native Eclipse launcher of eclipse-equinox-executable.
+#
+# Not built: org.jkiss.dbeaver.ext.wmi (Windows Management Instrumentation
+# driver). Its JNI library is an MSVC project that needs Microsoft ATL, which
+# MinGW-w64 does not provide; upstream ships it as a prebuilt DLL.
+#
+# JDBC drivers: DBeaver downloads driver JARs from Maven Central on first use.
+# The SQLite (Xerial) and H2 2.x drivers come from MSYS2 packages instead:
+# org.msys2ur.dbeaver.drivers declares DBeaver's product bundles
+# drivers.sqlite.xerial and drivers.h2_v2, so DBeaver uses the copies in
+# lib/dbeaver/drivers rather than downloading them.
+
+_realname=dbeaver
+_datadam=afb5477ab9ab6f90ba8aad27fb0231c6e1727ca3
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=26.2.2
+pkgrel=1
+pkgdesc="DBeaver Community Edition universal database tool, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://dbeaver.io/'
+license=('spdx:Apache-2.0')
+# packages of every bundle the product resolves (bundles.info of the check
+# run), the native launcher, and the JDBC drivers it ships
+_runtime_deps=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-gis"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-jfreechart"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-sshj"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-jdbc-api"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-antlr4-runtime"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-bcpkix"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-codec"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-jexl3"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-logging"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-guava"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-guava-failureaccess"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jsch"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jsqlparser"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-log4j-api"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-picocli"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+              "${MINGW_PACKAGE_PREFIX}-dbeaver-utils"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-compare"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-compare-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-compare-win32"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-commands"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-contenttype"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-databinding"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-databinding-beans"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-databinding-observable"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-databinding-property"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-expressions"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-filebuffers"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-filesystem"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-jobs"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-net"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-resources"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-runtime"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-core-variables"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-debug-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-draw2d"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-commands"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-contexts"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-di"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-di-annotations"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-di-extensions"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-di-extensions-supplier"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-core-services"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-emf-xpath"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-bindings"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-css-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-css-swt"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-css-swt-theme"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-di"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-dialogs"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-ide"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-model-workbench"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-progress"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-services"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-widgets"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-workbench"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-workbench-addons-swt"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-workbench-renderers-swt"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-workbench-swt"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-e4-ui-workbench3"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-filetransfer"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-identity"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-provider-filetransfer-ssl"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ecf-ssl"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-emf-common"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-emf-ecore"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-emf-ecore-change"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-emf-ecore-xmi"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-app"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-bidi"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-common"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-concurrent"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-console"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-event"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-executable"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-frameworkadmin"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-frameworkadmin-equinox"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-launcher"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-launcher-win32-win32-x86_64"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-artifact-repository"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-console"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-director"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-director-app"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-directorywatcher"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-discovery"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-discovery-compatibility"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-engine"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-extensionlocation"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-garbagecollector"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-jarprocessor"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-metadata"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-metadata-repository"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-operations"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-publisher"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-publisher-eclipse"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-reconciler-dropins"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-repository"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-repository-tools"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-touchpoint-eclipse"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-touchpoint-natives"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-transport-ecf"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-discovery"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-importexport"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-ui-sdk"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-p2-updatesite"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-preferences"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-registry"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security-ui"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-security-win32"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-simpleconfigurator"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-simpleconfigurator-manipulator"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-equinox-supplement"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-gef"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-help"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jdt-annotation"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jface"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jface-databinding"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jface-notifications"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jface-text"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jsch-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-jsch-ui"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ltk-core-refactoring"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ltk-ui-refactoring"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-ant"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-analysis"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-commons"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-tree"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-asm-util"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-gson"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-xz"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-osgi-compatibility-state"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-osgi-util"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-rcp"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-search"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-search-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-swt"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-swt-svg"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-swt-win32-win32-x86_64"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-team-core"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-team-ui"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-text"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-text-quicksearch"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-browser"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-console"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-editors"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-forms"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-ide"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-ide-application"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-navigator"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-navigator-resources"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-net"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-themes"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-views"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-views-log"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-views-properties-tabbed"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-win32"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-workbench"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-ui-workbench-texteditor"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-update-configurator"
+              "${MINGW_PACKAGE_PREFIX}-eclipse-urischeme"
+              "${MINGW_PACKAGE_PREFIX}-java-aries-spifly-dynamic-bundle"
+              "${MINGW_PACKAGE_PREFIX}-java-bcpg"
+              "${MINGW_PACKAGE_PREFIX}-java-bcprov"
+              "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+              "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-command"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-runtime"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-gogo-shell"
+              "${MINGW_PACKAGE_PREFIX}-java-felix-scr"
+              "${MINGW_PACKAGE_PREFIX}-java-h2"
+              "${MINGW_PACKAGE_PREFIX}-java-icu4j-base"
+              "${MINGW_PACKAGE_PREFIX}-java-jakarta-annotation-api"
+              "${MINGW_PACKAGE_PREFIX}-java-jakarta-inject-api"
+              "${MINGW_PACKAGE_PREFIX}-java-jna"
+              "${MINGW_PACKAGE_PREFIX}-java-jna-platform"
+              "${MINGW_PACKAGE_PREFIX}-java-jsvg"
+              "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-core"
+              "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-pb"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-service-cm"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-service-component"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-service-event"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-service-metatype"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-service-prefs"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-util-function"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-util-measurement"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-util-position"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-util-promise"
+              "${MINGW_PACKAGE_PREFIX}-java-osgi-util-xml"
+              "${MINGW_PACKAGE_PREFIX}-java-sqlite-jdbc")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-antlr4"
+             "${MINGW_PACKAGE_PREFIX}-java-osgi-annotation"
+             "${_runtime_deps[@]}")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/dbeaver/dbeaver/archive/refs/tags/${pkgver}.tar.gz"
+        "datadam-api-${_datadam}.tar.gz::https://github.com/dbeaver/datadam-api/archive/${_datadam}.tar.gz"
+        '0001-product-restrict-org.apache.ant-to-the-packaged-1.10.15-bundle.patch'
+        '0002-net.ssh-use-JSch-s-JDK-Unix-domain-socket-factory-for-ssh-agent.patch'
+        'dbeaver'
+        'dbeaver.vmargs'
+        'eclipse-features.txt'
+        'FeaturePlugins.java'
+        'drivers.MF'
+        'drivers-plugin.xml'
+        'e2e.MF'
+        'e2e-plugin.xml'
+        'E2EApplication.java')
+sha256sums=('942448e9bcc541f69fc929088ebc2167e01f2541fcf441547ecdd0adbc7c223d'
+            '043b6dd35b7462b56a84a49ca351cf40008cb1412cb991b90165b4089df1d4fb'
+            'cf35d59c2db0329000711a124feeea21f54006279bd5a8d44d41aca5248ae3b1'
+            'c9c931e715a0f7ac87c9fc051e100e4183be58f19e84281df8de5131066c59f3'
+            '5803d6143945637a36d707846e404af48a6131a925764ed418215a1489983fdc'
+            '4238c230f6606455b43ab6a46227738a26f20fd9c091b4f68f266d8f0566d0d4'
+            '073708b0316b1464e54c8a2f9fb675da1edd00453d920f087c481511b193905a'
+            'c381a9f604ab907ee122907c587ecf9d49a6cf0670adc2d8c294f604f6d3a8b2'
+            'd6e18f919914859de9ef7cd21b238b58925a6e6e8c0d7e540a389cc016387e45'
+            '9829b92b9f482fd48c955a259fa2eab1d5396117aac95c9c8a77a33572c54e72'
+            'cb33a38fcc0200fa84b9bda710a3aeb3ebe084ff6eef897616530863c52e9e18'
+            'de9596ba8be120cabe2d0db2d9fa780a511757ecf0f3f52c62c2ceb4378b1b61'
+            '24c19ef37066d18b07429f488fe167d5e1caf8dea351ef1cf5b824ca61db4989')
+
+_src=${_realname}-${pkgver}
+_qualifier=202610050000
+_excluded=(org.jkiss.dbeaver.ext.wmi)
+# ANTLR grammars: plug-in, Java package, grammars (lexer before parser)
+_grammars=('org.jkiss.dbeaver.model.lsm org.jkiss.dbeaver.model.lsm.sql.impl.syntax SQLStandardLexer.g4 SQLStandardParser.g4'
+           'org.jkiss.dbeaver.ext.clickhouse org.jkiss.dbeaver.ext.clickhouse ClickhouseDataTypes.g4'
+           'org.jkiss.dbeaver.ext.databricks org.jkiss.dbeaver.ext.databricks DatabricksDataTypes.g4')
+
+prepare() {
+  cd "${srcdir}/${_src}"
+  patch -Np1 -i "${srcdir}/0001-product-restrict-org.apache.ant-to-the-packaged-1.10.15-bundle.patch"
+  patch -Np1 -i "${srcdir}/0002-net.ssh-use-JSch-s-JDK-Unix-domain-socket-factory-for-ssh-agent.patch"
+  # prebuilt binaries: the awt.injector helper JAR (rebuilt from its source
+  # below) and the WMI JNI library (plug-in not built)
+  rm -f plugins/org.jkiss.dbeaver.core/lib/awt.injector-1.0.0.jar
+  rm -rf plugins/org.jkiss.dbeaver.ext.wmi/native
+  if [[ -n $(find . "../datadam-api-${_datadam}" -type f \( -name '*.jar' -o -name '*.class' \
+      -o -name '*.dll' -o -name '*.so' -o -name '*.dylib' -o -name '*.exe' -o -name '*.zip' \) -print -quit) ]]; then
+    echo 'prebuilt binaries left in the sources' >&2
+    return 1
+  fi
+
+  # bundle projects of this recipe
+  rm -rf "${srcdir}/bundles"
+  mkdir -p "${srcdir}/bundles/org.msys2ur.dbeaver.drivers/META-INF" \
+    "${srcdir}/bundles/org.msys2ur.dbeaver.e2e/META-INF" \
+    "${srcdir}/bundles/org.msys2ur.dbeaver.e2e/src/org/msys2ur/dbeaver/e2e"
+  cd "${srcdir}/bundles"
+  cp "${srcdir}/drivers.MF" org.msys2ur.dbeaver.drivers/META-INF/MANIFEST.MF
+  cp "${srcdir}/drivers-plugin.xml" org.msys2ur.dbeaver.drivers/plugin.xml
+  printf 'bin.includes = META-INF/,plugin.xml\n' > org.msys2ur.dbeaver.drivers/build.properties
+  cp "${srcdir}/e2e.MF" org.msys2ur.dbeaver.e2e/META-INF/MANIFEST.MF
+  cp "${srcdir}/e2e-plugin.xml" org.msys2ur.dbeaver.e2e/plugin.xml
+  cp "${srcdir}/E2EApplication.java" org.msys2ur.dbeaver.e2e/src/org/msys2ur/dbeaver/e2e/
+  printf 'source.. = src/\nbin.includes = .,META-INF/,plugin.xml\n' > org.msys2ur.dbeaver.e2e/build.properties
+}
+
+# DBeaver plug-ins of the CE product, one BSN per line
+_ce_plugins() {
+  local p
+  while read -r p; do
+    [[ $p == feature:* ]] && continue
+    [[ -d ${srcdir}/${_src}/plugins/$p ]] || continue
+    [[ " ${_excluded[*]} " == *" $p "* ]] && continue
+    printf '%s\n' "$p"
+  done < "${srcdir}/ce-plugins.txt"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  export JB_QUALIFIER=${_qualifier}
+  cd "${srcdir}/${_src}"
+
+  # plug-ins of the CE feature tree on win32/x86_64; the included Eclipse
+  # features are listed in eclipse-features.txt
+  java "$(jb_w "${srcdir}/FeaturePlugins.java")" "$(jb_w features)" org.jkiss.dbeaver.ce.feature \
+    win32 win32 x86_64 | tr -d '\r' > "${srcdir}/ce-plugins.txt"
+  local f
+  for f in $(sed -n 's/^feature://p' "${srcdir}/ce-plugins.txt"); do
+    grep -q "^$f " "${srcdir}/eclipse-features.txt" || { echo "unknown feature $f" >&2; return 1; }
+  done
+
+  # ANTLR parsers, generated as antlr4-maven-plugin does
+  local row p pkg out antlr
+  local -a gs
+  antlr=$(jb_cp org.antlr:antlr4)
+  for row in "${_grammars[@]}"; do
+    read -r p pkg _ <<< "$row"
+    read -r -a gs <<< "${row#* * }"
+    out=plugins/$p/target/generated-sources/antlr4/${pkg//.//}
+    rm -rf "$out" && mkdir -p "$out"
+    java -cp "$antlr" org.antlr.v4.Tool -no-visitor -no-listener -Xexact-output-dir \
+      -o "$(jb_w "$out")" -lib "$(jb_w "$out")" \
+      $(for f in "${gs[@]}"; do jb_w "plugins/$p/grammar/$f"; done)
+  done
+
+  # awt.injector: the helper JAR of org.jkiss.dbeaver.core, from its source
+  local awt="${srcdir}/awt.injector"
+  rm -rf "$awt" && mkdir -p "$awt/classes"
+  javac -source 21 -target 21 -nowarn -proc:none --add-exports java.desktop/java.awt.peer=ALL-UNNAMED \
+    -d "$(jb_w "$awt/classes")" \
+    $(find plugins/org.jkiss.dbeaver.core/awt.injector.lib/src/main/java -name '*.java')
+  mkdir -p plugins/org.jkiss.dbeaver.core/lib
+  jar --create --file "$(jb_w plugins/org.jkiss.dbeaver.core/lib/awt.injector-1.0.0.jar)" \
+    -C "$(jb_w "$awt/classes")" .
+  JB_BUNDLE_OPTS_org_jkiss_dbeaver_core=(-C "${srcdir}/${_src}/plugins/org.jkiss.dbeaver.core/lib/awt.injector-1.0.0.jar")
+
+  local -a dirs=("${srcdir}/datadam-api-${_datadam}/apis/com.dbeaver.datadam.lm.api"
+                 "${srcdir}/bundles/org.msys2ur.dbeaver.drivers")
+  while read -r p; do dirs+=("plugins/$p"); done < <(_ce_plugins)
+  jb_bundles -- "${dirs[@]}"
+
+  # root bundles of the product for the launcher
+  {
+    printf '# DBeaver CE %s product roots (generated)\n' "${pkgver}"
+    _ce_plugins
+    grep -v '^feature:' "${srcdir}/ce-plugins.txt" | while read -r p; do
+      [[ -d plugins/$p ]] || printf '%s\n' "$p"
+    done
+    grep -v '^#' "${srcdir}/eclipse-features.txt" | awk '{print $2}'
+    # start-level bundles of DBeaver.product and the Gogo shell that
+    # org.eclipse.equinox.console (org.eclipse.e4.rcp) needs by capability
+    printf '%s\n' com.dbeaver.datadam.lm.api org.msys2ur.dbeaver.drivers org.apache.felix.scr \
+      org.eclipse.equinox.event org.eclipse.equinox.simpleconfigurator \
+      org.apache.felix.gogo.shell org.apache.felix.gogo.command
+  } | awk '!seen[$0]++' > "${srcdir}/dbeaver.roots"
+}
+
+# the product bundles built here
+_product_bundles() {
+  printf '%s\n' com.dbeaver.datadam.lm.api org.msys2ur.dbeaver.drivers
+  _ce_plugins
+}
+
+# lay out the product in $1 (lib/dbeaver)
+_assemble() {
+  local dest=$1
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  install -d "$dest/plugins" "$dest/drivers/sqlite/xerial" "$dest/drivers/h2_v2"
+  ( pkgdir= JB_PLUGINS=$dest/plugins; jb_plugins_install $(_product_bundles) )
+  install -m644 "${srcdir}/dbeaver.roots" "${srcdir}/dbeaver.vmargs" "$dest/"
+  install -m644 "${srcdir}/${_src}/product/community/icons/dbeaver.ico" "$dest/"
+  install -m644 "$(jb_jarpath org.xerial:sqlite-jdbc)" "$dest/drivers/sqlite/xerial/sqlite-jdbc.jar"
+  install -m644 "$(jb_jarpath com.h2database:h2)" "$dest/drivers/h2_v2/h2.jar"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  export JB_QUALIFIER=${_qualifier}
+  cd "${srcdir}/${_src}"
+  jb_bundle_loadcheck $(_product_bundles)
+  # all staged and installed bundle paths exceed the Windows command line
+  # limit: pass the resolver check's arguments to java in an @argfile
+  java() {
+    printf '"%s"\n' "$@" > "${srcdir}/java.args"
+    command java "@$(jb_w "${srcdir}/java.args")"
+  }
+  jb_osgi_resolvecheck
+  unset -f java
+
+  # end-to-end: the assembled product, run by the launcher with DBeaver's
+  # headless application plug-in (a test plug-in, not packaged) and a check
+  # application that resolves every bundle and connects through DBeaver's
+  # data source registry with the packaged SQLite and H2 drivers
+  jb_bundle plugins/org.jkiss.dbeaver.headless
+  jb_bundle "${srcdir}/bundles/org.msys2ur.dbeaver.e2e"
+  local product="${srcdir}/check-product" state="${srcdir}/check-state" work="${srcdir}/check-work"
+  rm -rf "$product" "$state" "$work"
+  _assemble "$product"
+  mkdir -p "$state/msys2-ur/dbeaver/plugins" "$work"
+  cp "$(jb_bundle_jar org.jkiss.dbeaver.headless)" "$(jb_bundle_jar org.msys2ur.dbeaver.e2e)" \
+    "$state/msys2-ur/dbeaver/plugins/"
+  sed -e "s|^prefix=.*|prefix=${MINGW_PREFIX}|" -e "s|^home=.*|home=${product}|" \
+    "${srcdir}/dbeaver" > "${srcdir}/dbeaver-check"
+  XDG_STATE_HOME="$state" timeout 1800 bash "${srcdir}/dbeaver-check" --console -nosplash -consoleLog \
+    -application org.msys2ur.dbeaver.e2e.app -data "$(cygpath -am "$work/workspace")" \
+    -vmargs -De2e.dir="$(cygpath -am "$work")" -Djava.io.tmpdir="$(cygpath -am "$work")" \
+    | tr -d '\r' | tee "${srcdir}/e2e.log"
+  grep -qx 'E2E PASS' "$work/result.txt"
+}
+
+package() {
+  depends=("${_runtime_deps[@]}")
+  _assemble "${pkgdir}${MINGW_PREFIX}/lib/${_realname}"
+  install -Dm755 "${srcdir}/dbeaver" "${pkgdir}${MINGW_PREFIX}/bin/dbeaver"
+  local lic="${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+  install -Dm644 "${srcdir}/${_src}/LICENSE.md" "$lic/LICENSE.md"
+  install -Dm644 "${srcdir}/datadam-api-${_datadam}/LICENSE.md" "$lic/datadam-api/LICENSE.md"
+}

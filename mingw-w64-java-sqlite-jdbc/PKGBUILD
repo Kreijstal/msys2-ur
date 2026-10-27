@@ -1,0 +1,173 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+# Xerial SQLite JDBC driver built from source: the Java classes are compiled
+# with the source-bootstrapped JDK and the JNI library is compiled with MinGW
+# GCC from the SQLite source release, the way upstream's Makefile builds it
+# (amalgamation generated with --update-limit, extension functions linked in).
+# All prebuilt native libraries and JARs in the upstream archive are deleted.
+
+_realname=sqlite-jdbc
+_sqlite=sqlite-src-3530400
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-${_realname}")
+pkgver=3.53.4.0
+pkgrel=1
+pkgdesc="SQLite JDBC driver (Xerial), built from source with its JNI library"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/xerial/sqlite-jdbc'
+license=('spdx:Apache-2.0 AND BSD-2-Clause AND blessing')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+             "${MINGW_PACKAGE_PREFIX}-openjdk"
+             'make'
+             'unzip')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/xerial/sqlite-jdbc/archive/refs/tags/${pkgver}.tar.gz"
+        "https://www.sqlite.org/2026/${_sqlite}.zip"
+        'sqlite-jdbc.bnd'
+        'SqliteJdbcCheck.java')
+noextract=("${_sqlite}.zip")
+sha256sums=('9dded7305b4f3bab596d6a40eaab0cf0d3afad60006eb80073492103b06b081c'
+            'd18fa15aec74d8c17e1463f861095adc01b5ad190256acb4f91d22f0368d232b'
+            '2fd79684feace8923e46fc3d2dfe943b3010d279d821791329a59be9d9daa612'
+            'a5fbe0d7e8ea081407a90c019c93f00dbb78e05a3521100f3920a453856c0133')
+
+prepare() {
+  cd "${srcdir}"
+  rm -rf "${_sqlite}"
+  unzip -q "${_sqlite}.zip"
+  cd "${_realname}-${pkgver}"
+  # prebuilt JNI libraries, demo/test JARs and the JDBC API stub JAR
+  rm -rf src/main/resources/org/sqlite/native lib/*.jar demo/*.jar src/test/resources/org/sqlite/*.jar
+  # GraalVM native-image feature: needs the GraalVM SDK, which is not packaged
+  rm -rf src/main/java9/org/sqlite/nativeimage src/main/resources/META-INF/native-image
+  sed -i '/org.graalvm.nativeimage/d' src/main/java9/module-info.java
+  if [[ -n $(find . "../${_sqlite}" -type f \( -name '*.jar' -o -name '*.class' -o -name '*.dll' \
+      -o -name '*.so' -o -name '*.dylib' -o -name '*.exe' \) -print -quit) ]]; then
+    echo 'prebuilt binaries left in the sources' >&2
+    return 1
+  fi
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local jdk native="${srcdir}/native" res="${srcdir}/resources"
+  jdk=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/^ *java.home = //p' | tr -d '\r')
+  jdk=$(cygpath -u "${jdk}")
+  [[ -f ${jdk}/include/jni.h ]]
+
+  # SQLite amalgamation with UPDATE/DELETE LIMIT, as upstream's Makefile makes it
+  cd "${srcdir}/${_sqlite}"
+  ./configure --update-limit
+  make sqlite3.c
+
+  rm -rf "${native}" "${res}"
+  mkdir -p "${native}"
+  cd "${srcdir}/${_realname}-${pkgver}"
+  # (sed rather than perl: UCRT64's native perl would get its arguments
+  # rewritten by the MSYS2 path conversion)
+  sed 's/sqlite3_api;/sqlite3_api = 0;/g' \
+    "${srcdir}/${_sqlite}/sqlite3ext.h" > "${native}/sqlite3ext.h"
+  cp "${srcdir}/${_sqlite}/sqlite3.h" "${native}/"
+  # register the extension functions on every opened database and record it
+  # as the JDBC_EXTENSIONS compile option (with a block-scope prototype:
+  # GCC 14+ rejects the implicit declaration upstream's hook relies on)
+  sed -e 's/^opendb_out:/  if(!db->mallocFailed \&\& rc==SQLITE_OK){ int RegisterExtensionFunctions(sqlite3 *); rc = RegisterExtensionFunctions(db); }\nopendb_out:/' \
+      -e 's|^\(static const char \* const sqlite3azCompileOpt.*\)$|\1\n\n/* This has been automatically added by sqlite-jdbc */\n  "JDBC_EXTENSIONS",|' \
+    "${srcdir}/${_sqlite}/sqlite3.c" > "${native}/sqlite3.c"
+  cat src/main/ext/*.c >> "${native}/sqlite3.c"
+  grep -q 'RegisterExtensionFunctions(db); }' "${native}/sqlite3.c"
+  grep -q '"JDBC_EXTENSIONS",' "${native}/sqlite3.c"
+
+  # JNI header
+  javac -h "$(jb_w "${native}")" -d "$(jb_w "${native}/hdr-classes")" \
+    -cp "$(jb_cp org.slf4j:slf4j-api)" -sourcepath "$(jb_w src/main/java)" \
+    -proc:none -nowarn src/main/java/org/sqlite/core/NativeDB.java
+  mv "${native}/org_sqlite_core_NativeDB.h" "${native}/NativeDB.h"
+
+  local -a ccflags=(-I"${native}" -I"${jdk}/include" -I"${jdk}/include/win32" -D_JNI_IMPLEMENTATION_)
+  ${CC:-gcc} ${CFLAGS} "${ccflags[@]}" -c -o "${native}/sqlite3.o" \
+    -DSQLITE_ENABLE_LOAD_EXTENSION=1 \
+    -DSQLITE_HAVE_ISNAN \
+    -DHAVE_USLEEP=1 \
+    -DSQLITE_ENABLE_COLUMN_METADATA \
+    -DSQLITE_CORE \
+    -DSQLITE_ENABLE_FTS3 \
+    -DSQLITE_ENABLE_FTS3_PARENTHESIS \
+    -DSQLITE_ENABLE_FTS5 \
+    -DSQLITE_ENABLE_RTREE \
+    -DSQLITE_ENABLE_PERCENTILE \
+    -DSQLITE_ENABLE_STAT4 \
+    -DSQLITE_ENABLE_DBSTAT_VTAB \
+    -DSQLITE_ENABLE_MATH_FUNCTIONS \
+    -DSQLITE_THREADSAFE=1 \
+    -DSQLITE_DEFAULT_MEMSTATUS=0 \
+    -DSQLITE_DEFAULT_FILE_PERMISSIONS=0666 \
+    -DSQLITE_MAX_VARIABLE_NUMBER=250000 \
+    -DSQLITE_MAX_MMAP_SIZE=1099511627776 \
+    -DSQLITE_MAX_LENGTH=2147483647 \
+    -DSQLITE_MAX_COLUMN=32767 \
+    -DSQLITE_MAX_SQL_LENGTH=1073741824 \
+    -DSQLITE_MAX_FUNCTION_ARG=127 \
+    -DSQLITE_MAX_ATTACHED=125 \
+    -DSQLITE_MAX_PAGE_COUNT=4294967294 \
+    -DSQLITE_DISABLE_PAGECACHE_OVERFLOW_STATS \
+    -DSQLITE_ENABLE_UPDATE_DELETE_LIMIT \
+    "${native}/sqlite3.c"
+  ${CC:-gcc} ${CFLAGS} "${ccflags[@]}" -c -o "${native}/NativeDB.o" src/main/java/org/sqlite/core/NativeDB.c
+  ${CC:-gcc} ${LDFLAGS} -shared -Wl,--kill-at -static-libgcc -o "${native}/sqlitejdbc.dll" \
+    "${native}/NativeDB.o" "${native}/sqlite3.o"
+  strip --strip-unneeded "${native}/sqlitejdbc.dll"
+
+  # resources as the upstream POM maps them
+  mkdir -p "${res}/META-INF/services" "${res}/org/sqlite/native/Windows/x86_64"
+  cp -r src/main/resources/org "${res}/"
+  cp src/main/resources/java.sql.Driver "${res}/META-INF/services/java.sql.Driver"
+  sed -e 's/\${project.name}/SQLite JDBC/' -e "s/\${project.version}/${pkgver}/" \
+    src/main/resources/sqlite-jdbc.properties > "${res}/sqlite-jdbc.properties"
+  cp "${native}/sqlitejdbc.dll" "${res}/org/sqlite/native/Windows/x86_64/"
+
+  local JB_RELEASE=8
+  jb_module "org.xerial:sqlite-jdbc:${pkgver}" src/main/java -r "${res}" \
+    -v 9:src/main/java9 -b "${srcdir}/sqlite-jdbc.bnd" -j -Xlint:-options -- \
+    org.slf4j:slf4j-api?
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.slf4j:slf4j-api org.xerial:sqlite-jdbc
+  # the JNI library must only need system DLLs
+  if objdump -p "${srcdir}/native/sqlitejdbc.dll" | grep 'DLL Name' | grep -viE 'KERNEL32|api-ms-win|msvcrt|ucrtbase'; then
+    echo 'sqlitejdbc.dll has unexpected DLL dependencies' >&2
+    return 1
+  fi
+  local jar
+  jar=$(jb_jarpath org.xerial:sqlite-jdbc)
+  rm -rf "${srcdir}/check" && mkdir -p "${srcdir}/check/tmp"
+  javac --release 21 -d "$(jb_w "${srcdir}/check")" -cp "$(jb_w "$jar")" "$(jb_w "${srcdir}/SqliteJdbcCheck.java")"
+  # no slf4j: the driver must fall back to java.util.logging
+  java --enable-native-access=ALL-UNNAMED -Djava.io.tmpdir="$(jb_w "${srcdir}/check/tmp")" \
+    -cp "$(jb_w "${srcdir}/check");$(jb_w "$jar")" SqliteJdbcCheck \
+    "$(jb_w "${srcdir}/check/test.db")" "${pkgver%.*}"
+}
+
+package_java-sqlite-jdbc() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api: logging through SLF4J")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.xerial:sqlite-jdbc
+  local lic="${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE" "${lic}/LICENSE"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE.zentus" "${lic}/LICENSE.zentus"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/NOTICE" "${lic}/NOTICE"
+  install -Dm644 "${srcdir}/${_sqlite}/LICENSE.md" "${lic}/LICENSE.sqlite.md"
+}
+
+# Generate the environment-prefixed split package entry points.
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

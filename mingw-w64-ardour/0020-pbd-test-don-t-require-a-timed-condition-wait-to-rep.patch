@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 08:06:18 +0100
+Subject: [PATCH] pbd/test: don't require a timed condition wait to report a
+ timeout
+
+MutexTest::test_cond asserts that Cond::wait_for() returns false when
+nobody signals the condition. std::condition_variable_any may wake up
+spuriously, and with libc++ on Windows the wait regularly returns a
+little before the deadline as measured by steady_clock (coarse system
+timer), in which case wait_for() reports std::cv_status::no_timeout.
+In MSYS2 CLANG64 the assertion failed in roughly one of four runs:
+
+  mutex_test.cc:32:Assertion
+  - Expression: !_cond.wait_for (_mutex, std::chrono::milliseconds (1000))
+
+Keep exercising the timed wait, but only check that the mutex is held
+again afterwards. The signalled cases below are unchanged.
+---
+ libs/pbd/test/mutex_test.cc | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/libs/pbd/test/mutex_test.cc b/libs/pbd/test/mutex_test.cc
+index 69be477..7ce50e8 100644
+--- a/libs/pbd/test/mutex_test.cc
++++ b/libs/pbd/test/mutex_test.cc
+@@ -29,7 +29,14 @@ MutexTest::test_cond ()
+ {
+ 	PBD::Mutex::Lock lm (_mutex);
+ 
+-	CPPUNIT_ASSERT (!_cond.wait_for (_mutex, std::chrono::milliseconds (1000)));
++	/* Nobody signals, so this normally times out. Do not assert on the
++	 * result though: condition variables may wake up spuriously, and
++	 * libc++ reports no_timeout whenever the wait returns before the
++	 * deadline by its steady clock, which happens now and then with the
++	 * coarse Windows timer resolution.
++	 */
++	(void) _cond.wait_for (_mutex, std::chrono::milliseconds (1000));
++	CPPUNIT_ASSERT (lm.locked ());
+ 
+ 	thread t1 ([&]() { _cond.signal (); });
+ 	_cond.wait (_mutex);

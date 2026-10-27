@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 08:26:40 +0100
+Subject: [PATCH] temporal/test: don't abort an update that was never started
+
+TempoMapTest::addTest builds a private TempoMap with `new` (the
+TempoMap::write_copy() call is commented out) but still finishes with
+tmap->abort_update(). That calls SerializedRCUManager::abort(), which
+unlocks the RCU writer std::mutex although no write_copy() locked it.
+Unlocking a mutex the thread does not own is undefined behaviour: with
+libstdc++/winpthreads it happens to be ignored, with libc++ on Windows
+(SRW locks) it corrupts the lock, and the next test,
+TempoMapTest::addRemoveTest, deadlocks in write_copy():
+
+  #4 std::mutex::lock()
+  #5 SerializedRCUManager<Temporal::TempoMap>::write_copy()
+  #6 TempoMapTest::addRemoveTest()
+
+Drop the unbalanced abort_update() call.
+---
+ libs/temporal/test/TempoMapTest.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/libs/temporal/test/TempoMapTest.cc b/libs/temporal/test/TempoMapTest.cc
+index 98ff446..423d600 100644
+--- a/libs/temporal/test/TempoMapTest.cc
++++ b/libs/temporal/test/TempoMapTest.cc
+@@ -31,8 +31,10 @@ TempoMapTest::addTest()
+ 
+ 	CPPUNIT_ASSERT (tp.beats() == Beats (17,0));
+ 
+-
+-	tmap->abort_update ();
++	/* tmap is a private map, not obtained via TempoMap::write_copy(), so
++	 * there is no RCU write lock to release: calling abort_update() here
++	 * would unlock a std::mutex this thread does not hold.
++	 */
+ }
+ 
+ void

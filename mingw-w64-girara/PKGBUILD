@@ -1,0 +1,54 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=girara
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=2026.07.18
+pkgrel=1
+pkgdesc="Common utility library of the zathura document viewer (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://pwmt.org/projects/girara/'
+msys2_repository_url='https://github.com/pwmt/girara'
+msys2_references=(
+  'archlinux: girara'
+)
+license=('spdx:Zlib')
+depends=("${MINGW_PACKAGE_PREFIX}-glib2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/pwmt/girara/archive/refs/tags/${pkgver}.tar.gz"
+        "0001-Build-on-Windows.patch")
+sha256sums=('841ca1d6fc33f87ca0065208052dffd7c49489cfd1119ce572176c1d5428a1e0'
+            '8e51777d7a90bd9234b6761f77d9b9c0d98a10141f3b0d1ebb5cb22a11e23f85')
+
+prepare() {
+  cd "${_realname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-Build-on-Windows.patch"
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup \
+      --prefix="${MINGW_PREFIX}" \
+      --wrap-mode=nodownload \
+      --buildtype=plain \
+      -Ddocs=disabled \
+      "build-${MSYSTEM}" \
+      "${_realname}-${pkgver}"
+
+  meson compile -C "build-${MSYSTEM}"
+}
+
+check() {
+  meson test -C "build-${MSYSTEM}" --print-errorlogs
+}
+
+package() {
+  meson install -C "build-${MSYSTEM}" --destdir "${pkgdir}"
+
+  install -Dm644 "${_realname}-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

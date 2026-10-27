@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:20:30 +0100
+Subject: [PATCH] Keep user LDFLAGS on Windows and compare test output ignoring
+ CR
+
+configure.ac replaced LDFLAGS with "-no-undefined" on mingw targets,
+silently discarding the flags makepkg passes in (e.g. -Wl,--no-seh,
+stack protector link flags). Append instead.
+
+On Windows, ltcdecode writes its report to stdout in text mode, so
+every line ends in CRLF and the plain `diff -q` against the LF-only
+expectation files in tests/ fails although the decoded timecode is
+identical. Use --strip-trailing-cr so `make check` compares content.
+---
+ configure.ac      | 2 +-
+ tests/Makefile.am | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index c1263f9..d5f41e6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -41,7 +41,7 @@ LIBLTC_LDFLAGS="-export-symbols-regex '^(ltc_).*'"
+ 
+ case $target_os in
+   *mingw32*|*win*)
+-    LDFLAGS="-no-undefined"
++    LDFLAGS="$LDFLAGS -no-undefined"
+ 		;;
+   *)
+     AC_MSG_CHECKING([if -Wl,--as-needed works])
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 19c454d..6f5bb67 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -28,12 +28,12 @@ check: $(check_PROGRAMS)
+ 	 uname -a
+ 	 @echo "-----------------------------------------------------------------"
+ 	 ./ltcencode output.raw
+-	 ./ltcdecode output.raw | diff -q $(srcdir)/expect_48k_2sec.txt -
++	 ./ltcdecode output.raw | diff -q --strip-trailing-cr $(srcdir)/expect_48k_2sec.txt -
+ 	 @echo "-----------------------------------------------------------------"
+ 	 ./ltcencode output.raw 192000
+-	 ./ltcdecode output.raw 7680 | diff -q $(srcdir)/expect_96k_2sec.txt -
++	 ./ltcdecode output.raw 7680 | diff -q --strip-trailing-cr $(srcdir)/expect_96k_2sec.txt -
+ 	 @echo "-----------------------------------------------------------------"
+-	 ./ltcdecode $(srcdir)/timecode.raw 882 | diff -q $(srcdir)/timecode.txt -
++	 ./ltcdecode $(srcdir)/timecode.raw 882 | diff -q --strip-trailing-cr $(srcdir)/timecode.txt -
+ 	 @echo "-----------------------------------------------------------------"
+ 	 ./ltcloop
+ 	 @echo "-----------------------------------------------------------------"

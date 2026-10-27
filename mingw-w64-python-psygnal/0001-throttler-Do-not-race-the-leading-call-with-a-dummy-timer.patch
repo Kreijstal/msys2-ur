@@ -1,0 +1,15 @@
+--- a/src/psygnal/_throttler.py	2026-10-25 21:17:42.936251703 +0100
++++ b/src/psygnal/_throttler.py	2026-10-25 21:17:42.950251932 +0100
+@@ -31,8 +31,11 @@
+         self._interval: float = interval / 1000
+         self._policy: EmissionPolicy = policy
+         self._has_pending: bool = False
++        # A Timer that was never started is not alive, so the first call takes the
++        # leading edge. Starting a zero-delay timer here raced with that call: the
++        # timer thread may not have finished yet, notably on Windows, and the
++        # leading call was then dropped.
+         self._timer: Timer = Timer(0, lambda: None)
+-        self._timer.start()
+         self._args: tuple[Any, ...] = ()
+         self._kwargs: dict[str, Any] = {}
+ 

@@ -1,0 +1,45 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:40:20 +0100
+Subject: [PATCH] Find the bundled VAMP plugins from headless tools on Windows
+
+The VAMP plugins shipped with Ardour (libardourvampplugins: EBU R128
+loudness, true-peak, ...) are located through VAMP_PATH. On Linux the
+wrapper scripts of the command-line tools set VAMP_PATH=@LIBDIR@/vamp,
+and on Windows the GUI sets it in fixup_bundle_environment(), but the
+headless programs (ardourN-lua, ardourN-export, hardour) have no
+wrapper there, so exports from them cannot run the loudness analysis:
+
+  Vamp::HostExt::PluginLoader: No library found in Vamp path for
+  plugin "libardourvampplugins:ebur128"
+
+Default VAMP_PATH to <dll-dir>/vamp in ARDOUR::init() on Windows when it
+is not already set.
+---
+ libs/ardour/globals.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/libs/ardour/globals.cc b/libs/ardour/globals.cc
+index a54328c..c039143 100644
+--- a/libs/ardour/globals.cc
++++ b/libs/ardour/globals.cc
+@@ -625,6 +625,19 @@ ARDOUR::init (bool try_optimization, const char* localedir, bool with_gui)
+ 
+ 	running_from_gui = with_gui;
+ 
++#ifdef PLATFORM_WINDOWS
++	/* On Linux the wrapper scripts of the headless tools (ardour-lua,
++	 * ardourN-export, ...) export VAMP_PATH=@LIBDIR@/vamp, and the GUI sets
++	 * it in fixup_bundle_environment(). Windows has no wrapper scripts, so
++	 * point the VAMP host at the bundled plugins (used for export analysis
++	 * and loudness normalization) unless the environment already says
++	 * otherwise.
++	 */
++	if (Glib::getenv ("VAMP_PATH").empty ()) {
++		Glib::setenv ("VAMP_PATH", Glib::build_filename (ardour_dll_directory (), "vamp"), true);
++	}
++#endif
++
+ #ifndef NDEBUG
+ 	if (getenv ("ARDOUR_LUA_METATABLES")) {
+ 		luabridge::Security::setHideMetatables (false);

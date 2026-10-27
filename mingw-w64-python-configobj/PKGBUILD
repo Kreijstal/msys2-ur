@@ -1,0 +1,53 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=configobj
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.0.9
+pkgrel=1
+pkgdesc="Config file reading, writing and validation (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/DiffSK/configobj'
+msys2_repository_url='https://github.com/DiffSK/configobj'
+msys2_references=(
+  'purl: pkg:pypi/configobj'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('03c881bbf23aa07bccf1b837005975993c4ab4427ba57f959afdd9d1a2386848')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  # Test the built wheel, not the source tree.
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  local _site=( "${PWD}"/chk${MINGW_PREFIX}/lib/python3*/site-packages )
+  export PYTHONPATH="$(cygpath -w "${_site[0]}")"
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from configobj import ConfigObj
+from validate import Validator
+c = ConfigObj(["[sec]", "n = 3"], configspec=["[sec]", "n = integer(min=1)"])
+assert c.validate(Validator()) is True and c["sec"]["n"] == 3, c
+print("configobj ok")
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

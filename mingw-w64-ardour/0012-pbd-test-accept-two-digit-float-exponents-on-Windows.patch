@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:24:56 +0100
+Subject: [PATCH] pbd/test: accept two-digit float exponents on Windows
+
+StringConvertTest expects float_to_string() to produce the three digit
+exponent of the legacy msvcrt printf ("3.4028234663852886e+038") on
+every Windows build. Binaries linked against the Universal CRT, or
+built with mingw-w64's C99 printf (__USE_MINGW_ANSI_STDIO, the MSYS2
+default), print the standard two digit form ("e+38"), so the test
+fails there although both strings parse back to the same value (which
+the test checks separately).
+
+Accept either representation on Windows.
+---
+ libs/pbd/test/string_convert_test.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/libs/pbd/test/string_convert_test.cc b/libs/pbd/test/string_convert_test.cc
+index b8a856d..a96a716 100644
+--- a/libs/pbd/test/string_convert_test.cc
++++ b/libs/pbd/test/string_convert_test.cc
+@@ -464,7 +464,8 @@ _test_float_conversion ()
+ 	string str;
+ 	CPPUNIT_ASSERT (float_to_string (numeric_limits<float>::max (), str));
+ #ifdef PLATFORM_WINDOWS
+-	CPPUNIT_ASSERT_EQUAL (MAX_FLOAT_WIN, str);
++	/* msvcrt prints a three digit exponent, the UCRT and mingw's C99 printf two */
++	CPPUNIT_ASSERT (str == MAX_FLOAT_WIN || str == MAX_FLOAT_STR);
+ #else
+ 	CPPUNIT_ASSERT_EQUAL (MAX_FLOAT_STR, str);
+ #endif
+@@ -476,7 +477,8 @@ _test_float_conversion ()
+ 
+ 	CPPUNIT_ASSERT (float_to_string (numeric_limits<float>::min (), str));
+ #ifdef PLATFORM_WINDOWS
+-	CPPUNIT_ASSERT_EQUAL (MIN_FLOAT_WIN, str);
++	/* msvcrt prints a three digit exponent, the UCRT and mingw's C99 printf two */
++	CPPUNIT_ASSERT (str == MIN_FLOAT_WIN || str == MIN_FLOAT_STR);
+ #else
+ 	CPPUNIT_ASSERT_EQUAL (MIN_FLOAT_STR, str);
+ #endif

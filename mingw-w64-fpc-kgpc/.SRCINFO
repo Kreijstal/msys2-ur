@@ -1,0 +1,36 @@
+pkgbase = mingw-w64-fpc-kgpc
+	pkgdesc = Free Pascal Compiler 3.2.2, bootstrapped from source via KGPC (no host FPC) (mingw-w64)
+	pkgver = 3.2.2
+	pkgrel = 3
+	url = https://github.com/Kreijstal/Pascal-Compiler
+	arch = any
+	license = spdx:GPL-2.0-or-later
+	license = spdx:LGPL-2.1-or-later
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = mingw-w64-ucrt-x86_64-meson
+	makedepends = mingw-w64-ucrt-x86_64-ninja
+	makedepends = mingw-w64-ucrt-x86_64-pkgconf
+	makedepends = mingw-w64-ucrt-x86_64-gmp
+	options = !strip
+	options = !debug
+	source = fpc-3.2.2.tar.gz::https://gitlab.com/freepascal.org/fpc/source/-/archive/release_3_2_2/source-release_3_2_2.tar.gz
+	source = kgpc-0.0.9.tar.gz::https://github.com/Kreijstal/Pascal-Compiler/archive/refs/tags/0.0.9.tar.gz
+	source = 0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch
+	source = 0002-openssl-load-the-OpenSSL-3-DLLs-on-Windows.patch
+	source = 0003-sqlite3-also-load-libsqlite3-0.dll-on-Windows.patch
+	sha256sums = c15ae8c7b1fd1e6da4194d669d538b833516af3251afca5de5bec50727c3528f
+	sha256sums = 13cdba1b9cd8cc0d442812feddfdf666f3403725071470ff30ce9fc94462238d
+	sha256sums = b372e4cd4f334c2f503f84955cffb7b516657a477f7b7c2998272c1d312796c4
+	sha256sums = a2a196ab5a3b9eabdf27b93eea9656279848b7e1dea4ba65eedeac18f1e790a3
+	sha256sums = c119a1cbeeb4b7b8d89c72fd4d5530fb7ba7c09ec5e1fc5985587a83ccb48937
+
+pkgname = mingw-w64-ucrt-x86_64-fpc-kgpc
+	pkgdesc = Free Pascal Compiler 3.2.2 (compiler, RTL, packages, utils), bootstrapped from source via KGPC (no host FPC) (mingw-w64)
+	install = fpc-kgpc.install
+	depends = mingw-w64-ucrt-x86_64-binutils
+	optdepends = mingw-w64-ucrt-x86_64-fpc-kgpc-src: FPC sources (for Lazarus CodeTools)
+	optdepends = mingw-w64-ucrt-x86_64-cc: C preprocessor that windres runs for { *.rc} resources
+
+pkgname = mingw-w64-ucrt-x86_64-fpc-kgpc-src
+	pkgdesc = Free Pascal Compiler 3.2.2 sources, for Lazarus CodeTools (mingw-w64)
+	depends = 

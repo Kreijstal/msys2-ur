@@ -1,0 +1,81 @@
+From ea77fb8a9b01b8d5bf9ef27c2eb8f2cf0c4b8cbf Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 10:29:37 +0100
+Subject: [PATCH 2/4] Use MSYS2's libffi DLL instead of the bundled static
+ libffi
+
+The WIN64 build mode links Lape's ffi extension statically (-dStaticFFI)
+against prebuilt libffi.a, libgcc.a and libmsvcrt.a from
+Third-Party/lape/extensions/ffi/bin/win64 (libffi 3.2.1, built against
+msvcrt).  Drop -dStaticFFI and that library path from the WIN64 and
+default modes, so ffi.pas falls back to its DynamicFFI mode and loads
+libffi at start-up, and make it load MSYS2's libffi-8.dll, which lives
+next to simba.exe in <prefix>/bin.
+
+The parts of the libffi ABI the unit depends on are unchanged in 3.4+:
+FFI_WIN64 = 1, the ffi_cif layout, and an ffi_closure (56 bytes on
+win64) that fits in the 80 bytes the unit reserves.
+---
+ Source/Simba.lpi                        | 8 ++------
+ Third-Party/lape/extensions/ffi/ffi.pas | 4 ++++
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Source/Simba.lpi b/Source/Simba.lpi
+index 1279b01..36bdecd 100644
+--- a/Source/Simba.lpi
++++ b/Source/Simba.lpi
+@@ -77,7 +77,6 @@
+           </Target>
+           <SearchPaths>
+             <IncludeFiles Value="$(ProjOutDir);$(LazarusDir)/components/synedit;../Third-Party/lape;editor"/>
+-            <Libraries Value="../Third-Party/lape/extensions/ffi/bin/win64"/>
+             <OtherUnitFiles Value="$(ProjPath);script;forms;codetools;iomanager;matchtemplate;helpers;generics;algorithms;editor;finders;script/imports/lcl;script/imports/simba;script/imports/simbaclasses;package;../Third-Party;../Third-Party/lape;../Third-Party/lape/extensions/ffi;../Third-Party/Synapse"/>
+             <UnitOutputDirectory Value="$(ProjPath)../build/$(BuildMode)/$(TargetCPU)-$(TargetOS)"/>
+           </SearchPaths>
+@@ -106,8 +105,7 @@
+             <CompilerMessages>
+               <IgnoredMessages idx5024="True" idx4105="True" idx4104="True" idx4055="True" idx2054="True"/>
+             </CompilerMessages>
+-            <CustomOptions Value="-dStaticFFI
+--dLape_CDECL"/>
++            <CustomOptions Value="-dLape_CDECL"/>
+             <CreateMakefileOnBuild Value="True"/>
+           </Other>
+         </CompilerOptions>
+@@ -733,7 +731,6 @@
+     </Target>
+     <SearchPaths>
+       <IncludeFiles Value="$(ProjOutDir);$(LazarusDir)/components/synedit;../Third-Party/lape;editor"/>
+-      <Libraries Value="../Third-Party/lape/extensions/ffi/bin/win64"/>
+       <OtherUnitFiles Value="$(ProjPath);script;forms;codetools;iomanager;matchtemplate;helpers;generics;algorithms;editor;finders;script/imports/lcl;script/imports/simba;script/imports/simbaclasses;package;../Third-Party;../Third-Party/lape;../Third-Party/lape/extensions/ffi;../Third-Party/Synapse"/>
+       <UnitOutputDirectory Value="$(ProjPath)../build/$(BuildMode)/$(TargetCPU)-$(TargetOS)"/>
+     </SearchPaths>
+@@ -757,8 +754,7 @@
+       <CompilerMessages>
+         <IgnoredMessages idx5024="True" idx4105="True" idx4104="True" idx4055="True" idx2054="True"/>
+       </CompilerMessages>
+-      <CustomOptions Value="-dStaticFFI
+--dLape_CDECL"/>
++      <CustomOptions Value="-dLape_CDECL"/>
+       <CreateMakefileOnBuild Value="True"/>
+     </Other>
+   </CompilerOptions>
+diff --git a/Third-Party/lape/extensions/ffi/ffi.pas b/Third-Party/lape/extensions/ffi/ffi.pas
+index e3c97de..1343ef8 100644
+--- a/Third-Party/lape/extensions/ffi/ffi.pas
++++ b/Third-Party/lape/extensions/ffi/ffi.pas
+@@ -97,7 +97,11 @@ const
+ {$ENDIF}
+ 
+ const
++  {$IFDEF MSWINDOWS}
++  LibFFI = 'libffi-8.dll';  // MSYS2's libffi 3.4+ (same ABI as 3.2 for this unit)
++  {$ELSE}
+   LibFFI = 'libffi.' + SharedSuffix;
++  {$ENDIF}
+ 
+ type
+   TFFIStatus = (
+-- 
+2.55.0
+

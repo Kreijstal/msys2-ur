@@ -1,0 +1,35 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:39:35 +0100
+Subject: [PATCH] Don't crash when GLib knows no system config dir on Windows
+
+ardour_config_search_path() builds the "All Users" configuration path
+from g_get_system_config_dirs()[0]. GLib returns a NULL-terminated
+array that is empty when it cannot resolve the common application data
+folder, which happens e.g. when a tool is started from a stripped-down
+environment (service, scheduler, `env -i`). Constructing a std::string
+from that NULL entry throws std::logic_error, and every Ardour program,
+including the headless session utilities, aborts during
+ARDOUR::init():
+
+  terminate called after throwing an instance of 'std::logic_error'
+    what():  basic_string: construction from null is not valid
+
+Skip the All-Users folder when the array has no first entry.
+---
+ libs/ardour/filesystem_paths.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libs/ardour/filesystem_paths.cc b/libs/ardour/filesystem_paths.cc
+index 0a9e466..384a8db 100644
+--- a/libs/ardour/filesystem_paths.cc
++++ b/libs/ardour/filesystem_paths.cc
+@@ -250,7 +250,7 @@ ardour_config_search_path ()
+ 		// Despite its slightly odd name, the above returns a single entry which
+ 		// corresponds to 'All Users' on Windows (according to the documentation)
+ 
+-		if (all_users_folder) {
++		if (all_users_folder && all_users_folder[0]) {
+ 			std::string writable_all_users_path = all_users_folder[0];
+ 			writable_all_users_path += "\\";
+ 			writable_all_users_path += PROGRAM_NAME;

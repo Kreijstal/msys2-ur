@@ -1,0 +1,126 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=libtg_owt
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+# The revision Telegram Desktop builds against is pinned in tdesktop's
+# Telegram/build/prepare/prepare.py (stage 'tg_owt') and in its snapcraft.yaml.
+# This one is what tdesktop v7.3.3 expects.
+_commit=07fb35bc33b3e79125a1beab7690e830f183f5d8
+# The bundled libyuv submodule at the revision tg_owt pins.
+_libyuv_commit=04821d1e7d60845525e8db55c7bcd41ef5be9406
+pkgver=r502.07fb35b
+pkgrel=1
+pkgdesc="WebRTC fork used by Telegram Desktop (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/desktop-app/tg_owt'
+msys2_repository_url='https://github.com/desktop-app/tg_owt'
+msys2_references=(
+  'archlinux: libtg_owt'
+)
+license=('spdx:BSD-3-Clause')
+# Static library only (see build()), so everything it links against is
+# needed by whoever links it in turn.
+depends=("${MINGW_PACKAGE_PREFIX}-abseil-cpp"
+         "${MINGW_PACKAGE_PREFIX}-crc32c"
+         "${MINGW_PACKAGE_PREFIX}-ffmpeg"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+         "${MINGW_PACKAGE_PREFIX}-libsrtp"
+         "${MINGW_PACKAGE_PREFIX}-libvpx"
+         "${MINGW_PACKAGE_PREFIX}-openh264"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-opus")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             'git')
+options=('staticlibs')
+source=("git+https://github.com/desktop-app/tg_owt.git#commit=${_commit}"
+        "git+https://gitlab.com/chromiumsrc/libyuv.git#commit=${_libyuv_commit}"
+        "0001-Keep-MSVC-only-constructs-out-of-MinGW-builds.patch"
+        "0002-Include-cstdint-where-fixed-width-integers-are-used.patch"
+        "0003-Build-the-WGC-capture-session-with-mingw-w64-headers.patch"
+        "smoke-test.cc")
+sha256sums=('3bda4b8d3c3c6797d2adc1acb55c6a04842706eee112ff27950ce0438f239611'
+            '33810d30dcd83520e16e0be2ddc1eec0dc2c3154f32c8d103c2988a43f7ada78'
+            'd52795118025621175a2731dcaf913739629565a04890bf7a246930e30ddf112'
+            '29a922b7b50181eef37aa8d55bb8d42f7b57e32177047e1ecb5ac76afdcd4933'
+            '03a7c608129914e2436a13724b541766fd3ef132d560d3b1df764ea6ed0a296a'
+            '8be480ea478131db94cbbbcbf9f23fd0c343f234ba343393384ae98c2fa80916')
+
+prepare() {
+  cd "${srcdir}/tg_owt"
+
+  # abseil-cpp, libsrtp and crc32c come from MSYS2 (tg_owt's packaged build
+  # picks them up when found), so only the libyuv submodule is needed.
+  git submodule init src/third_party/libyuv
+  git config submodule.src/third_party/libyuv.url "${srcdir}/libyuv"
+  git -c protocol.file.allow=always submodule update src/third_party/libyuv
+
+  # SEH, an _MSC_FULL_VER check and an export-macro self-test assume MSVC.
+  patch -Np1 -i "${srcdir}/0001-Keep-MSVC-only-constructs-out-of-MinGW-builds.patch"
+  # GCC 16's libstdc++ no longer pulls in <cstdint> transitively.
+  patch -Np1 -i "${srcdir}/0002-Include-cstdint-where-fixed-width-integers-are-used.patch"
+  # Keep Windows.Graphics.Capture: replace the one WRL::Callback (mingw-w64
+  # has no <wrl/event.h>) and the namespaced IID constants it lacks.
+  patch -Np1 -i "${srcdir}/0003-Build-the-WGC-capture-session-with-mingw-w64-headers.patch"
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # Upstream only supports a static build; the shared one is explicitly
+  # "community maintained, may and will break".
+  # https://github.com/desktop-app/tg_owt/issues/75#issuecomment-992061171
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      "${_extra_config[@]}" \
+      -DBUILD_SHARED_LIBS=OFF \
+      -S tg_owt \
+      -B "build-${MSYSTEM}"
+
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "build-${MSYSTEM}"
+}
+
+check() {
+  # No upstream test suite is built by the CMake port, so link a small
+  # program against the library through its installed CMake package and run
+  # it: this proves the static archive and its exported link interface are
+  # complete, and exercises the desktop capture code the patches touch.
+  local _stage="${srcdir}/check-root"
+  rm -rf "${_stage:?}" "${srcdir}/smoke-build"
+  DESTDIR="${_stage}" "${MINGW_PREFIX}/bin/cmake.exe" --install "build-${MSYSTEM}" >/dev/null
+
+  mkdir -p "${srcdir}/smoke"
+  cp "${srcdir}/smoke-test.cc" "${srcdir}/smoke/"
+  cat > "${srcdir}/smoke/CMakeLists.txt" <<'END'
+cmake_minimum_required(VERSION 3.16)
+project(tg_owt_smoke CXX)
+find_package(tg_owt REQUIRED)
+add_executable(tg_owt_smoke smoke-test.cc)
+target_link_libraries(tg_owt_smoke PRIVATE tg_owt::tg_owt)
+END
+
+  "${MINGW_PREFIX}/bin/cmake.exe" -GNinja \
+    -DCMAKE_PREFIX_PATH="$(cygpath -m "${_stage}${MINGW_PREFIX}")" \
+    -S "${srcdir}/smoke" -B "${srcdir}/smoke-build"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/smoke-build"
+  "${srcdir}/smoke-build/tg_owt_smoke.exe"
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "build-${MSYSTEM}"
+
+  install -Dm644 "${srcdir}/tg_owt/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

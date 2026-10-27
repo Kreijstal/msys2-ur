@@ -1,0 +1,86 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=heidisql
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=12.22
+pkgrel=1
+pkgdesc="SQL client for MariaDB/MySQL, PostgreSQL, SQLite and MS SQL (Lazarus port) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.heidisql.com/'
+msys2_repository_url='https://github.com/HeidiSQL/HeidiSQL'
+msys2_references=(
+  'aur: heidisql'
+)
+license=('spdx:GPL-2.0-or-later')
+# The client libraries are loaded at run time from the directory of
+# heidisql.exe (<prefix>/bin), where these packages install them.
+depends=("${MINGW_PACKAGE_PREFIX}-libmariadbclient"
+         "${MINGW_PACKAGE_PREFIX}-postgresql"
+         "${MINGW_PACKAGE_PREFIX}-sqlite3")
+optdepends=("${MINGW_PACKAGE_PREFIX}-freetds: MS SQL Server connections (libsybdb)")
+makedepends=("${MINGW_PACKAGE_PREFIX}-lazarus")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-sqlite3")
+options=('!strip' '!debug')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/HeidiSQL/HeidiSQL/archive/refs/tags/v${pkgver}.tar.gz"
+        "0001-Find-resources-and-MariaDB-plugins-in-the-MSYS2-layo.patch")
+sha256sums=('aeb335ee7a1090a27b82c4eb94a91c972cd40d1bd5c5be2c23a8736f32277b3d'
+            '962864280086537a1652d76bd099a9793b0e02de3549f339c60188d8ab3596f8')
+
+prepare() {
+  cd "${srcdir}/HeidiSQL-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-Find-resources-and-MariaDB-plugins-in-the-MSYS2-layo.patch"
+}
+
+build() {
+  cd "${srcdir}/HeidiSQL-${pkgver}"
+  # Private lazbuild config dir, so the user's ~/.lazarus is not touched.
+  # (Upstream's extra/lazarus-patches only change the Qt6/Cocoa widgetsets,
+  # VirtualTreeView HiDPI buffering and a SynEdit caret detail; the win32
+  # build does not need them.)
+  rm -rf "${srcdir:?}/lazconf"
+  lazbuild --pcp="$(cygpath -m "${srcdir}/lazconf")" -B --bm=Release heidisql.lpi
+}
+
+check() {
+  # Start the built program against an SQLite database (the MSYS2 layout:
+  # bin/heidisql.exe next to the client DLL, share/heidisql/*.ini), in
+  # portable mode with session logging to a file, and check the log for a
+  # completed connection.  heidisql is a GUI program and never exits on its
+  # own, so it is terminated afterwards.
+  local _t="${srcdir}/test"
+  rm -rf "${_t:?}"
+  mkdir -p "${_t}/bin" "${_t}/share/heidisql" "${_t}/logs"
+  cp "${srcdir}/HeidiSQL-${pkgver}/out/heidisql.exe" "${_t}/bin/"
+  cp "${srcdir}/HeidiSQL-${pkgver}"/extra/ini/*.ini "${_t}/share/heidisql/"
+  cp "${MINGW_PREFIX}/bin/libsqlite3-0.dll" "${_t}/bin/"
+  : > "${_t}/bin/portable.lock"
+  local _logs; _logs="$(cygpath -w "${_t}/logs")"
+  printf '{\n  "LogToFile" : 1,\n  "SessionLogsDirectory" : "%s\\\\"\n}\n' \
+    "${_logs//\\/\\\\}" > "${_t}/bin/settings.json"
+  "${MINGW_PREFIX}/bin/sqlite3" "${_t}/test.db" \
+    "create table fruit(id integer primary key, name text); insert into fruit(name) values('apple');"
+
+  "${_t}/bin/heidisql.exe" -n 10 -h "$(cygpath -w "${_t}/test.db")" </dev/null >/dev/null 2>&1 &
+  local _pid=$! _i
+  for _i in $(seq 1 60); do
+    grep -qs "Connected\. Thread-ID" "${_t}"/logs/*.log && break
+    sleep 1
+  done
+  kill "${_pid}" 2>/dev/null || true
+  wait "${_pid}" 2>/dev/null || true
+  cat "${_t}"/logs/*.log
+  grep -q "SELECT sqlite_version();" "${_t}"/logs/*.log
+  grep -q "Connected\. Thread-ID" "${_t}"/logs/*.log
+}
+
+package() {
+  cd "${srcdir}/HeidiSQL-${pkgver}"
+  install -Dm755 out/heidisql.exe "${pkgdir}${MINGW_PREFIX}/bin/heidisql.exe"
+  # Read by GetResourcesDir (see 0001): SQL function lists and translations.
+  install -d "${pkgdir}${MINGW_PREFIX}/share/${_realname}/locale"
+  install -m644 extra/ini/*.ini "${pkgdir}${MINGW_PREFIX}/share/${_realname}/"
+  install -m644 extra/locale/*.mo "${pkgdir}${MINGW_PREFIX}/share/${_realname}/locale/"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

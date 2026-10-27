@@ -1,0 +1,607 @@
+From 330d4623218d6c629d6013ea13122b5442e6f5f5 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 02:11:48 +0100
+Subject: [PATCH 2/5] lib_base: Build with mingw-w64
+
+The Windows code assumes the MSVC toolchain and the full Windows SDK.
+
+* Add base/platform/win/mingw_sdk, put on the include path for MinGW
+  only, with stand-ins for SDK headers mingw-w64 lacks or ships in part:
+  - wrl/implements.h, wrl/event.h, wrl/module.h: the classic COM part of
+    WRL (RuntimeClass, Implements, FtmBase, Make, Callback and the
+    out-of-process Module/CoCreatableClass registration used for toast
+    activation). mingw-w64 only has the ComPtr side; its own wrl/module.h
+    is included first.
+  - UserConsentVerifierInterop.h: the Windows Hello window interop
+    interface.
+  - ShObjIdl_core.h: mingw-w64 keeps those interfaces in <shobjidl.h>.
+
+* base_windows_winrt.cpp defines the WINRT_IMPL_* entry points of
+  C++/WinRT to route them through dynamically resolved pointers (the
+  Windows 7 baseline). With MSVC those names alias the real functions
+  through /alternatename; with MinGW the declarations are __asm__ labels
+  of the real function names, so the definitions clash with the import
+  libraries. Leave them out and link runtimeobject instead.
+
+* GUID_POWER_SAVING_STATUS is not declared by mingw-w64 yet; define it.
+
+* GetProcAddress() returns a function pointer, which GCC does not
+  convert to void* implicitly.
+
+* The DLL search path is restricted to System32. A MinGW build uses the
+  shared libraries of its environment, installed next to the executable,
+  and Qt plugins loaded later (e.g. the WebP image format plugin needed
+  for the emoji) pull more of them in by name. Keep the application
+  directory searchable there, otherwise the emoji sprites fail to load
+  and the app aborts on start.
+---
+ Telegram/lib_base/CMakeLists.txt              |  16 ++
+ .../platform/win/base_battery_saving_win.cpp  |   9 +
+ .../win/base_windows_safe_library.cpp         |  16 +-
+ .../base/platform/win/base_windows_winrt.cpp  |  11 ++
+ .../platform/win/mingw_sdk/ShObjIdl_core.h    |  11 ++
+ .../mingw_sdk/UserConsentVerifierInterop.h    |  22 +++
+ .../base/platform/win/mingw_sdk/wrl/event.h   |  62 +++++++
+ .../platform/win/mingw_sdk/wrl/implements.h   | 160 ++++++++++++++++++
+ .../base/platform/win/mingw_sdk/wrl/module.h  | 155 +++++++++++++++++
+ 9 files changed, 460 insertions(+), 2 deletions(-)
+ create mode 100644 Telegram/lib_base/base/platform/win/mingw_sdk/ShObjIdl_core.h
+ create mode 100644 Telegram/lib_base/base/platform/win/mingw_sdk/UserConsentVerifierInterop.h
+ create mode 100644 Telegram/lib_base/base/platform/win/mingw_sdk/wrl/event.h
+ create mode 100644 Telegram/lib_base/base/platform/win/mingw_sdk/wrl/implements.h
+ create mode 100644 Telegram/lib_base/base/platform/win/mingw_sdk/wrl/module.h
+
+diff --git a/Telegram/lib_base/CMakeLists.txt b/Telegram/lib_base/CMakeLists.txt
+index 5ad2ede..53624c5 100644
+--- a/Telegram/lib_base/CMakeLists.txt
++++ b/Telegram/lib_base/CMakeLists.txt
+@@ -253,6 +253,22 @@ PUBLIC
+     ${src_loc}
+ )
+ 
++if (MINGW)
++    # Stand-ins for Windows SDK headers that mingw-w64 lacks or ships only in
++    # part (the WRL implementation helpers, some interop interfaces).
++    target_include_directories(lib_base SYSTEM BEFORE
++    PUBLIC
++        ${src_loc}/base/platform/win/mingw_sdk
++    )
++
++    # C++/WinRT calls the Ro*/WindowsString* functions directly here (see
++    # base_windows_winrt.cpp), MSVC gets them from WindowsApp.lib.
++    target_link_libraries(lib_base
++    PUBLIC
++        runtimeobject
++    )
++endif()
++
+ target_link_libraries(lib_base
+ PUBLIC
+     desktop-app::lib_rpl
+diff --git a/Telegram/lib_base/base/platform/win/base_battery_saving_win.cpp b/Telegram/lib_base/base/platform/win/base_battery_saving_win.cpp
+index 2301f7a..d8ebe86 100644
+--- a/Telegram/lib_base/base/platform/win/base_battery_saving_win.cpp
++++ b/Telegram/lib_base/base/platform/win/base_battery_saving_win.cpp
+@@ -16,6 +16,15 @@ namespace {
+ 
+ constexpr auto kWindowClassName = L"DesktopAppBatterySaving";
+ 
++#ifdef __MINGW32__
++// Energy saver status power setting, not declared by mingw-w64 (yet).
++// {E00958C0-C213-4ACE-AC77-FECCED2EEEA5}
++constexpr auto GUID_POWER_SAVING_STATUS = GUID{
++	0xe00958c0, 0xc213, 0x4ace,
++	{ 0xac, 0x77, 0xfe, 0xcc, 0xed, 0x2e, 0xee, 0xa5 },
++};
++#endif // __MINGW32__
++
+ // The only thing the window is needed for is being a target handle for
+ // RegisterPowerSettingNotification, so it is created as a message-only
+ // window: a child of HWND_MESSAGE is never displayed, never reaches the
+diff --git a/Telegram/lib_base/base/platform/win/base_windows_safe_library.cpp b/Telegram/lib_base/base/platform/win/base_windows_safe_library.cpp
+index 6272ddf..1ab293b 100644
+--- a/Telegram/lib_base/base/platform/win/base_windows_safe_library.cpp
++++ b/Telegram/lib_base/base/platform/win/base_windows_safe_library.cpp
+@@ -86,11 +86,14 @@ BOOL (__stdcall *SetDefaultDllDirectories)(_In_ DWORD DirectoryFlags);
+ namespace details {
+ 
+ void *LoadMethodRaw(HINSTANCE library, LPCSTR name, WORD id) {
+-	const auto result = GetProcAddress(library, name);
++	// FARPROC is a function pointer, MSVC converts it to void* implicitly.
++	const auto result = reinterpret_cast<void*>(
++		GetProcAddress(library, name));
+ 	return result
+ 		? result
+ 		: id
+-		? GetProcAddress(library, MAKEINTRESOURCEA(id))
++		? reinterpret_cast<void*>(
++			GetProcAddress(library, MAKEINTRESOURCEA(id)))
+ 		: nullptr;
+ }
+ 
+@@ -130,7 +133,16 @@ void InitDynamicLibraries() {
+ 	static const auto Inited = [] {
+ 		const auto kernel = LoadLibrary(L"kernel32.dll");
+ 		if (LOAD_SYMBOL(kernel, SetDefaultDllDirectories)) {
++#ifdef __MINGW32__
++			// A MinGW build links the shared libraries of its environment,
++			// installed next to the executable. Qt plugins, loaded later
++			// from their own directory, pull more of them in by name, so
++			// keep the application directory searchable as well.
++			SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_APPLICATION_DIR
++				| LOAD_LIBRARY_SEARCH_SYSTEM32);
++#else // __MINGW32__
+ 			SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
++#endif // __MINGW32__
+ 		} else {
+ 			CheckDynamicLibraries();
+ 		}
+diff --git a/Telegram/lib_base/base/platform/win/base_windows_winrt.cpp b/Telegram/lib_base/base/platform/win/base_windows_winrt.cpp
+index 4c8b2c2..3723fa5 100644
+--- a/Telegram/lib_base/base/platform/win/base_windows_winrt.cpp
++++ b/Telegram/lib_base/base/platform/win/base_windows_winrt.cpp
+@@ -198,6 +198,15 @@ void details::LogError(
+ 
+ } // namespace base::WinRT
+ 
++#ifndef __MINGW32__
++
++// With MSVC C++/WinRT reaches the system through WINRT_IMPL_* names that
++// default to the real functions via /alternatename, so defining them here
++// routes every call through the pointers resolved above. With MinGW those
++// declarations are __asm__ labels naming the real functions themselves:
++// definitions here would clash with the import libraries, so C++/WinRT
++// links against the system functions directly.
++
+ namespace P = base::WinRT;
+ 
+ extern "C" {
+@@ -463,3 +472,5 @@ void __stdcall WINRT_IMPL_CloseThreadpool(winrt::impl::ptp_pool pool) noexcept {
+ }
+ 
+ } // extern "C"
++
++#endif // !__MINGW32__
+diff --git a/Telegram/lib_base/base/platform/win/mingw_sdk/ShObjIdl_core.h b/Telegram/lib_base/base/platform/win/mingw_sdk/ShObjIdl_core.h
+new file mode 100644
+index 0000000..e813109
+--- /dev/null
++++ b/Telegram/lib_base/base/platform/win/mingw_sdk/ShObjIdl_core.h
+@@ -0,0 +1,11 @@
++// This file is part of Desktop App Toolkit,
++// a set of libraries for developing nice desktop applications.
++//
++// For license and copyright information please follow this link:
++// https://github.com/desktop-app/legal/blob/master/LEGAL
++//
++// The Windows SDK splits the core shell interfaces out of <shobjidl.h>,
++// mingw-w64 keeps them all in <shobjidl.h>.
++#pragma once
++
++#include <shobjidl.h>
+diff --git a/Telegram/lib_base/base/platform/win/mingw_sdk/UserConsentVerifierInterop.h b/Telegram/lib_base/base/platform/win/mingw_sdk/UserConsentVerifierInterop.h
+new file mode 100644
+index 0000000..97bfe83
+--- /dev/null
++++ b/Telegram/lib_base/base/platform/win/mingw_sdk/UserConsentVerifierInterop.h
+@@ -0,0 +1,22 @@
++// This file is part of Desktop App Toolkit,
++// a set of libraries for developing nice desktop applications.
++//
++// For license and copyright information please follow this link:
++// https://github.com/desktop-app/legal/blob/master/LEGAL
++//
++// The Windows Hello interop interface from the Windows SDK header of the
++// same name, which mingw-w64 does not provide (yet).
++#pragma once
++
++#include <inspectable.h>
++#include <winstring.h>
++
++MIDL_INTERFACE("39E050C3-4E74-441A-8DC0-B81104DF949C")
++IUserConsentVerifierInterop : public IInspectable {
++	virtual HRESULT STDMETHODCALLTYPE RequestVerificationForWindowAsync(
++		HWND appWindow,
++		HSTRING message,
++		REFIID riid,
++		void **asyncOperation) = 0;
++};
++__CRT_UUID_DECL(IUserConsentVerifierInterop, 0x39e050c3, 0x4e74, 0x441a, 0x8d, 0xc0, 0xb8, 0x11, 0x04, 0xdf, 0x94, 0x9c)
+diff --git a/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/event.h b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/event.h
+new file mode 100644
+index 0000000..0a8a4e9
+--- /dev/null
++++ b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/event.h
+@@ -0,0 +1,62 @@
++// This file is part of Desktop App Toolkit,
++// a set of libraries for developing nice desktop applications.
++//
++// For license and copyright information please follow this link:
++// https://github.com/desktop-app/legal/blob/master/LEGAL
++//
++// Microsoft::WRL::Callback for mingw-w64, which has no <wrl/event.h>:
++// wraps a callable into a COM delegate object implementing interface I,
++// whose single Invoke() method forwards to the callable.
++#pragma once
++
++#include <wrl/implements.h>
++
++namespace Microsoft::WRL {
++namespace Details {
++
++template <typename Interface, typename Function, typename Method>
++class CallbackImpl;
++
++template <
++	typename Interface,
++	typename Function,
++	typename Result,
++	typename Class,
++	typename ...Args>
++class CallbackImpl<Interface, Function, Result(STDMETHODCALLTYPE Class::*)(Args...)> final
++: public RuntimeClass<RuntimeClassFlags<Delegate>, Interface> {
++public:
++	explicit CallbackImpl(Function function)
++	: _function(std::move(function)) {
++	}
++
++	Result STDMETHODCALLTYPE Invoke(Args ...args) override {
++		return _function(args...);
++	}
++
++private:
++	Function _function;
++
++};
++
++} // namespace Details
++
++template <typename Interface, typename Function>
++ComPtr<Interface> Callback(Function &&function) {
++	using Impl = Details::CallbackImpl<
++		Interface,
++		std::decay_t<Function>,
++		decltype(&Interface::Invoke)>;
++	auto result = ComPtr<Interface>();
++	result.Attach(new (std::nothrow) Impl(std::forward<Function>(function)));
++	return result;
++}
++
++template <typename Interface, typename Object, typename Method>
++ComPtr<Interface> Callback(Object *object, Method method) {
++	return Callback<Interface>([=](auto ...args) {
++		return (object->*method)(args...);
++	});
++}
++
++} // namespace Microsoft::WRL
+diff --git a/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/implements.h b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/implements.h
+new file mode 100644
+index 0000000..a13b0d6
+--- /dev/null
++++ b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/implements.h
+@@ -0,0 +1,160 @@
++// This file is part of Desktop App Toolkit,
++// a set of libraries for developing nice desktop applications.
++//
++// For license and copyright information please follow this link:
++// https://github.com/desktop-app/legal/blob/master/LEGAL
++//
++// mingw-w64 ships <wrl/client.h> (ComPtr) but not the implementation side of
++// the Windows Runtime C++ Template Library. This is the small classic-COM
++// subset the code here and the WebView2 SDK helper header use:
++// RuntimeClass, Implements, RuntimeClassFlags, FtmBase and Make.
++#pragma once
++
++#include <unknwn.h>
++#include <objidl.h>
++#include <wrl/client.h>
++
++#include <atomic>
++#include <new>
++#include <type_traits>
++#include <utility>
++
++namespace Microsoft::WRL {
++
++enum RuntimeClassType {
++	WinRt = 0x0001,
++	ClassicCom = 0x0002,
++	WinRtClassicComMix = WinRt | ClassicCom,
++	InhibitWeakReference = 0x0004,
++	Delegate = ClassicCom,
++	InhibitFtmBase = 0x0008,
++	InhibitRoOriginateError = 0x0010,
++};
++
++template <unsigned int flags>
++struct RuntimeClassFlags {
++	static constexpr unsigned int value = flags;
++};
++
++// The SDK's FtmBase aggregates the free-threaded marshaler. Here it only
++// marks the class as agile: QueryInterface answers IAgileObject, which is
++// what lets COM hand the object to other apartments of the process as is.
++class FtmBase {
++};
++
++namespace Details {
++
++template <typename T, typename = void>
++struct IsImplements : std::false_type {
++};
++
++template <typename T>
++struct IsImplements<T, std::void_t<typename T::WrlImplementsTag>>
++: std::true_type {
++};
++
++// Answers riid for one entry of a RuntimeClass/Implements base list. With
++// `any` set it returns the first interface found, which serves as the
++// object's IUnknown identity.
++template <typename Self, typename Base>
++bool QueryBase(Self *self, REFIID riid, void **object, bool any) {
++	if constexpr (std::is_same_v<Base, FtmBase>) {
++		return false;
++	} else if constexpr (IsImplements<Base>::value) {
++		return Base::QueryImplements(static_cast<Base*>(self), riid, object, any);
++	} else {
++		static_assert(std::is_base_of_v<IUnknown, Base>, "Expected COM interface");
++		if (any || riid == __uuidof(Base)) {
++			*object = static_cast<Base*>(self);
++			return true;
++		}
++		return false;
++	}
++}
++
++template <typename Self, typename ...Bases>
++bool QueryBases(Self *self, REFIID riid, void **object, bool any) {
++	return (QueryBase<Self, Bases>(self, riid, object, any) || ...);
++}
++
++} // namespace Details
++
++// A mixin listing more interfaces for an enclosing RuntimeClass.
++template <typename Flags, typename ...Interfaces>
++class Implements : public Interfaces... {
++public:
++	using WrlImplementsTag = void;
++
++	static bool QueryImplements(
++			Implements *self,
++			REFIID riid,
++			void **object,
++			bool any) {
++		return Details::QueryBases<Implements, Interfaces...>(
++			self,
++			riid,
++			object,
++			any);
++	}
++
++protected:
++	virtual ~Implements() = default;
++};
++
++template <typename Flags, typename ...Bases>
++class RuntimeClass : public Bases... {
++	static constexpr bool kAgile = (std::is_same_v<Bases, FtmBase> || ...);
++
++public:
++	RuntimeClass() = default;
++	RuntimeClass(const RuntimeClass &) = delete;
++	RuntimeClass &operator=(const RuntimeClass &) = delete;
++
++	HRESULT STDMETHODCALLTYPE QueryInterface(
++			REFIID riid,
++			void **object) override {
++		if (!object) {
++			return E_POINTER;
++		}
++		*object = nullptr;
++		const auto any = (riid == __uuidof(IUnknown))
++			|| (kAgile && riid == __uuidof(IAgileObject));
++		if (!Details::QueryBases<RuntimeClass, Bases...>(
++				this,
++				riid,
++				object,
++				any)) {
++			return E_NOINTERFACE;
++		}
++		AddRef();
++		return S_OK;
++	}
++
++	ULONG STDMETHODCALLTYPE AddRef() override {
++		return ++_refCount;
++	}
++
++	ULONG STDMETHODCALLTYPE Release() override {
++		const auto result = --_refCount;
++		if (!result) {
++			delete this;
++		}
++		return result;
++	}
++
++protected:
++	virtual ~RuntimeClass() = default;
++
++private:
++	std::atomic<ULONG> _refCount = 1;
++
++};
++
++template <typename T, typename ...Args>
++ComPtr<T> Make(Args &&...args) {
++	auto result = ComPtr<T>();
++	result.Attach(new (std::nothrow) T(std::forward<Args>(args)...));
++	return result;
++}
++
++} // namespace Microsoft::WRL
+diff --git a/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/module.h b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/module.h
+new file mode 100644
+index 0000000..ec6d884
+--- /dev/null
++++ b/Telegram/lib_base/base/platform/win/mingw_sdk/wrl/module.h
+@@ -0,0 +1,155 @@
++// This file is part of Desktop App Toolkit,
++// a set of libraries for developing nice desktop applications.
++//
++// For license and copyright information please follow this link:
++// https://github.com/desktop-app/legal/blob/master/LEGAL
++//
++// mingw-w64's <wrl/module.h> only pulls in the client side of WRL. Add the
++// out-of-process server part used for COM activation of toast notification
++// clicks: CoCreatableClass() records a class, and
++// Module<OutOfProc>::GetModule().RegisterObjects() publishes class factories
++// for all recorded classes with CoRegisterClassObject().
++#pragma once
++
++#include_next <wrl/module.h>
++#include <wrl/implements.h>
++
++#include <vector>
++
++namespace Microsoft::WRL {
++
++enum ModuleType {
++	InProc = 0x01,
++	OutOfProc = 0x02,
++	DisableCaching = 0x04,
++	InProcDisableCaching = InProc | DisableCaching,
++	OutOfProcDisableCaching = OutOfProc | DisableCaching,
++};
++
++namespace Details {
++
++struct CreatableClassEntry {
++	const CLSID *clsid = nullptr;
++	HRESULT (*create)(REFIID riid, void **object) = nullptr;
++	CreatableClassEntry *next = nullptr;
++};
++
++inline CreatableClassEntry *&CreatableClasses() {
++	static CreatableClassEntry *head = nullptr;
++	return head;
++}
++
++struct CreatableClassRegistrar {
++	explicit CreatableClassRegistrar(CreatableClassEntry *entry) {
++		entry->next = CreatableClasses();
++		CreatableClasses() = entry;
++	}
++};
++
++template <typename T>
++HRESULT CreateInstance(REFIID riid, void **object) {
++	const auto instance = new (std::nothrow) T();
++	if (!instance) {
++		return E_OUTOFMEMORY;
++	}
++	const auto result = instance->QueryInterface(riid, object);
++	instance->Release();
++	return result;
++}
++
++class ClassFactory final
++: public RuntimeClass<RuntimeClassFlags<ClassicCom>, IClassFactory> {
++public:
++	explicit ClassFactory(const CreatableClassEntry *entry)
++	: _entry(entry) {
++	}
++
++	HRESULT STDMETHODCALLTYPE CreateInstance(
++			IUnknown *outer,
++			REFIID riid,
++			void **object) override {
++		if (!object) {
++			return E_POINTER;
++		}
++		*object = nullptr;
++		return outer
++			? CLASS_E_NOAGGREGATION
++			: _entry->create(riid, object);
++	}
++
++	HRESULT STDMETHODCALLTYPE LockServer(BOOL) override {
++		return S_OK;
++	}
++
++private:
++	const CreatableClassEntry *_entry = nullptr;
++
++};
++
++} // namespace Details
++
++template <int Type>
++class Module final {
++public:
++	static Module &GetModule() {
++		static auto instance = Module();
++		return instance;
++	}
++
++	HRESULT RegisterObjects(PCWSTR serverName = nullptr) {
++		(void)serverName;
++		auto result = S_OK;
++		for (auto entry = Details::CreatableClasses()
++			; entry
++			; entry = entry->next) {
++			const auto factory = Make<Details::ClassFactory>(entry);
++			if (!factory) {
++				return E_OUTOFMEMORY;
++			}
++			auto cookie = DWORD();
++			const auto hr = CoRegisterClassObject(
++				*entry->clsid,
++				factory.Get(),
++				CLSCTX_LOCAL_SERVER,
++				REGCLS_MULTIPLEUSE,
++				&cookie);
++			if (SUCCEEDED(hr)) {
++				_cookies.push_back(cookie);
++			} else {
++				result = hr;
++			}
++		}
++		return result;
++	}
++
++	HRESULT UnregisterObjects(PCWSTR serverName = nullptr) {
++		(void)serverName;
++		auto result = S_OK;
++		for (const auto cookie : _cookies) {
++			const auto hr = CoRevokeClassObject(cookie);
++			if (FAILED(hr)) {
++				result = hr;
++			}
++		}
++		_cookies.clear();
++		return result;
++	}
++
++private:
++	Module() = default;
++
++	std::vector<DWORD> _cookies;
++
++};
++
++} // namespace Microsoft::WRL
++
++#define CoCreatableClass(className) \
++	static ::Microsoft::WRL::Details::CreatableClassEntry \
++		WrlCreatableClassEntry##className = { \
++			&__uuidof(className), \
++			&::Microsoft::WRL::Details::CreateInstance<className>, \
++		}; \
++	static const ::Microsoft::WRL::Details::CreatableClassRegistrar \
++		WrlCreatableClassRegistrar##className( \
++			&WrlCreatableClassEntry##className);
+-- 
+2.55.0
+

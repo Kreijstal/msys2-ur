@@ -1,0 +1,39 @@
+From 958a3ed6dcf621084a47927d80e9f8acd8d67d5a Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 08:56:02 +0100
+Subject: [PATCH 2/2] compat: only include <sec_api/stdlib_s.h> when it exists
+
+mingw-w64 removed the sec_api/ directory; getenv_s() and _putenv_s(), and
+the errno_t type, are now declared by <stdlib.h> (via corecrt.h), which
+compat.c already includes. Building against a current mingw-w64 toolchain
+failed with:
+
+  compat.c:30:10: fatal error: sec_api/stdlib_s.h: No such file or directory
+
+Keep including the header where it is still shipped, so older toolchains
+continue to work.
+---
+ compat.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/compat.c b/compat.c
+index dc678a9..257b014 100644
+--- a/compat.c
++++ b/compat.c
+@@ -27,7 +27,15 @@
+ #include <inttypes.h>
+ 
+ #ifdef _WIN32
+-#include <sec_api/stdlib_s.h> /* errno_t, size_t */
++/* errno_t, size_t. Current mingw-w64 dropped the sec_api/ headers and
++ * declares the *_s functions in <stdlib.h> itself. */
++#if defined(__has_include)
++#if __has_include(<sec_api/stdlib_s.h>)
++#include <sec_api/stdlib_s.h>
++#endif
++#else
++#include <sec_api/stdlib_s.h>
++#endif
+ #ifndef HAVE_GETENV_S_DECL
+ errno_t getenv_s(
+ 	size_t     *ret_required_buf_size,

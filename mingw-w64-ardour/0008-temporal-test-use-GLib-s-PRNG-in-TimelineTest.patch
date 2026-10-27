@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:58:10 +0100
+Subject: [PATCH] temporal/test: use GLib's PRNG in TimelineTest
+
+TimelineTest uses the BSD/POSIX srandom()/random() functions, which
+the Windows C runtime does not provide, so `waf --test` fails to build
+libtemporal's test runner with mingw-w64:
+
+  TimelineTest.cc:18:9: error: 'srandom' was not declared in this scope
+
+Use g_random_set_seed()/g_random_int() from GLib, which libtemporal
+already depends on. The test only needs arbitrary values, and
+g_random_int() covers the same 31-bit range used with the modulo
+operations (Windows' rand() would only give 15 bits).
+---
+ libs/temporal/test/TimelineTest.cc | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/libs/temporal/test/TimelineTest.cc b/libs/temporal/test/TimelineTest.cc
+index 01122ca..4747c36 100644
+--- a/libs/temporal/test/TimelineTest.cc
++++ b/libs/temporal/test/TimelineTest.cc
+@@ -1,5 +1,8 @@
+ #include <iostream>
+ #include <stdlib.h>
++#include <time.h>
++
++#include <glib.h>
+ 
+ #include "temporal/timeline.h"
+ 
+@@ -15,19 +18,19 @@ TimelineTest::createTest()
+ 	using namespace Temporal;
+ 	using namespace std;
+ 
+-	srandom (time (0));
++	g_random_set_seed (time (0));
+ 
+ 	vector<timepos_t> times;
+ 
+ 	for (int n = 0; n < 32767; ++n) {
+-		times.push_back (timepos_t (random() % 32120321));
++		times.push_back (timepos_t (g_random_int () % 32120321));
+ 	}
+ 
+ 	uint32_t lessthan = 0;
+ 	uint32_t greaterthan = 0;
+ 
+ 	for (vector<timepos_t>::iterator t = times.begin(); t != times.end(); ++t) {
+-		if ((*t) + timepos_t (random() % 20207) < timepos_t (2299307)) {
++		if ((*t) + timepos_t (g_random_int () % 20207) < timepos_t (2299307)) {
+ 			lessthan++;
+ 		} else {
+ 			greaterthan++;

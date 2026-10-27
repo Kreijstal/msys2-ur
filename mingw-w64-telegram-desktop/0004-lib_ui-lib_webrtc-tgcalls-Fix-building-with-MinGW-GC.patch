@@ -1,0 +1,157 @@
+From 2866c1668453662bd4ca9f54a7649dd1108cca24 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 02:11:48 +0100
+Subject: [PATCH 4/5] lib_ui, lib_webrtc, tgcalls: Fix building with MinGW GCC
+
+* GCC rejects '?:' between two different rpl::producer types that both
+  convert to rpl::producer<int>; return through an explicit branch.
+
+* tgcalls opens its log files with std::ofstream::open(std::wstring),
+  an MSVC extension. libstdc++ on Windows takes const wchar_t*, so pass
+  c_str() (which also works with MSVC and, being char* there, on other
+  platforms). It also used the MSVC-only Ui64 literal suffix.
+
+* mingw-w64's <ksmedia.h> lacks a few KSAUDIO_SPEAKER_* layouts used by
+  the loopback capture; define them with the Windows SDK channel masks.
+  The KSDATAFORMAT_SUBTYPE_* GUIDs it uses are only declared there,
+  their definitions come from libksguid.
+---
+ .../tgcalls/tgcalls/LogSinkImpl.cpp           |  4 ++--
+ .../ThirdParty/tgcalls/tgcalls/Manager.cpp    |  2 +-
+ .../tgcalls/tgcalls/v2/InstanceV2Impl.cpp     |  2 +-
+ .../tgcalls/v2/InstanceV2ReferenceImpl.cpp    |  2 +-
+ .../ui/platform/win/ui_window_title_win.cpp   |  5 ++++-
+ Telegram/lib_webrtc/CMakeLists.txt            |  8 ++++++++
+ .../platform/win/webrtc_loopback_adm_win.cpp  | 20 +++++++++++++++++++
+ 7 files changed, 37 insertions(+), 6 deletions(-)
+
+diff --git a/Telegram/ThirdParty/tgcalls/tgcalls/LogSinkImpl.cpp b/Telegram/ThirdParty/tgcalls/tgcalls/LogSinkImpl.cpp
+index 98ea054..47129d5 100644
+--- a/Telegram/ThirdParty/tgcalls/tgcalls/LogSinkImpl.cpp
++++ b/Telegram/ThirdParty/tgcalls/tgcalls/LogSinkImpl.cpp
+@@ -13,7 +13,7 @@ namespace tgcalls {
+ 
+ LogSinkImpl::LogSinkImpl(const FilePath &logPath) {
+ 	if (!logPath.data.empty()) {
+-		_file.open(logPath.data);
++		_file.open(logPath.data.c_str());
+ 	}
+ }
+ 
+@@ -41,7 +41,7 @@ void LogSinkImpl::OnLogMessage(const std::string &message) {
+ 	full <<= 32;
+ 	full |= ft.dwLowDateTime;
+ 
+-	const auto deltaEpochInMicrosecs = 11644473600000000Ui64;
++	const auto deltaEpochInMicrosecs = 11644473600000000ULL;
+ 	full -= deltaEpochInMicrosecs;
+ 	full /= 10;
+ 	int32_t milliseconds = (long)(full % 1000000UL) / 1000;
+diff --git a/Telegram/ThirdParty/tgcalls/tgcalls/Manager.cpp b/Telegram/ThirdParty/tgcalls/tgcalls/Manager.cpp
+index 4d87cce..d5d62fa 100644
+--- a/Telegram/ThirdParty/tgcalls/tgcalls/Manager.cpp
++++ b/Telegram/ThirdParty/tgcalls/tgcalls/Manager.cpp
+@@ -13,7 +13,7 @@ void dumpStatsLog(const FilePath &path, const CallStats &stats) {
+ 		return;
+ 	}
+     std::ofstream file;
+-    file.open(path.data);
++    file.open(path.data.c_str());
+ 
+     file << "{";
+     file << "\"v\":\"" << 1 << "\"";
+diff --git a/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2Impl.cpp b/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2Impl.cpp
+index f34c475..4d20284 100644
+--- a/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2Impl.cpp
++++ b/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2Impl.cpp
+@@ -2132,7 +2132,7 @@ public:
+ 
+         if (!_statsLogPath.data.empty()) {
+             std::ofstream file;
+-            file.open(_statsLogPath.data);
++            file.open(_statsLogPath.data.c_str());
+ 
+             file << jsonStatsLog.dump();
+ 
+diff --git a/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2ReferenceImpl.cpp b/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2ReferenceImpl.cpp
+index dbaf093..fde6580 100644
+--- a/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2ReferenceImpl.cpp
++++ b/Telegram/ThirdParty/tgcalls/tgcalls/v2/InstanceV2ReferenceImpl.cpp
+@@ -1779,7 +1779,7 @@ public:
+ 
+         if (!_statsLogPath.data.empty()) {
+             std::ofstream file;
+-            file.open(_statsLogPath.data);
++            file.open(_statsLogPath.data.c_str());
+ 
+             file << jsonStatsLog.dump();
+ 
+diff --git a/Telegram/lib_ui/ui/platform/win/ui_window_title_win.cpp b/Telegram/lib_ui/ui/platform/win/ui_window_title_win.cpp
+index 0311cc3..f227096 100644
+--- a/Telegram/lib_ui/ui/platform/win/ui_window_title_win.cpp
++++ b/Telegram/lib_ui/ui/platform/win/ui_window_title_win.cpp
+@@ -231,7 +231,10 @@ int TitleWidget::additionalPadding() const {
+ }
+ 
+ rpl::producer<int> TitleWidget::additionalPaddingValue() const {
+-	return _paddingHelper ? _paddingHelper->padding.value() : rpl::single(0);
++	if (_paddingHelper) {
++		return _paddingHelper->padding.value();
++	}
++	return rpl::single(0);
+ }
+ 
+ void TitleWidget::setAdditionalPadding(int padding) {
+diff --git a/Telegram/lib_webrtc/CMakeLists.txt b/Telegram/lib_webrtc/CMakeLists.txt
+index d3c786b..d86e5f1 100644
+--- a/Telegram/lib_webrtc/CMakeLists.txt
++++ b/Telegram/lib_webrtc/CMakeLists.txt
+@@ -62,6 +62,14 @@ if (WIN32)
+     PRIVATE
+         WEBRTC_WIN
+     )
++    if (MINGW)
++        # KSDATAFORMAT_SUBTYPE_* GUIDs used by the loopback capture are only
++        # declared by mingw-w64's <ksmedia.h>, their definitions live here.
++        target_link_libraries(lib_webrtc
++        PRIVATE
++            ksguid
++        )
++    endif()
+ elseif (APPLE)
+     target_compile_definitions(lib_webrtc
+     PRIVATE
+diff --git a/Telegram/lib_webrtc/webrtc/platform/win/webrtc_loopback_adm_win.cpp b/Telegram/lib_webrtc/webrtc/platform/win/webrtc_loopback_adm_win.cpp
+index 8777b49..2cf0334 100644
+--- a/Telegram/lib_webrtc/webrtc/platform/win/webrtc_loopback_adm_win.cpp
++++ b/Telegram/lib_webrtc/webrtc/platform/win/webrtc_loopback_adm_win.cpp
+@@ -15,6 +15,26 @@ extern "C" {
+ #include <libswresample/swresample.h>
+ } // extern "C"
+ 
++// Speaker layouts mingw-w64's <ksmedia.h> does not define (yet), with the
++// channel masks of the Windows SDK.
++#ifndef KSAUDIO_SPEAKER_2POINT1
++#define KSAUDIO_SPEAKER_2POINT1 (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT \
++	| SPEAKER_LOW_FREQUENCY)
++#endif // KSAUDIO_SPEAKER_2POINT1
++#ifndef KSAUDIO_SPEAKER_3POINT1
++#define KSAUDIO_SPEAKER_3POINT1 (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT \
++	| SPEAKER_FRONT_CENTER | SPEAKER_LOW_FREQUENCY)
++#endif // KSAUDIO_SPEAKER_3POINT1
++#ifndef KSAUDIO_SPEAKER_5POINT0
++#define KSAUDIO_SPEAKER_5POINT0 (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT \
++	| SPEAKER_FRONT_CENTER | SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
++#endif // KSAUDIO_SPEAKER_5POINT0
++#ifndef KSAUDIO_SPEAKER_7POINT0
++#define KSAUDIO_SPEAKER_7POINT0 (SPEAKER_FRONT_LEFT | SPEAKER_FRONT_RIGHT \
++	| SPEAKER_FRONT_CENTER | SPEAKER_BACK_LEFT | SPEAKER_BACK_RIGHT \
++	| SPEAKER_SIDE_LEFT | SPEAKER_SIDE_RIGHT)
++#endif // KSAUDIO_SPEAKER_7POINT0
++
+ namespace Webrtc::details {
+ namespace {
+ 
+-- 
+2.55.0
+

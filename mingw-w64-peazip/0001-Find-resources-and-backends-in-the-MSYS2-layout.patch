@@ -1,0 +1,64 @@
+From e9af2c55ad6969c20f2862e0c8b54655bffa7185 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 09:37:16 +0100
+Subject: [PATCH 1/2] Find resources and backends in the MSYS2 layout
+
+MSYS2 installs peazip.exe and pea.exe in <prefix>/bin next to the
+packaged 7z.exe, zstd.exe and brotli.exe, and the read-only resources
+(res/share, default res/conf) in <prefix>/lib/peazip/res.
+
+* pea, peach: when no res/ directory sits next to the executable, use
+  ../lib/peazip/res.  Portable and upstream-layout installs keep working
+  because res/ next to the executable still wins.
+* peach: set the packager knob HSYSBIN to 2, so every backend is run
+  by name (found in the executable's directory first, then PATH) instead
+  of from res/bin/<tool>/, which MSYS2 does not ship.
+---
+ peazip-sources/dev/pea.pas   | 5 +++++
+ peazip-sources/dev/peach.pas | 7 ++++++-
+ 2 files changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/peazip-sources/dev/pea.pas b/peazip-sources/dev/pea.pas
+index 8366f5c..f25aaaa 100644
+--- a/peazip-sources/dev/pea.pas
++++ b/peazip-sources/dev/pea.pas
+@@ -8601,6 +8601,11 @@ if resource_path<>'' then
+ resource_path:=resource_path+'Resources/';
+ {$ELSE}
+ resource_path:=executable_path+'res'+directoryseparator;
++{$IFDEF MSWINDOWS}
++//MSYS2 layout: executables in <prefix>\bin, resources in <prefix>\lib\peazip\res
++if not(DirectoryExists(resource_path)) and DirectoryExists(executable_path+'..\lib\peazip\res') then
++   resource_path:=ExpandFileName(executable_path+'..\lib\peazip\res')+directoryseparator;
++{$ENDIF}
+ {$ENDIF}
+ SetFocusedControl(EditPW);
+ pmode:=0;
+diff --git a/peazip-sources/dev/peach.pas b/peazip-sources/dev/peach.pas
+index b75338d..9befd0f 100644
+--- a/peazip-sources/dev/peach.pas
++++ b/peazip-sources/dev/peach.pas
+@@ -6065,7 +6065,7 @@ procedure finishlistview;
+ const
+   HLIBRE_DIR    = 0; //hardcoded "libre directive" 0 not hardcoded, read from configuration; 1 hardcoded to allow only using Free Software components; 2 hardcoded to allow only using Free Software components and open archive formats (not encumbered by patents for read nor write)
+   HPRIVACY_MODE = 0; //hardcoded privacy_mode directive 0 not hardcoded, read from configuration; 1,2 hardcoded skippable or non skippable password request at startup, overriding configuration
+-  HSYSBIN       = 0; //hardcoded use of binaries in system paths, eg as in $PATH 0 no, read from configuration; 1 only 7z / p7zip; 2 all backend binaries
++  HSYSBIN       = 2; //MSYS2: use the 7z/zstd/brotli/... packages found next to peazip.exe in <prefix>\bin and on PATH; hardcoded use of binaries in system paths, eg as in $PATH 0 no, read from configuration; 1 only 7z / p7zip; 2 all backend binaries
+   HBINPATH      = '';//hardcoded path for binaries
+   HCONFPATH     = '';//hardcoded path for configuration
+   HSHAREPATH    = '';//hardcoded path for other data (non binary, non configuration)
+@@ -22940,6 +22940,11 @@ resource_path:=resource_path+'Resources/';
+ binpath:=executable_path+'bin'+directoryseparator;//binaries, architecture dependant
+ {$ELSE}
+ resource_path:=executable_path+'res'+directoryseparator;
++{$IFDEF MSWINDOWS}
++//MSYS2 layout: executables in <prefix>\bin, resources in <prefix>\lib\peazip\res
++if not(DirectoryExists(resource_path)) and DirectoryExists(executable_path+'..\lib\peazip\res') then
++   resource_path:=ExpandFileName(executable_path+'..\lib\peazip\res')+directoryseparator;
++{$ENDIF}
+ binpath:=resource_path+'bin'+directoryseparator;//binaries, architecture dependant
+ {$ENDIF}
+ sharepath:=resource_path+'share'+directoryseparator;//non binaries resources, non-architecture dependant
+-- 
+2.55.0
+

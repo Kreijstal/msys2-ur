@@ -1,0 +1,42 @@
+From 29d9007a445de1eddb703c01df1cb2af0b6f402d Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 11:08:17 +0100
+Subject: [PATCH] sqlite3: also load libsqlite3-0.dll on Windows
+
+sqlite3dyn (used by sqlite3conn/TSQLite3Connection) loads sqlite3.dll,
+the name of the official SQLite Windows binaries.  MSYS2 and other
+MinGW builds name it libsqlite3-0.dll, so on MSYS2 every
+TSQLite3Connection fails with "Can not load SQLite client library
+sqlite3.dll" unless the program sets SQLiteDefaultLibrary itself (seen
+with Cheat Engine's symbol database).
+
+When the default library name fails to load on Windows, try
+libsqlite3-0.dll.  The requested name is still what SQLiteLoadedLibrary
+records, so repeated InitializeSqlite(SQLiteDefaultLibrary) calls keep
+matching, and the unit interface (and its CRC) is unchanged.
+---
+ packages/sqlite/src/sqlite3.inc | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/packages/sqlite/src/sqlite3.inc b/packages/sqlite/src/sqlite3.inc
+index b44b3e0..070ce73 100644
+--- a/packages/sqlite/src/sqlite3.inc
++++ b/packages/sqlite/src/sqlite3.inc
+@@ -1411,6 +1411,14 @@ begin
+   if result  = 1 then
+   begin
+     SQLiteLibraryHandle := LoadLibrary(N);
++{$IFDEF WINDOWS}
++    { MinGW/MSYS2 builds of SQLite are called libsqlite3-0.dll, the official
++      Windows binaries sqlite3.dll.  Accept the former for the default name;
++      SQLiteLoadedLibrary keeps the requested name, so repeated
++      InitializeSqlite(SQLiteDefaultLibrary) calls still match. }
++    if (SQLiteLibraryHandle = NilHandle) and (N = Sqlite3Lib) then
++      SQLiteLibraryHandle := LoadLibrary(UnicodeString('libsqlite3-0.dll'));
++{$ENDIF WINDOWS}
+     if (SQLiteLibraryHandle = NilHandle) then
+     begin
+       RefCount := 0;
+-- 
+2.55.0
+

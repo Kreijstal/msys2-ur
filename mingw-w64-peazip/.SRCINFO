@@ -1,0 +1,22 @@
+pkgbase = mingw-w64-peazip
+	pkgdesc = File archiver and manager GUI (7z, zstd, brotli, PEA, ...), built with Lazarus (mingw-w64)
+	pkgver = 11.4.0
+	pkgrel = 1
+	url = https://peazip.github.io/
+	arch = any
+	license = spdx:LGPL-3.0-only
+	makedepends = mingw-w64-ucrt-x86_64-lazarus
+	depends = mingw-w64-ucrt-x86_64-7zip
+	depends = mingw-w64-ucrt-x86_64-zstd
+	depends = mingw-w64-ucrt-x86_64-brotli
+	optdepends = mingw-w64-ucrt-x86_64-upx: compress executables
+	options = !strip
+	options = !debug
+	source = peazip-11.4.0.tar.gz::https://github.com/peazip/PeaZip/archive/refs/tags/11.4.0.tar.gz
+	source = 0001-Find-resources-and-backends-in-the-MSYS2-layout.patch
+	source = 0002-Do-not-pin-the-hash-of-dragdropfilesdll.dll.patch
+	sha256sums = a35861156df46c0852574d7905bf28b69ea5eff965a88ca17f08f2eb9296e996
+	sha256sums = c1cda3cfd3702accfe90a28e5225683fdb0fb7bd3acdd6174c855625327f04d8
+	sha256sums = dc58a4c00c3729afec640d29b4459b5f8534e1dfe17383197c83df0a9af9d0f1
+
+pkgname = mingw-w64-ucrt-x86_64-peazip

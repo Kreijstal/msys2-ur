@@ -1,0 +1,55 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=libltc
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.3.2
+pkgrel=1
+pkgdesc="Linear/Longitudinal Time Code (LTC) encoder and decoder library (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://x42.github.io/libltc/'
+msys2_repository_url='https://github.com/x42/libltc'
+msys2_references=(
+  'archlinux: libltc'
+)
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools")
+source=("https://github.com/x42/libltc/releases/download/v${pkgver}/${_realname}-${pkgver}.tar.gz"
+        '0001-windows-ldflags-and-crlf-tests.patch'
+        '0002-tests-include-stdlib-for-set-fmode.patch')
+sha256sums=('0a6d42cd6c21e925a27fa560dc45ac80057d275f23342102825909c02d3b1249'
+            'a9b41a45f91f0bd23e3d9496f7a70f5f067786b78a1d93d699a6078ede90fc92'
+            '2d1129858d13c7308a0602c422d04d9865674bb9a68d84810c2296ca1c613b3e')
+
+prepare() {
+  cd "${_realname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-windows-ldflags-and-crlf-tests.patch"
+  patch -Np1 -i "${srcdir}/0002-tests-include-stdlib-for-set-fmode.patch"
+  autoreconf -fiv
+}
+
+build() {
+  mkdir -p "build-${MSYSTEM}" && cd "build-${MSYSTEM}"
+  ../${_realname}-${pkgver}/configure \
+    --prefix="${MINGW_PREFIX}" \
+    --build="${MINGW_CHOST}" \
+    --host="${MINGW_CHOST}" \
+    --enable-shared \
+    --disable-static
+  make
+}
+
+check() {
+  # The test target is not parallel-safe (x42/libltc#66).
+  make -C "build-${MSYSTEM}" -j1 check
+}
+
+package() {
+  make -C "build-${MSYSTEM}" DESTDIR="${pkgdir}" install
+  rm -f "${pkgdir}${MINGW_PREFIX}"/lib/*.la
+  install -Dm644 "${_realname}-${pkgver}/COPYING" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

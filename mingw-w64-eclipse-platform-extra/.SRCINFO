@@ -1,12 +1,14 @@
 pkgbase = mingw-w64-eclipse-platform-extra
-	pkgdesc = Source-built Eclipse security UI, concurrency and quick search
+	pkgdesc = Source-built Eclipse security UI, concurrency, quick search and JSch integration
 	pkgver = 4.41
 	pkgrel = 1
 	url = https://eclipse.org/
 	arch = any
 	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-dbeaver-orbit-jsch
 	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-expressions
 	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-jobs
+	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-net
 	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-resources
 	makedepends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
 	makedepends = mingw-w64-ucrt-x86_64-eclipse-equinox-security
@@ -23,8 +25,10 @@ pkgbase = mingw-w64-eclipse-platform-extra
 	makedepends = mingw-w64-ucrt-x86_64-java-osgi-service-component-annotations
 	source = equinox-R4_41.tar.gz::https://github.com/eclipse-equinox/equinox/archive/refs/tags/R4_41.tar.gz
 	source = eclipse.platform.ui-R4_41.tar.gz::https://github.com/eclipse-platform/eclipse.platform.ui/archive/refs/tags/R4_41.tar.gz
+	source = eclipse.platform-R4_41.tar.gz::https://github.com/eclipse-platform/eclipse.platform/archive/refs/tags/R4_41.tar.gz
 	sha256sums = 995e801eca5f8ebb0471d731226c2e4eab421e7933bec7c01280abe2c4e78304
 	sha256sums = 5c70484fcbc01d3d8950db8e2afeea4ebdc3c05ed65940c22ef36dcfb35863d7
+	sha256sums = 235ea1a33d2388962b90179f64a66a48013ffe576a68210da970557870785b09
 
 pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-security-ui
 	pkgdesc = Eclipse org.eclipse.equinox.security.ui bundle, built from source
@@ -50,3 +54,16 @@ pkgname = mingw-w64-ucrt-x86_64-eclipse-text-quicksearch
 pkgname = mingw-w64-ucrt-x86_64-eclipse-equinox-concurrent
 	pkgdesc = Eclipse org.eclipse.equinox.concurrent bundle, built from source
 	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-jsch-core
+	pkgdesc = Eclipse org.eclipse.jsch.core bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-dbeaver-orbit-jsch
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-net
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-osgi
+
+pkgname = mingw-w64-ucrt-x86_64-eclipse-jsch-ui
+	pkgdesc = Eclipse org.eclipse.jsch.ui bundle, built from source
+	depends = mingw-w64-ucrt-x86_64-eclipse-core-runtime
+	depends = mingw-w64-ucrt-x86_64-eclipse-jsch-core
+	depends = mingw-w64-ucrt-x86_64-eclipse-ui

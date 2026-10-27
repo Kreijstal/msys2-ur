@@ -1,0 +1,16 @@
+post_install() {
+  cat <<'MSG'
+openconnect needs a layer-3 TUN driver: Wintun (preferred) or TAP-Windows6.
+It loads wintun.dll from the directory of the program, then from the
+directory of libopenconnect, then from System32.
+
+  * Windows 10/11: use the WireGuard-signed wintun.dll from
+    https://www.wintun.net/ (place it next to openconnect.exe or in System32).
+  * ReactOS, or Windows in test-signing mode: the optional mingw-w64-wintun
+    package installs a source-built, unsigned wintun.dll into the same bin
+    directory as openconnect.exe.
+
+Creating an adapter needs Administrator rights. Without a TUN driver,
+openconnect can still run with --script-tun / -S (userspace, e.g. ocproxy).
+MSG
+}

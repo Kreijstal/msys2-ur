@@ -1,0 +1,82 @@
+From 1bc39cbbcb43c512fa35fddf555ffbc403e7d02b Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 12:38:24 +0100
+Subject: [PATCH 2/2] Load MSYS2's SQLite instead of the bundled sqlite3.dll
+
+LuaSQL and the pointer scanner set FPC's SQLiteLibraryName to
+.\win64\sqlite3.dll (the prebuilt DLL shipped in bin/win64), which also
+becomes the library the symbol handler's database loads.  The MSYS2
+package does not ship that DLL, so every SQLite use failed with
+"Can not load SQLite client library .\win64\sqlite3.dll".
+
+* Only override the library name when that file exists; otherwise FPC's
+  default applies, which (with fpc-kgpc 3.2.2-3) also loads MSYS2's
+  libsqlite3-0.dll.
+* BetterDLLSearchPath restricts DLL loading to the application, system
+  and win64 directories (SetDefaultDllDirectories), so PATH is never
+  searched.  In the MSYS2 layout (exe in <prefix>/lib/cheatengine), add
+  <prefix>/bin as a DLL directory when it holds libsqlite3-0.dll.
+---
+ Cheat Engine/LuaSQL.pas              | 6 ++++--
+ Cheat Engine/betterdllsearchpath.pas | 6 ++++++
+ Cheat Engine/pointerscannerfrm.pas   | 6 ++++--
+ 3 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/Cheat Engine/LuaSQL.pas b/Cheat Engine/LuaSQL.pas
+index cd7b0b8..a5e19bd 100755
+--- a/Cheat Engine/LuaSQL.pas	
++++ b/Cheat Engine/LuaSQL.pas	
+@@ -1537,10 +1537,12 @@ begin
+ end;
+ 
+ initialization
++  // MSYS2: only use the bundled sqlite3.dll if it is there; otherwise keep
++  // FPC's default, which also finds MSYS2's libsqlite3-0.dll.
+   {$ifdef cpu64}
+-    SQLiteLibraryName:='.\win64\sqlite3.dll';
++    if FileExists('.\win64\sqlite3.dll') then SQLiteLibraryName:='.\win64\sqlite3.dll';
+   {$else}
+-    SQLiteLibraryName:='.\win32\sqlite3.dll';
++    if FileExists('.\win32\sqlite3.dll') then SQLiteLibraryName:='.\win32\sqlite3.dll';
+   {$endif}
+   luaclass_register(TODBCConnection, odbcconnection_addMetaData);
+   luaclass_register(TSQLite3Connection,  sqlite3connection_addMetaData);
+diff --git a/Cheat Engine/betterdllsearchpath.pas b/Cheat Engine/betterdllsearchpath.pas
+index 2bdb37d..2b1b649 100755
+--- a/Cheat Engine/betterdllsearchpath.pas	
++++ b/Cheat Engine/betterdllsearchpath.pas	
+@@ -63,6 +63,12 @@ begin
+     p:=ExtractFilePath(ParamStr(0))+'win64';
+ {$endif}
+     DLLDirectoryCookie:=AddDllDirectory(@p[1]);
++
++    // MSYS2 layout: cheatengine-x86_64.exe lives in <prefix>\lib\cheatengine;
++    // let it load the MSYS2 DLLs it uses (libsqlite3-0.dll) from <prefix>\bin.
++    p:=ExpandFileName(ExtractFilePath(ParamStr(0))+'..\..\bin');
++    if FileExists(p+'\libsqlite3-0.dll') then
++      AddDllDirectory(@p[1]);
+   end
+   else
+     AddDllDirectory:=@AddDllDirectoryNI;
+diff --git a/Cheat Engine/pointerscannerfrm.pas b/Cheat Engine/pointerscannerfrm.pas
+index 72083dc..b80c723 100755
+--- a/Cheat Engine/pointerscannerfrm.pas	
++++ b/Cheat Engine/pointerscannerfrm.pas	
+@@ -3648,10 +3648,12 @@ begin
+   cbtype.itemindex:=2;
+ 
+ 
++  // MSYS2: only use the bundled sqlite3.dll if it is there; otherwise keep
++  // FPC's default, which also finds MSYS2's libsqlite3-0.dll.
+   {$ifdef cpu64}
+-    SQLiteLibraryName:='.\win64\sqlite3.dll';
++    if FileExists('.\win64\sqlite3.dll') then SQLiteLibraryName:='.\win64\sqlite3.dll';
+   {$else}
+-    SQLiteLibraryName:='.\win32\sqlite3.dll';
++    if FileExists('.\win32\sqlite3.dll') then SQLiteLibraryName:='.\win32\sqlite3.dll';
+   {$endif}
+ 
+ 
+-- 
+2.55.0
+

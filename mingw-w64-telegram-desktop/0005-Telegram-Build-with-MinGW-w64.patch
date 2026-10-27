@@ -1,0 +1,280 @@
+From eed9ba583ad1ac5cf30ac5ad9664019a076778e8 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 02:11:48 +0100
+Subject: [PATCH 5/5] Telegram: Build with MinGW-w64
+
+* Generate the toast activation headers and IIDs with widl, which
+  mingw-w64 provides in place of midl.
+
+* /PDBPAGESIZE is an MSVC linker option.
+
+* MSVC embeds Telegram.manifest at link time, with MinGW it has to come
+  from the resource script. It replaces the generic manifest MinGW links
+  in by default, so the UTF-8 code page and DPI awareness settings apply.
+
+* GCC has no SEH __try/__except: call the cleanup helpers directly, they
+  catch C++ exceptions themselves.
+
+* __uuidof(ToastActivator) needs the IID declared with __CRT_UUID_DECL,
+  GCC ignores DECLSPEC_UUID.
+
+* PropVariantToCLSID() is an inline wrapper of PropVariantToGUID() in the
+  Windows SDK that mingw-w64 lacks; call the latter. Also define
+  APPUSERMODEL_STARTPINOPTION_NOPINONINSTALL, missing from <propkey.h>.
+
+* MSYS2's C++/WinRT projection is generated from Windows metadata that
+  predates the window-owned KeyCredential overloads of Windows 11 24H2,
+  so take the unowned path the code already has for older systems.
+
+* GCC rejects '?:' between two different rpl::producer types.
+---
+ Telegram/CMakeLists.txt                       |  4 +-
+ Telegram/Resources/winrc/Telegram.rc          | 12 ++++++
+ .../SourceFiles/platform/win/specific_win.cpp | 10 +++++
+ .../platform/win/wallet_protection_win.cpp    |  8 ++++
+ .../win/windows_app_user_model_id.cpp         |  9 +++-
+ .../platform/win/windows_toast_activator.h    |  5 +++
+ .../settings/sections/settings_advanced.cpp   |  6 +--
+ Telegram/cmake/generate_midl.cmake            | 42 +++++++++++++++----
+ 8 files changed, 82 insertions(+), 14 deletions(-)
+
+diff --git a/Telegram/CMakeLists.txt b/Telegram/CMakeLists.txt
+index 11d2fc6..406d982 100644
+--- a/Telegram/CMakeLists.txt
++++ b/Telegram/CMakeLists.txt
+@@ -2564,7 +2564,9 @@ if (WIN32)
+         )
+     endif()
+ 
+-    target_link_options(Telegram PRIVATE /PDBPAGESIZE:8192)
++    if (MSVC)
++        target_link_options(Telegram PRIVATE /PDBPAGESIZE:8192)
++    endif()
+ 
+     if (DESKTOP_APP_WIN7_BASELINE)
+         # The loader reads the subsystem version as the minimal Windows.
+diff --git a/Telegram/Resources/winrc/Telegram.rc b/Telegram/Resources/winrc/Telegram.rc
+index 3cfe2df..da91f70 100644
+--- a/Telegram/Resources/winrc/Telegram.rc
++++ b/Telegram/Resources/winrc/Telegram.rc
+@@ -38,6 +38,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+ // remains consistent on all systems.
+ IDI_ICON1               ICON                    "..\\art\\icon256.ico"
+ 
++#if defined(__MINGW64__) || defined(__MINGW32__)
++/////////////////////////////////////////////////////////////////////////////
++//
++// Manifest
++//
++// MSVC embeds Telegram.manifest at link time, the GNU toolchain has to get
++// it from here (it replaces the generic default manifest MinGW links in).
++//
++
++1 RT_MANIFEST "Telegram.manifest"
++#endif
++
+ /////////////////////////////////////////////////////////////////////////////
+ //
+ // Version
+diff --git a/Telegram/SourceFiles/platform/win/specific_win.cpp b/Telegram/SourceFiles/platform/win/specific_win.cpp
+index ba7f267..e1fc7c2 100644
+--- a/Telegram/SourceFiles/platform/win/specific_win.cpp
++++ b/Telegram/SourceFiles/platform/win/specific_win.cpp
+@@ -277,6 +277,7 @@ void psDoCleanup() {
+ }
+ 
+ int psCleanup() {
++#ifdef _MSC_VER
+ 	__try
+ 	{
+ 		psDoCleanup();
+@@ -285,6 +286,10 @@ int psCleanup() {
+ 	{
+ 		return 0;
+ 	}
++#else // _MSC_VER
++	// GCC has no SEH __try/__except, rely on the C++ handler inside.
++	psDoCleanup();
++#endif // _MSC_VER
+ 	return 0;
+ }
+ 
+@@ -343,6 +348,7 @@ void psDoFixPrevious() {
+ }
+ 
+ int psFixPrevious() {
++#ifdef _MSC_VER
+ 	__try
+ 	{
+ 		psDoFixPrevious();
+@@ -351,6 +357,10 @@ int psFixPrevious() {
+ 	{
+ 		return 0;
+ 	}
++#else // _MSC_VER
++	// GCC has no SEH __try/__except, rely on the C++ handler inside.
++	psDoFixPrevious();
++#endif // _MSC_VER
+ 	return 0;
+ }
+ 
+diff --git a/Telegram/SourceFiles/platform/win/wallet_protection_win.cpp b/Telegram/SourceFiles/platform/win/wallet_protection_win.cpp
+index ce7ab60..29f54bb 100644
+--- a/Telegram/SourceFiles/platform/win/wallet_protection_win.cpp
++++ b/Telegram/SourceFiles/platform/win/wallet_protection_win.cpp
+@@ -200,10 +200,15 @@ void FocusUnownedPrompt(int attemptsLeft = kPromptFocusAttempts) {
+ // The owned overloads exist from Windows 11 24H2: on an older system the
+ // factory or the credential lacks the interface, and the unowned ask runs
+ // with the prompt brought forward by its class name instead.
++//
++// The C++/WinRT projection of mingw-w64 is generated from Windows metadata
++// that predates those overloads, so MinGW builds always take the unowned
++// path.
+ [[nodiscard]] IAsyncOperation<KeyCredentialRetrievalResult> RequestCreate(
+ 		const winrt::hstring &name,
+ 		const std::optional<WindowId> &owner) {
+ 	const auto option = KeyCredentialCreationOption::ReplaceExisting;
++#ifndef __MINGW32__
+ 	if (owner) {
+ 		auto owned = base::WinRT::Try([&] {
+ 			return KeyCredentialManager::RequestCreateForWindowAsync(
+@@ -215,6 +220,7 @@ void FocusUnownedPrompt(int attemptsLeft = kPromptFocusAttempts) {
+ 			return std::move(*owned);
+ 		}
+ 	}
++#endif // !__MINGW32__
+ 	auto result = KeyCredentialManager::RequestCreateAsync(name, option);
+ 	FocusUnownedPrompt();
+ 	return result;
+@@ -224,6 +230,7 @@ void FocusUnownedPrompt(int attemptsLeft = kPromptFocusAttempts) {
+ 		const KeyCredential &credential,
+ 		const IBuffer &data,
+ 		const std::optional<WindowId> &owner) {
++#ifndef __MINGW32__
+ 	if (owner) {
+ 		if (const auto owned = credential.try_as<IKeyCredentialWithWindow>()) {
+ 			auto request = base::WinRT::Try([&] {
+@@ -234,6 +241,7 @@ void FocusUnownedPrompt(int attemptsLeft = kPromptFocusAttempts) {
+ 			}
+ 		}
+ 	}
++#endif // !__MINGW32__
+ 	auto result = credential.RequestSignAsync(data);
+ 	FocusUnownedPrompt();
+ 	return result;
+diff --git a/Telegram/SourceFiles/platform/win/windows_app_user_model_id.cpp b/Telegram/SourceFiles/platform/win/windows_app_user_model_id.cpp
+index 3d051f4..2fa8619 100644
+--- a/Telegram/SourceFiles/platform/win/windows_app_user_model_id.cpp
++++ b/Telegram/SourceFiles/platform/win/windows_app_user_model_id.cpp
+@@ -15,6 +15,11 @@ https://github.com/telegramdesktop/tdesktop/blob/master/LEGAL
+ #include <propvarutil.h>
+ #include <propkey.h>
+ 
++#ifndef APPUSERMODEL_STARTPINOPTION_NOPINONINSTALL
++// System.AppUserModel.StartPinOption value, missing from mingw-w64 <propkey.h>.
++#define APPUSERMODEL_STARTPINOPTION_NOPINONINSTALL 1
++#endif // APPUSERMODEL_STARTPINOPTION_NOPINONINSTALL
++
+ namespace Platform {
+ namespace AppUserModelId {
+ namespace {
+@@ -296,7 +301,9 @@ bool validateShortcutAt(const QString &path) {
+ 	PropVariantClear(&appIdPropVar);
+ 
+ 	auto clsid = CLSID();
+-	hr = PropVariantToCLSID(toastActivatorPropVar, &clsid);
++	// PropVariantToCLSID() is only an inline wrapper around this one in the
++	// Windows SDK, mingw-w64 does not have it.
++	hr = PropVariantToGUID(toastActivatorPropVar, &clsid);
+ 	const auto good2 = SUCCEEDED(hr) && (clsid == __uuidof(ToastActivator));
+ 	const auto bad2 = !good2 && (toastActivatorPropVar.vt != VT_EMPTY);
+ 	PropVariantClear(&toastActivatorPropVar);
+diff --git a/Telegram/SourceFiles/platform/win/windows_toast_activator.h b/Telegram/SourceFiles/platform/win/windows_toast_activator.h
+index 0c85942..4682e22 100644
+--- a/Telegram/SourceFiles/platform/win/windows_toast_activator.h
++++ b/Telegram/SourceFiles/platform/win/windows_toast_activator.h
+@@ -39,6 +39,11 @@ private:
+ 
+ };
+ 
++#ifdef __MINGW32__
++// GCC ignores DECLSPEC_UUID, __uuidof() needs the IID declared explicitly.
++__CRT_UUID_DECL(ToastActivator, 0xf11932d3, 0x6110, 0x4bbc, 0x9b, 0x02, 0xb2, 0xec, 0x07, 0xa1, 0xbd, 0x19)
++#endif // __MINGW32__
++
+ struct ToastActivation {
+ 	struct UserInput {
+ 		QString key;
+diff --git a/Telegram/SourceFiles/settings/sections/settings_advanced.cpp b/Telegram/SourceFiles/settings/sections/settings_advanced.cpp
+index e06c1cc..fdb9d6e 100644
+--- a/Telegram/SourceFiles/settings/sections/settings_advanced.cpp
++++ b/Telegram/SourceFiles/settings/sections/settings_advanced.cpp
+@@ -653,9 +653,9 @@ void BuildSystemIntegrationSection(SectionBuilder &builder) {
+ 		.title = tr::lng_settings_close_to_taskbar(),
+ 		.checked = settings->closeBehavior() == Behavior::CloseToTaskbar,
+ 		.keywords = { u"close"_q, u"taskbar"_q, u"minimize"_q },
+-		.shown = closeToTaskbarShown
+-			? closeToTaskbarShown->value()
+-			: rpl::single(false),
++		.shown = (closeToTaskbarShown
++			? rpl::producer<bool>(closeToTaskbarShown->value())
++			: rpl::single(false)),
+ 	});
+ 	if (closeToTaskbar) {
+ 		closeToTaskbar->checkedChanges(
+diff --git a/Telegram/cmake/generate_midl.cmake b/Telegram/cmake/generate_midl.cmake
+index d3ec53c..6d7d924 100644
+--- a/Telegram/cmake/generate_midl.cmake
++++ b/Telegram/cmake/generate_midl.cmake
+@@ -27,15 +27,39 @@ function(generate_midl target_name src_loc)
+             ${gen_dst}/${file_name}_i.c
+             ${gen_dst}/${file_name}_h.h
+         )
+-        list(APPEND gen_commands
+-        COMMAND
+-            midl
+-            /out ${gen_dst}
+-            /h ${file_name}_h.h
+-            /env ${env}
+-            /notlb
+-            ${src_loc}/${file}
+-        )
++        if (MINGW)
++            # mingw-w64 comes with Wine's MIDL compiler instead. It writes
++            # one kind of output per run: the header, then the IID file.
++            if (CMAKE_SIZEOF_VOID_P EQUAL 8)
++                set(widl_arch -m64)
++            else()
++                set(widl_arch -m32)
++            endif()
++            list(APPEND gen_commands
++            COMMAND
++                widl
++                ${widl_arch}
++                -h
++                -o ${gen_dst}/${file_name}_h.h
++                ${src_loc}/${file}
++            COMMAND
++                widl
++                ${widl_arch}
++                -u
++                -o ${gen_dst}/${file_name}_i.c
++                ${src_loc}/${file}
++            )
++        else()
++            list(APPEND gen_commands
++            COMMAND
++                midl
++                /out ${gen_dst}
++                /h ${file_name}_h.h
++                /env ${env}
++                /notlb
++                ${src_loc}/${file}
++            )
++        endif()
+     endforeach()
+ 
+     add_custom_command(
+-- 
+2.55.0
+

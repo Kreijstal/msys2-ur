@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 07:25:24 +0100
+Subject: [PATCH] pbd: don't hand out StackAllocator's in-object buffer with
+ libc++
+
+PBD::StackAllocator keeps its buffer inside the allocator object, and
+every copy (including rebinding copies) starts with a fresh, private
+buffer. That only works as long as the container allocates and
+deallocates through the very same allocator instance. Current libc++
+(MSYS2 CLANG64) grows std::vector through a std::__split_buffer that
+allocates via its own copy of the allocator; the vector later frees
+that block through its own instance, which does not recognize the
+pointer as one of its buffer slots and calls ::operator delete on stack
+memory. Every PBD::Signal emission then corrupts the heap:
+
+  SignalsTest::testEmission  warning: Critical error detected c0000374
+  #3 ntdll!RtlFreeHeap
+  #5 allocator_traits<PBD::StackAllocator<PBD::Connection*, 512>>::deallocate
+  #6 vector<PBD::Connection*, PBD::StackAllocator<...>>::~vector
+  #7 PBD::SignalWithCombiner<...>::operator()()
+
+Fall back to heap allocation for all requests when building against
+libc++. libstdc++ builds keep the stack fast path.
+---
+ libs/pbd/pbd/stack_allocator.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/libs/pbd/pbd/stack_allocator.h b/libs/pbd/pbd/stack_allocator.h
+index 859f244..f1f76b7 100644
+--- a/libs/pbd/pbd/stack_allocator.h
++++ b/libs/pbd/pbd/stack_allocator.h
+@@ -80,7 +80,19 @@ public:
+ 	/* inspired by http://howardhinnant.github.io/stack_alloc.h */
+ 	pointer allocate (size_type n, void* hint = 0)
+ 	{
++#ifdef _LIBCPP_VERSION
++		/* Recent libc++ containers allocate through temporary copies of
++		 * the allocator (e.g. in std::__split_buffer when a vector grows)
++		 * and later deallocate through the container's own instance.
++		 * Since every copy has its own in-object buffer, memory handed
++		 * out from a temporary's buffer would later be passed to
++		 * ::operator delete, corrupting the heap. Always use the heap
++		 * with libc++.
++		 */
++		if (false) {
++#else
+ 		if ((pointer)&_buf + stack_capacity >= _ptr + n) {
++#endif
+ 			DEBUG_STACK_ALLOC ("[%p] Allocate %ld item(s) of size %zu on the stack. used: %ld\n", (pointer)&_buf, n, sizeof (T), (_ptr - (pointer)&_buf));
+ 			pointer rv = _ptr;
+ 			_ptr += n;

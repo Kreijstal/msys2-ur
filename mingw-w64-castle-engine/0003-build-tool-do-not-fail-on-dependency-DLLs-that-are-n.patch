@@ -1,0 +1,62 @@
+From 13212673b83d9863fb4988b660c720cba534d503 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 11:22:35 +0100
+Subject: [PATCH 3/3] build tool: do not fail on dependency DLLs that are not
+ bundled
+
+On Windows the build tool copies DLLs from
+tools/build-tool/data/external_libraries/<cpu>-<os>/ next to every
+compiled or packaged program and raises an exception if one is missing.
+Those are prebuilt third-party binaries (FreeType, libpng 1.4, OpenAL,
+Ogg/Vorbis, OpenSSL 1.0, MSVC runtimes); the MSYS2 package does not ship
+them and the engine loads the MSYS2 libraries from PATH instead.
+
+Warn and skip a missing library instead of failing the build.
+---
+ tools/build-tool/code/toolproject.pas | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/tools/build-tool/code/toolproject.pas b/tools/build-tool/code/toolproject.pas
+index bd6816c..dac53e7 100644
+--- a/tools/build-tool/code/toolproject.pas
++++ b/tools/build-tool/code/toolproject.pas
+@@ -309,19 +309,33 @@ procedure ExternalLibraries(const OS: TOS; const CPU: TCPU;
+     Right now, these host various Windows-specific DLL files.
+     If CheckFilesExistence then this checks existence of appropriate files along the way,
+     and raises exception in case of trouble. }
+-  function ExternalLibraryPath(const OS: TOS; const CPU: TCPU; const LibraryName: string): string;
++  function ExternalLibraryPath(const OS: TOS; const CPU: TCPU; const LibraryName: string;
++    const CheckExistence: Boolean): string;
+   var
+     LibraryUrl: String;
+   begin
+     LibraryUrl := 'castle-data:/' + LibraryName;
+     Result := UriToFilenameSafe(LibraryUrl);
+-    if CheckFilesExistence and (not RegularFileExists(Result)) then
++    if CheckExistence and (not RegularFileExists(Result)) then
+       raise Exception.Create('Cannot find dependency library in "' + Result + '". ' + SErrDataDir);
+   end;
+ 
+   procedure AddExternalLibrary(const LibraryName: string);
++  var
++    FileName: String;
+   begin
+-    List.Add(ExternalLibraryPath(OS, CPU, LibraryName));
++    { MSYS2 does not ship the prebuilt DLLs of data/external_libraries/.
++      Programs then use the MSYS2 libraries (zlib1.dll, libpng16-16.dll,
++      libfreetype-6.dll, libopenal-1.dll, libvorbisfile-3.dll) from PATH,
++      so warn instead of failing when a bundled DLL is missing. }
++    FileName := ExternalLibraryPath(OS, CPU, LibraryName, false);
++    if CheckFilesExistence and (not RegularFileExists(FileName)) then
++    begin
++      WritelnWarning('Not copying dependency library "%s": it is not bundled with this Castle Game Engine installation. The program will use the library found on PATH at run time.',
++        [ExtractFileName(FileName)]);
++      Exit;
++    end;
++    List.Add(FileName);
+   end;
+ 
+ var
+-- 
+2.55.0
+

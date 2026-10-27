@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:27:03 +0100
+Subject: [PATCH 1/4] Link fftw3f_threads for MinGW builds
+
+libs/ardour/globals.cc calls fftwf_make_planner_thread_safe() whenever
+fftw3f >= 3.3.5 is detected (HAVE_FFTW35F), but the wscripts only add
+-lfftw3f_threads for non-mingw targets (gtk2_ardour additionally allows
+it when waf itself runs under a native win32 Python). Building natively
+in MSYS2 with the MSYS Python (sys.platform == "cygwin") therefore
+leaves the symbol unresolved when libardour is linked.
+
+MSYS2's fftw package ships libfftw3f_threads, so link it on mingw too.
+The library is appended to the shared LIB_FFTW3F env by audiographer,
+which is built before libardour, so both places are adjusted.
+---
+ gtk2_ardour/wscript       | 2 +-
+ libs/audiographer/wscript | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/gtk2_ardour/wscript b/gtk2_ardour/wscript
+index c3a5e48..0ddab6e 100644
+--- a/gtk2_ardour/wscript
++++ b/gtk2_ardour/wscript
+@@ -716,7 +716,7 @@ def build(bld):
+         obj.source += [ 'lv2_plugin_ui.cc' ]
+         obj.use += [ 'SUIL' ]
+ 
+-    if bld.is_defined('HAVE_FFTW35F') and not (bld.env['build_target'] == 'mingw' and sys.platform != 'win32') and bld.env['build_target'] != 'msvc':
++    if bld.is_defined('HAVE_FFTW35F') and bld.env['build_target'] != 'msvc':
+         bld.env['LIB_FFTW3F'] += ['fftw3f_threads']
+ 
+     if bld.is_defined('NEED_INTL'):
+diff --git a/libs/audiographer/wscript b/libs/audiographer/wscript
+index 39c54d7..aa222c6 100644
+--- a/libs/audiographer/wscript
++++ b/libs/audiographer/wscript
+@@ -40,7 +40,7 @@ def build(bld):
+                                    and bld.is_defined('HAVE_GLIBMM')
+                                    and bld.is_defined('HAVE_GTHREAD'))
+ 
+-    if bld.is_defined('HAVE_FFTW35F') and bld.env['build_target'] != 'mingw' and bld.env['build_target'] != 'msvc':
++    if bld.is_defined('HAVE_FFTW35F') and bld.env['build_target'] != 'msvc':
+         bld.env['LIB_FFTW3F'] += ['fftw3f_threads']
+ 
+     audiographer_sources = [

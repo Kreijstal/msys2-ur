@@ -1,0 +1,44 @@
+From 91383d86bd45c1b41cc6a03978448646ee061800 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 02:11:48 +0100
+Subject: [PATCH 1/5] range-v3: Do not let member function pointers match the
+ data member invoke
+
+ranges::invoke has an overload for pointers to data members, D T::*f,
+next to the one for member functions. A pointer to member function
+matches D T::* as well, with D deduced as the function type. GCC on
+Linux then discards that overload because t1.*f is not a valid
+expression to return, but the MinGW GCC (16.2) accepts it and picks the
+overload, failing with "cannot convert 'int (A::)() const' to 'int'"
+or, through the projection concepts, "no class template named 'invoke'
+in 'struct ranges::detail::enable_if<false>'". Every range algorithm
+called with a member function projection, as in
+ranges::find(v, p, &std::unique_ptr<T>::get), fails to compile.
+
+Constrain the overload to non-function member types so the member
+function overload is the only candidate.
+---
+ .../range-v3/include/range/v3/functional/invoke.hpp        | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Telegram/ThirdParty/range-v3/include/range/v3/functional/invoke.hpp b/Telegram/ThirdParty/range-v3/include/range/v3/functional/invoke.hpp
+index 8c3349a..f81d0b2 100644
+--- a/Telegram/ThirdParty/range-v3/include/range/v3/functional/invoke.hpp
++++ b/Telegram/ThirdParty/range-v3/include/range/v3/functional/invoke.hpp
+@@ -125,7 +125,12 @@ namespace ranges
+             return (invoke_fn::coerce<T>((T1&&) t1, 0).*f)((Args&&) args...);
+         }
+ 
+-        template<typename D, typename T, typename T1>
++        // Only for pointers to data members. Without the constraint a
++        // pointer to member function also matches D T::* (D being the
++        // function type), and MinGW GCC accepts the resulting t1.*f in
++        // the return type instead of discarding the overload.
++        template<typename D, typename T, typename T1,
++                 std::enable_if_t<!std::is_function<D>::value, int> = 0>
+         constexpr auto operator()(D T::*f, T1&& t1) const
+             noexcept(noexcept(invoke_fn::coerce<T>((T1&&) t1, 0).*f))
+             -> decltype(invoke_fn::coerce<T>((T1&&) t1, 0).*f)
+-- 
+2.55.0
+

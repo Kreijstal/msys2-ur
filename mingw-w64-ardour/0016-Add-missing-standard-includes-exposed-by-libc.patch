@@ -1,0 +1,108 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 06:44:49 +0100
+Subject: [PATCH 16/18] Add missing standard includes exposed by libc++
+
+Several files rely on headers being pulled in transitively by
+libstdc++, which libc++ (MSYS2 CLANG64) does not do:
+
+ - audiographer/debug_utils.h uses typeid() without <typeinfo>
+   ("member access into incomplete type 'const std::type_info'")
+ - every midi_byte_array.cc uses std::back_insert_iterator without
+   <iterator>
+ - pbd/test/rwlock_test.cc uses pthread_create/pthread_t without
+   <pthread.h>
+
+Include what is used.
+---
+ libs/audiographer/audiographer/debug_utils.h        | 1 +
+ libs/ctrl-interface/midi_surface/midi_byte_array.cc | 1 +
+ libs/pbd/test/rwlock_test.cc                        | 1 +
+ libs/surfaces/launch_control_xl/midi_byte_array.cc  | 1 +
+ libs/surfaces/mackie/midi_byte_array.cc             | 1 +
+ libs/surfaces/push2/midi_byte_array.cc              | 1 +
+ libs/surfaces/us2400/midi_byte_array.cc             | 1 +
+ 7 files changed, 7 insertions(+)
+
+diff --git a/libs/audiographer/audiographer/debug_utils.h b/libs/audiographer/audiographer/debug_utils.h
+index 410567d..ae101ca 100644
+--- a/libs/audiographer/audiographer/debug_utils.h
++++ b/libs/audiographer/audiographer/debug_utils.h
+@@ -5,6 +5,7 @@
+ 
+ #include <cstdlib>
+ #include <string>
++#include <typeinfo>
+ 
+ #ifdef __GNUC__
+ #include <cxxabi.h>
+diff --git a/libs/ctrl-interface/midi_surface/midi_byte_array.cc b/libs/ctrl-interface/midi_surface/midi_byte_array.cc
+index 1aba19d..4060aa4 100644
+--- a/libs/ctrl-interface/midi_surface/midi_byte_array.cc
++++ b/libs/ctrl-interface/midi_surface/midi_byte_array.cc
+@@ -25,6 +25,7 @@
+ #include <algorithm>
+ #include <cstdarg>
+ #include <iomanip>
++#include <iterator>
+ #include <stdexcept>
+ 
+ MidiByteArray::MidiByteArray (std::vector<MIDI::byte> const & v)
+diff --git a/libs/pbd/test/rwlock_test.cc b/libs/pbd/test/rwlock_test.cc
+index 371652c..79ee302 100644
+--- a/libs/pbd/test/rwlock_test.cc
++++ b/libs/pbd/test/rwlock_test.cc
+@@ -1,4 +1,5 @@
+ #include <glib.h>
++#include <pthread.h>
+ #include <sched.h>
+ #include "rwlock_test.h"
+ 
+diff --git a/libs/surfaces/launch_control_xl/midi_byte_array.cc b/libs/surfaces/launch_control_xl/midi_byte_array.cc
+index 64519d4..3c0e85d 100644
+--- a/libs/surfaces/launch_control_xl/midi_byte_array.cc
++++ b/libs/surfaces/launch_control_xl/midi_byte_array.cc
+@@ -25,6 +25,7 @@
+ #include <algorithm>
+ #include <cstdarg>
+ #include <iomanip>
++#include <iterator>
+ #include <stdexcept>
+ 
+ MidiByteArray::MidiByteArray (size_t size, MIDI::byte array[])
+diff --git a/libs/surfaces/mackie/midi_byte_array.cc b/libs/surfaces/mackie/midi_byte_array.cc
+index 3774cf2..d296315 100644
+--- a/libs/surfaces/mackie/midi_byte_array.cc
++++ b/libs/surfaces/mackie/midi_byte_array.cc
+@@ -26,6 +26,7 @@
+ #include <algorithm>
+ #include <cstdarg>
+ #include <iomanip>
++#include <iterator>
+ #include <stdexcept>
+ 
+ MidiByteArray::MidiByteArray (size_t size, MIDI::byte array[])
+diff --git a/libs/surfaces/push2/midi_byte_array.cc b/libs/surfaces/push2/midi_byte_array.cc
+index 33440b1..34e716d 100644
+--- a/libs/surfaces/push2/midi_byte_array.cc
++++ b/libs/surfaces/push2/midi_byte_array.cc
+@@ -25,6 +25,7 @@
+ #include <algorithm>
+ #include <cstdarg>
+ #include <iomanip>
++#include <iterator>
+ #include <stdexcept>
+ 
+ MidiByteArray::MidiByteArray (size_t size, MIDI::byte array[])
+diff --git a/libs/surfaces/us2400/midi_byte_array.cc b/libs/surfaces/us2400/midi_byte_array.cc
+index 6c0175b..8decb32 100644
+--- a/libs/surfaces/us2400/midi_byte_array.cc
++++ b/libs/surfaces/us2400/midi_byte_array.cc
+@@ -25,6 +25,7 @@
+ #include <algorithm>
+ #include <cstdarg>
+ #include <iomanip>
++#include <iterator>
+ #include <stdexcept>
+ 
+ MidiByteArray::MidiByteArray (size_t size, MIDI::byte array[])

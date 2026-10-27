@@ -1,0 +1,54 @@
+From e617fcc3c4ef64ab47f6529506d6cfe685e51e77 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 21:48:41 +0100
+Subject: [PATCH 2/3] Include <cstdint> where fixed-width integers are used
+
+These files use int64_t without including <cstdint> and relied on it
+arriving through other standard headers. The libstdc++ of GCC 16 (as
+shipped by MSYS2) does not provide it through <memory>, <vector> or
+<limits>, so the build fails with "'int64_t' has not been declared".
+---
+ src/api/network_state_predictor.h                                | 1 +
+ src/modules/audio_coding/neteq/reorder_optimizer.cc              | 1 +
+ .../audio_processing/aec3/multi_channel_content_detector.h       | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/src/api/network_state_predictor.h b/src/api/network_state_predictor.h
+index 9cf5ab6f..2d165baa 100644
+--- a/src/api/network_state_predictor.h
++++ b/src/api/network_state_predictor.h
+@@ -11,6 +11,7 @@
+ #ifndef API_NETWORK_STATE_PREDICTOR_H_
+ #define API_NETWORK_STATE_PREDICTOR_H_
+ 
++#include <cstdint>
+ #include <memory>
+ #include <vector>
+ 
+diff --git a/src/modules/audio_coding/neteq/reorder_optimizer.cc b/src/modules/audio_coding/neteq/reorder_optimizer.cc
+index f6e073fc..172f6035 100644
+--- a/src/modules/audio_coding/neteq/reorder_optimizer.cc
++++ b/src/modules/audio_coding/neteq/reorder_optimizer.cc
+@@ -11,6 +11,7 @@
+ #include "modules/audio_coding/neteq/reorder_optimizer.h"
+ 
+ #include <algorithm>
++#include <cstdint>
+ #include <limits>
+ #include <vector>
+ 
+diff --git a/src/modules/audio_processing/aec3/multi_channel_content_detector.h b/src/modules/audio_processing/aec3/multi_channel_content_detector.h
+index be8717f3..12b5f562 100644
+--- a/src/modules/audio_processing/aec3/multi_channel_content_detector.h
++++ b/src/modules/audio_processing/aec3/multi_channel_content_detector.h
+@@ -13,6 +13,7 @@
+ 
+ #include <stddef.h>
+ 
++#include <cstdint>
+ #include <memory>
+ #include <vector>
+ 
+-- 
+2.55.0
+

@@ -1,0 +1,52 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=cli_helpers
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.15.2
+pkgrel=1
+pkgdesc="Helpers for building command-line apps (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/dbcli/cli_helpers'
+msys2_repository_url='https://github.com/dbcli/cli_helpers'
+msys2_references=(
+  'purl: pkg:pypi/cli_helpers'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-configobj"
+         "${MINGW_PACKAGE_PREFIX}-python-pygments"
+         "${MINGW_PACKAGE_PREFIX}-python-tabulate"
+         "${MINGW_PACKAGE_PREFIX}-python-wcwidth")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-pytest")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('730ddf07bff25b566c64453e543496364e88cbab2a0554e0bee0de98feedc68f')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  # Test the built wheel, not the source tree.
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  local _site=( "${PWD}"/chk${MINGW_PREFIX}/lib/python3*/site-packages )
+  export PYTHONPATH="$(cygpath -w "${_site[0]}")"
+  ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider tests
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

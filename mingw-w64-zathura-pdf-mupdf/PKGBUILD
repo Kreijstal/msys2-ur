@@ -1,0 +1,50 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=zathura-pdf-mupdf
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=2026.07.18
+pkgrel=1
+pkgdesc="PDF, EPUB and XPS support for zathura using MuPDF (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://pwmt.org/projects/zathura-pdf-mupdf/'
+msys2_repository_url='https://github.com/pwmt/zathura-pdf-mupdf'
+msys2_references=(
+  'archlinux: zathura-pdf-mupdf'
+)
+license=('spdx:Zlib')
+depends=("${MINGW_PACKAGE_PREFIX}-cairo"
+         "${MINGW_PACKAGE_PREFIX}-girara"
+         "${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-libmupdf"
+         "${MINGW_PACKAGE_PREFIX}-zathura")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/pwmt/zathura-pdf-mupdf/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('90a120edcc2533167597d26b24b5e4b6b5208379dd2ff74ce94ce2df514a0371')
+
+build() {
+  # zathura.pc gives the plugin directory as a native E:/... path, which
+  # --destdir would turn into ${pkgdir}/msys64/...; give it relative to the
+  # prefix instead.
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup \
+      --prefix="${MINGW_PREFIX}" \
+      --wrap-mode=nodownload \
+      --buildtype=plain \
+      -Dplugindir=lib/zathura \
+      "build-${MSYSTEM}" \
+      "${_realname}-${pkgver}"
+
+  meson compile -C "build-${MSYSTEM}"
+}
+
+package() {
+  meson install -C "build-${MSYSTEM}" --destdir "${pkgdir}"
+
+  install -Dm644 "${_realname}-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

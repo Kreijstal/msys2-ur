@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:57:33 +0100
+Subject: [PATCH] dummy backend: link system libltc with --use-external-libs
+
+The dummy backend's LTC generator calls ltc_encoder_*() directly, but
+the wscript only lists the bundled `libltc` task in `use`. With
+--use-external-libs that task does not exist, so nothing adds -lltc.
+ELF platforms get away with it because the symbols are resolved at run
+time through libardour; PE/COFF requires every DLL to resolve its own
+imports at link time:
+
+  dummy_audiobackend.cc: undefined reference to `ltc_encoder_create'
+
+Add the LIBLTC uselib (from pkg-config 'ltc') in that case, like
+libs/ardour does.
+---
+ libs/backends/dummy/wscript | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/libs/backends/dummy/wscript b/libs/backends/dummy/wscript
+index 7ef23d9..c6a15e3 100644
+--- a/libs/backends/dummy/wscript
++++ b/libs/backends/dummy/wscript
+@@ -19,6 +19,8 @@ def build(bld):
+     obj.target   = 'dummy_audiobackend'
+     obj.use      = 'libardour libpbd libltc'
+     obj.uselib   = 'GLIBMM XML OSX'
++    if bld.is_defined('USE_EXTERNAL_LIBS'):
++        obj.uselib += ' LIBLTC'
+     obj.install_path  = os.path.join(bld.env['LIBDIR'], 'backends')
+     obj.defines = ['PACKAGE="' + I18N_PACKAGE + '"',
+                    'ARDOURBACKEND_DLL_EXPORTS'

@@ -1,0 +1,26 @@
+pkgbase = mingw-w64-cheatengine
+	pkgdesc = Memory scanner, debugger and modding environment (userland GUI, built with Lazarus) (mingw-w64)
+	pkgver = 7.5
+	pkgrel = 1
+	url = https://www.cheatengine.org/
+	arch = any
+	license = custom
+	license = spdx:MIT
+	makedepends = mingw-w64-ucrt-x86_64-lazarus
+	makedepends = mingw-w64-ucrt-x86_64-fpc-kgpc>=3.2.2-3
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	depends = mingw-w64-ucrt-x86_64-sqlite3
+	options = !strip
+	options = !debug
+	source = cheatengine-7.5.tar.gz::https://github.com/cheat-engine/cheat-engine/archive/refs/tags/7.5.tar.gz
+	source = 0001-Build-with-Lazarus-4.patch
+	source = 0002-Load-MSYS2-s-SQLite-instead-of-the-bundled-sqlite3.d.patch
+	source = celauncher.pas
+	source = luafilesystem-1.9.0.tar.gz::https://github.com/lunarmodules/luafilesystem/archive/refs/tags/v1_9_0.tar.gz
+	sha256sums = 5af90b468885fa9dd377119a438470573040b08aa4f1d174522b5db77ee7cf31
+	sha256sums = ef71854931b28ab995c3da3b16c1690ce1701f14e4020403fddef2cd23497a31
+	sha256sums = 33dc14b0f9fdb43352e640709911021c4e9683b062e54a6458722cccb18af6ea
+	sha256sums = 7389b7cb51b12003b1c2e8599c901c6721e07e6056fd3ca7de6f22ea702a1bcb
+	sha256sums = 1142c1876e999b3e28d1c236bf21ffd9b023018e336ac25120fb5373aade1450
+
+pkgname = mingw-w64-ucrt-x86_64-cheatengine

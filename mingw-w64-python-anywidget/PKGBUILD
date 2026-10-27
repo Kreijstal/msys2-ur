@@ -1,0 +1,64 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=anywidget
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.11.0
+pkgrel=1
+pkgdesc="Custom Jupyter widgets made easy (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://anywidget.dev/'
+msys2_repository_url='https://github.com/manzt/anywidget'
+msys2_references=(
+  'purl: pkg:pypi/anywidget'
+)
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-ipywidgets"
+         "${MINGW_PACKAGE_PREFIX}-python-psygnal"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-watchfiles: reload _esm and _css files when they change")
+# The sdist carries the built JupyterLab and classic notebook extensions, so
+# hatch-jupyter-builder skips its npm step.
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-hatch-jupyter-builder")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-ipykernel"
+              "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+              "${MINGW_PACKAGE_PREFIX}-python-pytest"
+              "${MINGW_PACKAGE_PREFIX}-python-watchfiles")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('6695fbef9449cf8c27f421b96c5837aa37f909ec1f60cfa33add333e1b70b169')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  # Test the built wheel, not the source tree: the version comes from its
+  # metadata, and the extension files are only in it.
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  local _site=( "${PWD}"/chk${MINGW_PREFIX}/lib/python3*/site-packages )
+  export PYTHONPATH="$(cygpath -w "${_site[0]}")"
+  # test_version reads packages/anywidget/package.json of the monorepo, which
+  # is not in the sdist; check the version of the wheel against pkgver instead.
+  ${MINGW_PREFIX}/bin/python -c "import anywidget; assert anywidget.__version__ == '${pkgver}', anywidget.__version__"
+  cd tests
+  ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider --rootdir=. \
+    --deselect test_widget.py::test_version .
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

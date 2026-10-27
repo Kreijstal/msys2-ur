@@ -1,0 +1,74 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=simba
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1400
+_tag="simba${pkgver}-release"
+# Lape (Simba's script engine) is a git submodule; the commit Simba 1400 pins.
+_lape_commit=44a48180fa17c0ad90c5bab16d2d113ec6163c2b
+pkgrel=1
+pkgdesc="Scriptable color-finding and input automation tool with a Lape (Pascal) IDE (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://villavu.com/'
+msys2_repository_url='https://github.com/Villavu/Simba'
+license=('spdx:GPL-3.0-or-later' 'spdx:LGPL-3.0-or-later')  # Simba GPL-3, Lape LGPL
+# libffi-8.dll is loaded at start-up (0002); the OpenSSL 3 DLLs are loaded
+# by FPC's openssl unit for https (0003).
+depends=("${MINGW_PACKAGE_PREFIX}-libffi"
+         "${MINGW_PACKAGE_PREFIX}-openssl")
+# fpc-kgpc 3.2.2-3: openssl unit that finds OpenSSL 3 (libssl-3-x64.dll).
+makedepends=("${MINGW_PACKAGE_PREFIX}-lazarus"
+             "${MINGW_PACKAGE_PREFIX}-fpc-kgpc>=3.2.2-3")
+options=('!strip' '!debug')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/Villavu/Simba/archive/refs/tags/${_tag}.tar.gz"
+        "lape-${_lape_commit}.tar.gz::https://github.com/nielsAD/lape/archive/${_lape_commit}.tar.gz"
+        "0001-Build-with-Lazarus-4.patch"
+        "0002-Use-MSYS2-s-libffi-DLL-instead-of-the-bundled-static.patch"
+        "0003-Do-not-embed-and-extract-the-bundled-OpenSSL-DLLs.patch"
+        "0004-Keep-user-data-in-LOCALAPPDATA-Simba-in-the-MSYS2-la.patch")
+sha256sums=('4920a5d04a5f10b6e786ea10c2a86dc3224d6927518f3c05f0278f226ab4bffb'
+            '9a9393eff6f5a705849721e112a36964f77807a8e9427c41f1f5c9ec37142e65'
+            'a176c3c5502a4d72a385bd9ef40550f6c0aafc951fbccbb1e87f6ea0b74dfb0f'
+            '27c7d0334c8b00ae54233c6b14cc457a403757d48ce4e230729ae65250e59663'
+            '1fed84bf41b369778b921f99cfad5656b65553dfb6dbbac1e533bb429a947df9'
+            '7c6cc1be4b0d2f5445b38c107ab1657b9bc5b2e07fcd3033f1c00b9de23fe10c')
+
+prepare() {
+  cd "${srcdir}/Simba-${_tag}"
+  rm -rf Third-Party/lape
+  cp -r "${srcdir}/lape-${_lape_commit}" Third-Party/lape
+  # Prebuilt third-party binaries are not used (see 0002, 0003).
+  rm -rf Third-Party/lape/extensions/ffi/bin/win32 Third-Party/lape/extensions/ffi/bin/win64
+  rm -f Third-Party/openssl/win32.res Third-Party/openssl/win64.res
+
+  local _p
+  for _p in "${srcdir}"/000*.patch; do
+    patch -Np1 -i "${_p}"
+  done
+}
+
+build() {
+  cd "${srcdir}/Simba-${_tag}"
+  # Private lazbuild config dir, so the user's ~/.lazarus is not touched.
+  rm -rf "${srcdir:?}/lazconf"
+  lazbuild --pcp="$(cygpath -m "${srcdir}/lazconf")" -B --bm=WIN64 Source/Simba.lpi
+}
+
+check() {
+  cd "${srcdir}/Simba-${_tag}"
+  # Upstream's test runner: runs every Tests/*.simba script in a child Simba
+  # process (headless --run) and fails if any of them fails.
+  ./Simba-Win64.exe --run Tests/tester.simba </dev/null
+}
+
+package() {
+  cd "${srcdir}/Simba-${_tag}"
+  install -Dm755 Simba-Win64.exe "${pkgdir}${MINGW_PREFIX}/bin/simba.exe"
+  # <prefix>/share/simba marks the MSYS2 layout (0004): user data then goes
+  # to %LOCALAPPDATA%\Simba.  The examples are also built into simba.exe.
+  install -d "${pkgdir}${MINGW_PREFIX}/share/${_realname}/examples"
+  install -m644 Examples/*.simba "${pkgdir}${MINGW_PREFIX}/share/${_realname}/examples/"
+  install -Dm644 COPYING "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

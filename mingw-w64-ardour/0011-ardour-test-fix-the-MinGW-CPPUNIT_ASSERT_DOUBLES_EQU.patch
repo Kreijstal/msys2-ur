@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:10:47 +0100
+Subject: [PATCH] ardour/test: fix the MinGW CPPUNIT_ASSERT_DOUBLES_EQUAL
+ replacement
+
+dsp_load_calculator_test.cc replaces CPPUNIT_ASSERT_DOUBLES_EQUAL on
+MinGW (to avoid cppunit's "%.*g" string comparison) with a check that
+rint(A/P) == rint(B/P). That is not the same as |A - B| <= P: two
+values a hair apart on either side of a rounding boundary fail it,
+which is what happens to the 48k/96k LPF comparison on Windows:
+
+  equality assertion failed
+  - Expected: 990
+  - Actual  : 991
+
+Compare the absolute difference against the tolerance instead, which
+is what the original cppunit macro means and still avoids the string
+formatting.
+---
+ libs/ardour/test/dsp_load_calculator_test.cc | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/libs/ardour/test/dsp_load_calculator_test.cc b/libs/ardour/test/dsp_load_calculator_test.cc
+index 6b774e5..37a0ac0 100644
+--- a/libs/ardour/test/dsp_load_calculator_test.cc
++++ b/libs/ardour/test/dsp_load_calculator_test.cc
+@@ -20,7 +20,11 @@ CPPUNIT_TEST_SUITE_REGISTRATION (DSPLoadCalculatorTest);
+  * and this needs to go to https://sourceforge.net/p/cppunit/bugs/
+  */
+ #include <math.h>
+-#define CPPUNIT_ASSERT_DOUBLES_EQUAL(A,B,P) CPPUNIT_ASSERT_EQUAL((float)rint ((A) / (P)),(float)rint ((B) / (P)))
++/* Rounding both values to multiples of P and comparing those is stricter
++ * than |A - B| <= P (values on either side of a rounding boundary differ
++ * by one step), so compare the difference directly.
++ */
++#define CPPUNIT_ASSERT_DOUBLES_EQUAL(A,B,P) CPPUNIT_ASSERT (fabs ((double)(A) - (double)(B)) <= (P))
+ #endif
+ 
+ using namespace std;

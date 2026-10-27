@@ -1,0 +1,93 @@
+From 8c27839d5fa5478cca93480a34a7b0a73eb95a79 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 08:48:51 +0100
+Subject: [PATCH 1/2] wintun: also look for wintun.dll next to libopenconnect
+ and in System32
+
+init_wintun() only loaded wintun.dll with LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
+i.e. from the directory of the running executable. That works for the
+openconnect.exe CLI when wintun.dll is installed beside it, but not when
+libopenconnect is used by a front-end installed in another directory, and
+not with a machine-wide Wintun installation in System32.
+
+Search, in order:
+  1. the executable's directory (unchanged upstream behaviour, and what the
+     official Wintun distribution recommends);
+  2. the directory libopenconnect itself was loaded from, which is where a
+     distribution package (e.g. MSYS2's mingw-w64-wintun) installs it;
+  3. System32.
+
+The current directory and PATH are still never searched, so this does not
+reintroduce DLL planting. Log which copy was loaded at debug level, which
+makes it easy to see which wintun.dll is in use.
+
+On ReactOS, LoadLibraryExW ignores the LOAD_LIBRARY_SEARCH_* flags and uses
+the normal process search order, whose first entry is again the
+application directory, so step 1 behaves the same there.
+---
+ wintun.c | 49 +++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 47 insertions(+), 2 deletions(-)
+
+diff --git a/wintun.c b/wintun.c
+index 8900d73..0e8642c 100644
+--- a/wintun.c
++++ b/wintun.c
+@@ -61,11 +61,56 @@ static void CALLBACK wintun_log_fn(WINTUN_LOGGER_LEVEL wlvl, DWORD64 wts, const
+ 	vpn_progress(logger_vpninfo, lvl, "%d: %S\n", wlvl, wmsg);
+ }
+ 
++/*
++ * Locate wintun.dll. The official Wintun distribution expects applications
++ * to ship wintun.dll next to their executable, so that is tried first.
++ * When libopenconnect is used by a front-end installed somewhere else, also
++ * look next to libopenconnect itself (where a packaged wintun.dll normally
++ * lives too), and finally in System32 for a machine-wide installation.
++ * The current directory and PATH are never searched.
++ */
++static HMODULE load_wintun_dll(struct openconnect_info *vpninfo)
++{
++	static const WCHAR dllname[] = L"wintun.dll";
++	WCHAR path[MAX_PATH];
++	HMODULE self, dll;
++	DWORD len;
++
++	dll = LoadLibraryExW(dllname, NULL, LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
++	if (dll)
++		goto found;
++
++	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
++			       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
++			       (LPCWSTR)&logger_vpninfo, &self)) {
++		len = GetModuleFileNameW(self, path, MAX_PATH);
++		if (len && len < MAX_PATH) {
++			WCHAR *sep = wcsrchr(path, L'\\');
++
++			if (sep && (size_t)(sep + 1 - path) + ARRAY_SIZE(dllname) <= MAX_PATH) {
++				memcpy(sep + 1, dllname, sizeof(dllname));
++				dll = LoadLibraryExW(path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
++				if (dll)
++					goto found;
++			}
++		}
++	}
++
++	dll = LoadLibraryExW(dllname, NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
++	if (!dll)
++		return NULL;
++
++ found:
++	len = GetModuleFileNameW(dll, path, MAX_PATH);
++	if (len && len < MAX_PATH)
++		vpn_progress(vpninfo, PRG_DEBUG, _("Loaded %S\n"), path);
++	return dll;
++}
++
+ static int init_wintun(struct openconnect_info *vpninfo)
+ {
+ 	if (!vpninfo->wintun) {
+-		vpninfo->wintun = LoadLibraryExW(L"wintun.dll", NULL,
+-						 LOAD_LIBRARY_SEARCH_APPLICATION_DIR);
++		vpninfo->wintun = load_wintun_dll(vpninfo);
+ 		if (!vpninfo->wintun) {
+ 			vpn_progress(vpninfo, PRG_DEBUG, _("Could not load wintun.dll\n"));
+ 			return -ENOENT;

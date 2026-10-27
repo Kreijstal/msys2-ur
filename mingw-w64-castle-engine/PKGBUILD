@@ -1,0 +1,133 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=castle-engine
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+_tag=v7.0-alpha.3
+pkgver=7.0alpha3
+pkgrel=1
+pkgdesc="Castle Game Engine: Object Pascal 3D/2D game engine with build tool and visual editor (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://castle-engine.io/'
+msys2_repository_url='https://github.com/castle-engine/castle-engine'
+msys2_references=(
+  'aur: castle-engine'
+)
+# Engine: LGPL >= 2 with static linking exception; editor and tools: GPL >= 2.
+license=('spdx:LGPL-2.0-or-later' 'spdx:GPL-2.0-or-later')
+# The engine and the programs built with it load these DLLs at run time
+# (0002); fpc/lazbuild are run by the build tool and the editor.
+depends=("${MINGW_PACKAGE_PREFIX}-lazarus"
+         "${MINGW_PACKAGE_PREFIX}-zlib"
+         "${MINGW_PACKAGE_PREFIX}-libpng"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-openal"
+         "${MINGW_PACKAGE_PREFIX}-libvorbis"
+         "${MINGW_PACKAGE_PREFIX}-openssl")
+# fpc-kgpc 3.2.2-3: FPC's openssl unit (castle-https: downloads) finds
+# OpenSSL 3 instead of the OpenSSL 1.0 DLLs CGE used to bundle.
+makedepends=("${MINGW_PACKAGE_PREFIX}-fpc-kgpc>=3.2.2-3")
+options=('!strip' '!debug')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/castle-engine/castle-engine/archive/refs/tags/${_tag}.tar.gz"
+        "0001-Find-the-engine-in-the-MSYS2-layout.patch"
+        "0002-Load-the-MSYS2-builds-of-FreeType-libpng-OpenAL-and-.patch"
+        "0003-build-tool-do-not-fail-on-dependency-DLLs-that-are-n.patch")
+# The tarball is ~590 MB, mostly examples/; extracted in prepare() without them.
+noextract=("${_realname}-${pkgver}.tar.gz")
+sha256sums=('332d0aa94ea4376f3fe603601c6958f341b44b196e1453273a06e1108688704e'
+            'd6e688f8347f92c73f6aff7b06c89b639266f4a72827c5c7bb4af00e6ca101e1'
+            '76168aa08c5a6d662a27724c621f125eda7a54ee41a00a18f6cc913a485b8313'
+            '5ee5edd0e5dc2cf7c7a9b6395c1cb13f3252618bf5e2567f7a177c8bf86fbbdf')
+
+_srcname="castle-engine-${_tag#v}"
+
+prepare() {
+  cd "${srcdir}"
+  rm -rf "${_srcname:?}"
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "${_srcname}/examples"
+  cd "${_srcname}"
+  local _p
+  for _p in "${srcdir}"/000*.patch; do
+    patch -Np1 -i "${_p}"
+  done
+
+  # Drop the prebuilt third-party binaries: upstream's own list for Debian
+  # (Windows DLLs, Android .so/gradle), plus the remaining Android libpng .so.
+  make strip-precompiled-libraries
+  rm -rf tools/build-tool/data/android/integrated-services/png/app/src/main/jniLibs
+}
+
+_bt() {
+  "${srcdir}/${_srcname}/tools/build-tool/castle-engine.exe" "$@"
+}
+
+build() {
+  cd "${srcdir}/${_srcname}"
+  export CASTLE_ENGINE_PATH="$(cygpath -w "${PWD}")"
+
+  # Build tool (plain fpc with castle-fpc.cfg), then the command-line tools.
+  bash tools/build-tool/castle-engine_compile.sh
+  local _t
+  for _t in image-to-pascal texture-font-to-pascal to-data-uri; do
+    _bt --project "tools/${_t}/" compile
+  done
+
+  # The editor (LCL) with lazbuild; private config dir for the package links.
+  local _pcp; _pcp="$(cygpath -m "${srcdir}/lazconf")"
+  rm -rf "${srcdir:?}/lazconf"
+  local _lpk
+  for _lpk in castle_base castle_window castle_components castle_editor_components; do
+    lazbuild --pcp="${_pcp}" --add-package-link "packages/${_lpk}.lpk"
+  done
+  lazbuild --pcp="${_pcp}" tools/castle-editor/castle_editor.lpi
+}
+
+check() {
+  cd "${srcdir}/${_srcname}"
+  export CASTLE_ENGINE_PATH="$(cygpath -w "${PWD}")"
+
+  _bt --version | tee "${srcdir}/version.txt"
+  grep -q "^castle-engine ${_tag#v}$" "${srcdir}/version.txt"
+
+  # Engine unit tests (FPCUnit), console mode without creating a window.
+  _bt --project tests/ --mode=release compile
+  _bt --project tests/ run -- --console --no-window-create
+  _bt --project tests/ clean
+
+  # A new project from an editor template, built with the build tool.
+  rm -rf "${srcdir}/template-test"
+  _bt create msys2-template-test --project-parent-dir "${srcdir}/template-test" \
+    --project-template 3d_fps_game
+  _bt --project "${srcdir}/template-test/msys2-template-test" compile
+  test -f "${srcdir}/template-test/msys2-template-test/msys2-template-test.exe"
+}
+
+package() {
+  cd "${srcdir}/${_srcname}"
+  local _dst="${pkgdir}${MINGW_PREFIX}/lib/${_realname}"
+  install -d "${_dst}" "${pkgdir}${MINGW_PREFIX}/bin"
+
+  # Engine sources, Lazarus packages and tool sources/data (the build tool
+  # and the editor find them here, see 0001; the editor recompiles itself
+  # from tools/castle-editor with project-specific components).
+  tar -cf - \
+      --exclude='castle-engine-output' --exclude='lib' --exclude='backup' \
+      --exclude='*.exe' --exclude='*.ppu' --exclude='*.o' --exclude='*.a' \
+      --exclude='*.compiled' --exclude='*.or' \
+      src packages tools castle-fpc.cfg castle-fpc-messages.cfg \
+      COPYING.md README.md CONTRIBUTING.md \
+    | tar -xf - -C "${_dst}"
+
+  install -m755 tools/build-tool/castle-engine.exe \
+    tools/castle-editor/castle-editor.exe \
+    tools/image-to-pascal/image-to-pascal.exe \
+    tools/texture-font-to-pascal/texture-font-to-pascal.exe \
+    tools/to-data-uri/to-data-uri.exe \
+    "${pkgdir}${MINGW_PREFIX}/bin/"
+  # castle_editor.lpi's default mode links ~130 MB of DWARF (with build paths);
+  # strip debug info from the executables only, like the lazarus package does.
+  "${MINGW_PREFIX}/bin/strip" --strip-debug "${pkgdir}${MINGW_PREFIX}"/bin/*.exe
+
+  install -Dm644 COPYING.md "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING.md"
+}

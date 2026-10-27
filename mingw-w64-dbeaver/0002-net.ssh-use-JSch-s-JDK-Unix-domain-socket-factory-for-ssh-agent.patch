@@ -1,0 +1,40 @@
+From 7c1371d108f5967b9740d44536b3011da34b049b Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 16:33:48 +0100
+Subject: [PATCH] net.ssh: use JSch's JDK Unix domain socket factory for
+ ssh-agent
+
+The ssh-agent connector (used on Linux and macOS; Windows uses Pageant)
+reaches the agent socket through com.jcraft.jsch.JUnixSocketFactory,
+JSch's adapter for the junixsocket native library. The MSYS2 JSch
+bundle is built without the optional junixsocket backend, so that class
+does not exist and the plug-in does not compile.
+
+JSch also provides com.jcraft.jsch.UnixDomainSocketFactory, the same
+USocketFactory implemented with the JDK's own Unix domain socket channels
+(Java 16+; DBeaver requires Java 21). Use it instead: the agent protocol
+handling is unchanged and no native library is needed.
+---
+ .../dbeaver/model/net/ssh/AbstractSessionController.java      | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/AbstractSessionController.java b/plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/AbstractSessionController.java
+index 4d9576e..3a829a1 100644
+--- a/plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/AbstractSessionController.java
++++ b/plugins/org.jkiss.dbeaver.net.ssh/src/org/jkiss/dbeaver/model/net/ssh/AbstractSessionController.java
+@@ -159,10 +159,10 @@ public abstract class AbstractSessionController<T extends AbstractSession> imple
+         } else {
+             try {
+                 if (CommonUtils.isNotEmpty(authSockPath)) {
+-                    connector = new SSHAgentConnector(new JUnixSocketFactory(), Path.of(authSockPath));
++                    connector = new SSHAgentConnector(new UnixDomainSocketFactory(), Path.of(authSockPath));
+                     log.debug("SSHSessionController: Connected with ssh-agent using custom socket: " + authSockPath);
+                 } else {
+-                    connector = new SSHAgentConnector(new JUnixSocketFactory());
++                    connector = new SSHAgentConnector(new UnixDomainSocketFactory());
+                     log.debug("SSHSessionController: Connected with ssh-agent");
+                 }
+             } catch (InvalidPathException e) {
+-- 
+2.55.0
+
