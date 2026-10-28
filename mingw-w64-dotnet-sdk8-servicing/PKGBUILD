@@ -3,7 +3,7 @@ _realname=dotnet-sdk8-servicing
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.131
-pkgrel=3
+pkgrel=4
 pkgdesc='Audited source SDK8 with source-built8.0.31 apphost and runtime packs (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -15,28 +15,28 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
          "${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31-3"
          "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing>=8.0.31-2"
          "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers=8.0.0.preview26274.2")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131-3"
              "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja" "${MINGW_PACKAGE_PREFIX}-llvm"
              'mingw-w64-ucrt-x86_64-mono=6.12.0.199' 'python' 'patch' 'make')
 options=('!strip' '!lto' '!buildflags')
 # The SDK input is our unchanged, audited source-bootstrap package, built by
 # mingw-w64-dotnet-bootstrap from the Mono seed. No vendor SDK binaries enter.
-source=('mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst'
+source=("mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-3-any.pkg.tar.zst::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-3-any.pkg.tar.zst"
         'runtime-v8.0.31.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v8.0.31'
         "dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz"
-        'dotnet-runtime8-servicing-source-3.tar.gz'
-        'dotnet-sdk8-servicing-source-1.tar.gz'
+        "dotnet-runtime8-servicing-source-3.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-runtime8-servicing-source-3.tar.gz"
+        "dotnet-sdk8-servicing-source-2.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-sdk8-servicing-source-2.tar.gz"
         'README.md')
-noextract=('mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst'
+noextract=('mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-3-any.pkg.tar.zst'
            'runtime-v8.0.31.tar.gz'
            'dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz')
-sha256sums=('3e23ceeddb31efcd60b25238115deda3daf7de6ba4b42db143974e9b031c04b5'
+sha256sums=('4d2c8e8f23a26c38cbd4edd5acb3b412c7c77e4a7a21379d7ef5b35274184166'
             'b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
             '1901796a07f37c06c6a5423cce5ce67b98fd300a7201f9a055e998f30d062356'
-            'ae242a43aebcbbe6f5099c4410ce95bc7dcdcc034fc7ffff3fd5155b866131b5'
-            '2c72e9f1b9ce8a353ba444cf9dec389b29270349d47332d2b9ff7786628c079c')
+            '553715ae7466b6a5103869034e5e25a8db0931de2d307ca4106ce6a34aba2eea'
+            '089df02dbf636914373b0cc881f2b055eaad6c035321f3aa994021f68ffe48e6')
 
 build() {
   bash "$srcdir/sdk-servicing/build-host.sh" "$srcdir/servicing" \
@@ -44,7 +44,7 @@ build() {
     "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" \
     "$srcdir/prepared"
   /usr/bin/python3 "$srcdir/sdk-servicing/stage-sdk.py" \
-    "$srcdir/mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-2-any.pkg.tar.zst" \
+    "$srcdir/mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-3-any.pkg.tar.zst" \
     "$srcdir/prepared" "$srcdir/sdk-stage"
 }
 

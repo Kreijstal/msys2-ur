@@ -1,11 +1,13 @@
 # Source SDK8 host/runtime servicing
 
 This package replaces the source-bootstrap SDK owner using explicit
-provides/conflicts metadata. Its input SDK8.0.131-2 is our audited source-built
+provides/conflicts metadata. Its input SDK8.0.131-3 is our audited source-built
 native package, SHA256
-`3e23ceeddb31efcd60b25238115deda3daf7de6ba4b42db143974e9b031c04b5`.
+`4d2c8e8f23a26c38cbd4edd5acb3b412c7c77e4a7a21379d7ef5b35274184166`.
 The managed SDK assemblies, templates, original source feed and licenses remain
-unchanged. They are not recompiled by this recipe. The original
+unchanged. They are not recompiled by this recipe. `check()` compares them with the
+installed SDK, so build with that exact bootstrap package installed (not an
+older sdk8-servicing, which conflicts with it). The original
 `mingw-w64-dotnet-bootstrap` recipe records their full Mono-seeded source build.
 
 The recipe freshly compiles runtime8.0.31's apphost/comhost/nethost and their
