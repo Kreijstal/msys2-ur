@@ -1,0 +1,14 @@
+--- a/src/3rdparty/chromium/components/policy/core/common/policy_loader_win.cc
++++ b/src/3rdparty/chromium/components/policy/core/common/policy_loader_win.cc
+@@ -13,6 +13,11 @@
+ #include <security.h>  // For GetUserNameEx()
+ #include <stddef.h>
+ #include <userenv.h>
++
++// Older MinGW userenv.h omits the Windows profile type used below.
++#if defined(__MINGW32__) && !defined(PT_ROAMING_PREEXISTING)
++#define PT_ROAMING_PREEXISTING 0x00000008
++#endif
+ 
+ #include <algorithm>
+ #include <memory>

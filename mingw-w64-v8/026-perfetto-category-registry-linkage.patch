@@ -1,0 +1,11 @@
+--- a/third_party/perfetto/include/perfetto/tracing/internal/track_event_macros.h
++++ b/third_party/perfetto/include/perfetto/tracing/internal/track_event_macros.h
+@@ -88,7 +88,7 @@
+ #define PERFETTO_INTERNAL_CATEGORY_STORAGE(attrs)                      \
+   namespace internal {                                                 \
+   attrs std::atomic<uint8_t> g_category_state_storage[kCategoryCount]; \
+-  attrs const ::perfetto::internal::TrackEventCategoryRegistry         \
++  attrs extern const ::perfetto::internal::TrackEventCategoryRegistry  \
+       kCategoryRegistry(kCategoryCount,                                \
+                         &kCategories[0],                               \
+                         &g_category_state_storage[0]);                 \

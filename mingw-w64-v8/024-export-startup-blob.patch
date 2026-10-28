@@ -1,0 +1,29 @@
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -30,6 +30,8 @@
+ emit_builtins_as_inline_asm = is_msvc && is_clang
+ 
+ declare_args() {
++  # Also ship the default snapshot as data for consumer snapshot generators.
++  v8_export_startup_blob = false
+   # Print to stdout on Android.
+   v8_android_log_stdout = false
+ 
+@@ -2625,14 +2627,15 @@
+       ]
+     }
+ 
+-    if (v8_use_external_startup_data) {
++    if (v8_use_external_startup_data || v8_export_startup_blob) {
+       outputs += [ "$root_out_dir/snapshot_blob${suffix}.bin" ]
+       data += [ "$root_out_dir/snapshot_blob${suffix}.bin" ]
+       args += [
+         "--startup_blob",
+         rebase_path("$root_out_dir/snapshot_blob${suffix}.bin", root_build_dir),
+       ]
+-    } else {
++    }
++    if (!v8_use_external_startup_data) {
+       outputs += [ "$target_gen_dir/snapshot${suffix}.cc" ]
+       args += [
+         "--startup_src",

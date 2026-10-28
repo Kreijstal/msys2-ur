@@ -1,0 +1,42 @@
+{
+  "baseline": "Qt WebEngine 6.11.2 / Chromium 140.0.7339.225",
+  "patches": [
+    {
+      "file": "0126-chromium-mingw-link-followup.patch",
+      "sha256": "de954cd5d47e3b1caa4820aac4a30e2d13fd5f4606526627e58c96cef17ce76d",
+      "source": "/home/kreijstal/tmp/qwe6112/core/mingw-w64-qt6-webengine/0126-chromium-mingw-link-followup.patch",
+      "source_sha256": "b5fb929bf6ab66c29982a3d6794d12bcad7a5e3988547fa90e37fc9635856263",
+      "adaptation": "Omit third_party/zstd/BUILD.gn hunk: existing control port already sets ZSTD_DISABLE_ASM at the start of decompress. Applying it twice makes GN reject a nonempty-list replacement."
+    },
+    {
+      "file": "0127-chromium-audio-session-observer-mingw.patch",
+      "sha256": "0699467fb862f1059d718ff1b27794c152e72f5efcccf12d99540eba2640e2d6",
+      "source": "/home/kreijstal/tmp/qwe6112/core/mingw-w64-qt6-webengine/0127-chromium-audio-session-observer-mingw.patch",
+      "source_sha256": "0699467fb862f1059d718ff1b27794c152e72f5efcccf12d99540eba2640e2d6"
+    },
+    {
+      "file": "0128-chromium-shell-no-atl-mingw.patch",
+      "sha256": "b5b3a3572185af397251021823ae73be0f4749fc4aadf0bbce92a9cb1dc09407",
+      "source": "/home/kreijstal/tmp/qwe6112/core/mingw-w64-qt6-webengine/0128-chromium-shell-no-atl-mingw.patch",
+      "source_sha256": "b5b3a3572185af397251021823ae73be0f4749fc4aadf0bbce92a9cb1dc09407"
+    },
+    {
+      "file": "0129-chromium-blink-image-encoder-shlwapi-mingw.patch",
+      "sha256": "de6f044ca6c015ed365a0908c951caa7328da90ccc7fc1494dd990921157ec8c",
+      "source": "/home/kreijstal/tmp/qwe6112/core/mingw-w64-qt6-webengine/0129-chromium-blink-image-encoder-shlwapi-mingw.patch",
+      "source_sha256": "de6f044ca6c015ed365a0908c951caa7328da90ccc7fc1494dd990921157ec8c"
+    },
+    {
+      "file": "0132-chromium-googletest-msvc-flags.patch",
+      "sha256": "fbd680666c0e2b7936c94f62f10656ab0cc78596c3d465dbe9d086476610f041",
+      "origin": "Local compatibility fix for Chromium140 content_shell test harness: restrict MSVC warning suppression to is_msvc."
+    },
+    {
+      "file": "0133-chromium-policy-profile-flag-mingw.patch",
+      "sha256": "d24d0d86705fd257f26a33d422801c7142c8c91f0089715b361059fe6bd745f8",
+      "origin": "Local compatibility definition for missing MinGW userenv.h profile flag, preserving profile classification.",
+      "reference": "https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/System/GroupPolicy/constant.PT_ROAMING_PREEXISTING.html",
+      "reference_value": 8
+    }
+  ]
+}

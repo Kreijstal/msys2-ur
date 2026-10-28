@@ -1,0 +1,11 @@
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -123,6 +123,8 @@
+ #   even if the value is overridden, which is wasteful. See first bullet.
+ 
+ declare_args() {
++  # Qt-vendored dependencies share this build-mode flag.
++  is_qtwebengine = false
+   # Set to enable the official build level of optimization. This has nothing
+   # to do with branding, but enables an additional level of optimization above
+   # release (!is_debug). This might be better expressed as a tri-state

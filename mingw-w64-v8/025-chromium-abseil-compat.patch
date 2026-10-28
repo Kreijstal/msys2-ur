@@ -1,0 +1,53 @@
+--- a/absl/strings/ascii.cc
++++ b/absl/strings/ascii.cc
+@@ -249,7 +249,9 @@
+   return incorrect_index;
+ }
+ 
++#if ABSL_INTERNAL_HAVE_MIN_GNUC_VERSION(10, 0) // Not constant expression in gcc 9
+ static_assert(ValidateAsciiCasefold() == 0, "error in case conversion");
++#endif
+ 
+ }  // namespace ascii_internal
+ 
+--- a/absl/base/internal/thread_identity.h
++++ b/absl/base/internal/thread_identity.h
+@@ -217,7 +217,9 @@
+ #error ABSL_THREAD_IDENTITY_MODE cannot be directly set
+ #elif defined(ABSL_FORCE_THREAD_IDENTITY_MODE)
+ #define ABSL_THREAD_IDENTITY_MODE ABSL_FORCE_THREAD_IDENTITY_MODE
+-#elif defined(_WIN32) && !defined(__MINGW32__)
++#elif defined(_WIN32)
++#define ABSL_THREAD_IDENTITY_MODE ABSL_THREAD_IDENTITY_MODE_USE_CPP11
++#elif defined(__clang__) && defined(__MINGW32__) && defined(_WIN32)
+ #define ABSL_THREAD_IDENTITY_MODE ABSL_THREAD_IDENTITY_MODE_USE_CPP11
+ #elif defined(__APPLE__) && defined(ABSL_HAVE_THREAD_LOCAL)
+ #define ABSL_THREAD_IDENTITY_MODE ABSL_THREAD_IDENTITY_MODE_USE_CPP11
+--- a/absl/container/internal/raw_hash_set.h
++++ b/absl/container/internal/raw_hash_set.h
+@@ -3569,7 +3569,7 @@
+     }
+   }
+ 
+-  static const PolicyFunctions& GetPolicyFunctions() {
++  static PolicyFunctions GetPolicyFunctions() {
+     static_assert(sizeof(slot_type) <= (std::numeric_limits<uint32_t>::max)(),
+                   "Slot size is too large. Use std::unique_ptr for value type "
+                   "or use absl::node_hash_{map,set}.");
+@@ -3581,7 +3581,7 @@
+                   size_t{(std::numeric_limits<uint32_t>::max)()});
+     static constexpr size_t kBackingArrayAlignment =
+         BackingArrayAlignment(alignof(slot_type));
+-    static constexpr PolicyFunctions value = {
++    return {
+         static_cast<uint32_t>(sizeof(key_type)),
+         static_cast<uint32_t>(sizeof(value_type)),
+         static_cast<uint32_t>(sizeof(slot_type)),
+@@ -3600,7 +3600,6 @@
+         &AllocateBackingArray<kBackingArrayAlignment, CharAlloc>,
+         &DeallocateBackingArray<kBackingArrayAlignment, CharAlloc>,
+         &raw_hash_set::transfer_unprobed_elements_to_next_capacity_fn};
+-    return value;
+   }
+ 
+   // Bundle together CommonFields plus other objects which might be empty.
