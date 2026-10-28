@@ -1,0 +1,14 @@
+--- a/ext/phar/phar/pharcommand.inc
++++ b/ext/phar/phar/pharcommand.inc
+@@ -212,6 +212,11 @@
+      */
+     static function cli_arg_typ_loader($arg, $cfg, $key)
+     {
++        // Windows has no POSIX PEAR discovery below. The optional loader
++        // sentinel still means that an archive requiring ext/phar is valid.
++        if ($arg === '0' && substr(PHP_OS, 0, 3) === 'WIN' && !file_exists($arg)) {
++            return null;
++        }
+         if (($arg == '0' || $arg == '1') && !file_exists($arg) && substr(PHP_OS, 0, 3) != 'WIN') {
+             $found = NULL;
+             $apiver = false;
