@@ -13,7 +13,7 @@ pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-host"
          "${MINGW_PACKAGE_PREFIX}-dotnet-host-devel"
          "${MINGW_PACKAGE_PREFIX}-dotnet-mono-devel")
 pkgver=8.0.131
-pkgrel=2
+pkgrel=3
 pkgdesc='Source-bootstrapped .NET 8 SDK and runtime with MinGW (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -30,8 +30,8 @@ makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
              "${MINGW_PACKAGE_PREFIX}-brotli"
              'git' 'patch' 'make' 'perl' 'unzip' 'zip')
 options=('!strip' '!lto' '!buildflags')
-# Tag msys2/dotnet-bootstrap-8.0.131-2 of Kreijstal/dotnet-mingw-bootstrap.
-_bootstrap_commit=2e8208f629f11c8786fa44c69683f864a3591f4a
+# Tag msys2/dotnet-bootstrap-8.0.131-3 of Kreijstal/dotnet-mingw-bootstrap.
+_bootstrap_commit=8bcadc1062c3bebeb1b52ba269ad342c11a805f2
 source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
         "roslyn-4.0.1.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/v4.0.1.tar.gz"
         "roslyn-4.4.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.4.tar.gz"
@@ -63,7 +63,7 @@ source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.gi
         "xdt-9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz::https://github.com/dotnet/xdt/archive/9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz"
 )
 source+=('relocate-bootstrap-tools.py' 'check-bootstrap-tools.py' 'check-native-devel.py' 'dotnet.sh' 'short-build-root.py' 'normalize-targeting-metadata.py' 'install-net-analyzer-imports.py')
-sha256sums=('3e4aedfc6526beb9ba40a2f785926e57c3c8bb23e6ca66fa9c382c758d06ad2e'
+sha256sums=('d86f0271176e353fb2c8ffb31d40f02d07e021ec0f304eb93530853ff77087e3'
             'fcd5794179e9732c6bf088a7bb0ea9438dadc1e135034d08a5fa9cd8c431532e'
             'ea41e64568038038fe700e8d674739f935dd9030a375b7a81fb104ea76cf8424'
             '15490d3a96f15c653a5f6e4bfb854c338b15d0ca4070a8c2bd01fa8d8850f0a6'

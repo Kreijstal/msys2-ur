@@ -45,10 +45,12 @@ private directory so they can coexist with that seed.
 ## Build
 
 The bootstrap sources are https://github.com/Kreijstal/dotnet-mingw-bootstrap.
-The recipe pins tag `msys2/dotnet-bootstrap-8.0.131-2` (commit 2e8208f): the
+The recipe pins tag `msys2/dotnet-bootstrap-8.0.131-3` (commit 8bcadc1): the
 earlier 3cbf210 plus the packaging changes this recipe used to carry as
-patches, and the native launcher shared with cppcli (`packaging/`). Source
-changes belong in that repository, not in patches here.
+patches, the native launcher shared with cppcli (`packaging/`), and an SDK
+patch that keeps a custom `DOTNET_CLI_HOME` out of the persistent Windows user
+PATH (upstream adds `<home>\.dotnet\tools` once per new home). Source changes
+belong in that repository, not in patches here.
 
 From a **CLANG64** shell, build normally:
 
