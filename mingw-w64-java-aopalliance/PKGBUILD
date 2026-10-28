@@ -1,0 +1,38 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# AOP Alliance 1.0 interfaces.  The project only ever lived in SourceForge
+# CVS; like GNU Guix this uses the import at github.com/hoverruan/aopalliance.
+
+_realname=aopalliance
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=1.0
+_commit=0d7757ae204e5876f69431421fe9bc2a4f01e8a0
+pkgrel=1
+pkgdesc="AOP Alliance interfaces for aspect-oriented programming in Java (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://aopalliance.sourceforge.net/'
+msys2_repository_url='https://github.com/hoverruan/aopalliance'
+license=('LicenseRef-Public-Domain')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${_commit}.tar.gz::https://github.com/hoverruan/aopalliance/archive/${_commit}.tar.gz")
+sha256sums=('7a6d62371cf092aa7615e5492533cdfcbfba3f6ae8b2eac2dd981271e3b4e864')
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_realname}-${_commit}/aopalliance"
+  # the published aopalliance-1.0 holds only the aop and intercept packages
+  jb_module aopalliance:aopalliance:${pkgver} src/main/org/aopalliance/aop \
+    -s src/main/org/aopalliance/intercept
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck aopalliance:aopalliance
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install aopalliance:aopalliance
+}

@@ -1,0 +1,61 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Only the blocking httpcore module is built (what Maven's HTTP transports use).
+
+_realname=httpcomponents-core
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-httpcore")
+pkgver=4.4.16
+pkgrel=1
+pkgdesc="Apache HttpComponents Core (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://hc.apache.org/httpcomponents-core-4.4.x/'
+msys2_repository_url='https://github.com/apache/httpcomponents-core'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4"
+              "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j"
+              "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple")
+source=("${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/httpcomponents/httpcore/source/httpcomponents-core-${pkgver}-src.tar.gz")
+sha256sums=('8fe2e88a5c66c4c8260a0ad828b119142a11e6c9a10d90dd7f65624a3c8e9036')
+
+# the tarball has no top-level directory
+prepare() {
+  sed -i -e "s/\${pom.version}/${pkgver}/" -e 's/\${mvn.timestamp}/UNAVAILABLE/' \
+    httpcore/src/main/resources/org/apache/http/version.properties
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_module org.apache.httpcomponents:httpcore:${pkgver} httpcore/src/main/java \
+    -s httpcore/src/main/java-deprecated \
+    -r httpcore/src/main/resources -u httpcore/pom.xml \
+    -m 'Automatic-Module-Name: org.apache.httpcomponents.httpcore'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.apache.httpcomponents:httpcore
+  # upstream JUnit 4 tests, without the ones that need Mockito
+  jb_test httpcore httpcore/src/test/java -r httpcore/src/test/resources -x "$(grep -rl mockito httpcore/src/test/java | sed 's|.*/||' | paste -sd'|')" \
+    -- org.apache.httpcomponents:httpcore org.slf4j:jcl-over-slf4j org.slf4j:slf4j-simple
+}
+
+package_java-httpcore() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.httpcomponents:httpcore
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-httpcore/LICENSE.txt"
+  install -Dm644 NOTICE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-httpcore/NOTICE.txt"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

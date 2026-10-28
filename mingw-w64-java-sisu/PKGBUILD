@@ -1,0 +1,113 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Eclipse Sisu: the JSR-330 container (on Guice) and its Plexus API layer
+# that Maven runs on.  The OSGi bundle support is left out (no OSGi
+# framework is packaged), as are the JUnit 5/TestNG test helpers; the
+# optional guice-servlet and CDI (@Typed) lookups are compiled out (0001).
+
+_realname=sisu
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-sisu-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus")
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="Eclipse Sisu dependency injection (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://eclipse.dev/sisu/'
+msys2_repository_url='https://github.com/eclipse-sisu/sisu-project'
+license=('spdx:EPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-guice"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-annotation-api"
+             "${MINGW_PACKAGE_PREFIX}-java-junit4"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-classworlds"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/eclipse-sisu/sisu-project/archive/refs/tags/releases/${pkgver}.tar.gz"
+        '0001-inject-build-without-guice-servlet-and-CDI.patch')
+sha256sums=('1a24445d175e58327a3fcec70828684c2de87cf3fc0ef51cf60168cf9d31c523'
+            '3c2cf22cac5278794122acd55e3da829222cfd0bbd9402a3b0eb23ac069c29cc')
+
+_src=sisu-project-releases-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # test fixtures (bundles, commons-logging, icu4j, component jars)
+  find . -name '*.jar' -print -delete
+  patch -p1 -i "${srcdir}/0001-inject-build-without-guice-servlet-and-CDI.patch"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # OSGi integration and the JUnit 5/TestNG base class need unpackaged APIs
+  jb_module org.eclipse.sisu:org.eclipse.sisu.inject:${pkgver} \
+    org.eclipse.sisu.inject/src/main/java -u org.eclipse.sisu.inject/pom.xml \
+    -x '/org/eclipse/sisu/osgi/' \
+    -x '/org/eclipse/sisu/launch/(SisuBundlePlan|BundleModule|BundlePlan|SisuTracker|SisuExtender|InjectedTest)\.java$' \
+    -x '/org/eclipse/sisu/space/BundleClassSpace\.java$' \
+    -m 'Automatic-Module-Name: org.eclipse.sisu.inject' \
+    -c 'com.google.inject:guice#classes' -c org.slf4j:slf4j-api \
+    -c javax.annotation:javax.annotation-api -c junit:junit \
+    -- org.ow2.asm:asm
+  # Sisu's own index of @Named components (sisu-maven-plugin upstream)
+  jb_module org.eclipse.sisu:org.eclipse.sisu.plexus:${pkgver} \
+    org.eclipse.sisu.plexus/src/main/java -u org.eclipse.sisu.plexus/pom.xml \
+    -x '/org/eclipse/sisu/plexus/PlexusBundlePlan\.java$' \
+    -m 'Automatic-Module-Name: org.eclipse.sisu.plexus' -P sisu \
+    -c 'com.google.inject:guice#classes' -c org.slf4j:slf4j-api \
+    -c javax.annotation:javax.annotation-api -c junit:junit \
+    -- org.eclipse.sisu:org.eclipse.sisu.inject \
+       org.codehaus.plexus:plexus-component-annotations \
+       org.codehaus.plexus:plexus-classworlds \
+       org.codehaus.plexus:plexus-utils
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests use JUnit 5, TestNG, Felix and prebuilt fixture jars;
+  # load the classes with the runtime classpath Maven gives them instead
+  local cp
+  cp=$(jb_cp 'com.google.inject:guice#classes' org.slf4j:slf4j-api junit:junit)
+  java -cp "$(jb_w "${MINGW_PREFIX}/share/java-build-helper/javabuild.jar")" jb.LoadCheck \
+    "$(jb_w "$(jb_jarpath org.eclipse.sisu:org.eclipse.sisu.inject)")" "${cp}"
+  java -cp "$(jb_w "${MINGW_PREFIX}/share/java-build-helper/javabuild.jar")" jb.LoadCheck \
+    "$(jb_w "$(jb_jarpath org.eclipse.sisu:org.eclipse.sisu.plexus)")" \
+    "$(jb_cp org.eclipse.sisu:org.eclipse.sisu.plexus);${cp}"
+  # the Sisu index was generated
+  unzip -p "$(jb_jarpath org.eclipse.sisu:org.eclipse.sisu.plexus)" \
+    META-INF/sisu/javax.inject.Named | grep -q .
+}
+
+package_java-sisu-inject() {
+  pkgdesc="Eclipse Sisu JSR-330 container on Guice (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-guice: the injector it runs on")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.eclipse.sisu:org.eclipse.sisu.inject
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-sisu-inject/LICENSE.txt"
+}
+
+package_java-sisu-plexus() {
+  pkgdesc="Eclipse Sisu Plexus API layer (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-sisu-inject"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-component-annotations"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-classworlds"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.eclipse.sisu:org.eclipse.sisu.plexus
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-sisu-plexus/LICENSE.txt"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

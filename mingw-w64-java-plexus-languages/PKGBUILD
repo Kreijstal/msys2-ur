@@ -1,0 +1,78 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=plexus-languages
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-plexus-java")
+pkgver=1.5.2
+pkgrel=1
+pkgdesc="Plexus language support libraries (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-languages/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-languages'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-asm"
+             "${MINGW_PACKAGE_PREFIX}-java-qdox"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-inject")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-languages/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('88a02ce4d893e3fcd2ea03e39f7264dcd3256a6642208a8a8295f9cdd5349d1b')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}/plexus-java"
+  # multi-release jar: java.lang.module based parsers in META-INF/versions/9
+  jb_module org.codehaus.plexus:plexus-java:${pkgver} src/main/java -r src/main/resources \
+    -v 9:src/main/java9 -u pom.xml -P sisu \
+    -- org.ow2.asm:asm com.thoughtworks.qdox:qdox 'javax.inject:javax.inject?'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5, Mockito and AssertJ; resolve the module
+  # name of a jar through LocationManager (the Java 9 parser)
+  jb_loadcheck --with javax.inject:javax.inject org.codehaus.plexus:plexus-java
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.io.File;
+import java.util.Collections;
+import org.codehaus.plexus.languages.java.jpms.*;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    File jar = new File(a[0]);
+    ResolvePathsResult<File> r = new LocationManager().resolvePaths(
+        ResolvePathsRequest.ofFiles(Collections.singletonList(jar)));
+    JavaModuleDescriptor d = r.getPathElements().get(jar);
+    System.out.println("plexus-java smoke test: " + jar.getName() + " -> "
+        + (d == null ? null : d.name()) + " " + r.getModulepathElements().get(jar));
+    if (d == null || !"org.objectweb.asm".equals(d.name())) throw new AssertionError(d);
+  }
+}
+JAVA
+  cp=$(jb_cp org.codehaus.plexus:plexus-java)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");${cp}" Smoke "$(jb_w "$(jb_jarpath org.ow2.asm:asm)")"
+}
+
+package_java-plexus-java() {
+  pkgdesc="Plexus Java: JPMS module path support for tools (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-asm"
+           "${MINGW_PACKAGE_PREFIX}-java-qdox")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-java
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

@@ -1,0 +1,66 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Guice core.  Upstream's main jar embeds ASM renamed with jarjar and the
+# plain classes are attached as the "classes" classifier (what Maven core
+# uses).  Without jarjar both coordinates carry the same unshaded jar, so
+# its POM depends on ASM.
+
+_realname=guice
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=5.1.0
+pkgrel=1
+pkgdesc="Google Guice dependency injection framework, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/google/guice'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-aopalliance"
+         "${MINGW_PACKAGE_PREFIX}-java-guava"
+         "${MINGW_PACKAGE_PREFIX}-java-asm")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jsr305"
+             "${MINGW_PACKAGE_PREFIX}-java-error-prone-annotations")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/google/guice/archive/refs/tags/${pkgver}.tar.gz"
+        # the JSR-330 TCK, run against Guice in check()
+        "javax-inject-1.tar.gz::https://github.com/javax-inject/javax-inject/archive/refs/tags/1.tar.gz")
+sha256sums=('56c5cbaa160fc9e754b8d2d93b8d8584c8468726e6b16075a6d8a0f6c61fad25'
+            'aa437908aa6b50f2a6fe30bade6495ab1195c3ec4d7708a66afc97f2edeee766')
+
+_src=${_realname}-${pkgver}
+
+prepare() {
+  find "${_src}" javax-inject-1 -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module com.google.inject:guice:${pkgver} core/src -u core/pom.xml \
+    -m 'Automatic-Module-Name: com.google.guice' \
+    -c com.google.code.findbugs:jsr305 -c com.google.errorprone:error_prone_annotations \
+    -- javax.inject:javax.inject aopalliance:aopalliance com.google.guava:guava org.ow2.asm:asm
+  cp "${JB_OUT}/guice.jar" "${JB_STAGE}/com/google/inject/guice/${pkgver}/guice-${pkgver}-classes.jar"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck com.google.inject:guice
+  # JSR-330 TCK (javax.inject's tck/) with upstream's GuiceTck harness;
+  # the rest of Guice's tests need Truth and guava-testlib
+  local t="${srcdir}/tck-classes" cp
+  rm -rf "${t}"
+  mkdir -p "${t}"
+  cp=$(jb_cp com.google.inject:guice junit:junit)
+  jb_javac -d "$(jb_w "${t}")" -cp "${cp}" -proc:none \
+    -- "${srcdir}/javax-inject-1/tck" "${_src}/core/test/com/googlecode/guice/GuiceTck.java"
+  jb_junit4 "${t}" "${cp}" com.googlecode.guice.GuiceTck
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.google.inject:guice
+  install -Dm644 "${_src}/COPYING" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/COPYING"
+}

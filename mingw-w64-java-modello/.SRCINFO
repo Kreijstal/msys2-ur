@@ -1,0 +1,39 @@
+pkgbase = mingw-w64-java-modello
+	pkgdesc = Modello data model code generator (mingw-w64)
+	pkgver = 2.6.0
+	pkgrel = 1
+	url = https://codehaus-plexus.github.io/modello/
+	arch = any
+	license = spdx:MIT
+	checkdepends = mingw-w64-ucrt-x86_64-java-slf4j-simple
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-build-api
+	makedepends = mingw-w64-ucrt-x86_64-java-sisu-plexus
+	makedepends = mingw-w64-ucrt-x86_64-java-guice
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-utils
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-xml
+	makedepends = mingw-w64-ucrt-x86_64-java-slf4j-api
+	source = modello-2.6.0.tar.gz::https://github.com/codehaus-plexus/modello/archive/refs/tags/modello-2.6.0.tar.gz
+	sha256sums = 68f2029e2bf7e2cab1c04f501d2049776eb8e7d7bb84b822a3eee41a6d1a72f5
+
+pkgname = mingw-w64-ucrt-x86_64-java-modello-core
+	pkgdesc = Modello data model code generator, core (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-plexus-build-api
+	depends = mingw-w64-ucrt-x86_64-java-sisu-plexus
+	depends = mingw-w64-ucrt-x86_64-java-guice
+	depends = mingw-w64-ucrt-x86_64-java-plexus-utils
+	depends = mingw-w64-ucrt-x86_64-java-plexus-xml
+	depends = mingw-w64-ucrt-x86_64-java-slf4j-api
+
+pkgname = mingw-w64-ucrt-x86_64-java-modello-plugin-java
+	pkgdesc = Modello Java generator (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-modello-core
+
+pkgname = mingw-w64-ucrt-x86_64-java-modello-plugin-xml
+	pkgdesc = Modello XML model support (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-modello-core
+
+pkgname = mingw-w64-ucrt-x86_64-java-modello-plugin-xpp3
+	pkgdesc = Modello XPP3 reader and writer generators (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-modello-plugin-java
+	depends = mingw-w64-ucrt-x86_64-java-modello-plugin-xml

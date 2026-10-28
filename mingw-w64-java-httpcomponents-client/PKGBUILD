@@ -1,0 +1,78 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Only the httpclient module is built.  Its commons-logging dependency is
+# satisfied by jcl-over-slf4j (as in Maven's own distribution); the POM
+# names jcl-over-slf4j instead of commons-logging.
+
+_realname=httpcomponents-client
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-httpclient")
+pkgver=4.5.14
+pkgrel=1
+pkgdesc="Apache HttpComponents Client (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://hc.apache.org/httpcomponents-client-4.5.x/'
+msys2_repository_url='https://github.com/apache/httpcomponents-client'
+license=('spdx:Apache-2.0 AND MPL-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-httpcore"
+             "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-codec")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4"
+              "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple")
+# upstream's build downloads the current Public Suffix List (wget plugin);
+# here a fixed revision of it is a source
+_psl=3929462652695bad04f0a27afb600974014a3c8b
+source=("${_realname}-${pkgver}-src.tar.gz::https://archive.apache.org/dist/httpcomponents/httpclient/source/httpcomponents-client-${pkgver}-src.tar.gz"
+        "public_suffix_list-${_psl}.dat::https://raw.githubusercontent.com/publicsuffix/list/${_psl}/public_suffix_list.dat")
+sha256sums=('03ddb419dd2066adfbdcc52d6498afafab968fff0d39864bc4dfb95837db83f1'
+            '2919eb9803c91a3f73a507cc6fedc934de005543c22c4016f72e3343de5dd6e7')
+
+# the tarball has no top-level directory
+prepare() {
+  sed -i -e "s/\${pom.version}/${pkgver}/" -e 's/\${mvn.timestamp}/UNAVAILABLE/' \
+    httpclient/src/main/resources/org/apache/http/client/version.properties
+  install -Dm644 "public_suffix_list-${_psl}.dat" psl/mozilla/public-suffix-list.txt
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_module org.apache.httpcomponents:httpclient:${pkgver} httpclient/src/main/java \
+    -s httpclient/src/main/java-deprecated \
+    -r httpclient/src/main/resources -r psl -u httpclient/pom.xml \
+    -m 'Automatic-Module-Name: org.apache.httpcomponents.httpclient' \
+    -- org.apache.httpcomponents:httpcore org.slf4j:jcl-over-slf4j commons-codec:commons-codec
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.apache.httpcomponents:httpclient
+  # upstream JUnit 4 tests, without the ones that need Mockito; testTLSOnly
+  # needs TLS 1.0, which current JDKs disable (jdk.tls.disabledAlgorithms)
+  jb_test httpclient httpclient/src/test/java -r httpclient/src/test/resources \
+    -X 'TestSSLSocketFactory#testTLSOnly' \
+    -x "$(grep -rl mockito httpclient/src/test/java | sed 's|.*/||' | paste -sd'|')" \
+    -- org.apache.httpcomponents:httpclient org.slf4j:slf4j-simple
+}
+
+package_java-httpclient() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-httpcore"
+           "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-codec")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.httpcomponents:httpclient
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-httpclient/LICENSE.txt"
+  install -Dm644 NOTICE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-httpclient/NOTICE.txt"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

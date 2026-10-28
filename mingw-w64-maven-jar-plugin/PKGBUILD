@@ -1,0 +1,72 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-jar-plugin
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.5.0
+pkgrel=1
+pkgdesc="Apache Maven JAR Plugin, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/plugins/maven-jar-plugin/'
+msys2_repository_url='https://github.com/apache/maven-jar-plugin'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-maven-file-management"
+         "${MINGW_PACKAGE_PREFIX}-maven-archiver"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-archiver"
+         "${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-io")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core"
+             "${MINGW_PACKAGE_PREFIX}-maven-plugin-annotations")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-jar-plugin/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('0a231c2c14ac8a99d2f7ebc17eee354d2b21b788dc6261878ebbad5da583b919')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # integration-test fixtures
+  find "${_src}" -name '*.jar' -print -delete
+  # resource filtering of the lifecycle mapping for <extensions>true</extensions>
+  # use; upstream fills in the plugin versions of its parent POM, here those
+  # that are packaged (deploy: Maven 3.9.16's default binding)
+  sed -i -e 's/\${version.maven-resources-plugin}/3.4.0/g' \
+         -e 's/\${version.maven-compiler-plugin}/3.15.0/g' \
+         -e 's/\${version.maven-surefire}/3.5.4/g' \
+         -e "s/\${project.version}/${pkgver}/g" \
+         -e 's/\${version.maven-install-plugin}/3.1.4/g' \
+         -e 's/\${version.maven-deploy-plugin}/3.1.4/g' \
+    "${_src}/src/main/filtered-resources/META-INF/plexus/components.xml"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_plugin org.apache.maven.plugins:maven-jar-plugin:${pkgver} jar \
+    "Apache Maven JAR Plugin" 1.8 3.6.3 src/main/java -r src/main/filtered-resources -u pom.xml -P sisu \
+    -- org.apache.maven:maven-plugin-api/provided org.apache.maven:maven-core/provided \
+       org.apache.maven:maven-artifact/provided \
+       org.apache.maven.plugin-tools:maven-plugin-annotations/provided \
+       org.apache.maven.shared:file-management org.apache.maven:maven-archiver \
+       org.codehaus.plexus:plexus-archiver javax.inject:javax.inject org.slf4j:slf4j-api \
+       commons-io:commons-io
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need maven-plugin-testing-harness, JUnit 5 and Mockito;
+  # the plugin is exercised by the maven package's hello-world check
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.plugins:maven-jar-plugin
+  local p
+  p=$(unzip -p "$(jb_jarpath org.apache.maven.plugins:maven-jar-plugin)" META-INF/maven/plugin.xml)
+  grep -q '<goal>jar</goal>' <<< "${p}"
+  grep -q '<goal>test-jar</goal>' <<< "${p}"
+  if unzip -p "$(jb_jarpath org.apache.maven.plugins:maven-jar-plugin)" META-INF/plexus/components.xml \
+    | grep -q '[$][{]'; then return 1; fi
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.plugins:maven-jar-plugin
+}

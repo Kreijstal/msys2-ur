@@ -1,0 +1,393 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Apache Maven 3.9 bootstrapped from source without Maven, as GNU Guix does
+# it: every module is compiled with javac (java-build-helper), Modello is
+# run directly for the model classes and the Sisu/Plexus component indexes
+# come from annotation processors.  The final "maven" package only adds the
+# launchers, conf/ and a bin/m2.conf that loads the jars straight from the
+# system Maven repository (share/maven-repo), which is also chained as a
+# read-only local repository tail, so `mvn -o` finds every packaged plugin.
+
+_realname=maven
+pkgbase=mingw-w64-${_realname}
+_modules=(artifact builder-support model settings settings-builder repository-metadata
+          plugin-api model-builder resolver-provider core compat slf4j-provider embedder)
+pkgname=("${_modules[@]/#/${MINGW_PACKAGE_PREFIX}-maven-}"
+         "${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.9.16
+# commit of the maven-3.9.16 tag (mvn -v prints it)
+_commit=2bdd9fddda4b155ebf8000e807eb73fd829a51d5
+# Maven 3.9 is built and run with SLF4J 1.x (maven-slf4j-provider is a 1.x
+# StaticLoggerBinder); the packaged java-slf4j is 2.x, so Maven ships these
+# jars privately in share/maven/lib, as the upstream binary distribution does
+_slf4jver=1.7.36
+pkgrel=2
+pkgdesc="Apache Maven software project management tool (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/'
+msys2_repository_url='https://github.com/apache/maven'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-xpp3"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-classworlds"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-interpolation"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-component-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-sec-dispatcher"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+             "${MINGW_PACKAGE_PREFIX}-java-guice"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-cli"
+             "${MINGW_PACKAGE_PREFIX}-java-jansi"
+             "${MINGW_PACKAGE_PREFIX}-maven-shared-utils"
+             "${MINGW_PACKAGE_PREFIX}-maven-resolver-impl"
+             "${MINGW_PACKAGE_PREFIX}-maven-resolver-connector-basic"
+             "${MINGW_PACKAGE_PREFIX}-maven-resolver-transport-file"
+             "${MINGW_PACKAGE_PREFIX}-maven-resolver-transport-http"
+             "${MINGW_PACKAGE_PREFIX}-maven-resolver-transport-wagon"
+             "${MINGW_PACKAGE_PREFIX}-maven-wagon-file"
+             "${MINGW_PACKAGE_PREFIX}-maven-wagon-http")
+source=("https://archive.apache.org/dist/maven/maven-3/${pkgver}/source/apache-maven-${pkgver}-src.tar.gz"
+        # maven-slf4j-provider compiles slf4j-simple's sources into itself
+        "slf4j-${_slf4jver}.tar.gz::https://github.com/qos-ch/slf4j/archive/refs/tags/v_${_slf4jver}.tar.gz"
+        '0001-launchers-find-plexus-classworlds-in-the-Maven-repository.patch')
+sha256sums=('f7031b091ad75a226a06a0c092cbf05860dcfc16d140e6da997e6c6b62dbd03c'
+            'a2deaffa191c81abbf830d4060eb84129f31b9b3b945b7791344e8875b595286'
+            'e094af60bc6e98a943275485d28a68b100eeb13a0ceea9f447b5eb573fe078a6')
+
+_src=apache-maven-${pkgver}
+
+prepare() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # test fixtures: old Maven, Plexus and JUnit jars, dummy plugins and
+  # extensions (maven-core, maven-compat, maven-embedder,
+  # maven-resolver-provider src/test)
+  find . -name '*.jar' -print -delete
+  find "${srcdir}/slf4j-v_${_slf4jver}" -name '*.jar' -delete
+  # resource filtering done by Maven upstream
+  sed -i -e "s/\${parsedVersion.osgiVersion}/${_slf4jver}/g" \
+         -e 's/\${slf4j.api.minimum.compatible.version}/1.6.0/g' \
+    "${srcdir}"/slf4j-v_${_slf4jver}/{slf4j-api,slf4j-simple,jcl-over-slf4j}/src/main/resources/META-INF/MANIFEST.MF
+  patch -p1 -i "${srcdir}/0001-launchers-find-plexus-classworlds-in-the-Maven-repository.patch"
+  sed -i "s/@CLASSWORLDS_VERSION@/$(jb_version org.codehaus.plexus:plexus-classworlds)/g" apache-maven/src/bin/mvn apache-maven/src/bin/mvn.cmd
+  # resource filtering (buildnumber-maven-plugin and Maven upstream)
+  sed -i -e "s/\${buildNumber}/${_commit}/" -e "s/\${project.version}/${pkgver}/" \
+    -e 's/\${distributionId}/apache-maven/' -e 's/\${distributionShortName}/Maven/' \
+    -e 's/\${distributionName}/Apache Maven/' \
+    maven-core/src/main/resources/org/apache/maven/messages/build.properties
+}
+
+# jb_module for maven-<m>, with generated sources from $srcdir/gen/<m>
+_mod() {
+  local m=$1
+  shift
+  local -a src=(maven-${m}/src/main/java) res=()
+  [[ -d maven-${m}/src/main/java ]] || src=(-)
+  [[ -d ${srcdir}/gen/${m} ]] && src+=(-s "${srcdir}/gen/${m}")
+  [[ -d maven-${m}/src/main/resources ]] && res=(-r maven-${m}/src/main/resources)
+  jb_module org.apache.maven:maven-${m}:${pkgver} "${src[@]}" "${res[@]}" -u maven-${m}/pom.xml "$@"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local m=org.apache.maven:maven r=org.apache.maven.resolver:maven-resolver
+  rm -rf "${srcdir}/gen"
+  # Modello models (the modello-maven-plugin executions of the reactor)
+  jb_modello maven-model/src/main/mdo/maven.mdo "${srcdir}/gen/model" 4.0.0 \
+    java xpp3-reader xpp3-extended-reader xpp3-writer xpp3-extended-writer
+  jb_modello maven-settings/src/main/mdo/settings.mdo "${srcdir}/gen/settings" 1.2.0 \
+    java xpp3-reader xpp3-writer
+  jb_modello maven-repository-metadata/src/main/mdo/metadata.mdo "${srcdir}/gen/repository-metadata" 1.1.0 \
+    java xpp3-reader xpp3-writer
+  jb_modello maven-plugin-api/src/main/mdo/lifecycle.mdo "${srcdir}/gen/plugin-api" 1.0.0 \
+    java xpp3-reader xpp3-writer
+  jb_modello maven-core/src/main/mdo/toolchains.mdo "${srcdir}/gen/core" 1.1.0 \
+    java xpp3-reader xpp3-writer
+  local mdo
+  for mdo in profiles paramdoc; do
+    jb_modello maven-compat/src/main/mdo/${mdo}.mdo "${srcdir}/gen/compat" 1.0.0 \
+      java xpp3-reader xpp3-writer
+  done
+  jb_modello maven-embedder/src/main/mdo/core-extensions.mdo "${srcdir}/gen/embedder" 1.1.0 \
+    java xpp3-reader xpp3-writer
+  # slf4j-simple sources, without its StaticLoggerBinder (maven-dependency-plugin unpack)
+  mkdir -p "${srcdir}/gen/slf4j-provider/org/slf4j/impl"
+  find "${srcdir}/slf4j-v_${_slf4jver}/slf4j-simple/src/main/java/org/slf4j/impl" -maxdepth 1 \
+    -name '*.java' ! -name 'StaticLoggerBinder*' -exec cp {} "${srcdir}/gen/slf4j-provider/org/slf4j/impl/" \;
+
+  # SLF4J 1.x, staged only (the stage is searched before the system repository)
+  local sl="${srcdir}/slf4j-v_${_slf4jver}"
+  jb_module org.slf4j:slf4j-api:${_slf4jver} "${sl}/slf4j-api/src/main/java" \
+    -r "${sl}/slf4j-api/src/main/resources" -u "${sl}/slf4j-api/pom.xml" -e org/slf4j/impl
+  jb_module org.slf4j:slf4j-simple:${_slf4jver} "${sl}/slf4j-simple/src/main/java" \
+    -r "${sl}/slf4j-simple/src/main/resources" -u "${sl}/slf4j-simple/pom.xml" -- org.slf4j:slf4j-api
+  jb_module org.slf4j:jcl-over-slf4j:${_slf4jver} "${sl}/jcl-over-slf4j/src/main/java" \
+    -r "${sl}/jcl-over-slf4j/src/main/resources" -u "${sl}/jcl-over-slf4j/pom.xml" -- org.slf4j:slf4j-api
+
+  _mod artifact -m 'Main-Class: org.apache.maven.artifact.versioning.ComparableVersion' \
+    -- org.codehaus.plexus:plexus-utils
+  _mod builder-support
+  _mod model -- org.codehaus.plexus:plexus-utils
+  _mod settings -- org.codehaus.plexus:plexus-utils
+  _mod settings-builder -P sisu \
+    -- ${m}-builder-support javax.inject:javax.inject org.codehaus.plexus:plexus-interpolation \
+       org.codehaus.plexus:plexus-utils ${m}-settings org.codehaus.plexus:plexus-sec-dispatcher
+  _mod repository-metadata -- org.codehaus.plexus:plexus-utils
+  _mod plugin-api \
+    -- ${m}-model ${m}-artifact org.apache.maven.wagon:wagon-provider-api \
+       org.eclipse.sisu:org.eclipse.sisu.plexus org.codehaus.plexus:plexus-utils \
+       org.codehaus.plexus:plexus-classworlds
+  _mod model-builder -P sisu -P plexus \
+    -- org.codehaus.plexus:plexus-interpolation javax.inject:javax.inject ${m}-model \
+       ${m}-artifact ${m}-builder-support org.eclipse.sisu:org.eclipse.sisu.inject org.ow2.asm:asm
+  _mod resolver-provider -P sisu \
+    -- ${m}-model ${m}-model-builder ${m}-repository-metadata ${r}-api ${r}-spi ${r}-util \
+       ${r}-impl org.codehaus.plexus:plexus-utils javax.inject:javax.inject \
+       'com.google.inject:guice#classes?' aopalliance:aopalliance \
+       'com.google.guava:guava?' 'com.google.guava:failureaccess?'
+  _mod core -P sisu -P plexus \
+    -- ${m}-model ${m}-settings ${m}-settings-builder ${m}-builder-support \
+       ${m}-repository-metadata ${m}-artifact ${m}-plugin-api ${m}-model-builder \
+       ${m}-resolver-provider ${r}-impl ${r}-api ${r}-spi ${r}-util \
+       org.apache.maven.shared:maven-shared-utils org.eclipse.sisu:org.eclipse.sisu.plexus \
+       org.eclipse.sisu:org.eclipse.sisu.inject org.ow2.asm:asm 'com.google.inject:guice#classes' \
+       com.google.guava:guava com.google.guava:failureaccess javax.inject:javax.inject \
+       org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-classworlds \
+       org.codehaus.plexus:plexus-interpolation org.codehaus.plexus:plexus-component-annotations \
+       org.slf4j:slf4j-api
+  _mod compat -P plexus \
+    -- ${m}-model ${m}-model-builder ${m}-settings ${m}-settings-builder ${m}-artifact \
+       ${m}-core ${m}-resolver-provider ${m}-repository-metadata ${r}-api ${r}-util ${r}-impl \
+       org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-interpolation \
+       org.eclipse.sisu:org.eclipse.sisu.plexus org.codehaus.plexus:plexus-component-annotations \
+       org.apache.maven.wagon:wagon-provider-api
+  _mod slf4j-provider -- org.slf4j:slf4j-api org.apache.maven.shared:maven-shared-utils
+  # logback (an optional slf4j binding) is not packaged: leave out its
+  # configurator, which is only instantiated when logback is the binding
+  _mod embedder -P sisu -c org.slf4j:slf4j-simple \
+    -x '/cli/logging/impl/LogbackConfiguration\.java$' \
+    -- ${m}-settings ${m}-settings-builder ${m}-core ${m}-plugin-api ${m}-model \
+       ${m}-model-builder ${m}-builder-support ${r}-api ${r}-util \
+       org.apache.maven.shared:maven-shared-utils 'com.google.inject:guice#classes' \
+       com.google.guava:guava com.google.guava:failureaccess javax.inject:javax.inject \
+       javax.annotation:javax.annotation-api org.codehaus.plexus:plexus-utils \
+       org.codehaus.plexus:plexus-classworlds org.eclipse.sisu:org.eclipse.sisu.plexus \
+       org.codehaus.plexus:plexus-sec-dispatcher org.codehaus.plexus:plexus-cipher \
+       org.codehaus.plexus:plexus-interpolation org.slf4j:slf4j-api commons-cli:commons-cli
+}
+
+# the jars Maven runs with (apache-maven/pom.xml's dependencies and their
+# dependencies), as g:a[#classifier]; plexus-classworlds is the launcher
+_runtime() {
+  local m=org.apache.maven r=org.apache.maven.resolver:maven-resolver
+  jb_closure ${m}:maven-embedder ${m}:maven-core ${m}:maven-compat \
+    org.eclipse.sisu:org.eclipse.sisu.plexus commons-cli:commons-cli \
+    org.apache.maven.wagon:wagon-http org.apache.maven.wagon:wagon-file org.slf4j:jcl-over-slf4j \
+    ${r}-connector-basic ${r}-transport-file ${r}-transport-http ${r}-transport-wagon \
+    ${m}:maven-slf4j-provider org.fusesource.jansi:jansi \
+    | grep -v '^org.codehaus.plexus:plexus-classworlds$'
+}
+
+# write bin/m2.conf; jar paths are printed by the command given
+_m2conf() {
+  local s
+  {
+    echo 'main is org.apache.maven.cli.MavenCli from plexus.core'
+    echo
+    echo 'set maven.conf default ${maven.home}/conf'
+    echo '# the system Maven repository of the packaged artifacts is a read-only'
+    echo '# tail of the local repository (-Dmaven.repo.local.tail= disables it)'
+    echo 'set maven.repo.local.tail default ${maven.home}/../maven-repo'
+    echo
+    echo '[plexus.core]'
+    echo 'load       ${maven.conf}/logging'
+    echo 'optionally ${maven.home}/lib/ext/redisson/*.jar'
+    echo 'optionally ${maven.home}/lib/ext/hazelcast/*.jar'
+    echo 'optionally ${maven.home}/lib/ext/*.jar'
+    echo 'optionally ${maven.home}/lib/*.jar'
+    while read -r s; do
+      echo "load       $("$@" "${s}")"
+    done < <(_runtime | sort)
+  }
+}
+
+# repository path of a jar, relative to the repository root
+_repopath() {
+  local j
+  j=$(jb_jarpath "$1")
+  j=${j#"${JB_STAGE}/"}
+  echo "\${maven.home}/../maven-repo/${j#"${JB_SYSREPO}/"}"
+}
+
+_stagedpath() {
+  jb_w "$(jb_jarpath "$1")"
+}
+
+# the private SLF4J 1.x jars of lib/ (loaded by "optionally ${maven.home}/lib/*.jar")
+_libjars=(org.slf4j:slf4j-api org.slf4j:jcl-over-slf4j)
+
+# assemble a Maven home: bin/, conf/, lib/ and an m2.conf with jar paths from $2
+_home() {
+  local h=$1 s
+  mkdir -p "${h}/bin" "${h}/lib/ext"
+  _m2conf "$2" | grep -v '/org/slf4j/' > "${h}/bin/m2.conf"
+  for s in "${_libjars[@]}"; do
+    install -m644 "$(jb_jarpath "${s}")" "${h}/lib/"
+  done
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local m=org.apache.maven:maven mod
+  # upstream unit tests need JUnit 5, Mockito, xmlunit and plexus-testing
+  # (as for GNU Guix, they are not run); load every class instead ...
+  for mod in "${_modules[@]}"; do
+    case ${mod} in
+      embedder) jb_loadcheck --with org.slf4j:slf4j-simple ${m}-${mod} ;;
+      resolver-provider) jb_loadcheck --with 'com.google.inject:guice#classes' ${m}-${mod} ;;
+      *) jb_loadcheck ${m}-${mod} ;;
+    esac
+  done
+  # ... and run the assembled distribution from the build tree (mvn -v)
+  local h="${srcdir}/check-home"
+  rm -rf "${h}"
+  mkdir -p "${h}/bin"
+  cp -r apache-maven/src/bin/. "${h}/bin/"
+  cp -r apache-maven/src/conf "${h}/conf"
+  _home "${h}" _stagedpath
+  sed -i "s|^set maven.repo.local.tail .*|set maven.repo.local.tail default $(jb_w "${JB_SYSREPO}")|" "${h}/bin/m2.conf"
+  local cw
+  cw=$(jb_w "$(jb_jarpath org.codehaus.plexus:plexus-classworlds)")
+  java --enable-native-access=ALL-UNNAMED -classpath "${cw}" \
+    "-Dclassworlds.conf=$(jb_w "${h}/bin/m2.conf")" "-Dmaven.home=$(jb_w "${h}")" \
+    "-Dmaven.multiModuleProjectDirectory=$(jb_w "${PWD}")" \
+    org.codehaus.plexus.classworlds.launcher.Launcher -v \
+    | tee "${srcdir}/mvn-v.txt"
+  grep -q "Apache Maven ${pkgver} (${_commit})" "${srcdir}/mvn-v.txt"
+}
+
+_package() {
+  local mod=$1
+  shift
+  depends=("$@")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven:maven-${mod}
+}
+
+_p=${MINGW_PACKAGE_PREFIX}
+package_maven-artifact() {
+  pkgdesc="Maven artifact and version classes (mingw-w64)"
+  _package artifact ${_p}-java-plexus-utils
+}
+package_maven-builder-support() {
+  pkgdesc="Maven support library for descriptor builders (mingw-w64)"
+  _package builder-support
+}
+package_maven-model() {
+  pkgdesc="Maven POM model (mingw-w64)"
+  _package model ${_p}-java-plexus-utils
+}
+package_maven-settings() {
+  pkgdesc="Maven settings model (mingw-w64)"
+  _package settings ${_p}-java-plexus-utils
+}
+package_maven-settings-builder() {
+  pkgdesc="Maven settings builder (mingw-w64)"
+  _package settings-builder ${_p}-maven-builder-support ${_p}-maven-settings ${_p}-java-javax-inject \
+    ${_p}-java-plexus-interpolation ${_p}-java-plexus-sec-dispatcher
+}
+package_maven-repository-metadata() {
+  pkgdesc="Maven repository metadata model (mingw-w64)"
+  _package repository-metadata ${_p}-java-plexus-utils
+}
+package_maven-plugin-api() {
+  pkgdesc="Maven plugin API (mingw-w64)"
+  _package plugin-api ${_p}-maven-model ${_p}-maven-artifact ${_p}-maven-wagon-provider-api \
+    ${_p}-java-sisu-plexus ${_p}-java-plexus-classworlds
+}
+package_maven-model-builder() {
+  pkgdesc="Maven effective model builder (mingw-w64)"
+  _package model-builder ${_p}-maven-model ${_p}-maven-artifact ${_p}-maven-builder-support \
+    ${_p}-java-plexus-interpolation ${_p}-java-javax-inject ${_p}-java-sisu-inject ${_p}-java-asm
+}
+package_maven-resolver-provider() {
+  pkgdesc="Maven Artifact Resolver provider for Maven POMs (mingw-w64)"
+  _package resolver-provider ${_p}-maven-model-builder ${_p}-maven-repository-metadata \
+    ${_p}-maven-resolver-impl ${_p}-java-aopalliance
+}
+package_maven-core() {
+  pkgdesc="Maven core (mingw-w64)"
+  _package core ${_p}-maven-settings-builder ${_p}-maven-plugin-api ${_p}-maven-resolver-provider \
+    ${_p}-maven-shared-utils ${_p}-java-guice ${_p}-java-plexus-component-annotations \
+    ${_p}-java-slf4j-api
+}
+package_maven-compat() {
+  pkgdesc="Maven 2 compatibility layer (mingw-w64)"
+  _package compat ${_p}-maven-core
+}
+package_maven-slf4j-provider() {
+  pkgdesc="Maven's SLF4J simple logger binding (mingw-w64)"
+  _package slf4j-provider ${_p}-java-slf4j-api ${_p}-maven-shared-utils
+}
+package_maven-embedder() {
+  pkgdesc="Maven embeddable component and command line (mingw-w64)"
+  _package embedder ${_p}-maven-core ${_p}-java-commons-cli ${_p}-java-javax-annotation-api \
+    ${_p}-java-plexus-sec-dispatcher
+}
+
+package_maven() {
+  pkgdesc="Apache Maven software project management tool, built from source (mingw-w64)"
+  depends=("${_p}-openjdk"
+           "${_p}-java-plexus-classworlds"
+           "${_p}-maven-embedder"
+           "${_p}-maven-compat"
+           "${_p}-maven-slf4j-provider"
+           "${_p}-java-sisu-plexus"
+           "${_p}-java-commons-cli"
+           "${_p}-java-jansi"
+           "${_p}-maven-wagon-file"
+           "${_p}-maven-wagon-http"
+           "${_p}-maven-resolver-connector-basic"
+           "${_p}-maven-resolver-transport-file"
+           "${_p}-maven-resolver-transport-http"
+           "${_p}-maven-resolver-transport-wagon")
+  backup=("${MINGW_PREFIX#/}/share/maven/conf/settings.xml"
+          "${MINGW_PREFIX#/}/share/maven/conf/toolchains.xml"
+          "${MINGW_PREFIX#/}/share/maven/conf/logging/simplelogger.properties")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local home="${pkgdir}${MINGW_PREFIX}/share/maven" f
+  install -d "${home}/bin" "${home}/lib/ext/redisson" "${home}/lib/ext/hazelcast"
+  for f in mvn mvnDebug mvnyjp mvn.cmd mvnDebug.cmd; do
+    install -m755 "${_src}/apache-maven/src/bin/${f}" "${home}/bin/${f}"
+  done
+  ( cd "${_src}" && _home "${home}" _repopath )
+  cp -r "${_src}/apache-maven/src/conf" "${home}/conf"
+  install -m644 "${_src}"/apache-maven/src/lib/ext/README.txt "${home}/lib/ext/README.txt"
+  install -m644 "${_src}"/apache-maven/src/lib/ext/redisson/README.txt "${home}/lib/ext/redisson/README.txt"
+  install -m644 "${_src}"/apache-maven/src/lib/ext/hazelcast/README.txt "${home}/lib/ext/hazelcast/README.txt"
+  # launchers on PATH
+  install -d "${pkgdir}${MINGW_PREFIX}/bin"
+  for f in mvn mvnDebug; do
+    printf '#!/usr/bin/env sh\nexec "$(dirname "$0")/../share/maven/bin/%s" "$@"\n' "${f}" \
+      > "${pkgdir}${MINGW_PREFIX}/bin/${f}"
+    chmod 755 "${pkgdir}${MINGW_PREFIX}/bin/${f}"
+    printf '@"%%~dp0..\\share\\maven\\bin\\%s.cmd" %%*\r\n' "${f}" > "${pkgdir}${MINGW_PREFIX}/bin/${f}.cmd"
+  done
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/maven/LICENSE"
+  install -Dm644 "${_src}/NOTICE" "${pkgdir}${MINGW_PREFIX}/share/licenses/maven/NOTICE"
+  install -Dm644 "${srcdir}/slf4j-v_${_slf4jver}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/maven/slf4j-LICENSE.txt"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

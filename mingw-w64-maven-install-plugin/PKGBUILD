@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-install-plugin
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.1.4
+pkgrel=1
+pkgdesc="Apache Maven Install Plugin, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/plugins/maven-install-plugin/'
+msys2_repository_url='https://github.com/apache/maven-install-plugin'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-maven-resolver-util"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-xml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core"
+             "${MINGW_PACKAGE_PREFIX}-maven-plugin-annotations")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-install-plugin/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('b09860ad4ffaf676ef81beba65e5fd80c6e093735d10a463e851a4d2aa489289')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # test and integration-test fixtures
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_plugin org.apache.maven.plugins:maven-install-plugin:${pkgver} install \
+    "Apache Maven Install Plugin" 1.8 3.6.3 src/main/java -u pom.xml \
+    -- org.apache.maven:maven-plugin-api/provided org.apache.maven:maven-artifact/provided \
+       org.apache.maven:maven-core/provided org.apache.maven:maven-model/provided \
+       org.apache.maven.resolver:maven-resolver-api/provided \
+       org.apache.maven.resolver:maven-resolver-util org.slf4j:slf4j-api/provided \
+       org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-xml \
+       org.apache.maven.plugin-tools:maven-plugin-annotations/provided
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need maven-plugin-testing-harness and Mockito
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.plugins:maven-install-plugin
+  unzip -p "$(jb_jarpath org.apache.maven.plugins:maven-install-plugin)" META-INF/maven/plugin.xml \
+    | grep -q '<goal>install-file</goal>'
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.plugins:maven-install-plugin
+}

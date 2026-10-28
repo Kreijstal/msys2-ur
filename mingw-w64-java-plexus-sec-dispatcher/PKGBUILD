@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=plexus-sec-dispatcher
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=2.0
+pkgrel=1
+pkgdesc="Plexus security dispatcher for Maven's settings-security.xml, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/codehaus-plexus/plexus-sec-dispatcher'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-cipher"
+         "${MINGW_PACKAGE_PREFIX}-java-javax-inject")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-xpp3"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-inject")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-sec-dispatcher/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('21ab7548945f3d6a2cb599fe198575f11ea18841a85d5bbe3d62fa6f9183d39a')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_modello src/main/mdo/settings-security.mdo "${srcdir}/generated" 1.0.0 \
+    java xpp3-reader xpp3-writer
+  jb_module org.codehaus.plexus:plexus-sec-dispatcher:${pkgver} src/main/java \
+    -s "${srcdir}/generated" -u pom.xml -P sisu -c org.eclipse.sisu:org.eclipse.sisu.inject \
+    -- org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-cipher javax.inject:javax.inject
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_loadcheck org.codehaus.plexus:plexus-sec-dispatcher
+  unzip -p "$(jb_jarpath org.codehaus.plexus:plexus-sec-dispatcher)" META-INF/sisu/javax.inject.Named \
+    | grep -q DefaultSecDispatcher
+  jb_test sec-dispatcher src/test/java -r src/test/resources -- org.codehaus.plexus:plexus-sec-dispatcher
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-sec-dispatcher
+}

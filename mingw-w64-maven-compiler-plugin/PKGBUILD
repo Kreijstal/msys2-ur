@@ -1,0 +1,66 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-compiler-plugin
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.15.0
+pkgrel=1
+pkgdesc="Apache Maven Compiler Plugin, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/plugins/maven-compiler-plugin/'
+msys2_repository_url='https://github.com/apache/maven-compiler-plugin'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-asm"
+         "${MINGW_PACKAGE_PREFIX}-maven-shared-utils"
+         "${MINGW_PACKAGE_PREFIX}-maven-shared-incremental"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-java"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-manager"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-javac"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core"
+             "${MINGW_PACKAGE_PREFIX}-maven-plugin-annotations")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-compiler-plugin/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('dbfbedb12acfd93b20164d9e3bb8e84cc028ca671c5baf8b10047705a8c71942')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # integration-test fixtures
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local x='!org.apache.maven:maven-core!org.apache.maven:maven-plugin-api'
+  x+='!org.apache.maven.shared:maven-shared-utils!org.codehaus.plexus:plexus-component-annotations'
+  jb_plugin org.apache.maven.plugins:maven-compiler-plugin:${pkgver} compiler \
+    "Apache Maven Compiler Plugin" 1.8 3.6.3 src/main/java -u pom.xml \
+    -- org.apache.maven.plugin-tools:maven-plugin-annotations/provided \
+       org.apache.maven:maven-plugin-api/provided org.apache.maven:maven-artifact/provided \
+       org.apache.maven:maven-core/provided org.ow2.asm:asm \
+       org.apache.maven.shared:maven-shared-utils \
+       "org.apache.maven.shared:maven-shared-incremental${x}" \
+       org.codehaus.plexus:plexus-java org.codehaus.plexus:plexus-compiler-api \
+       org.codehaus.plexus:plexus-compiler-manager \
+       org.codehaus.plexus:plexus-compiler-javac/runtime org.codehaus.plexus:plexus-utils
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need maven-plugin-testing-harness, JUnit 5 and Mockito;
+  # the plugin is exercised by the maven package's hello-world check
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.plugins:maven-compiler-plugin
+  local p
+  p=$(unzip -p "$(jb_jarpath org.apache.maven.plugins:maven-compiler-plugin)" META-INF/maven/plugin.xml)
+  grep -q '<goal>compile</goal>' <<< "${p}"
+  grep -q '<goal>testCompile</goal>' <<< "${p}"
+  grep -q '<role>org.codehaus.plexus.compiler.manager.CompilerManager</role>' <<< "${p}"
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.plugins:maven-compiler-plugin
+}

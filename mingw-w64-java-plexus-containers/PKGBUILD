@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Only plexus-component-annotations is built: Maven 3.9 runs on Sisu and
+# needs no plexus-container-default, and the job of plexus-component-metadata
+# is done by java-build-helper's annotation processor.
+
+_realname=plexus-containers
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-plexus-component-annotations")
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="Plexus IoC container components (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-containers/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-containers'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-containers/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('9525732daf1d2a994b7aeab477319228042f791dbb61a75de257726f10cdb013')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}/plexus-component-annotations"
+  jb_module org.codehaus.plexus:plexus-component-annotations:${pkgver} src/main/java -u pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # annotations only, no upstream tests
+  jb_loadcheck org.codehaus.plexus:plexus-component-annotations
+}
+
+package_java-plexus-component-annotations() {
+  pkgdesc="Plexus component annotations (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-component-annotations
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

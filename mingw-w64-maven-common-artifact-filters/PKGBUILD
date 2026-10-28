@@ -1,0 +1,48 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-common-artifact-filters
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.4.0
+pkgrel=1
+pkgdesc="Apache Maven shared artifact filters, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/shared/maven-common-artifact-filters/'
+msys2_repository_url='https://github.com/apache/maven-common-artifact-filters'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-maven-resolver-util")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-common-artifact-filters/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('a63fe188374a1607e6021c199b256e7cd0d62a0f897007dac4841bceefb07864')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.maven.shared:maven-common-artifact-filters:${pkgver} src/main/java -u pom.xml \
+    -- org.slf4j:slf4j-api org.apache.maven:maven-artifact/provided \
+       org.apache.maven:maven-model/provided org.apache.maven:maven-core/provided \
+       org.apache.maven.resolver:maven-resolver-api/provided \
+       org.apache.maven.resolver:maven-resolver-util
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.shared:maven-common-artifact-filters
+  # upstream JUnit 4 tests without the ones needing Mockito, the plugin
+  # testing harness or JMH
+  jb_test artifact-filters src/test/java -r src/test/resources \
+    -g 'org\.mockito|plugin\.testing|PlexusTestCase|org\.openjdk\.jmh' \
+    -- org.apache.maven.shared:maven-common-artifact-filters org.apache.maven:maven-core
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.shared:maven-common-artifact-filters
+}

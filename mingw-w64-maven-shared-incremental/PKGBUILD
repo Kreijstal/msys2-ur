@@ -1,0 +1,42 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-shared-incremental
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=1.1
+pkgrel=1
+pkgdesc="Apache Maven incremental build support utilities, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/shared/maven-shared-incremental/'
+msys2_repository_url='https://github.com/apache/maven-shared-incremental'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-maven-core"
+         "${MINGW_PACKAGE_PREFIX}-maven-shared-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-component-annotations")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-shared-incremental/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('128b788bafd99300a68eb75a371a8da47b60138f6d873d78e84cc8aeda0540e3')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # written against the Maven 2.2.1 API, compiled against Maven 3.9 (the
+  # dependency versions are those packaged, like every flattened POM here)
+  jb_module org.apache.maven.shared:maven-shared-incremental:${pkgver} src/main/java -u pom.xml \
+    -- org.apache.maven:maven-plugin-api org.apache.maven:maven-core \
+       org.apache.maven.shared:maven-shared-utils org.codehaus.plexus:plexus-component-annotations
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # no upstream tests
+  jb_loadcheck org.apache.maven.shared:maven-shared-incremental
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.shared:maven-shared-incremental
+}
