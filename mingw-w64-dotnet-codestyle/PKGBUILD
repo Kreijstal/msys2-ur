@@ -1,0 +1,79 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-codestyle
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-csharp" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-visualbasic" "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-codestyle")
+pkgver=4.9.2
+pkgrel=1
+_commit=9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+pkgdesc='Complete source-built Roslyn CodeStyle analyzers and fixes for the .NET 8 toolchain'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        prepare.py build-libraries.sh build.sh pack.py check.sh check-api.sh check-msbuild.sh verify-build-assets.py
+        Check.cs ExtractFixtures.cs InspectApi.cs InspectInventory.cs InspectMetadata.cs
+        ExpectedAssemblies.json ExpectedBuildAssets.json UpstreamFixtures.json published-metadata-provenance.json README.md)
+sha256sums=('e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30'
+            '98953be7f133d23ca2e7441e15a5c452a8378cc93cae6563ffbc85d2b3ac24d9'
+            '17ab0a34a6aae74656ba89cd3cac4f825cbf68d5a733cd90206608601e17c108'
+            '010ba3bbc31a9ea007a40e34437fd076d94c3e24b80b3176bdd59c5754edaadd'
+            'dcd70e1b910b715f4fda3866d1ef42f915442f3c4e2d084a72b928ac75e516c2'
+            '39612275e17cb433179b08ee6b35a5fb0a41e9f5ced7fc6d11721b13f3bd33e5'
+            '6925353be2eef8bd6b714050711d0637a656cc2bb6fb53c225c427cae7a4a3a0'
+            '91f8052cafcbe3775e9321e3ba5be1b42a960c31b05b38c9fc91d14105149975'
+            'd2d667e220da645f301181a1a675f057c7232920b20254531d3863404c90f03d'
+            'f0db6b983282270e7c557bc44dd4601ad7888e9eb90a08cadf90649fe76f83ef'
+            '925f54f003a4f7fa6e1891f0f392fb71f1ea92517bae6010fd2815c2bf901a33'
+            '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
+            '251856bd6a92dd24d20eb9bcf4540dcac74af504535cc8a31b5a1ef30ef01645'
+            '52ddc3fc92ee498be47769f54480b951afbcd7c32c5c50640d0a6ed46a1e560d'
+            '86ac8ab339e04721edbe69c97fa73de3e8038c514c416cefdd5a8a27c176eca1'
+            '32174a02afb9d2900e855ca436e6a33c11e96a2bf138d7169a5ec235f384625b'
+            'e75fd14d1848d56742d029f447275b0bbf67e47acccce347557405a3783a3ca5'
+            '2b75b5a32a42778a3fc5dbf00a0bde10c7b3bb8cc5cfb6bd2d6fac4285ce4400'
+            'ace2951be7866fbb9b91acf07c6250bbb1669abecec64209a49ee25993f93d92')
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-$_commit" "$srcdir/prepared"; }
+build() { bash "$srcdir/build.sh" "$srcdir/roslyn-$_commit" "$srcdir/prepared"; }
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+_install_language() {
+ local suffix=$1 language=$2
+ install -Dm644 "$srcdir/feed/Microsoft.CodeAnalysis.$language.CodeStyle.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.codeanalysis.${language,,}.codestyle.$pkgver.nupkg"
+ install -Dm644 "$srcdir/roslyn-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codestyle-$suffix/License.txt"
+ install -m644 "$srcdir/roslyn-$_commit/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codestyle-$suffix/THIRD-PARTY-NOTICES.txt"
+ for file in README.md ExpectedAssemblies.json ExpectedBuildAssets.json UpstreamFixtures.json published-metadata-provenance.json;do
+  install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-codestyle-$suffix/$file"
+ done
+ for file in source-items.json localization.json removed-binaries.json;do
+  install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-codestyle-$suffix/$file"
+ done
+}
+package_mingw-w64-clang-x86_64-dotnet-codestyle-csharp() {
+ pkgdesc='Full source-built CSharp CodeStyle analyzers and fixes4.9.2'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver")
+ _install_language csharp CSharp
+}
+package_mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic() {
+ pkgdesc='Full source-built VisualBasic CodeStyle analyzers and fixes4.9.2'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
+ _install_language visualbasic VisualBasic
+}
+package_mingw-w64-clang-x86_64-dotnet-sdk-codestyle() {
+ pkgdesc='Source-built CSharp/VisualBasic CodeStyle integration for source SDK8.0.131'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-visualbasic=$pkgver")
+ local language short target payload
+ for language in CSharp VisualBasic;do
+  short=cs;[[ $language != VisualBasic ]] || short=vb
+  target="$pkgdir$MINGW_PREFIX/lib/dotnet/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/codestyle/$short"
+  payload="$srcdir/prepared/packages/$language/payload"
+  mkdir -p "$target/build"
+  cp -R "$payload/analyzers/dotnet/$short/"* "$target/"
+  cp "$payload/build/Microsoft.CodeAnalysis.$language.CodeStyle.targets" "$target/build/"
+  cp -R "$payload/build/config" "$target/build/"
+ done
+ install -Dm644 "$srcdir/roslyn-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-sdk-codestyle/License.txt"
+ install -m644 "$srcdir/roslyn-$_commit/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-sdk-codestyle/THIRD-PARTY-NOTICES.txt"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-sdk-codestyle/README.md"
+}

@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-identitymodel-abstractions
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.35.0
+pkgrel=1
+_commit=c94c7fc235501d478221e979062bd8837a55575b
+pkgdesc='Complete original source IdentityModel logging and telemetry abstractions'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+options=('!strip' '!lto')
+source=("identitymodel-$_commit.tar.gz::https://codeload.github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tar.gz/$_commit"
+ extract.py
+ prepare.py
+ verify-build.py
+ pack.py
+ Check.cs
+ check.sh
+ check-payload.py
+ compare.py
+ InspectApi.cs
+ InspectAssemblyMetadata.cs
+ published-api.json
+ published-metadata.json
+ README.md
+)
+noextract=("identitymodel-$_commit.tar.gz")
+sha256sums=('c8bb5a2b1a946b98dc7165ed8e01439b76cc2d91c1b3ab168e613f0120b763f2'
+ 'b0c8fe1ae21ab8b23e8d9548256acf799bcc5a416ff0ee77f50dddcd4237ffa6'
+ '87f82238ed60dd693c442d4409530a7963e47144791a338df77f632eb39d79e8'
+ '6903eb5bb0314d46182a26c00fab69161057ebee44403d4314ac5bb885be77fa'
+ '90ad18cebc07285076ea7c961dd8603e4a2bdc58d62feffa875bf9dfff33a3d4'
+ 'ec39eaa7f9ac0bd0dd0eb277e37f24ef18836d482a871f7300e54b789ebdaf93'
+ '285879f97cb30ad85e744d3d49e9ffdfcb7af6564de481d1516a0d117a3bc11d'
+ 'f2036bafba17af9d5fd5c2c309901d7469c5e04c438b4a640ee199b9d6068826'
+ '98a27979c475e8274bbc1cd1537449e099eed461a7fe431dd5b1eb4cdfd093ee'
+ '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+ 'de8b3f122834b495ac439d5d27c78a9eeaa7dd56fb6637b58f5596b54517f4ce'
+ '1ef7e777c5c44e40b015ac69c2f30c60ffe1b52cd5280457816f7a3b12b6b766'
+ 'ac9dd2dcb66b34aabfdf09d6776e9c72fb24a086f58fd8fdc73a63967e9345e4'
+ '3b8e0f11862edaebaa4b5c4cc002a2a9d9a9e1526e9a124963b7691d211442bb'
+)
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/identitymodel-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
+}
+build() {
+ export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+ /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/Microsoft.IdentityModel.Abstractions/Microsoft.IdentityModel.Abstractions.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+ /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+ install -Dm644 "$srcdir/feed/Microsoft.IdentityModel.Abstractions.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/Microsoft.IdentityModel.Abstractions.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+ install -m644 "$srcdir/prepared/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

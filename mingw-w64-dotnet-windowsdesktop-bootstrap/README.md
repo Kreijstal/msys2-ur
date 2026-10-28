@@ -20,8 +20,13 @@ Executable fixtures in the upstream source archives are deleted before building.
 Native libc++/ICU dependencies are bundled for self-contained publish, with their
 MSYS2 package owners, hashes and licenses recorded.
 
-Run `python make-source.py` to export the pinned local bootstrap commit, then
-build in a CLANG64 shell with `makepkg-mingw -s`. An interactive Windows desktop
+The recipe downloads two pinned commits: the shared bootstrap driver from
+https://github.com/Kreijstal/dotnet-mingw-bootstrap (96ae31a) and the WPF and
+WinForms port from https://github.com/Kreijstal/wpf-mingw (tag
+`msys2/dotnet-windowsdesktop-bootstrap-8.0.0-64`), which `prepare()` overlays
+on `bootstrap/m612`. The recipe carries no source patches: changes go to
+wpf-mingw and the next release pins the new commit. Build in a CLANG64 shell with
+`makepkg-mingw -s`. An interactive Windows desktop
 is needed by `check()`. It validates the real bridge assemblies, printer
 enumeration, a local XPS document, automation/Ribbon/interop, native graphics,
 text-decoration callback geometry and public raster output, and ordinary offline
@@ -887,3 +892,18 @@ Custom DrawingVisual settings use its protected visual rendering properties;
 UIElement attached-property callbacks are not assumed to run on DrawingVisual.
 Registered SDK consumers increase to47. Existing WPP/SEH translation limitations,
 hardware/multimedia conformance and other documented native gaps remain open.
+
+Release 8.0.0-64 preserves original cell forced-progress flags for finite spanning
+row groups, including resumed fragments. Oversized lines keep their real geometry
+and source continuations while parent consumed height stays within the page.
+Previously, a three-line spanning cell could finish as an empty page at height 10,
+losing all 30 source characters. Ordinary nonempty-page deferral remains active.
+
+Native checks resume nine oversized fragments, check row flags/terminal state and
+verify exact resource ownership. The new public consumer checks single spans,
+short neighbors and independently continuing multiline neighbors in Ideal/Display
+mode at page heights 10/40/80, including opposing page/table directions. Character
+ownership/page numbers, visible glyphs on taller pages and byte-identical page
+regeneration after compacting GC pass through shared and portable SDK builds.
+Registered WPF SDK consumers increase to48. This rebuilds the paragraph library;
+full native layout/rendering conformance remains open.

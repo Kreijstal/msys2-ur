@@ -1,0 +1,19 @@
+--- a/TdsParserStateObjectFactory.Windows.cs
++++ b/TdsParserStateObjectFactory.Windows.cs
+@@ -19,14 +19,8 @@
+         //private static bool shouldUseLegacyNetorking;
+         //public static bool UseManagedSNI { get; } = AppContext.TryGetSwitch(UseLegacyNetworkingOnWindows, out shouldUseLegacyNetorking) ? !shouldUseLegacyNetorking : true;
+ 
+-#if DEBUG
+-        private static Lazy<bool> useManagedSNIOnWindows = new Lazy<bool>(
+-            () => bool.TrueString.Equals(Environment.GetEnvironmentVariable("System.Data.SqlClient.UseManagedSNIOnWindows"), StringComparison.InvariantCultureIgnoreCase)
+-        );
+-        public static bool UseManagedSNI => useManagedSNIOnWindows.Value;
+-#else
+-        public static bool UseManagedSNI { get; } = false;
+-#endif
++        // Source port: use the complete managed SNI implementation in every configuration.
++        public static bool UseManagedSNI { get; } = true;
+ 
+         public EncryptionOptions EncryptionOptions
+         {

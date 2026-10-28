@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-extensions6
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-extensions-primitives6"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6")
+pkgver=6.0.0
+pkgrel=1
+_commit=4822e3c3aa77eb82b2fb33c9321f923cf11ddde6
+pkgdesc='Complete original Microsoft.Extensions 6.0 libraries for source NuGet/PSResourceGet'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+options=('!strip' '!lto')
+source=("runtime-$_commit.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/$_commit"
+        extract.py prepare.py verify-build.py check.sh Check.cs InspectApi.cs compare-api.py
+        AspNetCore.pubkey.hex published-provenance.json published-metadata.json published-api.json README.md)
+noextract=("runtime-$_commit.tar.gz")
+sha256sums=('0eb8640ce1964d0f1422060b31ab0fc25be194239998f72d2f9316aa3a31241c'
+            'ccfbada37705bf327e8fd265e7b807a82c299b0e4331f37eefcea46483489fdc'
+            'e5ace2584a849569273d8cff4e25cf47c42e1fce3b3c222962087adb2d75d35b'
+            'd49dc3b0f17e987f9fe4c04fe9287fc94d692118548851f437dec3d4b1845342'
+            '78b69054b3ed89146e4e89c0a9c42ec4420f92872fb7593038e79ab28edb4731'
+            'dd63f2fe4d0606210e1f6ac97ba6a9a44b199c00fb12cddc18bc16f761e9f03b'
+            '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+            '1a9954ab4b97ebaf48ad1ce69d0f4e8f7f71eccf420f9a37dd9d72d63abee265'
+            '9faab536742ab7c206bfd26d3f2dce0227f5db75b960af0d7a0ba43e6dc9c0d4'
+            '67b28eeeef2463a27346a8b5a58246c083bc133026cf8b1ba9dae92eb2c98569'
+            '90f0cb525a7dd769460e5d6be42de85d4cc7d3b8e045b6d00fca971a691dbceb'
+            'f47d6796700e1cd174ff326f9a99dfff9750a4b3c9a53b6d5a0062c891c61ae4'
+            '5e5b457b06fba1c2bfc573c23f6b22b5014602801a6a3cb2a1b0aab112174eb1')
+prepare() {
+  /usr/bin/python3 "$srcdir/extract.py" "$srcdir/runtime-$_commit.tar.gz" "$srcdir/runtime"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime" "$srcdir/prepared"
+}
+build() {
+  export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/empty-packages")
+  local name
+  for name in Microsoft.Extensions.Primitives Microsoft.Extensions.FileProviders.Abstractions Microsoft.Extensions.FileSystemGlobbing;do
+    /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/$name/Library.csproj")" -c Release \
+      --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+  done
+  /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/runtime" "$srcdir/prepared"
+  for name in Microsoft.Extensions.Primitives Microsoft.Extensions.FileProviders.Abstractions Microsoft.Extensions.FileSystemGlobbing;do
+    /clang64/lib/dotnet/dotnet.exe pack "$(cygpath -am "$srcdir/prepared/$name/Library.csproj")" -c Release \
+      --no-build --no-restore -o "$(cygpath -am "$srcdir/feed")" -v:minimal
+  done
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+_package() {
+  local name=$1 suffix=$2
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  if [[ $name == Microsoft.Extensions.FileProviders.Abstractions ]];then depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-extensions-primitives6=$pkgver");fi
+  install -Dm644 "$srcdir/feed/$name.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/$name.$pkgver.nupkg"
+  install -Dm644 "$srcdir/runtime/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$suffix/LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$suffix/README.md"
+  install -m644 "$srcdir/prepared/$name/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$suffix/"
+}
+package_mingw-w64-clang-x86_64-dotnet-extensions-primitives6() { _package Microsoft.Extensions.Primitives dotnet-extensions-primitives6; }
+package_mingw-w64-clang-x86_64-dotnet-fileproviders-abstractions6() { _package Microsoft.Extensions.FileProviders.Abstractions dotnet-fileproviders-abstractions6; }
+package_mingw-w64-clang-x86_64-dotnet-filesystem-globbing6() { _package Microsoft.Extensions.FileSystemGlobbing dotnet-filesystem-globbing6; }

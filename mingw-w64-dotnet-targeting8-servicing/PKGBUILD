@@ -1,0 +1,77 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-targeting8-servicing
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.31
+pkgrel=2
+pkgdesc='Source-built serviced .NET8 references and generators for source Roslyn4.9 (mingw-w64)'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
+# Preserve the source SDK's component dependency while replacing the package
+# that owns the same Microsoft.NETCore.App.Ref paths. Never use --overwrite.
+provides=("${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=8.0.131-2")
+conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers=8.0.0.preview26274.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers=3.3.4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-convention=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-typedparts=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31"
+             'mingw-w64-ucrt-x86_64-mono=6.12.0.199' 'python' 'patch')
+options=('!strip' '!lto' '!buildflags')
+source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
+        "dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz"
+        "dotnet-targeting8-servicing-source-2.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-targeting8-servicing-source-2.tar.gz"
+        'README.md')
+noextract=("runtime-v${pkgver}.tar.gz" 'dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz')
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
+            'ea3a74e166369a9c17dba161a1198693d854c7bdcd9704e28783133453b257a8'
+            '8ccbd891dfd86aa96163959eacc14c3a9fb45552bb4569905e66f16cd4a574db')
+
+build() {
+  bash "$srcdir/servicing/build-targeting-pack.sh" "$srcdir/runtime-v${pkgver}.tar.gz" \
+    "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" \
+    "$srcdir/prepared" "$srcdir/targeting-pack" "$srcdir/targeting-licenses"
+}
+
+check() {
+  bash "$srcdir/servicing/check-sdk.sh" /clang64/lib/dotnet "$srcdir/sdk-check"
+  bash "$srcdir/servicing/check-targeting-pack.sh" "$srcdir/targeting-pack" \
+    "$srcdir/sdk-check/sdk-root" "$srcdir/pack-check"
+  bash "$srcdir/servicing/check-targeting-generators.sh" "$srcdir/prepared" \
+    "$srcdir/sdk-check/sdk-root" "$srcdir/generator-check"
+}
+
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/packs/Microsoft.NETCore.App.Ref"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target" "$doc"
+  cp -R "$srcdir/targeting-pack" "$target/$pkgver"
+  install -m644 "$srcdir/README.md" "$doc/"
+  install -m644 "$srcdir/servicing/SdkGeneratorCheck.cs" "$doc/"
+  for file in source-inputs reference-audit version-build-inputs file-version-adapters framework-build-adapters shim-version-audit shim-identity-audit; do
+    install -m644 "$srcdir/prepared/$file.json" "$doc/"
+  done
+  for file in source-inputs build-audit pe-metadata; do
+    install -m644 "$srcdir/prepared/targeting-generators/$file.json" "$doc/generators-$file.json"
+  done
+  install -m644 "$srcdir/targeting-licenses/source-owners.json" "$doc/"
+  local licenses="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
+  mkdir -p "$licenses"
+  cp -R "$srcdir/targeting-licenses/"* "$licenses/"
+  rm "$licenses/source-owners.json"
+  install -m644 "$srcdir/servicing/targeting-inputs/LICENSE.TXT" "$licenses/Arcade-LICENSE.TXT"
+}

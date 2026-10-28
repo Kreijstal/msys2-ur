@@ -1,0 +1,93 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-windows-compatibility
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.31
+pkgrel=1
+_commit=337963009d48a3016b50172b451b4e80f78791a7
+_arcade=444c2ef3c414558e2e409ee346f1faebb19687eb
+pkgdesc='Source Windows compatibility metapackage; SqlClient source port experimental'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/windowsdesktop'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-codedom=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-composition=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-composition-registration=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-accountmanagement=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-drawing-common=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-encoding-codepages=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-io-ports=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-management=8.0.0"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-odbc=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-oledb=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-reflection-context=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-registry-accesscontrol=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime-caching=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-duplex=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-http=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-nettcp=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-security=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-speech=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sqlclient=4.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-systemevents=8.0.31"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol=8.0.0"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-web-services-description=4.10.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging=6.9.1" 'python')
+options=('!strip' '!lto')
+source=("windowsdesktop-$pkgver.tar.gz::https://codeload.github.com/dotnet/windowsdesktop/tar.gz/$_commit"
+        "arcade-$_arcade.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/$_arcade"
+        prepare.py build.py Pack.cs audit.py published.nuspec Check.cs check.sh verify-consumer.py check-installed.sh README.md)
+noextract=("windowsdesktop-$pkgver.tar.gz" "arcade-$_arcade.tar.gz")
+sha256sums=('e5f9b43643a3dfdf1afae7e2f3f54d5e140513191c82dadcc56301b9cb494b94'
+            'a4e0e24eb4238b692e4407c4fb0e5fa4db2ee79c8033bb7d2a40e3fb7164604f'
+            '30bc028085b40c3c28bd85b4813865c42a13c27e6d81837ede641c19b0b0fbb4'
+            'bc3b208100446866454870e394e34c835a940be69ce6199a2845a5ffe6dc5eee'
+            '1ccd30ba1dc945694093874580e737807fa0605e0bc27cc88b27a8cd7771e02d'
+            '1499b6febb17c065730e2383da80cbfba85f035c9e8747337253f1e8bdb3daa7'
+            '4c4ddd53f5278a50d3e63745bb5d7b6ab343ed5efdc52e329bcdd4d52dd08c81'
+            '8113949444aa8317bad40ff7f9245900dd2283c32157b9e0c330f2fbe38eab7c'
+            'd867f9d20f92dc25045a48c2901b13a83e5ac372999b56b806c0201c79bdc5d5'
+            '9eaa9d4620ccf294f35bdd3d3e84be995d92165f5defe134b9e7111319854643'
+            'c65d781883f81cd05c3f55db73152138cbc7cb69cc999b1135318c1192fe3f57'
+            '92c866bfa87e2d68fd49441853631773d7b7aa12a98686bfe791c8a6bfc3a56c')
+
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/windowsdesktop-$pkgver.tar.gz"     "$srcdir/arcade-$_arcade.tar.gz" "$srcdir/prepared"
+}
+build() { /usr/bin/python3 "$srcdir/build.py" "$srcdir/prepared"; }
+check() {
+  /usr/bin/python3 "$srcdir/audit.py" "$srcdir/prepared"
+  bash "$srcdir/check.sh" "$srcdir/prepared" "$srcdir/consumer"
+}
+package() {
+  install -Dm644 "$srcdir/prepared/feed/microsoft.windows.compatibility.$pkgver.nupkg"     "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.windows.compatibility.$pkgver.nupkg"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$doc"
+  for name in source-inputs build-audit package-audit dependency-groups; do
+    install -m644 "$srcdir/prepared/$name.json" "$doc/"
+  done
+  for name in README.md Check.cs check.sh verify-consumer.py check-installed.sh; do
+    install -m644 "$srcdir/$name" "$doc/"
+  done
+  install -Dm644 "$srcdir/prepared/source/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -m644 "$srcdir/prepared/Arcade-LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/"
+}

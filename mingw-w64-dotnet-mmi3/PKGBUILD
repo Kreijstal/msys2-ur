@@ -1,0 +1,79 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-mmi3
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.0.0
+pkgrel=1
+_nugetver=3.0.0
+pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/PowerShell/MMI'
+license=('spdx:MIT')
+_commit=cf32fc695b32c2eae848b693395c09222fe1d2ae
+_tree=MMI-${_commit}
+_id=Microsoft.Management.Infrastructure
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
+options=('!strip' '!lto')
+source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
+            '0d5439f4ae05d7620c975eae6e96eb0840a0c01bfb1159630c048d345f56ad32'
+            '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
+            '7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6'
+            'eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7'
+            '168583e2346114afad7cbda70ac071cfeec667cc9c07f2da9af1274324d2da14'
+            '6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a'
+            '613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3'
+            '26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93'
+            '9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b'
+            '90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f'
+            '30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42'
+            '9841df264a70e1a8c6da34c2ae157b47ab4227b0bb49d15fc44a58e1b4af13c0'
+            '6b8cdfbaade97c0d950c91ae5ff2c9fe31e21a68b2a6488231cb3f35ef6522e6'
+            '15db2b46ad99adb211565b916fbf37a98ee8d26cca5040ccc6d6518076bfa120'
+            '818c61cd5354a8df48b4f2d7a1b7ce0efd5e4a501eb00c430e04c683bf1f9f1f'
+            '1d5e52f7cc0f9b25a223ea25b98c11d4da0d77557fa0222a0d014ffc4fc96305'
+            'd747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad'
+            '728d7c047167bd152f1c362cb4544e43fe6d87a1f576bd8088c19530d77db00c'
+            'd24a547c8ff3405e1d17866e62bfd956842d567a9ee1df8736e0450e1042238c'
+            '8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed'
+            '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
+            'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
+            '1fd719614d75075e4b956597f344264023fd5ca0f131bef0d268a3f41421c806'
+            'cc17a47fb80f181b8c5d8e914649898a73f5e0c9d8a62e64046c914624e729ae'
+            '443342b9670a8f8eb99e63846088a3b42a2c0a751d8992bc499684d945981b31')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree" "$srcdir/mmi" --patched --public-sign
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/mmi/Mmi.csproj")" -c Release \
+    -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/NuGet.config")" \
+    -p:PackageId="$_id" -p:PackageVersion="$_nugetver" -p:Version="$_nugetver" \
+    -p:RepositoryUrl="$url" -p:RepositoryCommit="$_commit" -p:PackageLicenseExpression=MIT \
+    -p:PackageDescription="$pkgdesc" -p:GeneratePackageOnBuild=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/check" "$srcdir/check-api"
+}
+
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$_nugetver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$_nugetver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/ExpectedApi.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/ExpectedApi.json"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+}

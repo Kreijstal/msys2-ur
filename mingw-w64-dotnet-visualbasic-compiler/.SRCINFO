@@ -1,0 +1,31 @@
+pkgbase = mingw-w64-dotnet-visualbasic-compiler
+	pkgdesc = Source-built Roslyn 4.9 VisualBasic command-line compiler for the .NET 8 toolchain
+	pkgver = 4.9.2
+	pkgrel = 1
+	url = https://github.com/dotnet/roslyn
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-targeting-pack>=8.0.131-2
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-common=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic=4.9.2
+	options = !strip
+	options = !lto
+	source = roslyn-4.9.2.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+	source = prepare.py
+	source = build.sh
+	source = vbc49.cmd
+	source = Probe.cs
+	source = check.sh
+	source = README.md
+	sha256sums = e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30
+	sha256sums = fb012e844308862813bad4cf36e01b9d98ee93b23e2230b26a574c43bb6a3123
+	sha256sums = c8f90205915c8863dd893934b24e145ed765091a12b4b5d731d1c3f964e809ab
+	sha256sums = c4ed2eaa0f7ff226aa70b4a5f2d72e3ca49807f20b5d0594280f0802be0256a7
+	sha256sums = 286bfcac9335725871a2e5361815f1c95376f481a64527525454b122d2098fa9
+	sha256sums = 505ae56f7173fbe7dab4142b491d2bc8f80c314c96f28d05fe7b612ca26bb7d8
+	sha256sums = 0ceb73f26f3add7bdee9fe56918b3a0763e22b354dd27c063045ee21d2bbe4f7
+
+pkgname = mingw-w64-clang-x86_64-dotnet-visualbasic-compiler

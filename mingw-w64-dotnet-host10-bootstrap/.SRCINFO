@@ -1,0 +1,30 @@
+pkgbase = mingw-w64-dotnet-host10-bootstrap
+	pkgdesc = Source-built native .NET10 host bootstrap component; runtime and SDK not included (mingw-w64)
+	pkgver = 10.0.5
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk8-servicing=8.0.131-3
+	makedepends = mingw-w64-clang-x86_64-cc
+	makedepends = mingw-w64-clang-x86_64-cmake
+	makedepends = mingw-w64-clang-x86_64-ninja
+	makedepends = mingw-w64-clang-x86_64-llvm
+	makedepends = mingw-w64-clang-x86_64-uasm
+	makedepends = mingw-w64-clang-x86_64-python
+	makedepends = python
+	makedepends = patch
+	depends = mingw-w64-clang-x86_64-cc-libs
+	noextract = runtime-v10.0.5.tar.gz
+	options = !strip
+	options = !lto
+	options = !buildflags
+	options = !debug
+	source = runtime-v10.0.5.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v10.0.5
+	source = dotnet-host10-source-1.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-host10-source-1.tar.gz
+	source = README.md
+	sha256sums = 1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a
+	sha256sums = ed3ae779bffb536e8580b1791e1e2e9c0109dd936818155a2a1921eea34c4084
+	sha256sums = 6af00dfe6c5a07ef3659ff62d7aecc344c4e65176e8447cebff0425163fcc8a3
+
+pkgname = mingw-w64-clang-x86_64-dotnet-host10-bootstrap

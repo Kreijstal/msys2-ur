@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-roslyn
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp")
+pkgver=4.9.2
+pkgrel=1
+pkgdesc='Roslyn compiler libraries built from source for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+_commit=9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("roslyn-${pkgver}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/${_commit}"
+        prepare.py build.sh check-generated.py Check.cs CheckApi.cs check.sh README.md)
+sha256sums=('e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30'
+            '9aa8290f10b010869c14163bd69d2e63ac50fa9380962bcc3c24158a1bfdec87' 'defc8b6c026039d35b032c66107de9a8967af33485934cac7a2788428c160b1d' 'f7a1922886e9ae7533c369318afca61dc665c1bff2a14f5aea910ab7cf418df3' '1ef0268062e433ffcbedaec1230a66a2f1bce38fba485266ef18086ffa9b394e' 'b0d13b7ad3f1bdb768fc3e48786dc7b557e92180bd36769b44999115ab1115c4' '980b87d47c5ea525b1b2a485446554949b7862dcff09eb418e008f3a6f322b48' 'e8adfe099adc81cb4f5e6ace6b0533dae565c3e80ea5e974f16a68555e812a0c')
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-${_commit}" "$srcdir/build"
+  cp "$srcdir/README.md" "$srcdir/build/README.md"
+}
+build() {
+  bash "$srcdir/build.sh" "$srcdir/roslyn-${_commit}" "$srcdir/build"
+}
+check() {
+  bash "$srcdir/check.sh" "$srcdir/consumer" "$srcdir/build/feed" \
+    "$srcdir/build/api-common.txt" "$srcdir/build/api-csharp.txt" \
+    "$srcdir/build/localization-common.json" "$srcdir/build/localization-csharp.json"
+}
+_package() {
+  local suffix=$1 id=$2
+  install -Dm644 "$srcdir/build/feed/$id.$pkgver.nupkg" \
+    "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/roslyn-${_commit}/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codeanalysis-$suffix/LICENSE"
+  install -Dm644 "$srcdir/roslyn-${_commit}/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codeanalysis-$suffix/THIRD-PARTY-NOTICES.txt"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/dotnet-codeanalysis-$suffix"
+  install -Dm644 "$srcdir/README.md" "$doc/README.md"
+  install -m644 "$srcdir/build/api-$suffix.txt" "$doc/PublicAPI.txt"
+  install -m644 "$srcdir/build/localization-$suffix.json" "$doc/localization.json"
+  install -m644 "$srcdir/build/removed-binaries.json" "$doc/removed-binaries.json"
+  install -m644 "$srcdir/build/generated-sources.json" "$doc/generated-sources.json"
+}
+package_mingw-w64-clang-x86_64-dotnet-codeanalysis-common() {
+  pkgdesc='Roslyn 4.9.2 shared compiler library and localized resources built from source'
+  _package common Microsoft.CodeAnalysis.Common
+}
+package_mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp() {
+  pkgdesc='Roslyn 4.9.2 C# compiler library and localized resources built from source'
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver")
+  _package csharp Microsoft.CodeAnalysis.CSharp
+}

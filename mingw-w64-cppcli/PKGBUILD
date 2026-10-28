@@ -10,7 +10,7 @@ mingw_arch=('clang64')
 url='https://github.com/Kreijstal/msys2-ur'
 license=('spdx:Apache-2.0 WITH LLVM-exception' 'spdx:MIT')
 _llvmver=23.1.3
-_bootstrap_commit=96ae31a4c7e54685de440de2adde387840392054
+_bootstrap_commit=f3beebb4edd98ee939165d0ecb9cc0ff21b39b15  # tag msys2/cppcli-0.3.0-2
 _dotnetver=8.0.131
 depends=("${MINGW_PACKAGE_PREFIX}-clang=${_llvmver}"
          "${MINGW_PACKAGE_PREFIX}-clang-libs=${_llvmver}"
@@ -27,8 +27,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              'patch')
 checkdepends=('mingw-w64-ucrt-x86_64-gcc')
 options=('!strip' '!lto' '!buildflags')
-source=("dotnet-bootstrap-${_bootstrap_commit}.tar.gz"
-        'launcher.c'
+source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
         'package-driver.py'
         "LLVM-LICENSE.TXT::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/llvm/LICENSE.TXT"
         "ParseAST.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseAST.cpp"
@@ -51,9 +50,7 @@ source=("dotnet-bootstrap-${_bootstrap_commit}.tar.gz"
         "Parser.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/Parser.cpp"
         "ParseReflect.cpp::https://raw.githubusercontent.com/llvm/llvm-project/llvmorg-${_llvmver}/clang/lib/Parse/ParseReflect.cpp"
 )
-source+=('LICENSE.launcher' 'check-launcher.py' '0001-windows-unicode-output-path.patch' '0002-windowsforms-framework.patch' '0003-llvm23-parser-and-abi.patch')
-sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
-            '2abc10f6cb6e5cf7bfcd72137565f831e9b0ec5dbecf90cb3edcec2d906a7abf'
+sha256sums=('9f5ead13a2a297f2f079a42fd2ba916435df7ed7b46e8c3d1754aa4ad196a722'
             '58f537b7f803ac76f3eced97625fe03a71803f54446d9dc694859f5476ae86a0'
             '8d85c1057d742e597985c7d4e6320b015a9139385cff4cbae06ffc0ebe89afee'
             '733349ba89f600a8902d059bb20f6e2d15f0b4491ed7660c7f06b8ca24856d17'
@@ -75,30 +72,18 @@ sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
             'da24949a3ed41114f34ce08b3809474b712f8f1959a0d3bfa2bebb55effeaa9a'
             '6b2af862ccb2d9636f4af7fb88345906ab5cb33326dcaca7567e16e4fc633d9f'
             'ebae8d1b43c3d5f20ea34c8cff6eca9ce65ac416b24594471bd8a5023856ce10'
-            'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
-            '13621544a12725292b1c8a206e43a195c62bbb4fbc1008454c1f162329008335'
-            'a51f5c95886338927ad0c7000e491375701c91c5dba986ec6a81fe15ebfed794'
-            'ff141326ed2390d5e4bd5399c473cb16370772934c6f329e1f154f43701ce054'
-            'a5cda253c85eb2a92f403bf4355ddc8e896b2703ae9bdb239bc2367bafad04ee'
 )
 
 noextract=("${source[@]%%::*}")
 
-_tree() { printf '%s/dotnet-bootstrap-%s' "${srcdir}" "${_bootstrap_commit}"; }
+_tree() { printf '%s/dotnet-mingw-bootstrap-%s' "${srcdir}" "${_bootstrap_commit}"; }
 _frontend() { printf '%s/bootstrap/m612/cppcli' "$(_tree)"; }
 
 prepare() {
-  tar -xf "${srcdir}/dotnet-bootstrap-${_bootstrap_commit}.tar.gz" -C "${srcdir}"
-  if ! grep -Fq 'ap.add_argument("--framework"' "$(_frontend)/cli-clang.py"; then
-    patch -d "$(_tree)" -Np1 -i "${srcdir}/0002-windowsforms-framework.patch"
-  fi
-  if ! grep -q 'std::filesystem::u8path(path)' "$(_frontend)/frontend.cpp"; then
-    patch -d "$(_tree)" -Np1 -i "${srcdir}/0001-windows-unicode-output-path.patch"
-  fi
-  patch -d "$(_tree)" -Np1 -i "${srcdir}/0003-llvm23-parser-and-abi.patch"
+  tar -xf "${srcdir}/dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz" -C "${srcdir}"
   mkdir -p "${srcdir}/parse-cache"
   local file
-  for file in "${source[@]:4:19}"; do
+  for file in "${source[@]:3:19}"; do
     file=${file%%::*}
     cp "${srcdir}/${file}" "${srcdir}/parse-cache/${file}"
   done
@@ -125,7 +110,7 @@ build() {
   printf '#define TARGET_RELATIVE L"../bin/python.exe"\n#define TOOL_RELATIVE L"../lib/cppcli/package-driver.py"\n' \
     > "${srcdir}/launcher-config.h"
   "${MINGW_PREFIX}/bin/cc" -std=c11 -O2 -Wall -Wextra -Werror -municode \
-    -include "${srcdir}/launcher-config.h" "${srcdir}/launcher.c" -o "${srcdir}/cli-clang.exe"
+    -include "${srcdir}/launcher-config.h" "$(_tree)/packaging/launcher.c" -o "${srcdir}/cli-clang.exe"
 }
 
 check() (
@@ -135,8 +120,8 @@ check() (
   previous_cp=$("${console_cp_tool}" | tr -cd '0-9')
   trap '"${console_cp_tool}" "${previous_cp}" >/dev/null' EXIT
   "${console_cp_tool}" 65001 >/dev/null
-  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/check-launcher.py" \
-    "$(cygpath -m "${srcdir}/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
+  "${MINGW_PREFIX}/bin/python.exe" "$(_tree)/packaging/check-launcher.py" \
+    "$(cygpath -m "$(_tree)/packaging/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
 
   # Use the build tree through the same driver as the installed package.
   local test="${srcdir}/check"
@@ -176,6 +161,6 @@ package() {
     install -Dm644 "$(_frontend)/${file}" "${pkgdir}${MINGW_PREFIX}/share/${_realname}/${file}"
   done
   cp -a "$(_frontend)/tests" "${pkgdir}${MINGW_PREFIX}/share/${_realname}/"
-  install -Dm644 "${srcdir}/LICENSE.launcher" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.launcher"
+  install -Dm644 "$(_tree)/packaging/LICENSE.launcher" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.launcher"
   install -Dm644 "${srcdir}/LLVM-LICENSE.TXT" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LLVM-LICENSE.TXT"
 }

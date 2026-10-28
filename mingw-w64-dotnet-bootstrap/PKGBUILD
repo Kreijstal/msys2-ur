@@ -1,0 +1,371 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# Source-only Mono seed -> stage-1 tools/runtime -> self-hosted stage-2 SDK.
+# These split packages share the SDK bundle version; the runtime itself is 8.0.0.
+pkgbase=mingw-w64-dotnet-bootstrap
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-host"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-bootstrap-tools"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime-mono"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-crossgen2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-host-devel"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-mono-devel")
+pkgver=8.0.131
+pkgrel=2
+pkgdesc='Source-bootstrapped .NET 8 SDK and runtime with MinGW (mingw-w64)'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/sdk'
+license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
+makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-uasm"
+             "${MINGW_PACKAGE_PREFIX}-llvm"
+             "${MINGW_PACKAGE_PREFIX}-zlib"
+             "${MINGW_PACKAGE_PREFIX}-brotli"
+             'git' 'patch' 'make' 'perl' 'unzip' 'zip')
+options=('!strip' '!lto' '!buildflags')
+# Tag msys2/dotnet-bootstrap-8.0.131-2 of Kreijstal/dotnet-mingw-bootstrap.
+_bootstrap_commit=2e8208f629f11c8786fa44c69683f864a3591f4a
+source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
+        "roslyn-4.0.1.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/v4.0.1.tar.gz"
+        "roslyn-4.4.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.4.tar.gz"
+        "roslyn-4.6.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.6.tar.gz"
+        "roslyn-4.8.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.8.tar.gz"
+        "roslyn-4.10.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.10.tar.gz"
+        "roslyn-4.11.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.11.tar.gz"
+        "roslyn-4.12.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.12.tar.gz"
+        "roslyn-4.13.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.13.tar.gz"
+        "roslyn-5.0.0-p4.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/NET-SDK-10.0.100-preview.4.25258.110.tar.gz"
+        "roslyn-5.0.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2026-Version-18.0.tar.gz"
+        "maintenance-packages-2025.03.19.tar.gz::https://github.com/dotnet/maintenance-packages/archive/refs/tags/2025.03.19.tar.gz"
+        "runtime-8.0.0.tar.gz::https://github.com/dotnet/runtime/archive/refs/tags/v8.0.0.tar.gz"
+        "msbuild-17.8.49.tar.gz::https://github.com/dotnet/msbuild/archive/refs/tags/v17.8.49.tar.gz"
+        "nuget-6.8.2.3.tar.gz::https://github.com/NuGet/NuGet.Client/archive/refs/tags/6.8.2.3.tar.gz"
+        "sdk-8.0.131.tar.gz::https://github.com/dotnet/sdk/archive/refs/tags/v8.0.131.tar.gz"
+        "newtonsoft.json-13.0.3.tar.gz::https://github.com/JamesNK/Newtonsoft.Json/archive/refs/tags/13.0.3.tar.gz"
+        "xdt-3.2.12.tar.gz::https://github.com/dotnet/xdt/archive/refs/tags/v3.2.12.tar.gz"
+        "applicationinsights-2.21.0.tar.gz::https://github.com/microsoft/ApplicationInsights-dotnet/archive/refs/tags/2.21.0.tar.gz"
+        "templating-8.0.131.tar.gz::https://github.com/dotnet/templating/archive/refs/tags/v8.0.131.tar.gz"
+        "sourcelink-8.0.0.tar.gz::https://github.com/dotnet/sourcelink/archive/refs/tags/8.0.0.tar.gz"
+        "wcwidth-1.0.0.tar.gz::https://github.com/spectreconsole/wcwidth/archive/refs/tags/1.0.0.tar.gz"
+        "deployment-tools-5255d40e228ea1d4b624781b5b97ec16484a3b4b.tar.gz::https://github.com/dotnet/deployment-tools/archive/5255d40e228ea1d4b624781b5b97ec16484a3b4b.tar.gz"
+        "command-line-api-02fe27cd.tar.gz::https://github.com/dotnet/command-line-api/archive/02fe27cd6a9b001c8feb7938e6ef4b3799745759.tar.gz"
+        "cecil-45dd3a73.tar.gz::https://github.com/dotnet/cecil/archive/45dd3a73dd5b64b010c4251303b3664bb30df029.tar.gz"
+        "arcade-7945b1b660dff1927e4d71aca0a11e5d067ba4a5.tar.gz::https://github.com/dotnet/arcade/archive/7945b1b660dff1927e4d71aca0a11e5d067ba4a5.tar.gz"
+        "sbrp-5aeee2738338530a92d7f6caa2c7d5f569fed3c4.tar.gz::https://github.com/dotnet/source-build-reference-packages/archive/5aeee2738338530a92d7f6caa2c7d5f569fed3c4.tar.gz"
+        "xliff-tasks-73f0850939d96131c28cf6ea6ee5aacb4da0083a.tar.gz::https://github.com/dotnet/xliff-tasks/archive/73f0850939d96131c28cf6ea6ee5aacb4da0083a.tar.gz"
+        "xdt-9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz::https://github.com/dotnet/xdt/archive/9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz"
+)
+source+=('relocate-bootstrap-tools.py' 'check-bootstrap-tools.py' 'check-native-devel.py' 'dotnet.sh' 'short-build-root.py' 'normalize-targeting-metadata.py' 'install-net-analyzer-imports.py')
+sha256sums=('3e4aedfc6526beb9ba40a2f785926e57c3c8bb23e6ca66fa9c382c758d06ad2e'
+            'fcd5794179e9732c6bf088a7bb0ea9438dadc1e135034d08a5fa9cd8c431532e'
+            'ea41e64568038038fe700e8d674739f935dd9030a375b7a81fb104ea76cf8424'
+            '15490d3a96f15c653a5f6e4bfb854c338b15d0ca4070a8c2bd01fa8d8850f0a6'
+            'fddbdbfcf41bd95d29039cd93384d49f86068b5591b0109ccc8e9d99b99bdcd2'
+            '019395080061b56fccb6d7523e43dc22220fedc5f00a853e14fe49753b9889a6'
+            'd31ea29a46ab3c8a626236bd6aa16483cafb4d88559b3fb642693337379ff899'
+            '82dc4542f34942f8916c75ff841af341e33871ab040a9e9b7c7a661892b88ce6'
+            'e7d37ca57c2c0a4a5144c7c2ace02c0f38fecb3eda15255c694a0f5f63d32d5c'
+            'e9951026290f889735a093087d8809123e02558331eab130876c3fbbb8eb0e25'
+            'd34ef9c4ab1004c739753b0f6347614a9e747a007fa38e44a5c21c22d838c689'
+            'f036d70aba6970246f9097997f3bb50c7dde58bcd256f7655843944d2edcae03'
+            'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
+            '96a899015db8683e4823ea05727b0bfe9a5f27cbdfa1f9fc77a71b319a7ac910'
+            'eb5bea7d7c9728ec8cdd61d1a86a9bbd0113eed3a13155398285d8568573b543'
+            '9daf4ad52a5083e3a7862bc1a56cd19cbe8ec6498bbed086c20a1c588c41e591'
+            '3dc1eeeb8f781122e0713481bad993329c669feb9928cc4ec86e0ab24d9eff9e'
+            '4d5e5a9cd69ae34c65ef2a6cce9b34bd293f7f7fa48e5d0b36839c30d5fdda96'
+            '693443261b33de33903f8680f895c13b7cf1d99b01fe8ffe15c4fcadb5dc4d33'
+            '9c74f9734ca6c744d794b3b89c5fa4bba3c5d554c98c0a1aa870c25f21393017'
+            '701c8b963b6b7437419e3466df9327037d0996e6c190f453b49cd234f70e925b'
+            '0cbc9b4314243036035c971d9ac64db86af539feebfd1a7aae9c558c1f4c6e0f'
+            '68f3c0bd29c41c223fb5d60d4913457ac6cc267a3e18812a9b9ef6093fb3f3a2'
+            '46d026dfec63670fd7d5749010f4223e2e171cfeeb48ad79c7bd3f1fdadb9694'
+            '8cc7d70641b0e6eb8737ffd1ae9285a88642cb57a0033f8413741dcbf8fb84db'
+            '822e5ed9b9785bcb0671b7efb76967f083ca849ff75029b169332a6c062011c7'
+            '2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79'
+            '6d1b5f61ab93bea1d51b881b4908160ece96251ab4c2ef21e047b4a8f867c53b'
+            '3616405727d17fda1623ae13f3970f81a28300a78e5cd32fd00eb6c549e3b351'
+            'ad175dd675b208c165cad5a38499743d775631389dc22bd9a43a7dc6cd3e9ae9'
+            'de4cd38b224b6a65541f9c68e8cbcfb828330352e75a75e07c16f460203994db'
+            '2042b52b0f87bd0ec9ddde1054f2dda0ebdff955d2573998e6ca2f500584fcaa'
+            'd0799f395417c7012f01141e1f77220e83259c1f4af840ccdab5c4d9273ee5b6'
+            '4517efce9490fbae95b43d4080de73b9077a7e7e10fd73d84970b849820ac8ab'
+            '91c21753c4e186242cf34a732d241d23e02c17a2b88fcdaa67782d6cdaf119ea'
+            '79d46cad11a510d52af1b2691540fd9edac5ac27df9f8b0ac65df9e094a1a7e5')
+noextract=("${source[@]%%::*}")
+
+_tree() { printf '%s/dotnet-mingw-bootstrap-%s' "${srcdir}" "${_bootstrap_commit}"; }
+_root() {
+  local saved
+  if [[ -f ${srcdir}/.m612-root ]] && saved=$(cat "${srcdir}/.m612-root") && [[ -d ${saved} ]]; then
+    printf '%s' "${saved}"
+  else printf '%s/m612' "${srcdir}"; fi
+}
+_short_root() {
+  [[ -f ${srcdir}/.m612-root && -d $(cat "${srcdir}/.m612-root") ]] && return 0
+  local short
+  short=$(mktemp -d /tmp/dnb.XXXXXX)
+  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/short-build-root.py" \
+    "$(cygpath -m "${srcdir}/m612")" "$(cygpath -m "${short}/m")"
+  printf '%s' "${short}/m" > "${srcdir}/.m612-root"
+}
+_sdk() { printf '%s/dotnet-sdk-%s-stage2' "$(_root)" "${pkgver}"; }
+_dotnet_env() {
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1 DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+  export DOTNET_MULTILEVEL_LOOKUP=0 DOTNET_CLI_HOME="$(cygpath -m "${srcdir}/check-home")"
+  export NUGET_PACKAGES="$(cygpath -m "${srcdir}/check-packages")"
+  export HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 NO_PROXY=
+}
+
+prepare() {
+  [[ ${MSYSTEM} == CLANG64 ]] || { error 'The runtime port currently requires CLANG64'; return 1; }
+  tar -xzf "${srcdir}/dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz" -C "${srcdir}"
+  mkdir -p "$(_root)/src" "$(_root)/s12/src"
+  local input name dest
+  for input in "${source[@]:1:28}"; do
+    name=${input%%::*}; dest="$(_root)/src"
+    case ${name} in
+      arcade-*|sbrp-*|xliff-tasks-*|xdt-9a1c3e1b*) dest="$(_root)/s12/src" ;;
+    esac
+    cp "${srcdir}/${name}" "${dest}/${name}"
+  done
+}
+
+_launcher() {
+  local name=$1 target=$2 tool=${3:-}
+  printf '#define TARGET_RELATIVE L"%s"\n' "${target}" > "${srcdir}/launcher-${name}.h"
+  if [[ -n ${tool} ]]; then
+    printf '#define TOOL_RELATIVE L"%s"\n' "${tool}" >> "${srcdir}/launcher-${name}.h"
+  fi
+  "${MINGW_PREFIX}/bin/cc" -std=c11 -O2 -Wall -Wextra -Werror -municode \
+    -include "${srcdir}/launcher-${name}.h" "$(_tree)/packaging/launcher.c" -o "${srcdir}/${name}.exe"
+}
+
+build() {
+  _short_root
+  # Only source archives enter this private build root. Mono 6.12 from UCRT64
+  # is the one trusted managed seed; native builds switch to CLANG64 themselves.
+  env M612="$(_root)" MSYSTEM=UCRT64 JOBS="${DOTNET_BUILD_JOBS:-4}" \
+    bash "$(_tree)/bootstrap/m612/chain.sh" "${DOTNET_BOOTSTRAP_START:-1}" 44
+  # The hand-run bootstrap built ilasm outside chain.sh. Close that missing edge
+  # before S12 assembles its reference packages.
+  PATH="${MINGW_PREFIX}/bin:/usr/bin" \
+    "${MINGW_PREFIX}/bin/ninja" -C "$(_root)/build/coreclr-8.0.0/cmake" -j"${DOTNET_BUILD_JOBS:-4}" ilasm
+  env M612="$(_root)" MSYSTEM=UCRT64 JOBS="${DOTNET_BUILD_JOBS:-4}" \
+    bash "$(_tree)/bootstrap/m612/chain.sh" 45 46
+  _launcher dotnet ../lib/dotnet/dotnet.exe
+  _launcher dotnet-mono ../lib/dotnet-mono/dotnet.exe
+  _launcher crossgen2 ../lib/dotnet/dotnet.exe ../lib/dotnet/tools/crossgen2/crossgen2.dll
+  _launcher csc-bootstrap ../../ucrt64/bin/mono.exe ../lib/dotnet-bootstrap/roslyn-5.0.0/csc.exe
+  _launcher msbuild-bootstrap ../../ucrt64/bin/mono.exe ../lib/dotnet-bootstrap/msbuild-17.8.49/tools/MSBuild.exe
+}
+
+_copy() { # copy a required build output, keeping relative directory content
+  [[ -e $1 ]] || { error "Missing source-built output: $1"; return 1; }
+  mkdir -p "$(dirname "$2")"
+  rm -rf -- "$2"
+  cp -a "$1" "$2"
+}
+_license() {
+  local component=$1 text=$2
+  install -Dm644 "${text}" "${pkgdir}${MINGW_PREFIX}/share/licenses/${pkgname}/${component}.txt"
+}
+_component_licenses() {
+  local tree name
+  for tree in "$(_root)"/src/*/ "$(_root)"/build/*/ "$(_root)"/s12/src/*/; do
+    for name in LICENSE LICENSE.txt LICENSE.md License.txt COPYING NOTICE THIRD-PARTY-NOTICES.TXT; do
+      [[ -f ${tree}/${name} ]] || continue
+      _license "$(basename "${tree}")-${name,,}" "${tree}/${name}"
+    done
+  done
+}
+_host() {
+  _copy "$(_sdk)/dotnet.exe" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/dotnet.exe"
+  _copy "$(_sdk)/host" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/host"
+  install -Dm755 "${srcdir}/dotnet.exe" "${pkgdir}${MINGW_PREFIX}/bin/dotnet.exe"
+  install -Dm644 "${srcdir}/dotnet.sh" "${pkgdir}${MINGW_PREFIX}/etc/profile.d/dotnet.sh"
+}
+_runtime() { _copy "$(_sdk)/shared" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/shared"; }
+_targeting() {
+  _copy "$(_sdk)/packs/Microsoft.NETCore.App.Ref" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/packs/Microsoft.NETCore.App.Ref"
+  "${MINGW_PREFIX}/bin/python.exe" "$(cygpath -m "${srcdir}/normalize-targeting-metadata.py")" \
+    "$(cygpath -m "${pkgdir}${MINGW_PREFIX}/lib/dotnet/packs/Microsoft.NETCore.App.Ref")" \
+    "$(cygpath -m "$(_sdk)/shared/Microsoft.NETCore.App/8.0.0")"
+}
+_sdkfiles() {
+  local part
+  for part in sdk templates library-packs; do
+    _copy "$(_sdk)/${part}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/${part}"
+  done
+  for part in Microsoft.NETCore.App.Host.win-x64 Microsoft.NETCore.App.Runtime.win-x64; do
+    _copy "$(_sdk)/packs/${part}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/packs/${part}"
+  done
+  rm -f "${pkgdir}${MINGW_PREFIX}/lib/dotnet/sdk/${pkgver}/.m612-stage"
+  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/install-net-analyzer-imports.py" \
+    "$(cygpath -m "${pkgdir}${MINGW_PREFIX}/lib/dotnet/sdk/${pkgver}")"
+  # Include the upstream SDK notices that the bootstrap layout did not copy.
+  _license sdk "$(_root)/build/sdk-${pkgver}/LICENSE.TXT"
+  _component_licenses
+  _license launcher "$(_tree)/packaging/LICENSE.launcher"
+}
+_bootstrap_tools() {
+  local part
+  for part in "$(_root)"/roslyn-*/ "$(_root)/msbuild-17.8.49" "$(_root)/pkgs"; do
+    _copy "${part%/}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-bootstrap/$(basename "${part%/}")"
+  done
+  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/relocate-bootstrap-tools.py" "$(cygpath -m "${pkgdir}${MINGW_PREFIX}/lib/dotnet-bootstrap")"
+  install -Dm755 "${srcdir}/csc-bootstrap.exe" "${pkgdir}${MINGW_PREFIX}/bin/csc-bootstrap.exe"
+  install -Dm755 "${srcdir}/msbuild-bootstrap.exe" "${pkgdir}${MINGW_PREFIX}/bin/msbuild-bootstrap.exe"
+}
+_mono_runtime() {
+  local base="$(_root)/dotnet-sdk-${pkgver}-net8" part
+  for part in dotnet.exe host shared; do
+    _copy "${base}/${part}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-mono/${part}"
+  done
+  install -Dm755 "${srcdir}/dotnet-mono.exe" "${pkgdir}${MINGW_PREFIX}/bin/dotnet-mono.exe"
+}
+_crossgen() {
+  _copy "$(_root)/crossgen2-8.0.0" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/tools/crossgen2"
+  install -Dm755 "${srcdir}/crossgen2.exe" "${pkgdir}${MINGW_PREFIX}/bin/crossgen2.exe"
+}
+_ilasm() {
+  install -Dm755 "$(_root)/build/coreclr-8.0.0/cmake/ilasm/ilasm.exe" "${pkgdir}${MINGW_PREFIX}/bin/ilasm-dotnet.exe"
+}
+
+_host_devel() {
+  local native="$(_root)/corehost-8.0.0/corehost" file
+  for file in nethost.h hostfxr.h coreclr_delegates.h; do
+    install -Dm644 "${native}/${file}" "${pkgdir}${MINGW_PREFIX}/include/dotnet/${file}"
+  done
+  for file in nethost.dll nethost.dll.a libnethost.a hostfxr.dll hostfxr.dll.a libhostfxr.a; do
+    install -Dm644 "${native}/${file}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet/hosting/${file}"
+  done
+}
+_mono_devel() {
+  local native="$(_root)/mono-8.0.0" file
+  _copy "${native}/include" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-mono/embedding/include"
+  _copy "${native}/lib" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-mono/embedding/lib"
+  install -Dm755 "${native}/bin/mono-sgen.exe" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-mono/embedding/bin/mono-sgen.exe"
+  for file in "${native}/libs"/*.a; do
+    install -Dm644 "${file}" "${pkgdir}${MINGW_PREFIX}/lib/dotnet-mono/embedding/lib/$(basename "${file}")"
+  done
+}
+
+check() {
+  "${MINGW_PREFIX}/bin/python.exe" "$(_tree)/packaging/check-launcher.py" \
+    "$(cygpath -m "$(_tree)/packaging/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
+
+  # Test the same install functions used by package(), in a moved tree whose
+  # path contains spaces. The native bin launcher must find the adjacent root.
+  local image="${srcdir}/package check" part
+  (
+    pkgdir=${image}
+    for part in _host _runtime _targeting _sdkfiles _crossgen _ilasm _bootstrap_tools _mono_runtime _host_devel _mono_devel; do "${part}"; done
+    _dotnet_env
+    local cli="${image}${MINGW_PREFIX}/bin/dotnet.exe" project="${srcdir}/check project"
+    "${cli}" --info
+    "${cli}" --list-sdks | tr -d '\r' > "${srcdir}/check-sdks.txt"
+    grep -q '^8.0.131 ' "${srcdir}/check-sdks.txt"
+    mkdir -p "${project}"
+    printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "${project}/NuGet.config"
+    "${cli}" new console --no-restore -o "${project}" --force
+    "${cli}" build "${project}" --configfile "${project}/NuGet.config" -p:UseSharedCompilation=false -p:NuGetAudit=false
+    "${cli}" "${project}/bin/Debug/net8.0/$(basename "${project}").dll" | tr -d '\r' > "${srcdir}/check-console.txt"
+    grep -qx 'Hello, World!' "${srcdir}/check-console.txt"
+    (
+      MINGW_PREFIX="${image}${MINGW_PREFIX}"
+      unset DOTNET_ROOT DOTNET_ROOT_X64
+      . "${MINGW_PREFIX}/etc/profile.d/dotnet.sh"
+      "${project}/bin/Debug/net8.0/$(basename "${project}").exe" | tr -d '\r' > "${srcdir}/check-apphost.txt"
+    )
+    grep -qx 'Hello, World!' "${srcdir}/check-apphost.txt"
+    "${image}${MINGW_PREFIX}/bin/dotnet-mono.exe" "${project}/bin/Debug/net8.0/$(basename "${project}").dll" | tr -d '\r' > "${srcdir}/check-mono-console.txt"
+    grep -qx 'Hello, World!' "${srcdir}/check-mono-console.txt"
+    "${image}${MINGW_PREFIX}/bin/crossgen2.exe" --help > /dev/null
+    "${image}${MINGW_PREFIX}/bin/ilasm-dotnet.exe" -? > /dev/null
+    "${image}${MINGW_PREFIX}/lib/dotnet-mono/embedding/bin/mono-sgen.exe" --version
+    "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/check-native-devel.py" \
+      "$(cygpath -m "${image}")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")"
+    "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/check-bootstrap-tools.py" \
+      "$(cygpath -m "${image}")" "$(cygpath -m "$(_tree)/bootstrap/m612/tests/oldstyle")"
+  )
+}
+
+package_mingw-w64-clang-x86_64-dotnet-host() {
+  pkgdesc='.NET 8 native host and hostfxr, built from source with MinGW (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+  _host
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license launcher "$(_tree)/packaging/LICENSE.launcher"
+}
+package_mingw-w64-clang-x86_64-dotnet-runtime() {
+  pkgdesc='CoreCLR 8.0.0 and Microsoft.NETCore.App, built from source (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-host=${pkgver}" "${MINGW_PACKAGE_PREFIX}-cc-libs"
+           "${MINGW_PACKAGE_PREFIX}-zlib" "${MINGW_PACKAGE_PREFIX}-brotli")
+  _runtime
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-targeting-pack() {
+  pkgdesc='Source-built .NET 8 reference assemblies (mingw-w64)'
+  _targeting
+  _license runtime "$(_root)/src/runtime-8.0.0/LICENSE.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-sdk() {
+  pkgdesc='Self-hosted .NET SDK 8.0.131 built from the Mono seed, without Microsoft binaries (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=${pkgver}")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers: source-built implicit .NET analyzers and compiler selection")
+  _sdkfiles
+}
+package_mingw-w64-clang-x86_64-dotnet-bootstrap-tools() {
+  pkgdesc='Source-built Roslyn generations, MSBuild/NuGet and net472 bootstrap dependencies (mingw-w64)'
+  depends=('mingw-w64-ucrt-x86_64-mono')
+  optdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${pkgver}: run the retained net8 Roslyn tool builds")
+  _bootstrap_tools
+  _component_licenses
+  _license launcher "$(_tree)/packaging/LICENSE.launcher"
+  _license roslyn "$(_root)/build/roslyn-5.0.0/License.txt"
+}
+package_mingw-w64-clang-x86_64-dotnet-runtime-mono() {
+  pkgdesc='Source-built Mono flavor of the .NET 8 shared framework (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-cc-libs" "${MINGW_PACKAGE_PREFIX}-zlib" "${MINGW_PACKAGE_PREFIX}-brotli")
+  _mono_runtime
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license launcher "$(_tree)/packaging/LICENSE.launcher"
+  _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-crossgen2() {
+  pkgdesc='Source-built ReadyToRun compiler crossgen2 8.0.0 (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${pkgver}" "${MINGW_PACKAGE_PREFIX}-cc-libs")
+  _crossgen
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license launcher "$(_tree)/packaging/LICENSE.launcher"
+  _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-ilasm() {
+  pkgdesc='Source-built CoreCLR IL assembler (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+  _ilasm
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-host-devel() {
+  pkgdesc='Native .NET hosting headers, nethost and hostfxr import/static libraries (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-host=${pkgver}")
+  _host_devel
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
+}
+package_mingw-w64-clang-x86_64-dotnet-mono-devel() {
+  pkgdesc='Mono 8 embedding headers, libraries and native test driver (mingw-w64)'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime-mono=${pkgver}")
+  _mono_devel
+  _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
+  _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
+}

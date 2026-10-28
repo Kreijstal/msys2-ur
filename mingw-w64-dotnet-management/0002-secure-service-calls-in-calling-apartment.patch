@@ -1,0 +1,354 @@
+--- a/src/libraries/System.Management/src/System/Management/ManagementScope.cs
++++ b/src/libraries/System.Management/src/System/Management/ManagementScope.cs
+@@ -21,6 +21,39 @@
+ 
+     internal static class WmiNetUtilsHelper
+     {
++        internal delegate int PortCancelAsyncCall([In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pSink, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortQueryObjectSink([In] int lFlags, [Out][MarshalAs(UnmanagedType.Interface)]  out IWbemObjectSink ppResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortGetObject([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [Out][MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(MarshalWbemObject))] out IWbemClassObjectFreeThreaded ppObject, [In] IntPtr ppCallResult, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortGetObjectAsync([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortPutClassAsync([In] IntPtr pObject, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortDeleteClass([In][MarshalAs(UnmanagedType.BStr)] string strClass, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In] IntPtr ppCallResult, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortDeleteClassAsync([In][MarshalAs(UnmanagedType.BStr)] string strClass, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortCreateClassEnumAsync([In][MarshalAs(UnmanagedType.BStr)] string strSuperclass, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortPutInstanceAsync([In] IntPtr pInst, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortDeleteInstance([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In] IntPtr ppCallResult, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortDeleteInstanceAsync([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortCreateInstanceEnumAsync([In][MarshalAs(UnmanagedType.BStr)] string strFilter, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortExecQueryAsync([In][MarshalAs(UnmanagedType.BStr)] string strQueryLanguage, [In][MarshalAs(UnmanagedType.BStr)] string strQuery, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortExecNotificationQueryAsync([In][MarshalAs(UnmanagedType.BStr)] string strQueryLanguage, [In][MarshalAs(UnmanagedType.BStr)] string strQuery, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortExecMethod([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In][MarshalAs(UnmanagedType.BStr)] string strMethodName, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In] IntPtr pInParams, [Out][MarshalAs(UnmanagedType.CustomMarshaler, MarshalTypeRef = typeof(MarshalWbemObject))] out IWbemClassObjectFreeThreaded ppOutParams, [In] IntPtr ppCallResult, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal delegate int PortExecMethodAsync([In][MarshalAs(UnmanagedType.BStr)] string strObjectPath, [In][MarshalAs(UnmanagedType.BStr)] string strMethodName, [In] int lFlags, [In][MarshalAs(UnmanagedType.Interface)]  IWbemContext pCtx, [In] IntPtr pInParams, [In][MarshalAs(UnmanagedType.Interface)]  IWbemObjectSink pResponseHandler, [MarshalAs(UnmanagedType.Interface)] IWbemServices services, [MarshalAs(UnmanagedType.BStr)] string user, IntPtr password, [MarshalAs(UnmanagedType.BStr)] string authority, int impersonation, int authentication);
++        internal static PortCancelAsyncCall PortCancelAsyncCall_f;
++        internal static PortQueryObjectSink PortQueryObjectSink_f;
++        internal static PortGetObject PortGetObject_f;
++        internal static PortGetObjectAsync PortGetObjectAsync_f;
++        internal static PortPutClassAsync PortPutClassAsync_f;
++        internal static PortDeleteClass PortDeleteClass_f;
++        internal static PortDeleteClassAsync PortDeleteClassAsync_f;
++        internal static PortCreateClassEnumAsync PortCreateClassEnumAsync_f;
++        internal static PortPutInstanceAsync PortPutInstanceAsync_f;
++        internal static PortDeleteInstance PortDeleteInstance_f;
++        internal static PortDeleteInstanceAsync PortDeleteInstanceAsync_f;
++        internal static PortCreateInstanceEnumAsync PortCreateInstanceEnumAsync_f;
++        internal static PortExecQueryAsync PortExecQueryAsync_f;
++        internal static PortExecNotificationQueryAsync PortExecNotificationQueryAsync_f;
++        internal static PortExecMethod PortExecMethod_f;
++        internal static PortExecMethodAsync PortExecMethodAsync_f;
++
+         internal delegate int ResetSecurity(IntPtr hToken);
+         internal delegate int SetSecurity([In][Out] ref bool pNeedtoReset, [In][Out] ref IntPtr pHandle);
+         internal delegate int BlessIWbemServices([MarshalAs(UnmanagedType.Interface)] IWbemServices pIUnknown,
+@@ -234,6 +267,24 @@
+             if (!LoadDelegate(ref PortAbiVersion_f, hModule, "WmiPortAbiVersion") || PortAbiVersion_f() != 1)
+                 throw new PlatformNotSupportedException("Incompatible source-built WMI backend");
+ 
++            if (!(LoadDelegate(ref PortCancelAsyncCall_f, hModule, "PortCancelAsyncCall")
++                && LoadDelegate(ref PortQueryObjectSink_f, hModule, "PortQueryObjectSink")
++                && LoadDelegate(ref PortGetObject_f, hModule, "PortGetObject")
++                && LoadDelegate(ref PortGetObjectAsync_f, hModule, "PortGetObjectAsync")
++                && LoadDelegate(ref PortPutClassAsync_f, hModule, "PortPutClassAsync")
++                && LoadDelegate(ref PortDeleteClass_f, hModule, "PortDeleteClass")
++                && LoadDelegate(ref PortDeleteClassAsync_f, hModule, "PortDeleteClassAsync")
++                && LoadDelegate(ref PortCreateClassEnumAsync_f, hModule, "PortCreateClassEnumAsync")
++                && LoadDelegate(ref PortPutInstanceAsync_f, hModule, "PortPutInstanceAsync")
++                && LoadDelegate(ref PortDeleteInstance_f, hModule, "PortDeleteInstance")
++                && LoadDelegate(ref PortDeleteInstanceAsync_f, hModule, "PortDeleteInstanceAsync")
++                && LoadDelegate(ref PortCreateInstanceEnumAsync_f, hModule, "PortCreateInstanceEnumAsync")
++                && LoadDelegate(ref PortExecQueryAsync_f, hModule, "PortExecQueryAsync")
++                && LoadDelegate(ref PortExecNotificationQueryAsync_f, hModule, "PortExecNotificationQueryAsync")
++                && LoadDelegate(ref PortExecMethod_f, hModule, "PortExecMethod")
++                && LoadDelegate(ref PortExecMethodAsync_f, hModule, "PortExecMethodAsync")))
++                throw new PlatformNotSupportedException("Missing source WMI apartment-security entry point");
++
+             if (LoadDelegate(ref ResetSecurity_f, hModule, "ResetSecurity") &&
+                 LoadDelegate(ref SetSecurity_f, hModule, "SetSecurity") &&
+                 LoadDelegate(ref BlessIWbemServices_f, hModule, "BlessIWbemServices") &&
+@@ -1067,26 +1118,66 @@
+         internal int CancelAsyncCall_(IWbemObjectSink pSink)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.CancelAsyncCall_(pSink);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortCancelAsyncCall_f(pSink,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int QueryObjectSink_(int lFlags, ref IWbemObjectSink ppResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.QueryObjectSink_(lFlags, out ppResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortQueryObjectSink_f(lFlags, out ppResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int GetObject_(string strObjectPath, int lFlags, IWbemContext pCtx, ref IWbemClassObjectFreeThreaded ppObject, IntPtr ppCallResult)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.GetObject_(strObjectPath, lFlags, pCtx, out ppObject, ppCallResult);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortGetObject_f(strObjectPath, lFlags, pCtx, out ppObject, ppCallResult,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+ 
+         internal int GetObjectAsync_(string strObjectPath, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.GetObjectAsync_(strObjectPath, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortGetObjectAsync_f(strObjectPath, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int PutClass_(IWbemClassObjectFreeThreaded pObject, int lFlags, IWbemContext pCtx, IntPtr ppCallResult)
+@@ -1112,19 +1203,49 @@
+         internal int PutClassAsync_(IWbemClassObjectFreeThreaded pObject, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.PutClassAsync_(pObject, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortPutClassAsync_f(pObject, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int DeleteClass_(string strClass, int lFlags, IWbemContext pCtx, IntPtr ppCallResult)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.DeleteClass_(strClass, lFlags, pCtx, ppCallResult);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortDeleteClass_f(strClass, lFlags, pCtx, ppCallResult,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int DeleteClassAsync_(string strClass, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.DeleteClassAsync_(strClass, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortDeleteClassAsync_f(strClass, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int CreateClassEnum_(string strSuperClass, int lFlags, IWbemContext pCtx, ref IEnumWbemClassObject ppEnum)
+@@ -1150,7 +1271,17 @@
+         internal int CreateClassEnumAsync_(string strSuperClass, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.CreateClassEnumAsync_(strSuperClass, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortCreateClassEnumAsync_f(strSuperClass, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int PutInstance_(IWbemClassObjectFreeThreaded pInst, int lFlags, IWbemContext pCtx, IntPtr ppCallResult)
+@@ -1176,19 +1307,49 @@
+         internal int PutInstanceAsync_(IWbemClassObjectFreeThreaded pInst, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.PutInstanceAsync_(pInst, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortPutInstanceAsync_f(pInst, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int DeleteInstance_(string strObjectPath, int lFlags, IWbemContext pCtx, IntPtr ppCallResult)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.DeleteInstance_(strObjectPath, lFlags, pCtx, ppCallResult);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortDeleteInstance_f(strObjectPath, lFlags, pCtx, ppCallResult,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int DeleteInstanceAsync_(string strObjectPath, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.DeleteInstanceAsync_(strObjectPath, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortDeleteInstanceAsync_f(strObjectPath, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+ 
+@@ -1215,7 +1376,17 @@
+         internal int CreateInstanceEnumAsync_(string strFilter, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.CreateInstanceEnumAsync_(strFilter, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortCreateInstanceEnumAsync_f(strFilter, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int ExecQuery_(string strQueryLanguage, string strQuery, int lFlags, IWbemContext pCtx, ref IEnumWbemClassObject ppEnum)
+@@ -1242,7 +1413,17 @@
+         internal int ExecQueryAsync_(string strQueryLanguage, string strQuery, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.ExecQueryAsync_(strQueryLanguage, strQuery, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortExecQueryAsync_f(strQueryLanguage, strQuery, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int ExecNotificationQuery_(string strQueryLanguage, string strQuery, int lFlags, IWbemContext pCtx, ref IEnumWbemClassObject ppEnum)
+@@ -1269,19 +1450,49 @@
+         internal int ExecNotificationQueryAsync_(string strQueryLanguage, string strQuery, int lFlags, IWbemContext pCtx, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.ExecNotificationQueryAsync_(strQueryLanguage, strQuery, lFlags, pCtx, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortExecNotificationQueryAsync_f(strQueryLanguage, strQuery, lFlags, pCtx, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int ExecMethod_(string strObjectPath, string strMethodName, int lFlags, IWbemContext pCtx, IWbemClassObjectFreeThreaded pInParams, ref IWbemClassObjectFreeThreaded ppOutParams, IntPtr ppCallResult)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.ExecMethod_(strObjectPath, strMethodName, lFlags, pCtx, pInParams, out ppOutParams, ppCallResult);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortExecMethod_f(strObjectPath, strMethodName, lFlags, pCtx, pInParams, out ppOutParams, ppCallResult,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+         internal int ExecMethodAsync_(string strObjectPath, string strMethodName, int lFlags, IWbemContext pCtx, IWbemClassObjectFreeThreaded pInParams, IWbemObjectSink pResponseHandler)
+         {
+             int status = (int)tag_WBEMSTATUS.WBEM_E_FAILED;
+-            status = pWbemServiecsSecurityHelper.ExecMethodAsync_(strObjectPath, strMethodName, lFlags, pCtx, pInParams, pResponseHandler);
++            IntPtr password = scope.Options.GetPassword();
++            try
++            {
++                status = WmiNetUtilsHelper.PortExecMethodAsync_f(strObjectPath, strMethodName, lFlags, pCtx, pInParams, pResponseHandler,
++                    pWbemServiecsSecurityHelper, scope.Options.Username, password,
++                    scope.Options.Authority, (int)scope.Options.Impersonation, (int)scope.Options.Authentication);
++            }
++            finally
++            {
++                Marshal.ZeroFreeBSTR(password);
++            }
+             return status;
+         }
+     }

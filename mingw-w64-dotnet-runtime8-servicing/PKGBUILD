@@ -1,0 +1,83 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-runtime8-servicing
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.31
+pkgrel=3
+pkgdesc='Source-built serviced .NET8 shared framework and versioned hostfxr (mingw-w64)'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers=3.3.4"
+             "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sqlclient=4.9.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol=8.0.0"
+             'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+             "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja" "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-uasm" "${MINGW_PACKAGE_PREFIX}-llvm"
+             'python' 'patch' 'make' 'perl')
+options=('!strip' '!lto' '!buildflags')
+source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
+        "dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz"
+        "dotnet-runtime8-servicing-source-3.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-runtime8-servicing-source-3.tar.gz"
+        'README.md')
+noextract=("runtime-v${pkgver}.tar.gz" 'dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz')
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
+            '1901796a07f37c06c6a5423cce5ce67b98fd300a7201f9a055e998f30d062356'
+            '405fa7d891329de53457b8c3ce1b5c7dd020a103868f2d96246b8627e8db9b73')
+
+build() {
+  bash "$srcdir/servicing/build-all.sh" "$srcdir/runtime-v${pkgver}.tar.gz" \
+    "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" \
+    "$srcdir/prepared" "$srcdir/runtime-layout" "${RUNTIME_SERVICING_JOBS:-2}"
+}
+
+check() {
+  bash "$srcdir/servicing/check-runtime.sh" "$srcdir/prepared" "$srcdir/runtime-layout" "$srcdir/runtime-check"
+  # The installed package keeps the existing muxer. Test that exact combination
+  # in a private relocated layout before packaging the two versioned directories.
+  mkdir "$srcdir/existing-muxer-layout"
+  cp -R "$srcdir/runtime-layout/host" "$srcdir/runtime-layout/shared" "$srcdir/existing-muxer-layout/"
+  cp /clang64/lib/dotnet/dotnet.exe "$srcdir/existing-muxer-layout/dotnet.exe"
+  (
+    export DOTNET_ROOT=$(cygpath -am "$srcdir/existing-muxer-layout") DOTNET_MULTILEVEL_LOOKUP=0
+    export DOTNET_ROOT_X64=$DOTNET_ROOT
+    timeout 180 "$srcdir/existing-muxer-layout/dotnet.exe" "$(cygpath -am "$srcdir/runtime-check/RuntimeCheck.dll")" \
+      "$(cygpath -am "$srcdir/existing-muxer-layout/shared/Microsoft.NETCore.App/$pkgver")" \
+      "$(cygpath -am "$srcdir/runtime-layout/required-framework.txt")"
+    bash "$srcdir/servicing/check-powershell.sh" "$srcdir/existing-muxer-layout"
+    bash "$srcdir/servicing/check-json-binding.sh" "$srcdir/existing-muxer-layout" "$srcdir/json-binding-check"
+    bash "$srcdir/servicing/check-framework-forwarders.sh" "$srcdir/existing-muxer-layout" "$srcdir/forwarder-check"
+  )
+}
+
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target/shared/Microsoft.NETCore.App" "$target/host/fxr" "$doc"
+  cp -R "$srcdir/runtime-layout/shared/Microsoft.NETCore.App/$pkgver" "$target/shared/Microsoft.NETCore.App/"
+  cp -R "$srcdir/runtime-layout/host/fxr/$pkgver" "$target/host/fxr/"
+  install -m644 "$srcdir/README.md" "$doc/README.md"
+  for name in source-inputs build-audit framework-audit framework-build-adapters corelib-build-adapter version-build-inputs file-version-adapters shim-version-audit shim-identity-audit; do
+    install -m644 "$srcdir/prepared/$name.json" "$doc/$name.json"
+  done
+  install -m644 "$srcdir/runtime-layout/source-payload.json" "$srcdir/runtime-layout/required-framework.txt" "$doc/"
+  install -m644 "$srcdir/servicing/RuntimeCheck.cs" "$srcdir/servicing/PowerShellCheck.ps1" "$doc/"
+  install -m644 "$srcdir/servicing/FrameworkForwarderCheck.cs" "$srcdir/servicing/check-framework-forwarders.sh" "$doc/"
+  local license_dir="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
+  install -Dm644 "$srcdir/prepared/m/src/runtime-$pkgver-native/LICENSE.TXT" "$license_dir/LICENSE.TXT"
+  install -m644 "$srcdir/prepared/m/src/runtime-$pkgver-native/THIRD-PARTY-NOTICES.TXT" "$license_dir/"
+  install -m644 "$srcdir/servicing/inputs/Arcade-LICENSE.TXT" "$license_dir/"
+}

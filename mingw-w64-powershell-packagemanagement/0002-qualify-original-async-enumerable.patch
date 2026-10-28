@@ -1,0 +1,33 @@
+--- a/Microsoft.PackageManagement/Implementation/EnumerableRequestObject.cs
++++ b/Microsoft.PackageManagement/Implementation/EnumerableRequestObject.cs
+@@ -21,7 +21,7 @@
+     using Utility.Async;
+     using Utility.Collections;
+ 
+-    internal class EnumerableRequestObject<T> : RequestObject, IAsyncEnumerable<T> {
++    internal class EnumerableRequestObject<T> : RequestObject, global::Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T> {
+         protected readonly BlockingCollection<T> Results = new BlockingCollection<T>();
+ 
+         internal EnumerableRequestObject(ProviderBase provider, IHostApi request, Action<RequestObject> action)
+--- a/Microsoft.PackageManagement/Implementation/ProviderBase.cs
++++ b/Microsoft.PackageManagement/Implementation/ProviderBase.cs
+@@ -205,7 +205,7 @@
+             return new DictionaryRequestObject(this, requestObject, request => Provider.GetFeatures(request));
+         }
+ 
+-        public IAsyncEnumerable<DynamicOption> GetDynamicOptions(OptionCategory category, IHostApi requestObject) {
++        public global::Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<DynamicOption> GetDynamicOptions(OptionCategory category, IHostApi requestObject) {
+             requestObject = requestObject ?? new object().As<IHostApi>();
+ 
+             return new DynamicOptionRequestObject(this, requestObject, request => Provider.GetDynamicOptions(category.ToString(), request), category);
+--- a/Microsoft.PowerShell.PackageManagement/Cmdlets/CmdletBase.cs
++++ b/Microsoft.PowerShell.PackageManagement/Cmdlets/CmdletBase.cs
+@@ -93,7 +93,7 @@
+ 
+         protected bool ShouldSelectAllProviders { get; set; }
+ 
+-        protected bool WaitForActivity<T>(IEnumerable<IAsyncEnumerable<T>> enumerables) {
++        protected bool WaitForActivity<T>(IEnumerable<global::Microsoft.PackageManagement.Internal.Utility.Async.IAsyncEnumerable<T>> enumerables) {
+             var handles = enumerables.Select(each => each.Ready).ConcatSingleItem(CancellationEvent.Token.WaitHandle).ToArray();
+             if (handles.Length > 1) {
+                 if (handles.Length <= 64)

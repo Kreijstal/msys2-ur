@@ -1,0 +1,32 @@
+MC-SMP WNDW is the maximum permitted DATA sequence, inclusive.
+https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-smp/4ada62f7-33c2-45bb-980c-f566f5a6c11a
+
+--- a/SNIMarsHandle.cs
++++ b/SNIMarsHandle.cs
+@@ -126,7 +126,7 @@
+             {
+                 lock (this)
+                 {
+-                    if (_sequenceNumber < _sendHighwater)
++                    if (_sequenceNumber <= _sendHighwater)
+                     {
+                         break;
+                     }
+@@ -159,7 +159,7 @@
+             Debug.Assert(packet.ReservedHeaderSize == SNISMUXHeader.HEADER_LENGTH, "mars handle attempting to send muxed packet without mux reservation in InternalSendAsync");
+             lock (this)
+             {
+-                if (_sequenceNumber >= _sendHighwater)
++                if (_sequenceNumber > _sendHighwater)
+                 {
+                     return TdsEnums.SNI_QUEUE_FULL;
+                 }
+@@ -182,7 +182,7 @@
+             {
+                 lock (this)
+                 {
+-                    if (_sequenceNumber < _sendHighwater)
++                    if (_sequenceNumber <= _sendHighwater)
+                     {
+                         if (_sendPacketQueue.Count != 0)
+                         {

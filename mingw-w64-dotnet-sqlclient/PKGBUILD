@@ -1,0 +1,83 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-sqlclient
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.9.1
+pkgrel=1
+_commit=84b081710c66cc560b77d4de38cee493c3a38e9d
+pkgdesc='Experimental complete Windows SqlClient source port with managed SNI; full native compatibility unverified'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/maintenance-packages'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2" 'python' 'patch')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3")
+options=('!strip' '!lto')
+source=("maintenance-packages-$_commit.tar.gz::https://codeload.github.com/dotnet/maintenance-packages/tar.gz/$_commit"
+ extract.py
+ prepare.py
+ build.sh
+ audit-source-sni.py
+ pack.py
+ check.sh
+ verify-consumer.py
+ prepare-tds.py
+ CheckApi.cs
+ CheckAssets.cs
+ Probe.cs
+ SourceSniProbe.cs
+ MarsTdsProbe.cs
+ MarsWindowProbe.cs
+ PowerShell.ps1
+ Microsoft.pubkey.hex
+ 0001-use-managed-sni-on-windows.patch
+ 0002-tds-test-peer-return-partial-handshake-reads.patch
+ 0003-pass-complete-spns-to-windows-sspi.patch
+ 0004-accept-short-custom-named-pipe-paths.patch
+ 0005-honor-inclusive-smp-send-window.patch
+ README.md
+)
+noextract=("maintenance-packages-$_commit.tar.gz")
+sha256sums=('f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6'
+ 'c901d8c36f368bc5a46d5c9067e27de6d67a41c83a20cb1516c129b9502f7b69'
+ 'c98940e735ffbc7c613d737f2e5f91518b9f96047a661c5932f09ade74e43b7f'
+ 'e9063f6e7cf1b159ea6b8db912864562e971d06755178e91e01c455f0d3cc776'
+ 'ead52774ccb8d88d5a80a77090a38e0e590f5f06774dd9927e9630ab6abc25a6'
+ '265d0cb156cfd7affa7e5f8f0f9f8fee4341d454054eecf5d555e7e7275e5944'
+ '52b17e8824b5b4cf6430dae6f509d7180163afe7d3ea2fab7e88d22aa40b3dda'
+ 'dbf6ca728aebf1cf9a82bbae23a7096492378020b270685e592abf5ca00d239c'
+ '93a7ae3de5b3148e1e46308eb6dc78a00ca634a3b73a7d97ccc43c006df5a509'
+ '35599ac411f33dd191e2767d685515c0955d3a04f07d815d2d968c00ea0abe30'
+ 'f0c88a518ad6196d70fabd02aeaaca835c894a25d0be4c3656c750bbdf38bd8f'
+ 'f844d2f7d0adeb2dafda7693824b495488aa0f6c750f7b2ce774f33b74cc6618'
+ '96feec3ed33708c75f6373c1207d09daded2ab4b8556a3f871c42042779c2629'
+ '7ff7012a1291154e7735b1318c90978cc23a5a612cff41bbb693538cd0aa1216'
+ 'e4f8607970497c5a09dd75a065bd3dbdca427d2ebef189777485480638ef1e38'
+ '8d89d77f21836b5a5b31708badf77ef8d467a788e81805d08e2b748b88fdc6b0'
+ 'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+ 'e04edd0e37056c8d97284e8413956d59c33df7fe43f8e708e6c46c943c0e0727'
+ '592f04fcc2ede310336042100cd4eb78c7f882ca642fe9477a232f8fd52e72ad'
+ 'c3b03f226ae516ca5f0375af069855fa54aa5439e8ef2818d04822643077e21f'
+ '9d234bc7b25f2d6b734ea959681082adf3f2d41af0971119d8eb68a7383a9614'
+ '57ebaf32f50d4245e985e3de80ccc5e71f3188ece1b91bfcffff98d5db42c192'
+ 'c575dec5d5c55b5430c0cded06eaf8d7e9f37f893d4b0606fa883dae94d949b5')
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/maintenance-packages-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared" --managed-sni
+}
+build() {
+ bash "$srcdir/build.sh" "$srcdir/prepared"
+ /usr/bin/python3 "$srcdir/audit-source-sni.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/maintenance-packages-$_commit.tar.gz"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() {
+ bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/source" "$srcdir/feed"
+ /usr/bin/python3 "$srcdir/audit-source-sni.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/check/protocol" "$srcdir/maintenance-packages-$_commit.tar.gz"
+}
+package() {
+ install -Dm644 "$srcdir/feed/system.data.sqlclient.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.data.sqlclient.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+ install -m644 "$srcdir/prepared/source-inventory.json" "$srcdir/prepared/source-sni-audit.json" "$srcdir/prepared/managed-sni-port.json" "$srcdir/check/protocol/tds-source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

@@ -3,7 +3,7 @@ _realname=dotnet-windowsdesktop-bootstrap
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.0
-pkgrel=63
+pkgrel=64
 pkgdesc='Source-built WPF 8 and interim WinForms 7 WindowsDesktop bootstrap (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64')
@@ -11,6 +11,8 @@ url='https://github.com/Kreijstal/msys2-ur'
 license=('spdx:MIT' 'spdx:Apache-2.0 WITH LLVM-exception' 'spdx:Unicode-3.0' 'spdx:MPL-1.1' 'spdx:LicenseRef-Hyphenation-Patterns')
 _dotnetver=8.0.131
 _bootstrap_commit=96ae31a4c7e54685de440de2adde387840392054
+# Tag msys2/dotnet-windowsdesktop-bootstrap-8.0.0-64 of Kreijstal/wpf-mingw.
+_wpf_commit=b8b69ae6de1fa97d4d5998c0883e321de09bf764
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_dotnetver}")
 conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-winforms-bootstrap")
 provides=("${MINGW_PACKAGE_PREFIX}-dotnet-winforms-bootstrap=7.0.20")
@@ -31,148 +33,24 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_dotnetver}"
              'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
              'python' 'patch' 'tar')
 options=('!strip' '!lto' '!buildflags')
-source=("dotnet-bootstrap-${_bootstrap_commit}.tar.gz"
+source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
+        "wpf-mingw-${_wpf_commit}.tar.gz::https://codeload.github.com/Kreijstal/wpf-mingw/tar.gz/${_wpf_commit}"
         "wpf-8.0.0.tar.gz::https://codeload.github.com/dotnet/wpf/tar.gz/refs/tags/v8.0.0"
         "winforms-7.0.20.tar.gz::https://codeload.github.com/dotnet/winforms/tar.gz/refs/tags/v7.0.20"
         "winforms-8.0.0.tar.gz::https://codeload.github.com/dotnet/winforms/tar.gz/refs/tags/v8.0.0"
         "runtime-8.0.0.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v8.0.0"
         README.md)
-sha256sums=('8987e19d4508e1ab3ecea7291a9614eda5327388f17e005d1d8315381e38a9e7'
+sha256sums=('dcc79c0f3bc0cb6f14bf7bf6de7911e228f910b1ac78b27f8cce40f963808547'
+            '4dd03c8a51ef3f002e83b85c08f8cb00f403191a703c1bd68ace57359df71681'
             'b4acc515805fd551fe9982f496e4062f0e9ddc4bed219a236454857b56126748'
             '7a95a414898b0e4d7e5aab657b3b60b344e67dfeba8a876eec14b010e1a7f49e'
             'bf2e48f2a35ab30f135ad91cfb3062f402d4fb84e5a36dead53dc89b81369ed2'
             'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
-            '09bd53936921c4223f359c73fc45c69a144c500c69fb013e592416f40fa7e420')
-source+=('0001-desktop-crypto-closure.patch')
-sha256sums+=('b0f4e321e112f70dc99d39f6a890b0fd30795acdeee98757e0e0b4e7cdb86dde')
-source+=('0002-text-decorations.patch')
-sha256sums+=('394c49a1b3cff0de6e08d0976d220d32d78da6f612ea090239fcc3ff7e566318')
-source+=('0003-tabs-and-composite-fonts.patch')
-sha256sums+=('53eaeabe53bd3acfe20a25b79da3a4e09443abe12ae57fe454dc84536ac177ab')
-source+=('0004-aligned-field-wrapping.patch')
-sha256sums+=('1c95da2bdf96cdb5f063e16a4b1e686c06d956dc47b9492831d952b62e05c8b1')
-source+=('0005-inline-objects-and-sdk-isolation.patch')
-sha256sums+=('f38c23db1eae6e6c37cdfbab367b8f7bb15ba12728991fcaff34ed7f99b20e26')
-source+=('0006-interword-justification.patch')
-sha256sums+=('7909250d211640a531fa8936016ba344d6e92867e6f4875736b8c4e3a84ae9b1')
-source+=('0007-paragraph-widths.patch')
-sha256sums+=('6dd06d145261841aadd3cf2b4a15231885663523fe25c8c408440eb5af25eead')
-source+=('0008-paragraph-contexts-and-penalty-resources.patch')
-sha256sums+=('ee0dbffe4b1c75938fe2ca0d7af1805c0b9fb1b082100d7671cb814895d2cf20')
-source+=('0009-paragraph-geometry-and-page-abi.patch')
-sha256sums+=('1fa5f12a86c84ad0745388d7fe65c63599a430261d719050be1033c09a7683dd')
-source+=('0010-finite-text-pages.patch')
-sha256sums+=('951e276decfbf8002b85c8093356aeaef7fe9aa4ac0a666263d68e52c97aff9b')
-source+=('0011-bottomless-documents-and-page-coordinates.patch')
-sha256sums+=('1b6c11d1cd58662035dd80df6aa39cf17fc067a6083c2526bbd61e345155c010')
-source+=('0012-finite-pagination.patch')
-sha256sums+=('c5be803d4429766667d8d6a083c635777f95f17adb340290643a76dab5bc3824')
-source+=('0013-column-layout.patch')
-sha256sums+=('049fe33e470372cff10e90afeda450c33d8e74f748dd482fc23f18caf8d3b6fb')
-source+=('0014-explicit-paragraph-breaks.patch')
-sha256sums+=('6092ed75d7542f5019db4bc3eda45a63648e51caf1f92c51edcbc617249b20fe')
-source+=('0015-keep-together-paragraphs.patch')
-sha256sums+=('6e219e7fc428a39989eb06a1830bff82206d9e54eafc08643bfdd1d7848b6e2a')
-source+=('0016-keep-with-next-chains.patch')
-sha256sums+=('1b5e1a49a92efbb2665f89fdf54b78e6a9f4275516973361dfdcc6cc71b4b2aa')
-source+=('0017-forced-page-progress.patch')
-sha256sums+=('866978ad708199adc953331bec7a6c6d62f15d93488248f4ff10477b8d3606a0')
-source+=('0018-block-ui-containers.patch')
-sha256sums+=('1f9167a2f1bc560987d634bbe717ce03a9684d6459b0c4096df409021d23fa8f')
-source+=('0019-subpage-layout.patch')
-sha256sums+=('5e433ed8d0b6661976de6b295dc2309b46fb2e2948a304c0bc0ade1c471bf0bf')
-source+=('0020-bottomless-subpage-updates.patch')
-sha256sums+=('f910381961b21edcffbe3a40ea71772bdcf828d8f6e97b833e10d6742770d24d')
-source+=('0021-subtrack-updates-and-synchronization.patch')
-sha256sums+=('00638975f6ad89e98370d45411d0860b8373c1e412c3dae5deaff9961e2388f4')
-source+=('0022-rectangular-floaters.patch')
-sha256sums+=('24f44759bb5cc9684a7d7537a1f0b4218eea9abe7979ee941d1817d58ed297a7')
-source+=('0023-multiple-floater-placement.patch')
-sha256sums+=('eac70bbe946e077fafea1879ecda7c3f80b4f5313219fc1b8d0406d704bca3e8')
-source+=('0024-deferred-floaters.patch')
-sha256sums+=('6bc36655c3feb27ca354163b7cac68ebff3775c937f745bf0b0e5e292b46b902')
-source+=('0025-inline-floater-anchors.patch')
-sha256sums+=('069e5939aa25b13ec30a891c3664e64b1e74e34c69374abfa5b6839949916a77')
-source+=('0026-split-floaters.patch')
-sha256sums+=('8fd0c8d54a06dac0904943686e3e5ac8ee40a4d18f4d493c384b95765580addf')
-source+=('0027-public-tables.patch')
-sha256sums+=('f59022b0978c41476befabcd30758b910b9c2ed946fbbcfa0dcba49796620c67')
-source+=('0028-split-table-cells.patch')
-sha256sums+=('5bae2d583eb9caa024a87c4bb48cc520a85b934a1cff9c9976e51cfea5b0394a')
-source+=('0029-vertical-table-spans.patch')
-sha256sums+=('a400f21a594ac7c426165d06dbac08b8f08e1e99830a41ef72c24432de4ef074')
-source+=('0030-split-vertical-spans.patch')
-sha256sums+=('ba799a8e65ddebc613646a20e49f392e8fd7937264f48ef029e5f7d784d8779f')
-source+=('0031-figures.patch')
-sha256sums+=('648894f8c35c47ca31bd3039f3a13b82eed5344141033034b122b14e3f899930')
-source+=('0032-finite-page-updates.patch')
-sha256sums+=('e02e30c93bfaea8d4bba8c5ef33ce2202da2c8feb42eaab25f437881397e3ed3')
-source+=('0033-bidi-reversals.patch')
-sha256sums+=('e66e85b3a5841654dbefbd842f0784ea7a27816dece525a46ecdcb61f924401f')
-source+=('0034-rtl-pages.patch')
-sha256sums+=('b14be24cec9514c91060962617ea12c49db4ba812f9bd3d0b619367fc0bc75b6')
-source+=('0035-display-transfer.patch')
-sha256sums+=('7772445d5218f539a224fbc1a181e82aa19a8eb4e8a2ab8d83ee9b28394cc230')
-source+=('0036-column-balancing.patch')
-sha256sums+=('4e3713a1c18c65d92ad696e7584b7785e97c8327d7dbb65e925e5ebcbf86be78')
-source+=('0037-composite-lines.patch')
-sha256sums+=('d1486b2b3df0634fa5fd33ffa9a919190cf9f70954c23b2093af44c07d57337c')
-source+=('0038-source-hyphenation.patch')
-sha256sums+=('512b64ddebdde1177eaa03be13e8b49931ce8dbffc85cf5fdb3896f6f7cca728')
-source+=('0039-paragraph-breakpoint-sessions.patch')
-sha256sums+=('f04a06bcdaa32eedb0f51e678bac733eddf494afb62606b66d8f5a9c9168356e')
-source+=('0040-optimal-paragraph-layout.patch')
-sha256sums+=('d291f3397e303f27057fff2c014c65beb738ef6e14d5bce4cbfef21c4ac89ac1')
-source+=('0041-list-markers.patch')
-sha256sums+=('34c64ce6c2cd006537f11e10a6eab440602b7e1c9ea4c71b17854078d72a04a3')
-source+=('0042-centered-and-cleared-floaters.patch')
-sha256sums+=('f6290163eef21a3887ed01527f1a4c21dd29223b7cdf6c5d4d8e4e965875f816')
-source+=('0043-source-spelling-bridge.patch')
-sha256sums+=('c2274b78579b5e1ae72750c824ea003bd71bac5f68437007e8d93efe9b4ff59d')
-source+=('0044-cross-paragraph-floats.patch')
-sha256sums+=('a632851f83a97f953ef14a2de477bf15ef2628771056f3519dbb4b8fc0f24495')
-source+=('0045-oversized-floating-groups.patch')
-sha256sums+=('9a987dd5586d1ad306bc586b4cc1943eb3e39d6579d48948760f4a109681b2dd')
-source+=('0046-forced-atomic-floaters.patch')
-sha256sums+=('386607c6897d9f683278ed7ebb9297b1f56856583a4de018c88edd413c0564b4')
-source+=('0047-original-footnote-queries.patch')
-sha256sums+=('14a5edafea8876d0efda821b0e3cf2a69c4d91e333a94bd925eed690f9ec99dd')
-source+=('0048-native-reverse-object-handler.patch')
-sha256sums+=('2935f36d1ea9421efbc9aeb7843f448ecdf0baff19e5c59f460a001d0caaff7f')
-source+=('0049-independent-table-direction.patch')
-sha256sums+=('0b4faf37fae165dc84c1a4b8369bc079b2a19598fa5f696c0d7cfacfee888d3a')
-source+=('0050-container-clearing.patch')
-sha256sums+=('b0859ebe4e8ddfaec477a3ce8943a698d3fd905f19ab3b0e0c3718c607cca1e7')
-source+=('0051-styled-container-clearing.patch')
-sha256sums+=('a1bd71947d0367a025d158c73f497ec4fdaf89a132818f9b300fe603f7ee82bd')
-source+=('0052-legacy-multiword-spelling.patch')
-sha256sums+=('75d1577cb578c665af3c120d3b1677a1a07d0adacdf8366cb22bb64dafa056e6')
-source+=('0053-image-codecs-sdk.patch')
-sha256sums+=('ff95e5d4f3be82d40f5f75b4a3db0852086bafb2c48ba5fbd0919f7c921881fa')
-source+=('0054-block-ui-clearing.patch')
-sha256sums+=('dd3fe45a5fedcd1ca64c33d237ed71f7cbc28975eb8c17f4aba31a6e940cb1d0')
-source+=('0055-cross-run-caret-cells.patch')
-sha256sums+=('b9907672f9529ca44d38e93f4874e3e8099a3439447225e9e80dd270301f439b')
-source+=('0056-mixed-emergency-expansion.patch')
-sha256sums+=('5a070d35848f58974fc37b21727d84f4ade5d2d05d14340172b53306856119ab')
-source+=('0057-aligned-flexible-objects.patch')
-sha256sums+=('3b85fc22b71bc6341502ae7d52a655e5627e772b147dd44db196d19ef936615b')
-source+=('0058-selected-tab-justification.patch')
-sha256sums+=('23f0e4133aed53f4f1d592d95b3e75b3cc41f1f2488aafe226bafeff948bc714')
-source+=('0059-optimal-interword-compression.patch')
-sha256sums+=('a1f0c6cc8de615583579c03fec6bef246aebf6ea48cc8b53ce97a6b2e141950a')
-source+=('0060-justified-dependent-objects.patch')
-sha256sums+=('83d2afd09ea77a3c218606968fc4d5e2e566866041560af58edd757f5982c2a5')
-source+=('0061-final-candidate-height.patch')
-sha256sums+=('5639791a884a1653e10cdfd5f4df27b2730c12ac239e8f12a86dc0a825fb8f61')
-source+=('0062-complete-space-cluster-compression.patch')
-sha256sums+=('d633a955e3e8b5979dba60679613cfc935ce76d6d579db804c9d759dc4e2d787')
-source+=('0063-software-drawing-effects-gate.patch')
-sha256sums+=('c86fef618df73bd8d0bd70f199d35cabe03ed6a64a968a413885dcb84c9bda65')
+            'ecc70471180ce08be6f8d5e5342cc0c2c6deeafe2bbd3c9e1837a66fc64493df')
 source+=('check-staged.py')
 sha256sums+=('c11baa3616c49483899a82d19dafee98c7f3b37d4c77cead6bca353050965cbb')
 noextract=("${source[@]%%::*}")
-_tree() { printf '%s/dotnet-bootstrap-%s' "$srcdir" "$_bootstrap_commit"; }
+_tree() { printf '%s/dotnet-mingw-bootstrap-%s' "$srcdir" "$_bootstrap_commit"; }
 _root() { printf '%s/work' "$srcdir"; }
 _seed() { printf '%s/lib/dotnet' "$MINGW_PREFIX"; }
 _sdk() { printf '%s/sdk-input' "$(_root)"; }
@@ -181,70 +59,11 @@ _wpfbuild() { printf '%s/build/wpf-8.0.0' "$(_root)"; }
 
 prepare() {
   [[ ${MSYSTEM} == CLANG64 ]] || { error 'The source desktop port requires CLANG64'; return 1; }
-  tar -xf "$srcdir/dotnet-bootstrap-${_bootstrap_commit}.tar.gz" -C "$srcdir"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0001-desktop-crypto-closure.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0002-text-decorations.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0003-tabs-and-composite-fonts.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0004-aligned-field-wrapping.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0005-inline-objects-and-sdk-isolation.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0006-interword-justification.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0007-paragraph-widths.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0008-paragraph-contexts-and-penalty-resources.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0009-paragraph-geometry-and-page-abi.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0010-finite-text-pages.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0011-bottomless-documents-and-page-coordinates.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0012-finite-pagination.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0013-column-layout.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0014-explicit-paragraph-breaks.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0015-keep-together-paragraphs.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0016-keep-with-next-chains.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0017-forced-page-progress.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0018-block-ui-containers.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0019-subpage-layout.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0020-bottomless-subpage-updates.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0021-subtrack-updates-and-synchronization.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0022-rectangular-floaters.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0023-multiple-floater-placement.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0024-deferred-floaters.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0025-inline-floater-anchors.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0026-split-floaters.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0027-public-tables.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0028-split-table-cells.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0029-vertical-table-spans.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0030-split-vertical-spans.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0031-figures.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0032-finite-page-updates.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0033-bidi-reversals.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0034-rtl-pages.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0035-display-transfer.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0036-column-balancing.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0037-composite-lines.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0038-source-hyphenation.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0039-paragraph-breakpoint-sessions.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0040-optimal-paragraph-layout.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0041-list-markers.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0042-centered-and-cleared-floaters.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0043-source-spelling-bridge.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0044-cross-paragraph-floats.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0045-oversized-floating-groups.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0046-forced-atomic-floaters.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0047-original-footnote-queries.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0048-native-reverse-object-handler.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0049-independent-table-direction.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0050-container-clearing.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0051-styled-container-clearing.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0052-legacy-multiword-spelling.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0053-image-codecs-sdk.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0054-block-ui-clearing.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0055-cross-run-caret-cells.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0056-mixed-emergency-expansion.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0057-aligned-flexible-objects.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0058-selected-tab-justification.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0059-optimal-interword-compression.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0060-justified-dependent-objects.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0061-final-candidate-height.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0062-complete-space-cluster-compression.patch"
-  patch -d "$(_tree)" -Np1 -i "$srcdir/0063-software-drawing-effects-gate.patch"
+  tar -xf "$srcdir/dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz" -C "$srcdir"
+  # WPF/WinForms drivers, native replacements and checks overlay the shared
+  # bootstrap driver directory.
+  tar -xf "$srcdir/wpf-mingw-${_wpf_commit}.tar.gz" -C "$(_driver)" --strip-components=1 \
+    --exclude="wpf-mingw-${_wpf_commit}/README.md"
   mkdir -p "$(_root)/src"
   local release directory
   for release in wpf-8.0.0 winforms-7.0.20 winforms-8.0.0 runtime-8.0.0; do

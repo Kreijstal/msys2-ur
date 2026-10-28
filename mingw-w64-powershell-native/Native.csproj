@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDefaultItems>false</EnableDefaultItems>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NuGetAudit>false</NuGetAudit>
+    <PackageId>Microsoft.PowerShell.Native</PackageId>
+    <PackageVersion>700.0.0</PackageVersion>
+    <PackageDescription>PowerShell native WinRM plugin and ETW resources built from source with CLANG64</PackageDescription>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/PowerShell/PowerShell-Native</RepositoryUrl>
+    <RepositoryCommit>2c55e8fc288e31ce72974ad783151b06049591c4</RepositoryCommit>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="plugin/pwrshplugin.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
+    <None Include="instrumentation/PowerShell.Core.Instrumentation.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
+    <None Include="README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

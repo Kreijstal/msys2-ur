@@ -1,0 +1,98 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-windows-libraries
+pkgname=(
+  "${MINGW_PACKAGE_PREFIX}-dotnet-registry-accesscontrol"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-winhttp-handler"
+)
+pkgver=8.0.31
+pkgrel=1
+pkgdesc='Source-built Windows .NET satellite libraries for the offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
+        prepare.py libraries.json Microsoft.pubkey.hex check.cs check.sh check-api.cs check-api.sh README.md)
+noextract=("runtime-v${pkgver}.tar.gz")
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '64bbd16b568900512df191fcf983d2312b61cf3ac63530acfe5a81f34fc8d7b4'
+            'da38a599735819c6590eed2cba2d03feb3f41185aecb3193445c736cc495e202'
+            'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+            '84a4740be3c741bdfd7b807011cb08405e05cf718fb2e555fcd0c26208b3f4ec'
+            '8c1efdc94a50d2d5d2dc239917d093186e69515a67b7ecb801e632d7e1fe50f9'
+            '613012561ced8c253257a6e5efc8bbfcbcf4f789117494be3cb7c36f3cb16682'
+            'f01f6eb224ef88f7aafc4b4a865fd227318299a836178c974873fd05fa4ea126'
+            '2e88854e2f4f5e694491b80efe3ac74dddd945658c2ab52a51996ad1d940cfdc')
+
+_env() {
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  inputs=("runtime-$pkgver/LICENSE.TXT" "runtime-$pkgver/THIRD-PARTY-NOTICES.TXT"
+          "runtime-$pkgver/src/libraries/Common/src"
+          "runtime-$pkgver/src/libraries/System.Private.CoreLib/src")
+  for id in Microsoft.Win32.Registry.AccessControl System.Security.Cryptography.ProtectedData System.IO.Packaging System.DirectoryServices.Protocols System.Net.Http.WinHttpHandler; do
+    inputs+=("runtime-$pkgver/src/libraries/$id/src" "runtime-$pkgver/src/libraries/$id/ref" "runtime-$pkgver/src/libraries/$id/Directory.Build.props")
+  done
+  tar -xzf "$srcdir/runtime-v$pkgver.tar.gz" -C "$srcdir" "${inputs[@]}"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$pkgver" "$srcdir/prepared"
+}
+build() {
+  _env
+  for id in Microsoft.Win32.Registry.AccessControl System.Security.Cryptography.ProtectedData System.IO.Packaging System.DirectoryServices.Protocols System.Net.Http.WinHttpHandler; do
+    if [[ -f "$srcdir/prepared/$id/contract/Contract.csproj" ]]; then
+      "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/prepared/$id/contract/Contract.csproj")" -c Release \
+        --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    fi
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/prepared/$id/Library.csproj")" -c Release \
+      -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" \
+      -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false -p:UseSharedCompilation=false -v:minimal
+  done
+}
+check() {
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/runtime-$pkgver" "$srcdir/prepared" "$srcdir/check-api"
+}
+_install() {
+  local suffix=$1 id=$2 version=$3
+  install -Dm644 "$srcdir/feed/$id.$version.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$version.nupkg"
+  install -Dm644 "$srcdir/runtime-$pkgver/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/LICENSE"
+  install -Dm644 "$srcdir/runtime-$pkgver/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/THIRD-PARTY-NOTICES"
+  install -Dm644 "$srcdir/prepared/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/removed-binaries.json"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
+}
+
+package_mingw-w64-clang-x86_64-dotnet-registry-accesscontrol() {
+  pkgdesc='Source-built Microsoft.Win32.Registry.AccessControl 8.0.0 from .NET 8.0.31 sources'
+  _install registry-accesscontrol Microsoft.Win32.Registry.AccessControl 8.0.0
+}
+
+package_mingw-w64-clang-x86_64-dotnet-protecteddata() {
+  pkgdesc='Source-built System.Security.Cryptography.ProtectedData 8.0.0 from .NET 8.0.31 sources'
+  _install protecteddata System.Security.Cryptography.ProtectedData 8.0.0
+}
+
+package_mingw-w64-clang-x86_64-dotnet-io-packaging() {
+  pkgdesc='Source-built System.IO.Packaging 8.0.1 from .NET 8.0.31 sources'
+  _install io-packaging System.IO.Packaging 8.0.1
+}
+
+package_mingw-w64-clang-x86_64-dotnet-directoryservices-protocols() {
+  pkgdesc='Source-built System.DirectoryServices.Protocols 8.0.2 from .NET 8.0.31 sources'
+  _install directoryservices-protocols System.DirectoryServices.Protocols 8.0.2
+}
+
+package_mingw-w64-clang-x86_64-dotnet-winhttp-handler() {
+  pkgdesc='Source-built System.Net.Http.WinHttpHandler 8.0.3 from .NET 8.0.31 sources'
+  _install winhttp-handler System.Net.Http.WinHttpHandler 8.0.3
+}

@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-documentation-analyzers
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers-unstable")
+pkgver=1.0.0.beta59
+pkgrel=1
+_commit=489c06575beee224030ffdc9e91ce43569f32a79
+pkgdesc='Source-built DocumentationAnalyzers and code fixes for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/DotNetAnalyzers/DocumentationAnalyzers'
+license=('spdx:MIT' 'spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("documentation-$pkgver.tar.gz::https://codeload.github.com/DotNetAnalyzers/DocumentationAnalyzers/tar.gz/$_commit"
+        prepare.py pack.py build.sh Check.cs check.sh ExtractFixtures.cs InspectInventory.cs ExpectedInventory.json UpstreamFixtures.json published-metadata-provenance.json README.md)
+sha256sums=('28249640f14e82a53702994be7c651eb7ac3559c922452e57770301f7f9b9605'
+            '2b6ce39f22ce82532b6519563bd9ab895c045f56d2053d7326a581ba079709db'
+            'bf036fb544725c25857295a8a811046ff6a4a404a1716d72ab1e7a0525156310'
+            '4c6050beb0d08c069fae155031e505dce635ac69a891710f62526d0c04d6efe9'
+            '2fe99e2eadf54b1c5ec115f3f3aa9f1d0723f40a5dddb59695cfbb13a7036fd9'
+            '893693ca48218f8dcf7ea102c9429844c444e8df7971f003003f412f0aeaed47'
+            'bfbd554c9b7494e87da54a16a86ce384a59eaf55e5b2c4b9625b19bad6bd7ddc'
+            '96187d226e96e7cb99857747f2a83a2b6e44c370c7a32247266993ca8a73935d'
+            'f84e6aa95c3b765baeadc8d3e436a5b2cdfd82d48f31b4da07ad286a1f9b5d90'
+            'a5c3b371473e5b916ea0b06c928aa537eb0374e161268d85bea3b4f610e9ea25'
+            'b7904fc21c541afb581140c4e15261649b9bcd96751e2e90fa104c075aa9d67f'
+            'a36298df0c668a6e1ad423826006937b006f139767fdef30e854a8d517e3ce08')
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/DocumentationAnalyzers-$_commit" "$srcdir/prepared"; }
+build() { bash "$srcdir/build.sh" "$srcdir/DocumentationAnalyzers-$_commit" "$srcdir/prepared"; }
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared"; }
+_install() {
+ local suffix=$1 id=$2 version=$3
+ install -Dm644 "$srcdir/feed/$id.$version.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$version.nupkg"
+ install -Dm644 "$srcdir/DocumentationAnalyzers-$_commit/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-documentation-analyzers$suffix/LICENSE"
+ install -m644 "$srcdir/DocumentationAnalyzers-$_commit/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-documentation-analyzers$suffix/THIRD-PARTY-NOTICES"
+ for file in README.md ExpectedInventory.json UpstreamFixtures.json published-metadata-provenance.json;do
+  install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-documentation-analyzers$suffix/$file"
+ done
+ for file in source-items.json removed-binaries.json fixtures.json localization.json;do
+  install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-documentation-analyzers$suffix/$file"
+ done
+}
+package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers() {
+ pkgdesc='Source-built DocumentationAnalyzers beta.59 dependency package'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers-unstable=$pkgver")
+ _install '' DotNetAnalyzers.DocumentationAnalyzers 1.0.0-beta.59
+}
+package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable() {
+ pkgdesc='Source-built DocumentationAnalyzers 1.0.0.59 analyzer and code-fix implementation'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2")
+ _install '-unstable' DotNetAnalyzers.DocumentationAnalyzers.Unstable 1.0.0.59
+}

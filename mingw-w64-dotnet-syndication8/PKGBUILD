@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-syndication8
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.31
+pkgrel=1
+pkgdesc='Source-built System.ServiceModel.Syndication 8 for the offline .NET feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
+        prepare.py libraries.json Open.pubkey.hex check.cs check.sh check-api.cs check-api.sh README.md)
+noextract=("runtime-v${pkgver}.tar.gz")
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            'eb94570850ef04b1eb5c2834b230f1382cede66d254af445549d0250aa806b4e'
+            'cbff67365fada1ea847c1ee196763d23e15a0f5fa4f8b10f162aa0840a91e958'
+            '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
+            '0621679d6ceab8e5f5f032bb1a9cb1460b9085470b9d90bc798547e499fe7963'
+            '0e0eea3f32d629683c09a71662eae5d6e6b4b706ffa6749f7c34f50b33bf534f'
+            'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
+            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            'a8ad4ca5de6c7fb9ca25fb01b873e6cf5c289be26551bf3fc5b92bb1a82be024')
+
+_env() {
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  inputs=("runtime-$pkgver/LICENSE.TXT" "runtime-$pkgver/THIRD-PARTY-NOTICES.TXT"
+          "runtime-$pkgver/src/libraries/Common/src" "runtime-$pkgver/src/libraries/System.Private.CoreLib/src")
+  while read -r id; do inputs+=("runtime-$pkgver/src/libraries/$id"); done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+  tar -xzf "$srcdir/runtime-v$pkgver.tar.gz" -C "$srcdir" "${inputs[@]}"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$pkgver" "$srcdir/prepared"
+}
+build() {
+  _env
+  mkdir -p "$srcdir/feed"
+  while read -r id; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/prepared/$id/contract/Contract.csproj")" -c Release \
+      --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/prepared/$id/Library.csproj")" -c Release \
+      -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" \
+      -p:GeneratePackageOnBuild=false -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false -p:UseSharedCompilation=false -v:minimal
+  done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+}
+check() {
+  _env
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/prepared/localization.json" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/prepared" "$srcdir/check" "$srcdir/check-api"
+}
+package() {
+  install -Dm644 "$srcdir/feed/System.ServiceModel.Syndication.8.0.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.servicemodel.syndication.8.0.0.nupkg"
+  install -Dm644 "$srcdir/runtime-$pkgver/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/runtime-$pkgver/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES"
+  install -Dm644 "$srcdir/prepared/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+  install -Dm644 "$srcdir/prepared/localization.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/localization.json"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+}

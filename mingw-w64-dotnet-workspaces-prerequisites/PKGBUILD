@@ -1,0 +1,107 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-workspaces-prerequisites
+pkgname=(
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-convention"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-typedparts"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-composition2"
+)
+pkgver=8.0.31
+pkgrel=1
+pkgdesc='Source-built MEF2 and Pipelines prerequisites for Roslyn Workspaces'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("runtime-v$pkgver.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v$pkgver"
+        prepare.py make-meta.py libraries.json Microsoft.pubkey.hex Open.pubkey.hex build.sh check.cs CheckResources.cs check.sh InspectApi.cs ExpectedApi.json published-metadata-provenance.json check-api.sh README.md)
+noextract=("runtime-v$pkgver.tar.gz")
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '95a717708be0b27258c6650fdc1184e0cfbee549d21439fe2be10719c6b955b4'
+            '76fc7ba6828a62e6ce347c9bd182b78dd3c24f0e3ee168b9d113947816754396'
+            '08d4545d2198ff047fd94f524ceaafae172ed850e8ee9e851e6b1977cfd90903'
+            'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+            '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
+            '5af9d1cdf6985f3cb85b6cf184d9eab037557e93489a44b879ae783bf832c69a'
+            'b004a42e720dbbe1487a028abfc5aa5701a08f7a3fc29764b26cba00476a8e21'
+            '09d171b6c370197e95d7f33dfc5107e10365461316356f95fbc52f1f3e0b33d4'
+            'd30b3a069c02b95dfcf2e725935fbb569f5454d84ed0bbd7e8d0f07d345fe34b'
+            '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
+            'd616713511c8bebea22ad59dae21a44a0a2b0ae0de86d3f58789a5d9d3e76cec'
+            '5e0fe4dc9ecf1f7e0711b0be0dd2da9b38d12198de4ea51543ff29eab545d7a9'
+            '075808988247e7f9b9962d9869a298e035453acd2381dd5a1324d5d39212e06a'
+            'f26878a215b6ea0dc2c92b43eaf1bde97f727ca91de74542b6cd808e891235f0')
+prepare() {
+  local inputs=("runtime-$pkgver/LICENSE.TXT" "runtime-$pkgver/THIRD-PARTY-NOTICES.TXT"
+                "runtime-$pkgver/src/libraries/Common/src" "runtime-$pkgver/src/libraries/System.Private.CoreLib/src"
+                "runtime-$pkgver/src/libraries/System.Composition")
+  while read -r id;do inputs+=("runtime-$pkgver/src/libraries/$id");done < <(/usr/bin/python3 -c 'import json,sys;[print(e["id"]) for e in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+  tar -xzf "$srcdir/runtime-v$pkgver.tar.gz" -C "$srcdir" "${inputs[@]}"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$pkgver" "$srcdir/prepared"
+  /usr/bin/python3 "$srcdir/make-meta.py" "$srcdir/prepared"
+}
+build() { bash "$srcdir/build.sh" "$srcdir/prepared"; }
+check() {
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/prepared/localization.json" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/check" "$srcdir/check-api"
+}
+_install() {
+  local suffix=$1 id=$2
+  install -Dm644 "$srcdir/feed/$id.8.0.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.8.0.0.nupkg"
+  install -Dm644 "$srcdir/runtime-$pkgver/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/LICENSE"
+  install -Dm644 "$srcdir/runtime-$pkgver/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/THIRD-PARTY-NOTICES"
+  for file in README.md ExpectedApi.json libraries.json published-metadata-provenance.json;do
+    install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/$file"
+  done
+  for file in removed-binaries.json localization.json;do
+    install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/$file"
+  done
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2-attributedmodel() {
+  pkgdesc='Source-built System.Composition.AttributedModel 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install composition2-attributedmodel System.Composition.AttributedModel
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2-runtime() {
+  pkgdesc='Source-built System.Composition.Runtime 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install composition2-runtime System.Composition.Runtime
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2-hosting() {
+  pkgdesc='Source-built System.Composition.Hosting 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime=${pkgver}")
+  _install composition2-hosting System.Composition.Hosting
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2-convention() {
+  pkgdesc='Source-built System.Composition.Convention 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel=${pkgver}")
+  _install composition2-convention System.Composition.Convention
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2-typedparts() {
+  pkgdesc='Source-built System.Composition.TypedParts 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime=${pkgver}")
+  _install composition2-typedparts System.Composition.TypedParts
+}
+
+package_mingw-w64-clang-x86_64-dotnet-io-pipelines() {
+  pkgdesc='Source-built System.IO.Pipelines 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install io-pipelines System.IO.Pipelines
+}
+
+package_mingw-w64-clang-x86_64-dotnet-composition2() {
+  pkgdesc='Source-built System.Composition 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-convention=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-typedparts=${pkgver}")
+  _install composition2 System.Composition
+}

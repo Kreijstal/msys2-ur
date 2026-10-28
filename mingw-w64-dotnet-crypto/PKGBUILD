@@ -1,0 +1,108 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-crypto
+pkgname=(
+  "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-diagnosticsource"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-encodings-web"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-encoding-codepages"
+)
+pkgver=8.0.31
+pkgrel=1
+pkgdesc='Source-built .NET cryptography, diagnostics and encoding libraries'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
+        prepare.py libraries.json Microsoft.pubkey.hex Open.pubkey.hex check.cs check.sh check-api.cs check-api.sh README.md)
+noextract=("runtime-v${pkgver}.tar.gz")
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '1a1aa9c20a986d7403fc73d0f80e33cb972e1021b0a3bda7d7f84196864e9066'
+            'aa6ec14676d67cc0437e1b20b0072c575690beb14830983a83a155f61f1b29cc'
+            'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+            '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
+            'fa3003f4b3c52041c6b6dc8a883676bb2ff24d0fd46c395b8801cb8b401f6729'
+            'd63cd03cecd0ec281f8bf6d203b669a21fafffa0c2e4bc56c60aa06ea2afbb57'
+            'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
+            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            'dc8f4105e3b1868b3277ef9ec36cabd1ba6dd3ba5064a18be987852e054c0ce3')
+
+_env() {
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  inputs=("runtime-$pkgver/LICENSE.TXT" "runtime-$pkgver/THIRD-PARTY-NOTICES.TXT"
+          "runtime-$pkgver/src/libraries/Common/src" "runtime-$pkgver/src/libraries/System.Private.CoreLib/src")
+  while read -r id; do inputs+=("runtime-$pkgver/src/libraries/$id"); done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+  tar -xzf "$srcdir/runtime-v$pkgver.tar.gz" -C "$srcdir" "${inputs[@]}"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$pkgver" "$srcdir/prepared"
+}
+build() {
+  _env
+  mkdir -p "$srcdir/feed"
+  while read -r id; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/prepared/$id/contract/Contract.csproj")" -c Release \
+      --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/prepared/$id/Library.csproj")" -c Release \
+      -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" \
+      -p:GeneratePackageOnBuild=false -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false -p:UseSharedCompilation=false -v:minimal
+  done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+}
+check() {
+  _env
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/prepared" "$srcdir/check" "$srcdir/check-api"
+}
+_install() {
+  local suffix=$1 id=$2 version=$3
+  install -Dm644 "$srcdir/feed/$id.$version.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$version.nupkg"
+  install -Dm644 "$srcdir/runtime-$pkgver/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/LICENSE"
+  install -Dm644 "$srcdir/runtime-$pkgver/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/THIRD-PARTY-NOTICES"
+  install -Dm644 "$srcdir/prepared/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/removed-binaries.json"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
+}
+
+package_mingw-w64-clang-x86_64-dotnet-formats-asn1() {
+  pkgdesc='Source-built System.Formats.Asn1 8.0.2 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install formats-asn1 System.Formats.Asn1 8.0.2
+}
+
+package_mingw-w64-clang-x86_64-dotnet-cryptography-pkcs() {
+  pkgdesc='Source-built System.Security.Cryptography.Pkcs 8.0.1 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1=${pkgver}")
+  _install cryptography-pkcs System.Security.Cryptography.Pkcs 8.0.1
+}
+
+package_mingw-w64-clang-x86_64-dotnet-cryptography-xml() {
+  pkgdesc='Source-built System.Security.Cryptography.Xml 8.0.4 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=${pkgver}")
+  _install cryptography-xml System.Security.Cryptography.Xml 8.0.4
+}
+
+package_mingw-w64-clang-x86_64-dotnet-diagnosticsource() {
+  pkgdesc='Source-built System.Diagnostics.DiagnosticSource 8.0.1 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install diagnosticsource System.Diagnostics.DiagnosticSource 8.0.1
+}
+
+package_mingw-w64-clang-x86_64-dotnet-encodings-web() {
+  pkgdesc='Source-built System.Text.Encodings.Web 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install encodings-web System.Text.Encodings.Web 8.0.0
+}
+
+package_mingw-w64-clang-x86_64-dotnet-encoding-codepages() {
+  pkgdesc='Source-built System.Text.Encoding.CodePages 8.0.0 from .NET 8.0.31 sources'
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  _install encoding-codepages System.Text.Encoding.CodePages 8.0.0
+}

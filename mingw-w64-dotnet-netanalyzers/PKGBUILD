@@ -1,0 +1,76 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-netanalyzers
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-netanalyzers" "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers")
+pkgver=8.0.0.preview26274.2
+pkgrel=1
+_nugetver=8.0.0-preview.26274.2
+_commit=0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4
+pkgdesc='Full source-built SDK-selected .NET analyzers and CSharp/VisualBasic code fixes'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn-analyzers'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=4.9.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'mingw-w64-ucrt-x86_64-mono=6.12.0.199' 'python')
+options=('!strip' '!lto')
+source=("roslyn-analyzers-$_commit.tar.gz::https://codeload.github.com/dotnet/roslyn-analyzers/tar.gz/$_commit"
+        prepare.py build-libraries.sh generate-config.sh build.sh pack.py check.sh check-api.sh check-msbuild.sh verify-generated.py
+        Check.cs ExtractFixtures.cs InspectApi.cs InspectInventory.cs InspectMetadata.cs MicrosoftShared.pubkey.hex
+        ExpectedAssemblies.json ExpectedLegacyEmpty.json ExpectedGeneratedAssets.json UpstreamFixtures.json
+        published-metadata-provenance.json SourceBuild.NetAnalyzers.props README.md)
+sha256sums=('1e4434f9401670f8b0e53116edecbb3a5db60c056dab5ac2c28a88966d9861e0'
+            '24c33c45d3fe736bc7a0aa4d216fc9a284c71226957ec7e7c8b563f5d4fdb4f7'
+            '9ccf36472932d7f272ee292ab783ac0d22e3236583486dbb775a98608f9cd239'
+            '933562d6b501bd5c16cae5e407f5f2bfd2929d68e3688c0937fb2e59d3c0e973'
+            'abb4a7d84e28da932a51572d4bcd2ceb3eda30480aba5b10354a07ee0335874d'
+            '1a685a74afe04567cd518a0762b976f46b13e5685ea5429d01840767a4fff4fe'
+            'e661c526c2763e459661be94391d56eedf8c7654413734ad81acfc56c41c519a'
+            '6bb4c04b8ccd304f3b16237151c714c62b22d4c9b9e8ada837b246d52cd59d36'
+            'b8c057d0468b849dbc7417897d09600405e1b9cb81d8285b579e16b0a13411c8'
+            '91ca57261aaf8dbc2725551584be595ab7e7b2431e7ce84b2ce3f7e0d5dfd4e9'
+            'dabcc2ead6b44f6365f8925185e6364638cd1e441a1236266481759832c6c0a7'
+            '12c32130266fd2ed6b162a2c8e8badb98faed5890c935e8c77b159a547dd4c93'
+            '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
+            '7bc5d4159b1f116ae61c2be8dac84aa1ca6ed29375dd7f0c4c68b86c5af74fb4'
+            '52ddc3fc92ee498be47769f54480b951afbcd7c32c5c50640d0a6ed46a1e560d'
+            '8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed'
+            '9a8daf5a7dbbee47fb3c7d5c20d7be70214fb2603e1caac96ce8092dc01f2286'
+            'f229241b240a645c661080be92d07ccfd7709b922251d522fbb656a42cd2030c'
+            '786efe9cfe10b378ab68a24c24ac0029a33cde12746f41c47cabf5abc90c26cb'
+            '954e75b8d1d11ee25859d470ef51d121383d7af56bc2f10b75ba3e1051cbe42c'
+            '89609380d1d8bd732dc9a8f9087ec2f6b64715608a5de0477a71d20a1449125c'
+            '3f8c41b4da655935046a6717a3b869bbf2d4668fa806f65f722b05c96da08671'
+            'd3d0dae4c9933dd065046d555f9437e1ce3301d6e12c11fe4fbeb89a0cefcac4')
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
+build() { bash "$srcdir/build.sh" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared/package/payload/source-build"; }
+package_mingw-w64-clang-x86_64-dotnet-netanalyzers() {
+ install -Dm644 "$srcdir/feed/Microsoft.CodeAnalysis.NetAnalyzers.$_nugetver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.codeanalysis.netanalyzers.$_nugetver.nupkg"
+ install -Dm644 "$srcdir/roslyn-analyzers-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-netanalyzers/License.txt"
+ install -m644 "$srcdir/roslyn-analyzers-$_commit/assets/ThirdPartyNotices.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-netanalyzers/ThirdPartyNotices.txt"
+ for file in README.md ExpectedAssemblies.json ExpectedLegacyEmpty.json ExpectedGeneratedAssets.json UpstreamFixtures.json published-metadata-provenance.json;do
+  install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-netanalyzers/$file"
+ done
+ for file in source-items.json localization.json removed-binaries.json fixtures.json;do
+  install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-netanalyzers/$file"
+ done
+}
+package_mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers() {
+ pkgdesc='Source-built implicit .NET analyzers and compiler selection for source SDK8.0.131'
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2" "${MINGW_PACKAGE_PREFIX}-dotnet-netanalyzers=$pkgver")
+ local target="$pkgdir$MINGW_PREFIX/lib/dotnet/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/analyzers" name language
+ for name in Microsoft.CodeAnalysis.NetAnalyzers Microsoft.CodeAnalysis.CSharp.NetAnalyzers Microsoft.CodeAnalysis.VisualBasic.NetAnalyzers;do
+  install -Dm644 "$srcdir/prepared/$name/bin/Release/net8.0/$name.dll" "$target/$name.dll"
+ done
+ for language in cs de es fr it ja ko pl pt-BR ru tr zh-Hans zh-Hant;do
+  install -Dm644 "$srcdir/prepared/Microsoft.CodeAnalysis.NetAnalyzers/bin/Release/net8.0/$language/Microsoft.CodeAnalysis.NetAnalyzers.resources.dll" "$target/$language/Microsoft.CodeAnalysis.NetAnalyzers.resources.dll"
+ done
+ install -Dm644 "$srcdir/prepared/generated/buildTransitive/Microsoft.CodeAnalysis.NetAnalyzers.props" "$target/build/SourceBuild.NetAnalyzers.Default.props"
+ install -Dm644 "$srcdir/prepared/generated/buildTransitive/Microsoft.CodeAnalysis.NetAnalyzers.targets" "$target/build/SourceBuild.NetAnalyzers.targets"
+ install -m644 "$srcdir/SourceBuild.NetAnalyzers.props" "$target/build/SourceBuild.NetAnalyzers.props"
+ mkdir -p "$target/build/config"
+ cp "$srcdir/prepared/generated/globalconfig/"*.globalconfig "$target/build/config/"
+ install -Dm644 "$srcdir/roslyn-analyzers-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-sdk-netanalyzers/License.txt"
+ install -m644 "$srcdir/roslyn-analyzers-$_commit/assets/ThirdPartyNotices.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-sdk-netanalyzers/ThirdPartyNotices.txt"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-sdk-netanalyzers/README.md"
+}

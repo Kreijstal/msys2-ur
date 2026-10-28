@@ -62,6 +62,23 @@ installation.
 
 ---
 
+## Source-built .NET and C++/CLI
+
+The [dotnet-bootstrap recipe](mingw-w64-dotnet-bootstrap/README.md) builds
+split CLANG64 packages for the self-hosted SDK, CoreCLR and Mono runtimes,
+reference pack, host/embedding development files and bootstrap tools. The
+[cppcli recipe](mingw-w64-cppcli/README.md) packages the Clang-based C++/CLI
+subset. [pnet-bootstrap](mingw-w64-pnet-bootstrap/README.md) packages the
+independent C-only Portable.NET root for UCRT64.
+
+[PowerShell 7.4.20](mingw-w64-powershell/README.md) is built from source on
+this stack for CLANG64 and published together with its runtime dependencies
+and bundled modules. The SDK, compiler and other build-only packages are
+experimental and not yet part of the published binary repository. See each
+recipe's build instructions.
+
+---
+
 ## Contributing
 
 1. **Fork the Repository**

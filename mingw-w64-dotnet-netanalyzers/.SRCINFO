@@ -1,0 +1,71 @@
+pkgbase = mingw-w64-dotnet-netanalyzers
+	pkgdesc = Full source-built SDK-selected .NET analyzers and CSharp/VisualBasic code fixes
+	pkgver = 8.0.0.preview26274.2
+	pkgrel = 1
+	url = https://github.com/dotnet/roslyn-analyzers
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-targeting-pack>=8.0.131-2
+	makedepends = mingw-w64-ucrt-x86_64-mono=6.12.0.199
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-visualbasic-workspaces=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-visualbasic-compiler=4.9.2
+	options = !strip
+	options = !lto
+	source = roslyn-analyzers-0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4.tar.gz::https://codeload.github.com/dotnet/roslyn-analyzers/tar.gz/0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4
+	source = prepare.py
+	source = build-libraries.sh
+	source = generate-config.sh
+	source = build.sh
+	source = pack.py
+	source = check.sh
+	source = check-api.sh
+	source = check-msbuild.sh
+	source = verify-generated.py
+	source = Check.cs
+	source = ExtractFixtures.cs
+	source = InspectApi.cs
+	source = InspectInventory.cs
+	source = InspectMetadata.cs
+	source = MicrosoftShared.pubkey.hex
+	source = ExpectedAssemblies.json
+	source = ExpectedLegacyEmpty.json
+	source = ExpectedGeneratedAssets.json
+	source = UpstreamFixtures.json
+	source = published-metadata-provenance.json
+	source = SourceBuild.NetAnalyzers.props
+	source = README.md
+	sha256sums = 1e4434f9401670f8b0e53116edecbb3a5db60c056dab5ac2c28a88966d9861e0
+	sha256sums = 24c33c45d3fe736bc7a0aa4d216fc9a284c71226957ec7e7c8b563f5d4fdb4f7
+	sha256sums = 9ccf36472932d7f272ee292ab783ac0d22e3236583486dbb775a98608f9cd239
+	sha256sums = 933562d6b501bd5c16cae5e407f5f2bfd2929d68e3688c0937fb2e59d3c0e973
+	sha256sums = abb4a7d84e28da932a51572d4bcd2ceb3eda30480aba5b10354a07ee0335874d
+	sha256sums = 1a685a74afe04567cd518a0762b976f46b13e5685ea5429d01840767a4fff4fe
+	sha256sums = e661c526c2763e459661be94391d56eedf8c7654413734ad81acfc56c41c519a
+	sha256sums = 6bb4c04b8ccd304f3b16237151c714c62b22d4c9b9e8ada837b246d52cd59d36
+	sha256sums = b8c057d0468b849dbc7417897d09600405e1b9cb81d8285b579e16b0a13411c8
+	sha256sums = 91ca57261aaf8dbc2725551584be595ab7e7b2431e7ce84b2ce3f7e0d5dfd4e9
+	sha256sums = dabcc2ead6b44f6365f8925185e6364638cd1e441a1236266481759832c6c0a7
+	sha256sums = 12c32130266fd2ed6b162a2c8e8badb98faed5890c935e8c77b159a547dd4c93
+	sha256sums = 4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e
+	sha256sums = 7bc5d4159b1f116ae61c2be8dac84aa1ca6ed29375dd7f0c4c68b86c5af74fb4
+	sha256sums = 52ddc3fc92ee498be47769f54480b951afbcd7c32c5c50640d0a6ed46a1e560d
+	sha256sums = 8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed
+	sha256sums = 9a8daf5a7dbbee47fb3c7d5c20d7be70214fb2603e1caac96ce8092dc01f2286
+	sha256sums = f229241b240a645c661080be92d07ccfd7709b922251d522fbb656a42cd2030c
+	sha256sums = 786efe9cfe10b378ab68a24c24ac0029a33cde12746f41c47cabf5abc90c26cb
+	sha256sums = 954e75b8d1d11ee25859d470ef51d121383d7af56bc2f10b75ba3e1051cbe42c
+	sha256sums = 89609380d1d8bd732dc9a8f9087ec2f6b64715608a5de0477a71d20a1449125c
+	sha256sums = 3f8c41b4da655935046a6717a3b869bbf2d4668fa806f65f722b05c96da08671
+	sha256sums = d3d0dae4c9933dd065046d555f9437e1ce3301d6e12c11fe4fbeb89a0cefcac4
+
+pkgname = mingw-w64-clang-x86_64-dotnet-netanalyzers
+
+pkgname = mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers
+	pkgdesc = Source-built implicit .NET analyzers and compiler selection for source SDK8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-sdk>=8.0.131-2
+	depends = mingw-w64-clang-x86_64-dotnet-netanalyzers=8.0.0.preview26274.2

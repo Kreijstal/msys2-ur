@@ -1,0 +1,87 @@
+pkgbase = mingw-w64-dotnet-windows-compatibility-libraries
+	pkgdesc = Source-built remaining Windows compatibility libraries for .NET 8
+	pkgver = 8.0.31
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-configuration-manager=8.0.31
+	makedepends = mingw-w64-clang-x86_64-dotnet-performancecounter=8.0.31
+	makedepends = mingw-w64-clang-x86_64-dotnet-directoryservices=8.0.31
+	makedepends = mingw-w64-clang-x86_64-dotnet-directoryservices-protocols=8.0.31
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	noextract = runtime-v8.0.31.tar.gz
+	options = !strip
+	options = !lto
+	source = runtime-v8.0.31.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v8.0.31
+	source = prepare.py
+	source = libraries.json
+	source = Open.pubkey.hex
+	source = ECMA.pubkey.hex
+	source = MicrosoftShared.pubkey.hex
+	source = build.sh
+	source = check.cs
+	source = CheckResources.cs
+	source = check.sh
+	source = check-api.cs
+	source = check-api.sh
+	source = README.md
+	sha256sums = b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070
+	sha256sums = bcc059f4ac0d09a362d08f929c861fc79fa2fc1f4b768647701d44eb881d03f0
+	sha256sums = 7c9d281111887567d4ff8826dba9e6504a5dd4ad847bbc5305bec822d5da1e89
+	sha256sums = 68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5
+	sha256sums = 6c11546f600ca15ea07e0c461b5a9b4d56f00d553e312e3050faae1f54f0a53d
+	sha256sums = 8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed
+	sha256sums = c337485463ea88786b23016703192b455cbd720e9ad3c38bd1184cdc21838acd
+	sha256sums = 2dbaab69172e9e85a509b4f736a2a9e760531775e25ead79462c2063a107673d
+	sha256sums = fed65a6a80487079726efc093fd3ab342a4c430828cad2c60e8773a1a748a7e0
+	sha256sums = dac38e270e141a01c6f49bf4a8269d69ed8ab785b6b0e2515ba7a97ead18a797
+	sha256sums = f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52
+	sha256sums = 18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f
+	sha256sums = 09c7d0214e6976ff8ec70233cfde4611c581bcd73f0c0c639d21c0ca657a1bbf
+
+pkgname = mingw-w64-clang-x86_64-dotnet-codedom
+	pkgdesc = Source-built System.CodeDom 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+
+pkgname = mingw-w64-clang-x86_64-dotnet-reflection-context
+	pkgdesc = Source-built System.Reflection.Context 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+
+pkgname = mingw-w64-clang-x86_64-dotnet-composition
+	pkgdesc = Source-built System.ComponentModel.Composition 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+
+pkgname = mingw-w64-clang-x86_64-dotnet-composition-registration
+	pkgdesc = Source-built System.ComponentModel.Composition.Registration 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-composition=8.0.31
+	depends = mingw-w64-clang-x86_64-dotnet-reflection-context=8.0.31
+
+pkgname = mingw-w64-clang-x86_64-dotnet-odbc
+	pkgdesc = Source-built System.Data.Odbc 8.0.1 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+
+pkgname = mingw-w64-clang-x86_64-dotnet-oledb
+	pkgdesc = Source-built System.Data.OleDb 8.0.1 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-configuration-manager=8.0.31
+	depends = mingw-w64-clang-x86_64-dotnet-performancecounter=8.0.31
+
+pkgname = mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement
+	pkgdesc = Source-built System.DirectoryServices.AccountManagement 8.0.1 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-configuration-manager=8.0.31
+	depends = mingw-w64-clang-x86_64-dotnet-directoryservices=8.0.31
+	depends = mingw-w64-clang-x86_64-dotnet-directoryservices-protocols=8.0.31
+
+pkgname = mingw-w64-clang-x86_64-dotnet-io-ports
+	pkgdesc = Source-built System.IO.Ports 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+
+pkgname = mingw-w64-clang-x86_64-dotnet-speech
+	pkgdesc = Source-built System.Speech 8.0.0 from .NET 8.0.31 sources
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131

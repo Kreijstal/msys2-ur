@@ -1,0 +1,22 @@
+--- a/SecuritySafeHandles.cs
++++ b/SecuritySafeHandles.cs
+@@ -387,7 +387,6 @@
+     {
+ #endif
+         private const string dummyStr = " ";
+-        private static readonly IdnMapping s_idnMapping = new IdnMapping();
+ 
+         protected SafeFreeCredentials _EffectiveCredential;
+ 
+@@ -493,8 +492,9 @@
+                             targetName = dummyStr;
+                         }
+ 
+-                        string punyCode = s_idnMapping.GetAscii(targetName);
+-                        fixed (char* namePtr = punyCode)
++                        // Negotiate accepts a complete SPN, including a service
++                        // class and optional instance/path. It is not a DNS name.
++                        fixed (char* namePtr = targetName)
+                         {
+                             errorCode = MustRunInitializeSecurityContext(
+                                             ref inCredentials,
