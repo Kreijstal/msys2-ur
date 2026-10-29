@@ -1,0 +1,35 @@
+Include headers that libc++ does not pull in
+
+Two files use std::atomic and std::exception_ptr and rely on other
+standard headers to include <atomic> and <exception>.  libstdc++ does,
+libc++ does not:
+
+  ggml-vulkan.cpp:150:10: error: no template named 'atomic' in namespace 'std'
+  fish_drama3/generator.cpp:302:24: error: variable has incomplete type 'std::exception_ptr'
+
+ggml-vulkan.cpp has CRLF line endings (apply with patch --binary).
+
+diff --git a/external/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/external/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index 931a128..3bfd529 100644
+--- a/external/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/external/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -36,6 +36,7 @@ DispatchLoaderDynamic & ggml_vk_default_dispatcher();
+ #endif
+ 
+ #include <algorithm>
++#include <atomic>
+ #include <cmath>
+ #include <iomanip>
+ #include <iostream>
+diff --git a/src/community_models/fish_drama3/generator.cpp b/src/community_models/fish_drama3/generator.cpp
+index d7ce7d0..918e30c 100644
+--- a/src/community_models/fish_drama3/generator.cpp
++++ b/src/community_models/fish_drama3/generator.cpp
+@@ -11,6 +11,7 @@
+ #include <chrono>
+ #include <condition_variable>
+ #include <deque>
++#include <exception>
+ #include <iostream>
+ #include <numeric>
+ #include <mutex>
