@@ -1,0 +1,75 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=fsearch
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+_commit=1208a34ef59a08dd8df5a1f8f1ba271fdcbe82ea
+pkgver=0.3.r92.g1208a34e
+pkgrel=1
+pkgdesc="Fast file search utility, searchable while it indexes (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://cboxdoerfer.github.io/fsearch/'
+msys2_repository_url='https://github.com/cboxdoerfer/fsearch'
+msys2_references=(
+  'archlinux: fsearch'
+)
+license=('spdx:GPL-2.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-adwaita-icon-theme"
+         "${MINGW_PACKAGE_PREFIX}-cairo"
+         "${MINGW_PACKAGE_PREFIX}-gdk-pixbuf2"
+         "${MINGW_PACKAGE_PREFIX}-gettext-runtime"
+         "${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-gtk3"
+         "${MINGW_PACKAGE_PREFIX}-icu"
+         "${MINGW_PACKAGE_PREFIX}-pango"
+         "${MINGW_PACKAGE_PREFIX}-pcre2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-gettext-tools"
+             "${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf")
+# Patches are the commits of https://github.com/Kreijstal/fsearch/tree/win32compat
+source=("${_realname}-${_commit}.tar.gz::https://github.com/cboxdoerfer/fsearch/archive/${_commit}.tar.gz"
+        "0001-Port-fsearch-to-Windows-using-the-MSYS2-toolchain.patch"
+        "0002-Search-the-partial-index-while-a-scan-is-running.patch"
+        "0003-Only-look-up-the-toplevel-window-for-X11-previews.patch"
+        "0004-Build-fsearch-as-a-GUI-application-on-Windows.patch"
+        "0005-Drop-the-ANSI-directory-reader-on-Windows.patch")
+sha256sums=('8daef190846f7ef45a99d2361965d5f4dc7a2d6f7616a1fae8329f106ee6f414'
+            '7c582e2059696c50f29629c788fafc657287381e131929cae7d0d865dfed7c7e'
+            '2256ce335d26ef9a07055a37be2cb8e96028a2df97b345312346618633fa9ae6'
+            '81559a8906bec1222ddb6f4df3ad96e72b39c0e99c1dd7d162bf80c2e75544ff'
+            'ea0a150c4bfb442188b770fc82e551d5a78e921e521746ac8697176ee74e0163'
+            '3b201682dbefc0dfcd3e3c6f4ddf22c5b30557ee5e2bf4bff8bdf1e6f6417447')
+
+prepare() {
+  cd "${_realname}-${_commit}"
+  local _patch
+  for _patch in "${srcdir}"/00*.patch; do
+    patch -Np1 -i "${_patch}"
+  done
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup \
+      --prefix="${MINGW_PREFIX}" \
+      --wrap-mode=nodownload \
+      --buildtype=plain \
+      "build-${MSYSTEM}" \
+      "${_realname}-${_commit}"
+
+  meson compile -C "build-${MSYSTEM}"
+}
+
+check() {
+  meson test -C "build-${MSYSTEM}" --print-errorlogs
+}
+
+package() {
+  meson install -C "build-${MSYSTEM}" --destdir "${pkgdir}"
+
+  install -Dm644 "${_realname}-${_commit}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

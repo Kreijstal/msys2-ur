@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Fri, 30 Oct 2026 18:37:30 +0100
+Subject: [PATCH 4/5] Build fsearch as a GUI application on Windows
+
+---
+ src/meson.build | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/meson.build b/src/meson.build
+index 7a4e0db0..52eb76a7 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -140,6 +140,7 @@ libfsearch_dep = declare_dependency(
+ fsearch = executable('fsearch', 'main.c',
+     include_directories: fsearch_include_dirs,
+     dependencies: libfsearch_dep,
++    win_subsystem: 'windows',
+     install: true,
+ )
+ 
