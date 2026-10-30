@@ -19,6 +19,21 @@ when repackaging cached source-built outputs.
 This is the experimental bootstrap's SDK, including its documented shims and
 unsupported components, rather than a complete upstream Windows SDK.
 
+## UCRT64
+
+The UCRT64 packages rehost the CLANG64 build: the managed IL comes from the
+CLANG64 packages of the same pkgver-pkgrel of this recipe (fetched from the
+release by checksum), and every native file is rebuilt from the same patched
+runtime 8.0.0 tree with UCRT64 GCC/libstdc++. CoreCLR's `__try`/`__except`
+come from ReactOS's PSEH with its `gcc_plugin_seh` (pinned raw sources of
+Kreijstal/reactos). `rehost-natives.py` replaces each native file and fails if
+any CLANG64 native code is left. UCRT64 has `dotnet-host`, `dotnet-runtime`,
+`dotnet-targeting-pack`, `dotnet-sdk`, `dotnet-crossgen2`, `dotnet-ilasm` and
+`dotnet-host-devel`; the Mono flavor and the Mono-hosted bootstrap tools stay
+CLANG64-only. `check()` runs the GCC EHa self-tests, builds and runs a console
+app through the CLI and its apphost, and runs an exception/GC stress test as
+IL and as ReadyToRun code from the GCC-built crossgen2.
+
 | CLANG64 package suffix | Installed files |
 | --- | --- |
 | `dotnet-host` | `bin/dotnet.exe` launcher, `lib/dotnet/dotnet.exe`, hostfxr |
@@ -45,12 +60,14 @@ private directory so they can coexist with that seed.
 ## Build
 
 The bootstrap sources are https://github.com/Kreijstal/dotnet-mingw-bootstrap.
-The recipe pins tag `msys2/dotnet-bootstrap-8.0.131-3` (commit 8bcadc1): the
-earlier 3cbf210 plus the packaging changes this recipe used to carry as
-patches, the native launcher shared with cppcli (`packaging/`), and an SDK
-patch that keeps a custom `DOTNET_CLI_HOME` out of the persistent Windows user
-PATH (upstream adds `<home>\.dotnet\tools` once per new home). Source changes
-belong in that repository, not in patches here.
+Both environments pin tag `msys2/dotnet-bootstrap-8.0.131-4` (commit fa4be12):
+the -3 tag 8bcadc1 plus the GCC native port (compiler-conditional, so CLANG64
+builds are unaffected). 8bcadc1 is the earlier 3cbf210 plus the packaging
+changes this recipe used to carry as patches, the native launcher shared with
+cppcli (`packaging/`), and an SDK patch that keeps a custom `DOTNET_CLI_HOME`
+out of the persistent Windows user PATH (upstream adds `<home>\.dotnet\tools`
+once per new home). Source changes belong in that repository, not in patches
+here.
 
 From a **CLANG64** shell, build normally:
 

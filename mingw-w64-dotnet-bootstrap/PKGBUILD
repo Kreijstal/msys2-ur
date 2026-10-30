@@ -13,10 +13,10 @@ pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-host"
          "${MINGW_PACKAGE_PREFIX}-dotnet-host-devel"
          "${MINGW_PACKAGE_PREFIX}-dotnet-mono-devel")
 pkgver=8.0.131
-pkgrel=3
+pkgrel=4
 pkgdesc='Source-bootstrapped .NET 8 SDK and runtime with MinGW (mingw-w64)'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/sdk'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
 makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
@@ -30,8 +30,8 @@ makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
              "${MINGW_PACKAGE_PREFIX}-brotli"
              'git' 'patch' 'make' 'perl' 'unzip' 'zip')
 options=('!strip' '!lto' '!buildflags')
-# Tag msys2/dotnet-bootstrap-8.0.131-3 of Kreijstal/dotnet-mingw-bootstrap.
-_bootstrap_commit=8bcadc1062c3bebeb1b52ba269ad342c11a805f2
+# Tag msys2/dotnet-bootstrap-8.0.131-4 of Kreijstal/dotnet-mingw-bootstrap (both environments).
+_bootstrap_commit=fa4be125699f52a835f9c30526cb4f5a5c2d6e53
 source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
         "roslyn-4.0.1.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/v4.0.1.tar.gz"
         "roslyn-4.4.0.tar.gz::https://github.com/dotnet/roslyn/archive/refs/tags/Visual-Studio-2022-Version-17.4.tar.gz"
@@ -63,7 +63,7 @@ source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.gi
         "xdt-9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz::https://github.com/dotnet/xdt/archive/9a1c3e1b7f0c8763d4c96e593961a61a72679a7b.tar.gz"
 )
 source+=('relocate-bootstrap-tools.py' 'check-bootstrap-tools.py' 'check-native-devel.py' 'dotnet.sh' 'short-build-root.py' 'normalize-targeting-metadata.py' 'install-net-analyzer-imports.py')
-sha256sums=('d86f0271176e353fb2c8ffb31d40f02d07e021ec0f304eb93530853ff77087e3'
+sha256sums=('845b08505af9b1cc15569460bf46ee64e8aa94e65a6c19c668abb872a8f4905a'
             'fcd5794179e9732c6bf088a7bb0ea9438dadc1e135034d08a5fa9cd8c431532e'
             'ea41e64568038038fe700e8d674739f935dd9030a375b7a81fb104ea76cf8424'
             '15490d3a96f15c653a5f6e4bfb854c338b15d0ca4070a8c2bd01fa8d8850f0a6'
@@ -94,12 +94,59 @@ sha256sums=('d86f0271176e353fb2c8ffb31d40f02d07e021ec0f304eb93530853ff77087e3'
             '3616405727d17fda1623ae13f3970f81a28300a78e5cd32fd00eb6c549e3b351'
             'ad175dd675b208c165cad5a38499743d775631389dc22bd9a43a7dc6cd3e9ae9'
             'de4cd38b224b6a65541f9c68e8cbcfb828330352e75a75e07c16f460203994db'
-            '2042b52b0f87bd0ec9ddde1054f2dda0ebdff955d2573998e6ca2f500584fcaa'
+            '78aaaf2a963c03538be11f9e3a0393e94e5511b513990d371d0de9fed91f6b76'
             'd0799f395417c7012f01141e1f77220e83259c1f4af840ccdab5c4d9273ee5b6'
             '4517efce9490fbae95b43d4080de73b9077a7e7e10fd73d84970b849820ac8ab'
             '91c21753c4e186242cf34a732d241d23e02c17a2b88fcdaa67782d6cdaf119ea'
             '79d46cad11a510d52af1b2691540fd9edac5ac27df9f8b0ac65df9e094a1a7e5')
 noextract=("${source[@]%%::*}")
+
+if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; then
+  # UCRT64 rehosts the CLANG64 build of this recipe: its managed IL does not
+  # depend on the C runtime or the compiler and is taken from the CLANG64
+  # packages; every native file is rebuilt from the same patched runtime
+  # 8.0.0 tree with GCC/libstdc++ (SEH from ReactOS's PSEH and gcc_plugin_seh).
+  # The Mono flavor and the Mono-hosted bootstrap tools stay CLANG64-only.
+  _rehost_parts=(host runtime targeting-pack sdk crossgen2 ilasm host-devel)
+  pkgname=("${_rehost_parts[@]/#/${MINGW_PACKAGE_PREFIX}-dotnet-}")
+  _reactos_commit=e417d7d45544bb292f1df4181d0ce5f0014ae1b4
+  _clang_release=https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731
+  _clang_pkgver=${pkgver}-${pkgrel}
+  makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+               "${MINGW_PACKAGE_PREFIX}-cc"
+               "${MINGW_PACKAGE_PREFIX}-gcc-plugin"
+               "${MINGW_PACKAGE_PREFIX}-cmake"
+               "${MINGW_PACKAGE_PREFIX}-ninja"
+               "${MINGW_PACKAGE_PREFIX}-python"
+               "${MINGW_PACKAGE_PREFIX}-uasm"
+               "${MINGW_PACKAGE_PREFIX}-zlib"
+               "${MINGW_PACKAGE_PREFIX}-brotli"
+               'git' 'patch' 'zstd')
+  source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"
+          "runtime-8.0.0.tar.gz::https://github.com/dotnet/runtime/archive/refs/tags/v8.0.0.tar.gz")
+  for _part in "${_rehost_parts[@]}"; do
+    source+=("${_clang_release}/mingw-w64-clang-x86_64-dotnet-${_part}-${_clang_pkgver}-any.pkg.tar.zst")
+  done
+  source+=("reactos-${_reactos_commit}-gcc_plugin_seh.cpp::https://raw.githubusercontent.com/Kreijstal/reactos/${_reactos_commit}/sdk/tools/gcc_plugin_seh/main.cpp"
+           "reactos-${_reactos_commit}-pseh2_64.h::https://raw.githubusercontent.com/Kreijstal/reactos/${_reactos_commit}/sdk/lib/pseh/include/pseh/pseh2_64.h"
+           'short-build-root.py' 'rehost-natives.py' 'check-native-devel.py')
+  sha256sums=('845b08505af9b1cc15569460bf46ee64e8aa94e65a6c19c668abb872a8f4905a'
+              'e7eca36b223203c475fe7e44f4669b097f95f8b02d851e30020f1490a95a1c90'
+              '06f8bfd5134bc6e33cd6d5d27e2fcd0304e6ce2bc614356bc5cd2fc38f807789'
+              'a8981243cd43676d0692e39e4e5fc7b6b7a133306cf5f187a20eec589b4cec00'
+              '3c3d50e6e71d83364506bbf477dd2485967299796abdc31bee3165e812d1e6d6'
+              'ff4dcc2e03a30192000fed9aca8aebb2154c1e3a7a16e12ef535b107f047dc26'
+              '460c8b6b9b1ebb36102ab06f30f9cadebe4c22bea6035e0e1ab307f0c51bfa08'
+              'b571bb34d37ddedf49a641279b6d4f0978d7705a8a91fef3f0942dbf7cc9b5ba'
+              '2a442209dd8571628ce223ba09cdf52bd436838ca208bc4154122a92d4f928d9'
+              '786085fbc2e14e1caa8ea246795b1b8e94fd929574a74665c91bdad4138b1fbe'
+              '7a66646937fa256587ea70395c010cea3eb2f1e5137742d7efd6660a470bd5ac'
+              '4517efce9490fbae95b43d4080de73b9077a7e7e10fd73d84970b849820ac8ab'
+              '404de2ace6f2c8b2c6bb2d8f9878fd8975d2793586ac89a9665f9d87c3c034b6'
+              '78aaaf2a963c03538be11f9e3a0393e94e5511b513990d371d0de9fed91f6b76')
+  noextract=("${source[@]%%::*}")
+  noextract=("${noextract[@]##*/}")
+fi
 
 _tree() { printf '%s/dotnet-mingw-bootstrap-%s' "${srcdir}" "${_bootstrap_commit}"; }
 _root() {
@@ -124,7 +171,121 @@ _dotnet_env() {
   export HTTP_PROXY=http://127.0.0.1:9 HTTPS_PROXY=http://127.0.0.1:9 NO_PROXY=
 }
 
+# ---- UCRT64: the CLANG64 packages with GCC-built native files ----
+_rehosting() { [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; }
+_rehost_env() {
+  printf '%s\n' "M612=$(_root)" MSYSTEM=UCRT64 "JOBS=${DOTNET_BUILD_JOBS:-4}" "REACTOS_SRC=${srcdir}/reactos"
+}
+_rehost_prepare() {
+  tar -xzf "${srcdir}/dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz" -C "${srcdir}"
+  mkdir -p "$(_root)/src"
+  cp "${srcdir}/runtime-8.0.0.tar.gz" "$(_root)/src/"
+  install -Dm644 "${srcdir}/reactos-${_reactos_commit}-gcc_plugin_seh.cpp" \
+    "${srcdir}/reactos/sdk/tools/gcc_plugin_seh/main.cpp"
+  install -Dm644 "${srcdir}/reactos-${_reactos_commit}-pseh2_64.h" \
+    "${srcdir}/reactos/sdk/lib/pseh/include/pseh/pseh2_64.h"
+  local part
+  rm -rf "${srcdir}/rehost"
+  for part in "${_rehost_parts[@]}"; do
+    mkdir -p "${srcdir}/rehost/${part}"
+    tar --zstd -xf "${srcdir}/mingw-w64-clang-x86_64-dotnet-${part}-${_clang_pkgver}-any.pkg.tar.zst" \
+      -C "${srcdir}/rehost/${part}" --exclude=.PKGINFO --exclude=.BUILDINFO --exclude=.MTREE
+  done
+}
+_rehost_build() {
+  _short_root
+  local m bs
+  m=$(_root); bs=$(_tree)/bootstrap/m612
+  local -a e
+  mapfile -t e < <(_rehost_env)
+  env "${e[@]}" SDKROOT="${m}/corehost-sdkroot" bash "${bs}/corehost.sh" prep configure build install
+  env "${e[@]}" bash "${bs}/coreclr.sh" prep configure build install
+  PATH="${MINGW_PREFIX}/bin:/usr/bin" \
+    "${MINGW_PREFIX}/bin/ninja" -C "${m}/build/coreclr-8.0.0-ucrt64/cmake" -j"${DOTNET_BUILD_JOBS:-4}" ilasm
+  env "${e[@]}" NATIVE_MSYSTEM=UCRT64 CROSSGEN2_NATIVE=1 bash "${bs}/crossgen2.sh" native
+  env "${e[@]}" bash "${bs}/mono-runtime.sh" prep nativelibs
+  _launcher dotnet ../lib/dotnet/dotnet.exe
+  _launcher crossgen2 ../lib/dotnet/dotnet.exe ../lib/dotnet/tools/crossgen2/crossgen2.dll
+
+  # every native file of the CLANG64 packages, built by GCC (debug info stripped)
+  local o="${m}/corehost-8.0.0-ucrt64/corehost" c="${m}/coreclr-8.0.0-ucrt64"
+  local cb="${m}/build/coreclr-8.0.0-ucrt64/cmake" g="${srcdir}/gcc-natives" n
+  rm -rf "${g}"; mkdir -p "${g}"
+  for n in apphost.exe comhost.dll nethost.dll nethost.dll.a libnethost.a dotnet.exe \
+           hostfxr.dll hostfxr.dll.a libhostfxr.a hostpolicy.dll; do cp "${o}/${n}" "${g}/"; done
+  for n in coreclr.dll clrjit.dll mscorrc.dll; do cp "${c}/${n}" "${g}/"; done
+  cp "${m}/mono-8.0.0-ucrt64/libs/System.IO.Compression.Native.dll" "${cb}/jit/clrjit_win_x64_x64.dll" \
+     "${cb}/tools/aot/jitinterface/jitinterface_x64.dll" "${cb}/ilasm/ilasm.exe" "${g}/"
+  strip --strip-debug "${g}"/*.exe "${g}"/*.dll
+  local -a r=()
+  for n in apphost.exe comhost.dll nethost.dll nethost.dll.a libnethost.a hostfxr.dll hostfxr.dll.a \
+           libhostfxr.a hostpolicy.dll coreclr.dll clrjit.dll mscorrc.dll System.IO.Compression.Native.dll \
+           clrjit_win_x64_x64.dll jitinterface_x64.dll; do r+=("${n}=${g}/${n}"); done
+  r+=("lib/dotnet/dotnet.exe=${g}/dotnet.exe" "bin/dotnet.exe=${srcdir}/dotnet.exe"
+      "bin/crossgen2.exe=${srcdir}/crossgen2.exe" "bin/ilasm-dotnet.exe=${g}/ilasm.exe")
+  "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/rehost-natives.py" "${srcdir}"/rehost/*/clang64 -- "${r[@]}"
+}
+_rehost_install() { # _rehost_install <part> <destdir>
+  local lic="$2${MINGW_PREFIX}/share/licenses"
+  mkdir -p "$2${MINGW_PREFIX}"
+  cp -a "${srcdir}/rehost/$1/clang64/." "$2${MINGW_PREFIX}/"
+  mv "${lic}/mingw-w64-clang-x86_64-dotnet-$1" "${lic}/${MINGW_PACKAGE_PREFIX}-dotnet-$1"
+}
+_rehost_check() {
+  local -a e
+  mapfile -t e < <(_rehost_env)
+  # the EHa self-tests of the GCC SEH plugin with the runtime's EH shim
+  env "${e[@]}" bash "$(_tree)/bootstrap/m612/coreclr.sh" test
+  "${MINGW_PREFIX}/bin/python.exe" "$(_tree)/packaging/check-launcher.py" \
+    "$(cygpath -m "$(_tree)/packaging/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
+
+  local image="${srcdir}/package check" part
+  rm -rf "${image}"
+  for part in "${_rehost_parts[@]}"; do _rehost_install "${part}" "${image}"; done
+  (
+    _dotnet_env
+    local p="${image}${MINGW_PREFIX}" project="${srcdir}/check project" eh="${srcdir}/check ehstress"
+    local cli="${p}/bin/dotnet.exe" fx="${p}/lib/dotnet/shared/Microsoft.NETCore.App/8.0.0" out
+    "${cli}" --info
+    "${cli}" --list-sdks | tr -d '\r' > "${srcdir}/check-sdks.txt"
+    grep -q '^8.0.131 ' "${srcdir}/check-sdks.txt"
+    rm -rf "${project}" "${eh}" "${srcdir}/check-r2r"
+    mkdir -p "${project}"
+    printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "${project}/NuGet.config"
+    "${cli}" new console --no-restore -o "${project}" --force
+    "${cli}" build "${project}" --configfile "${project}/NuGet.config" -p:UseSharedCompilation=false -p:NuGetAudit=false
+    out="${project}/bin/Debug/net8.0/$(basename "${project}")"
+    "${cli}" "${out}.dll" | tr -d '\r' > "${srcdir}/check-console.txt"
+    grep -qx 'Hello, World!' "${srcdir}/check-console.txt"
+    (
+      MINGW_PREFIX=${p}
+      unset DOTNET_ROOT DOTNET_ROOT_X64
+      . "${p}/etc/profile.d/dotnet.sh"
+      "${out}.exe" | tr -d '\r' > "${srcdir}/check-apphost.txt"
+    )
+    grep -qx 'Hello, World!' "${srcdir}/check-apphost.txt"
+    # hardware faults, filters, finally, threads and the GC on the GCC CoreCLR,
+    # as IL and as ReadyToRun code compiled by crossgen2 with the GCC JIT
+    cp -r "$(_tree)/bootstrap/m612/tests/ehstress" "${eh}"
+    cp "${project}/NuGet.config" "${eh}/"
+    "${cli}" build "${eh}" --configfile "${eh}/NuGet.config" -p:UseSharedCompilation=false -p:NuGetAudit=false
+    "${cli}" "${eh}/bin/Debug/net8.0/ehstress.dll" | tr -d '\r' | tee "${srcdir}/check-ehstress.txt"
+    grep -qx 'EHSTRESS OK' "${srcdir}/check-ehstress.txt"
+    mkdir -p "${srcdir}/check-r2r"
+    "${p}/bin/crossgen2.exe" "$(cygpath -m "${eh}/bin/Debug/net8.0/ehstress.dll")" \
+      -o "$(cygpath -m "${srcdir}/check-r2r/ehstress.dll")" -r "$(cygpath -m "${fx}")/*.dll" \
+      --targetos windows --targetarch x64 -O
+    cp "${eh}/bin/Debug/net8.0/ehstress.runtimeconfig.json" "${srcdir}/check-r2r/"
+    "${cli}" "${srcdir}/check-r2r/ehstress.dll" | tr -d '\r' | tee "${srcdir}/check-ehstress-r2r.txt"
+    grep -qx 'EHSTRESS OK' "${srcdir}/check-ehstress-r2r.txt"
+    "${p}/bin/ilasm-dotnet.exe" -? > /dev/null
+    "${MINGW_PREFIX}/bin/python.exe" "${srcdir}/check-native-devel.py" \
+      "$(cygpath -m "${image}")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "${MINGW_PREFIX#/}"
+  )
+}
+
 prepare() {
+  if _rehosting; then _rehost_prepare; return; fi
   [[ ${MSYSTEM} == CLANG64 ]] || { error 'The runtime port currently requires CLANG64'; return 1; }
   tar -xzf "${srcdir}/dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz" -C "${srcdir}"
   mkdir -p "$(_root)/src" "$(_root)/s12/src"
@@ -149,6 +310,7 @@ _launcher() {
 }
 
 build() {
+  if _rehosting; then _rehost_build; return; fi
   _short_root
   # Only source archives enter this private build root. Mono 6.12 from UCRT64
   # is the one trusted managed seed; native builds switch to CLANG64 themselves.
@@ -259,6 +421,7 @@ _mono_devel() {
 }
 
 check() {
+  if _rehosting; then _rehost_check; return; fi
   "${MINGW_PREFIX}/bin/python.exe" "$(_tree)/packaging/check-launcher.py" \
     "$(cygpath -m "$(_tree)/packaging/launcher.c")" "$(cygpath -m "${MINGW_PREFIX}/bin/cc.exe")" "$(cygpath -m "${srcdir}")"
 
@@ -301,6 +464,7 @@ check() {
 package_mingw-w64-clang-x86_64-dotnet-host() {
   pkgdesc='.NET 8 native host and hostfxr, built from source with MinGW (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+  if _rehosting; then _rehost_install host "${pkgdir}"; return; fi
   _host
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
   _license launcher "$(_tree)/packaging/LICENSE.launcher"
@@ -309,12 +473,14 @@ package_mingw-w64-clang-x86_64-dotnet-runtime() {
   pkgdesc='CoreCLR 8.0.0 and Microsoft.NETCore.App, built from source (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-host=${pkgver}" "${MINGW_PACKAGE_PREFIX}-cc-libs"
            "${MINGW_PACKAGE_PREFIX}-zlib" "${MINGW_PACKAGE_PREFIX}-brotli")
+  if _rehosting; then _rehost_install runtime "${pkgdir}"; return; fi
   _runtime
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
   _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
 }
 package_mingw-w64-clang-x86_64-dotnet-targeting-pack() {
   pkgdesc='Source-built .NET 8 reference assemblies (mingw-w64)'
+  if _rehosting; then _rehost_install targeting-pack "${pkgdir}"; return; fi
   _targeting
   _license runtime "$(_root)/src/runtime-8.0.0/LICENSE.TXT"
 }
@@ -322,6 +488,7 @@ package_mingw-w64-clang-x86_64-dotnet-sdk() {
   pkgdesc='Self-hosted .NET SDK 8.0.131 built from the Mono seed, without Microsoft binaries (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=${pkgver}")
   optdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers: source-built implicit .NET analyzers and compiler selection")
+  if _rehosting; then _rehost_install sdk "${pkgdir}"; return; fi
   _sdkfiles
 }
 package_mingw-w64-clang-x86_64-dotnet-bootstrap-tools() {
@@ -344,6 +511,7 @@ package_mingw-w64-clang-x86_64-dotnet-runtime-mono() {
 package_mingw-w64-clang-x86_64-dotnet-crossgen2() {
   pkgdesc='Source-built ReadyToRun compiler crossgen2 8.0.0 (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${pkgver}" "${MINGW_PACKAGE_PREFIX}-cc-libs")
+  if _rehosting; then _rehost_install crossgen2 "${pkgdir}"; return; fi
   _crossgen
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
   _license launcher "$(_tree)/packaging/LICENSE.launcher"
@@ -352,12 +520,14 @@ package_mingw-w64-clang-x86_64-dotnet-crossgen2() {
 package_mingw-w64-clang-x86_64-dotnet-ilasm() {
   pkgdesc='Source-built CoreCLR IL assembler (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-cc-libs")
+  if _rehosting; then _rehost_install ilasm "${pkgdir}"; return; fi
   _ilasm
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
 }
 package_mingw-w64-clang-x86_64-dotnet-host-devel() {
   pkgdesc='Native .NET hosting headers, nethost and hostfxr import/static libraries (mingw-w64)'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-host=${pkgver}")
+  if _rehosting; then _rehost_install host-devel "${pkgdir}"; return; fi
   _host_devel
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
   _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
@@ -369,3 +539,11 @@ package_mingw-w64-clang-x86_64-dotnet-mono-devel() {
   _license runtime "$(_root)/src/runtime-8.0.0-native/LICENSE.TXT"
   _license runtime-third-party "$(_root)/src/runtime-8.0.0-native/THIRD-PARTY-NOTICES.TXT"
 }
+
+if _rehosting; then
+  for _part in "${_rehost_parts[@]}"; do
+    _func=$(declare -f "package_mingw-w64-clang-x86_64-dotnet-${_part}")
+    eval "${_func/#package_mingw-w64-clang-x86_64-/package_${MINGW_PACKAGE_PREFIX}-}"
+  done
+  unset _part _func
+fi
