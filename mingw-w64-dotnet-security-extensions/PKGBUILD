@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/PowerShell/PowerShell'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-osslsigncode=2.14" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-osslsigncode>=2.14" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=(FileSignatureInfo.cs
         signature-native.c

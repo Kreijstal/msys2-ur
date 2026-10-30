@@ -13,8 +13,8 @@ license=('spdx:MIT')
 _commit=cf32fc695b32c2eae848b693395c09222fe1d2ae
 _tree=MMI-${_commit}
 _id=Microsoft.Management.Infrastructure
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" 'python' 'patch')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
         prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs README.md)

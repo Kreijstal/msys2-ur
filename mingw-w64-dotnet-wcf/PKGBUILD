@@ -17,11 +17,11 @@ mingw_arch=('clang64')
 url='https://github.com/dotnet/wcf'
 license=('spdx:MIT')
 _commit=6c05fa33450ee3960f0763948e91327f049b302b
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8=8.0.31" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8>=8.0.31" 'python')
 options=('!strip' '!lto')
 source=("wcf-$pkgver.tar.gz::https://codeload.github.com/dotnet/wcf/tar.gz/$_commit"
         prepare.py build.sh Microsoft.pubkey.hex Probe.cs probe.sh CheckAssets.cs TransportProbe.cs SecurityProbe.cs
@@ -98,42 +98,42 @@ _install() {
 
 package_mingw-w64-clang-x86_64-dotnet-private-servicemodel() {
   pkgdesc='Source-built System.Private.ServiceModel 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml=8.0.31")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool>=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml>=8.0.31")
   _install private-servicemodel System.Private.ServiceModel
 }
 
 package_mingw-w64-clang-x86_64-dotnet-web-services-description() {
   pkgdesc='Source-built System.Web.Services.Description 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install web-services-description System.Web.Services.Description
 }
 
 package_mingw-w64-clang-x86_64-dotnet-servicemodel-primitives() {
   pkgdesc='Source-built System.ServiceModel.Primitives 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8=8.0.31")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8>=8.0.31")
   _install servicemodel-primitives System.ServiceModel.Primitives
 }
 
 package_mingw-w64-clang-x86_64-dotnet-servicemodel-duplex() {
   pkgdesc='Source-built System.ServiceModel.Duplex 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-duplex System.ServiceModel.Duplex
 }
 
 package_mingw-w64-clang-x86_64-dotnet-servicemodel-security() {
   pkgdesc='Source-built System.ServiceModel.Security 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-security System.ServiceModel.Security
 }
 
 package_mingw-w64-clang-x86_64-dotnet-servicemodel-http() {
   pkgdesc='Source-built System.ServiceModel.Http 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-http System.ServiceModel.Http
 }
 
 package_mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp() {
   pkgdesc='Source-built System.ServiceModel.NetTcp 4.10.3 for .NET 8'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-nettcp System.ServiceModel.NetTcp
 }

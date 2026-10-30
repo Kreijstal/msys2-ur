@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/roslyn'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic=$pkgver")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic=$pkgver")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
         prepare.py build.sh vbc49.cmd Probe.cs check.sh README.md)

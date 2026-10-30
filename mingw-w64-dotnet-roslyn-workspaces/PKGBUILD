@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/roslyn'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2>=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines>=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
         prepare.py build.sh Check.cs check.sh InspectApi.cs ExpectedApi.json published-metadata-provenance.json check-api.sh README.md)
@@ -45,11 +45,11 @@ _install() {
 }
 package_mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common() {
   pkgdesc='Source-built Roslyn 4.9.2 shared Workspaces library and translated resources'
-  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31")
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2>=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines>=8.0.31")
   _install workspaces-common Microsoft.CodeAnalysis.Workspaces.Common
 }
 package_mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces() {
   pkgdesc='Source-built Roslyn 4.9.2 CSharp Workspaces library and translated resources'
-  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1")
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1")
   _install csharp-workspaces Microsoft.CodeAnalysis.CSharp.Workspaces
 }

@@ -10,9 +10,9 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/Azure/azure-sdk-for-net'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-memory-data=1.0.2")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" 'python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8>=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-memory-data>=1.0.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("azure-sdk-$_commit.tar.gz::https://codeload.github.com/Azure/azure-sdk-for-net/tar.gz/$_commit"
  extract.py

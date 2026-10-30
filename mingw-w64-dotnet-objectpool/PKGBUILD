@@ -9,8 +9,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/aspnetcore'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" 'python')
 options=('!strip' '!lto')
 source=("aspnetcore-v$pkgver.tar.gz::https://codeload.github.com/dotnet/aspnetcore/tar.gz/refs/tags/v$pkgver"
         prepare.py AspNetCore.pubkey.hex Check.cs CheckApi.cs check.sh README.md)

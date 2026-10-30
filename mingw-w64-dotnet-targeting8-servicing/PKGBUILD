@@ -14,22 +14,22 @@ license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
 provides=("${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=8.0.131-2")
 conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack")
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31-3"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers=8.0.0.preview26274.2")
+         "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers>=8.0.0.preview26274.2")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers=3.3.4"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-convention=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-typedparts=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31"
-             'mingw-w64-ucrt-x86_64-mono=6.12.0.199' 'python' 'patch')
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers>=3.3.4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-attributedmodel>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-convention>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-hosting>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-runtime>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-composition2-typedparts>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines>=8.0.31"
+             'mingw-w64-ucrt-x86_64-mono>=6.12.0.199' 'python' 'patch')
 options=('!strip' '!lto' '!buildflags')
 source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
         "dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz"

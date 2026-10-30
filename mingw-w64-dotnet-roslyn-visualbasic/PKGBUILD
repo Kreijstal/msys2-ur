@@ -8,8 +8,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/roslyn'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
         prepare.py build.sh Check.cs check.sh check-api.sh InspectApi.cs InspectMetadata.cs ExpectedApi.json ExpectedMetadata.json published-metadata-provenance.json README.md)

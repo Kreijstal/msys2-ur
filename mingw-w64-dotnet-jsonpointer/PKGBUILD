@@ -13,8 +13,8 @@ _commit=782198a80220fc2e54dfe3e01c2e4da54ab4cad7
 _tree=json-everything-${_commit}
 _project=src/JsonPointer/JsonPointer.csproj
 _id=JsonPointer.Net
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-json-more=2.0.2" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-json-more>=2.0.2" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("jsonpointer-${_commit}.tar.gz::https://codeload.github.com/gregsdennis/json-everything/tar.gz/${_commit}"
         prepare.py check.cs)

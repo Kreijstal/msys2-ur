@@ -13,7 +13,7 @@ license=('spdx:MIT')
 # Script/data dependency consumed by PowerShell; no application-host dependency cycle.
 depends=()
 makedepends=('python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host=7.4.20")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20")
 options=('!strip' '!lto')
 source=("archive-$pkgver.tar.gz::https://codeload.github.com/PowerShell/Microsoft.PowerShell.Archive/tar.gz/$_commit"
         prepare.py

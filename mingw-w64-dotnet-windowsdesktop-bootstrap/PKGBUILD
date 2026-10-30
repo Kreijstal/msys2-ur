@@ -13,12 +13,12 @@ _dotnetver=8.0.131
 _bootstrap_commit=96ae31a4c7e54685de440de2adde387840392054
 # Tag msys2/dotnet-windowsdesktop-bootstrap-8.0.0-64 of Kreijstal/wpf-mingw.
 _wpf_commit=b8b69ae6de1fa97d4d5998c0883e321de09bf764
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_dotnetver}")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=${_dotnetver}")
 conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-winforms-bootstrap")
 provides=("${MINGW_PACKAGE_PREFIX}-dotnet-winforms-bootstrap=7.0.20")
 replaces=("${MINGW_PACKAGE_PREFIX}-dotnet-winforms-bootstrap")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_dotnetver}"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm=${_dotnetver}"
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=${_dotnetver}"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm>=${_dotnetver}"
              "${MINGW_PACKAGE_PREFIX}-cppcli>=0.3.0"
              "${MINGW_PACKAGE_PREFIX}-clang"
              "${MINGW_PACKAGE_PREFIX}-cmake"
@@ -30,7 +30,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_dotnetver}"
              "${MINGW_PACKAGE_PREFIX}-tools"
              "${MINGW_PACKAGE_PREFIX}-uasm"
              "${MINGW_PACKAGE_PREFIX}-icu"
-             'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+             'mingw-w64-ucrt-x86_64-mono>=6.12.0.199'
              'python' 'patch' 'tar')
 options=('!strip' '!lto' '!buildflags')
 source=("dotnet-mingw-bootstrap-${_bootstrap_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_bootstrap_commit}"

@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/Knagis/CommonMark.NET'
 license=('spdx:BSD-3-Clause' 'spdx:CC-BY-SA-4.0')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("commonmark-$pkgver.tar.gz::https://codeload.github.com/Knagis/CommonMark.NET/tar.gz/$_commit"
         prepare.py build.sh Check.cs TestHost.cs check.sh InspectApi.cs ExpectedApi.json published-metadata-provenance.json check-api.sh README.md LICENSE.CommonMarkSpec)

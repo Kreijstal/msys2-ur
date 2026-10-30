@@ -13,8 +13,8 @@ _commit=3ebc38de585fc641a04b0e78ed69468453b0f8a1
 _tree=Humanizer-${_commit}
 _project=src/Humanizer/Humanizer.csproj
 _id=Humanizer.Core
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("humanizer-${_commit}.tar.gz::https://codeload.github.com/Humanizr/Humanizer/tar.gz/${_commit}"
         prepare.py check.cs)

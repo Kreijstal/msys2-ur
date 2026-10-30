@@ -19,7 +19,7 @@ arch=('any')
 mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/sdk'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
-makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+makedepends=('mingw-w64-ucrt-x86_64-mono>=6.12.0.199'
              "${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja"
@@ -112,7 +112,7 @@ if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; then
   _reactos_commit=e417d7d45544bb292f1df4181d0ce5f0014ae1b4
   _clang_release=https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731
   _clang_pkgver=${pkgver}-${pkgrel}
-  makedepends=('mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+  makedepends=('mingw-w64-ucrt-x86_64-mono>=6.12.0.199'
                "${MINGW_PACKAGE_PREFIX}-cc"
                "${MINGW_PACKAGE_PREFIX}-gcc-plugin"
                "${MINGW_PACKAGE_PREFIX}-cmake"

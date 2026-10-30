@@ -10,19 +10,19 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/PowerShell/PSResourceGet'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-commands=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-projectmodel=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=6.9.1"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-azure-identity=1.11.4")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-commands>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-projectmodel>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol>=6.9.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8>=8.0.5"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-azure-identity>=1.11.4")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2"
              "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3" 'python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("psresourceget-$_commit.tar.gz::https://codeload.github.com/PowerShell/PSResourceGet/tar.gz/$_commit"
  extract.py

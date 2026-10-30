@@ -10,7 +10,7 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/corefx'
 license=('spdx:MIT')
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("corefx-${_commit}.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/${_commit}" prepare.py Check.cs check.sh README.md)
 noextract=("corefx-${_commit}.tar.gz")

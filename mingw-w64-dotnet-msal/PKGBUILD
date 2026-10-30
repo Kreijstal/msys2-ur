@@ -9,8 +9,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/AzureAD/microsoft-authentication-library-for-dotnet'
 license=('spdx:MIT')
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31" 'python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions>=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8>=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("msal-$_commit.tar.gz::https://codeload.github.com/AzureAD/microsoft-authentication-library-for-dotnet/tar.gz/$_commit"
  extract.py prepare.py verify-build.py pack.py Check.cs check.sh check-payload.py compare.py InspectApi.cs InspectAssemblyMetadata.cs source-inputs.json
@@ -55,10 +55,10 @@ _package() {
  install -m644 "$srcdir/prepared/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/"
 }
 package_mingw-w64-clang-x86_64-dotnet-msal() {
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions>=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8>=8.0.5")
  _package Microsoft.Identity.Client msal
 }
 package_mingw-w64-clang-x86_64-dotnet-msal-extensions() {
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-msal=4.61.3" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-msal>=4.61.3" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31")
  _package Microsoft.Identity.Client.Extensions.Msal msal-extensions
 }

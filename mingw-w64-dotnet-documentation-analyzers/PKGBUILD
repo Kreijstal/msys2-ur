@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/DotNetAnalyzers/DocumentationAnalyzers'
 license=('spdx:MIT' 'spdx:BSD-3-Clause')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark>=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("documentation-$pkgver.tar.gz::https://codeload.github.com/DotNetAnalyzers/DocumentationAnalyzers/tar.gz/$_commit"
         prepare.py pack.py build.sh Check.cs check.sh ExtractFixtures.cs InspectInventory.cs ExpectedInventory.json UpstreamFixtures.json published-metadata-provenance.json README.md)
@@ -49,6 +49,6 @@ package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers() {
 }
 package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable() {
  pkgdesc='Source-built DocumentationAnalyzers 1.0.0.59 analyzer and code-fix implementation'
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark>=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2")
  _install '-unstable' DotNetAnalyzers.DocumentationAnalyzers.Unstable 1.0.0.59
 }

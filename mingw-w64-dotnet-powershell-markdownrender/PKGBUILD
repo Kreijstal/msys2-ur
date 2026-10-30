@@ -13,8 +13,8 @@ _commit=c216c18b1fb275aec0a3e84094bd0e1a4c5da685
 _tree=MarkdownRender-${_commit}
 _project=src/Microsoft.PowerShell.MarkdownRender.csproj
 _id=Microsoft.PowerShell.MarkdownRender
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-markdig=0.33.0")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-markdig>=0.33.0")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("powershell-markdownrender-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MarkdownRender/tar.gz/${_commit}"
         prepare.py check.cs)

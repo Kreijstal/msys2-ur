@@ -11,8 +11,8 @@ url='https://github.com/CommunityToolkit/WindowsCommunityToolkit'
 license=('spdx:MIT')
 _commit=0ce64d053be11e928408393175851516bd253ccf
 _tree=WindowsCommunityToolkit-${_commit}
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap" "${MINGW_PACKAGE_PREFIX}-dotnet-winrt-bootstrap=0.1.1")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap" "${MINGW_PACKAGE_PREFIX}-dotnet-winrt-bootstrap>=0.1.1")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("toolkit-$_commit.tar.gz::https://codeload.github.com/CommunityToolkit/WindowsCommunityToolkit/tar.gz/$_commit" prepare.py check.cs README.md)
 sha256sums=('85fef15812a6b47256c6ea0bfad4f5b8bf85828e568ea3f870fe3833fc22793e' 'be87a6f43173fc1ed80ca0f976692028a9afb2be08d98230e749ae1d59d3d2a0' '0e4b88b40bfde7edd53e9e5ee5204ea47ff5a6146e6abb658a91ec522e38368d' 'cf4b268dd934091c2e912b315a449a270bd9b4b713621e65d5b3120fe76a0459')

@@ -12,8 +12,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("runtime-$_commit.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/$_commit"
         extract.py prepare.py verify-build.py check.sh Check.cs InspectApi.cs compare-api.py
@@ -53,7 +53,7 @@ build() {
 check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
 _package() {
   local name=$1 suffix=$2
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   if [[ $name == Microsoft.Extensions.FileProviders.Abstractions ]];then depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-extensions-primitives6=$pkgver");fi
   install -Dm644 "$srcdir/feed/$name.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/$name.$pkgver.nupkg"
   install -Dm644 "$srcdir/runtime/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$suffix/LICENSE"

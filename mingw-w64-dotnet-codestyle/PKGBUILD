@@ -9,8 +9,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/roslyn'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
         prepare.py build-libraries.sh build.sh pack.py check.sh check-api.sh check-msbuild.sh verify-build-assets.py
@@ -52,17 +52,17 @@ _install_language() {
 }
 package_mingw-w64-clang-x86_64-dotnet-codestyle-csharp() {
  pkgdesc='Full source-built CSharp CodeStyle analyzers and fixes4.9.2'
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=$pkgver")
  _install_language csharp CSharp
 }
 package_mingw-w64-clang-x86_64-dotnet-codestyle-visualbasic() {
  pkgdesc='Full source-built VisualBasic CodeStyle analyzers and fixes4.9.2'
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=$pkgver")
  _install_language visualbasic VisualBasic
 }
 package_mingw-w64-clang-x86_64-dotnet-sdk-codestyle() {
  pkgdesc='Source-built CSharp/VisualBasic CodeStyle integration for source SDK8.0.131'
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-visualbasic=$pkgver")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codestyle-visualbasic=$pkgver")
  local language short target payload
  for language in CSharp VisualBasic;do
   short=cs;[[ $language != VisualBasic ]] || short=vb

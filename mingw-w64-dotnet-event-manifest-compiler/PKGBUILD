@@ -10,8 +10,8 @@ mingw_arch=('clang64')
 url='https://github.com/gix/event-trace-kit'
 license=('spdx:MIT')
 _commit=f919e38bbf553f89058f98b5d1eeb3c4536a673b
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" 'bash')
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" 'bash')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("event-trace-kit-${_commit}.tar.gz::https://codeload.github.com/gix/event-trace-kit/tar.gz/${_commit}"
         prepare.py Program.cs build.sh event-manifest-compiler.sh README.md)

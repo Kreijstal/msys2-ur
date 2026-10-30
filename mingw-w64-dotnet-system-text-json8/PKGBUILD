@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" 'python')
 options=('!strip' '!lto')
 source=("runtime-$_commit.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/$_commit"
   extract.py

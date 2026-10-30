@@ -15,8 +15,8 @@ _tree=command-line-api-${_commit}
 _project=src/System.CommandLine/System.CommandLine.csproj
 _id=System.CommandLine
 _framework=net8.0
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("command-line-api-ddf3078641e8e11ebb7d6d893eb09d014d35df70.tar.gz::https://codeload.github.com/dotnet/command-line-api/tar.gz/ddf3078641e8e11ebb7d6d893eb09d014d35df70" prepare.py check.cs MSShared.pubkey.hex)
 sha256sums=('18fb442d3a2ea5d86892b0f6fb6920cc85a942e26d4fe9122b4bd1b10c951480' '91cd638aeebb35556788a30b5ab8b3cb51569e4070b467017746dfe084a6defe' 'f10bbd8aeb36c1e683392f3cbc41e69d3302648cd41e1c877a14953f9d24d518' '7f0f29ad3362c7308306a581e4c3979582644fe8f997756628a1f511efa8dfcf')

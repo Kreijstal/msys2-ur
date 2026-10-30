@@ -9,20 +9,20 @@ arch=('any')
 mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers=3.3.4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers>=3.3.4"
              "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-sqlclient=4.9.1"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol=8.0.0"
-             'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sqlclient>=4.9.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol>=8.0.0"
+             'mingw-w64-ucrt-x86_64-mono>=6.12.0.199'
              "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja" "${MINGW_PACKAGE_PREFIX}-python"
              "${MINGW_PACKAGE_PREFIX}-uasm" "${MINGW_PACKAGE_PREFIX}-llvm"
@@ -47,7 +47,7 @@ if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; then
   # workflows/runtime-servicing/ucrt64 with GCC (ReactOS PSEH/gcc_plugin_seh).
   _reactos_commit=e417d7d45544bb292f1df4181d0ce5f0014ae1b4
   makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-3"
-               'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+               'mingw-w64-ucrt-x86_64-mono>=6.12.0.199'
                "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-gcc-plugin"
                "${MINGW_PACKAGE_PREFIX}-cmake" "${MINGW_PACKAGE_PREFIX}-ninja"
                "${MINGW_PACKAGE_PREFIX}-python" "${MINGW_PACKAGE_PREFIX}-uasm"

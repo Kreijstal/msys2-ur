@@ -8,8 +8,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/roslyn-analyzers'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=4.9.2")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler>=4.9.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("roslyn-analyzers-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn-analyzers/tar.gz/$_commit"
         prepare.py build-libraries.sh generate-config.sh pack.py build.sh check.sh check-api.sh

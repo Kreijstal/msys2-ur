@@ -21,14 +21,14 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/NuGet/NuGet.Client'
 license=('spdx:Apache-2.0')
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python'
-  "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6=6.0.0"
-  "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6=6.0.0"
-  "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json=13.0.4"
-  "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=8.0.31"
-  "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31"
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python'
+  "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6>=6.0.0"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6>=6.0.0"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json>=13.0.4"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs>=8.0.31"
+  "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31"
 )
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("nuget-client-$_commit.tar.gz::https://codeload.github.com/NuGet/NuGet.Client/tar.gz/$_commit"
   extract.py
@@ -111,46 +111,46 @@ Path(sys.argv[3]).write_text(json.dumps(record,indent=2)+'\n')
 PYINNER
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-frameworks() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _package NuGet.Frameworks dotnet-nuget-frameworks
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-common() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-frameworks=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-frameworks=$pkgver")
   _package NuGet.Common dotnet-nuget-common
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-versioning() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _package NuGet.Versioning dotnet-nuget-versioning
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-configuration() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31")
   _package NuGet.Configuration dotnet-nuget-configuration
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-packaging() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json=13.0.4" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=8.0.31")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json>=13.0.4" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs>=8.0.31")
   _package NuGet.Packaging dotnet-nuget-packaging
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-librarymodel() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver")
   _package NuGet.LibraryModel dotnet-nuget-librarymodel
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-dependencyresolver-core() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-librarymodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-librarymodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
   _package NuGet.DependencyResolver.Core dotnet-nuget-dependencyresolver-core
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-projectmodel() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-dependencyresolver-core=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-dependencyresolver-core=$pkgver")
   _package NuGet.ProjectModel dotnet-nuget-projectmodel
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-protocol() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging=$pkgver")
   _package NuGet.Protocol dotnet-nuget-protocol
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-credentials() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
   _package NuGet.Credentials dotnet-nuget-credentials
 }
 package_mingw-w64-clang-x86_64-dotnet-nuget-commands() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-credentials=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-projectmodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6=6.0.0" "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6=6.0.0")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-credentials=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-projectmodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6>=6.0.0" "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6>=6.0.0")
   _package NuGet.Commands dotnet-nuget-commands
 }

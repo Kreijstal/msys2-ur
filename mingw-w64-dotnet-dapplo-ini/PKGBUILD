@@ -14,8 +14,8 @@ _tree=Dapplo.Ini-${_commit}
 _project=src/Dapplo.Ini/Dapplo.Ini.csproj
 _id=Dapplo.Ini
 _framework=net8.0
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("dapplo-ini-8f2c2228175a39a09f88a3d77643fc4e947803d8.tar.gz::https://codeload.github.com/dapplo/Dapplo.Ini/tar.gz/8f2c2228175a39a09f88a3d77643fc4e947803d8" prepare.py check.cs)
 sha256sums=('e17846b10683a82b0d4436bbd0ddc13ad818896f8137be0ccfd49f00f6d0152b' 'eb65010dc09b9f1cc9e19a4fe75ea8b21be3b5f6c911d558d7556eef4fd3f528' '9be7ecaa43b41303034919457da6ed2a0dbf3d8733a49f0f6477479aa9fadbc8')
@@ -63,6 +63,6 @@ package_mingw-w64-clang-x86_64-dotnet-dapplo-ini() {
   _package_feed Dapplo.Ini
 }
 package_mingw-w64-clang-x86_64-dotnet-dapplo-ini-generator() {
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-ini=$pkgver")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-dapplo-ini=$pkgver")
   _package_feed Dapplo.Ini.Generator
 }

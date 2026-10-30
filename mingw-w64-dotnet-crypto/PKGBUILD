@@ -15,8 +15,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
 options=('!strip' '!lto')
 source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
         prepare.py libraries.json Microsoft.pubkey.hex Open.pubkey.hex check.cs check.sh check-api.cs check-api.sh README.md)
@@ -73,36 +73,36 @@ _install() {
 
 package_mingw-w64-clang-x86_64-dotnet-formats-asn1() {
   pkgdesc='Source-built System.Formats.Asn1 8.0.2 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install formats-asn1 System.Formats.Asn1 8.0.2
 }
 
 package_mingw-w64-clang-x86_64-dotnet-cryptography-pkcs() {
   pkgdesc='Source-built System.Security.Cryptography.Pkcs 8.0.1 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1=${pkgver}")
   _install cryptography-pkcs System.Security.Cryptography.Pkcs 8.0.1
 }
 
 package_mingw-w64-clang-x86_64-dotnet-cryptography-xml() {
   pkgdesc='Source-built System.Security.Cryptography.Xml 8.0.4 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=${pkgver}")
   _install cryptography-xml System.Security.Cryptography.Xml 8.0.4
 }
 
 package_mingw-w64-clang-x86_64-dotnet-diagnosticsource() {
   pkgdesc='Source-built System.Diagnostics.DiagnosticSource 8.0.1 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install diagnosticsource System.Diagnostics.DiagnosticSource 8.0.1
 }
 
 package_mingw-w64-clang-x86_64-dotnet-encodings-web() {
   pkgdesc='Source-built System.Text.Encodings.Web 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install encodings-web System.Text.Encodings.Web 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-encoding-codepages() {
   pkgdesc='Source-built System.Text.Encoding.CodePages 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install encoding-codepages System.Text.Encoding.CodePages 8.0.0
 }

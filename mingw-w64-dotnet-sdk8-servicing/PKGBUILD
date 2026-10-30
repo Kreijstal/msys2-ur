@@ -11,14 +11,14 @@ url='https://github.com/dotnet/sdk'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
 provides=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${pkgver}-${pkgrel}")
 conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk")
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31-3"
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31"
          "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing>=8.0.31-2"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers=8.0.0.preview26274.2")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers>=8.0.0.preview26274.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131"
              "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-cmake"
              "${MINGW_PACKAGE_PREFIX}-ninja" "${MINGW_PACKAGE_PREFIX}-llvm"
-             'mingw-w64-ucrt-x86_64-mono=6.12.0.199' 'python' 'patch' 'make')
+             'mingw-w64-ucrt-x86_64-mono>=6.12.0.199' 'python' 'patch' 'make')
 options=('!strip' '!lto' '!buildflags')
 # The SDK input is our unchanged, audited source-bootstrap package, built by
 # mingw-w64-dotnet-bootstrap from the Mono seed. No vendor SDK binaries enter.

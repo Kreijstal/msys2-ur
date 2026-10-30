@@ -10,9 +10,9 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
-checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2")
 options=('!strip' '!lto')
 source=("identitymodel-$_commit.tar.gz::https://codeload.github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/tar.gz/$_commit"
  extract.py

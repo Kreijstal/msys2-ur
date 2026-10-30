@@ -10,8 +10,8 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/DotNetAnalyzers/StyleCopAnalyzers'
 license=('spdx:MIT' 'spdx:Apache-2.0')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'git' 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'git' 'python')
 options=('!strip' '!lto')
 source=("stylecop::git+https://github.com/DotNetAnalyzers/StyleCopAnalyzers#commit=$_commit"
         prepare.py verify-source.py source-inputs.json upstream-commit.txt build-libraries.sh build.sh pack.py
@@ -58,6 +58,6 @@ package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers() {
 }
 package_mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable() {
  pkgdesc='Source-built StyleCop.Analyzers 1.2.0.556 analyzer and code-fix implementation'
- depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2")
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2")
  _install '-unstable' StyleCop.Analyzers.Unstable 1.2.0.556
 }

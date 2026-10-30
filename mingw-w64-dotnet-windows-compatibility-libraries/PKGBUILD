@@ -18,13 +18,13 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols=8.0.31" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols>=8.0.31" 'python')
 options=('!strip' '!lto')
 source=("runtime-v$pkgver.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v$pkgver"
         prepare.py libraries.json Open.pubkey.hex ECMA.pubkey.hex MicrosoftShared.pubkey.hex
@@ -68,54 +68,54 @@ _install() {
 
 package_mingw-w64-clang-x86_64-dotnet-codedom() {
   pkgdesc='Source-built System.CodeDom 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install codedom System.CodeDom 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-reflection-context() {
   pkgdesc='Source-built System.Reflection.Context 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install reflection-context System.Reflection.Context 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-composition() {
   pkgdesc='Source-built System.ComponentModel.Composition 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install composition System.ComponentModel.Composition 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-composition-registration() {
   pkgdesc='Source-built System.ComponentModel.Composition.Registration 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-reflection-context=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-reflection-context=${pkgver}")
   _install composition-registration System.ComponentModel.Composition.Registration 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-odbc() {
   pkgdesc='Source-built System.Data.Odbc 8.0.1 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install odbc System.Data.Odbc 8.0.1
 }
 
 package_mingw-w64-clang-x86_64-dotnet-oledb() {
   pkgdesc='Source-built System.Data.OleDb 8.0.1 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter=${pkgver}")
   _install oledb System.Data.OleDb 8.0.1
 }
 
 package_mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement() {
   pkgdesc='Source-built System.DirectoryServices.AccountManagement 8.0.1 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols=${pkgver}")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols=${pkgver}")
   _install directoryservices-accountmanagement System.DirectoryServices.AccountManagement 8.0.1
 }
 
 package_mingw-w64-clang-x86_64-dotnet-io-ports() {
   pkgdesc='Source-built System.IO.Ports 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install io-ports System.IO.Ports 8.0.0
 }
 
 package_mingw-w64-clang-x86_64-dotnet-speech() {
   pkgdesc='Source-built System.Speech 8.0.0 from .NET 8.0.31 sources'
-  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install speech System.Speech 8.0.0
 }

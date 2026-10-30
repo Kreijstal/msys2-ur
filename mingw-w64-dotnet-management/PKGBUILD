@@ -10,9 +10,9 @@ arch=('any')
 mingw_arch=('clang64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codedom=8.0.31")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-codedom=8.0.31"
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codedom>=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codedom>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-llvm" "${MINGW_PACKAGE_PREFIX}-lld" 'python' 'patch')
 options=('!strip' '!lto')
 source=("runtime-v${_sourcever}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${_sourcever}"
