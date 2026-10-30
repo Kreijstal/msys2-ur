@@ -6,7 +6,7 @@ pkgver=1.0.0.git20201006.f919e38
 pkgrel=1
 pkgdesc='Source-built EventTraceKit manifest resource compiler with a .NET 8 command-line driver'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/gix/event-trace-kit'
 license=('spdx:MIT')
 _commit=f919e38bbf553f89058f98b5d1eeb3c4536a673b
@@ -16,7 +16,7 @@ options=('!strip' '!lto')
 source=("event-trace-kit-${_commit}.tar.gz::https://codeload.github.com/gix/event-trace-kit/tar.gz/${_commit}"
         prepare.py Program.cs build.sh event-manifest-compiler.sh README.md)
 sha256sums=('02c4f0cf88ccd5049b549ac7b4419cc5fda6e0ea724104b415f0004a71de3fa3'
-            'c8afb495c86808adfa2e3d948db17c02095a7ad634459b89b952fef287211a78' '259573eeda33c8b237d4485c895503ad13d71b8ede4a28d07aa78a9ffcd7154f' '6e5f2492f27a0676503e70e75a678561e5116d02c0384ba7aa3a7716d68963f3' '6d02a02b716f2c9bb001e67589f19a65b5ec7d742a32523e154f3edaa2736bdc' 'f396b66a3db4478ed8ae3f8ea035450692ee3fb177f95a6474a423b525fa4178')
+            'c8afb495c86808adfa2e3d948db17c02095a7ad634459b89b952fef287211a78' '259573eeda33c8b237d4485c895503ad13d71b8ede4a28d07aa78a9ffcd7154f' '89d41bbb62678bf5d6ab32786e83c31a67d474398a5e72188f352f5313a1aa01' '6d02a02b716f2c9bb001e67589f19a65b5ec7d742a32523e154f3edaa2736bdc' 'f396b66a3db4478ed8ae3f8ea035450692ee3fb177f95a6474a423b525fa4178')
 prepare() {
   /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/event-trace-kit-${_commit}" "$srcdir/compiler"
 }

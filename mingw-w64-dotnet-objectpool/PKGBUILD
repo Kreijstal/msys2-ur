@@ -6,7 +6,7 @@ pkgver=8.0.31
 pkgrel=1
 pkgdesc='Source-built Microsoft.Extensions.ObjectPool for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/aspnetcore'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -16,7 +16,7 @@ source=("aspnetcore-v$pkgver.tar.gz::https://codeload.github.com/dotnet/aspnetco
         prepare.py AspNetCore.pubkey.hex Check.cs CheckApi.cs check.sh README.md)
 noextract=("aspnetcore-v$pkgver.tar.gz")
 sha256sums=('ad8ef8f6331576a03714941a90f33fb418b3d1ab9765e792418da5d9a328a60c'
-            'da4db6b3d2d91b5a96e2973c3d579c5b873409630dceee4c9e8eaca404ca8bf8' '9faab536742ab7c206bfd26d3f2dce0227f5db75b960af0d7a0ba43e6dc9c0d4' '0039f73e5d54f17b78e8d798d061cd5baf695b587575c4167e880d6294fdf8f3' 'b0d13b7ad3f1bdb768fc3e48786dc7b557e92180bd36769b44999115ab1115c4' 'a7c4b99a90c3af09b755d0c98873b531f6b38bc32a67957b1393985dbb26d1d0' '5282fa2900bfc5ff579b1d2b9d8117efb804afa9bf45181d8f85b92ef1a3f4a6')
+            'da4db6b3d2d91b5a96e2973c3d579c5b873409630dceee4c9e8eaca404ca8bf8' '9faab536742ab7c206bfd26d3f2dce0227f5db75b960af0d7a0ba43e6dc9c0d4' '0039f73e5d54f17b78e8d798d061cd5baf695b587575c4167e880d6294fdf8f3' 'b0d13b7ad3f1bdb768fc3e48786dc7b557e92180bd36769b44999115ab1115c4' '0f01b5cde7b3eee90fc67f7698c1663f16a70018d8fc3e4767bfe30a8727a3bf' '5282fa2900bfc5ff579b1d2b9d8117efb804afa9bf45181d8f85b92ef1a3f4a6')
 prepare() {
   tar -xzf "$srcdir/aspnetcore-v$pkgver.tar.gz" -C "$srcdir" \
     "aspnetcore-$pkgver/src/ObjectPool/src" \

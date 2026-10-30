@@ -83,13 +83,13 @@ files excluded to hide errors.
 Run a clean package build in CLANG64 with the listed source-built dependencies:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 ```
 
 After installing all seven packages, use a fresh output directory:
 
 ```bash
-bash check-installed.sh /tmp/wcf-installed /clang64/share/doc/dotnet-private-servicemodel/localization.json
+bash check-installed.sh /tmp/wcf-installed $MINGW_PREFIX/share/doc/dotnet-private-servicemodel/localization.json
 ```
 
 Validation records and package hashes are maintained under

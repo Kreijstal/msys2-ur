@@ -19,6 +19,6 @@ The core runtime remains source-built from 8.0.0, regardless of tooling aliases.
 In CLANG64:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 bash check.sh /tmp/asyncinterfaces8-installed
 ```

@@ -33,7 +33,7 @@ all metric aggregation and actual PowerShell integration remain unverified.
 In CLANG64:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 bash check.sh /tmp/applicationinsights-installed
 ```
 

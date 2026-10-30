@@ -11,7 +11,7 @@ pkgver=8.0.31
 pkgrel=1
 pkgdesc='Source-built Windows .NET satellite libraries for the offline feed'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -25,10 +25,10 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             'da38a599735819c6590eed2cba2d03feb3f41185aecb3193445c736cc495e202'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             '84a4740be3c741bdfd7b807011cb08405e05cf718fb2e555fcd0c26208b3f4ec'
-            '8c1efdc94a50d2d5d2dc239917d093186e69515a67b7ecb801e632d7e1fe50f9'
+            '2f0653cf56bb730def5a87e1ff61b00892551fe26ee0ce9ca2a68ad66793ad04'
             '613012561ced8c253257a6e5efc8bbfcbcf4f789117494be3cb7c36f3cb16682'
-            'f01f6eb224ef88f7aafc4b4a865fd227318299a836178c974873fd05fa4ea126'
-            '2e88854e2f4f5e694491b80efe3ac74dddd945658c2ab52a51996ad1d940cfdc')
+            '46cb29b309650ea18ca36b101df1e2757d4d025b188cecf7c9ec81a93df8bf35'
+            '2348dc70a1d9d2a6c8a6d542994da17feba89e890b77423a2e6e50933c22c558')
 
 _env() {
   export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
@@ -72,27 +72,38 @@ _install() {
   install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
 }
 
-package_mingw-w64-clang-x86_64-dotnet-registry-accesscontrol() {
+package_dotnet-registry-accesscontrol() {
   pkgdesc='Source-built Microsoft.Win32.Registry.AccessControl 8.0.0 from .NET 8.0.31 sources'
   _install registry-accesscontrol Microsoft.Win32.Registry.AccessControl 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-protecteddata() {
+package_dotnet-protecteddata() {
   pkgdesc='Source-built System.Security.Cryptography.ProtectedData 8.0.0 from .NET 8.0.31 sources'
   _install protecteddata System.Security.Cryptography.ProtectedData 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-io-packaging() {
+package_dotnet-io-packaging() {
   pkgdesc='Source-built System.IO.Packaging 8.0.1 from .NET 8.0.31 sources'
   _install io-packaging System.IO.Packaging 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-directoryservices-protocols() {
+package_dotnet-directoryservices-protocols() {
   pkgdesc='Source-built System.DirectoryServices.Protocols 8.0.2 from .NET 8.0.31 sources'
   _install directoryservices-protocols System.DirectoryServices.Protocols 8.0.2
 }
 
-package_mingw-w64-clang-x86_64-dotnet-winhttp-handler() {
+package_dotnet-winhttp-handler() {
   pkgdesc='Source-built System.Net.Http.WinHttpHandler 8.0.3 from .NET 8.0.31 sources'
   _install winhttp-handler System.Net.Http.WinHttpHandler 8.0.3
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

@@ -16,7 +16,7 @@ pkgver=8.0.31
 pkgrel=1
 pkgdesc='Source-built Windows .NET configuration, drawing and diagnostics libraries'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -33,13 +33,13 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '69851557bc55c9e0c025581e02abbe5251733091ed2fb62aa4f4c3175c35b4b3'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
-            '8ebaf572e11d66d339ea215bba3e4ad73eb08026d20b9b5cd88a57e586f428c9'
+            '19f60f0ee6cb69abc7ab44a424b3216f7e979bb590fb60fb42c1d6f8560adf36'
             '6c487be822b0ff589fa4e1485d24fa284c8bf4103c66c37429cb3d75e721ebc1'
-            '89fab59c363682b0bd4babfaf24c31b833574b4148c1e11f17d54cbdc18d990d'
+            'f146567b706d4c7f5c026d216ee2bdd224120d1f53e6c1b3c685eb24c279d089'
             'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
-            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            '2d5694a524bf4499bafdfb6a7a5057221fda34cfe7e7b7e609c3b90b189e9266'
             '66255b121ac89c3071a256a6ed2327c172c30cdcc23eeda94504e719a7da511a'
-            '2e4524e252a4d423357915ece1996672702aa7c8329f503cefd4fe2045e2355e')
+            'bae939754d1f6e7af3e37d0fe75fe32654d58f5b266809be4a5ed1df916862c1')
 
 _env() {
   export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
@@ -81,62 +81,73 @@ _install() {
   install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
 }
 
-package_mingw-w64-clang-x86_64-dotnet-systemevents() {
+package_dotnet-systemevents() {
   pkgdesc='Source-built Microsoft.Win32.SystemEvents 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install systemevents Microsoft.Win32.SystemEvents 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-drawing-common() {
+package_dotnet-drawing-common() {
   pkgdesc='Source-built System.Drawing.Common 8.0.31 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-systemevents=${pkgver}")
   _install drawing-common System.Drawing.Common 8.0.31
 }
 
-package_mingw-w64-clang-x86_64-dotnet-windows-extensions() {
+package_dotnet-windows-extensions() {
   pkgdesc='Source-built System.Windows.Extensions 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-drawing-common=${pkgver}")
   _install windows-extensions System.Windows.Extensions 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-security-permissions() {
+package_dotnet-security-permissions() {
   pkgdesc='Source-built System.Security.Permissions 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions=${pkgver}")
   _install security-permissions System.Security.Permissions 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-eventlog() {
+package_dotnet-eventlog() {
   pkgdesc='Source-built System.Diagnostics.EventLog 8.0.2 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install eventlog System.Diagnostics.EventLog 8.0.2
 }
 
-package_mingw-w64-clang-x86_64-dotnet-configuration-manager() {
+package_dotnet-configuration-manager() {
   pkgdesc='Source-built System.Configuration.ConfigurationManager 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=${pkgver}")
   _install configuration-manager System.Configuration.ConfigurationManager 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-runtime-caching() {
+package_dotnet-runtime-caching() {
   pkgdesc='Source-built System.Runtime.Caching 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}")
   _install runtime-caching System.Runtime.Caching 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-performancecounter() {
+package_dotnet-performancecounter() {
   pkgdesc='Source-built System.Diagnostics.PerformanceCounter 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}")
   _install performancecounter System.Diagnostics.PerformanceCounter 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicecontroller() {
+package_dotnet-servicecontroller() {
   pkgdesc='Source-built System.ServiceProcess.ServiceController 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog=${pkgver}")
   _install servicecontroller System.ServiceProcess.ServiceController 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-directoryservices() {
+package_dotnet-directoryservices() {
   pkgdesc='Source-built System.DirectoryServices 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions=${pkgver}")
   _install directoryservices System.DirectoryServices 8.0.0
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

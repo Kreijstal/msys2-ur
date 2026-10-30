@@ -47,7 +47,7 @@ The currently installed core runtime still uses 8.0.0 sources; these library
 packages do not supply its later servicing fixes.
 
 Build in CLANG64, after installing the source-built SDK and
-mingw-w64-clang-x86_64-dotnet-protecteddata:
+${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata:
 
 ```bash
 makepkg --cleanbuild --force --noconfirm

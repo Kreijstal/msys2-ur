@@ -5,7 +5,7 @@ pkgrel=1
 _commit=9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
 pkgdesc='Complete source-built Roslyn Visual Basic compiler library and resources for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/roslyn'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver")
@@ -15,16 +15,16 @@ source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz
         prepare.py build.sh Check.cs check.sh check-api.sh InspectApi.cs InspectMetadata.cs ExpectedApi.json ExpectedMetadata.json published-metadata-provenance.json README.md)
 sha256sums=('e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30'
             '8111d35c18cca77edec747869bffb571e3902bf3ec7317a5b28cb7114812e84c'
-            '349705aca9bd7b1508bff4140ebc7ec11b24c5145b6468a432de31b6fe2f7881'
+            'b3c9c95b937f67da0387731a07661cbf27a411f461c7e8256f130ee918b3bddb'
             'b69b866c5e18ba37460fabc2a0c2303fe9973d0361a5ffa954a98e0661f5676a'
-            'd0d4ac3deeb4fb6a158698b66af9a7bbd711afbe73d68ae980d1c111b863660e'
-            '4a5e1ab23971620677870f0dd0c597a8b11f923ecef8dede188cdb7d17aa96aa'
+            '094dde62bcc5ddc545111b18ccff7348336f7065cbd56e191842550d9b520cc8'
+            '625481905dc5e562b981e427551ee5f3e9c595e976c86b8f9ba1f61450b92ad5'
             '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
             'a4a82f1187cb348048f58eff68ed452040171159d16d33e76b86a71e7bbf6ad1'
             '45a9b8f5896740150928af57f3d81643d26a7d94d87d7ce7cf85c6f0a4eff639'
             '034d8ddefe93bf0845c33cee6c0220a74c429095066b3aafcd2c014f7dd77ad1'
             '51dfe3015efbaea565e330216a6281679bf4cbc0dc6f87b9b345190887a42f16'
-            'eb634d3efd5fc7b0148f613cbbf61df6c7327eb5b8ea6f01d48833ce0259ea08')
+            'ca05ab06c4cceecbe81ecbd102d0b38540216930e1a743e579c956668e5e1a10')
 prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-$_commit" "$srcdir/prepared"; }
 build() { bash "$srcdir/build.sh" "$srcdir/roslyn-$_commit" "$srcdir/prepared"; }
 check() {

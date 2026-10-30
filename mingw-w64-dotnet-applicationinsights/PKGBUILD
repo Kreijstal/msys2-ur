@@ -6,7 +6,7 @@ pkgver=2.23.0
 pkgrel=1
 pkgdesc='Source-built Microsoft.ApplicationInsights core 2.23.0 for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/microsoft/ApplicationInsights-dotnet'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-diagnosticsource>=8.0.31")
@@ -21,8 +21,8 @@ sha256sums=('d4db350c94a29d41ac58a62f53d86fc6124a458904ccf6f607c1eca2f8d023a0'
             '8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed'
             '22e220f9cf6e09dc0ff9fd78d28ad18e728c8b069827a61ffd85077ba9c28b4c'
             'b0d13b7ad3f1bdb768fc3e48786dc7b557e92180bd36769b44999115ab1115c4'
-            '1853be95131280a3fef8f5aefd35f7395568a54075e5e74486f01e64c744a934'
-            'd5edd7ef8244b96103608b58755df9f4f5c0ecc3ac74a416354768f5ec6ef62e')
+            '693e13bcb56a0d588d1c765208ca56f1e14843b2771d2efb7f86d0bce05b5466'
+            '5a881a44d3c4213016a224c6ab1d49275efbb91d93907a85650beed8c8d9d7e9')
 prepare() {
   tar -xzf "$srcdir/applicationinsights-$_commit.tar.gz" -C "$srcdir"
   /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/ApplicationInsights-dotnet-$_commit" "$srcdir/build"

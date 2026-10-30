@@ -7,7 +7,7 @@ pkgrel=2
 _sourcever=8.0.31
 pkgdesc='Source-built System.Threading.AccessControl 8 for plain .NET 8 consumers'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -22,10 +22,10 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             '4945572b8ebade73e12473a0b36ba76f54ad499b3275051d678572d1306a65eb'
             '16e3f95dae8a33ff981216fab2b0be9e1055a831d8e8097733a6af701e7b74ea'
-            '96ea1c4aa46586a7e4fb0e49f09503a7e27d43d15a4642efdac8f9d6a94c019d'
+            '96a169715601cec8777c88f78e0e41d35fdcf46c27f21702afad232de172c195'
             'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
-            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
-            '210245f78b38c48e2ba658b888f8b6525ed5ac18f0cf06a11a1e9c080330780c')
+            '2d5694a524bf4499bafdfb6a7a5057221fda34cfe7e7b7e609c3b90b189e9266'
+            '7d314e282de2f65eef1e81a498f4e6a444fc011d6ece7567be506acbc579b3bc')
 
 _env() {
   export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")

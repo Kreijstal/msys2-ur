@@ -1,4 +1,5 @@
 """Verify complete source provenance, module assets, API/resources and Core forwarders."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -42,17 +43,17 @@ actual_types=forwarders['exported_types']
 assert len(actual_types)==5
 assert [{k:v for k,v in item.items() if k!='target_version'} for item in actual_types]==[{k:v for k,v in item.items() if k!='target_version'} for item in expected_types]
 assert all(item['target_version']=='7.4.6.500' for item in actual_types)
-pager=Path('/clang64/lib/dotnet/library-packs/Microsoft.PowerShell.Pager.1.0.0.nupkg')
+pager=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/Microsoft.PowerShell.Pager.1.0.0.nupkg')
 with zipfile.ZipFile(pager) as z:assert z.read('lib/net8.0/Microsoft.PowerShell.Pager.dll')==(module/'Microsoft.PowerShell.Pager.dll').read_bytes()
 resources={p.get('name'):p.findtext('value') for p in E.parse(source/'PSReadLine/PSReadLineResources.resx').getroot().findall('data')}
 assert len(resources)==245
 (root/'expected-resources.json').write_text(json.dumps(resources,ensure_ascii=False,indent=2)+'\n')
-feed=Path('/clang64/lib/dotnet/library-packs/psreadline.2.3.6.nupkg')
+feed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/psreadline.2.3.6.nupkg')
 if feed.is_file():
     with zipfile.ZipFile(feed) as z:
         same=all(z.read(name)==(module/name).read_bytes() for name in expected)
     if same:
-        installed=Path('/clang64/lib/powershell/Modules/PSReadLine/2.3.6')
+        installed=Path(os.environ['MINGW_PREFIX']+'/lib/powershell/Modules/PSReadLine/2.3.6')
         for name in expected:assert (installed/name).read_bytes()==(module/name).read_bytes(),name
         print('PASS restored installed NuGet module files equal installed loose module files')
 print('PASS complete48+1 unchanged production sources/resource,9 module files,457 API declarations, original identity and five original Core forwarders retargeted to source SMA')

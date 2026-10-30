@@ -7,7 +7,7 @@ pkgrel=1
 _commit=44697aed1740126153a8d9dd0ef368261b2fe45c
 pkgdesc='Complete original source PSResourceGet module with source-built NuGet and Azure dependencies'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/PowerShell/PSResourceGet'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131"
@@ -46,12 +46,12 @@ source=("psresourceget-$_commit.tar.gz::https://codeload.github.com/PowerShell/P
 noextract=("psresourceget-$_commit.tar.gz")
 sha256sums=('4819dc0283c6a28979aa5a26aa70ad41468de1a2a52e0729a61062086c08bc03'
  '3c49b885c468e8a9df675c28ea64b73a46b6aa0282e7e6c077431da6dcf466b9'
- 'e262066d42a6ebcd17d50cf3733aa32639fec75fe14378d5b545e246e2c2c91e'
- 'fcc618bbe46b038891ac73d0f7f49f0135c00bdc739e5b678d264ae404a5b960'
- '8c3b31958ae08d2fe72d17332d2ba365648f8fd968f8eeac953656f3772430d0'
+ '704edb5d7dea353bf1f8ec7de0294967e173ce16b6ae92990c9474c2804e49fa'
+ '878b436323faac22394baf2ae652b3ff07802e14b5d3ffc48cad690dc2575ff9'
+ 'd5fd21b96a1f4bc08bff796aa7f9dd284b7d031828bce1e80696c2c41bbf16f4'
  'faa139f37921e93b61e46737b5932af31cd822a201ee44889cb3ef0b5d024323'
- 'afcc3e4baeab568e0b315365c2207cf9d222cb6f24cc52d2bb5e70bedd72ac48'
- '4e523d40ea7ef7886f8730b3fe5910ed94ae540ce91d0f7d4081385446b9290e'
+ 'b8de605a5a267d78ada504be3317eab2defbfe44d9c62e215d58a4b502162d3c'
+ '51d19c353229bd33a5f6e1701e4c3acc30efa4dbfbcd2b71407e77af7ab51147'
  '98a27979c475e8274bbc1cd1537449e099eed461a7fe431dd5b1eb4cdfd093ee'
  '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
  'de8b3f122834b495ac439d5d27c78a9eeaa7dd56fb6637b58f5596b54517f4ce'
@@ -61,15 +61,15 @@ sha256sums=('4819dc0283c6a28979aa5a26aa70ad41468de1a2a52e0729a61062086c08bc03'
  'ee5480d88155e287118e0bff1e16ab05b07a726633a298c005ed8dd53a60010b'
  'cbb9d5b71686849ef02031fe96f03b174f4f4fbcddd1511da30d0ec2918e90ae'
  '5c6abc10f319831342d47e03afdf9f7a4f2d2852ae225f9769796fbafbd1fb7c'
- 'a5eb135ab602cf37cf96bff3af3e706e0004a34c99b540586797f08582a7f884')
+ 'cc6cc1bb41ad9df2698203c57e828aac62870ffbbecc1cf6cf1ec6e6509d59db')
 prepare() {
  /usr/bin/python3 "$srcdir/extract.py" "$srcdir/psresourceget-$_commit.tar.gz" "$srcdir/source"
  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
 }
 build() {
- export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Library.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -p:CscToolPath="$(cygpath -am /clang64/lib/dotnet/compiler-packs/roslyn-4.9.2)" -p:CscToolExe=csc49.cmd -v:minimal
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Library.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -p:CscToolPath="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/compiler-packs/roslyn-4.9.2)" -p:CscToolExe=csc49.cmd -v:minimal
  /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
  /usr/bin/python3 "$srcdir/stage.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache" "$srcdir/module"
  /usr/bin/python3 "$srcdir/pack.py" "$srcdir/module" "$srcdir/feed"

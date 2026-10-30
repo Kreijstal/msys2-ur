@@ -37,7 +37,7 @@ E.SubElement(items,'EmbeddedResource',Include=os.path.relpath(root/'Resources.re
 reference=E.SubElement(items,'Reference',Include='System.Management.Automation')
 # Relative MSYS paths are not valid inside native MSBuild; convert the single
 # installed source reference to its native path, with no vendor GAC reference.
-native=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
+native=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
 E.SubElement(reference,'HintPath').text=native
 E.SubElement(reference,'Private').text='false'
 E.indent(project);E.ElementTree(project).write(output/'ThreadJob.csproj',encoding='utf-8',xml_declaration=True)

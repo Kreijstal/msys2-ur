@@ -8,7 +8,7 @@ _commit=337963009d48a3016b50172b451b4e80f78791a7
 _arcade=444c2ef3c414558e2e409ee346f1faebb19687eb
 pkgdesc='Source Windows compatibility metapackage; SqlClient source port experimental'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/windowsdesktop'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-codedom>=8.0.31"
@@ -60,14 +60,14 @@ noextract=("windowsdesktop-$pkgver.tar.gz" "arcade-$_arcade.tar.gz")
 sha256sums=('e5f9b43643a3dfdf1afae7e2f3f54d5e140513191c82dadcc56301b9cb494b94'
             'a4e0e24eb4238b692e4407c4fb0e5fa4db2ee79c8033bb7d2a40e3fb7164604f'
             '30bc028085b40c3c28bd85b4813865c42a13c27e6d81837ede641c19b0b0fbb4'
-            'bc3b208100446866454870e394e34c835a940be69ce6199a2845a5ffe6dc5eee'
+            'd57c5b455de83f1ecc107c9cb38249996d01720d71bf9abe5ed8441497d83e32'
             '1ccd30ba1dc945694093874580e737807fa0605e0bc27cc88b27a8cd7771e02d'
             '1499b6febb17c065730e2383da80cbfba85f035c9e8747337253f1e8bdb3daa7'
             '4c4ddd53f5278a50d3e63745bb5d7b6ab343ed5efdc52e329bcdd4d52dd08c81'
             '8113949444aa8317bad40ff7f9245900dd2283c32157b9e0c330f2fbe38eab7c'
-            'd867f9d20f92dc25045a48c2901b13a83e5ac372999b56b806c0201c79bdc5d5'
-            '9eaa9d4620ccf294f35bdd3d3e84be995d92165f5defe134b9e7111319854643'
-            'c65d781883f81cd05c3f55db73152138cbc7cb69cc999b1135318c1192fe3f57'
+            'a4f31b22761de89311586485c92281ad32772bef25058ef6a7d700b91f38c903'
+            'e71d321918025bdd8c29aebdbee70342ff18d81544442ae55cb083b9cac7a97a'
+            'd5beebf2537c969a54640d63626a9db55113db8b8039992cd1357049d7b05c7b'
             '92c866bfa87e2d68fd49441853631773d7b7aa12a98686bfe791c8a6bfc3a56c')
 
 prepare() {

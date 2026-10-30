@@ -1,11 +1,12 @@
 """Gate original NET6 selection, C# bytes, actual signing/references and JSON generator."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,xml.etree.ElementTree as E,zipfile
 
 source,out,cache=(Path(p).resolve() for p in sys.argv[1:]);sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip().replace('\\','/')
 own_prefix=native(out)+'/';cache_prefix=native(cache)+'/'
-framework=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
+framework=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
 r=json.loads((out/'source-inventory.json').read_text());records={}
 for name,tree in r['original_project_trees'].items():
     folder=out/'src/client'/name;original=source/'src/client'/name;intermediate=folder/'obj/Release/net8.0'

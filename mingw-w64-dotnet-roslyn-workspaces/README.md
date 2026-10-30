@@ -37,13 +37,13 @@ simplification, a real analyzer diagnostic, a DocumentEditor-based code fix,
 CodeAction/ApplyChanges operations, incremental change tracking and cancellation.
 Framework implementation modules are rejected.
 
-Build in CLANG64 with the source-built SDK and prerequisites installed:
+Build in CLANG64 or UCRT64 with the source-built SDK and prerequisites installed:
 
     makepkg --cleanbuild --force --noconfirm
 
 After installing both packages, use new output directories/caches:
 
-    bash mingw-w64-dotnet-roslyn-workspaces/check.sh NEW_CONSUMER /clang64/share/doc/dotnet-codeanalysis-workspaces-common/localization.json /clang64/share/doc/dotnet-codeanalysis-workspaces-common/source-items.json
+    bash mingw-w64-dotnet-roslyn-workspaces/check.sh NEW_CONSUMER $MINGW_PREFIX/share/doc/dotnet-codeanalysis-workspaces-common/localization.json $MINGW_PREFIX/share/doc/dotnet-codeanalysis-workspaces-common/source-items.json
     bash mingw-w64-dotnet-roslyn-workspaces/check-api.sh NEW_CONSUMER NEW_API
 
 Only the installed source-built feed is used unless a new build feed is supplied

@@ -13,7 +13,7 @@ pkgver=4.10.3
 pkgrel=1
 pkgdesc='Source-built WCF client libraries for the .NET 8 offline feed'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/wcf'
 license=('spdx:MIT')
 _commit=6c05fa33450ee3960f0763948e91327f049b302b
@@ -31,27 +31,27 @@ source=("wcf-$pkgver.tar.gz::https://codeload.github.com/dotnet/wcf/tar.gz/$_com
 noextract=("wcf-$pkgver.tar.gz")
 sha256sums=('fd4a9c4500f811ec600e1570f94672db25aa5fa8129c1aa0704643290b41e8ae'
             'e643ae51aefea6f3d3475e3bc705436110a959d2a6b337d31f50a4c8ab86518b'
-            'a8a1b5683961a5ed515400b16886d42780863b25f5a9771ce60134ec9638e377'
+            '6cc66f2183230319208a4811f15a4820d7c285d7912d272167e07beec7bb0234'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             'd88365d80f056f9c1d4630d69b3eba47682eb4e6e42db1de5c8c200acce8b08f'
-            '732eccb2a5d8f11361c36d2b1cef62edf4e914926519672dcd2a8e530907e907'
+            '1ef4226084f0a7266b72ba20d4ffab2b1a96b79e0515b34c6dcaf1de46e4ea6a'
             'b888af407b5da2be2e65d6ec0bac09cbe407a900213b9daaee71c448faac5e0f'
             '3672f30a10c50e5f4aa57ede9c7bee9354f1d4b4a2cd18b765930d7dd343c9c4'
             'c893bbd87a7f224d4cc637c23184ef127f8bc58be05744f9b6771f0cd49a0b21'
             '65a8a3bd8a6f6f7b84ee2614e22c28847716252698cc3bd28afff28c7a6819ae'
-            'a22d1f9c2d616599630a3487b3db662e019a7f6cc254c0ae4a65df59fc4e21c8'
+            '15a5b219ba01635681bb673fb1c3c114ff4ad556c0762394445104a0cbb5289b'
             '182ef98db8bc209911192b9f6a611e39fac99ae719e85b7967460dd00112a558'
             '1bf77704c3f43ae7c4dbbbc4aed842d860bf51c0e507ad923b230ee412b4a49f'
             '47c5d82710ea748ae3d55c9263f686a80181636c5dc8bd45e80279044371775f'
             'd50d27ed9cf48c309e5846f1b852e25083e30aea78e1fcaf1e3ba7a3349ba754'
-            '195660477b775bba71a708e5c23045a8d98b8cc7691da9aa7d4c301811c17a29'
+            '0725667422684ff01e662842bf5f5519b38355406de32abe252f56079686a7cb'
             '1181fb55ef59f8b93ee550dec4df31085903e3f1c7f4ee23b4afe3a592bb58bd'
-            '2251b1fefc14c51e3139a49eaed25ee395a2772a87ed8b1aa15cd012838ab8b5'
+            'd457a5160ea454edb9b903a18dcd1d6e48bac5dfb88df987a711276c3aa2689b'
             'a1e7cf4fe7dad936137f27f7ee125373e314bc9595faf80ca1e65b5b6f2769d3'
-            'a605e5dbdccad8131258144f0e74d7b1e40891d8b01ac3f44f7851f8800ea655'
+            'ec358d78ee66880a1b31beb833cf9885b42bd07bafcff1c7515433c3068dff09'
             '94fd3cd038a9ed2f3baed57496e6932585b35828a442c5d44f953defb995f4cd'
-            'b086f2d991f41a55978408d6adc4e11511c93ac54b93e8ec9086ada355b13bfa'
-            'f328a21e3adbdf3b24902fa11736eab1c1a032effc2a506fbc85089eb979d95f')
+            '773554ad8966604344c9ac8389fd82cb2a89408bc47edc07ef4dd13890f22df1'
+            '13119d1ad16716723e21a65b2a7727add74989af84906ecbc7d1a908916a9b03')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -96,44 +96,55 @@ _install() {
   install -m644 "$srcdir/upstream-api-mismatches.json" "$srcdir/legacy-forwards.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/"
 }
 
-package_mingw-w64-clang-x86_64-dotnet-private-servicemodel() {
+package_dotnet-private-servicemodel() {
   pkgdesc='Source-built System.Private.ServiceModel 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-objectpool>=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml>=8.0.31")
   _install private-servicemodel System.Private.ServiceModel
 }
 
-package_mingw-w64-clang-x86_64-dotnet-web-services-description() {
+package_dotnet-web-services-description() {
   pkgdesc='Source-built System.Web.Services.Description 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install web-services-description System.Web.Services.Description
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicemodel-primitives() {
+package_dotnet-servicemodel-primitives() {
   pkgdesc='Source-built System.ServiceModel.Primitives 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8>=8.0.31")
   _install servicemodel-primitives System.ServiceModel.Primitives
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicemodel-duplex() {
+package_dotnet-servicemodel-duplex() {
   pkgdesc='Source-built System.ServiceModel.Duplex 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-duplex System.ServiceModel.Duplex
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicemodel-security() {
+package_dotnet-servicemodel-security() {
   pkgdesc='Source-built System.ServiceModel.Security 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-security System.ServiceModel.Security
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicemodel-http() {
+package_dotnet-servicemodel-http() {
   pkgdesc='Source-built System.ServiceModel.Http 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-http System.ServiceModel.Http
 }
 
-package_mingw-w64-clang-x86_64-dotnet-servicemodel-nettcp() {
+package_dotnet-servicemodel-nettcp() {
   pkgdesc='Source-built System.ServiceModel.NetTcp 4.10.3 for .NET 8'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-primitives=${pkgver}")
   _install servicemodel-nettcp System.ServiceModel.NetTcp
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

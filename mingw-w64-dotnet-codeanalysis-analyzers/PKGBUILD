@@ -5,7 +5,7 @@ pkgrel=1
 _commit=22ea6422f85b05ca0793cc3b76375487be407f5d
 pkgdesc='Complete source-built Roslyn analyzers, CSharp and VisualBasic code fixes for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/roslyn-analyzers'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler>=4.9.2")
@@ -18,12 +18,12 @@ source=("roslyn-analyzers-$pkgver.tar.gz::https://codeload.github.com/dotnet/ros
         ExpectedGeneratedAssets.json UpstreamFixtures.json published-metadata-provenance.json README.md)
 sha256sums=('49a992347546aef48cb31673b294bd1b10c30e68bbb53be61d411bb0d7219e1e'
             'a1c6c2983bc12013c3fa442840876acc404ec225571e493a5187ed653f09d1ce'
-            'b3f62e9b2e12919d777588dd6aa33309dd67717f48a38a7d84b62348d93552b2'
-            '48bd14e4505eaa7c0d28796838e8c9e13f68c3ba4b1338221f2f4090349278b2'
+            'd680258ccb3104e093d34efdbd219a57d43928e08dd7423074810c35d6caf914'
+            '5dbd95818f91c7b408e4270e78e5d21bb7fbae632c0b0295a36a27c73b3b40c2'
             '33c5203c668a6419be2b050128bbf47edc64168c24d588404cf5fb0818a07edf'
-            '4351a42e70e33518fe4413060258a26ca139e8025d80e31bf22250570672adc6'
-            '415dac019c812b7f9904df25744cada60b9925bd09d33833beae761c27cb9f58'
-            '8c70474897d650ab82007ec7a06b7bb9c177c633f61402cb82119e77c01bf715'
+            'd0707e19347e5b121eb6d188acc77790398eb504a1f7165629e3503c23fb5831'
+            '8e12738c032745a871f9c91fe9e4da60f905b239a4f6ff8831635405895c631f'
+            '4c75d5bbdb8516d6fed9c83ab0135ae54e407111c1718b92425fcbf027168dc4'
             '265d8c125ef8d3fabc517d55632393ec201babefe77573727afe31a646dd42e5'
             'f026f796c0ea9076d026a565fbeaadb143211e18e2f38516a46fbf4482dcd7ee'
             '86527a5322c9889a225388ade58d8d56fbb35929fd69fe78ba9c90b4f8359409'
@@ -37,7 +37,7 @@ sha256sums=('49a992347546aef48cb31673b294bd1b10c30e68bbb53be61d411bb0d7219e1e'
             'f72015ca245ea15b897971dd529ede67e52fa099518a8344409121d41bd87496'
             '720020ddbbdf1c984a566835d5cb6ca6e8ebdc1c1b03505d7d787995e9c62260'
             '4d95e26c522978c3c49de4b26cc8e2057e37016b1e2c76685e1122fec2a0f7c1'
-            'be59092f28299b27aa0f400ae57125f3c516eb10807f8b9f36d58a0589ce3594')
+            'c5cf94ea45be223e04bb074b3628e2d4005145df0695511f3193b58ce74bf2b5')
 prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
 build() { bash "$srcdir/build.sh" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
 check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared/package/payload/source-build"; }

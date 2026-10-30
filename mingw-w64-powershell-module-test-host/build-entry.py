@@ -24,12 +24,12 @@ for name in ['System.Management.Automation','Microsoft.PowerShell.ConsoleHost']:
     E.SubElement(reference,'HintPath').text=os.path.relpath(host/(name+'.dll'),out).replace('\\','/')
 E.indent(project);E.ElementTree(project).write(out/'Entry.csproj',encoding='utf-8',xml_declaration=True)
 native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip()
-subprocess.run(['/clang64/lib/dotnet/dotnet.exe','build',native(out/'Entry.csproj'),'-c','Release',
+subprocess.run([os.environ['MINGW_PREFIX']+'/lib/dotnet/dotnet.exe','build',native(out/'Entry.csproj'),'-c','Release',
     '--configfile',native(root/'NuGet.config'),'-p:UseSharedCompilation=false','-v:minimal'],check=True)
 sha=lambda data:hashlib.sha256(data).hexdigest()
 record=dict(original_source='src/powershell/Program.cs',source_sha256=sha(original.read_bytes()),
     source_changes=[],references={name:sha((host/name).read_bytes()) for name in ['System.Management.Automation.dll','Microsoft.PowerShell.ConsoleHost.dll']})
-native_host=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/8.0.31/runtimes/win-x64/native/apphost.exe')
+native_host=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Host.win-x64/8.0.31/runtimes/win-x64/native/apphost.exe')
 record['sdk_source_apphost_sha256']=sha(native_host.read_bytes())
 record['sdk_source_apphost_path']=str(native_host)
 for name in ['pwsh.exe','pwsh.dll','pwsh.runtimeconfig.json']:

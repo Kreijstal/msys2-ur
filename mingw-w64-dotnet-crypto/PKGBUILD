@@ -12,7 +12,7 @@ pkgver=8.0.31
 pkgrel=1
 pkgdesc='Source-built .NET cryptography, diagnostics and encoding libraries'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -27,9 +27,9 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
             'fa3003f4b3c52041c6b6dc8a883676bb2ff24d0fd46c395b8801cb8b401f6729'
-            'd63cd03cecd0ec281f8bf6d203b669a21fafffa0c2e4bc56c60aa06ea2afbb57'
+            'b1fb55904d83ce240b8c817971c11f0d6bbf71da34bb82375766a44e65688a83'
             'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
-            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            '2d5694a524bf4499bafdfb6a7a5057221fda34cfe7e7b7e609c3b90b189e9266'
             'dc8f4105e3b1868b3277ef9ec36cabd1ba6dd3ba5064a18be987852e054c0ce3')
 
 _env() {
@@ -71,38 +71,49 @@ _install() {
   install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
 }
 
-package_mingw-w64-clang-x86_64-dotnet-formats-asn1() {
+package_dotnet-formats-asn1() {
   pkgdesc='Source-built System.Formats.Asn1 8.0.2 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install formats-asn1 System.Formats.Asn1 8.0.2
 }
 
-package_mingw-w64-clang-x86_64-dotnet-cryptography-pkcs() {
+package_dotnet-cryptography-pkcs() {
   pkgdesc='Source-built System.Security.Cryptography.Pkcs 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1=${pkgver}")
   _install cryptography-pkcs System.Security.Cryptography.Pkcs 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-cryptography-xml() {
+package_dotnet-cryptography-xml() {
   pkgdesc='Source-built System.Security.Cryptography.Xml 8.0.4 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs=${pkgver}")
   _install cryptography-xml System.Security.Cryptography.Xml 8.0.4
 }
 
-package_mingw-w64-clang-x86_64-dotnet-diagnosticsource() {
+package_dotnet-diagnosticsource() {
   pkgdesc='Source-built System.Diagnostics.DiagnosticSource 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install diagnosticsource System.Diagnostics.DiagnosticSource 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-encodings-web() {
+package_dotnet-encodings-web() {
   pkgdesc='Source-built System.Text.Encodings.Web 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install encodings-web System.Text.Encodings.Web 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-encoding-codepages() {
+package_dotnet-encoding-codepages() {
   pkgdesc='Source-built System.Text.Encoding.CodePages 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install encoding-codepages System.Text.Encoding.CodePages 8.0.0
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

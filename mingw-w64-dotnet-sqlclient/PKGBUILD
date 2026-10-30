@@ -7,7 +7,7 @@ pkgrel=1
 _commit=84b081710c66cc560b77d4de38cee493c3a38e9d
 pkgdesc='Experimental complete Windows SqlClient source port with managed SNI; full native compatibility unverified'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/maintenance-packages'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -42,10 +42,10 @@ noextract=("maintenance-packages-$_commit.tar.gz")
 sha256sums=('f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6'
  'c901d8c36f368bc5a46d5c9067e27de6d67a41c83a20cb1516c129b9502f7b69'
  'c98940e735ffbc7c613d737f2e5f91518b9f96047a661c5932f09ade74e43b7f'
- 'e9063f6e7cf1b159ea6b8db912864562e971d06755178e91e01c455f0d3cc776'
- 'ead52774ccb8d88d5a80a77090a38e0e590f5f06774dd9927e9630ab6abc25a6'
+ '74fa090f97b2884d1c4e7d3a4282963278d7e082342473422caa07b283ef9495'
+ 'e7be24d693e46606d37b4a8a67188432e96bd48732ff87f44bcb7a34480e1eea'
  '265d0cb156cfd7affa7e5f8f0f9f8fee4341d454054eecf5d555e7e7275e5944'
- '52b17e8824b5b4cf6430dae6f509d7180163afe7d3ea2fab7e88d22aa40b3dda'
+ '125d0848f155ce2e66ac637ff226daa1c09e29affee9b2f27044babb9e354c12'
  'dbf6ca728aebf1cf9a82bbae23a7096492378020b270685e592abf5ca00d239c'
  '93a7ae3de5b3148e1e46308eb6dc78a00ca634a3b73a7d97ccc43c006df5a509'
  '35599ac411f33dd191e2767d685515c0955d3a04f07d815d2d968c00ea0abe30'
@@ -61,7 +61,7 @@ sha256sums=('f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6'
  'c3b03f226ae516ca5f0375af069855fa54aa5439e8ef2818d04822643077e21f'
  '9d234bc7b25f2d6b734ea959681082adf3f2d41af0971119d8eb68a7383a9614'
  '57ebaf32f50d4245e985e3de80ccc5e71f3188ece1b91bfcffff98d5db42c192'
- 'c575dec5d5c55b5430c0cded06eaf8d7e9f37f893d4b0606fa883dae94d949b5')
+ '85609a316d46864c743851a31a500ca4fc1514c662aa74ae6f606e9e59a111b4')
 prepare() {
  /usr/bin/python3 "$srcdir/extract.py" "$srcdir/maintenance-packages-$_commit.tar.gz" "$srcdir/source"
  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared" --managed-sni

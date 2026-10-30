@@ -6,7 +6,7 @@ pkgver=2.3.6
 pkgrel=1
 pkgdesc='Complete source PSReadLine Core module and NuGet PSModule package for .NET8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/PowerShell/PSReadLine'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-powershell-pager>=1.0.0")
@@ -31,15 +31,15 @@ source=("psreadline-$pkgver.tar.gz::https://codeload.github.com/PowerShell/PSRea
 )
 sha256sums=(
   '177b308aaa42a360d61c89a33701b840a89c366a98b49104a4d0ba7a9e90954b'
-  '5079cf6989b420e04c8b6bb208b21921dcc3f4cbda79582bcd8eed7a3a7a5ec8'
-  '99a092f7be8a8e71af8bedba45ddbffb362badfae22d5bfd7418319539292ad0'
+  '6ecf394ed18495fe520d2c701d578157a5723716f31ebbbbdad63462058f67ae'
+  '0689a9b873631ea62e32806e1c9c6c064a979defb07606aab01fe3843e8880c7'
   '5d3ff621146b0961677221f9ee800dd28fbef24361b1494b53fb2c0b1a62ee3c'
-  '5e19fd224de959a2bc4465b1fd40eb25bb299f64211dfdf3458a5109763bb9e7'
-  'aa87699ddb2d6b87465781470813df7be003af61940f8515cf249d9be6538a0a'
+  'f1abc3f9d01a3230e493fe8a690e42c3ade3dc358c8c6fc3f39acb6de2381083'
+  '97bedcb44b4d1c50d4c50f9a167570afa759d036bce3847d0e8994e76547bdf2'
   '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
   '312c8f1e71d200066283afb5949abfc0e749f0c5deaef7d35ed2b13b05b39571'
-  '643bb0d1290fd0954864e55bbe8d438f739ef2a83660d29b642c580b5f02b9e1'
-  'e77ad2681376a44efccda06121d1ee7389b47221696af134578e2d9bb18bea87'
+  '3f106c5ce356158f2decdc6b7955d852f4db99d85a95c29c11f3979bbf0e5dd0'
+  '30960866200f03080b1610887d4a836f745372536f2589f36ab86f97ee14a72a'
   '292c9dc373a0217b6abe6a583435614aae134c637a61439adb687fc3fee2b8a7'
   '750c35353365c08fcc11ae02931e5521585d62fc381364a9dbebacdeddd3b78f'
   'd8b78d0de312c4280a5db7ddfe33e28768ab67e51ff236f06eff6e0bb61e0e51'
@@ -58,7 +58,7 @@ package() {
   mkdir -p "$module"
   cp -R "$srcdir/prepared/module/." "$module/"
   install -Dm644 "$srcdir/prepared/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/License.txt"
-  install -Dm644 /clang64/share/licenses/dotnet-powershell-pager/LICENSE "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Pager-LICENSE"
+  install -Dm644 ${MINGW_PREFIX}/share/licenses/dotnet-powershell-pager/LICENSE "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Pager-LICENSE"
   install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
   install -m644 "$srcdir/prepared/source-build.json" "$srcdir/published-provenance.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
 }

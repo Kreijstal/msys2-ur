@@ -7,7 +7,7 @@ _nugetver=8.0.0-preview.26274.2
 _commit=0963af6bfc2a3d5083faa2b7c1c91a4eee29a6f4
 pkgdesc='Full source-built SDK-selected .NET analyzers and CSharp/VisualBasic code fixes'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/roslyn-analyzers'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-visualbasic-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler>=4.9.2")
@@ -20,13 +20,13 @@ source=("roslyn-analyzers-$_commit.tar.gz::https://codeload.github.com/dotnet/ro
         published-metadata-provenance.json SourceBuild.NetAnalyzers.props README.md)
 sha256sums=('1e4434f9401670f8b0e53116edecbb3a5db60c056dab5ac2c28a88966d9861e0'
             '24c33c45d3fe736bc7a0aa4d216fc9a284c71226957ec7e7c8b563f5d4fdb4f7'
-            '9ccf36472932d7f272ee292ab783ac0d22e3236583486dbb775a98608f9cd239'
-            '933562d6b501bd5c16cae5e407f5f2bfd2929d68e3688c0937fb2e59d3c0e973'
-            'abb4a7d84e28da932a51572d4bcd2ceb3eda30480aba5b10354a07ee0335874d'
+            'c31075960f3d5b6dee741a2d67049bef4217ce3509e4783c4d5867e33d17a4a7'
+            '978eaee9b682e6dcc2e42f1f88fda4400920e3c3a54bdadca45daf082579ebc8'
+            '4ba648f78216b4ef62e38170896fd681d2e70660f8923ed3a13cbb6571e8278d'
             '1a685a74afe04567cd518a0762b976f46b13e5685ea5429d01840767a4fff4fe'
-            'e661c526c2763e459661be94391d56eedf8c7654413734ad81acfc56c41c519a'
-            '6bb4c04b8ccd304f3b16237151c714c62b22d4c9b9e8ada837b246d52cd59d36'
-            'b8c057d0468b849dbc7417897d09600405e1b9cb81d8285b579e16b0a13411c8'
+            'd9a2f19d315ec56a4f73579259b8d780dbea7c7694590aedbb8b3718d7139e79'
+            '7e5a47dbcce1cf14939a3dd56572a0ff40db2a95134f248c8593283d189815e5'
+            '718284ae10716b7d56f6b4873696a67de3c07d83c446688c4ac9a1fcd4e92da1'
             '91ca57261aaf8dbc2725551584be595ab7e7b2431e7ce84b2ce3f7e0d5dfd4e9'
             'dabcc2ead6b44f6365f8925185e6364638cd1e441a1236266481759832c6c0a7'
             '12c32130266fd2ed6b162a2c8e8badb98faed5890c935e8c77b159a547dd4c93'
@@ -44,7 +44,7 @@ sha256sums=('1e4434f9401670f8b0e53116edecbb3a5db60c056dab5ac2c28a88966d9861e0'
 prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
 build() { bash "$srcdir/build.sh" "$srcdir/roslyn-analyzers-$_commit" "$srcdir/prepared"; }
 check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared/package/payload/source-build"; }
-package_mingw-w64-clang-x86_64-dotnet-netanalyzers() {
+package_dotnet-netanalyzers() {
  install -Dm644 "$srcdir/feed/Microsoft.CodeAnalysis.NetAnalyzers.$_nugetver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.codeanalysis.netanalyzers.$_nugetver.nupkg"
  install -Dm644 "$srcdir/roslyn-analyzers-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-netanalyzers/License.txt"
  install -m644 "$srcdir/roslyn-analyzers-$_commit/assets/ThirdPartyNotices.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-netanalyzers/ThirdPartyNotices.txt"
@@ -55,7 +55,7 @@ package_mingw-w64-clang-x86_64-dotnet-netanalyzers() {
   install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-netanalyzers/$file"
  done
 }
-package_mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers() {
+package_dotnet-sdk-netanalyzers() {
  pkgdesc='Source-built implicit .NET analyzers and compiler selection for source SDK8.0.131'
  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2" "${MINGW_PACKAGE_PREFIX}-dotnet-netanalyzers=$pkgver")
  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/sdk/8.0.131/Sdks/Microsoft.NET.Sdk/analyzers" name language
@@ -74,3 +74,14 @@ package_mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers() {
  install -m644 "$srcdir/roslyn-analyzers-$_commit/assets/ThirdPartyNotices.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-sdk-netanalyzers/ThirdPartyNotices.txt"
  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-sdk-netanalyzers/README.md"
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

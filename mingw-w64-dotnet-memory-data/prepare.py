@@ -40,7 +40,7 @@ capture=E.SubElement(project,'Target',Name='CaptureOriginalCompilerInputs',Befor
 E.SubElement(capture,'WriteLinesToFile',File='$(IntermediateOutputPath)compiler-inputs.txt',Lines="@(Compile->'%(FullPath)')",Overwrite='true',Encoding='UTF-8')
 E.SubElement(capture,'WriteLinesToFile',File='$(IntermediateOutputPath)reference-inputs.txt',Lines="@(ReferencePath->'%(FullPath)')",Overwrite='true',Encoding='UTF-8')
 E.indent(project);E.ElementTree(project).write(out/'Library.csproj',encoding='utf-8',xml_declaration=True)
-feed=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else '/clang64/lib/dotnet/library-packs'
+feed=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+feed+'"/></packageSources></configuration>\n')
 metadata=['Directory.Build.props','Directory.Build.targets','eng/Directory.Build.Common.props','eng/Directory.Build.Common.targets','sdk/core/System.Memory.Data/Directory.Build.props','sdk/core/System.Memory.Data/src/System.Memory.Data.csproj']
 assert all((source/p).is_file() for p in metadata)

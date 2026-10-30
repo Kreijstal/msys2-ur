@@ -15,7 +15,7 @@ pkgver=8.0.31
 pkgrel=1
 pkgdesc='Source-built remaining Windows compatibility libraries for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -36,13 +36,13 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
             '6c11546f600ca15ea07e0c461b5a9b4d56f00d553e312e3050faae1f54f0a53d'
             '8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed'
-            'c337485463ea88786b23016703192b455cbd720e9ad3c38bd1184cdc21838acd'
+            '89017b4bc1a039a50ff83e59da97fcbe8207f959edcb231f2aec584da36eabba'
             '2dbaab69172e9e85a509b4f736a2a9e760531775e25ead79462c2063a107673d'
             'fed65a6a80487079726efc093fd3ab342a4c430828cad2c60e8773a1a748a7e0'
-            'dac38e270e141a01c6f49bf4a8269d69ed8ab785b6b0e2515ba7a97ead18a797'
+            'e0314645a8f523f20a07d383e3ae487cd2b6dbda16d3895f76394a46054f62bc'
             'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
-            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
-            '09c7d0214e6976ff8ec70233cfde4611c581bcd73f0c0c639d21c0ca657a1bbf')
+            '2d5694a524bf4499bafdfb6a7a5057221fda34cfe7e7b7e609c3b90b189e9266'
+            'c7aaf8ee0feb495cba39b4ba062c5058a2e72e1061a704a4a8c7751f8065654c')
 prepare() {
   local inputs=("runtime-$pkgver/LICENSE.TXT" "runtime-$pkgver/THIRD-PARTY-NOTICES.TXT"
                 "runtime-$pkgver/src/libraries/Common/src" "runtime-$pkgver/src/libraries/System.Private.CoreLib/src")
@@ -66,56 +66,67 @@ _install() {
   install -m644 "$srcdir/prepared/removed-binaries.json" "$srcdir/prepared/localization.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/"
 }
 
-package_mingw-w64-clang-x86_64-dotnet-codedom() {
+package_dotnet-codedom() {
   pkgdesc='Source-built System.CodeDom 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install codedom System.CodeDom 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-reflection-context() {
+package_dotnet-reflection-context() {
   pkgdesc='Source-built System.Reflection.Context 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install reflection-context System.Reflection.Context 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-composition() {
+package_dotnet-composition() {
   pkgdesc='Source-built System.ComponentModel.Composition 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install composition System.ComponentModel.Composition 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-composition-registration() {
+package_dotnet-composition-registration() {
   pkgdesc='Source-built System.ComponentModel.Composition.Registration 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-composition=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-reflection-context=${pkgver}")
   _install composition-registration System.ComponentModel.Composition.Registration 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-odbc() {
+package_dotnet-odbc() {
   pkgdesc='Source-built System.Data.Odbc 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install odbc System.Data.Odbc 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-oledb() {
+package_dotnet-oledb() {
   pkgdesc='Source-built System.Data.OleDb 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter=${pkgver}")
   _install oledb System.Data.OleDb 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-directoryservices-accountmanagement() {
+package_dotnet-directoryservices-accountmanagement() {
   pkgdesc='Source-built System.DirectoryServices.AccountManagement 8.0.1 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices=${pkgver}" "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols=${pkgver}")
   _install directoryservices-accountmanagement System.DirectoryServices.AccountManagement 8.0.1
 }
 
-package_mingw-w64-clang-x86_64-dotnet-io-ports() {
+package_dotnet-io-ports() {
   pkgdesc='Source-built System.IO.Ports 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install io-ports System.IO.Ports 8.0.0
 }
 
-package_mingw-w64-clang-x86_64-dotnet-speech() {
+package_dotnet-speech() {
   pkgdesc='Source-built System.Speech 8.0.0 from .NET 8.0.31 sources'
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _install speech System.Speech 8.0.0
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

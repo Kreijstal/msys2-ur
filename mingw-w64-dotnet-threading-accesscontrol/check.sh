@@ -4,7 +4,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 out=${1:?usage: check.sh NEW_OUTPUT_DIRECTORY LOCALIZATION_JSON [FEED]}
 localization=$(cygpath -am "${2:?missing localization manifest}")
-feed=${3:-/clang64/lib/dotnet/library-packs}
+feed=${3:-${MINGW_PREFIX}/lib/dotnet/library-packs}
 mkdir "$out"
 out=$(cd "$out" && pwd)
 feed=$(cd "$feed" && pwd)
@@ -22,9 +22,9 @@ PY
 cat > "$out/NuGet.config" <<CONFIG
 <configuration><packageSources><clear /><add key="source-built" value="$(cygpath -m "$feed")" /></packageSources></configuration>
 CONFIG
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_HOME=$(cygpath -m "$out/cli-home") NUGET_PACKAGES=$(cygpath -m "$out/empty-packages")
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release --configfile "$(cygpath -m "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release --configfile "$(cygpath -m "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
 cd "$out"
-timeout 120 /clang64/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$localization"
+timeout 120 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$localization"

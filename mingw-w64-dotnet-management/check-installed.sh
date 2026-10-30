@@ -10,7 +10,7 @@ cat > "$out/check.csproj" <<'PROJECT'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="System.Management" Version="[8.0.0]"/></ItemGroup></Project>
 PROJECT
 cat > "$out/NuGet.config" <<CONFIG
-<configuration><packageSources><clear/><add key="installed-source-built" value="$(cygpath -m /clang64/lib/dotnet/library-packs)"/>
+<configuration><packageSources><clear/><add key="installed-source-built" value="$(cygpath -m ${MINGW_PREFIX}/lib/dotnet/library-packs)"/>
 CONFIG
 if [[ $# -ge 3 ]]; then
   printf '<add key="new-source-built" value="%s"/>\n' "$(cygpath -am "$3")" >> "$out/NuGet.config"
@@ -25,11 +25,11 @@ if [[ $# -ge 3 ]]; then
 MAPPING
 fi
 printf '</configuration>\n' >> "$out/NuGet.config"
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -m "$out/cli-home") NUGET_PACKAGES=$(cygpath -m "$out/empty-packages")
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release \
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release \
   --configfile "$(cygpath -m "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
-/usr/bin/python3 - "$out" "${3:-/clang64/lib/dotnet/library-packs}" <<'PY'
+/usr/bin/python3 - "$out" "${3:-${MINGW_PREFIX}/lib/dotnet/library-packs}" <<'PY'
 from pathlib import Path
 import hashlib,sys,zipfile
 out,feed=(Path(p) for p in sys.argv[1:])
@@ -42,4 +42,4 @@ with zipfile.ZipFile(expected[0]) as archive:
   assert (out/'bin/Release/net8.0'/name).read_bytes()==archive.read(name),name
 print('PASS consumer restored exact candidate/installed source archive and loads its exact managed/native asset bytes')
 PY
-timeout 90 /clang64/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$resources"
+timeout 90 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$resources"

@@ -18,7 +18,7 @@ pkgrel=1
 _commit=623fde83a3cd73cb479ec7fa03866c6116894dbf
 pkgdesc='Complete original NuGet.Client Core source libraries for PowerShell PSResourceGet'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/NuGet/NuGet.Client'
 license=('spdx:Apache-2.0')
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python'
@@ -57,11 +57,11 @@ sha256sums=(
   'd9ac33e2b712c85a624dc9602e172e8ac5ae1bea571885cbde39bb38366ab5ec'
   '4390ddf7b63bf470d2beb1405d9c0519a4cc34fa9c349da40ef0f8990c2ae0f6'
   '4999aedfdc3130f075dfe4d67ef572e48e99f2458abca528535d7796b682353d'
-  '42ce194142fb6024ee04c01ea1f6057122fbd5121da5deda5fd7d0cb2baf97e0'
+  '56ac673aa46bad149792f73d004d6284b01e9a1421ff0537ed85d999d340bf33'
   'e265bee4e0470f0efe6c197789a3608ccea8f2749d6e71dd45a8e497bdad06ea'
   '027ecd2eb55c5994ef459114a32fecfa2800189a1986f7d9b186044368743c90'
   '60a7fce5582e13db47a6e60135d057741bd7ef83d1e924d9dbd496069b4ca6fc'
-  'f79b9663521004be34550c044afa2badf515bec8a123450ef6d90c0d161fa903'
+  'dc26c0719d660c5abb9c48707216b22261b31c5e9234ad994fd296cc133bd05e'
   '42dc236dbd007c9ba92577d4f3e89b0acd612d7e212298a20c0004f7c734096a'
   '3e8ba67ab34b999a7bf2570af1b0d0177f91867095987995095bdc961b600c8d'
   '078789683bc4bc33df46a9ba6ee4ee01ae961394b1083ef565601c3d5505d22c'
@@ -78,14 +78,14 @@ prepare() {
   /usr/bin/python3 "$srcdir/extract.py" "$srcdir/nuget-client-$_commit.tar.gz" "$srcdir/source"
   /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
   cat > "$srcdir/NuGet.config" <<XML
-<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am /clang64/lib/dotnet/library-packs)"/></packageSources></configuration>
+<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/library-packs)"/></packageSources></configuration>
 XML
 }
 build() {
-  export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
   export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/empty-packages")
   export BUILD_SOURCEVERSION=$_commit
-  /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/NuGet.Core/NuGet.Commands/NuGet.Commands.csproj")" -c Release \
+  ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/NuGet.Core/NuGet.Commands/NuGet.Commands.csproj")" -c Release \
     --configfile "$(cygpath -am "$srcdir/NuGet.config")" -p:DotNetBuildFromSource=true -p:TargetFrameworks=net8.0 -p:NETCoreTargetFramework=net8.0 \
     -p:IsXPlat=true -p:BuildRTM=true -p:BuildNumber=3 -p:RepositoryCommit=$_commit -p:SourceRevisionId=$_commit \
     -p:NewtonsoftJsonPackageVersion=13.0.4 -p:SystemSecurityCryptographyPkcsVersion=8.0.1 -p:DebugType=portable -p:GenerateDocumentationFile=true \
@@ -110,47 +110,58 @@ record['original_compile_items']=len(record['projects'][name]['actual_original_c
 Path(sys.argv[3]).write_text(json.dumps(record,indent=2)+'\n')
 PYINNER
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-frameworks() {
+package_dotnet-nuget-frameworks() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _package NuGet.Frameworks dotnet-nuget-frameworks
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-common() {
+package_dotnet-nuget-common() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-frameworks=$pkgver")
   _package NuGet.Common dotnet-nuget-common
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-versioning() {
+package_dotnet-nuget-versioning() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
   _package NuGet.Versioning dotnet-nuget-versioning
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-configuration() {
+package_dotnet-nuget-configuration() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31")
   _package NuGet.Configuration dotnet-nuget-configuration
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-packaging() {
+package_dotnet-nuget-packaging() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json>=13.0.4" "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs>=8.0.31")
   _package NuGet.Packaging dotnet-nuget-packaging
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-librarymodel() {
+package_dotnet-nuget-librarymodel() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-versioning=$pkgver")
   _package NuGet.LibraryModel dotnet-nuget-librarymodel
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-dependencyresolver-core() {
+package_dotnet-nuget-dependencyresolver-core() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-configuration=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-librarymodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
   _package NuGet.DependencyResolver.Core dotnet-nuget-dependencyresolver-core
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-projectmodel() {
+package_dotnet-nuget-projectmodel() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-dependencyresolver-core=$pkgver")
   _package NuGet.ProjectModel dotnet-nuget-projectmodel
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-protocol() {
+package_dotnet-nuget-protocol() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-packaging=$pkgver")
   _package NuGet.Protocol dotnet-nuget-protocol
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-credentials() {
+package_dotnet-nuget-credentials() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-protocol=$pkgver")
   _package NuGet.Credentials dotnet-nuget-credentials
 }
-package_mingw-w64-clang-x86_64-dotnet-nuget-commands() {
+package_dotnet-nuget-commands() {
   depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-credentials=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-nuget-projectmodel=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6>=6.0.0" "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6>=6.0.0")
   _package NuGet.Commands dotnet-nuget-commands
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

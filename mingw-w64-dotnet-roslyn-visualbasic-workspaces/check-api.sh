@@ -3,7 +3,7 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 consumer=$(cd "${1:?usage: check-api.sh CONSUMER NEW_OUTPUT}" && pwd)
 mkdir "${2:?missing new output}";out=$(cd "$2" && pwd)
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/empty-packages")
 cp "$consumer/NuGet.config" "$out/"
@@ -16,12 +16,12 @@ for tool in api metadata services;do
  cat > "$out/$tool/Tool.csproj" <<'PROJECT'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="[4.9.2]"/></ItemGroup></Project>
 PROJECT
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$out/$tool/Tool.csproj")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$out/$tool/Tool.csproj")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
 done
 target=$(cygpath -am "$consumer/bin/Release/net8.0/Microsoft.CodeAnalysis.VisualBasic.Workspaces.dll")
-/clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/api/bin/Release/net8.0/Tool.dll")" "$(cygpath -am /clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$target" > "$out/actual-api.json"
-/clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/metadata/bin/Release/net8.0/Tool.dll")" "$target" > "$out/actual-metadata.json"
-/clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/services/bin/Release/net8.0/Tool.dll")" "$target" > "$out/actual-services.json"
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/api/bin/Release/net8.0/Tool.dll")" "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$target" > "$out/actual-api.json"
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/metadata/bin/Release/net8.0/Tool.dll")" "$target" > "$out/actual-metadata.json"
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/services/bin/Release/net8.0/Tool.dll")" "$target" > "$out/actual-services.json"
 /usr/bin/python3 - "$here" "$out" <<'PY'
 from pathlib import Path
 import json,sys

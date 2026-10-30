@@ -1,4 +1,5 @@
 """Verify source provenance, exact source patch, installed parity and metadata API."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -38,12 +39,12 @@ for name,digest in record['module_files'].items():assert sha((module/name).read_
 assert json.loads((inspection/'api.json').read_text())==golden['published_api']
 identity=json.loads((inspection/'identity.json').read_text())
 assert {k:v for k,v in identity.items() if k!='types'}==golden['published_identity']
-feed=Path('/clang64/lib/dotnet/library-packs/threadjob.2.0.3.nupkg')
+feed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/threadjob.2.0.3.nupkg')
 if feed.is_file():
     with zipfile.ZipFile(feed) as z:
         same=all(z.read(name)==(module/name).read_bytes() for name in record['module_files'])
     if same:
-        installed=Path('/clang64/lib/powershell/Modules/ThreadJob/2.0.3')
+        installed=Path(os.environ['MINGW_PREFIX']+'/lib/powershell/Modules/ThreadJob/2.0.3')
         for name in record['module_files']:assert (installed/name).read_bytes()==(module/name).read_bytes(),name
         print('PASS restored installed NuGet binary/manifest equal installed loose module bytes')
 print('PASS complete original source inventory/patch provenance, sole binary, license, frozen identity and all55 published API declarations')

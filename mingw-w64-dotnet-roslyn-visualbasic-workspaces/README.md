@@ -42,7 +42,7 @@ identities and absence of Framework implementation modules. CSharp.Workspaces
 is used only by these cross-language checks; it is not bundled or a production
 dependency. These are focused integration gates, not the full upstream test suite.
 
-Build in CLANG64 with the source SDK and dependencies installed:
+Build in CLANG64 or UCRT64 with the source SDK and dependencies installed:
 
 ```bash
 makepkg --cleanbuild --force --noconfirm
@@ -51,7 +51,7 @@ makepkg --cleanbuild --force --noconfirm
 After installation, choose new output directories and only the installed feed:
 
 ```bash
-bash check.sh NEW_OUTPUT /clang64/share/doc/dotnet-codeanalysis-visualbasic-workspaces/localization.json /clang64/share/doc/dotnet-codeanalysis-visualbasic-workspaces/source-items.json
+bash check.sh NEW_OUTPUT $MINGW_PREFIX/share/doc/dotnet-codeanalysis-visualbasic-workspaces/localization.json $MINGW_PREFIX/share/doc/dotnet-codeanalysis-visualbasic-workspaces/source-items.json
 bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
 ```
 

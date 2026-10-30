@@ -51,7 +51,7 @@ for path in sorted(files):E.SubElement(items,'Compile',Include=rel(path))
 capture=E.SubElement(p,'Target',Name='CaptureOriginalCompilerInputs',BeforeTargets='CoreCompile')
 for kind,filename in [('Compile','compiler-inputs.txt'),('ReferencePath','reference-inputs.txt'),('Analyzer','analyzer-inputs.txt')]:E.SubElement(capture,'WriteLinesToFile',File='$(IntermediateOutputPath)'+filename,Lines='@('+kind+"->'%(FullPath)')",Overwrite='true',Encoding='UTF-8')
 E.indent(p);E.ElementTree(p).write(out/'Library.csproj',encoding='utf-8',xml_declaration=True)
-feed=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/library-packs'],text=True).strip() if __import__('shutil').which('cygpath') else '/clang64/lib/dotnet/library-packs'
+feed=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'],text=True).strip() if __import__('shutil').which('cygpath') else os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+feed+'"/></packageSources></configuration>\n')
 metadata=['Directory.Build.props','Directory.Build.targets','eng/Directory.Build.Common.props','eng/Directory.Build.Common.targets','sdk/core/Azure.Core/Directory.Build.props','sdk/core/Azure.Core/src/Azure.Core.csproj']
 r=dict(source_commit=inputs['source_repository']['commit'],source_archive_sha256=inputs['source_archive_sha256'],

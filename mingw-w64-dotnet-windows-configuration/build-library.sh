@@ -6,7 +6,7 @@ feed=${3:?missing feed}
 prepared=$(cd "$prepared" && pwd)
 mkdir -p "$feed"
 feed=$(cd "$feed" && pwd)
-dotnet=/clang64/lib/dotnet/dotnet.exe
+dotnet=${MINGW_PREFIX}/lib/dotnet/dotnet.exe
 config=$(cygpath -m "$prepared/NuGet.config")
 if [[ $id == System.Diagnostics.EventLog ]]; then
   mkdir "$prepared/$id/messages"
@@ -16,7 +16,7 @@ if [[ $id == System.Diagnostics.EventLog ]]; then
     # and message table; llvm-rc emits the resource consumed by source-built csc.
     /usr/bin/windmc -a -U -n ../../../runtime-8.0.31/src/libraries/System.Diagnostics.EventLog/src/Messages/EventLogMessages.mc
     cp ../../../runtime-8.0.31/src/libraries/System.Diagnostics.EventLog/src/Messages/EventLogMessages.rc .
-    MSYS2_ARG_CONV_EXCL='*' /clang64/bin/llvm-rc.exe /FO EventLogMessages.res EventLogMessages.rc
+    MSYS2_ARG_CONV_EXCL='*' ${MINGW_PREFIX}/bin/llvm-rc.exe /FO EventLogMessages.res EventLogMessages.rc
     cat > Messages.csproj <<'PROJECT'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>System.Diagnostics.EventLog.Messages</AssemblyName><AssemblyVersion>8.0.0.0</AssemblyVersion><Win32Resource>EventLogMessages.res</Win32Resource><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><SignAssembly>true</SignAssembly><PublicSign>true</PublicSign><AssemblyOriginatorKeyFile>../Library.public.snk</AssemblyOriginatorKeyFile></PropertyGroup></Project>
 PROJECT

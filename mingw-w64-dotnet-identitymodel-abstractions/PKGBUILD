@@ -7,7 +7,7 @@ pkgrel=1
 _commit=c94c7fc235501d478221e979062bd8837a55575b
 pkgdesc='Complete original source IdentityModel logging and telemetry abstractions'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -32,11 +32,11 @@ source=("identitymodel-$_commit.tar.gz::https://codeload.github.com/AzureAD/azur
 noextract=("identitymodel-$_commit.tar.gz")
 sha256sums=('c8bb5a2b1a946b98dc7165ed8e01439b76cc2d91c1b3ab168e613f0120b763f2'
  'b0c8fe1ae21ab8b23e8d9548256acf799bcc5a416ff0ee77f50dddcd4237ffa6'
- '87f82238ed60dd693c442d4409530a7963e47144791a338df77f632eb39d79e8'
+ 'fd920a3ee45839f62622b7ee43035f84a2253fa9815caba68bf230434afd4fe9'
  '6903eb5bb0314d46182a26c00fab69161057ebee44403d4314ac5bb885be77fa'
  '90ad18cebc07285076ea7c961dd8603e4a2bdc58d62feffa875bf9dfff33a3d4'
  'ec39eaa7f9ac0bd0dd0eb277e37f24ef18836d482a871f7300e54b789ebdaf93'
- '285879f97cb30ad85e744d3d49e9ffdfcb7af6564de481d1516a0d117a3bc11d'
+ 'c6bc491329863fd441e04f02f36a550e9c618b244cd29400c944ba9a166ddf10'
  'f2036bafba17af9d5fd5c2c309901d7469c5e04c438b4a640ee199b9d6068826'
  '98a27979c475e8274bbc1cd1537449e099eed461a7fe431dd5b1eb4cdfd093ee'
  '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
@@ -50,9 +50,9 @@ prepare() {
  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
 }
 build() {
- export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/Microsoft.IdentityModel.Abstractions/Microsoft.IdentityModel.Abstractions.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/Microsoft.IdentityModel.Abstractions/Microsoft.IdentityModel.Abstractions.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
  /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared"
  /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
 }

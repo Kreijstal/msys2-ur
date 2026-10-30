@@ -1,4 +1,5 @@
 """Gate actual original compiler/resource inputs and resolved dependency graph."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -59,7 +60,7 @@ for name,record in gold['projects'].items():
         assert framework['dependencies'][package]['version']=='['+version+', )',(name,package)
         assert package+'/'+version in assets['libraries'],(name,package)
     references=[]
-    roots=[('prepared',prepared),('source-cache',cache),('framework',Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31'))]
+    roots=[('prepared',prepared),('source-cache',cache),('framework',Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31'))]
     roots=[(label,root,native(root)+'/') for label,root in roots]
     for value in (obj/'reference-inputs.txt').read_text(encoding='utf-8-sig').splitlines():
         value=value.replace('\\','/')

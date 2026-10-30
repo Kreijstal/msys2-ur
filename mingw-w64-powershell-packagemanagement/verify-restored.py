@@ -1,4 +1,5 @@
 """Check exact restored module assets, original compiler/resource inputs and API baselines."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -83,11 +84,11 @@ for name,namespace in namespaces.items():
     strings={p.get('name').replace(' ','_'):p.findtext('value') for p in E.parse(originals[name]/'resources/Messages.resx').getroot().findall('data')}
     assert resources[name]=={base:strings},name
 assert sum(len(values) for item in resources.values() for values in item.values())==295
-installed=Path('/clang64/lib/dotnet/library-packs/packagemanagement.1.4.8.1.nupkg')
+installed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/packagemanagement.1.4.8.1.nupkg')
 if installed.is_file():
     with zipfile.ZipFile(installed) as z:same=all(z.read(name)==data for name,data in expected.items())
     if same:
-        loose=Path('/clang64/lib/powershell/Modules/PackageManagement/1.4.8.1')
+        loose=Path(os.environ['MINGW_PREFIX']+'/lib/powershell/Modules/PackageManagement/1.4.8.1')
         for name,data in expected.items():assert (loose/name).read_bytes()==data,name
         print('PASS restored installed NuGet21 module files equal installed loose module bytes')
 print('PASS PackageManagement277 original compiler inputs/five generated classes,295 resources,2205 APIs, six identities, three exact type-name overlays and complete Core module/DSC/license assets')

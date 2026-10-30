@@ -65,7 +65,7 @@ On CLANG64 with source-built SDK, Common/CSharp/VisualBasic and both Workspaces
 python3 prepare.py PINNED_SOURCE NEW_PREPARED
 bash build-libraries.sh NEW_PREPARED
 bash generate-config.sh NEW_PREPARED PINNED_SOURCE
-/clang64/lib/dotnet/dotnet.exe NEW_PREPARED/fixture-tool/bin/Release/net8.0/Tool.dll PINNED_SOURCE/src/Microsoft.CodeAnalysis.Analyzers/UnitTests > fixtures.json
+$MINGW_PREFIX/lib/dotnet/dotnet.exe NEW_PREPARED/fixture-tool/bin/Release/net8.0/Tool.dll PINNED_SOURCE/src/Microsoft.CodeAnalysis.Analyzers/UnitTests > fixtures.json
 bash check-prototype.sh NEW_PREPARED NEW_CONSUMER fixtures.json
 ```
 

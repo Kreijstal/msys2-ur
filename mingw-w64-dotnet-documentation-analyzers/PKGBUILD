@@ -7,7 +7,7 @@ pkgrel=1
 _commit=489c06575beee224030ffdc9e91ce43569f32a79
 pkgdesc='Source-built DocumentationAnalyzers and code fixes for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/DotNetAnalyzers/DocumentationAnalyzers'
 license=('spdx:MIT' 'spdx:BSD-3-Clause')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -18,9 +18,9 @@ source=("documentation-$pkgver.tar.gz::https://codeload.github.com/DotNetAnalyze
 sha256sums=('28249640f14e82a53702994be7c651eb7ac3559c922452e57770301f7f9b9605'
             '2b6ce39f22ce82532b6519563bd9ab895c045f56d2053d7326a581ba079709db'
             'bf036fb544725c25857295a8a811046ff6a4a404a1716d72ab1e7a0525156310'
-            '4c6050beb0d08c069fae155031e505dce635ac69a891710f62526d0c04d6efe9'
+            '4a42b8aae9d28c86e09ff79a59a12483208424df605de7a571bd3fac299f8f63'
             '2fe99e2eadf54b1c5ec115f3f3aa9f1d0723f40a5dddb59695cfbb13a7036fd9'
-            '893693ca48218f8dcf7ea102c9429844c444e8df7971f003003f412f0aeaed47'
+            '17bb9bb9014eecaadee46aa14f65fd2af35e5ee817edbe56f39249eac79643c9'
             'bfbd554c9b7494e87da54a16a86ce384a59eaf55e5b2c4b9625b19bad6bd7ddc'
             '96187d226e96e7cb99857747f2a83a2b6e44c370c7a32247266993ca8a73935d'
             'f84e6aa95c3b765baeadc8d3e436a5b2cdfd82d48f31b4da07ad286a1f9b5d90'
@@ -42,13 +42,24 @@ _install() {
   install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-documentation-analyzers$suffix/$file"
  done
 }
-package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers() {
+package_dotnet-documentation-analyzers() {
  pkgdesc='Source-built DocumentationAnalyzers beta.59 dependency package'
  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers-unstable=$pkgver")
  _install '' DotNetAnalyzers.DocumentationAnalyzers 1.0.0-beta.59
 }
-package_mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable() {
+package_dotnet-documentation-analyzers-unstable() {
  pkgdesc='Source-built DocumentationAnalyzers 1.0.0.59 analyzer and code-fix implementation'
  depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-commonmark>=0.15.1" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2")
  _install '-unstable' DotNetAnalyzers.DocumentationAnalyzers.Unstable 1.0.0.59
 }
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

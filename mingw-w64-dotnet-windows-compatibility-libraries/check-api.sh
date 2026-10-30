@@ -12,12 +12,12 @@ cp "$here/check-api.cs" "$out/Program.cs"
 cat > "$out/check-api.csproj" <<'PROJECT'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
 PROJECT
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_HOME=$(cygpath -m "$out/cli-home") NUGET_PACKAGES=$(cygpath -m "$out/empty-packages")
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check-api.csproj")" -c Release --configfile "$(cygpath -m "$prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check-api.csproj")" -c Release --configfile "$(cygpath -m "$prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
 while read -r id; do
-  /clang64/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check-api.dll")" \
+  ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check-api.dll")" \
     "$(cygpath -m "$prepared/$id/contract/bin/Release/net8.0/$id.dll")" \
     "$(cygpath -m "$consumer/bin/Release/net8.0")" \
     "$(cygpath -m "$consumer/bin/Release/net8.0")"

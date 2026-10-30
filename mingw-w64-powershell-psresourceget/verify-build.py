@@ -1,4 +1,5 @@
 """Gate the full original module, exact NuGet type qualification and source references."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,zipfile
 
@@ -25,8 +26,8 @@ for mapping in ['original_module_assets','original_project_metadata']:
     for path,digest in r[mapping].items():assert sha(source/path)==digest
 for path,digest in r['prepared_project_metadata'].items():assert sha(out/path)==digest
 cache_prefix=native(cache)+'/'
-framework=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
-sma=Path('/clang64/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll');sma_native=native(sma)
+framework=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
+sma=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll');sma_native=native(sma)
 refs=[];engines=[]
 for value in (out/'obj/Release/net8.0/ReferencePath.txt').read_text(encoding='utf-8-sig').splitlines():
     value=value.replace('\\','/')

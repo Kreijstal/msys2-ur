@@ -7,7 +7,7 @@ pkgrel=1
 _sourcever=8.0.31
 pkgdesc='Source-built Microsoft.Bcl.AsyncInterfaces 8 facade for the .NET 8 feed'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -20,8 +20,8 @@ sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '38d99a633e3eacc7ca198b4f97d9d502901e17ed6cfd55e5f5c34a7b3a9425cd'
             '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
             'eca377db258a82b0057e09f2357fb6f2890cf6de4d89e65060dbef6eaeba32ff'
-            '5931423d8dc95c075d51973e6920e7d9af559e8b99e5d9c24317755330a89a15'
-            '4b5a8b828308cec5581cec6ae640fecf1265051567730d6ad80da28dc31977e8')
+            'f38d0d30a77da0069207d90b1bfbd4e0a0a55c5b68bb926a830b20e67c47ed50'
+            '5fe8c0a842fa4643201828cf44cd369911614eabd17b017bfe75d0ab9772a835')
 prepare() {
   tar -xzf "$srcdir/runtime-v$_sourcever.tar.gz" -C "$srcdir" \
     "runtime-$_sourcever/src/libraries/Microsoft.Bcl.AsyncInterfaces" "runtime-$_sourcever/LICENSE.TXT"

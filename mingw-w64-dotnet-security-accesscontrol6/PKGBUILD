@@ -7,7 +7,7 @@ pkgrel=1
 _sourcever=189fbbd88d97dd6d65515ba2da05b62eab4e5039
 pkgdesc='Full source-built System.Security.AccessControl 6.0.1 Windows port for .NET 8'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -22,10 +22,10 @@ sha256sums=('edc08a6ea7adb9d231fb4e9f8279d99f3cec37a4bf5f254f038cdf9d5669525e'
             'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
             'acff1c19e98c71b65e74ae8c6b6049fb90633f47bae3a6ebe36341f7f473bb32'
             'b978c4392b4c2eb64016949907432e32b49795cd5f9664d7da449b0275d71a68'
-            '066a2aecf97ed4977b25d74c450fad51abbe3f33ec38b81db304af20f3ca83dd'
+            '4cd02d2a86946366e8d03f58ddcd00ea2f8a0fcb99481a207dfd5a5d9d6b4b02'
             'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
-            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
-            '260dd73c95527d111499b76831bc020f3a7d0b727cdd8f5e70cba6d1da1554d4')
+            '2d5694a524bf4499bafdfb6a7a5057221fda34cfe7e7b7e609c3b90b189e9266'
+            '0f0211e6eaafe8202829eeb2ab8a37bec742b88a9e507a18ae439958ca829eb0')
 
 _env() {
   export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")

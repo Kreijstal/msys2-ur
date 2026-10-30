@@ -1,4 +1,5 @@
 """Gate original Azure.Core compiler inputs, source JSON reference and produced bytes."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys
 
@@ -20,7 +21,7 @@ for relative,digest in r['original_project_tree'].items():assert sha(source/rela
 assert sha(source/'eng/AzureSDKClient.snk')==r['signing_key_sha256']
 for relative,digest in r['prepared_project_metadata'].items():assert sha(out/relative)==digest
 refs=[];dependency_refs={};cache_prefix=native(cache)+'/'
-framework=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
+framework=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');framework_prefix=native(framework)+'/'
 for line in (out/'obj/Release/net8.0/reference-inputs.txt').read_text(encoding='utf-8-sig').splitlines():
     line=line.replace('\\','/')
     if line.lower().startswith(cache_prefix.lower()):

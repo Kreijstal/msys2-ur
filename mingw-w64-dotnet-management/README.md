@@ -75,13 +75,13 @@ and no process-wide COM security initialization or system policy is changed.
 In CLANG64 with the source-built SDK and CodeDom installed:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 ```
 
 After installation, use a new output directory:
 
 ```bash
-bash check-installed.sh /tmp/wmi-installed /clang64/share/doc/dotnet-management/localization.json
+bash check-installed.sh /tmp/wmi-installed $MINGW_PREFIX/share/doc/dotnet-management/localization.json
 ```
 
 The original workflows/mmi-cim-wmi (dotnet-mingw-bootstrap) Framework-dependent probe is retained as historical

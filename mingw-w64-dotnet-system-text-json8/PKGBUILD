@@ -7,7 +7,7 @@ pkgrel=1
 _commit=81cabf2857a01351e5ab578947c7403a5b128ad1
 pkgdesc='Complete source System.Text.Json .NET8 library and original generator variants'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
@@ -36,13 +36,13 @@ noextract=("runtime-$_commit.tar.gz")
 sha256sums=(
  'bbd5b1651bfc4c75b67ef23b71af58f6441401185f22233daefd35cc9ec72cfd'
  '9ca75e675c416eed3b78fd2a49dd4b2ed1997008e456ead7a2be8adca7ab57a7'
- 'ce12fcf39889308e8975dbd1956d8c4f0e9c562942f6770da62dc105a36d81f1'
- 'e106ee13e0cd867308d7db53cb1384d92b6ecb783cb07a5cbcd715ede7a23829'
+ '1a66a31d7afd8de5243a6a99597f98869160e9a42d0418d404a1ec617d2b8abb'
+ 'd0a2658a620986a496df92e025d94a1586b00190488ffc4a351142ca69eea530'
  'bd30af5b25419f4c27b5aed501bbe5f5081562877b4b974bfe49b35d87336967'
- '50816f9f6c2d6468e3e1f0a731b7d52280a241823657f7a0c4dd24cac4588667'
+ '2344e95b4b04bb4bb0167c182a92666a4ef43208d3f19f97ea36efc897071dcc'
  '2fc6bc6c5115ff45b9120b1b79c536fc219ffdd4d6ec0e74885310b2e8f7481d'
  'eaf599ed09ffa9d115b6cb28a4d4398339cebb1ee7deec6d85d97c0302cb2aad'
- 'ae91f40ac32f98aa84beff3614cbebbecb616a86c5df314ce2827db7cf4b785f'
+ '7934690196e7dde70afc336595abd8d4fec28ae2c251ad0a6aa1a4ad46a26a3a'
  '03df7a19181901c22c7e5c6af8ba94de48ad0d57101fee1b32944979e2934098'
  '35db41e17e957c6288b7c8760dd836bae8d393cc8b3bb9d199dc88eae3d227e5'
  '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
@@ -51,18 +51,18 @@ sha256sums=(
  '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
  'b1666a1b0874f33fde442f78a4618668ecf6eefae41590f1fc2dad95d55578d8'
  '3689639beeab22fa9a5c8b0df30cf7f1cfefe1dbb301edf3b623174002bcd654'
- '9fbfd65c33a16e83cb3dd8d56e3c0fe7d9fdbe00e0a9e3481bf024cd1f75b24b'
+ 'cf14ffa464d939ffb20af76e878dbe376c0e0bfb8f3efa7384c317c1f1c550ff'
 )
 prepare() {
  /usr/bin/python3 "$srcdir/extract.py" "$srcdir/runtime-$_commit.tar.gz" "$srcdir/source"
  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
 }
 build() {
- export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Lib/Library.csproj")" -c Release \
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Lib/Library.csproj")" -c Release \
   --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false \
-  -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -v:minimal
+  -p:CscToolPath=$(cygpath -m "$MINGW_PREFIX")/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -v:minimal
  /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
  /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
 }

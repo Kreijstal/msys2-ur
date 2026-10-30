@@ -1,11 +1,12 @@
 """Set up owned source-only runtime/generator/SDK/metadata consumers."""
+import os
 from pathlib import Path
 import shutil,subprocess,sys,xml.etree.ElementTree as E
 
 here,out=(Path(p) for p in sys.argv[1:3])
 native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip()
 config=E.Element('configuration');sources=E.SubElement(config,'packageSources');E.SubElement(sources,'clear')
-E.SubElement(sources,'add',key='installed-source',value=native(Path('/clang64/lib/dotnet/library-packs')))
+E.SubElement(sources,'add',key='installed-source',value=native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs')))
 if len(sys.argv)>3:
     E.SubElement(sources,'add',key='new-source',value=native(Path(sys.argv[3])))
     mapping=E.SubElement(config,'packageSourceMapping')

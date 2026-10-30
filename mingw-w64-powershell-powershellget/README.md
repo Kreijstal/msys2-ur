@@ -16,8 +16,8 @@ or replacement implementations are used. The complete input inventory and
 per-file output hashes are installed in source-build.json.
 
 The package provides a root-layout PSModule NuGet package in
-/clang64/lib/dotnet/library-packs and identical loose module files in
-/clang64/lib/powershell/Modules/PowerShellGet/2.2.5. The original manifest requires
+$MINGW_PREFIX/lib/dotnet/library-packs and identical loose module files in
+$MINGW_PREFIX/lib/powershell/Modules/PowerShellGet/2.2.5. The original manifest requires
 PackageManagement >=1.4.4; the installed source PackageManagement 1.4.8.1 supplies
 the matching original NuGet provider.
 

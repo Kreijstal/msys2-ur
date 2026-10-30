@@ -6,13 +6,13 @@ pkgver=700.0.0
 pkgrel=1
 pkgdesc='PowerShell native WinRM plugin and ETW resources built from source with CLANG64'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/PowerShell/PowerShell-Native'
 license=('spdx:MIT')
 _commit=2c55e8fc288e31ce72974ad783151b06049591c4
 _metadata_commit=2f767671802301cf043c717d66bf004ed7863487
 depends=("${MINGW_PACKAGE_PREFIX}-libc++" "${MINGW_PACKAGE_PREFIX}-libunwind")
-makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-llvm"
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-llvm"
              "${MINGW_PACKAGE_PREFIX}-lld" "${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131"
              "${MINGW_PACKAGE_PREFIX}-dotnet-event-manifest-compiler" 'python' 'binutils')
 options=('!strip' '!lto')
@@ -27,10 +27,10 @@ sha256sums=('a3fd1e53f1de8699f3a34a587524edffb5d5d6f862dcb9ed862cdc746da2eff9'
             'e5b1319b84b6f2483dfe34e0e9b69d9e67a723b4af95e8aae8dac386fad7a00c'
             '94a6dee3db771aae5620eb9efeff21cd84af756c77f33104276236d00f3a0b8d'
             'ad5c5f017e7a4e06f52d9bfa6c970aecca6bf170a6d45265d8fa593cb6fe2cd5'
-            'cac9eb7b2dfb50926a7175acd81ee65123bb7fae8f988d02a493bf986c59d2b5'
-            '5e111214b2d96f1fb6b78f4c692be1e2d808ffa9125b6d879ec1abcb78ddfaf3'
+            '9da68d9b5e289f3ca4b8bfcd7802b24bff583fb609e4b1546c1f9c08f389cb8d'
+            '4e45b765173635ffb3a816ea43b69ab3d4982082024ec5f7e700ff09c6e03b8c'
             'e7b11499b3db1a630066e90cfdeb52ef168d60d18337a45b9bc3926e61d97e8d'
-            '7d06250dec406fddccac3f6bafa1d62730bbcfb0521128a478f85b6079074060'
+            '243ae1a027506d948806ccba7ab19cfeb9743e6d3594bda027c5b41c955ac0c8'
             '3c5b37ee952545cc42c220e5f553e16f0441590ddaf69b10967f5c968f93a4a9'
             '8237a200fb9829e7b90045cccbbcb67d57b8c8e21f47c1a0865c942bde90c8f4')
 _env() {

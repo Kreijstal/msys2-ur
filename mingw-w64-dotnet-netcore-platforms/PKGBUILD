@@ -7,7 +7,7 @@ pkgrel=1
 _commit=718443a10dbd456b6c8f08ee594a92cfbf2ef8db
 pkgdesc='Source-packaged Microsoft.NETCore.Platforms 1.1.2 runtime graph'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/corefx'
 license=('spdx:MIT')
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
@@ -17,7 +17,7 @@ noextract=("corefx-${_commit}.tar.gz")
 sha256sums=('e3e01f8387664b93e10a2abdafaacc0ed8deb11e35db94e359f4d7a3f7a57630'
             'fc23c6dfabae133237d49206a51180f8330a8066a1fe300c03c4e73d6ca539b7'
             'ed32e58d3fe1684f3b5c6a3426cd1751c38eb1df182a2c8ee2fb233fa5c2d544'
-            'd8d789ed1d03fa27fa2d63d53fb137170c7f0ab4613c75d1b4392cb31b4bd970'
+            'dc0fcbac972937582ee05d28cb383026d2b8d423ca269c3a4478fa66690e814f'
             '9ace5614b2cb5950c92d62480b874e957816d9e997835f5271b3b528ab0fe419')
 _env() {
   export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet") DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false

@@ -26,14 +26,14 @@ for lib in json.loads(manifest.read_text()):
     folder=out/lib['id'];folder.mkdir()
     project(folder/'Contract.csproj',dict(AssemblyName=lib['id'],EnableDefaultCompileItems='false',NoWarn='CS0108;CS0067;CS0809;CS3021;SYSLIB0003;SYSLIB0051'),source/'src/libraries'/lib['id']/'ref'/(lib['id']+'.cs'))
 PY
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_HOME=$(cygpath -m "$out/cli-home") NUGET_PACKAGES=$(cygpath -m "$out/empty-packages")
 config="$prepared/NuGet.config"
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check-api.csproj")" -c Release --configfile "$(cygpath -m "$config")" -p:UseSharedCompilation=false -v:minimal
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check-api.csproj")" -c Release --configfile "$(cygpath -m "$config")" -p:UseSharedCompilation=false -v:minimal
 while IFS=$'\t' read -r id framework; do
-  /clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/$id/Contract.csproj")" -c Release --configfile "$(cygpath -m "$config")" -p:UseSharedCompilation=false -v:minimal
-  /clang64/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0-windows/check-api.dll")" \
+  ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/$id/Contract.csproj")" -c Release --configfile "$(cygpath -m "$config")" -p:UseSharedCompilation=false -v:minimal
+  ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0-windows/check-api.dll")" \
     "$(cygpath -m "$out/$id/bin/Release/net8.0-windows/$id.dll")" \
     "$(cygpath -m "$prepared/$id/bin/Release/$framework/$id.dll")"
 done < <(/usr/bin/python3 -c 'import json,sys; [print(v["id"]+"\t"+v["framework"]) for v in json.load(open(sys.argv[1]))]' "$here/libraries.json")

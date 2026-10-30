@@ -36,7 +36,7 @@ Add-Type. No published PowerShell or Framework implementation is used.
 
 ```bash
 makepkg --cleanbuild --force --noconfirm
-pacman -U mingw-w64-clang-x86_64-powershell-archive-1.2.6-1-any.pkg.tar.zst
+pacman -U ${MINGW_PACKAGE_PREFIX}-powershell-archive-1.2.6-1-any.pkg.tar.zst
 bash check.sh NEW_OUTPUT /path/to/pinned-archive-source
 ```
 

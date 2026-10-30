@@ -1,4 +1,5 @@
 """Gate actual .NET8 library/generator compiler inputs against original source."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys
 
@@ -7,7 +8,7 @@ sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip().replace('\\','/')
 source_prefix=native(source)+'/'
 records=json.loads((prepared/'source-inventory.json').read_text())
-roots=[('source-cache',cache),('framework',Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31'))]
+roots=[('source-cache',cache),('framework',Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31'))]
 roots=[(label,path,native(path)+'/') for label,path in roots]
 total=0
 for folder,record in records.items():

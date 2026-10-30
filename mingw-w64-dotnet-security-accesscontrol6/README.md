@@ -24,4 +24,4 @@ remain outside this focused package gate.
 
 Run makepkg --cleanbuild --force --noconfirm in CLANG64. After installation:
 
-    bash check.sh NEW_OUTPUT /clang64/share/doc/dotnet-security-accesscontrol6/localization.json
+    bash check.sh NEW_OUTPUT $MINGW_PREFIX/share/doc/dotnet-security-accesscontrol6/localization.json
