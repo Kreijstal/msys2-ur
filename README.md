@@ -72,8 +72,9 @@ subset. [pnet-bootstrap](mingw-w64-pnet-bootstrap/README.md) packages the
 independent C-only Portable.NET root for UCRT64.
 
 [PowerShell 7.4.20](mingw-w64-powershell/README.md) is built from source on
-this stack for CLANG64 and published together with its runtime dependencies
-and bundled modules. The SDK, compiler and other build-only packages are
+this stack for CLANG64 and UCRT64 (UCRT64 without the WindowsDesktop
+GraphicalHost) and published together with its runtime dependencies and
+bundled modules. The SDK, compiler and other build-only packages are
 experimental and not yet part of the published binary repository. See each
 recipe's build instructions.
 

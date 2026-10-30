@@ -8,7 +8,7 @@
 #include <wctype.h>
 
 #ifndef TARGET_RELATIVE
-#error TARGET_RELATIVE must name the executable relative to this launcher's directory
+#error TARGET_RELATIVE must name the executable relative to the directory of this launcher
 #endif
 #ifndef TOOL_RELATIVE
 #define TOOL_RELATIVE NULL

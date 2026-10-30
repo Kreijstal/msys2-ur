@@ -1,7 +1,7 @@
 pkgbase = mingw-w64-powershell
 	pkgdesc = Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)
 	pkgver = 7.4.20
-	pkgrel = 2
+	pkgrel = 3
 	url = https://github.com/PowerShell/PowerShell
 	arch = any
 	license = spdx:MIT
@@ -99,7 +99,6 @@ pkgbase = mingw-w64-powershell
 	makedepends = mingw-w64-clang-x86_64-dotnet-web-services-description>=4.10.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-windows-compatibility>=8.0.31
 	makedepends = mingw-w64-clang-x86_64-dotnet-windows-extensions>=8.0.31
-	makedepends = mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap>=8.0.0
 	makedepends = mingw-w64-clang-x86_64-dotnet-winhttp-handler>=8.0.31
 	makedepends = mingw-w64-clang-x86_64-powershell-archive>=1.2.6
 	makedepends = mingw-w64-clang-x86_64-powershell-native>=700.0.0
@@ -108,17 +107,30 @@ pkgbase = mingw-w64-powershell
 	makedepends = mingw-w64-clang-x86_64-powershell-psreadline>=2.3.6
 	makedepends = mingw-w64-clang-x86_64-powershell-psresourceget>=1.1.1
 	makedepends = mingw-w64-clang-x86_64-powershell-threadjob>=2.0.3
+	makedepends = mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap>=8.0.0
 	depends = mingw-w64-clang-x86_64-dotnet-runtime8-servicing>=8.0.31
-	depends = mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap>=8.0.0
 	depends = mingw-w64-clang-x86_64-cc-libs
+	depends = mingw-w64-clang-x86_64-dotnet-windowsdesktop-bootstrap>=8.0.0
 	noextract = powershell-7.4.20.tar.gz
 	options = !strip
 	options = !lto
 	options = !buildflags
 	options = !debug
 	source = powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerShell/tar.gz/refs/tags/v7.4.20
-	source = powershell-source-workflow-4.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/powershell-source-workflow-4.tar.gz
+	source = dotnet-mingw-bootstrap-5ab58f8ba94346c59bc68ab052d8f96f124be323.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/5ab58f8ba94346c59bc68ab052d8f96f124be323
+	source = launcher.c
+	source = LICENSE.launcher
+	source = README.md
+	source = check-package.sh
+	source = check-launcher.py
+	source = module-host-audit-source.py
 	sha256sums = 3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb
-	sha256sums = 756314e4ab0a1b3d5b7eac5dccb4707654de3d885a64396220f17de9d439c878
+	sha256sums = 24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63
+	sha256sums = 49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5
+	sha256sums = c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde
+	sha256sums = 5555d903cfe59bc553595d913bdcd608f3285f6cd4f39ea252feeae73f77e0fa
+	sha256sums = 5369d3c899e844a69f7c0f715d9c837b4de29e14718d332784a05833eaa3f345
+	sha256sums = 16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1
+	sha256sums = 831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96
 
 pkgname = mingw-w64-clang-x86_64-powershell

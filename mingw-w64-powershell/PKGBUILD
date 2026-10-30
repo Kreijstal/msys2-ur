@@ -3,14 +3,13 @@ _realname=powershell
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=7.4.20
-pkgrel=2
+pkgrel=3
 pkgdesc='Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/PowerShell/PowerShell'
 license=('spdx:MIT')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31"
-         "${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0"
          "${MINGW_PACKAGE_PREFIX}-cc-libs")
 makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'python'
              "${MINGW_PACKAGE_PREFIX}-dotnet-applicationinsights>=2.23.0"
@@ -104,7 +103,6 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-web-services-description>=4.10.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-windows-compatibility>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions>=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-winhttp-handler>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-powershell-archive>=1.2.6"
              "${MINGW_PACKAGE_PREFIX}-powershell-native>=700.0.0"
@@ -114,25 +112,47 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-powershell-psresourceget>=1.1.1"
              "${MINGW_PACKAGE_PREFIX}-powershell-threadjob>=2.0.3")
 options=('!strip' '!lto' '!buildflags' '!debug')
+# The full-SDK workflow of Kreijstal/dotnet-mingw-bootstrap, for both
+# environments. UCRT64 has no WindowsDesktop runtime: it builds the console
+# without GraphicalHost and the WindowsDesktop framework reference.
+_workflow_commit=5ab58f8ba94346c59bc68ab052d8f96f124be323
 source=('powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerShell/tar.gz/refs/tags/v7.4.20'
-        "powershell-source-workflow-4.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/powershell-source-workflow-4.tar.gz")
+        "dotnet-mingw-bootstrap-${_workflow_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_workflow_commit}"
+        'launcher.c'
+        'LICENSE.launcher'
+        'README.md'
+        'check-package.sh'
+        'check-launcher.py'
+        'module-host-audit-source.py')
 noextract=('powershell-7.4.20.tar.gz')
 sha256sums=('3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb'
-            '756314e4ab0a1b3d5b7eac5dccb4707654de3d885a64396220f17de9d439c878')
+            '24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63'
+            '49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5'
+            'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
+            '5555d903cfe59bc553595d913bdcd608f3285f6cd4f39ea252feeae73f77e0fa'
+            '5369d3c899e844a69f7c0f715d9c837b4de29e14718d332784a05833eaa3f345'
+            '16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1'
+            '831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96')
+if [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]]; then
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
+  makedepends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
+fi
+_wf() { printf '%s/dotnet-mingw-bootstrap-%s/workflows/powershell-full-sdk' "${srcdir}" "${_workflow_commit}"; }
+_desktop() { [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]] && echo 1 || echo 0; }
 
 prepare() {
   mkdir "$srcdir/build"
   cp "$srcdir/powershell-7.4.20.tar.gz" "$srcdir/build/"
   tar -xf "$srcdir/powershell-7.4.20.tar.gz" -C "$srcdir/build"
-  /usr/bin/python3 "$srcdir/workflow/tests/powershell-full-sdk/prepare.py" "$srcdir/build/PowerShell-7.4.20"
+  /usr/bin/python3 "$(_wf)/prepare.py" "$srcdir/build/PowerShell-7.4.20"
 }
 
 build() {
-  bash "$srcdir/workflow/tests/powershell-full-sdk/build-package.sh" "$srcdir/build"
+  POWERSHELL_DESKTOP=$(_desktop) bash "$(_wf)/build-package.sh" "$srcdir/build" "$srcdir"
 }
 
 check() {
-  bash "$srcdir/workflow/tests/powershell-full-sdk/check-localaccounts-api.sh" "$srcdir/build" "$srcdir/build/localaccounts-api-check"
+  bash "$(_wf)/check-localaccounts-api.sh" "$srcdir/build" "$srcdir/build/localaccounts-api-check"
   local checks="$srcdir/build/distribution/share/doc/powershell/checks"
   bash "$checks/check-package.sh" "$srcdir/build/distribution" "$srcdir/build/package-check" "$checks"
 }
