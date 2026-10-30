@@ -6,7 +6,7 @@ pkgver=8.0.31
 pkgrel=2
 pkgdesc='Source-built serviced .NET8 references and generators for source Roslyn4.9 (mingw-w64)'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
 # Preserve the source SDK's component dependency while replacing the package
@@ -39,16 +39,83 @@ noextract=("runtime-v${pkgver}.tar.gz" 'dotnet-bootstrap-3cbf21078968e2290a54ab0
 sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
             'ea3a74e166369a9c17dba161a1198693d854c7bdcd9704e28783133453b257a8'
-            '8ccbd891dfd86aa96163959eacc14c3a9fb45552bb4569905e66f16cd4a574db')
+            '3b5476d4f59b0339c91ecad142ed015f9aa99db302bb9d2949a534f4de50c06d')
+
+if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; then
+  # UCRT64 rehosts the CLANG64 package of this recipe: the reference pack and
+  # its generators are managed code only, so the same bytes serve both
+  # environments. rehost-natives.py fails if any native file is present.
+  makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python' 'zstd')
+  source+=("https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst"
+           'rehost-natives.py')
+  noextract+=("mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst")
+  sha256sums+=('39dac9a55cd3a701db6fcfc1608d536e52d70968a2c804722382d484823bb187'
+               '404de2ace6f2c8b2c6bb2d8f9878fd8975d2793586ac89a9665f9d87c3c034b6')
+fi
+
+_rehosting() { [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; }
+
+_rehost_build() {
+  rm -rf "$srcdir/rehost"; mkdir "$srcdir/rehost"
+  tar --zstd -xf "$srcdir/mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst" \
+    -C "$srcdir/rehost" --exclude=.PKGINFO --exclude=.BUILDINFO --exclude=.MTREE
+  /usr/bin/python3 "$srcdir/rehost-natives.py" "$srcdir/rehost/clang64" --
+}
+
+_rehost_check() {
+  # the installed SDK with this reference pack in place of its own, in a private root
+  local root="$srcdir/rehost-sdk" out="$srcdir/rehost-check" pack=packs/Microsoft.NETCore.App.Ref/$pkgver
+  rm -rf "$root" "$out"; mkdir -p "$out"
+  cp -a "${MINGW_PREFIX}/lib/dotnet" "$root"
+  rm -rf "$root/$pack"; cp -a "$srcdir/rehost/clang64/lib/dotnet/$pack" "$root/$pack"
+  cp "$srcdir/rehost/clang64/share/doc/$_realname/SdkGeneratorCheck.cs" "$out/Program.cs"
+  cat > "$out/Check.csproj" <<'XML'
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><Nullable>enable</Nullable><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+ <Target Name="RecordSelection" BeforeTargets="CoreCompile">
+  <WriteLinesToFile File="$(IntermediateOutputPath)analyzers.txt" Lines="@(Analyzer->'%(FullPath)')" Overwrite="true" Encoding="UTF-8"/>
+  <WriteLinesToFile File="$(IntermediateOutputPath)references.txt" Lines="@(ReferencePathWithRefAssemblies->'%(FullPath)')" Overwrite="true" Encoding="UTF-8"/>
+ </Target>
+</Project>
+XML
+  printf '%s\n' '<configuration><packageSources><clear/></packageSources></configuration>' > "$out/NuGet.config"
+  (
+    export DOTNET_ROOT=$(cygpath -am "$root") DOTNET_ROOT_X64=$(cygpath -am "$root") DOTNET_MULTILEVEL_LOOKUP=0
+    export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/cache")
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+    "$root/dotnet.exe" build "$(cygpath -am "$out/Check.csproj")" -c Release \
+      --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    timeout 90 "$root/dotnet.exe" "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")"
+  )
+  /usr/bin/python3 - "$out/obj/Release/net8.0" "$root/$pack" <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess,sys
+folder,pack=Path(sys.argv[1]),Path(sys.argv[2])
+manifest=json.loads((pack/'source-payload.json').read_text())
+prefix=subprocess.check_output(['cygpath','-am',str(pack)],text=True).strip()+'/'
+references=(folder/'references.txt').read_text(encoding='utf-8-sig').splitlines()
+assert len(references)==163,len(references)
+for line in references:
+    line=line.replace('\\','/');assert line.lower().startswith(prefix.lower()),line
+    relative=line[len(prefix):];assert hashlib.sha256((pack/relative).read_bytes()).hexdigest()==manifest['files'][relative]['sha256']
+analyzers=[p.replace('\\','/') for p in (folder/'analyzers.txt').read_text(encoding='utf-8-sig').splitlines()]
+for name in ['Microsoft.Interop.LibraryImportGenerator','Microsoft.Interop.ComInterfaceGenerator','System.Text.RegularExpressions.Generator','System.Text.Json.SourceGeneration']:
+    selected=[p for p in analyzers if Path(p).name==name+'.dll']
+    assert len(selected)==1 and selected[0].lower().startswith(prefix.lower()),(name,selected)
+print('PASS rehosted reference pack: 163 serviced references and the pack generators selected by the UCRT64 SDK')
+PY
+}
 
 build() {
+  if _rehosting; then _rehost_build; return; fi
   bash "$srcdir/servicing/build-targeting-pack.sh" "$srcdir/runtime-v${pkgver}.tar.gz" \
     "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" \
     "$srcdir/prepared" "$srcdir/targeting-pack" "$srcdir/targeting-licenses"
 }
 
 check() {
-  bash "$srcdir/servicing/check-sdk.sh" /clang64/lib/dotnet "$srcdir/sdk-check"
+  if _rehosting; then _rehost_check; return; fi
+  bash "$srcdir/servicing/check-sdk.sh" ${MINGW_PREFIX}/lib/dotnet "$srcdir/sdk-check"
   bash "$srcdir/servicing/check-targeting-pack.sh" "$srcdir/targeting-pack" \
     "$srcdir/sdk-check/sdk-root" "$srcdir/pack-check"
   bash "$srcdir/servicing/check-targeting-generators.sh" "$srcdir/prepared" \
@@ -56,6 +123,11 @@ check() {
 }
 
 package() {
+  if _rehosting; then
+    mkdir -p "$pkgdir$MINGW_PREFIX"
+    cp -a "$srcdir/rehost/clang64/." "$pkgdir$MINGW_PREFIX/"
+    return
+  fi
   local target="$pkgdir$MINGW_PREFIX/lib/dotnet/packs/Microsoft.NETCore.App.Ref"
   local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
   mkdir -p "$target" "$doc"

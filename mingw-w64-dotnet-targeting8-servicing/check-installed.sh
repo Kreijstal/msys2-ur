@@ -2,18 +2,18 @@
 # Read installed ownership and compile using normal SDK targeting-pack selection.
 set -euo pipefail
 mkdir "${1:?usage: check-installed.sh NEW_OUTPUT}"; out=$(cd "$1" && pwd)
-export PATH=/clang64/bin:/usr/bin:$PATH
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export PATH=${MINGW_PREFIX}/bin:/usr/bin:$PATH
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/cache")
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false DOTNET_MULTILEVEL_LOOKUP=0
-pacman -Q mingw-w64-clang-x86_64-dotnet-targeting8-servicing
-pacman -T 'mingw-w64-clang-x86_64-dotnet-targeting-pack=8.0.131' 'mingw-w64-clang-x86_64-dotnet-targeting-pack>=8.0.131-2'
+pacman -Q ${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing
+pacman -T "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2"
 /usr/bin/python3 - <<'PY'
 from pathlib import Path
-import hashlib,json,subprocess
+import hashlib,json,os,subprocess
 installed=set(subprocess.check_output(['pacman','-Qq'],text=True).splitlines())
-assert 'mingw-w64-clang-x86_64-dotnet-targeting-pack' not in installed,'Old package remains installed alongside its replacement'
-pack=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
+assert os.environ['MINGW_PACKAGE_PREFIX']+'-dotnet-targeting-pack' not in installed,'Old package remains installed alongside its replacement'
+pack=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
 manifest=json.loads((pack/'source-payload.json').read_text())
 assert len(manifest['files'])==595
 for relative,record in manifest['files'].items():
@@ -24,10 +24,10 @@ assert hashlib.sha256((pack/'source-platform-manifest.json').read_bytes()).hexdi
 assert manifest['platform_manifest_unique_entries']==342
 for relative in ['ref/net8.0/System.Runtime.dll','analyzers/dotnet/cs/Microsoft.Interop.ComInterfaceGenerator.dll','data/PlatformManifest.txt']:
  owner=subprocess.check_output(['pacman','-Qqo',str(pack/relative)],text=True).strip()
- assert owner=='mingw-w64-clang-x86_64-dotnet-targeting8-servicing',owner
+ assert owner==os.environ['MINGW_PACKAGE_PREFIX']+'-dotnet-targeting8-servicing',owner
 print('PASS installed595 DLL payload bytes, complete manifest and replacement native-package ownership')
 PY
-cp /clang64/share/doc/dotnet-targeting8-servicing/SdkGeneratorCheck.cs "$out/Program.cs"
+cp ${MINGW_PREFIX}/share/doc/dotnet-targeting8-servicing/SdkGeneratorCheck.cs "$out/Program.cs"
 cat > "$out/Check.csproj" <<'XML'
 <Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><AllowUnsafeBlocks>true</AllowUnsafeBlocks><Nullable>enable</Nullable><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
@@ -39,14 +39,14 @@ cat > "$out/Check.csproj" <<'XML'
 </Project>
 XML
 cat > "$out/NuGet.config" <<XML
-<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am /clang64/lib/dotnet/library-packs)"/></packageSources></configuration>
+<configuration><packageSources><clear/><add key="installed-source" value="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/library-packs)"/></packageSources></configuration>
 XML
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$out/Check.csproj")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
-timeout 90 /clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")"
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$out/Check.csproj")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+timeout 90 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")"
 /usr/bin/python3 - "$out/obj/Release/net8.0" <<'PY'
 from pathlib import Path
-import hashlib,json,subprocess,sys
-folder=Path(sys.argv[1]);pack=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
+import hashlib,json,os,subprocess,sys
+folder=Path(sys.argv[1]);pack=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
 manifest=json.loads((pack/'source-payload.json').read_text())
 prefix=subprocess.check_output(['cygpath','-am',str(pack)],text=True).strip().replace('\\','/')+'/'
 references=(folder/'references.txt').read_text(encoding='utf-8-sig').splitlines()
