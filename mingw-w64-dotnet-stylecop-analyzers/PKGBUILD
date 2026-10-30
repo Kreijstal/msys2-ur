@@ -38,7 +38,13 @@ sha256sums=('SKIP'
             '401f1f058ff7476520ef8f7719ceba42498d3689b4dd786599cb42c13a524599'
             '430c26b5c011102a4f259892f0c8c2d119eeff52474c32507586c0ab584e617c'
             '074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff')
-prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/stylecop" "$srcdir/prepared"; }
+prepare() {
+ # MSYS git checks out LICENSE and THIRD-PARTY-NOTICES.txt (attribute `text`) with CRLF;
+ # the exact tree check needs the committed bytes. Git skips stat-clean files, so delete first.
+ git -C "$srcdir/stylecop" ls-files -z | (cd "$srcdir/stylecop" && xargs -0 rm -f)
+ git -C "$srcdir/stylecop" -c core.eol=lf checkout -f -- .
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/stylecop" "$srcdir/prepared"
+}
 build() { bash "$srcdir/build.sh" "$srcdir/stylecop" "$srcdir/prepared"; }
 check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared/checkdata"; }
 _install() {
