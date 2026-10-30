@@ -3,10 +3,10 @@ _realname=dotnet-runtime8-servicing
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=8.0.31
-pkgrel=3
+pkgrel=4
 pkgdesc='Source-built serviced .NET8 shared framework and versioned hostfxr (mingw-w64)'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/runtime'
 license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
@@ -28,24 +28,123 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
              "${MINGW_PACKAGE_PREFIX}-uasm" "${MINGW_PACKAGE_PREFIX}-llvm"
              'python' 'patch' 'make' 'perl')
 options=('!strip' '!lto' '!buildflags')
+# The servicing workflow of Kreijstal/dotnet-mingw-bootstrap, for both
+# environments; prepare.py stages the pinned 3cbf210 bootstrap archive.
+_workflow_commit=196a004e25d5381456d007cac7c92ff13b29ad0d
 source=("runtime-v${pkgver}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${pkgver}"
         "dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz"
-        "dotnet-runtime8-servicing-source-3.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-runtime8-servicing-source-3.tar.gz"
+        "dotnet-mingw-bootstrap-${_workflow_commit}.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/${_workflow_commit}"
         'README.md')
 noextract=("runtime-v${pkgver}.tar.gz" 'dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz')
 sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
             '75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6'
-            '1901796a07f37c06c6a5423cce5ce67b98fd300a7201f9a055e998f30d062356'
-            '405fa7d891329de53457b8c3ce1b5c7dd020a103868f2d96246b8627e8db9b73')
+            'b7a4453114a075f7af28d2d7882bd432998b852f8897615483c9390a4d23dbd8'
+            '041bfbb8bd7cddf2184eba81d8d117491ddfb883eecfd87c8fc65aeb5c13eed8')
+
+if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; then
+  # UCRT64 rehosts the CLANG64 package of this recipe: its managed framework,
+  # with the native files built from the same prepared 8.0.31 tree by
+  # workflows/runtime-servicing/ucrt64 with GCC (ReactOS PSEH/gcc_plugin_seh).
+  _reactos_commit=e417d7d45544bb292f1df4181d0ce5f0014ae1b4
+  makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-3"
+               'mingw-w64-ucrt-x86_64-mono=6.12.0.199'
+               "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-gcc-plugin"
+               "${MINGW_PACKAGE_PREFIX}-cmake" "${MINGW_PACKAGE_PREFIX}-ninja"
+               "${MINGW_PACKAGE_PREFIX}-python" "${MINGW_PACKAGE_PREFIX}-uasm"
+               "${MINGW_PACKAGE_PREFIX}-zlib" "${MINGW_PACKAGE_PREFIX}-brotli"
+               'python' 'patch' 'zstd')
+  # the PowerShell integration check runs the CLANG64 module test host (IL)
+  checkdepends=('mingw-w64-clang-x86_64-powershell-module-test-host>=7.4.20-3')
+  source+=("https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst"
+           "reactos-${_reactos_commit}-gcc_plugin_seh.cpp::https://raw.githubusercontent.com/Kreijstal/reactos/${_reactos_commit}/sdk/tools/gcc_plugin_seh/main.cpp"
+           "reactos-${_reactos_commit}-pseh2_64.h::https://raw.githubusercontent.com/Kreijstal/reactos/${_reactos_commit}/sdk/lib/pseh/include/pseh/pseh2_64.h"
+           'rehost-natives.py')
+  noextract+=("mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst")
+  sha256sums+=('7a8f0bc879960b1e37819ae0c7739467de7f24fe1e52b04a284debea817188b0'
+               '786085fbc2e14e1caa8ea246795b1b8e94fd929574a74665c91bdad4138b1fbe'
+               '7a66646937fa256587ea70395c010cea3eb2f1e5137742d7efd6660a470bd5ac'
+               '404de2ace6f2c8b2c6bb2d8f9878fd8975d2793586ac89a9665f9d87c3c034b6')
+fi
+
+_wf() { printf '%s/dotnet-mingw-bootstrap-%s/workflows/runtime-servicing' "${srcdir}" "${_workflow_commit}"; }
+_rehosting() { [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* ]]; }
+
+_rehost_build() {
+  /usr/bin/python3 "$(_wf)/prepare.py" "$srcdir/runtime-v${pkgver}.tar.gz" \
+    "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" "$srcdir/prepared"
+  /usr/bin/python3 "$(_wf)/prepare-version.py" "$srcdir/prepared"
+  /usr/bin/python3 "$(_wf)/prepare-file-version.py" "$srcdir/prepared"
+  install -Dm644 "$srcdir/reactos-${_reactos_commit}-gcc_plugin_seh.cpp" "$srcdir/reactos/sdk/tools/gcc_plugin_seh/main.cpp"
+  install -Dm644 "$srcdir/reactos-${_reactos_commit}-pseh2_64.h" "$srcdir/reactos/sdk/lib/pseh/include/pseh/pseh2_64.h"
+  bash "$(_wf)/ucrt64/build-native.sh" "$srcdir/prepared" "$srcdir/dotnet-mingw-bootstrap-${_workflow_commit}" \
+    "$srcdir/reactos" "${RUNTIME_SERVICING_JOBS:-2}"
+
+  rm -rf "$srcdir/rehost"; mkdir "$srcdir/rehost"
+  tar --zstd -xf "$srcdir/mingw-w64-clang-x86_64-${_realname}-${pkgver}-${pkgrel}-any.pkg.tar.zst" \
+    -C "$srcdir/rehost" --exclude=.PKGINFO --exclude=.BUILDINFO --exclude=.MTREE
+  local m="$srcdir/prepared/m" g="$srcdir/gcc-natives" n
+  rm -rf "$g"; mkdir "$g"
+  cp "$m"/coreclr-8.0.31-ucrt64/{coreclr,clrjit,mscorrc,clretwrc}.dll "$m/mono-8.0.31-ucrt64/libs/System.IO.Compression.Native.dll" \
+     "$m"/corehost-8.0.31-ucrt64/corehost/{hostfxr,hostpolicy}.dll "$g/"
+  strip --strip-debug "$g"/*.dll
+  local -a r=()
+  for n in "$g"/*.dll; do r+=("$(basename "$n")=$n"); done
+  "${MINGW_PREFIX}/bin/python.exe" "$srcdir/rehost-natives.py" "$srcdir/rehost/clang64" -- "${r[@]}"
+  # the payload manifest lists the bytes this package installs
+  /usr/bin/python3 - "$srcdir/rehost/clang64" <<'PY'
+from pathlib import Path
+import hashlib, json, sys
+root = Path(sys.argv[1]); doc = root / 'share/doc/dotnet-runtime8-servicing/source-payload.json'
+data = json.loads(doc.read_text()); changed = 0
+for name in data['files']:
+    path = root / 'lib/dotnet' / name
+    if not path.is_file():  # layout-only entries (dotnet.exe, required-framework.txt) are not installed here
+        continue
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != data['files'][name]:
+        data['files'][name] = digest; changed += 1
+assert changed == 7, changed
+doc.write_text(json.dumps(data, indent=2) + '\n')
+print('updated', changed, 'native digests in source-payload.json')
+PY
+}
+
+_rehost_check() {
+  local root="$srcdir/rehost-check" doc="$srcdir/rehost/clang64/share/doc/dotnet-runtime8-servicing" out="$srcdir/rehost-runtime-check"
+  rm -rf "$root" "$out"; mkdir -p "$root" "$out"
+  # the installed UCRT64 muxer with this package's runtime and hostfxr 8.0.31
+  cp "${MINGW_PREFIX}/lib/dotnet/dotnet.exe" "$root/"
+  cp -R "$srcdir/rehost/clang64/lib/dotnet/host" "$srcdir/rehost/clang64/lib/dotnet/shared" "$root/"
+  (
+    export DOTNET_ROOT=$(cygpath -am "$root") DOTNET_MULTILEVEL_LOOKUP=0 DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_ROOT_X64=$DOTNET_ROOT MSBuildEnableWorkloadResolver=false POWERSHELL_TELEMETRY_OPTOUT=1
+    export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/cache")
+    "$root/dotnet.exe" --list-runtimes | tee "$out/runtimes.txt"
+    grep -q '^Microsoft.NETCore.App 8.0.31 ' "$out/runtimes.txt"
+    cp "$doc/RuntimeCheck.cs" "$out/Program.cs"
+    printf '%s\n' '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup></Project>' > "$out/Check.csproj"
+    printf '%s\n' '<configuration><packageSources><clear/></packageSources></configuration>' > "$out/NuGet.config"
+    DOTNET_ROOT=$(cygpath -am "${MINGW_PREFIX}/lib/dotnet") DOTNET_ROOT_X64=$(cygpath -am "${MINGW_PREFIX}/lib/dotnet") \
+      "${MINGW_PREFIX}/lib/dotnet/dotnet.exe" build "$(cygpath -am "$out/Check.csproj")" -c Release \
+      --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    timeout 180 "$root/dotnet.exe" exec --fx-version 8.0.31 "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")" \
+      "$(cygpath -am "$root/shared/Microsoft.NETCore.App/8.0.31")" "$(cygpath -am "$doc/required-framework.txt")"
+    timeout 300 "$root/dotnet.exe" exec --fx-version 8.0.31 \
+      "$(cygpath -am /clang64/lib/dotnet/tools/powershell-module-test-host/SourcePowerShell.ModuleHost.dll)" \
+      "$(cygpath -am "$doc/PowerShellCheck.ps1")"
+  )
+}
 
 build() {
-  bash "$srcdir/servicing/build-all.sh" "$srcdir/runtime-v${pkgver}.tar.gz" \
+  if _rehosting; then _rehost_build; return; fi
+  bash "$(_wf)/build-all.sh" "$srcdir/runtime-v${pkgver}.tar.gz" \
     "$srcdir/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz" \
     "$srcdir/prepared" "$srcdir/runtime-layout" "${RUNTIME_SERVICING_JOBS:-2}"
 }
 
 check() {
-  bash "$srcdir/servicing/check-runtime.sh" "$srcdir/prepared" "$srcdir/runtime-layout" "$srcdir/runtime-check"
+  if _rehosting; then _rehost_check; return; fi
+  bash "$(_wf)/check-runtime.sh" "$srcdir/prepared" "$srcdir/runtime-layout" "$srcdir/runtime-check"
   # The installed package keeps the existing muxer. Test that exact combination
   # in a private relocated layout before packaging the two versioned directories.
   mkdir "$srcdir/existing-muxer-layout"
@@ -57,13 +156,17 @@ check() {
     timeout 180 "$srcdir/existing-muxer-layout/dotnet.exe" "$(cygpath -am "$srcdir/runtime-check/RuntimeCheck.dll")" \
       "$(cygpath -am "$srcdir/existing-muxer-layout/shared/Microsoft.NETCore.App/$pkgver")" \
       "$(cygpath -am "$srcdir/runtime-layout/required-framework.txt")"
-    bash "$srcdir/servicing/check-powershell.sh" "$srcdir/existing-muxer-layout"
-    bash "$srcdir/servicing/check-json-binding.sh" "$srcdir/existing-muxer-layout" "$srcdir/json-binding-check"
-    bash "$srcdir/servicing/check-framework-forwarders.sh" "$srcdir/existing-muxer-layout" "$srcdir/forwarder-check"
+    bash "$(_wf)/check-powershell.sh" "$srcdir/existing-muxer-layout"
+    bash "$(_wf)/check-json-binding.sh" "$srcdir/existing-muxer-layout" "$srcdir/json-binding-check"
+    bash "$(_wf)/check-framework-forwarders.sh" "$srcdir/existing-muxer-layout" "$srcdir/forwarder-check"
   )
 }
 
 package() {
+  if _rehosting; then
+    cp -a "$srcdir/rehost/clang64/." "$pkgdir$MINGW_PREFIX/"
+    return
+  fi
   local target="$pkgdir$MINGW_PREFIX/lib/dotnet"
   local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
   mkdir -p "$target/shared/Microsoft.NETCore.App" "$target/host/fxr" "$doc"
@@ -74,10 +177,10 @@ package() {
     install -m644 "$srcdir/prepared/$name.json" "$doc/$name.json"
   done
   install -m644 "$srcdir/runtime-layout/source-payload.json" "$srcdir/runtime-layout/required-framework.txt" "$doc/"
-  install -m644 "$srcdir/servicing/RuntimeCheck.cs" "$srcdir/servicing/PowerShellCheck.ps1" "$doc/"
-  install -m644 "$srcdir/servicing/FrameworkForwarderCheck.cs" "$srcdir/servicing/check-framework-forwarders.sh" "$doc/"
+  install -m644 "$(_wf)/RuntimeCheck.cs" "$(_wf)/PowerShellCheck.ps1" "$doc/"
+  install -m644 "$(_wf)/FrameworkForwarderCheck.cs" "$(_wf)/check-framework-forwarders.sh" "$doc/"
   local license_dir="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
   install -Dm644 "$srcdir/prepared/m/src/runtime-$pkgver-native/LICENSE.TXT" "$license_dir/LICENSE.TXT"
   install -m644 "$srcdir/prepared/m/src/runtime-$pkgver-native/THIRD-PARTY-NOTICES.TXT" "$license_dir/"
-  install -m644 "$srcdir/servicing/inputs/Arcade-LICENSE.TXT" "$license_dir/"
+  install -m644 "$(_wf)/inputs/Arcade-LICENSE.TXT" "$license_dir/"
 }
