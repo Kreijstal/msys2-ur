@@ -117,6 +117,8 @@ target_compile_options(ovpn-dco PRIVATE
         -nostdinc -include ${GLUE}/ovpn-gcc-prelude.h
         -O2 -mcmodel=small -mcx16 -mlong-double-64 -fms-extensions -fno-strict-aliasing
         -fno-common -fno-exceptions -fno-aggressive-loop-optimizations
+        # kernel mode has no __stack_chk_* or fortify helpers; MSYS2's CFLAGS enable both
+        -fno-stack-protector -U_FORTIFY_SOURCE
         -Wall -Wno-multichar -Wno-unknown-pragmas -Wno-write-strings -Wno-unused-result -Wno-unused-value>
     $<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17 -fno-rtti -fpermissive>
     $<$<COMPILE_LANGUAGE:C>:-std=gnu11>)

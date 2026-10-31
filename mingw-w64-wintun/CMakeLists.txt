@@ -128,6 +128,8 @@ target_compile_options(wintun-sys PRIVATE
     -nostdinc -fplugin=${GCC_PLUGIN_SEH} -fno-reorder-blocks
     -std=gnu11 -O2 -mcmodel=small -mcx16 -mlong-double-64 -fms-extensions -fno-strict-aliasing
     -fno-common -fno-aggressive-loop-optimizations
+    # kernel mode has no __stack_chk_* or fortify helpers; MSYS2's CFLAGS enable both
+    -fno-stack-protector -U_FORTIFY_SOURCE
     -Wall -Wno-multichar -Wno-unknown-pragmas -Wno-missing-braces -Wno-int-to-pointer-cast)
 
 target_link_options(wintun-sys PRIVATE
