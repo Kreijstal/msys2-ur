@@ -1,0 +1,162 @@
+From 8b362cc487b6bc89b225409f8b19322010a6a6f0 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 11:14:46 +0100
+Subject: [PATCH 1/2] Build with Lazarus 4
+
+Cheat Engine 7.5 targets Lazarus 2.2.2.  Adapt to the LCL/LazUtils API
+removals of Lazarus 3 and 4 (no behaviour change):
+
+* LazUtils' Laz_AVL_Tree unit is gone; its TAVLTree now lives in FPC's
+  AVL_Tree (which AvgLvlTree builds on).  Use AVL_Tree, or nothing where
+  AvgLvlTree already provides the type.
+* ExtractFileNameWithoutExt moved from FileUtil to LazFileUtils; add
+  LazFileUtils to the units that call it.
+* TPropertyEditorHook is a TComponent now; create it with an owner (nil).
+* laz.VirtualTrees dropped the TVirtualStringTree alias; register the Lua
+  class for TLazVirtualStringTree.
+---
+ Cheat Engine/DissectCodeThread.pas    | 2 +-
+ Cheat Engine/LuaHandler.pas           | 2 +-
+ Cheat Engine/accessedmemory.pas       | 2 +-
+ Cheat Engine/cesupport.pas            | 2 +-
+ Cheat Engine/formdesignerunit.pas     | 2 +-
+ Cheat Engine/frmSaveSnapshotsUnit.pas | 2 +-
+ Cheat Engine/luavirtualstringtree.pas | 2 +-
+ Cheat Engine/memscan.pas              | 2 +-
+ Cheat Engine/pointervaluelist.pas     | 2 +-
+ Cheat Engine/symbollisthandler.pas    | 2 +-
+ 10 files changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/Cheat Engine/DissectCodeThread.pas b/Cheat Engine/DissectCodeThread.pas
+index a6b1bba..a83025d 100755
+--- a/Cheat Engine/DissectCodeThread.pas	
++++ b/Cheat Engine/DissectCodeThread.pas	
+@@ -152,7 +152,7 @@ var dissectcode: tdissectcodethread;
+ 
+ implementation
+ 
+-uses ProcessHandlerUnit, parsers, symbolhandler, symbolhandlerstructs, Laz_AVL_Tree;
++uses ProcessHandlerUnit, parsers, symbolhandler, symbolhandlerstructs, AVL_Tree;
+ 
+ resourcestring
+   rsInvalidDissectCodeFile = 'Invalid dissect code file';
+diff --git a/Cheat Engine/LuaHandler.pas b/Cheat Engine/LuaHandler.pas
+index fbc585e..e98ddeb 100755
+--- a/Cheat Engine/LuaHandler.pas	
++++ b/Cheat Engine/LuaHandler.pas	
+@@ -21,7 +21,7 @@ uses
+   {$ifdef windows}
+   jwawindows, windows, ShellApi,
+   {$endif}
+-  vmxfunctions, Classes, dialogs, SysUtils, lua, lualib,
++  vmxfunctions, Classes, dialogs, SysUtils, LazFileUtils, lua, lualib,
+   lauxlib, syncobjs, syncobjs2, CEFuncProc, NewKernelHandler, Graphics,
+   controls, LuaCaller, forms, ExtCtrls, StdCtrls, comctrls, ceguicomponents,
+   genericHotkey, luafile, xmplayer_server, ExtraTrainerComponents, customtimer,
+diff --git a/Cheat Engine/accessedmemory.pas b/Cheat Engine/accessedmemory.pas
+index f3b9959..17c072b 100755
+--- a/Cheat Engine/accessedmemory.pas	
++++ b/Cheat Engine/accessedmemory.pas	
+@@ -7,7 +7,7 @@ interface
+ uses
+   windows, Classes, SysUtils, FileUtil, laz.VirtualTrees, Forms, Controls, Graphics,
+   Dialogs, StdCtrls, ExtCtrls, Menus, ComCtrls, genericHotkey, DBK32functions,
+-  commonTypeDefs, newkernelhandler, betterControls,AvgLvlTree, Laz_AVL_Tree;
++  commonTypeDefs, newkernelhandler, betterControls,AvgLvlTree, AVL_Tree;
+ 
+ resourcestring
+   rsAMError = 'Error';
+diff --git a/Cheat Engine/cesupport.pas b/Cheat Engine/cesupport.pas
+index 91c48e2..1b08773 100755
+--- a/Cheat Engine/cesupport.pas	
++++ b/Cheat Engine/cesupport.pas	
+@@ -8,7 +8,7 @@ uses
+   {$ifdef windows}
+   windows, activex, comobj,
+   {$endif}
+-  lclintf, Classes, SysUtils,forms, controls, LMessages,
++  lclintf, Classes, SysUtils, LazFileUtils,forms, controls, LMessages,
+   ExtCtrls, Graphics, FileUtil, Dialogs, math;
+ 
+ type TADWindow=class(TCustomForm)
+diff --git a/Cheat Engine/formdesignerunit.pas b/Cheat Engine/formdesignerunit.pas
+index d04b37a..943fa6e 100755
+--- a/Cheat Engine/formdesignerunit.pas	
++++ b/Cheat Engine/formdesignerunit.pas	
+@@ -670,7 +670,7 @@ begin
+ 
+   SurfaceList:=tlist.create;
+ 
+-  GlobalDesignHook:=TPropertyEditorHook.Create;
++  GlobalDesignHook:=TPropertyEditorHook.Create(nil);
+   GlobalDesignHook.AddHandlerCreateMethod(onCreateMethod);
+   GlobalDesignHook.AddHandlerGetMethodName(ogm);
+   GlobalDesignHook.AddHandlerGetMethods(onGetMethods);
+diff --git a/Cheat Engine/frmSaveSnapshotsUnit.pas b/Cheat Engine/frmSaveSnapshotsUnit.pas
+index 64f5ae5..f4f2ae1 100755
+--- a/Cheat Engine/frmSaveSnapshotsUnit.pas	
++++ b/Cheat Engine/frmSaveSnapshotsUnit.pas	
+@@ -5,7 +5,7 @@ unit frmSaveSnapshotsUnit;
+ interface
+ 
+ uses
+-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
++  Classes, SysUtils, LazFileUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
+   ExtCtrls, math, LuaCanvas, FPImage, FPCanvas, FPImgCanv, FPReadPNG, FPWritePNG, betterControls;
+ 
+ resourcestring
+diff --git a/Cheat Engine/luavirtualstringtree.pas b/Cheat Engine/luavirtualstringtree.pas
+index ec7e0ec..bcf872b 100644
+--- a/Cheat Engine/luavirtualstringtree.pas	
++++ b/Cheat Engine/luavirtualstringtree.pas	
+@@ -892,7 +892,7 @@ end;
+ 
+ 
+ initialization
+-   luaclass_register(TVirtualStringTree,  virtualstringtree_addMetaData);
++   luaclass_register(TLazVirtualStringTree,  virtualstringtree_addMetaData);
+    luaclass_register(TVirtualTreeColumns, VirtualTreeColumns_addMetaData);
+    luaclass_register(TVirtualTreeColumn,  VirtualTreeColumn_addMetaData);
+    luaclass_register(TVTHeader,  VTHeader_addMetaData);
+diff --git a/Cheat Engine/memscan.pas b/Cheat Engine/memscan.pas
+index e660003..cdad203 100755
+--- a/Cheat Engine/memscan.pas	
++++ b/Cheat Engine/memscan.pas	
+@@ -31,7 +31,7 @@ uses
+      SyncObjs, SyncObjs2 {$ifdef windows},windows7taskbar{$endif},SaveFirstScan, savedscanhandler, autoassembler,
+      symbolhandler, CEFuncProc{$ifdef windows},shellapi{$endif}, CustomTypeHandler, lua,lualib,lauxlib,
+      LuaHandler, {$ifdef windows}fileaccess,{$endif} groupscancommandparser, commonTypeDefs, LazUTF8,
+-     forms, LazFileUtils, LCLProc, LCLVersion, AvgLvlTree, Laz_AVL_Tree;
++     forms, LazFileUtils, LCLProc, LCLVersion, AvgLvlTree, AVL_Tree;
+ {$define customtypeimplemented}
+ {$endif}
+ 
+diff --git a/Cheat Engine/pointervaluelist.pas b/Cheat Engine/pointervaluelist.pas
+index 8f4bb0f..e3fc31a 100755
+--- a/Cheat Engine/pointervaluelist.pas	
++++ b/Cheat Engine/pointervaluelist.pas	
+@@ -22,7 +22,7 @@ uses
+   LCLIntf, dialogs, SysUtils, classes, ComCtrls, CEFuncProc,
+      NewKernelHandler, symbolhandler, symbolhandlerstructs, math,
+      bigmemallochandler, maps, luahandler, lua, lauxlib, lualib, LuaClass,
+-     LuaObject, zstream, commonTypeDefs, AvgLvlTree, Laz_AVL_Tree;
++     LuaObject, zstream, commonTypeDefs, AvgLvlTree, AVL_Tree;
+ 
+ const scandataversion=1;
+ 
+diff --git a/Cheat Engine/symbollisthandler.pas b/Cheat Engine/symbollisthandler.pas
+index c8722dc..25321bc 100755
+--- a/Cheat Engine/symbollisthandler.pas	
++++ b/Cheat Engine/symbollisthandler.pas	
+@@ -10,7 +10,7 @@ interface
+ 
+ {$ifdef windows}
+ uses
+-  windows, Classes, SysUtils, AvgLvlTree, laz_avl_Tree, math, fgl, cvconst, syncobjs, symbolhandlerstructs;
++  windows, Classes, SysUtils, AvgLvlTree, math, fgl, cvconst, syncobjs, symbolhandlerstructs;
+ {$endif}
+ 
+ {$ifdef darwin}
+-- 
+2.55.0
+

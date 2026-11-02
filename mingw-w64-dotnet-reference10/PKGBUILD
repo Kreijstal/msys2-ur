@@ -1,0 +1,43 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-reference10
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.5
+pkgrel=1
+pkgdesc='Original source .NET10 complete public reference contracts'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-v10.0.5.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v10.0.5'
+        'reference10-source-1.tar.gz'
+        'arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d')
+noextract=('runtime-v10.0.5.tar.gz' 'arcade-runtime10-4bf37ce6.tar.gz')
+sha256sums=('1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a'
+            'bc1f3972ed5d6519415f6a1d8fcdc1eea4b5daac19cc5214e8e1924aa4051e86'
+            '82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66')
+prepare() {
+  /usr/bin/python3 "$srcdir/reference10-workflow/prepare.py" "$srcdir" "$srcdir/prepared" >"$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/reference10-workflow/build.sh" "$srcdir" "$srcdir/prepared" >"$srcdir/build.log" 2>&1
+}
+check() {
+  bash "$srcdir/reference10-workflow/check.sh" "$srcdir" "$srcdir/prepared" >"$srcdir/check.log" 2>&1
+}
+package() {
+  local refs="$pkgdir$MINGW_PREFIX/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$refs" "$doc"
+  install -m644 "$srcdir/prepared/ref/net10.0/"*.dll "$refs/"
+  install -m644 "$srcdir/reference10-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{build-status,metadata-audit,validation-results,pristine-source-audit,tool-inputs}.json "$doc/"
+  install -m644 "$srcdir/"{version-build-inputs,source-extraction}.json "$doc/"
+  install -Dm644 "$srcdir/r/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+  install -Dm644 "$srcdir/r/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+  install -Dm644 "$srcdir/Arcade-LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Arcade-LICENSE.TXT"
+}

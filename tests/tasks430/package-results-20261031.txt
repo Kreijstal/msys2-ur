@@ -1,0 +1,356 @@
+{
+  "finished_at_utc": "2026-10-31T14:06:07.267058+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-tasks430",
+  "installed_version": "mingw-w64-clang-x86_64-dotnet-tasks430 4.3.0-1",
+  "source_build_root": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+  "prototype_root": "/e/codex-dotnet10/tasks430.K0IQZs",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "cwd": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/tasks430-workflow/audit-package.py mingw-w64-clang-x86_64-dotnet-tasks430-4.3.0-1-any.pkg.tar.zst src archive-audit.json",
+      "cwd": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-tasks430-4.3.0-1-any.pkg.tar.zst",
+      "cwd": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-tasks430/check.py E:/msys64/clang64/lib/dotnet/library-packs E:/codex-dotnet10/tasks430pkg1.VSqCqH/installed-check E:/msys64/clang64 E:/codex-dotnet10/tasks430pkg1.VSqCqH/src/compiler44/bin/Release/net8.0",
+      "cwd": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-tasks430",
+      "cwd": "/e/codex-dotnet10/tasks430pkg1.VSqCqH",
+      "exit_code": 0
+    }
+  ],
+  "workflow_source_archive_sha256": "914ba014adb9df0d71c2334bc7423762b3af12995699e60c16d7f5f1ccc5e21e",
+  "workflow_source_files": 79,
+  "source_reference_archive_sha256": "2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79",
+  "source_reference_commit": "5aeee2738338530a92d7f6caa2c7d5f569fed3c4",
+  "original_CSharp_reference_source_changes": 0,
+  "original_reference_profiles": 2,
+  "original_API_entries": 1007,
+  "original_DLL_asset_paths": 3,
+  "original_framework_markers": 22,
+  "original_dependency_groups": 14,
+  "original_localized_XML_paths": 30,
+  "source_archives": {
+    "System.Threading.Tasks": {
+      "sha256": "ad494a236ca0daa6d609f1ca56672c2c17eb247a6be2c2a7ad652a7cf1b7aabd",
+      "markers": 22,
+      "original_data_and_reference_paths_verified": true,
+      "original_dependencies_and_framework_selection_verified": true
+    }
+  },
+  "contracts": {
+    "System.Threading.Tasks-netstandard1.0": {
+      "API_entries": 499,
+      "identity": "System.Threading.Tasks, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "4f90d5ac6736ea653a2d5ec5d763a1bc3f5e1543dd7fdcff625f6ef112beba59",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    },
+    "System.Threading.Tasks-netstandard1.3": {
+      "API_entries": 508,
+      "identity": "System.Threading.Tasks, Version=4.0.10.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "f2e56da56e8486867be2b78339f871b9a5a12f9529ac02a3286e22cadf6482c4",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    }
+  },
+  "archive_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-tasks430-4.3.0-1-any.pkg.tar.zst",
+    "artifact_sha256": "429eb4fe0e41ac6ba673376e6737085ff505a3fe497a27af451b7de46e82109a",
+    "source_nupkg_sha256": {
+      "System.Threading.Tasks": "ad494a236ca0daa6d609f1ca56672c2c17eb247a6be2c2a7ad652a7cf1b7aabd"
+    },
+    "original_source_changes": 0,
+    "original_reference_profiles": 2,
+    "API_entries": 1007,
+    "original_framework_markers": 22,
+    "all_original_data_bytes_and_asset_paths_verified": true,
+    "exact_checked_source_archives": true,
+    "runtime_implementation_DLLs": 0,
+    "historical_runtime_and_provider_closure_complete": false,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_file_audit": "mingw-w64-clang-x86_64-dotnet-tasks430: 151 total files, 0 altered files",
+  "feed_audit": {
+    "before_count": 294,
+    "after_count": 295,
+    "all_previous_archives_unchanged": true,
+    "added": [
+      "system.threading.tasks.4.3.0.nupkg"
+    ]
+  },
+  "required_checks_passed": true,
+  "exact_installed_and_producer_archive_hashes_match": true,
+  "all_original_data_and_dependency_groups_preserved": true,
+  "all_original_native_versions_and_resources_verified": true,
+  "higher_profile_CompletedTask_and_RunContinuationsAsynchronously_compile_consumed": true,
+  "fresh_restore_probes": {
+    "netstandard1.0": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.0"
+          ]
+        }
+      ],
+      "exact_compile_assets_and_no_runtime_assets_verified": true
+    },
+    "netstandard1.3": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.3"
+          ]
+        }
+      ],
+      "exact_compile_assets_and_no_runtime_assets_verified": true
+    },
+    "net8.0": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            "net8.0"
+          ]
+        }
+      ],
+      "exact_compile_assets_and_no_runtime_assets_verified": true
+    }
+  },
+  "installed_extension_restore_probes": {
+    "netstandard1.0": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.0"
+          ]
+        }
+      ],
+      "exact_seven_source_archive_bytes_and_original_compile_assets_verified": true,
+      "System_Threading_Tasks_missing_package_error_eliminated": true
+    },
+    "netstandard1.3": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.3"
+          ]
+        }
+      ],
+      "exact_seven_source_archive_bytes_and_original_compile_assets_verified": true,
+      "System_Threading_Tasks_missing_package_error_eliminated": true
+    }
+  },
+  "only_missing_package_in_tested_seven_archive_extension_graph": "System.Runtime4.3.0",
+  "runtime_any_or_AOT_provider_packages_supplied": false,
+  "original_dependency_closure_complete": false,
+  "original_historical_runtimes_or_build_tools_verified": false,
+  "full_dependency_goal_complete": false,
+  "next_Runtime_NET462_seed_generation_evidence": "tests/legacy-base430/framework-seed-generation-results-20261031.json",
+  "remaining_requirements": [
+    "Original System.Runtime4.3.0 including all references and complete277-forwarder NET462 facade",
+    "Compile and verify all29 additional original Framework forwarding targets required by Runtime NET462",
+    "Exact original runtime.any/AOT providers and core-library/URI dependency scopes",
+    "Original historical runtime/upstream workflow closure",
+    "Existing full PowerShell compatibility, remote/provider/ownership, native/database/desktop/COM/R2R/AOT/debugger and NET10/PowerShell7.6 gates"
+  ],
+  "direct_dependency_catalog_counts_unchanged": true,
+  "evidence": "tests/tasks430/package-results-20261031.txt",
+  "json_evidence": "tests/tasks430/package-results-20261031.json"
+}
+
+
+makepkg EXIT 0
+==> Making package: mingw-w64-dotnet-tasks430 4.3.0-1 (31 Oct 2026 15:00:57)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found sbrp-5aeee273.tar.gz
+  -> Found roslyn-4.4.0-1ce8866c.tar.gz
+  -> Found tasks430-source-1.tar.gz
+==> Validating source files with sha256sums...
+    sbrp-5aeee273.tar.gz ... Passed
+    roslyn-4.4.0-1ce8866c.tar.gz ... Passed
+    tasks430-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting tasks430-source-1.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-tasks430"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-tasks430 4.3.0-1 (31 Oct 2026 15:02:13)
+
+
+archive-audit EXIT 0
+PASS exact checked source NuGets, 2 unchanged sources/1007 API entries, 22 markers, original data and licenses; zero runtime DLLs
+
+
+install EXIT 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-tasks430-4.3.0-1
+
+Total Installed Size:  16.04 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-tasks430...
+
+
+installed-check EXIT 0
+PASS original reference identity/API/attributes/references and compile consumer: System.Threading.Tasks-netstandard1.0 499
+PASS original reference identity/API/attributes/references and compile consumer: System.Threading.Tasks-netstandard1.3 508
+PASS original aliases, 22 markers, documentation, licenses and NuGet semantics: System.Threading.Tasks
+netstandard1.0 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+netstandard1.3 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+net8.0 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+PASS installed extension integration: netstandard1.0 ; remaining missing IDs ['System.Runtime']
+PASS installed extension integration: netstandard1.3 ; remaining missing IDs ['System.Runtime']
+
+
+pacman-audit EXIT 0
+mingw-w64-clang-x86_64-dotnet-tasks430: 151 total files, 0 altered files
+
+
+src/compiler44.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\tasks430pkg1.VSqCqH\src\compiler44\Tool.csproj (in 540 ms).
+  Tool -> E:\codex-dotnet10\tasks430pkg1.VSqCqH\src\compiler44\bin\Release\net8.0\csc.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.75
+PASS original source csc4.4 bootstrap host 11 unchanged compile inputs
+
+
+src/references.log
+PASS original source reference compilation: System.Threading.Tasks netstandard1.0
+PASS original source reference compilation: System.Threading.Tasks netstandard1.3
+
+
+src/pack.log
+PASS packed original reference/data/marker paths: System.Threading.Tasks
+
+
+src/check.log
+PASS original reference identity/API/attributes/references and compile consumer: System.Threading.Tasks-netstandard1.0 499
+PASS original reference identity/API/attributes/references and compile consumer: System.Threading.Tasks-netstandard1.3 508
+PASS original aliases, 22 markers, documentation, licenses and NuGet semantics: System.Threading.Tasks
+netstandard1.0 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+netstandard1.3 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+net8.0 original dependency restore exit 1 ; diagnostic codes ['NU1101']
+PASS installed extension integration: netstandard1.0 ; remaining missing IDs ['System.Runtime']
+PASS installed extension integration: netstandard1.3 ; remaining missing IDs ['System.Runtime']
+
+
+extensions-netstandard1.0-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\extensions-netstandard1.0\Probe.csproj : error NU1101: Unable to find package System.Runtime. No packages exist with this id in source(s): candidate
+  Failed to restore E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\extensions-netstandard1.0\Probe.csproj (in 1.04 sec).
+
+
+extensions-netstandard1.3-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\extensions-netstandard1.3\Probe.csproj : error NU1101: Unable to find package System.Runtime. No packages exist with this id in source(s): candidate
+  Failed to restore E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\extensions-netstandard1.3\Probe.csproj (in 191 ms).
+
+
+net8.0-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-net8.0\Probe.csproj : error NU1101: Unable to find package System.Runtime. No packages exist with this id in source(s): candidate
+  Failed to restore E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-net8.0\Probe.csproj (in 222 ms).
+
+
+netstandard1.0-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-netstandard1.0\Probe.csproj : error NU1101: Unable to find package System.Runtime. No packages exist with this id in source(s): candidate
+  Failed to restore E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-netstandard1.0\Probe.csproj (in 553 ms).
+
+
+netstandard1.3-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-netstandard1.3\Probe.csproj : error NU1101: Unable to find package System.Runtime. No packages exist with this id in source(s): candidate
+  Failed to restore E:\codex-dotnet10\tasks430pkg1.VSqCqH\installed-check\restore-netstandard1.3\Probe.csproj (in 179 ms).
+

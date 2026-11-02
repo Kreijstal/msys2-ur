@@ -1,0 +1,33 @@
+Fresh Roslyn5.0 original Common/CSharp Standard2.0 prototype
+Source commit: 6c4a46a31302167b425d5e0a31ea83c9a9aa1d09
+Original production sources: Common1042, CSharp1136. Three original generator tools:20+3+1 sources; all5 regenerated CSharp files match original baselines.
+Original public API declarations verified: Common4284+CSharp6268=10552.
+CSharp14 extension-property parse/emit/execution, CSharp13, compiler diagnostics/cancellation, analyzer callbacks, incremental generation and portable PDB checks pass.
+All13 cultures/28 resource sets/39480 original strings and German diagnostics pass; no Framework native helper loaded.
+Pinned source archive inputs:2246; actual compiler/consumer package/cache references:41. Production source changes:0.
+
+Initial full makepkg exit4: old fixture expected42 resource sets. Corrected consumer and archive/cache audit exit0. Runtime9 exact-constraint warnings are retained; corrected runtime9-3 now installed and tested with both maintenance selections.
+Fresh workflow2,13 files SHA256 5af950e5505c8498e14571fbd3837e7b387f334a7aa82be780ffc10614b42958, runs in /e/codex-dotnet10/roslyn50pkg2.NvEGPf with live session18573. NU1608 is an error in producer and consumer projects. No completed clean package or installed Roslyn5.0 is claimed.
+
+Separate metadata-only package probe: exact paired Common5.0 preserved; runtime dependency minimums selected; every non-nuspec byte unchanged; real Standard2.0 API build with NU1608 as error passes. Actual PowerShell Immutable9.0.14 integration remains open.
+
+Exact prototype commands:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 4
+Initial clean build; both libraries compiled, fixture expected old localization count
+$ /usr/bin/python3 src/roslyn50-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/consumer2"
+RESULT: exit 0
+Corrected original RESX/XLF coverage; all compiler/API/resource checks
+$ /usr/bin/python3 src/roslyn50-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/consumer2"
+RESULT: exit 0
+Original source/generator/cache audit before runtime9 upgrade
+$ /usr/bin/python3 normalize-package-minimums.py NEW_SOURCE_ONLY_PROBE Microsoft.CodeAnalysis; /usr/bin/python3 normalize-package-minimums.py NEW_SOURCE_ONLY_PROBE Microsoft.CodeAnalysis.CSharp
+RESULT: exit 0
+Separate copied packages, all non-nuspec bytes verified unchanged
+$ dotnet build NEW_SOURCE_ONLY_PROBE/Build.csproj -c Release --configfile NEW_SOURCE_ONLY_PROBE/NuGet.config -p:UseSharedCompilation=false -v:minimal
+RESULT: exit 0
+Actual Standard2.0 Roslyn5 API use with source maintenance overrides and NU1608 as error
+
+Evidence:221 files SHA256 3d0fdeb72da79cf3e188a6dce1ba3549736b39c9d4c1d0c9361bcd5aa57bbcd8; all member hashes verified.
+Local evidence: /tmp/roslyn50-prototype1
+Original CLI/other framework variants, SDK compiler5.3, SDK10, PowerShell7.6 and all original compatibility gates remain open.

@@ -1,0 +1,31 @@
+pkgbase = mingw-w64-java-sisu
+	pkgdesc = Eclipse Sisu dependency injection (mingw-w64)
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://eclipse.dev/sisu/
+	arch = any
+	license = spdx:EPL-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-guice
+	makedepends = mingw-w64-ucrt-x86_64-java-slf4j-api
+	makedepends = mingw-w64-ucrt-x86_64-java-javax-annotation-api
+	makedepends = mingw-w64-ucrt-x86_64-java-junit4
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-component-annotations
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-classworlds
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-utils
+	source = sisu-1.0.0.tar.gz::https://github.com/eclipse-sisu/sisu-project/archive/refs/tags/releases/1.0.0.tar.gz
+	source = 0001-inject-build-without-guice-servlet-and-CDI.patch
+	sha256sums = 1a24445d175e58327a3fcec70828684c2de87cf3fc0ef51cf60168cf9d31c523
+	sha256sums = 3c2cf22cac5278794122acd55e3da829222cfd0bbd9402a3b0eb23ac069c29cc
+
+pkgname = mingw-w64-ucrt-x86_64-java-sisu-inject
+	pkgdesc = Eclipse Sisu JSR-330 container on Guice (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-asm
+	optdepends = mingw-w64-ucrt-x86_64-java-guice: the injector it runs on
+
+pkgname = mingw-w64-ucrt-x86_64-java-sisu-plexus
+	pkgdesc = Eclipse Sisu Plexus API layer (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-sisu-inject
+	depends = mingw-w64-ucrt-x86_64-java-plexus-component-annotations
+	depends = mingw-w64-ucrt-x86_64-java-plexus-classworlds
+	depends = mingw-w64-ucrt-x86_64-java-plexus-utils

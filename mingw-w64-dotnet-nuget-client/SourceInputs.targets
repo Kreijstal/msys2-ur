@@ -1,0 +1,12 @@
+<Project>
+  <Target Name="RecordOwnedNuGetSourceInputs" BeforeTargets="CoreCompile"
+          Condition="'$(TargetFramework)' == 'net8.0'">
+    <WriteLinesToFile File="$(IntermediateOutputPath)compiler-inputs.txt"
+                      Lines="@(Compile->'%(FullPath)')" Overwrite="true" Encoding="UTF-8" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)resource-inputs.txt"
+                      Lines="@(EmbeddedResource->'%(FullPath)|%(LogicalName)|%(ManifestResourceName)')"
+                      Overwrite="true" Encoding="UTF-8" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)reference-inputs.txt"
+                      Lines="@(ReferencePath->'%(FullPath)')" Overwrite="true" Encoding="UTF-8" />
+  </Target>
+</Project>

@@ -1,0 +1,225 @@
+{
+  "source_commit": "5d81cb8da82eda8a6b47aae92d1e6f888de982ce",
+  "source_archive_sha256": "3af9c4cd626db52aa51e63da9bd7e80f6944011ebf0a91a5c2b51f08dda731f1",
+  "source_commit_provenance": "NuGet.Configuration6.13.2 published nuspec repository commit (metadata only; published binary not executed)",
+  "published_configuration_file_version": "6.13.2.1",
+  "original_source_only_NET10_declared_in_common_project_props": true,
+  "projects": {
+    "NuGet.Frameworks": {
+      "project": "src/NuGet.Core/NuGet.Frameworks/NuGet.Frameworks.csproj",
+      "sha256": "e80084c9e7a6935d35d565dd3098e4431da20448dbc2b201b7702ed2aa16edf0",
+      "project_references": [],
+      "package_references": [],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibrary)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    },
+    "NuGet.Common": {
+      "project": "src/NuGet.Core/NuGet.Common/NuGet.Common.csproj",
+      "sha256": "6de5b35197e833ba920c635cb5b48174443a195a458419bfe143b488578c2417",
+      "project_references": [
+        {
+          "Include": "..\\NuGet.Frameworks\\NuGet.Frameworks.csproj"
+        }
+      ],
+      "package_references": [
+        {
+          "Include": "System.Collections.Immutable"
+        }
+      ],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibrary)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    },
+    "NuGet.Versioning": {
+      "project": "src/NuGet.Core/NuGet.Versioning/NuGet.Versioning.csproj",
+      "sha256": "37984c9877074caf59526bdd7ef6b0199e4b0abb506e46ce9a62c13c2018743f",
+      "project_references": [],
+      "package_references": [],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibrary)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    },
+    "NuGet.Configuration": {
+      "project": "src/NuGet.Core/NuGet.Configuration/NuGet.Configuration.csproj",
+      "sha256": "de49c3c8f1c159eba1008f705d4bcbf6cca424049448a2991589a9d0538f4591",
+      "project_references": [
+        {
+          "Include": "..\\NuGet.Common\\NuGet.Common.csproj"
+        }
+      ],
+      "package_references": [
+        {
+          "Include": "System.Security.Cryptography.ProtectedData",
+          "Condition": " '$(TargetFramework)' != '$(NETFXTargetFramework)' "
+        }
+      ],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibrary)",
+          "condition": "'$(IsVsixBuild)' != 'true'"
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": "'$(IsVsixBuild)' == 'true'"
+        }
+      ]
+    },
+    "NuGet.Packaging": {
+      "project": "src/NuGet.Core/NuGet.Packaging/NuGet.Packaging.csproj",
+      "sha256": "ccb9b2989b915c75f6ad8e5445777854a0fc63d44d5d064a578525c660619f8d",
+      "project_references": [
+        {
+          "Include": "..\\NuGet.Configuration\\NuGet.Configuration.csproj"
+        },
+        {
+          "Include": "..\\NuGet.Versioning\\NuGet.Versioning.csproj"
+        }
+      ],
+      "package_references": [
+        {
+          "Include": "Newtonsoft.Json"
+        },
+        {
+          "Include": "System.Memory",
+          "Condition": "'$(TargetFramework)' == '$(NETFXTargetFramework)'"
+        },
+        {
+          "Include": "System.Text.Json",
+          "Condition": "'$(TargetFrameworkIdentifier)' != '.NETCoreApp'"
+        },
+        {
+          "Include": "System.Security.Cryptography.Pkcs"
+        },
+        {
+          "Include": "System.Formats.Asn1",
+          "Condition": " '$(TargetFramework)' != '$(NETFXTargetFramework)'"
+        }
+      ],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibraryForSigning)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    },
+    "NuGet.Protocol": {
+      "project": "src/NuGet.Core/NuGet.Protocol/NuGet.Protocol.csproj",
+      "sha256": "781d3dd0ee5bc314231b027f70139358b230722e380ec9dc5273bc9f5e5ff252",
+      "project_references": [
+        {
+          "Include": "..\\NuGet.Packaging\\NuGet.Packaging.csproj"
+        }
+      ],
+      "package_references": [
+        {
+          "Include": "System.Text.Json"
+        }
+      ],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibraryForSigning)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    },
+    "NuGet.Credentials": {
+      "project": "src/NuGet.Core/NuGet.Credentials/NuGet.Credentials.csproj",
+      "sha256": "992580e904af53c4866a725c26ddb54956c604efdce7a5b26d5beeb2d2ae6a17",
+      "project_references": [
+        {
+          "Include": "..\\NuGet.Protocol\\NuGet.Protocol.csproj"
+        }
+      ],
+      "package_references": [],
+      "framework_properties": [
+        {
+          "expression": "$(TargetFrameworksLibraryForSigning)",
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": null,
+          "condition": null
+        },
+        {
+          "expression": "$(NETFXTargetFramework)",
+          "condition": null
+        }
+      ]
+    }
+  },
+  "full_dependency_goal_complete": false
+}

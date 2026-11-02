@@ -1,0 +1,24 @@
+Original SDK Roslyn 5.3 NET10 Common/CSharp/csc prototype
+Source: 2333221c0564852ee5ceac9c622a0b14e864d76e
+Profile: DotNetBuildSourceOnly=true;DotNetBuildFromVMR=true;NetCurrent=net10.0
+Build root: /e/codex-dotnet10/roslyn53-net10-build4
+
+Fourth fresh build: Common 1042 original CSharp inputs, CSharp 1151 original inputs including five regenerated baselines, csc 11 original inputs. All three compilation steps exit 0.
+The source Compiler5 bootstrap compiles against 167 installed source NET10 reference assemblies. Execution uses the installed source NET10 host. Production sources are unchanged.
+Real CLI: version, Unicode response file, CSharp14 extension property, source Regex generation, NET10 compiler-library identities and emitted program execution pass. Invalid source returns expected exit 1 with CS0103.
+Independent evidence audit:66 member hashes,2210 original source/project inputs against pinned source archive, all three compiler products and emitted Regex source verified.
+
+Exact commands:
+$ /usr/bin/python3 /e/codex-dotnet10/build-net10.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared /e/codex-dotnet10/roslyn53-net10-plan1 /e/codex-dotnet10/roslyn53-net10-build4
+RESULT: exit 0
+$ /usr/bin/python3 /e/codex-dotnet10/check-net10-cli.py /e/codex-dotnet10/roslyn53-net10-build4 "/e/codex-dotnet10/roslyn53-net10-cli-check1 λ"
+RESULT: exit 0
+$ python tests/roslyn5/audit-net10-evidence.py /tmp/roslyn53-net10-prototype1/roslyn53-net10-evidence1.tar.gz /tmp/dotnet10-sources/roslyn-sdk10-2333221c.tar.gz /tmp/roslyn53-net10-prototype1/source-audit.json
+RESULT: exit 0
+
+Earlier failed attempts are retained in evidence: missing Regex generator, missing generated output directory and duplicate generated CommitHash attribute. The final fresh build resolves these build-script issues without production source edits.
+
+Evidence SHA256: 610e75e63f9a55336f597d35ce269ac8ce9a6b0f503da8ad6b397a41b21effbf
+Local evidence: /tmp/roslyn53-net10-prototype1
+
+This is a CLI prototype, not a complete compiler package. Localized satellites, full source/metadata/tool dependency integration, remaining compiler variants and broader original SDK profiles remain open. Full SDK10 and PowerShell7.6 remain unfinished.

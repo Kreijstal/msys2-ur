@@ -1,0 +1,32 @@
+pkgbase = mingw-w64-dotnet-runtime10-native-bootstrap
+	pkgdesc = Original source runtime10 native compression and globalization bootstrap libraries
+	pkgver = 10.0.5
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	license = spdx:BSD-3-Clause
+	license = spdx:Zlib
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk8-servicing>=8.0.131-5
+	makedepends = mingw-w64-clang-x86_64-cc
+	makedepends = mingw-w64-clang-x86_64-cmake
+	makedepends = mingw-w64-clang-x86_64-ninja
+	makedepends = mingw-w64-clang-x86_64-llvm
+	makedepends = mingw-w64-clang-x86_64-python
+	makedepends = python
+	makedepends = patch
+	depends = mingw-w64-clang-x86_64-cc-libs
+	noextract = runtime-v10.0.5.tar.gz
+	noextract = arcade-runtime10-4bf37ce6.tar.gz
+	options = !strip
+	options = !lto
+	options = !buildflags
+	options = !debug
+	source = runtime-v10.0.5.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v10.0.5
+	source = runtime10-native-bootstrap-source-1.tar.gz
+	source = arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d
+	sha256sums = 1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a
+	sha256sums = 217b988346d44a38cea7184b72ea0ae9e1a0e8561325197bcb0f12391d5f8541
+	sha256sums = 82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66
+
+pkgname = mingw-w64-clang-x86_64-dotnet-runtime10-native-bootstrap

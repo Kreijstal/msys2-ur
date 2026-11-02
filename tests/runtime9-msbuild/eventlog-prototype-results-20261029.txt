@@ -1,0 +1,34 @@
+EventLog9 original Windows NET9 source prototype
+Host/root: win11 /e/codex-dotnet10/eventlog9proto1.34NrA0
+66 original production C# inputs; 74 original archive source/project/resource inputs verified.
+419 original CLR APIs, zero missing/extra/changed; nullable metadata equal.
+All41 original neutral resource values pass.
+Live source NET10 execution: classic/modern read-only EventLog queries; provider/channel metadata; XPath properties; bookmark seek; exact record filter; independent native EvtQuery XML record match; invalid query/missing channel; existing-record watcher callback;20 repeated GC/disposal cases.
+No event writes, registry changes or channel configuration saves.
+
+Managed compile:
+python -X utf8 build-library.py PLAN NET9_REFS BUILD EXACT_SOURCE_INTEROP_GENERATOR_DIR: exit 0
+API:
+python -X utf8 check-api.py SOURCE DLL NET9_REFS api-check2: exit 0
+Live consumer:
+python -X utf8 check-consumer.py BUILD NET9_REFS consumer-check2: exit 0
+
+Native resources:
+windmc -n ORIGINAL_EventLogMessages.mc: exit 0
+windres --preprocessor=clang --preprocessor-arg=-E --preprocessor-arg=-xc --preprocessor-arg=-DRC_INVOKED -i ORIGINAL_EventLogMessages.rc -O res -o EventLogMessages.res: exit 0
+Regenerated .res byte-identical to original resource data; SHA256 8794b2a9b4e7adcf95742ff6a2e506689b39bbee66e8ab09afb27da7b65e641a
+Source Roslyn5.3 /win32res with source NETStandard2.0 references: exit 0
+native-messages.exe System.Diagnostics.EventLog.Messages.dll: exit 0; all65536 IDs format Unicode insertions.
+
+Initial attempts and corrections:
+C fixture duplicate UNICODE macro with -municode corrected; no production changes
+API checker omitted original NETCoreApp reference partial; include both original files and correct defines
+LLVM windres requires clang -E -xc preprocessor arguments
+windmc-generated RC used string MESSAGETABLE type; retained original numeric-type RC and regenerated binary; final output byte-identical to original resource
+
+Remaining:
+Generate original unsupported-platform NET9 assembly with runtime9-pinned Arcade GenFacades
+Audit original message assembly identity/version policy and package placement
+Formal cold makepkg, independent payload audit, install and fresh installed-feed consumer
+Other original frameworks and generator toolset variants
+Full dependency goal remains active.

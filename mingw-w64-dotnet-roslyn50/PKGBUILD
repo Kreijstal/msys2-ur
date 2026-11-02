@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-roslyn50
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.0.0
+pkgrel=1
+pkgdesc='Original source Roslyn5.0 Common and CSharp Standard2.0 compiler libraries'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime9-libraries>=9.0.0-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard10>=20261029-1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=6c4a46a31302167b425d5e0a31ea83c9a9aa1d09
+source=("roslyn-5.0.0-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        'roslyn50-source-2.tar.gz')
+noextract=("roslyn-5.0.0-${_commit:0:8}.tar.gz")
+sha256sums=('7b0bfa1c049eeddf3257ad61b28eca11c259296d478edd4cf58767b2ed9184c4'
+            '5af950e5505c8498e14571fbd3837e7b387f334a7aa82be780ffc10614b42958')
+prepare() {
+  /usr/bin/python3 "$srcdir/roslyn50-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/roslyn50-workflow/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/roslyn50-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/roslyn50-workflow/audit.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  local file
+  for file in "$srcdir/prepared/feed/"*.nupkg;do
+    install -m644 "$file" "$feed/$(basename "$file" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -m644 "$srcdir/roslyn50-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,localization,generated-sources,source-package-audit}.json "$doc/"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-consumer-results.json"
+  cp -R "$srcdir/prepared/dependency-policy" "$doc/"
+  install -Dm644 "$srcdir/prepared/roslyn-source/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/License.txt"
+  install -Dm644 "$srcdir/prepared/roslyn-source/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.txt"
+}

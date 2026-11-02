@@ -1,0 +1,88 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-xmlgraphics-commons
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-xmlgraphics-commons")
+pkgver=2.10
+pkgrel=1
+pkgdesc="xmlgraphics-commons Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='http://xmlgraphics.apache.org/commons/'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-logging")
+source=('0001-commons-io-write-signature.patch'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/xmlgraphics-commons/2.10/xmlgraphics-commons-2.10-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/xmlgraphics-commons/2.10/xmlgraphics-commons-2.10.pom')
+noextract=('xmlgraphics-commons-2.10-sources.jar'
+         'xmlgraphics-commons-2.10.pom')
+sha256sums=('4fe324a78b147cdb732f58ecceb70c2ca7cc4a7be182cdf184ad280c5b7f6b1d'
+         'e49d6f2c6e617dafd30d7e9471a0f0863797e3346eab21f221d1eaad40a2f7cd'
+         '983d7c5d8701f0660e895c3b4c44f43918c319a3a2fd36acf933701099d35209')
+_artifacts=('org.apache.xmlgraphics:xmlgraphics-commons:2.10')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+  patch -p1 -i "${srcdir}/0001-commons-io-write-signature.patch"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.apache.xmlgraphics:xmlgraphics-commons:2.10 upstream/xmlgraphics-commons \
+    -r resources/xmlgraphics-commons -u xmlgraphics-commons-2.10.pom -- \
+    commons-io:commons-io commons-logging:commons-logging
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with commons-io:commons-io --with commons-logging:commons-logging org.apache.xmlgraphics:xmlgraphics-commons
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-xmlgraphics-commons() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-logging")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:xmlgraphics-commons
+  _license xmlgraphics-commons 2.10
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

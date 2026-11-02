@@ -1,0 +1,38 @@
+{
+  "command": "/clang64/bin/python.exe -X utf8 check.py E:/codex-dotnet10/nuget6132pkg1.0WLgS6/src/plan E:/codex-dotnet10/nuget6132pkg1.0WLgS6/src/dependencies E:/codex-dotnet10/nuget6132pkg1.0WLgS6/src/build E:/codex-dotnet10/pkcs604pkg1.QwblOI/old-NuGet-binding-negative",
+  "expected_exit_code": 1,
+  "actual_exit_code": 1,
+  "consumer_compilation_succeeded": true,
+  "old_fallback_Immutable_version_rejected": true,
+  "full_dependency_goal_complete": false
+}
+
+old-NuGet-binding-negative.exit
+1
+
+old-NuGet-binding-negative.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/pkcs604pkg1.QwblOI/check.py", line 38, in <module>
+    commands.append(dict(label=label,command=[str(p) for p in command],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                                       ^^^^^^^^^^^^^^^
+AssertionError: ('execute', 3762504530)
+
+old-NuGet-binding-negative/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Security.Cryptography.Pkcs' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+
+old-NuGet-binding-negative/execute.log
+PASS: NuGet.Versioning preserves all 202 upstream public API declarations
+PASS: NuGet.Frameworks preserves all 401 upstream public API declarations
+PASS: NuGet.Common preserves all 687 upstream public API declarations
+PASS: NuGet.Configuration preserves all 560 upstream public API declarations
+PASS: NuGet.Packaging preserves all 1903 upstream public API declarations
+PASS: NuGet.Protocol preserves all 2127 upstream public API declarations
+PASS: NuGet.Credentials preserves all 95 upstream public API declarations
+Unhandled exception. System.Exception: System.Collections.Immutable exact source assembly version
+   at Check.Require(Boolean ok, String message)
+   at Check.RunRuntime(String[] args)
+   at Check.Main(String[] args)
+   at Check.<Main>(String[] args)

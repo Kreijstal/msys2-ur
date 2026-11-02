@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-sdk8-servicing
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.131
+pkgrel=5
+pkgdesc='Audited source SDK8 servicing with original .NET Standard 2.1 framework registration'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/sdk'
+license=('spdx:MIT' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause')
+provides=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${pkgver}-${pkgrel}")
+conflicts=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk")
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing>=8.0.31-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers=8.0.0.preview26274.2")
+optdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-netstandard21-reference: source reference pack for netstandard2.1")
+makedepends=('python')
+options=('!strip' '!lto' '!buildflags')
+# Declared source-built servicing seed; full native source recipes are retained
+# in tests/sdk8-servicing/seed4.PKGBUILD and source-host3.PKGBUILD.
+source=('mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst'
+        'dotnet-sdk8-registration-source-1.tar.gz' 'README.md')
+noextract=('mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst')
+sha256sums=('a9a92676702275054ae88d09540071c5e2757055c17f0ac1040e0f22151fb0d0'
+            'a1f13bf900f3c3486b9bb6ee13cc6a69c00b5204c66e254c09f222122655d6b1'
+            'ca03b0a3d10d2a798f90f0d03da3a0a74913463a48c8cfdf14b011979af5a32e')
+build() {
+  /usr/bin/python3 "$srcdir/sdk-registration/register-netstandard21.py" \
+    "$srcdir/mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst" "$srcdir/sdk-stage" > "$srcdir/registration.log" 2>&1
+}
+check() {
+  /usr/bin/python3 - "$srcdir/sdk-stage" <<'PY'
+from pathlib import Path
+import hashlib,json,sys
+root=Path(sys.argv[1]);r=json.loads((root/'clang64/share/doc/dotnet-sdk8-servicing/netstandard21-registration.json').read_text())
+for p,d in r['unchanged_seed_payload_files'].items():assert hashlib.sha256((root/p).read_bytes()).hexdigest()==d,p
+assert hashlib.sha256((root/r['metadata_path']).read_bytes()).hexdigest()==r['metadata_updated_sha256']
+assert r['all_existing_framework_host_runtime_linker_metadata_retained']
+print('PASS retained source SDK payload and original framework registration')
+PY
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -a "$srcdir/sdk-stage/clang64/." "$pkgdir$MINGW_PREFIX/"
+  install -m644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/netstandard21-README.md"
+  install -Dm644 "$srcdir/sdk-registration/inputs/installer8-LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Installer-LICENSE.TXT"
+}

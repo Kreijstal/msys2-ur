@@ -1,0 +1,216 @@
+Source NuGet7.3 NET10 foundation package
+Date: 2026-10-29T07:15:16.978409+00:00
+Host: win11; /e/codex-dotnet10/nuget73pkg1.8g5AxB
+Installed: mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap 7.3.0.preview1.11413-1
+Package SHA256: ce08c2269326d9e2b376c558a63e9ad0e559eb3c0489b8a87b4c905a634c423b
+Source commit: bf048eb714eb6b1912ba868edca4c7cfec454841
+Previous goal turn: progress. Current goal turn: progress.
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0;fresh source build and all producer/candidate checks passed on first package attempt.
+Original VMR source-only NET10 profile,187 unchanged source inputs,assembly7.3.0.0,file7.3.0.11413.
+All1497 upstream API declarations are preserved;raw extra API comparison was not performed.
+All392 neutral/localized values,52 original satellites,19 upstream range vectors and24 concurrent owned-file lock operations pass.
+Four source NuGet archives retain original individual-library satellite exclusion;all52 satellites are present in the loose bootstrap layout.
+
+$ python tests/nuget73/audit-package.py /tmp/nuget73-package1/mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst /tmp/nuget73-package1/archive-audit.json
+RESULT: exit0;92 exact payload files,four source NuGet assets and52 satellites.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst
+RESULT: exit0.
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check
+RESULT: exit0;fresh installed-payload/API/resource/runtime consumer passed.
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap
+mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap: 129 total files, 0 altered files
+
+Exact build/localization/consumer commands:
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Versioning/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Versioning/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Frameworks/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Frameworks/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Common/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Common/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.LibraryModel/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.LibraryModel/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/cs/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/de/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/es/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/fr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/it/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ja/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ko/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/pl/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/pt-BR/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ru/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/tr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/zh-Hans/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/zh-Hant/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/cs/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/de/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/es/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/fr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/it/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ja/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ko/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/pl/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/pt-BR/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ru/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/tr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/zh-Hans/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/zh-Hant/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/cs/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/de/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/es/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/fr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/it/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ja/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ko/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/pl/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/pt-BR/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ru/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/tr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/zh-Hans/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/zh-Hant/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/cs/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/de/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/es/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/fr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/it/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ja/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ko/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/pl/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/pt-BR/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ru/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/tr/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/zh-Hans/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/zh-Hant/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/bin/Check.dll E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/validation-source E:/msys64/clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0 E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/baselines E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/owned-work E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/expected-localization.json
+RESULT: exit 0
+
+Cold makepkg
+==> Making package: mingw-w64-dotnet-nuget73-core-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 08:06:25)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found nuget-sdk10-bf048eb7.tar.gz
+  -> Found nuget73-core-source-1.tar.gz
+==> Validating source files with sha256sums...
+    nuget-sdk10-bf048eb7.tar.gz ... Passed
+    nuget73-core-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting nuget73-core-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-nuget73-core-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 08:12:34)
+
+
+Installed runtime/API checks
+PASS: NuGet.Versioning preserves all 202 upstream public API declarations
+PASS: NuGet.Frameworks preserves all 397 upstream public API declarations
+PASS: NuGet.Common preserves all 688 upstream public API declarations
+PASS: NuGet.LibraryModel preserves all 210 upstream public API declarations
+PASS original NET10 NuGet foundation APIs=1497,neutral strings=392,upstream range vectors=19,SemVer/TFM/library models/24 concurrent file locks
+
+
+Original archive audit
+PASS187 original source items,52 XLF inputs,outputs and actual reference hashes
+
+
+The initial standalone prototype omitted LibraryModel transitive Frameworks references;corrected transitive reference closure and verified reuse of three successful projects. The subsequent fresh clean package passed all gates on its first attempt.
+
+SDK10 exact support-library and project pins are retained in tests/sdk10/dependency-source-pins-20261029.json.
+
+Remaining:
+remaining NuGet7.3 Configuration,Packaging,Protocol,DependencyResolver,ProjectModel,Commands and other original libraries
+original NuGet7.3 restore/build/pack tasks,SDK resolver and full localization aggregate
+exact SDK10 support libraries:DependencyModel10.0.2,IO.Hashing10.0.2,HostModel10.0.2-servicing.25612.105,Deployment.DotNet.Releases2.0.0-preview.1.25612.105
+original SDK10 Build.Tasks,Extensions task and APICompat project closure
+additional original NuGet/framework/tool profiles and full SDK10/WindowsDesktop10/PowerShell7.6 plus existing compatibility gates
+
+Dependency catalog counts are unchanged;this is a source SDK prerequisite bundle. Full dependency goal remains incomplete.

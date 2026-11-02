@@ -1,0 +1,35 @@
+From d570ab1c8cbdab33550dc3cd00734642b3285dcb Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 22:01:04 +0100
+Subject: [PATCH] tl-parser: Only define away __attribute__ for MSVC
+
+tl-parser.h assumes every _WIN32 compiler lacks GNU attributes and
+defines __attribute__(x) to nothing. With MinGW GCC that also strips the
+__attribute__((__always_inline__, __gnu_inline__)) and friends from the
+fortified wrappers in the mingw-w64 CRT headers (_FORTIFY_SOURCE is on in
+MSYS2's default CFLAGS), which then fail with "invalid use of
+'__builtin_va_arg_pack ()'". Keep the workaround for compilers that are
+not GNU-compatible.
+
+The same change is carried by MSYS2's mingw-w64-tdlib package.
+---
+ td/generate/tl-parser/tl-parser.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/td/generate/tl-parser/tl-parser.h b/td/generate/tl-parser/tl-parser.h
+index 59209d4..98b6170 100644
+--- a/td/generate/tl-parser/tl-parser.h
++++ b/td/generate/tl-parser/tl-parser.h
+@@ -214,7 +214,9 @@ void write_types (FILE *f);
+ #ifdef _WIN32
+ #include "wgetopt.h"
+ 
++#ifndef __GNUC__
+ #define __attribute__(x)
++#endif
+ 
+ #define lrand48() rand()
+ #define strdup _strdup
+-- 
+2.55.0
+

@@ -1,0 +1,57 @@
+{
+  "source_inputs": {
+    "runtime/Directory.Build.props": {
+      "sha256": "7390c552db060d7d8ac556d183fb37cc4ee2085333c4d152b7becbaf532f3d4f",
+      "original_properties": {
+        "NetCoreAppCurrentVersion": "10.0",
+        "NetCoreAppPrevious": "$(NetCoreAppCurrent)",
+        "NetCoreAppMinimum": "$(NetCoreAppCurrent)",
+        "NetCoreAppToolCurrentVersion": "10.0",
+        "NetFrameworkToolCurrent": null
+      }
+    },
+    "runtime/eng/Versions.props": {
+      "sha256": "02d3c1323b09e901e4e0e5e42c923ee066fca55f8417df5664851b1290077ea4"
+    },
+    "runtime/src/installer/managed/Microsoft.NET.HostModel/Microsoft.NET.HostModel.csproj": {
+      "sha256": "30633458db019975643422de09853d2882d265e6c685c135a28eb2985e1c15c8"
+    },
+    "deployment-tools/Directory.Build.props": {
+      "sha256": "50ae449c91d19f25cb11f333214131b8d13703b36325a92768ed9c1b145c1963"
+    },
+    "deployment-tools/Directory.Packages.props": {
+      "sha256": "f44f67b5f33736811c9e11edd0e328e1fe1f6ec604073ff734668a2da4cc54cb",
+      "System.Text.Json_package_items": [
+        {
+          "Include": "System.Text.Json",
+          "Version": "8.0.5"
+        },
+        {
+          "Update": "System.Text.Json",
+          "Version": "$(SystemTextJsonVersion)",
+          "Condition": "'$(SystemTextJsonVersion)' != ''"
+        }
+      ]
+    },
+    "deployment-tools/eng/Versions.props": {
+      "sha256": "64c13d3d61aacdc49fdf47bc681f233cc806448e8a0eb35ada1b1f6256fe9452"
+    },
+    "deployment-tools/src/Microsoft.Deployment.DotNet.Releases/src/Microsoft.Deployment.DotNet.Releases.csproj": {
+      "sha256": "42a61f5f177118d3fce08f593fc03a3ef4688e30897f026cbf1b676de5bd5472"
+    }
+  },
+  "hostmodel_original_current_tool_framework": "net10.0",
+  "deployment_releases_original_framework": "netstandard2.0",
+  "deployment_releases_default_json_package": "System.Text.Json8.0.5",
+  "installed_json805_profiles": [
+    "net8.0"
+  ],
+  "installed_json805_netstandard20_asset_present": false,
+  "source_build_version_override_evaluated": false,
+  "remaining": [
+    "Evaluate original VMR package version override flow before fixing the Releases dependency version",
+    "Provide the original compatible JSON NETStandard2 profile required by Releases; do not use NET8 compile assets for its NS2 build",
+    "Build all exact SDK support libraries from original profiles"
+  ],
+  "full_dependency_goal_complete": false
+}

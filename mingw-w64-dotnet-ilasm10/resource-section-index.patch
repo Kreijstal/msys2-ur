@@ -1,0 +1,27 @@
+--- a/src/coreclr/dlls/mscorpe/ceefilegenwriter.cpp
++++ b/src/coreclr/dlls/mscorpe/ceefilegenwriter.cpp
+@@ -927,11 +927,11 @@
+ 
+                 for (; pSection < pSectionEnd; pSection++)
+                 {
+-                    if (strcmp(".rsrc$01", (char *)pSection->Name) == 0)
++                    if (memcmp(".rsrc$01", pSection->Name, IMAGE_SIZEOF_SHORT_NAME) == 0)
+                     {
+                         rsrc[0] = pSection;
+                     }
+-                    else if (strcmp(".rsrc$02", (char *)pSection->Name) == 0)
++                    else if (memcmp(".rsrc$02", pSection->Name, IMAGE_SIZEOF_SHORT_NAME) == 0)
+                     {
+                         rsrc[1] = pSection;
+                     }
+@@ -1054,7 +1054,9 @@
+             // Ensure the symbol entry is valid for a resource.
+             if ((pSymbolEntry->StorageClass != IMAGE_SYM_CLASS_STATIC) ||
+                 (VAL16(pSymbolEntry->Type) != IMAGE_SYM_TYPE_NULL) ||
+-                (VAL16(pSymbolEntry->SectionNumber) != 3)) // 3rd section is .rsrc$02
++                (VAL16(pSymbolEntry->SectionNumber) !=
++                 1 + (rsrc[1] - reinterpret_cast<const IMAGE_SECTION_HEADER *>(
++                     pbStartOfMappedMem + IMAGE_SIZEOF_FILE_HEADER))))
+             {
+                 pParam->hr = HRESULT_FROM_WIN32(ERROR_RESOURCE_DATA_NOT_FOUND);
+                 goto lDone;

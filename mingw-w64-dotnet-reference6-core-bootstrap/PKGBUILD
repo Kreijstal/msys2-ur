@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-reference6-core-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.0.19
+pkgrel=1
+pkgdesc='Original NET6 core reference graph for isolated source bootstrap builds'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime6-reference-snapshot-e37fab9f.tar.gz'
+        'arcade-runtime6-3d9c9a4d.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/3d9c9a4d3d893e903bb3295fd5b55b8e40699888'
+        'reference6-core-source-1.tar.gz')
+noextract=('runtime6-reference-snapshot-e37fab9f.tar.gz' 'arcade-runtime6-3d9c9a4d.tar.gz')
+sha256sums=('45e8453e4868b201f8dda3214931cce9ebfd965272c8e7972e49c56291d05106'
+            '43a351571629a4f2b54cbe07308fa109b20b7c7511991bba0aefadcf5cb39f7d'
+            '08332aa0a680d7e76ab1588ce55c59a0f0efc159c4d0fc8a3f106a54d0cbde74')
+_py() {
+  local script=$1 log=$2
+  shift 2
+  local path args=()
+  for path in "$@"; do args+=("$(cygpath -am "$path")"); done
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/reference6-core-workflow/$script")" "${args[@]}" > "$srcdir/$log" 2>&1
+}
+prepare() {
+  _py prepare.py prepare.log "$srcdir/runtime6-reference-snapshot-e37fab9f.tar.gz" "$srcdir/plan"
+  _py evaluate.py evaluate.log "$srcdir/plan"
+}
+build() {
+  _py build.py build.log "$srcdir/plan" "$srcdir/arcade-runtime6-3d9c9a4d.tar.gz" "$srcdir/build"
+}
+check() {
+  _py validate.py validate.log "$srcdir/plan" "$srcdir/build" "$srcdir/check"
+  _py audit.py source-audit.log "$srcdir/runtime6-reference-snapshot-e37fab9f.tar.gz" "$srcdir/plan" "$srcdir/build" "$srcdir/source-audit.json"
+  _py stage.py stage.log "$srcdir" "$srcdir/package-prefix"
+  _py check-installed.py staged-check.log "$srcdir/package-prefix" "$srcdir/staged-check"
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

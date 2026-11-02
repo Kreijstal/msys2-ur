@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-codedom44-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.4.0
+pkgrel=1
+pkgdesc='Original CodeDom4.4 Standard2.0 implementation and reference source bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx-codedom44-8321c729.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/8321c729934c0f8be754953439b88e6e1c120c24'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'codedom44-source-1.tar.gz')
+noextract=('corefx-codedom44-8321c729.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('f5ebd955cac6ff630689bf6cee2f2c2ffe30b1c7b22c4106d12bb3982abc6c69'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '4783b154428733d1e6250dd88e4f42241608bb5da59718b96dd4cf36622c5806')
+prepare() {
+  /usr/bin/python3 "$srcdir/codedom44-workflow/prepare.py" "$srcdir/corefx-codedom44-8321c729.tar.gz" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/codedom44-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  bash "$srcdir/codedom44-workflow/build.sh" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/codedom44-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/codedom44-workflow/check.py" "$srcdir/prepared" "$srcdir/check" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/System.CodeDom.4.4.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.codedom.4.4.0.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check.py; do install -m644 "$srcdir/codedom44-workflow/$file" "$doc/$file"; done
+  for file in Api.cs Check.cs Bridge.cs published-ns2-metadata.json published-ns2-reference-metadata.json published-provenance.json; do install -m644 "$srcdir/codedom44-workflow/inputs/$file" "$doc/inputs/$file"; done
+  install -m644 "$srcdir/prepared/source-inputs.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+}

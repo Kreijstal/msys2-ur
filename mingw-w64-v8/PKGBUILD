@@ -1,0 +1,243 @@
+# Maintainer: Rodrigo Hernandez <kwizatz@aeongames.com>
+# Contributor: Raed Rizqie <raed.rizqie@gmail.com>
+
+_realname=v8
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=14.0.365.10
+_v8_revision=b7ed978e41b4bac7802b206404d0e2f3d09f31ac
+_srcname=v8-${_v8_revision}
+pkgrel=1
+pkgdesc="Fast and modern Javascript engine (mingw-w64)"
+arch=('any')
+# Preserve the content hashes recorded in the SDK manifest.
+options=('!strip')
+mingw_arch=('ucrt64')
+url="https://v8.dev"
+msys2_references=(
+  "cpe: cpe:/a:google:v8"
+)
+msys2_repository_url='https://github.com/v8/v8'
+license=('spdx:BSD-3-Clause AND BSD-2-Clause AND Apache-2.0 AND BSL-1.0 AND CC0-1.0 AND MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-icu"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-gn"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "git")
+_qtver=6.11.2
+_qtarchive=qtwebengine-everywhere-src-${_qtver}
+source=("https://download.qt.io/official_releases/qt/6.11/${_qtver}/submodules/${_qtarchive}.tar.xz"
+        "build-5aa72841882c9df27ba6fdfb92c4659e1c273396.tar.gz::https://chromium.googlesource.com/chromium/src/build/+archive/5aa72841882c9df27ba6fdfb92c4659e1c273396.tar.gz"
+        "clang-ef1872e2e1012694ffbeeed668ff2c127517b7f0.tar.gz::https://chromium.googlesource.com/chromium/src/tools/clang/+archive/ef1872e2e1012694ffbeeed668ff2c127517b7f0.tar.gz"
+        "abseil-cpp-5f6b05eac05371bee829951e64f3fd35854e9311.tar.gz::https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp/+archive/5f6b05eac05371bee829951e64f3fd35854e9311.tar.gz"
+        "dragonbox-6c7c925b571d54486b9ffae8d9d18a822801cbda.tar.gz::https://chromium.googlesource.com/external/github.com/jk-jeon/dragonbox/+archive/6c7c925b571d54486b9ffae8d9d18a822801cbda.tar.gz"
+        "fast_float-cb1d42aaa1e14b09e1452cfdef373d051b8c02a4.tar.gz::https://chromium.googlesource.com/external/github.com/fastfloat/fast_float/+archive/cb1d42aaa1e14b09e1452cfdef373d051b8c02a4.tar.gz"
+        "fp16-0a92994d729ff76a58f692d3028ca1b64b145d91.tar.gz::https://chromium.googlesource.com/external/github.com/Maratyszcza/FP16/+archive/0a92994d729ff76a58f692d3028ca1b64b145d91.tar.gz"
+        "googletest-373af2e3df71599b87a40ce0e37164523849166b.tar.gz::https://chromium.googlesource.com/external/github.com/google/googletest/+archive/373af2e3df71599b87a40ce0e37164523849166b.tar.gz"
+        "highway-00fe003dac355b979f36157f9407c7c46448958e.tar.gz::https://chromium.googlesource.com/external/github.com/google/highway/+archive/00fe003dac355b979f36157f9407c7c46448958e.tar.gz"
+        "jinja2-c3027d884967773057bf74b957e3fea87e5df4d7.tar.gz::https://chromium.googlesource.com/chromium/src/third_party/jinja2/+archive/c3027d884967773057bf74b957e3fea87e5df4d7.tar.gz"
+        "markupsafe-4256084ae14175d38a3ff7d739dca83ae49ccec6.tar.gz::https://chromium.googlesource.com/chromium/src/third_party/markupsafe/+archive/4256084ae14175d38a3ff7d739dca83ae49ccec6.tar.gz"
+        "simdutf-c6c377dbb834a65fbea1423a670d82ecc2d576d2.tar.gz::https://chromium.googlesource.com/chromium/src/third_party/simdutf/+archive/c6c377dbb834a65fbea1423a670d82ecc2d576d2.tar.gz"
+        "zlib-363a126ed293970f3df97ee5f760cba29a29e193.tar.gz::https://chromium.googlesource.com/chromium/src/third_party/zlib/+archive/363a126ed293970f3df97ee5f760cba29a29e193.tar.gz"
+        "001-add-mingw-toolchain.patch"
+        "002-buildflags-fixes.patch"
+        "003-fix-macros-and-functions.patch"
+        "004-fix-static-assert-implementations.patch"
+        "005-fix-conflicting-macros.patch"
+        "006-support-clang-in-mingw-mode.patch"
+        "007-snapshot-use-system-zlib-header.patch"
+        "008-prioritized-native-thread-on-windows.patch"
+        "009-unicode-for-wide-char-functions.patch"
+        "010-disable-msvc-hack.patch"
+        "011-make-sure-that-__rdtsc-is-declared.patch"
+        "012-remove-dllimport-attributes.patch"
+        "013-builtin-deps-fixes.patch"
+        "014-heap-use-proper-sources.patch"
+        "015-abseil-build-as-static-lib.patch"
+        "016-zlib-use-system-lib.patch"
+        "017-highway-disable-avx10-on-mingw.patch"
+        "018-sdk-interface.patch"
+        "019-perfetto-mingw.patch"
+        "020-standalone-qt-build.patch"
+        "021-standalone-qt-args.patch"
+        "022-perfetto-protobuf-generators.patch"
+        "023-gn-stamp-files.patch"
+        "024-export-startup-blob.patch"
+        "025-chromium-abseil-compat.patch"
+        "026-perfetto-category-registry-linkage.patch"
+        "icu.gn"
+        "zlib.gn"
+        "sdk.py"
+        "unpack.py"
+        "archive_identity.py"
+        "source-trees.json"
+        "abi-profile.gn")
+noextract=("${_qtarchive}.tar.xz" "build-5aa72841882c9df27ba6fdfb92c4659e1c273396.tar.gz" "clang-ef1872e2e1012694ffbeeed668ff2c127517b7f0.tar.gz" "abseil-cpp-5f6b05eac05371bee829951e64f3fd35854e9311.tar.gz" "dragonbox-6c7c925b571d54486b9ffae8d9d18a822801cbda.tar.gz" "fast_float-cb1d42aaa1e14b09e1452cfdef373d051b8c02a4.tar.gz" "fp16-0a92994d729ff76a58f692d3028ca1b64b145d91.tar.gz" "googletest-373af2e3df71599b87a40ce0e37164523849166b.tar.gz" "highway-00fe003dac355b979f36157f9407c7c46448958e.tar.gz" "jinja2-c3027d884967773057bf74b957e3fea87e5df4d7.tar.gz" "markupsafe-4256084ae14175d38a3ff7d739dca83ae49ccec6.tar.gz" "simdutf-c6c377dbb834a65fbea1423a670d82ecc2d576d2.tar.gz" "zlib-363a126ed293970f3df97ee5f760cba29a29e193.tar.gz")
+# Gitiles changes archive entry timestamps on every download. unpack.py verifies
+# every member's path, type, mode and content against source-trees.json before
+# extraction. Only those archives skip the unstable compressed-byte checksum.
+sha256sums=('6101c1aa00ff933d1b65ee5d167f76e8d71b9ac5b378b0111277723ebda7c163'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'SKIP'
+            'b13af47de4ec56ba1239d484a577cfd5a68f92b95a24cf4e32c6fb1d7b1809d9'
+            'ebd7b8e2b91e02879cb6c83154cb276be2a820f939b6d166e98b39c175b0eb51'
+            '274d4cfc5a8a4f99699e67fed36565f315dd3bc0d1335bbf5070ba7052d99541'
+            'aa7255002773aa3944027e0aab19627eee089c2ec3893713c8c7ff082e214553'
+            '75a0d6fbf04cb9bbb724230104cf28595cd9b1169a0e91a4090bd0d3b6f80a8c'
+            'c860f43dfaeb77b7567044a45bcbc6d5508e1571fbb31cb49cfdfbe86a031916'
+            '1fca982ec6ede3b29d2692231569944ce0ad33519b47fd6fb01b0975c10eb6bd'
+            '3c7b480cd4c19e8120c9adb27d7fd45b8d98c5bfc13c153479afa0636c319153'
+            '4edcd5f7d2f9b52c8783e81b7f06f6e5b386aa6c0143cc2f9054754db53919cf'
+            'e4d8e57914cfcf6c0ea299d0556d7b747271e5a7ec66e1d8d52394fcd0da34b6'
+            '1ef6854b6a68101ab177a7a95389e9b03e7b8c4e3223320dfc9ce4405cbf5bfe'
+            '38df3176108c24c0431513a0369934add6be266d7c654d4c3f0e91e7c7aa6deb'
+            '37a29668fb02d4fa60062c02f0d24dce4ab9b7fce4d7f5a8e6eca745fa125be2'
+            '90798dab57f323930eda6dabe983a5d124615ab7447a69d5236e70dbcaf89079'
+            '23a02d057c06fb5b79ae94e72f9b5ab3e815727f69542d1b185c1278501e1ddc'
+            'a4275f41723cc990f2f43559ce716100830a8ce3f38e4878f6bf36d70d47b646'
+            '35b8efe424ae20b1d9e01a696baa1af5b160ebd07adad4beab61562c46dd51d1'
+            '722f2f5f3d677d40f52824a3640f04d58555267925893d8f528c626e5be7b466'
+            '784994c526107c9744a3b251546bb075dc3fc49ea581b1740382f4b742c0ee69'
+            'eb31d3abd8208a1b815ce7b0650e2e3f7cefafede1dcc0e4aec2c62df1a51a63'
+            'fbe138d17c27966ed560c3b74eb8001449eb0cd3b8f888b3a3fbf13069dc671e'
+            'eac2eba161ebe08867da6f9698c037f3068947d5d8f472051d2eadf9491aca5b'
+            '1801b3c4eca39fe3baec6a11535e13b42f874d4cd34a7e403f9245af1fca1cb4'
+            'd51676c66f6571865cb47e8ded0cbcfc6548e7f12513d1ba451abc6fce9a75dd'
+            '3e4fcedd85cfa3fe3a61c3cbf222aef8a1863239c33b34a0f9ba6fa4bf4fd650'
+            '2befd9d3203939d145e173030bccc7426383fca66a5eb104f1ec69549ffff99b'
+            'e1bc88af48143f29f5805b8ac5d77addef1b09318d1f5f127a9281872c00303b'
+            '7e1e39a3dc69632f7bf9182c92405186ce709aca921cf0abefadb6fa8b825510'
+            'f7422541021acab72f40c3f1dcc55957ae15bf04dbde1b250347f0851eaf3671'
+            '890b4feecf1301a70215582623f22d66b8c29038b10305af94675792f87b0983'
+            '01f012e082156955403634eaa0d89e0b4edfcbcdf2f20bce7a5ae347aa1c0032'
+            '134de82cbdd93f3298288082e541622cc4a22c5f73ac51c534caebbe3c8cc031'
+            'b7dad2e29aeea16fdb2d2137d0033ddc2d06e2451346dee781e7d75a8097cf24')
+
+apply_patch_with_msg() {
+  for _patch in "$@"
+  do
+    msg2 "Applying ${_patch}"
+    patch -p1 -i "${srcdir}/${_patch}"
+  done
+}
+
+prepare() {
+  python "${srcdir}/unpack.py" --cache "$(cygpath -m "${srcdir}")" \
+    --qt-archive "${_qtarchive}" --source-name "${_srcname}"
+  cp "${srcdir}/qt-build-inputs/config/"{jumbo.gni,merge_for_jumbo.py} "${srcdir}/build/config/"
+  echo ":: Patching build directory"
+  cd "${srcdir}"/build
+  patch -p1 -i "${srcdir}"/001-add-mingw-toolchain.patch
+  patch -p1 -i "${srcdir}/021-standalone-qt-args.patch"
+  python "${srcdir}"/build/util/lastchange.py -o "${srcdir}"/build/util/LASTCHANGE
+  echo "build_with_chromium = false" > "${srcdir}/build/config/gclient_args.gni"
+
+  cd "${srcdir}/abseil-cpp"
+  patch -p1 -i "${srcdir}/015-abseil-build-as-static-lib.patch"
+  patch -p1 -i "${srcdir}/025-chromium-abseil-compat.patch"
+  cd "${srcdir}/zlib"
+  patch -p1 -i "${srcdir}/016-zlib-use-system-lib.patch"
+  # Native GN and Python need real Windows directory junctions, not MSYS links.
+  python "${srcdir}/unpack.py" --assemble --cache "$(cygpath -m "${srcdir}")" \
+    --qt-archive "${_qtarchive}" --source-name "${_srcname}"
+
+  echo ":: Patching v8 source"
+  cd "${srcdir}"/${_srcname}
+  apply_patch_with_msg \
+    002-buildflags-fixes.patch \
+    003-fix-macros-and-functions.patch \
+    004-fix-static-assert-implementations.patch \
+    005-fix-conflicting-macros.patch \
+    006-support-clang-in-mingw-mode.patch \
+    007-snapshot-use-system-zlib-header.patch \
+    008-prioritized-native-thread-on-windows.patch \
+    009-unicode-for-wide-char-functions.patch \
+    010-disable-msvc-hack.patch \
+    011-make-sure-that-__rdtsc-is-declared.patch \
+    012-remove-dllimport-attributes.patch \
+    013-builtin-deps-fixes.patch \
+    014-heap-use-proper-sources.patch \
+    017-highway-disable-avx10-on-mingw.patch \
+    018-sdk-interface.patch \
+    019-perfetto-mingw.patch \
+    020-standalone-qt-build.patch \
+    022-perfetto-protobuf-generators.patch \
+    023-gn-stamp-files.patch \
+    024-export-startup-blob.patch \
+    026-perfetto-category-registry-linkage.patch
+
+
+}
+
+build() {
+  cd ${_srcname}
+
+  local _debug=false
+  local _symbol=0
+  if check_option "debug" "y"; then
+    _debug=true
+    _symbol=2
+  fi
+
+  local _arch=x64
+  if [[ ${CARCH} == aarch64 ]]; then
+    _arch=arm64
+  fi
+
+  local _clang=false
+  if [[ ${MSYSTEM} == CLANG* ]]; then
+    _clang=true
+  fi
+
+  local _gn_args
+  _gn_args="$(cat "${srcdir}/abi-profile.gn")
+    target_cpu=\"${_arch}\"
+    is_debug=${_debug}
+    is_clang=${_clang}
+    symbol_level=${_symbol}
+    v8_symbol_level=${_symbol}
+    enable_iterator_debugging=${_debug}
+    use_jumbo_build=true
+    jumbo_file_merge_limit=8
+    v8_export_startup_blob=true
+    enable_resource_allowlist_generation=false"
+
+  if [[ ${_debug} == true ]]; then
+    _gn_args="${_gn_args/is_official_build=true/is_official_build=false}"
+  fi
+
+  gn gen out/shared --threads=1 --fail-on-unused-args --args="${_gn_args} is_component_build=true"
+  ninja -j"${V8_BUILD_JOBS:-4}" -C out/shared v8 d8 torque torque-language-server mksnapshot v8_generate_features_json v8_sdk_config
+  gn args out/shared --list --json > out/shared/resolved-args.json
+  gn desc out/shared //:v8 --format=json > out/shared/interface.json
+  gn desc out/shared //:cppgc --format=json > out/shared/cppgc-interface.json
+
+  gn gen out/static --threads=1 --fail-on-unused-args --args="${_gn_args} is_component_build=false v8_monolithic=true"
+  ninja -j"${V8_BUILD_JOBS:-4}" -C out/static v8_monolith v8_sdk_config
+  gn args out/static --list --json > out/static/resolved-args.json
+  gn desc out/static //:v8 --format=json > out/static/interface.json
+  gn desc out/static //:v8_monolith libs --format=json > out/static/link-libs.json
+  gn desc out/static //:cppgc --format=json > out/static/cppgc-interface.json
+
+}
+
+package() {
+  cd "${srcdir}/${_srcname}"
+  python "${srcdir}/sdk.py" install --source . --shared out/shared --static out/static \
+    --dest "$(cygpath -m "${pkgdir}${MINGW_PREFIX}")" --version "${pkgver}" \
+    --revision "${_v8_revision}" --runtime ucrt64 --vendor-sha256 "${sha256sums[0]}"
+  install -Dm644 LICENSE* -t "${pkgdir}${MINGW_PREFIX}/share/licenses/v8"
+}

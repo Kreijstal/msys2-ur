@@ -1,0 +1,29 @@
+pkgbase = mingw-w64-castle-engine
+	pkgdesc = Castle Game Engine: Object Pascal 3D/2D game engine with build tool and visual editor (mingw-w64)
+	pkgver = 7.0alpha3
+	pkgrel = 1
+	url = https://castle-engine.io/
+	arch = any
+	license = spdx:LGPL-2.0-or-later
+	license = spdx:GPL-2.0-or-later
+	makedepends = mingw-w64-ucrt-x86_64-fpc-kgpc>=3.2.2-3
+	depends = mingw-w64-ucrt-x86_64-lazarus
+	depends = mingw-w64-ucrt-x86_64-zlib
+	depends = mingw-w64-ucrt-x86_64-libpng
+	depends = mingw-w64-ucrt-x86_64-freetype
+	depends = mingw-w64-ucrt-x86_64-openal
+	depends = mingw-w64-ucrt-x86_64-libvorbis
+	depends = mingw-w64-ucrt-x86_64-openssl
+	noextract = castle-engine-7.0alpha3.tar.gz
+	options = !strip
+	options = !debug
+	source = castle-engine-7.0alpha3.tar.gz::https://github.com/castle-engine/castle-engine/archive/refs/tags/v7.0-alpha.3.tar.gz
+	source = 0001-Find-the-engine-in-the-MSYS2-layout.patch
+	source = 0002-Load-the-MSYS2-builds-of-FreeType-libpng-OpenAL-and-.patch
+	source = 0003-build-tool-do-not-fail-on-dependency-DLLs-that-are-n.patch
+	sha256sums = 332d0aa94ea4376f3fe603601c6958f341b44b196e1453273a06e1108688704e
+	sha256sums = d6e688f8347f92c73f6aff7b06c89b639266f4a72827c5c7bb4af00e6ca101e1
+	sha256sums = 76168aa08c5a6d662a27724c621f125eda7a54ee41a00a18f6cc913a485b8313
+	sha256sums = 5ee5edd0e5dc2cf7c7a9b6395c1cb13f3252618bf5e2567f7a177c8bf86fbbdf
+
+pkgname = mingw-w64-ucrt-x86_64-castle-engine

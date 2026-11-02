@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-nuget6132-template-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.13.2
+pkgrel=3
+pkgdesc='Original NuGet6.13.2 NET10 source-only libraries for TemplateEngine'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/NuGet/NuGet.Client'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-immutable8=8.0.0"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-asn1801=8.0.1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard>=20261028-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-pkcs604=6.0.4"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata44=4.4.0"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json1303-bootstrap=13.0.3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-generators=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('nuget6132-5d81cb8d.tar.gz::https://codeload.github.com/NuGet/NuGet.Client/tar.gz/5d81cb8da82eda8a6b47aae92d1e6f888de982ce'
+        'nuget6132-template-source-3.tar.gz')
+noextract=('nuget6132-5d81cb8d.tar.gz')
+sha256sums=('3af9c4cd626db52aa51e63da9bd7e80f6944011ebf0a91a5c2b51f08dda731f1' 'a3c12c7997c49ac8745ba53ec9bd7b6d8459461984885f007c82bb4e4f07344d')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/prepare.py")" "$(cygpath -am "$srcdir/nuget6132-5d81cb8d.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/evaluate.py")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/evaluate.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/restore-dependencies.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/dependencies")" > "$srcdir/dependency-restore.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/dependencies")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/localize.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/dependencies")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/check-resources.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/resource-check")" > "$srcdir/resource-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/audit.py")" "$(cygpath -am "$srcdir/nuget6132-5d81cb8d.tar.gz")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/source-audit.json")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget6132-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

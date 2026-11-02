@@ -1,0 +1,100 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=peazip
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=11.4.0
+pkgrel=1
+pkgdesc="File archiver and manager GUI (7z, zstd, brotli, PEA, ...), built with Lazarus (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://peazip.github.io/'
+msys2_repository_url='https://github.com/peazip/PeaZip'
+msys2_references=(
+  'archlinux: peazip'
+)
+license=('spdx:LGPL-3.0-only')
+# The archive backends are the MSYS2 packages, run from <prefix>/bin
+# (see 0001); upstream's res/bin/<tool>/ binaries are not shipped.
+depends=("${MINGW_PACKAGE_PREFIX}-7zip"
+         "${MINGW_PACKAGE_PREFIX}-zstd"
+         "${MINGW_PACKAGE_PREFIX}-brotli")
+optdepends=("${MINGW_PACKAGE_PREFIX}-upx: compress executables")
+makedepends=("${MINGW_PACKAGE_PREFIX}-lazarus")
+options=('!strip' '!debug')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/peazip/PeaZip/archive/refs/tags/${pkgver}.tar.gz"
+        "0001-Find-resources-and-backends-in-the-MSYS2-layout.patch"
+        "0002-Do-not-pin-the-hash-of-dragdropfilesdll.dll.patch")
+sha256sums=('a35861156df46c0852574d7905bf28b69ea5eff965a88ca17f08f2eb9296e996'
+            'c1cda3cfd3702accfe90a28e5225683fdb0fb7bd3acdd6174c855625327f04d8'
+            'dc58a4c00c3729afec640d29b4459b5f8534e1dfe17383197c83df0a9af9d0f1')
+
+prepare() {
+  cd "${srcdir}/PeaZip-${pkgver}"
+  # The sources are CRLF; --binary keeps patch from rewriting them as LF.
+  patch --binary -Np1 -i "${srcdir}/0001-Find-resources-and-backends-in-the-MSYS2-layout.patch"
+  patch --binary -Np1 -i "${srcdir}/0002-Do-not-pin-the-hash-of-dragdropfilesdll.dll.patch"
+}
+
+build() {
+  cd "${srcdir}/PeaZip-${pkgver}/peazip-sources/dev"
+  # Private lazbuild config dir, so the user's ~/.lazarus is not touched.
+  local _pcp; _pcp="$(cygpath -m "${srcdir}/lazconf")"
+  rm -rf "${srcdir:?}/lazconf"
+  lazbuild --pcp="${_pcp}" --add-package-link metadarkstyle/metadarkstyle.lpk
+  lazbuild --pcp="${_pcp}" --add-package-link dragdropfilesdll.src/DragDropLazarus.lpk
+  lazbuild --pcp="${_pcp}" -B project_pea.lpi
+  lazbuild --pcp="${_pcp}" -B project_peach.lpi
+  lazbuild --pcp="${_pcp}" -B dragdropfilesdll.src/dragdropfilesdll.lpi
+}
+
+check() {
+  local _dev="${srcdir}/PeaZip-${pkgver}/peazip-sources/dev"
+  local _t="${srcdir}/test"
+  rm -rf "${_t:?}"
+  # MSYS2 layout: bin/pea.exe + lib/peazip/res
+  mkdir -p "${_t}/bin" "${_t}/lib/peazip" "${_t}/data/in" "${_t}/out" "${_t}/out-enc"
+  cp "${_dev}/pea.exe" "${_t}/bin/"
+  # res/portable is kept: configuration then goes to res/conf instead of
+  # the user's %APPDATA%\PeaZip.
+  cp -r "${_dev}/../res" "${_t}/lib/peazip/res"
+  seq 1 200000 > "${_t}/data/in/a.txt"
+  head -c 300000 /dev/urandom > "${_t}/data/in/b.bin"
+  local w; w="$(cygpath -w "${_t}")"
+  # pea is a GUI program; HIDDEN runs the job without showing a window.
+  # PEA archive with compression and SHA256 stream check, then extract.
+  "${_t}/bin/pea.exe" PEA "${w}\\data\\arc" 0 PCOMPRESS2 CRC32 CRC32 SHA256 HIDDEN \
+    FROMCL "${w}\\data\\in" </dev/null
+  "${_t}/bin/pea.exe" UNPEA "${w}\\data\\arc.pea" "${w}\\out\\" RESETDATE SETATTR EXTRACT2DIR \
+    HIDDEN "" "" </dev/null
+  cmp "${_t}/data/in/a.txt" "${_t}/out/arc.pea/in/a.txt"
+  cmp "${_t}/data/in/b.bin" "${_t}/out/arc.pea/in/b.bin"
+  # AES-256 EAX encrypted archive round trip.
+  "${_t}/bin/pea.exe" PEA "${w}\\data\\enc" 0 PCOMPRESS1 CRC64 SHA256 EAX256 HIDDEN \
+    "secret pw" "" FROMCL "${w}\\data\\in\\a.txt" "${w}\\data\\in\\b.bin" </dev/null
+  "${_t}/bin/pea.exe" UNPEA "${w}\\data\\enc.pea" "${w}\\out-enc\\" RESETDATE SETATTR EXTRACT2DIR \
+    HIDDEN "secret pw" "" </dev/null
+  cmp "${_t}/data/in/a.txt" "${_t}/out-enc/enc.pea/a.txt"
+  cmp "${_t}/data/in/b.bin" "${_t}/out-enc/enc.pea/b.bin"
+  # The encrypted payload must not contain the plain text.
+  if grep -q "^199999$" "${_t}/data/enc.pea"; then
+    error "enc.pea contains plain text"; return 1
+  fi
+}
+
+package() {
+  cd "${srcdir}/PeaZip-${pkgver}/peazip-sources"
+  install -Dm755 dev/peazip.exe "${pkgdir}${MINGW_PREFIX}/bin/peazip.exe"
+  install -Dm755 dev/pea.exe "${pkgdir}${MINGW_PREFIX}/bin/pea.exe"
+  # Loaded by peazip.exe from its own directory for drag and drop.
+  install -Dm755 dev/dragdropfilesdll.src/dragdropfilesdll.dll \
+    "${pkgdir}${MINGW_PREFIX}/bin/dragdropfilesdll.dll"
+
+  # res/ without the portable marker (configuration goes to %APPDATA%\PeaZip)
+  # and without the empty third-party binary placeholders.
+  local _res="${pkgdir}${MINGW_PREFIX}/lib/peazip/res"
+  install -d "${_res}"
+  cp -r res/share res/conf "${_res}/"
+
+  install -Dm644 ../LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

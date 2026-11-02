@@ -1,0 +1,60 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-legacy-windows-support-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=2
+pkgdesc='Original Registry4.3 and CodePages4.0.1 Windows sources with explicit Standard2 compatibility assets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx11-registry-4d1af962.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/4d1af962ca0fede10beb01d197367c2f90e92c97'
+        'corefx10-codepages-9688ddbb.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/9688ddbb62c04189cac4c4a06e31e93377dccd41'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'legacy-windows-support-source-2.tar.gz')
+noextract=('corefx11-registry-4d1af962.tar.gz' 'corefx10-codepages-9688ddbb.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2'
+            '986a512c70d55ed7a1ed8cbb9d8323017c9cc83e77e95e833c7b91f42e4ef601'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            'c2f049552eccf7d318c8b836a84132a9db2e47d73ef6f3e8c55f61b854d040c1')
+prepare() {
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/prepare.py" "$srcdir/corefx11-registry-4d1af962.tar.gz" "$srcdir/corefx10-codepages-9688ddbb.tar.gz" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  bash "$srcdir/legacy-windows-support-workflow/build.sh" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/build-references.py" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build-references.log" 2>&1
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/prepare-packages.py" "$srcdir/prepared" > "$srcdir/prepare-packages.log" 2>&1
+  bash "$srcdir/legacy-windows-support-workflow/pack.sh" "$srcdir/prepared" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/check-references.py" "$srcdir/prepared" "$srcdir/check-references" > "$srcdir/check-references.log" 2>&1
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/check.py" "$srcdir/prepared" "$srcdir/check-original" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/check-original.log" 2>&1
+  /usr/bin/python3 "$srcdir/legacy-windows-support-workflow/check-nuget.py" "$srcdir/prepared" "$srcdir/check-nuget" > "$srcdir/check-nuget.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local name file
+  install -Dm644 "$srcdir/prepared/feed/Microsoft.Win32.Registry.4.3.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.win32.registry.4.3.0.nupkg"
+  install -Dm644 "$srcdir/prepared/feed/System.Text.Encoding.CodePages.4.0.1.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.text.encoding.codepages.4.0.1.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check-nuget.py;do install -m644 "$srcdir/legacy-windows-support-workflow/$file" "$doc/$file";done
+  for file in Api.cs Check.cs ReferenceCheck.cs Bridge.cs published-runtime-metadata.json published-reference-metadata.json package-contract.json;do install -m644 "$srcdir/legacy-windows-support-workflow/inputs/$file" "$doc/inputs/$file";done
+  install -m644 "$srcdir/prepared/source-inputs.json" "$srcdir/prepared/producer-audit.json" "$srcdir/prepared/reference-build-results.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check-original/results.json" "$doc/producer-original-check-results.json"
+  install -m644 "$srcdir/check-nuget/results.json" "$doc/producer-nuget-check-results.json"
+  install -m644 "$srcdir/check-references/results.json" "$doc/producer-reference-check-results.json"
+  for name in Microsoft.Win32.Registry System.Text.Encoding.CodePages;do
+    for file in LICENSE THIRD-PARTY-NOTICES;do install -Dm644 "$srcdir/prepared/$name/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$name/$file";done
+  done
+}

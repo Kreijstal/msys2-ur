@@ -1,0 +1,80 @@
+Source SolutionPersistence 1.0.52 package validation
+Finished: 2026-10-29T02:53:40.492277+00:00
+Host/root: win11 /e/codex-dotnet10/solutionpersistencepkg2.9FbMKq
+Package: mingw-w64-clang-x86_64-dotnet-solutionpersistence-1.0.52-1-any.pkg.tar.zst
+Package SHA256: 226cce035f14ff0bd9e16140601eae190568e54e2f542edd95b45de89463ce24
+Pinned original source: 19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-solutionpersistence-1.0.52-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-solutionpersistence
+mingw-w64-clang-x86_64-dotnet-solutionpersistence: 15 total files, 0 altered files
+
+$ /usr/bin/python3 src/solutionpersistence-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+PASS: Microsoft.VisualStudio.SolutionPersistence preserves all 217 upstream public API declarations
+PASS source SolutionPersistence1.0.52:all original APIs,Unicode SLN/SLNX model roundtrips,5 upstream vectors,invalid input and SLN cancellation
+OBSERVED upstream behavior: XML reading completes with a pre-canceled token; XML cancellation is not supported by this reader
+
+$ python /tmp/audit-solutionpersistence-package.py
+RESULT: exit 0; 93 original selected compiler/resource inputs independently matched upstream archive; frozen workflow matches repository; installed consumer package/DLL bytes match producer.
+All 49 collected evidence file hashes verified.
+
+First formal attempt: exit4 because fixture incorrectly required XML cancellation. No production source change; corrected fixture exercises original SLN cancellation and records XML limitation.
+Original NET8 SourceBuild profile built; NET472 and its dependencies remain unfinished. This package is an SDK10 MSBuild prerequisite, not proof of full MSBuild/SDK10 or PowerShell7.6.
+
+Installed consumer build log:
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\installed-consumer\Check.csproj (in 747 ms).
+  Check -> E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\installed-consumer\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.05
+
+Producer build log:
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+
+A compatible .NET SDK was not found.
+
+Requested SDK version: 9.0.200
+global.json file: E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\src\prepared\source\vs-solutionpersistence-19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe\global.json
+
+Installed SDKs:
+
+Install the [9.0.200] .NET SDK or update [E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\src\prepared\source\vs-solutionpersistence-19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe\global.json] to match an installed SDK.
+
+Learn about SDK resolution:
+https://aka.ms/dotnet/sdk-not-found
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\src\prepared\source\vs-solutionpersistence-19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe\src\Microsoft.VisualStudio.SolutionPersistence\Microsoft.VisualStudio.SolutionPersistence.csproj (in 150 ms).
+  Microsoft.VisualStudio.SolutionPersistence -> E:\codex-dotnet10\solutionpersistencepkg2.9FbMKq\src\prepared\source\vs-solutionpersistence-19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe\bin\Microsoft.VisualStudio.SolutionPersistence\Release\net8.0\Microsoft.VisualStudio.SolutionPersistence.dll
+  The package Microsoft.VisualStudio.SolutionPersistence.1.0.52 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:/codex-dotnet10/solutionpersistencepkg2.9FbMKq/src/prepared/feed\Microsoft.VisualStudio.SolutionPersistence.1.0.52.nupkg'.
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.19
+8.0.131 [E:\msys64\clang64\lib\dotnet\sdk]
+

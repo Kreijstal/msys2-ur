@@ -1,0 +1,11 @@
+--- a/src/openvpnserv/Makefile.am
++++ b/src/openvpnserv/Makefile.am
+@@ -43,7 +43,7 @@
+ 	openvpnserv_resources.rc
+ 
+ openvpnservmsg.dll: eventmsg.o
+-	$(CC) -shared -Wl,--entry=0 -nostdlib -nostartfiles -o $@ $<
++	$(CC) -shared -Wl,--entry= -nostdlib -nostartfiles -o $@ $<
+ 
+ eventmsg.o: eventmsg.rc
+ 

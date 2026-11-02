@@ -4,7 +4,8 @@ using System.Security.Principal;
 using System.Threading;
 static class Program {
  static void Require(bool condition) { if (!condition) throw new Exception("ACL validation failed"); }
- static void Main() {
+ static void Main(string[] args) {
+  CheckAssets.Run(args[0]);
   var sid=WindowsIdentity.GetCurrent().User;
   string name="Local\\Msys2AclTest-"+Guid.NewGuid();
   var security=new MutexSecurity();

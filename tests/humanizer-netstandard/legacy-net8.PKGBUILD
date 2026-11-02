@@ -1,0 +1,62 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-humanizer
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.14.1
+pkgrel=1
+pkgdesc='Source-built Humanizer string, inflection and formatting library for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Humanizr/Humanizer'
+license=('spdx:MIT')
+_commit=3ebc38de585fc641a04b0e78ed69468453b0f8a1
+_tree=Humanizer-${_commit}
+_project=src/Humanizer/Humanizer.csproj
+_id=Humanizer.Core
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("humanizer-${_commit}.tar.gz::https://codeload.github.com/Humanizr/Humanizer/tar.gz/${_commit}"
+        prepare.py check.cs)
+sha256sums=('a98e80e9ca23c4ec17699481bd4b145e5477ba6f2ea8082956724428048c38db' '01d15a5877d4284f0ce89609d79480639a7c9161b4c5340354e6ea30f906181d' '8f1d05cfbba529751cdbfbad5b8b8dbc8a3d46d18cae478fd4cc24a186f93033')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:GeneratePackageOnBuild=false -p:TargetFrameworks=net8.0 -p:TargetFramework=net8.0 \
+    -p:RepositoryCommit="$_commit" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:EnablePackageValidation=false -p:EnableTrimAnalyzer=false -p:EnableAotAnalyzer=false -p:EnableSingleFileAnalyzer=false \
+    -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -p:AssemblyVersion=2.14.0.0 -p:FileVersion=2.14.1.0 -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECTFILE
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECTFILE
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" \
+    -p:RestoreAdditionalProjectSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/src/Humanizer/Bytes/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.Bytes"
+  install -Dm644 "$srcdir/$_tree/src/Humanizer/Inflections/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.Inflections"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

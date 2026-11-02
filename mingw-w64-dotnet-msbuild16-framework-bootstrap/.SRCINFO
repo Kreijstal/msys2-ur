@@ -1,0 +1,26 @@
+pkgbase = mingw-w64-dotnet-msbuild16-framework-bootstrap
+	pkgdesc = Original source MSBuild Framework16 Standard2.0 dependency-pruning port
+	pkgver = 16.0.461
+	pkgrel = 1
+	url = https://github.com/microsoft/msbuild
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk8-servicing>=8.0.131-5
+	makedepends = mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap=5.0.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-roslyn44=4.4.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-cecil011-bootstrap=0.11.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-netcore-platforms110=1.1.0
+	makedepends = python
+	noextract = msbuild16-6ff56ef6.tar.gz
+	noextract = roslyn-4.4.0-1ce8866c.tar.gz
+	options = !strip
+	options = !lto
+	options = !buildflags
+	source = msbuild16-6ff56ef6.tar.gz::https://codeload.github.com/microsoft/msbuild/tar.gz/6ff56ef63c3a1c9785d42fe2564d904ebd225ea0
+	source = roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a
+	source = msbuild16-framework-source-1.tar.gz
+	sha256sums = 04907cbf4ade0101998006e955d7c5ca567e19342340ee71fcd36612158c6726
+	sha256sums = 9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11
+	sha256sums = 7d317a6501bb5b091dd883072b4df1aad5e6d30469e8a76ab544f97386bdba2b
+
+pkgname = mingw-w64-clang-x86_64-dotnet-msbuild16-framework-bootstrap

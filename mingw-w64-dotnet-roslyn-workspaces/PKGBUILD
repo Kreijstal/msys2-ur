@@ -1,0 +1,55 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-roslyn-workspaces
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces")
+pkgver=4.9.2
+pkgrel=1
+_commit=9934fb9e3527e1c0c51314e57d4aab30f97e8f9e
+pkgdesc='Roslyn Workspaces libraries built from source for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("roslyn-$pkgver.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        prepare.py build.sh Check.cs check.sh InspectApi.cs ExpectedApi.json published-metadata-provenance.json check-api.sh README.md)
+sha256sums=('e01ea67aaec6408de51a0a4c18a7e15b2a527ca7a853c9a0a7742cb5680aeb30'
+            'e023852c8765ff7aed3e3c8e853778bf3d193ce309ca98d2d60ceb7d843204d3'
+            '5cc102dca4a477d798b658b783482bf65b3c0afae6f52297bedbc8e132d32ef4'
+            'b896009418caf13ed5fc2cb51afefffac1220884769690134202c12c4b2cd205'
+            'e3c1832a50581c2c5dedc1f2f75e79e6a808b001eea904cff8669e7016c5b37a'
+            '4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e'
+            '9dc5ce9f1011509867818b140dc6dc7efd006d830bb61f78d74ea7e078c84858'
+            '98e1a88a26942d9eda11b5e0f864038f160ce99fd3454a1a16bf89baa7bdbe67'
+            '99f3c5cf5ab3da3d685215fc53c58d23e26f2b92556a1b25210fdc14a78f24b6'
+            '0276f3189a860f21da1933995482a0e146c8ed0c7cf0168f2220d38288cb6372')
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/roslyn-$_commit" "$srcdir/prepared"; }
+build() { bash "$srcdir/build.sh" "$srcdir/prepared"; }
+check() {
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/prepared/localization.json" "$srcdir/prepared/source-items.json" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/check" "$srcdir/check-api"
+}
+_install() {
+  local suffix=$1 id=$2
+  install -Dm644 "$srcdir/feed/$id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/roslyn-$_commit/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codeanalysis-$suffix/LICENSE"
+  install -Dm644 "$srcdir/roslyn-$_commit/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-codeanalysis-$suffix/THIRD-PARTY-NOTICES"
+  for file in README.md ExpectedApi.json published-metadata-provenance.json;do
+    install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-codeanalysis-$suffix/$file"
+  done
+  for file in removed-binaries.json source-items.json localization.json;do
+    install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-codeanalysis-$suffix/$file"
+  done
+}
+package_mingw-w64-clang-x86_64-dotnet-codeanalysis-workspaces-common() {
+  pkgdesc='Source-built Roslyn 4.9.2 shared Workspaces library and translated resources'
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1" "${MINGW_PACKAGE_PREFIX}-dotnet-composition2=8.0.31" "${MINGW_PACKAGE_PREFIX}-dotnet-io-pipelines=8.0.31")
+  _install workspaces-common Microsoft.CodeAnalysis.Workspaces.Common
+}
+package_mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces() {
+  pkgdesc='Source-built Roslyn 4.9.2 CSharp Workspaces library and translated resources'
+  depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-workspaces-common=$pkgver" "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer=2.14.1")
+  _install csharp-workspaces Microsoft.CodeAnalysis.CSharp.Workspaces
+}

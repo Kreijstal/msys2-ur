@@ -1,0 +1,163 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-lucene
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-lucene-core"
+         "${MINGW_PACKAGE_PREFIX}-java-lucene-analysis-common"
+         "${MINGW_PACKAGE_PREFIX}-java-lucene-queries"
+         "${MINGW_PACKAGE_PREFIX}-java-lucene-sandbox"
+         "${MINGW_PACKAGE_PREFIX}-java-lucene-queryparser")
+pkgver=9.7.0
+pkgrel=1
+pkgdesc="lucene Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://lucene.apache.org/'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-core/9.7.0/lucene-core-9.7.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-core/9.7.0/lucene-core-9.7.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-analysis-common/9.7.0/lucene-analysis-common-9.7.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-analysis-common/9.7.0/lucene-analysis-common-9.7.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queries/9.7.0/lucene-queries-9.7.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queries/9.7.0/lucene-queries-9.7.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-sandbox/9.7.0/lucene-sandbox-9.7.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-sandbox/9.7.0/lucene-sandbox-9.7.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queryparser/9.7.0/lucene-queryparser-9.7.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queryparser/9.7.0/lucene-queryparser-9.7.0.pom')
+noextract=('lucene-core-9.7.0-sources.jar'
+         'lucene-core-9.7.0.pom'
+         'lucene-analysis-common-9.7.0-sources.jar'
+         'lucene-analysis-common-9.7.0.pom'
+         'lucene-queries-9.7.0-sources.jar'
+         'lucene-queries-9.7.0.pom'
+         'lucene-sandbox-9.7.0-sources.jar'
+         'lucene-sandbox-9.7.0.pom'
+         'lucene-queryparser-9.7.0-sources.jar'
+         'lucene-queryparser-9.7.0.pom')
+sha256sums=('49249db193112c2cc4814c53ea069f69a48a3ca71dc093ef087f29a01a49ea6f'
+         'dfee43e49f66c8cf1aa34a2a73eac5683f75d9935dac5d3ca568e41ae98c519f'
+         'd302db8645893b64a87fd7e1f175d9d13f5f368337443f35e11b6b8a6fc21f5b'
+         '53ad39c2af26e9aa67a5ceb02bcc5f9fb6ab5bfcb59b2e9dea45a2b3a47fe8e6'
+         'b744b3fc3c99c1dee473bfabd876c89e2fb4b21f5ee28498b29b2fb11f41c53a'
+         '85c646bb1790b9b4530cc8ba96282b72b005dae0dfef033abc3a87cdf4e08c8b'
+         '3d810f7d806754f0514e0c5a681cef89eac06ed630d667e6aaa5959e073b1906'
+         'b87eebb44d07ade28280dad78d4c28d913b8bef014ff63ce23866bfbb29ab4d1'
+         'a187834565b81077cd450836246f2548f09b7df964529dee5413469de2d10d1b'
+         'd03f4659b40610f7a2a9a559b334a36aff396df837d1e2a0ca39dc4dc06b185d')
+_artifacts=('org.apache.lucene:lucene-core:9.7.0'
+         'org.apache.lucene:lucene-analysis-common:9.7.0'
+         'org.apache.lucene:lucene-queries:9.7.0'
+         'org.apache.lucene:lucene-sandbox:9.7.0'
+         'org.apache.lucene:lucene-queryparser:9.7.0')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.apache.lucene:lucene-core:9.7.0 upstream/lucene-core \
+    -r resources/lucene-core -u lucene-core-9.7.0.pom
+  jb_module org.apache.lucene:lucene-analysis-common:9.7.0 upstream/lucene-analysis-common \
+    -r resources/lucene-analysis-common -u lucene-analysis-common-9.7.0.pom -- \
+    org.apache.lucene:lucene-core
+  jb_module org.apache.lucene:lucene-queries:9.7.0 upstream/lucene-queries \
+    -r resources/lucene-queries -u lucene-queries-9.7.0.pom -- \
+    org.apache.lucene:lucene-core
+  jb_module org.apache.lucene:lucene-sandbox:9.7.0 upstream/lucene-sandbox \
+    -r resources/lucene-sandbox -u lucene-sandbox-9.7.0.pom -- \
+    org.apache.lucene:lucene-core org.apache.lucene:lucene-queries
+  jb_module org.apache.lucene:lucene-queryparser:9.7.0 upstream/lucene-queryparser \
+    -r resources/lucene-queryparser -u lucene-queryparser-9.7.0.pom -- \
+    org.apache.lucene:lucene-core org.apache.lucene:lucene-queries org.apache.lucene:lucene-sandbox
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.apache.lucene:lucene-core
+  jb_loadcheck --with org.apache.lucene:lucene-core org.apache.lucene:lucene-analysis-common
+  jb_loadcheck --with org.apache.lucene:lucene-core org.apache.lucene:lucene-queries
+  jb_loadcheck --with org.apache.lucene:lucene-core --with org.apache.lucene:lucene-queries org.apache.lucene:lucene-sandbox
+  jb_loadcheck --with org.apache.lucene:lucene-core --with org.apache.lucene:lucene-queries --with org.apache.lucene:lucene-sandbox org.apache.lucene:lucene-queryparser
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-lucene-core() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.lucene:lucene-core
+  _license lucene-core 9.7.0
+}
+
+package_java-lucene-analysis-common() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.lucene:lucene-analysis-common
+  _license lucene-analysis-common 9.7.0
+}
+
+package_java-lucene-queries() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.lucene:lucene-queries
+  _license lucene-queries 9.7.0
+}
+
+package_java-lucene-sandbox() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-core"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-queries")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.lucene:lucene-sandbox
+  _license lucene-sandbox 9.7.0
+}
+
+package_java-lucene-queryparser() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-core"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-queries"
+           "${MINGW_PACKAGE_PREFIX}-java-lucene-sandbox")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.lucene:lucene-queryparser
+  _license lucene-queryparser 9.7.0
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

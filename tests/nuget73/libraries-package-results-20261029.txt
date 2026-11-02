@@ -1,0 +1,143 @@
+Original NuGet7.3 NET10 next-eight-library package
+
+Root: /e/codex-dotnet10/nuget73librariespkg1.ZZEx3P
+
+$ makepkg --force --noconfirm
+RESULT: exit 4; original compilation/XML/104 satellites passed, staged consumer missing ProtectedData implementation.
+
+$ NUGET73_LIBRARIES_RESUME_COMPILED=1 makepkg --noextract --force --noconfirm
+RESULT: exit 0; unchanged producers and complete original source/reference/output hashes verified before reuse.
+==> Making package: mingw-w64-dotnet-nuget73-libraries-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 08:48:14)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> WARNING: Using existing $srcdir/ tree
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-nuget73-libraries-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 08:49:03)
+
+$ python tests/nuget73/audit-libraries-package.py /tmp/nuget73-libraries-package/mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst /tmp/dotnet10-sources/nuget-sdk10-bf048eb7.tar.gz /tmp/nuget73-libraries-package/audit.json
+RESULT: exit 0; actual archive payload,original1081 sources,XML,104 satellites and exact package metadata pass.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/nuget73librariespkg1.ZZEx3P/mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-nuget73-libraries-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/nuget73librariespkg1.ZZEx3P/installed-check
+RESULT: exit 0
+PASS: NuGet.Configuration preserves all 556 upstream public API declarations
+PASS: NuGet.Packaging preserves all 1884 upstream public API declarations
+PASS: NuGet.Protocol preserves all 2126 upstream public API declarations
+PASS: NuGet.DependencyResolver.Core preserves all 175 upstream public API declarations
+PASS: NuGet.ProjectModel preserves all 693 upstream public API declarations
+PASS: NuGet.Credentials preserves all 95 upstream public API declarations
+PASS: NuGet.Resolver preserves all 55 upstream public API declarations
+PASS: NuGet.Commands preserves all 1031 upstream public API declarations
+PASS eight original NET10 NuGet libraries: upstream APIs=6615,resource values=10164,schema/pack/archive,Unicode settings,DPAPI,local protocol,graph JSON,offline transitive restore and committed assets
+Microsoft.Extensions.FileProviders.Abstractions 6.0.0
+Microsoft.Extensions.FileSystemGlobbing 6.0.0
+Microsoft.Extensions.Primitives 6.0.0
+Newtonsoft.Json 13.0.3
+NuGet.Commands 7.3.0-preview.1.11413
+NuGet.Common 7.3.0-preview.1.11413
+NuGet.Configuration 7.3.0-preview.1.11413
+NuGet.Credentials 7.3.0-preview.1.11413
+NuGet.DependencyResolver.Core 7.3.0-preview.1.11413
+NuGet.Frameworks 7.3.0-preview.1.11413
+NuGet.LibraryModel 7.3.0-preview.1.11413
+NuGet.Packaging 7.3.0-preview.1.11413
+NuGet.ProjectModel 7.3.0-preview.1.11413
+NuGet.Protocol 7.3.0-preview.1.11413
+NuGet.Resolver 7.3.0-preview.1.11413
+NuGet.Versioning 7.3.0-preview.1.11413
+System.Formats.Asn1 8.0.2
+System.Security.Cryptography.Pkcs 8.0.1
+System.Security.Cryptography.ProtectedData 8.0.0
+PASS actual eight packaged NuGet7.3 libraries and transitive source dependency graph: 19 packages; original NET10 assets and exact external versions
+
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap
+mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap: 239 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap: 129 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap: 20 total files, 0 altered files
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-29T07:50:52.197151+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/nuget73librariespkg1.ZZEx3P",
+  "recipe": "mingw-w64-dotnet-nuget73-libraries-bootstrap",
+  "package_version": "7.3.0.preview1.11413-1",
+  "source_commit": "bf048eb714eb6b1912ba868edca4c7cfec454841",
+  "original_framework": "net10.0",
+  "original_profile": "DotNetBuildSourceOnly=true;DotNetBuildFromVMR=true",
+  "assemblies": [
+    "NuGet.Configuration",
+    "NuGet.Packaging",
+    "NuGet.Protocol",
+    "NuGet.DependencyResolver.Core",
+    "NuGet.ProjectModel",
+    "NuGet.Credentials",
+    "NuGet.Resolver",
+    "NuGet.Commands"
+  ],
+  "original_source_compile_items": 1081,
+  "original_production_source_changes": 0,
+  "assembly_version": "7.3.0.0",
+  "file_version": "7.3.0.11413",
+  "initial_cold_makepkg_exit_code": 4,
+  "initial_failure": "Staged isolated consumer omitted ProtectedData implementation; all original library/XML/satellite compilation had succeeded",
+  "original_producers_unchanged_on_resume": true,
+  "all_original_source_reference_output_hashes_verified": true,
+  "resume_makepkg_exit_code": 0,
+  "archive_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_check_exit_code": 0,
+  "formal_eight_library_package_built": true,
+  "formal_eight_library_package_installed": true,
+  "original_public_api_declarations_preserved": 6615,
+  "raw_extra_api_comparison_performed": false,
+  "total_resource_values_verified": 10164,
+  "localized_satellites": 104,
+  "original_xml_documentation_verified": true,
+  "portable_pdb_library_identity_matches": 8,
+  "source_nuget_archives": 8,
+  "actual_source_dependency_graph_packages_restored": 19,
+  "exact_dependency_versions_verified": true,
+  "actual_NET10_compile_assets_verified": true,
+  "owned_current_user_dpapi_and_unicode_config_roundtrip": true,
+  "owned_synthetic_package_transitive_restore_and_metadata": true,
+  "package_sha256": "98fa98f555dc2237f665bd2bf5d913c1bf7cf47c544857b21f63fba815b1abcf",
+  "regular_payload_files": 186,
+  "pacman_integrity": [
+    "mingw-w64-clang-x86_64-dotnet-nuget73-libraries-bootstrap: 239 total files, 0 altered files",
+    "mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap: 129 total files, 0 altered files",
+    "mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap: 20 total files, 0 altered files"
+  ],
+  "full_nuget73_closure_built": false,
+  "other_original_framework_profiles_built": false,
+  "full_upstream_test_suite_run": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "NuGet7.3 build/pack/restore tasks, SDK resolver, PackageManagement/XDT/MEF and other original tool/framework profiles",
+    "Original analyzer/tool integration and full upstream tests; raw extra-API comparison",
+    "Exact SDK10 support libraries and original Build.Tasks/APICompat/Extensions project closure",
+    "Original compatible JSON NS2 profile and VMR dependency-version flow for Deployment.DotNet.Releases",
+    "Full SDK10/WindowsDesktop10/PowerShell7.6 plus existing MMI remote/provider/ownership, SQL/native/Windows.Compatibility, desktop and runtime compatibility gates"
+  ],
+  "evidence": "tests/nuget73/libraries-package-results-20261029.txt",
+  "json_evidence": "tests/nuget73/libraries-package-results-20261029.json"
+}

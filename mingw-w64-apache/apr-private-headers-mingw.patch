@@ -1,0 +1,22 @@
+Taken from MSYS2's mingw-w64-apr (apr_wtypes.patch): with mingw-w64,
+defining __wtypes_h__ around <accctrl.h> breaks the OLE headers it pulls
+in; COM_NO_WINDOWS_H is the supported way to keep them out.
+
+--- a/arch/win32/apr_private.h
++++ b/arch/win32/apr_private.h
+@@ -45,13 +45,9 @@
+  */
+ #ifndef _WIN32_WCE
+ #define HAVE_ACLAPI 1
+-#ifdef __wtypes_h__
++#define COM_NO_WINDOWS_H
+ #include <accctrl.h>
+-#else
+-#define __wtypes_h__
+-#include <accctrl.h>
+-#undef __wtypes_h__
+-#endif
++#undef COM_NO_WINDOWS_H
+ #else
+ #define HAVE_ACLAPI 0
+ #endif

@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-corefx21-metadata-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=3
+pkgdesc='Original CoreFX Immutable1.5 and Metadata1.6 all Standard and portable source profiles'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-metadata16-contracts-bootstrap>=20261031-1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx21-30ab651f.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/30ab651fcb4354552bd4891619a0bdd81e0ebdbf'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'corefx21-metadata-source-3.tar.gz')
+noextract=('corefx21-30ab651f.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('a886ecc798d92fa1183eb127f95ceb47270be7a53fcae51e7f391523c261e586'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '19483d8f7c7143b3f614342d9b3ed9fc1a8f9d1fcfdc1a95328e0154b0661b95')
+build() {
+  local workflow="$srcdir/corefx21-metadata-workflow"
+  /usr/bin/python3 "$workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/build.py")" "$(cygpath -am "$srcdir/corefx21-30ab651f.tar.gz")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$MINGW_PREFIX")" "$(cygpath -am "$srcdir/compiler44/bin/Release/net8.0")" "$(cygpath -am "$MINGW_PREFIX/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/pack.py")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/archives")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  local workflow="$srcdir/corefx21-metadata-workflow"
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/verify.py")" "$(cygpath -am "$srcdir/archives/feed")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$MINGW_PREFIX")" "$(cygpath -am "$srcdir/compiler44/bin/Release/net8.0")" > "$srcdir/check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/audit.py")" "$(cygpath -am "$srcdir/corefx21-30ab651f.tar.gz")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/check")" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/archives/feed/System.Collections.Immutable.1.5.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.collections.immutable.1.5.0.nupkg"
+  install -Dm644 "$srcdir/archives/feed/System.Reflection.Metadata.1.6.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.reflection.metadata.1.6.0.nupkg"
+  mkdir -p "$doc/inputs" "$doc/metadata-inputs" "$doc/inputs/documentation"
+  for file in README.md verify.py build-inspector.py check.py check-feed.py;do install -m644 "$srcdir/corefx21-metadata-workflow/$file" "$doc/$file";done
+  for file in "$srcdir/corefx21-metadata-workflow/inputs/"*;do [[ -f $file ]] && install -m644 "$file" "$doc/inputs/";done
+  install -m644 "$srcdir/corefx21-metadata-workflow/inputs/documentation/"* "$doc/inputs/documentation/"
+  install -m644 "$srcdir/corefx21-metadata-workflow/metadata-inputs/"*.cs "$doc/metadata-inputs/"
+  install -m644 "$srcdir/prepared/results.json" "$doc/source-build-results.json"
+  install -m644 "$srcdir/archives/results.json" "$doc/source-archive-results.json"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT;do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file";done
+}

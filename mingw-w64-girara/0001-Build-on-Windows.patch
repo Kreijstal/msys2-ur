@@ -1,0 +1,153 @@
+From 6ab14d84c9fd668c87afac7b124da9b6a84ddccf Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 20:37:27 +0100
+Subject: [PATCH] Build on Windows
+
+There is no passwd database on Windows, so ~user can only be resolved for
+the current user. Accept backslashes after ~ in paths, and log through
+GLib's printf, which supports %zu on every MinGW C runtime.
+
+The utils test reads the user list from the passwd database and expects
+$HOME to be the home directory, which GLib ignores on Windows.
+---
+ girara/log.c       |  3 ++-
+ girara/macros.h    |  6 +++++-
+ girara/utils.c     | 13 ++++++++++---
+ tests/test_utils.c | 14 +++++++++++++-
+ 4 files changed, 30 insertions(+), 6 deletions(-)
+
+diff --git a/girara/log.c b/girara/log.c
+index 38aa88d..5ac4d65 100644
+--- a/girara/log.c
++++ b/girara/log.c
+@@ -2,6 +2,7 @@
+ 
+ #include "log.h"
+ 
++#include <glib/gprintf.h>
+ #include <stdarg.h>
+ #include <stdio.h>
+ 
+@@ -28,7 +29,7 @@ void girara_vlog(const char* location, const char* function, girara_log_level_t
+       fprintf(stderr, "%s(): ", function);
+     }
+   }
+-  vfprintf(stderr, format, ap);
++  g_vfprintf(stderr, format, ap);
+   fprintf(stderr, "\n");
+ }
+ 
+diff --git a/girara/macros.h b/girara/macros.h
+index 1c491f7..a50aba0 100644
+--- a/girara/macros.h
++++ b/girara/macros.h
+@@ -18,7 +18,11 @@
+ #endif
+ 
+ #ifndef GIRARA_PRINTF
+-#if GIRARA_GNUC_CHECK(2, 5) || defined(__clang__)
++#if defined(_WIN32) && !defined(__clang__) && GIRARA_GNUC_CHECK(4, 4)
++/* The plain printf archetype means the msvcrt dialect on MinGW, which has
++ * no %zu. girara formats through GLib, which follows C99, like G_GNUC_PRINTF. */
++#define GIRARA_PRINTF(format_idx, arg_idx) __attribute__((__format__(gnu_printf, format_idx, arg_idx)))
++#elif GIRARA_GNUC_CHECK(2, 5) || defined(__clang__)
+ #define GIRARA_PRINTF(format_idx, arg_idx) __attribute__((__format__(__printf__, format_idx, arg_idx)))
+ #else
+ #define GIRARA_PRINTF(format_idx, arg_idx)
+diff --git a/girara/utils.c b/girara/utils.c
+index ed0673d..1e84464 100644
+--- a/girara/utils.c
++++ b/girara/utils.c
+@@ -6,7 +6,9 @@
+ #include <glib.h>
+ #include <glib/gstdio.h>
+ #include <gio/gio.h>
++#ifndef _WIN32
+ #include <pwd.h>
++#endif
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -28,8 +30,8 @@ char* girara_fix_path(const char* path) {
+     g_autofree char* user = NULL;
+     size_t idx            = 1;
+ 
+-    if (len > 1 && path[1] != '/') {
+-      while (path[idx] && path[idx] != '/') {
++    if (len > 1 && !G_IS_DIR_SEPARATOR(path[1])) {
++      while (path[idx] && !G_IS_DIR_SEPARATOR(path[idx])) {
+         ++idx;
+       }
+ 
+@@ -94,7 +96,12 @@ bool girara_xdg_open(const char* uri) {
+   return girara_xdg_open_with_working_directory(uri, NULL);
+ }
+ 
+-#if defined(HAVE_GETPWNAM_R)
++#if defined(_WIN32)
++/* Windows has no passwd database to look other users up in. */
++static char* get_home_directory_getpwnam(const char* GIRARA_UNUSED(user)) {
++  return NULL;
++}
++#elif defined(HAVE_GETPWNAM_R)
+ static char* get_home_directory_getpwnam(const char* user) {
+ #ifdef _SC_GETPW_R_SIZE_MAX
+   int bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+diff --git a/tests/test_utils.c b/tests/test_utils.c
+index 2c268d5..f0cc344 100644
+--- a/tests/test_utils.c
++++ b/tests/test_utils.c
+@@ -3,7 +3,9 @@
+ #include <glib.h>
+ #include <glib/gstdio.h>
+ #include <sys/types.h>
++#ifndef _WIN32
+ #include <pwd.h>
++#endif
+ #include <errno.h>
+ #include <unistd.h>
+ #include <stdlib.h>
+@@ -16,6 +18,10 @@ static girara_list_t* read_pwd_info(void) {
+   girara_list_t* list = girara_list_new();
+   girara_list_set_free_function(list, g_free);
+ 
++#ifdef _WIN32
++  /* No passwd database; the current user is the only one we can resolve. */
++  girara_list_append(list, g_strdup(g_get_user_name()));
++#else
+   struct passwd* pw;
+   errno = 0;
+   while ((pw = getpwent()) != NULL) {
+@@ -24,6 +30,7 @@ static girara_list_t* read_pwd_info(void) {
+   }
+   g_assert_cmpint(errno, ==, 0);
+   endpwent();
++#endif
+ 
+   return list;
+ }
+@@ -46,7 +53,12 @@ static void test_home_directory(void) {
+ }
+ 
+ static void test_home_directory_get_HOME(void) {
++#ifdef _WIN32
++  /* GLib ignores $HOME on Windows and uses the profile directory. */
++  const gchar* home = g_get_home_dir();
++#else
+   const gchar* home = g_getenv("HOME");
++#endif
+ 
+   if (home) {
+     gchar* result = girara_get_home_directory(NULL);
+@@ -65,7 +77,7 @@ static void test_fix_path_basic(void) {
+   g_free(result);
+ 
+   result = girara_fix_path("test");
+-  g_assert_true(g_str_has_suffix(result, "/test"));
++  g_assert_true(g_str_has_suffix(result, G_DIR_SEPARATOR_S "test"));
+   g_free(result);
+ }
+ 
+-- 
+2.55.0
+

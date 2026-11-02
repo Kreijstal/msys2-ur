@@ -1,0 +1,48 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/fixture/Fixture.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/consumer/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/consumer/bin/Release/net8.0/Check.dll",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/fixture/bin/Release/net8.0/OwnedFixture.dll",
+        "E:/codex-dotnet10/cecil011.9CtNI3/consumer44/rewritten",
+        "E:/codex-dotnet10/cecil011.9CtNI3/inputs/published-ns2-api.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_NS2_four_library_identities": true,
+  "actual_IL_and_nullable_metadata_rewriting": true,
+  "portable_and_embedded_PDB_round_trips": true,
+  "exact_cached_archive_and_copied_DLL_bytes": true,
+  "formal_pacman_installed": false,
+  "full_dependency_goal_complete": false
+}

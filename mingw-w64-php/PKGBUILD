@@ -1,0 +1,164 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=php
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.5.11
+pkgrel=1
+pkgdesc="A general-purpose scripting language that is especially suited to web development (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.php.net/'
+msys2_repository_url='https://github.com/php/php-src'
+msys2_changelog_url="https://www.php.net/ChangeLog-8.php#${pkgver}"
+license=('spdx:PHP-3.01')
+depends=("${MINGW_PACKAGE_PREFIX}-argon2"
+         "${MINGW_PACKAGE_PREFIX}-bzip2"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-gmp"
+         "${MINGW_PACKAGE_PREFIX}-icu"
+         "${MINGW_PACKAGE_PREFIX}-libffi"
+         "${MINGW_PACKAGE_PREFIX}-libgd"
+         "${MINGW_PACKAGE_PREFIX}-libiconv"
+         "${MINGW_PACKAGE_PREFIX}-libsodium"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-libxslt"
+         "${MINGW_PACKAGE_PREFIX}-libzip"
+         "${MINGW_PACKAGE_PREFIX}-oniguruma"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-pcre2"
+         "${MINGW_PACKAGE_PREFIX}-postgresql"
+         "${MINGW_PACKAGE_PREFIX}-readline"
+         "${MINGW_PACKAGE_PREFIX}-sqlite3"
+         "${MINGW_PACKAGE_PREFIX}-uriparser"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf")
+backup=("${MINGW_PREFIX#/}/etc/php/php.ini")
+source=("https://www.php.net/distributions/${_realname}-${pkgver}.tar.xz"
+        "0001-build-Add-a-MinGW-w64-host-to-the-Autotools-build.patch"
+        "0002-Zend-Fix-the-Windows-code-paths-for-GCC-and-Clang.patch"
+        "0003-win32-Fix-building-the-Windows-port-with-MinGW-w64.patch"
+        "0004-main-Map-installation-paths-to-the-runtime-prefix.patch"
+        "0005-ext-Pass-the-config.w32-defines-in-config.m4.patch"
+        "0006-ext-Fix-LLP64-and-MSVC-only-assumptions.patch")
+sha256sums=('d9be75c08e8c316f4c8f4194d8fbe1750a15f6a6d9d4e3fe72082abeeb800360')
+
+prepare() {
+  cd "${_realname}-${pkgver}"
+
+  local _p
+  for _p in "${source[@]}"; do
+    case "${_p}" in
+      *.patch) patch -Np1 -i "${srcdir}/${_p}" ;;
+    esac
+  done
+
+  # Use the system libtool, as Fedora does; PHP's bundled libtool.m4 (1.5)
+  # predates proper support for building DLLs.
+  libtoolize --force --copy
+  cat "$(aclocal --print-ac-dir)"/{libtool,ltoptions,ltsugar,ltversion,lt~obsolete}.m4 > build/libtool.m4
+  ./buildconf --force
+}
+
+build() {
+  mkdir -p "${srcdir}/build-${MSYSTEM}"
+  cd "${srcdir}/build-${MSYSTEM}"
+
+  if [[ ${CC:-cc} != *clang* ]] && [[ ${MINGW_PACKAGE_PREFIX} != *clang* ]]; then
+    # GCC 16: "internal compiler error: in i386_pe_seh_cold_init" (ext/standard/http.c)
+    CFLAGS+=" -fno-reorder-blocks-and-partition"
+  fi
+
+  # MSYS2's gdlib.pc says "Version: .."; bypass the pkg-config version check.
+  export GDLIB_CFLAGS="-I${MINGW_PREFIX}/include"
+  export GDLIB_LIBS="-L${MINGW_PREFIX}/lib -lgd"
+
+  ../${_realname}-${pkgver}/configure \
+    --prefix=${MINGW_PREFIX} \
+    --build=${MINGW_CHOST} \
+    --host=${MINGW_CHOST} \
+    --with-layout=GNU \
+    --sysconfdir=${MINGW_PREFIX}/etc \
+    --with-config-file-path=${MINGW_PREFIX}/etc/php \
+    --with-config-file-scan-dir=${MINGW_PREFIX}/etc/php/conf.d \
+    --disable-rpath \
+    --without-pear \
+    --enable-cli \
+    --enable-cgi \
+    --enable-embed=shared \
+    --disable-phpdbg \
+    --disable-posix \
+    --with-external-pcre \
+    --with-external-uriparser \
+    --with-password-argon2 \
+    --with-libxml \
+    --enable-xml \
+    --enable-dom \
+    --enable-simplexml \
+    --enable-xmlreader \
+    --enable-xmlwriter \
+    --with-zlib \
+    --with-iconv \
+    --enable-bcmath \
+    --enable-calendar \
+    --enable-ctype \
+    --enable-filter \
+    --enable-session \
+    --enable-tokenizer \
+    --enable-phar \
+    --enable-pdo \
+    --enable-mysqlnd \
+    --with-bz2=shared \
+    --with-curl=shared \
+    --enable-exif=shared \
+    --with-ffi=shared \
+    --enable-fileinfo=shared \
+    --enable-ftp=shared \
+    --enable-gd=shared \
+    --with-external-gd \
+    --with-gmp=shared \
+    --enable-intl=shared \
+    --enable-mbstring=shared \
+    --with-mysqli=shared \
+    --with-openssl=shared \
+    --with-pdo-mysql=shared \
+    --with-pdo-pgsql=shared \
+    --with-pdo-sqlite=shared \
+    --with-pgsql=shared \
+    --with-readline=${MINGW_PREFIX} \
+    --enable-sockets=shared \
+    --with-sodium=shared \
+    --with-sqlite3=shared \
+    --with-xsl=shared \
+    --with-zip=shared
+
+  make
+}
+
+check() {
+  cd "${srcdir}/build-${MSYSTEM}"
+
+  # The full test suite takes hours; run the engine tests here.
+  NO_INTERACTION=1 SKIP_IO_CAPTURE_TESTS=1 \
+  TEST_PHP_EXECUTABLE="$(cygpath -m "${PWD}/sapi/cli/php.exe")" \
+    ./sapi/cli/php.exe -n ../${_realname}-${pkgver}/run-tests.php -n -q --offline \
+      -j$(nproc) ../${_realname}-${pkgver}/Zend/tests || true
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+
+  make INSTALL_ROOT="${pkgdir}" install
+
+  local _extdir="$("${pkgdir}${MINGW_PREFIX}/bin/php-config" --extension-dir)"
+  rm -f "${pkgdir}${_extdir}"/*.la "${pkgdir}${_extdir}"/*.dll.a
+
+  install -Dm644 ../${_realname}-${pkgver}/php.ini-production "${pkgdir}${MINGW_PREFIX}/etc/php/php.ini"
+  install -Dm644 ../${_realname}-${pkgver}/php.ini-development "${pkgdir}${MINGW_PREFIX}/share/php/php.ini-development"
+  install -Dm644 ../${_realname}-${pkgver}/php.ini-production "${pkgdir}${MINGW_PREFIX}/share/php/php.ini-production"
+  install -dm755 "${pkgdir}${MINGW_PREFIX}/etc/php/conf.d"
+
+  install -Dm644 ../${_realname}-${pkgver}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

@@ -1,0 +1,15 @@
+--- a/PSThreadJob.cs
++++ b/PSThreadJob.cs
+@@ -339,9 +339,9 @@
+         /// Adds the provided set of breakpoints to the debugger.
+         /// </summary>
+         /// <param name="breakpoints">Breakpoints.</param>
+-        public override void SetBreakpoints(IEnumerable<Breakpoint> breakpoints)
+-        {
+-            _wrappedDebugger.SetBreakpoints(breakpoints);
++        public override void SetBreakpoints(IEnumerable<Breakpoint> breakpoints, int? runspaceId)
++        {
++            _wrappedDebugger.SetBreakpoints(breakpoints, runspaceId);
+         }
+ 
+         /// <summary>

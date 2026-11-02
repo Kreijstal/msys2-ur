@@ -1,0 +1,114 @@
+NETStandard reference package revision3 — original CLS policy restored
+Package: mingw-w64-clang-x86_64-dotnet-netstandard-reference 2.0.3-3
+Build root: /c/codex-dotnet10/nsref3.aT1CxD
+Finished UTC: 2026-10-28T18:18:07Z
+
+Build.Common.targets sets CLSCompliant=true before importing versioning.targets.
+All117 original assemblies now retain that marker; all117 source compilations produced zero compiler warnings.
+The 112 runtime-loadable facades, original identities/keys/4,197 forwards, native file versions,
+113 actual consumer references, runtime consumer and newer-API rejection continue to pass.
+123 installed payload files match the package archive; existing compiler hashes unchanged.
+Original Platforms >=1.1.0 still selects source1.1.2 with NU1603; original package metadata remains unchanged.
+Full PowerShell dependency objective remains open.
+
+Exact successful commands:
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-3-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-netstandard-reference
+RESULT: exit 0
+
+$ /usr/bin/python3 src/netstandard-reference/check.py src/standard-18a36291.tar.gz src/built installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-3-any.pkg.tar.zst evidence/installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c evidence/existing-compilers-before.sha256
+RESULT: exit 0
+
+$ python mingw-w64-dotnet-netstandard-reference/make-source.py
+RESULT: exit 0
+
+Evidence SHA256: dd83051e1221f91c3b2dcfbb2e481efbf8b1d389dae1b191f70bdeb521282cfd
+Package SHA256: e41f7fd6d907bb589d98aaf335b69884b9f6e953f0941d1e52937707f767fc5d
+
+Logs:
+
+--- makepkg.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-netstandard-reference 2.0.3-3 (28 Oct 2026 19:10:56)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found standard-18a36291.tar.gz
+  -> Found netstandard-reference-source-3.tar.gz
+  -> Found buildtools-09e02305.tar.gz
+==> Validating source files with sha256sums...
+    standard-18a36291.tar.gz ... Passed
+    netstandard-reference-source-3.tar.gz ... Passed
+    buildtools-09e02305.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting netstandard-reference-source-3.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netstandard-reference"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netstandard-reference 2.0.3-3 (28 Oct 2026 19:14:52)
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-3
+
+Total Installed Size:  2.57 MiB
+Net Upgrade Size:      0.01 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-netstandard-reference...
+
+
+--- installed-check.log ---
+PASS full original dependency groups, source packaging inputs, package and restored reference bytes
+PASS original source references/forwards, fresh source-only netstandard2.0 SDK consumer, runtime behavior and newer-API negative control
+
+
+--- installed-package-audit.log ---
+PASS installed package archive bytes, 113 reference DLLs and dedicated paths
+
+
+--- existing-compilers-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+

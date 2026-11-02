@@ -1,0 +1,138 @@
+{
+  "date_utc": "2026-10-29T00:01:47.079009+00:00",
+  "host": "win11",
+  "prototype_root": "/c/codex-dotnet10/framework10build.dQWG7O",
+  "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "runtime_source_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "completed_projects": 190,
+  "shipping_managed_implementations": 171,
+  "private_seed_outputs": 19,
+  "managed_assemblies_including_installed_corelib": 172,
+  "original_runtime_archive_inputs_verified": 6161,
+  "generated_input_hashes_verified": 495,
+  "original_resource_additional_and_policy_inputs_verified": 165,
+  "installed_source_tool_files_hashed": 90,
+  "linked_original_policy_assemblies": 109,
+  "linked_public_api_entries_preserved": 41273,
+  "original_illink_beforefieldinit_optimizations": 89,
+  "all_linked_public_api_resource_forwarder_and_pdb_checks_passed": true,
+  "windows_javascript_original_pnse_generation_and_execution_passed": true,
+  "installed_source_native_compression_and_globalization_passed": true,
+  "source_dotnet_host_runtime_discovery_and_all_three_probes_passed": true,
+  "public_contracts_compared": 167,
+  "missing_contract_entries": 0,
+  "extra_contract_entries": 2096,
+  "changed_contract_entries": 248,
+  "strict_reference_api_shape_parity_verified": false,
+  "strict_contract_comparison_exit_code": 1,
+  "commands": [
+    {
+      "command": "/usr/bin/python3 framework-workflow/build.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan",
+      "exit_code": 0,
+      "scope": "Complete original 190-project graph"
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/build.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan System.Runtime.InteropServices.JavaScript",
+      "exit_code": 0,
+      "scope": "Original Windows PNSE generation target and affected project closure"
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/audit-source.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan",
+      "exit_code": 0,
+      "log": "complete-source-audit7.log"
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-built.py build-plan complete-linked-check2",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-framework.py build-plan complete-framework-check",
+      "exit_code": 1,
+      "scope": "Native case passed; broader case initially failed on test-only Int64-to-Int32 cast"
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-framework.py build-plan complete-framework-check2 framework",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-framework.py build-plan javascript-windows-check javascript",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-contracts.py build-plan complete-contract-check2",
+      "exit_code": 1,
+      "scope": "All 167 public contracts; zero missing entries, strict extra/shape differences retained"
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/stage-framework.py build-plan 'complete dotnet10 \u03bb'",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-host.py 'complete dotnet10 \u03bb' complete-host-check 'complete-framework-check/complete CLR10 \u03bb/native.dll' 'complete-framework-check2/complete CLR10 \u03bb/framework.dll' 'javascript-windows-check/complete CLR10 \u03bb/javascript.dll'",
+      "exit_code": 0
+    }
+  ],
+  "attempt_history": [
+    "The first five expanded source audits failed on harness handling of generated XML paths, relative policy paths and backslashes; the sixth passed. The seventh expanded coverage to installed source compiler/generator/GenFacades tool bytes and passed.",
+    "The first full linked audit treated the original ILLink BeforeFieldInit optimization as a public API change. The revised checker separately validates its exact allowed transition; all 109 linked outputs pass.",
+    "The first broader runtime fixture failed because DataTable SUM(Int32) returns Int64. Correcting only the fixture cast and rerunning only the affected case passed.",
+    "The first full contract audit found 203 missing JavaScript entries. The original Windows unsupported-platform GenFacades target was added to the adapter; its focused rebuild, behavior test and all 203 entries now pass. Strict comparison still fails on 2096 extra and 248 changed entries.",
+    "The pristine standalone extraction/evaluation passed, then tool preparation failed because ILLink task sources were omitted by the extractor. All five unchanged task sources and five project inputs were added from the pinned archive, and the same build directory resumed. This is not a completed clean rebuild."
+  ],
+  "standalone_rebuild": {
+    "root": "/e/codex-dotnet10/framework10fresh.gOPSWd",
+    "session_id": 58835,
+    "status": "running; revalidate live handle before continuing",
+    "initial_workflow_sha256": "cb8771c3769ce8006a8ac8c95dd3dc1ea2e5cfc863f3cb23494f16239f3f96c2",
+    "source_extraction_files_initially": 24842,
+    "original_illink_task_inputs_added": 10,
+    "all56_original_asn_outputs_regenerated_and_compared": true,
+    "last_observed_completed_projects": 11
+  },
+  "frozen_next_standalone_workflow": {
+    "files": 25,
+    "sha256": "a5d038bcfcc7c397afc32ad21ce355f9a2242ab3d4dffe125e1ad1e3957c0a7d",
+    "local_archive": "/tmp/framework10-standalone-workflow2.tar.gz",
+    "same_as_running_standalone_workflow": false
+  },
+  "evidence": {
+    "files": 3220,
+    "archive_sha256": "afa981d5f5a6a05e8b01006d76e6eb4a9f1c84bbc1339ca7868454aa19a0730e",
+    "local_directory": "/tmp/runtime10-framework-complete-evidence",
+    "downloaded_archive_and_every_member_hash_verified": true,
+    "result_files_sha256": {
+      "linked-audit.json": "bb7a025cfe725b0c5e3d6c2cdbbad4cf98c8decd3a4d4b7e6f4881a4ac36ace3",
+      "javascript.json": "bb9c3d1f0765e3b16317b5f08fe14a562060ddb0e7b1b2e77c78a6290bb25d71",
+      "contracts.json": "3b54be9da82e36a3cf7b53490d38458f03e9c810a5410a2e376eb26b9e6d1147",
+      "host.json": "3daaed09a3d3c841e9df7049e44a48f444030299b27ab16d87846e743f4e6a90",
+      "native-and-initial-framework.json": "bf91f0bb18057642dfcc6fdc9fdfe7447458924bf13d0e3b9a403b161142b5b6",
+      "framework-evidence-files.json": "d9129d4cc4a2710736f1ed6a016c6f60c60bfa5ee32b9b18120be368ed12963e",
+      "framework.json": "1c466fcee34e602d94a222ba4202653695c506875a42ca4f10c9b5e7ef6ea69f",
+      "source-audit.json": "8e606743fe4a9052a23b570924d86273d56abe7403fe0f6b1a0fca6094e62a41"
+    },
+    "supplementary_extractor_result_sha256": "8f8fb40ce342d1bb544794ce7635ff134d4872b3cf2ab5d6cba9edafc7e4cd6a"
+  },
+  "formal_runtime10_package_built": false,
+  "full_runtime_compatibility_verified": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_count_increment": 0,
+  "remaining": [
+    "Finish pristine standalone rebuild and formal managed/runtime packaging with installed checks",
+    "Review strict implementation/reference extra and changed API entries; zero missing declarations does not establish full semantic parity",
+    "SDK10.0.201 and complete WindowsDesktop10/PowerShell7.6 dependency graph",
+    "Original NET10 build-tool/compiler profiles and standard version closures",
+    "MsQuic2.4.16 and QUIC, browser, COM, R2R/AOT, debugger/DAC and broader runtime coverage",
+    "Original MMI3 remote/auth/provider/ownership, SQLserver/LocalDB/shared-memory/FILESTREAM, Compatibility, WPF and WinForms8 gates"
+  ],
+  "corrected_fresh_extractor_validation": {
+    "root": "E:/codex-dotnet10/framework10extractcheck.9Xf7h5",
+    "exit_code": 0,
+    "pristine_archive_files": 24852,
+    "all_materialized_input_hashes_match_standalone_build": true,
+    "extractor_sha256": "954134b2546ce44c95bf25f2d4fc207ba7c7b61a7e836dc9e4cabdab05209777",
+    "log": "PASS pristine framework source extraction: 24852 pinned archive files\n",
+    "command": "clang64/python.exe framework-workflow/prepare-source.py NEW_ARCHIVE_ROOT"
+  }
+}

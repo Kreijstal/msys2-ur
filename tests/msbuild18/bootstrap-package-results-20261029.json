@@ -1,0 +1,468 @@
+{
+  "finished_at_utc": "2026-10-29T06:35:29.351060+00:00",
+  "host": "win11",
+  "previous_goal_turn_classification": "progress: original NET10 Roslyn task build,metadata,command-line and shared compiler-server checks passed",
+  "current_goal_turn_classification": "progress: source MSBuild18 bootstrap packaged,installed layout bug diagnosed/fixed,and installed checks passed",
+  "recipe": "mingw-w64-dotnet-msbuild18-bootstrap",
+  "package_version": "18.3.0.26113.113-2",
+  "cold_build_root": "/e/codex-dotnet10/msbuild18pkg1.35mGnO",
+  "layout_repackage_root": "/e/codex-dotnet10/msbuild18pkg2.mW9JA7",
+  "cold_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "cold_build_exit_code": 0,
+  "layout_only_repackage_command": "makepkg --repackage --force --noconfirm",
+  "layout_only_repackage_exit_code": 0,
+  "original_production_source_changes": 0,
+  "original_compile_items": 1326,
+  "source_package_compile_items": 104,
+  "source_localization_inputs": 85,
+  "file_version": "18.3.0.11413",
+  "original_arcade_version_policy_verified": true,
+  "localization": {
+    "satellites": 53,
+    "resource_sets": 118,
+    "resource_values": 23597
+  },
+  "cold_build_commands": [
+    {
+      "label": "version",
+      "command": [
+        "E:/msys64/clang64/bin/python.exe",
+        "-X",
+        "utf8",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/prepare-version.py",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/arcade-msbuild18-987d1a73.tar.gz",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/bin/python.exe",
+        "-X",
+        "utf8",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/build-all.py",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build",
+        "-",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/file-version.txt"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "cli",
+      "command": [
+        "E:/msys64/clang64/bin/python.exe",
+        "-X",
+        "utf8",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/check-cli.py",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/cli"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "localization",
+      "command": [
+        "E:/msys64/clang64/bin/python.exe",
+        "-X",
+        "utf8",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/localize.py",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/cli/stage",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/localized"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "parallel",
+      "command": [
+        "E:/msys64/clang64/bin/python.exe",
+        "-X",
+        "utf8",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/check-parallel.py",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/localized/bin",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/parallel"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "version_commands": [
+    {
+      "label": "build",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/Build.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "calculate",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/Calculate.proj",
+        "-t:Calculate",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "all_six_managed_project_commands": [
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.NET.StringTools/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Framework/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build/Resources.proj",
+        "-t:Resources",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Utilities.Core/Resources.proj",
+        "-t:Resources",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Utilities.Core/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Tasks.Core/Resources.proj",
+        "-t:Resources",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Tasks.Core/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/MSBuild/Resources.proj",
+        "-t:Resources",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/MSBuild/compile.rsp"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "source_audit": {
+    "msbuild_source_archive_sha256": "fff679ff42b8f821d75c31921ad938900bf66c530a143ddef27c5ce239736e45",
+    "arcade_source_archive_sha256": "85d88d61027f75faa8a11fe04c0d1e0572eb3330610f1bb971954f6fb787ec9c",
+    "original_compile_items": 1326,
+    "distinct_original_source_and_resource_files": 1171,
+    "source_package_compile_items": 104,
+    "original_localization_inputs_verified": 85,
+    "all_selected_original_sources_and_resources_archive_exact": true,
+    "all_source_package_inputs_archive_exact": true,
+    "original_version_task_and_msbuild_override_archive_exact": true
+  },
+  "output_reference_generated_audit_verified_files": 348,
+  "archive_audit": {
+    "package": "mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap-18.3.0.26113.113-2-any.pkg.tar.zst",
+    "package_sha256": "0245e677a2ae1ebcf76a6d1ee89a4171b79f18f0e09914141fbbd65d478cb6ce",
+    "regular_payload_files": 130,
+    "all_manifest_payload_bytes_verified": true,
+    "unexpected_or_missing_payload_files": 0,
+    "all6_primary_dll_hashes_match_cold_source_outputs": true,
+    "all53_satellite_hashes_match_cold_source_outputs": true,
+    "all6_exact_oob_feed_hashes_match_existing_source_package_gate": true,
+    "source_audit": {
+      "msbuild_source_archive_sha256": "fff679ff42b8f821d75c31921ad938900bf66c530a143ddef27c5ce239736e45",
+      "arcade_source_archive_sha256": "85d88d61027f75faa8a11fe04c0d1e0572eb3330610f1bb971954f6fb787ec9c",
+      "original_compile_items": 1326,
+      "distinct_original_source_and_resource_files": 1171,
+      "source_package_compile_items": 104,
+      "original_localization_inputs_verified": 85,
+      "all_selected_original_sources_and_resources_archive_exact": true,
+      "all_source_package_inputs_archive_exact": true,
+      "original_version_task_and_msbuild_override_archive_exact": true
+    },
+    "formal_bootstrap_package_archive_verified": true,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "unchanged_binary_and_pdb_audit": {
+    "only_layout_and_launcher_metadata_changed": true,
+    "unchanged_managed_binary_and_pdb_files": 76,
+    "sha256": {
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll": "89495d9884fc5efd5c1389753de708a7cf50375cdcbcacb8ea81ef37da1c244a",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.pdb": "1611ea71ba98902d733da497a0e69c681c8bdfe392a1f06059d3831b0fe57b9c",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Framework.dll": "01ff7eeac605b4ec0d31c6ba974f7dd01163f0ab5ddd2d641095a0e65ba6e57b",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Framework.pdb": "29d4182d2fc37aa114b5ce321e1e8fe08a944d22a2710f6234b08c8afcc68f1f",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Tasks.Core.dll": "fd0e21a66bf31b1c2aaa1374949439f7166d4ba404854dea0a5fb4a27679dc21",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Tasks.Core.pdb": "c7edbdfaa8e1c458bd458a4c699bea285958bd143a835c76a59b28432a63b61c",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Utilities.Core.dll": "68d726995ba7583fb4bc8bc93ac81b387229c3cec1b9676e11a17defc8cb10f6",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.Utilities.Core.pdb": "ea2b01ac7298d0e63b30026879630db344ce5d58ccdc970ae3fbe743137a1e7f",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.dll": "61d3b8830b1f9ac7dbd34017fe524d0a625a9694da7c0225c38d5a23ce967e72",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.Build.pdb": "61bb62b28e73095d4f72a3f196543ae93bf8e3918688d80bf948b5cdb301684c",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.NET.StringTools.dll": "4cb5716d7a2db689a3159ca6a99c8a809afd3b6b921fa9e857737e749e508d62",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.NET.StringTools.pdb": "622fd25a1aadfe002b2c2bc62456eb28000c43b20c64268cca1539b172c3594d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Microsoft.VisualStudio.SolutionPersistence.dll": "f40a7c51aea7c03f8cb4680bfa5114107c33a942e3c64fd5b1e87b5175d9d7ad",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.CodeDom.dll": "9dadf1226cde28ae1f8eb27798369a75ade7ffe210692bcd939410af35f04452",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Configuration.ConfigurationManager.dll": "465535216c13c699a78d3324db7936602585e6f09f72d4ea0085a7227f51b722",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Diagnostics.EventLog.Messages.dll": "b877a44ae53819f1fe19277be8158bdb915a351e32fdad2d2781c03fcb6e61b3",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Diagnostics.EventLog.dll": "d3c82c75f9929c4412dfd42a27ac536b69072bd55242df31008d58c7a3bdff1e",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Formats.Nrbf.dll": "5021ae4756aa0b6c77c81d5e34b19513b19343bf4e44f7750e1675bc0b7bd08d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Reflection.MetadataLoadContext.dll": "1ae8a8e26892ecd7a1ab4b957b8acd65bf9876a8819006f47ad0086b72098285",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Resources.Extensions.dll": "9dcb6c328a067befacf1af62fc4bf1495a63ad5aacb33260a0f25f6c8cef445d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Security.Cryptography.Pkcs.dll": "d37cf7d6f8af060951a67342b9e7b70c52f509e4d3c94916142988f2d5a51c6a",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Security.Cryptography.ProtectedData.dll": "14950c46e52235606759fd051f9bcd4517ec2259b95f866e5f51b3a2079b5a80",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/System.Security.Cryptography.Xml.dll": "d2694dcf622f391cd6dd62b514f4b982c85348449157aa4df3b3052f64cb71ca",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/cs/MSBuild.resources.dll": "0fdf166735dfd90a3cd1abe8f4a6441ebf6a9cb33b092b6e37760df2d0d8bcea",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/cs/Microsoft.Build.Tasks.Core.resources.dll": "3b688ea44ab242adde3eb1cdb8b709ca63bd0c4e30c5cdbdb9630cc97234680c",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/cs/Microsoft.Build.Utilities.Core.resources.dll": "956d6578b1e86dc82af4da5ee7bcc3857ff0cb8864834f6ec65c1ba483d31a16",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/cs/Microsoft.Build.resources.dll": "4f365b76f6f617294e866424055c8e9802c5b8de5d382009479886b44101b2fc",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/de/MSBuild.resources.dll": "14d8c80836c3da205983bd006bbd7068535f56851ddedb9cb34adb9435263cda",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/de/Microsoft.Build.Tasks.Core.resources.dll": "9c10e7cc16b6b847b95d1481f480c34da2773a93f09a90cc1fe5a658bcb4e7c6",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/de/Microsoft.Build.Utilities.Core.resources.dll": "e311805a0569487c7cfe4502d1c19a3d4ce59474a16997a215ccc1e0d1598d58",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/de/Microsoft.Build.resources.dll": "3ae4097e4e9e7200b6138f526edc2fd84f3efaeb096b91651a85214613a41108",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/en/Microsoft.Build.resources.dll": "42f95f96ab5d89d65c6bbc7829b473bb7f1d7a3fb31999414e0f13c8942fa1cf",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/es/MSBuild.resources.dll": "f05b7962659c4cc826c1420bf0ff6cc736f6f63c722c58d2bfde3e3b98429fdf",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/es/Microsoft.Build.Tasks.Core.resources.dll": "8a3e172bc20250f2a1f4232e9d40b28d10a199afe982eff2ef8c73614eed8eda",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/es/Microsoft.Build.Utilities.Core.resources.dll": "f0bab4377ab349b4eed4ba490a0645f7ce029b149616f504b0a83d5f0b52d7f0",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/es/Microsoft.Build.resources.dll": "d3821b8bb6db89c948c4c7b1dccb925b345a2f88a53a29a6a25c2bed39e8cadc",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/fr/MSBuild.resources.dll": "657746e7f93da8e8ad231226155ebe0df3e7f7c3e29a65b2d275a92853e60664",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/fr/Microsoft.Build.Tasks.Core.resources.dll": "84953f5d31c6dc2c19af56f4d36a3c6c45538ca98a7b9124cfc4dc0fa4844a79",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/fr/Microsoft.Build.Utilities.Core.resources.dll": "baea78feb072bac33ba0d4304205049a3dec15bd4f342c177fbbbc66a0344274",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/fr/Microsoft.Build.resources.dll": "1799d7559062226873a579497fb833420f16589f931b89af84924698d6b656b8",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/it/MSBuild.resources.dll": "928a6fe6a985a7cbd04a0fb8792437a7defa73592283104ebe4c51e577bcbb36",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/it/Microsoft.Build.Tasks.Core.resources.dll": "bb76f2395c17f550f2e72faacf7e27dad5f8fd5da959851e4030a54534199a90",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/it/Microsoft.Build.Utilities.Core.resources.dll": "dde0f616dbb7667084d7a95a2416e45fee322e944942cd753a48c295ac1d56d8",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/it/Microsoft.Build.resources.dll": "afcc7f98f4a8aec1b1df18403211b477e7a9fdffc69b5d3569e62a43f5f940db",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ja/MSBuild.resources.dll": "023de283cbe31fb87d096b95db6c342bcfae43f67356b8ce69b87454476516cc",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ja/Microsoft.Build.Tasks.Core.resources.dll": "62c7d7fc10951dcddf078f1999f5f21106c8032c1c295d605bc6071f39c31d05",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ja/Microsoft.Build.Utilities.Core.resources.dll": "c9e02400481bbb5844e95edb3bf45fb677addf53a11da0f5906b09b040d4a496",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ja/Microsoft.Build.resources.dll": "10d425a24c8f5a5b6a13745574f423e3c8b871cb2fcb70ef53b69e807fa220fc",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ko/MSBuild.resources.dll": "8ac3d2437e6884f4095de99e9b9e591d6f88e5419b0255ca970d3def20d4a45d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ko/Microsoft.Build.Tasks.Core.resources.dll": "8957c14e1a7cfb784b57968b07ed074c36b982be9f1c57183782d23657578970",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ko/Microsoft.Build.Utilities.Core.resources.dll": "fc5767e2954302d8e224265ac8c1d1d1ecd609f617e6674f3a8b79f86b80d5f9",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ko/Microsoft.Build.resources.dll": "32cae2e4c93834724be2435e0c6298848c6e527e4f342be61b1c74c5d7de210d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pl/MSBuild.resources.dll": "c1cbed2f6d121db1ea80f7ed69d2b3a834085e7850c7858ed384e59081381955",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pl/Microsoft.Build.Tasks.Core.resources.dll": "26fe90b7ad56a156e1bed7891b8938cb854f4de847c8f1df8908315b280a522e",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pl/Microsoft.Build.Utilities.Core.resources.dll": "076b775ccf6e21e563b8b7d2f899938e1c68b667deb86f3d6afe12c8c9f66e51",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pl/Microsoft.Build.resources.dll": "a4160241a22e452702efcd6b8cdd2964d04ab31d6821441add09e3e99416c67a",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pt-BR/MSBuild.resources.dll": "b094fb55f27baf575d3b79bb0f68ed6cedd96c9dc9d2e4dfcb68cd6075d68513",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pt-BR/Microsoft.Build.Tasks.Core.resources.dll": "0af8a2f8fc1468cab480dd825baf19dfd98012e00c392a8b462876d93d785b4c",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pt-BR/Microsoft.Build.Utilities.Core.resources.dll": "f672522324f5d417dfb4b6e2e0bf35950798b57808c2f5fa5075cba85b5b44f2",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/pt-BR/Microsoft.Build.resources.dll": "187ab681435b085fe439b2257671a45d329ce3b24e3987b5a03348ed54b5aa0b",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ru/MSBuild.resources.dll": "658024d5d381e4dd52d3e5af88dab36fec63b27f7abd05e5f9357fd73febc68d",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ru/Microsoft.Build.Tasks.Core.resources.dll": "ee3827f300b947e4b52abac0eb0bf3acd364ac48f48cc73be603c53cf2219511",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ru/Microsoft.Build.Utilities.Core.resources.dll": "733b0ef7bd19d9be2863e2eeb8eef8b09bb25322a9b1d49756c295695f4791fd",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/ru/Microsoft.Build.resources.dll": "843b4084f03fc856a1682b8c17d2cae7a601cd51419b6df419ba919776724ada",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/tr/MSBuild.resources.dll": "e4f967d726860974a536383f12fd94f6c80a4948a22d16ee1914976d63af8fcc",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/tr/Microsoft.Build.Tasks.Core.resources.dll": "533014f757053e263d550fbc419c34db2cccaa5237c3cce468cb69762542c4e5",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/tr/Microsoft.Build.Utilities.Core.resources.dll": "8aa779ada53ef9bf12d6e30fdbe705f676afe8f2acb95089416aa4adfe0140a6",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/tr/Microsoft.Build.resources.dll": "8ab24c953dd5a0a32f405f1c74cc070bb0de41a01e47807cfeabb90274de2d10",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hans/MSBuild.resources.dll": "482f0fe384d2ddfcad9cd89448c4890e52cbd6060624b55739937d0c9f36eb1b",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hans/Microsoft.Build.Tasks.Core.resources.dll": "7f350976c77c68e5310acf21201ae6c85588add321970408fd0c3c080c145d9f",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hans/Microsoft.Build.Utilities.Core.resources.dll": "612bba900aff2c65860c87dfcc02f24a686421e4808cda68b49dbe329617ac3e",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hans/Microsoft.Build.resources.dll": "90e445a62ed862ae18f9d6a216ff934670b3feb527eed1f57796a5cc8c6f4ace",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hant/MSBuild.resources.dll": "773297887130f43da07213a032f0a0bbaaa650b9e06fbc5b14276875875bce9f",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hant/Microsoft.Build.Tasks.Core.resources.dll": "e087eb12a3bde528d20468bb2929a2991cb591cfde00d517629f34978c658ad9",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hant/Microsoft.Build.Utilities.Core.resources.dll": "d1d7c499580a68d0664b267cfce5345529fead626a1373f8a884724ff39cd326",
+      "clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/zh-Hant/Microsoft.Build.resources.dll": "9b5b1ca29bca9cc364ab89e6c58f16e292aaf47792efb8b94ac23b6353bcf55d"
+    }
+  },
+  "installed_check": {
+    "commands": [
+      {
+        "label": "version",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll",
+          "-nologo",
+          "-version",
+          "-noautoresponse"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "german-help",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll",
+          "-nologo",
+          "-help",
+          "-noautoresponse"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "original-default-tasks",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll",
+          "E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/owned Unicode \u03bb/Owned.proj",
+          "-t:Build",
+          "-noautoresponse",
+          "-nr:false",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "parallel",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/check-parallel.py",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap",
+          "E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/parallel"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "all-resources",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/resource-consumer/Check.dll",
+          "E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/expected-resources.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "shell-launcher",
+        "command": [
+          "E:/msys64/usr/bin/bash.exe",
+          "E:/msys64/clang64/bin/msbuild18-bootstrap",
+          "-nologo",
+          "-version",
+          "-noautoresponse"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "cmd-launcher-with-inherited-sdk8-host",
+        "command": "C:\\WINDOWS\\system32\\cmd.exe /d /s /c \"\"E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/msbuild18-bootstrap.cmd\" -nologo -version -noautoresponse\"",
+        "exit_code": 0
+      }
+    ],
+    "payload_files_byte_verified": 129,
+    "all_localized_values_verified": 23597,
+    "actual_default_task_registration_and_unicode_build_passed": true,
+    "two_distinct_parallel_processes_verified": true,
+    "installed_shell_and_cmd_launchers_verified": true,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "worker_host_proof": {
+    "installed_worker_host_launches": [
+      ".NET TP Worker (TID 14) 639288524438732738 +   19.6897ms: Successfully launched E:\\msys64\\clang64\\lib\\dotnet10\\dotnet.exe node with PID 8888"
+    ],
+    "all_child_nodes_use_source_net10_host": true
+  },
+  "pacman_version": "mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-2",
+  "pacman_integrity": "mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap: 156 total files, 0 altered files",
+  "formal_bootstrap_package_built": true,
+  "formal_bootstrap_package_installed": true,
+  "installed_check_exit_code": 0,
+  "install_exit_code": 0,
+  "full_msbuild_native_content_and_framework_profiles_complete": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "formal Roslyn NET10 MSBuild-task package and its MSBuild17 compile-time dependency closure",
+    "complete original MSBuild native RC/icon/content layout and additional NETFramework/NETStandard profiles",
+    "SDK-style restore/build and full SDK10/WindowsDesktop10/PowerShell7.6 integration",
+    "existing runtime contract,SQL/native,remote MI/provider/ownership and broader compatibility gates"
+  ],
+  "frozen_source_archive": "mingw-w64-dotnet-msbuild18-bootstrap/msbuild18-bootstrap-source-2.tar.gz",
+  "frozen_source_sha256": "164c80a7011d2181114d0bc1b59d81e3da177ec8dd2fd8f46966ec0975353a6f",
+  "initial_installed_failure": {
+    "package_release": 1,
+    "exit_code": 1,
+    "parallel_timeout_seconds": 120,
+    "reason": "Original CurrentHost.GetCurrentHost searches two directories above MSBuild tools;lib/dotnet/build-packs selected installed SDK8 host for child nodes",
+    "diagnostic_trace": "Successfully launched E:\\msys64\\clang64\\lib\\dotnet\\dotnet.exe node",
+    "diagnostic_parent_process_id": 2620,
+    "diagnostic_parent_stopped_only_after_exact_owned_command_line_and_NET10_process_image_verified": true,
+    "fix": "Move isolated tool directory under lib/dotnet10/build-packs;original source unchanged;all76 managed DLL/PDB payloads byte-identical",
+    "observation_timeouts_not_treated_as_terminal": true
+  }
+}

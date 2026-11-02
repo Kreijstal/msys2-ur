@@ -1,0 +1,80 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-jakarta-el-api
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-jakarta-el-api")
+pkgver=6.0.1
+pkgrel=1
+pkgdesc="jakarta-el-api Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://projects.eclipse.org/projects/ee4j.el'
+license=('spdx:EPL-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/jakarta/el/jakarta.el-api/6.0.1/jakarta.el-api-6.0.1-sources.jar'
+         'https://repo.maven.apache.org/maven2/jakarta/el/jakarta.el-api/6.0.1/jakarta.el-api-6.0.1.pom')
+noextract=('jakarta.el-api-6.0.1-sources.jar'
+         'jakarta.el-api-6.0.1.pom')
+sha256sums=('fb59ec136656b409244f94e9700c409036b41e5110ee9f72d3a393d08e31d3f8'
+         'fccc4fb876febc216863fd21e810bc83d2ee18b8ab69dc497c700b84fc22ba40')
+_artifacts=('jakarta.el:jakarta.el-api:6.0.1')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module jakarta.el:jakarta.el-api:6.0.1 upstream/jakarta.el-api \
+    -r resources/jakarta.el-api -u jakarta.el-api-6.0.1.pom
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck jakarta.el:jakarta.el-api
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-jakarta-el-api() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install jakarta.el:jakarta.el-api
+  _license jakarta.el-api 6.0.1
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

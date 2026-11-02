@@ -1,0 +1,121 @@
+{
+  "finished_at_utc": "2026-10-29T10:07:40.751749+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "d0ffee1b3214354258fe5937ad89474f463827f57a13294493d1b0c202a26fca"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap-10.0.201-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "be4da7ed0bf843a89edaf619f5fe2996afe41919fb057767e6641c7c5a7db901"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "24e2a272175e79ccff3b14b33ffcd841af6286a0145ee7751448e8c0a288ae3e"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "0765cf119a9ce0f46a237bfca43d93ff032837003df88eb5adc286f16b51d56f"
+    }
+  ],
+  "source_audit": {
+    "original_compile_items": 181,
+    "unique_original_compile_inputs": 181,
+    "archive_selected_inputs_verified": 252,
+    "original_xlf_inputs": 52,
+    "source_reference_output_and_satellite_hashes_verified": true,
+    "original_eight_project_edges_and_exact_package_versions_preserved": true,
+    "original_production_source_changes": 0,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check-resources.py",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/plan",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/build",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/localized",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/resources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check.py",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/plan",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/build",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/sdk-cli-foundation-10.0.201-net10-bootstrap/bin"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 389,
+    "eight_original_NET10_assembly_and_PDB_identities_verified": true,
+    "exact_resource_values": 966,
+    "satellites": 52,
+    "original_managed_and_native_consumers_passed": true,
+    "MSI_install_write_operations_verified": false,
+    "formal_MSBuild_Runtime_NuGet_archive_provided": false,
+    "other_original_framework_profiles_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "runtime_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime/bin/Check.dll",
+          "E:/msys64/clang64",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/validation-source"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_eight_NET10_libraries_executed": true,
+    "owned_path_sentinel_cache_retry_passed": true,
+    "original_span_parser_and_MSBuild_forwarding_passed": true,
+    "original_five_shell_generators_executed": true,
+    "unchanged_upstream_manifest_passed": true,
+    "owned_Unicode_invalid_manifest_and_RID_alias_passed": true,
+    "source_hostfxr_SDK_runtime_enumeration_resolution_and_16_GC_callbacks_passed": true,
+    "source_hostfxr_sha256": "7d6113e026756a41c2342c4a5da60b171d376f244f23daf02e63bc23e7b49413",
+    "native_MSI_read_only_error_queries_passed": true,
+    "MSI_install_write_operations_verified": false,
+    "other_original_framework_profiles_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "formal_MSBuild_Runtime_NuGet_archive_provided": false,
+  "other_original_framework_profiles_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

@@ -1,0 +1,194 @@
+Source MSBuild18 NET10 bootstrap package and installed checks
+Date: 2026-10-29T06:35:29.351060+00:00
+Host: win11
+Recipe: mingw-w64-dotnet-msbuild18-bootstrap
+Installed: mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-2
+Package SHA256: 0245e677a2ae1ebcf76a6d1ee89a4171b79f18f0e09914141fbbd65d478cb6ce
+Previous goal turn: progress. Current goal turn: progress.
+
+Cold build: /e/codex-dotnet10/msbuild18pkg1.35mGnO
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0;all six primary projects,original version policy,53 satellites,CLI,parallel and staged consumers pass.
+
+Release1 installed parallel check: exit1 after120-second child startup timeout.
+Original CurrentHost.GetCurrentHost checks two directories above tools for dotnet.exe.
+Old layout under lib/dotnet/build-packs launched SDK8 for child nodes,as shown by communication traces.
+Diagnostic parent2620 was stopped after exact owned command-line and NET10 process image verification.
+
+Release2 layout fix: lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap.
+All76 managed DLL/PDB bytes are identical to cold source build;implementation was not recompiled.
+Stage2/check2: exit0;Unicode/default task registration/parallel/all23597 localized values pass.
+Repackage root: /e/codex-dotnet10/msbuild18pkg2.mW9JA7
+$ makepkg --repackage --force --noconfirm
+RESULT: exit0.
+
+$ python tests/msbuild18/audit-package.py /tmp/msbuild18-package2/mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap-18.3.0.26113.113-2-any.pkg.tar.zst tests/runtime9-msbuild/msbuild18-net9-feed-gate-20261029.json /tmp/msbuild18-package2/archive-audit.json
+RESULT: exit0;130 payload files,six primary DLLs,53 satellites,all exact NET9 feed hashes and source gates pass.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/msbuild18pkg2.mW9JA7/mingw-w64-dotnet-msbuild18-bootstrap/mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap-18.3.0.26113.113-2-any.pkg.tar.zst
+RESULT: exit0.
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check
+RESULT: exit0;installed shell/CMD launchers,default tasks,Unicode,parallel and all23597 localized values pass.
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap
+mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap: 156 total files, 0 altered files
+
+Installed worker host proof:
+{
+  "installed_worker_host_launches": [
+    ".NET TP Worker (TID 14) 639288524438732738 +   19.6897ms: Successfully launched E:\\msys64\\clang64\\lib\\dotnet10\\dotnet.exe node with PID 8888"
+  ],
+  "all_child_nodes_use_source_net10_host": true
+}
+
+Exact installed-consumer commands:
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll -nologo -version -noautoresponse
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll -nologo -help -noautoresponse
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/owned Unicode λ/Owned.proj -t:Build -noautoresponse -nr:false -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/check-parallel.py E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/parallel
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18pkg2.mW9JA7/installed-check/resource-consumer/Check.dll E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/expected-resources.json
+RESULT: exit 0
+$ E:/msys64/usr/bin/bash.exe E:/msys64/clang64/bin/msbuild18-bootstrap -nologo -version -noautoresponse
+RESULT: exit 0
+$ C:\WINDOWS\system32\cmd.exe /d /s /c ""E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/msbuild18-bootstrap.cmd" -nologo -version -noautoresponse"
+RESULT: exit 0
+
+Exact cold build commands:
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/prepare-version.py E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/arcade-msbuild18-987d1a73.tar.gz E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/build-all.py E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build - E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/file-version.txt
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/check-cli.py E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/cli
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/localize.py E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/plan E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/cli/stage E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/localized
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/msbuild18-workflow/check-parallel.py E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/localized/bin E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/parallel
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe build E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/Build.csproj -c Release --configfile E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/NuGet.config -p:UseSharedCompilation=false -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/version/Calculate.proj -t:Calculate -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.NET.StringTools/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Framework/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Utilities.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Utilities.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Tasks.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/Microsoft.Build.Tasks.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/MSBuild/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18pkg1.35mGnO/mingw-w64-dotnet-msbuild18-bootstrap/src/build/MSBuild/compile.rsp
+RESULT: exit 0
+
+Cold makepkg log
+==> Making package: mingw-w64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-1 (29 Oct 2026 07:17:41)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found msbuild-sdk10-228caa11.tar.gz
+  -> Found arcade-msbuild18-987d1a73.tar.gz
+  -> Found microsoft.codeanalysis.contracts.5.0.0-1.25277.114.nupkg
+  -> Found microsoft.codeanalysis.collections.5.0.0-1.25277.114.nupkg
+  -> Found microsoft.codeanalysis.pooledobjects.5.0.0-1.25277.114.nupkg
+  -> Found msbuild18-bootstrap-source-1.tar.gz
+==> Validating source files with sha256sums...
+    msbuild-sdk10-228caa11.tar.gz ... Passed
+    arcade-msbuild18-987d1a73.tar.gz ... Passed
+    microsoft.codeanalysis.contracts.5.0.0-1.25277.114.nupkg ... Passed
+    microsoft.codeanalysis.collections.5.0.0-1.25277.114.nupkg ... Passed
+    microsoft.codeanalysis.pooledobjects.5.0.0-1.25277.114.nupkg ... Passed
+    msbuild18-bootstrap-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting msbuild18-bootstrap-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-1 (29 Oct 2026 07:25:10)
+
+
+Initial installed failure
+Traceback (most recent call last):
+  File "E:/msys64/clang64/share/doc/dotnet-msbuild18-bootstrap/checks/check-parallel.py", line 40, in <module>
+    with (out/'execute.log').open('w',encoding='utf-8') as log:result=subprocess.run(command,env=env,stdout=log,stderr=subprocess.STDOUT,timeout=120)
+                                                                      ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/msys64/clang64/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/msys64/clang64/lib/python3.14/subprocess.py", line 1240, in communicate
+    sts = self.wait(timeout=self._remaining_time(endtime))
+  File "E:/msys64/clang64/lib/python3.14/subprocess.py", line 1279, in wait
+    return self._wait(timeout=timeout)
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "E:/msys64/clang64/lib/python3.14/subprocess.py", line 1608, in _wait
+    raise TimeoutExpired(self.args, timeout)
+subprocess.TimeoutExpired: Command '[WindowsPath('E:/msys64/clang64/lib/dotnet10/dotnet.exe'), WindowsPath('E:/msys64/clang64/lib/dotnet/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll'), WindowsPath('E:/codex-dotnet10/msbuild18pkg1.35mGnO/installed-check/parallel/Parent.proj'), '-t:Build', '-m:2', '-nr:false', '-noautoresponse', '-nologo', '-v:minimal']' timed out after 120 seconds
+
+
+Release2 repackage
+==> Making package: mingw-w64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-2 (29 Oct 2026 07:33:05)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-msbuild18-bootstrap 18.3.0.26113.113-2 (29 Oct 2026 07:33:17)
+
+
+Installed checks
+PASS MSBuild18 bootstrap payload,default tasks,Unicode,parallel workers and all23597 localized values;installed launchers: True
+
+
+Source inputs:1326 unchanged original Compile items,104 unchanged source-package inputs,85 original localization inputs.
+Localization:53 satellites,118 resource sets,23597 exact values.
+The .NET8 Arcade task bootstrap and original additional tool/framework profiles remain separate open requirements.
+No PowerShell dependency catalog count changed;this is a source build-tool bootstrap package.
+
+Remaining:
+formal Roslyn NET10 MSBuild-task package and its MSBuild17 compile-time dependency closure
+complete original MSBuild native RC/icon/content layout and additional NETFramework/NETStandard profiles
+SDK-style restore/build and full SDK10/WindowsDesktop10/PowerShell7.6 integration
+existing runtime contract,SQL/native,remote MI/provider/ownership and broader compatibility gates
+
+Full dependency goal remains incomplete.

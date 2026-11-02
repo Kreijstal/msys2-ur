@@ -1,0 +1,36 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-nuget73-core-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=7.3.0.preview1.11413
+pkgrel=1
+pkgdesc='Source NET10 NuGet7.3 Versioning Frameworks Common and LibraryModel bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/NuGet/NuGet.Client'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('nuget-sdk10-bf048eb7.tar.gz::https://codeload.github.com/NuGet/NuGet.Client/tar.gz/bf048eb714eb6b1912ba868edca4c7cfec454841'
+        'nuget73-core-source-1.tar.gz')
+noextract=('nuget-sdk10-bf048eb7.tar.gz')
+sha256sums=('9eb1139d9abecfab7d69fd7b02cb58d20792a0cd46ffb7b2ea6a12bbfda48f12' '06080b6b3ced75974ec16cee842a459d37889f85c77b8995accfa8ef159e1416')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/prepare-all.py")" "$(cygpath -am "$srcdir")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/localize.py")" "$(cygpath -am "$srcdir")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/audit.py")" "$(cygpath -am "$srcdir")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-workflow/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

@@ -1,0 +1,265 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=telegram-desktop
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=7.3.3
+pkgrel=1
+# Revisions tdesktop v7.3.3 pins for the pieces it builds from source on
+# every platform (Telegram/build/prepare/prepare.py and snap/snapcraft.yaml).
+# tde2e is TDLib's end-to-end encryption core, built on its own
+# (TD_E2E_ONLY); MSYS2's tdlib package ships libtde2e.a but not its headers
+# or CMake package, and is a different revision.
+_td_commit=51743dfd01dff6179e2d8f7095729caa4e2222e9
+# Lottie renderer and TON wallet engine, both Rust, linked as one staticlib.
+_tlottie_commit=92df98dc209bc39b1e567ec74a8c86a0af5239de
+_wallet_engine_commit=e59e0d89d7ee90c388bf36e3334c5b276f396697
+# desktop-app/patches revision holding the wallet-engine.patch tdesktop uses.
+_patches_commit=a895fef40eaa7d66481cff542c623b039b7ce494
+pkgdesc="Official Telegram Desktop messaging app (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://desktop.telegram.org/'
+msys2_repository_url='https://github.com/telegramdesktop/tdesktop'
+msys2_changelog_url='https://github.com/telegramdesktop/tdesktop/blob/dev/changelog.txt'
+msys2_references=(
+  'archlinux: telegram-desktop'
+)
+license=('spdx:GPL-3.0-or-later WITH OpenSSL-exception')
+depends=("${MINGW_PACKAGE_PREFIX}-abseil-cpp"
+         "${MINGW_PACKAGE_PREFIX}-ada-url"
+         "${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-crc32c"
+         "${MINGW_PACKAGE_PREFIX}-ffmpeg"
+         "${MINGW_PACKAGE_PREFIX}-hunspell"
+         "${MINGW_PACKAGE_PREFIX}-kcoreaddons"
+         "${MINGW_PACKAGE_PREFIX}-libavif"
+         "${MINGW_PACKAGE_PREFIX}-libfido2"
+         "${MINGW_PACKAGE_PREFIX}-libheif"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+         "${MINGW_PACKAGE_PREFIX}-libjxl"
+         "${MINGW_PACKAGE_PREFIX}-libsrtp"
+         "${MINGW_PACKAGE_PREFIX}-libvpx"
+         "${MINGW_PACKAGE_PREFIX}-lz4"
+         "${MINGW_PACKAGE_PREFIX}-minizip"
+         "${MINGW_PACKAGE_PREFIX}-openal"
+         "${MINGW_PACKAGE_PREFIX}-openh264"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-opus"
+         "${MINGW_PACKAGE_PREFIX}-qt6-base"
+         # The emoji sprites and many stickers are WebP, decoded by its
+         # Qt image format plugin.
+         "${MINGW_PACKAGE_PREFIX}-qt6-imageformats"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+         "${MINGW_PACKAGE_PREFIX}-rnnoise"
+         "${MINGW_PACKAGE_PREFIX}-webview2-loader"
+         "${MINGW_PACKAGE_PREFIX}-xxhash"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-cppwinrt"
+             "${MINGW_PACKAGE_PREFIX}-gperf"
+             "${MINGW_PACKAGE_PREFIX}-libtg_owt"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "${MINGW_PACKAGE_PREFIX}-qt6-shadertools"
+             "${MINGW_PACKAGE_PREFIX}-rust"
+             "${MINGW_PACKAGE_PREFIX}-tl-expected"
+             # widl, for the toast activation IDL files
+             "${MINGW_PACKAGE_PREFIX}-tools")
+source=("https://github.com/telegramdesktop/tdesktop/releases/download/v${pkgver}/tdesktop-${pkgver}-full.tar.gz"
+        "td-${_td_commit}.tar.gz::https://github.com/tdlib/td/archive/${_td_commit}.tar.gz"
+        "tlottie-${_tlottie_commit}.tar.gz::https://github.com/dkaraush/tlottie/archive/${_tlottie_commit}.tar.gz"
+        "wallet-engine-${_wallet_engine_commit}.tar.gz::https://github.com/i582/wallet-engine/archive/${_wallet_engine_commit}.tar.gz"
+        "wallet-engine-${_patches_commit:0:7}.patch::https://raw.githubusercontent.com/desktop-app/patches/${_patches_commit}/wallet-engine.patch"
+        "tdesktop_rust-Cargo.lock"
+        "td-0001-tl-parser-Only-define-away-__attribute__-for-MSVC.patch"
+        "0001-range-v3-Do-not-let-member-function-pointers-match-t.patch"
+        "0002-lib_base-Build-with-mingw-w64.patch"
+        "0003-lib_webview-Use-the-WebView2-SDK-of-the-MinGW-enviro.patch"
+        "0004-lib_ui-lib_webrtc-tgcalls-Fix-building-with-MinGW-GC.patch"
+        "0005-Telegram-Build-with-MinGW-w64.patch")
+sha256sums=('10a4214972ea40290a1f20a5f9e3711d5814ff08ed935bc7c00747e0251f3308'
+            'f2c6b92533ba41a024b9fdb86d346c8bfc876d5961738ad463effbd844d61405'
+            '7855c45912e59c51fbc530af5e849d6867e52e4d64a0117815add728e5cbee92'
+            '45d22ed481dc4fab07390abfa811c095c424e11c745e87b9d0d27b40efa17da2'
+            'b40aba82c39a42d0526a85ecfa40d613baa57b1a2d6600e601a42a1576b3b822'
+            '5a94994254ca1bcb33ea90b678d324d42fd6dfd2eecb54bbc903f5060631633e'
+            '681dd2d7f6225620e23281ce062125cc2f56383386cd69d2011a5ae6af675037'
+            '1388e0d613101e44c4aa70238b121fa09cd0ca8b039fab82fba9424bb8b43bba'
+            '21541dcc936f812a46bc9d98ee59d6ce7db1f3217cb80af0e094e75134301239'
+            'ddf81a76e13b653354411c89c0717b8d44dda2febc268c8426cc171481187994'
+            '71d4d6cf75b88b704896d57313c606a6cfef6cd04fd0263b4a29b92da984747b'
+            '30a13f9bb2039bedd8f81479c5a385e3811784901e506d1ea2f9e25ea7cdafce')
+# The full tarball carries relative symlinks, some pointing at paths that are
+# extracted later, which MSYS cannot create. All but one sit in the Linux-only
+# input-method plugins (fcitx5-qt, hime, nimf); the last is hunspell/README.
+# Unpack it by hand without them.
+noextract=("tdesktop-${pkgver}-full.tar.gz")
+
+prepare() {
+  cd "${srcdir}"
+  local _tp="tdesktop-${pkgver}-full/Telegram/ThirdParty"
+  bsdtar -xf "tdesktop-${pkgver}-full.tar.gz" \
+    --exclude "${_tp}/fcitx5-qt" \
+    --exclude "${_tp}/hime" \
+    --exclude "${_tp}/nimf" \
+    --exclude "${_tp}/hunspell/README"
+
+  mv "td-${_td_commit}" td
+  mv "tlottie-${_tlottie_commit}" tlottie
+  mv "wallet-engine-${_wallet_engine_commit}" wallet-engine
+
+  # tdesktop's wallet integration needs the extra TON Connect cell decoding
+  # API it adds on top of the pinned wallet-engine.
+  patch -d wallet-engine -Np1 -i "${srcdir}/wallet-engine-${_patches_commit:0:7}.patch"
+
+  # TDLib's TL parser defines __attribute__ away on every Windows compiler,
+  # breaking the fortified mingw-w64 CRT headers.
+  patch -d td -Np1 -i "${srcdir}/td-0001-tl-parser-Only-define-away-__attribute__-for-MSVC.patch"
+
+  _prepare_tdesktop_rust
+
+  cd "${srcdir}/tdesktop-${pkgver}-full"
+  # Bundled range-v3: member function projections fail with MinGW GCC.
+  patch -Np1 -i "${srcdir}/0001-range-v3-Do-not-let-member-function-pointers-match-t.patch"
+  # Stand-ins for the parts of the Windows SDK mingw-w64 lacks (classic COM
+  # WRL, interop headers), C++/WinRT linkage, DLL search path.
+  patch -Np1 -i "${srcdir}/0002-lib_base-Build-with-mingw-w64.patch"
+  # WebView2 from MSYS2's webview2-loader instead of NuGet, plus the
+  # __uuidof() declarations GCC needs for its MIDL-generated header.
+  patch -Np1 -i "${srcdir}/0003-lib_webview-Use-the-WebView2-SDK-of-the-MinGW-enviro.patch"
+  patch -Np1 -i "${srcdir}/0004-lib_ui-lib_webrtc-tgcalls-Fix-building-with-MinGW-GC.patch"
+  # widl instead of midl, manifest through the resource script, no SEH,
+  # declarations mingw-w64 is missing.
+  patch -Np1 -i "${srcdir}/0005-Telegram-Build-with-MinGW-w64.patch"
+}
+
+_build_tde2e() {
+  # The TL parser's bundled getopt is K&R C with empty-parameter-list
+  # prototypes, which mean "no parameters" in C23, GCC's default since 15.
+  CFLAGS="${CFLAGS} -std=gnu17" \
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="$(cygpath -m "${srcdir}/deps")" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DTD_E2E_ONLY=ON \
+      -DBUILD_TESTING=OFF \
+      -S "${srcdir}/td" \
+      -B "${srcdir}/build-td-${MSYSTEM}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-td-${MSYSTEM}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-td-${MSYSTEM}"
+}
+
+_prepare_tdesktop_rust() {
+  # Upstream builds tlottie and wallet-engine as a single Rust staticlib:
+  # each staticlib carries its own copy of std, and two of them in one binary
+  # define the same runtime symbols twice. The umbrella crate is generated
+  # the same way prepare.py does; its lock file is shipped with the package
+  # so the dependency graph is fixed.
+  local _crate="${srcdir}/tdesktop_rust"
+  mkdir -p "${_crate}/src"
+  cat > "${_crate}/Cargo.toml" <<'END'
+[package]
+name = "tdesktop_rust"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tlottie = { version = "1.0.6", path = "../tlottie", features = ["c-api"] }
+wallet-engine = { version = "0.0.7", path = "../wallet-engine" }
+END
+  printf 'pub use ::tlottie;\npub use ::wallet_engine;\n' > "${_crate}/src/lib.rs"
+  cp "${srcdir}/tdesktop_rust-Cargo.lock" "${_crate}/Cargo.lock"
+
+  local _target
+  _target="$(rustc -vV | sed -n 's/^host: //p')"
+  cargo fetch --locked --target "${_target}" --manifest-path "${_crate}/Cargo.toml"
+  cargo fetch --locked --target "${_target}" \
+    --manifest-path "${srcdir}/wallet-engine/bindgen/cpp/bindgen/Cargo.toml"
+}
+
+_build_tdesktop_rust() {
+  local _crate="${srcdir}/tdesktop_rust"
+  cd "${_crate}"
+  # Thin LTO, one codegen unit and unwinding panics as in prepare.py;
+  # opt-level 3 for everything like the snap build (prepare.py only uses it
+  # for tlottie, to keep the Windows wallet-engine small).
+  cargo rustc --lib --release --frozen \
+    --crate-type staticlib --crate-type cdylib \
+    --config "profile.release.opt-level=3" \
+    --config "profile.release.lto='thin'" \
+    --config "profile.release.codegen-units=1" \
+    --config "profile.release.panic='unwind'"
+
+  local _out="${srcdir}/deps"
+  install -Dm644 target/release/libtdesktop_rust.a "${_out}/lib/libtdesktop_rust.a"
+  install -Dm644 "${srcdir}/tlottie/include/tlottie.h" "${_out}/include/tlottie/tlottie.h"
+  # The C++ bindings are generated from the metadata uniffi embeds in the
+  # cdylib; tdesktop compiles the generated wallet_engine.cpp itself.
+  cargo run --frozen --manifest-path "${srcdir}/wallet-engine/bindgen/cpp/bindgen/Cargo.toml" -- \
+    --library --out-dir "${_out}/include/wallet_engine" \
+    target/release/tdesktop_rust.dll
+}
+
+build() {
+  _build_tde2e
+  _build_tdesktop_rust
+
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  local _deps
+  _deps="$(cygpath -m "${srcdir}/deps")"
+
+  # range-v3 is taken from the copy bundled in the tarball, which carries a
+  # fix for MinGW GCC (see 0001); the 0.12.0 release MSYS2 packages cannot
+  # be patched from here.
+  #
+  # TDESKTOP_API_ID/HASH are the public credentials Telegram allows
+  # distributions to use (the same ones its snap build and Arch use).
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=;-Dtde2e_DIR=;-DDESKTOP_APP_" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      "${_extra_config[@]}" \
+      -DTDESKTOP_API_ID=611335 \
+      -DTDESKTOP_API_HASH=d524b414d21f4d37f08684c1df41ac9c \
+      -DDESKTOP_APP_USE_PACKAGED=ON \
+      -DCMAKE_DISABLE_FIND_PACKAGE_range-v3=ON \
+      -Dtde2e_DIR="${_deps}/lib/cmake/tde2e" \
+      -DDESKTOP_APP_TDESKTOP_RUST_LIBRARY="${_deps}/lib/libtdesktop_rust.a" \
+      -DDESKTOP_APP_TLOTTIE_INCLUDE_DIR="${_deps}/include/tlottie" \
+      -DDESKTOP_APP_WALLET_ENGINE_INCLUDE_DIR="${_deps}/include/wallet_engine" \
+      -S "${srcdir}/tdesktop-${pkgver}-full" \
+      -B "${srcdir}/build-${MSYSTEM}"
+
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}"
+}
+
+check() {
+  # Upstream's tests are developer-only test apps. Run the real executable
+  # instead: -quit goes through Qt and platform start-up, the working
+  # directory and single-instance setup, then exits as no other instance
+  # is running.
+  local _workdir="${srcdir}/check-workdir"
+  rm -rf "${_workdir:?}"
+  mkdir -p "${_workdir}"
+  "${srcdir}/build-${MSYSTEM}/Telegram.exe" -quit -workdir "$(cygpath -w "${_workdir}")"
+  grep -q "This is the only instance of Telegram" "${_workdir}"/log_start*.txt
+}
+
+package() {
+  install -Dm755 "${srcdir}/build-${MSYSTEM}/Telegram.exe" \
+    "${pkgdir}${MINGW_PREFIX}/bin/Telegram.exe"
+
+  install -Dm644 "${srcdir}/tdesktop-${pkgver}-full/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

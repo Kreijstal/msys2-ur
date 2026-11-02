@@ -1,0 +1,60 @@
+pkgbase = mingw-w64-java-lucene
+	pkgdesc = lucene Java libraries, built from source
+	pkgver = 9.7.0
+	pkgrel = 1
+	url = https://lucene.apache.org/
+	arch = any
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	noextract = lucene-core-9.7.0-sources.jar
+	noextract = lucene-core-9.7.0.pom
+	noextract = lucene-analysis-common-9.7.0-sources.jar
+	noextract = lucene-analysis-common-9.7.0.pom
+	noextract = lucene-queries-9.7.0-sources.jar
+	noextract = lucene-queries-9.7.0.pom
+	noextract = lucene-sandbox-9.7.0-sources.jar
+	noextract = lucene-sandbox-9.7.0.pom
+	noextract = lucene-queryparser-9.7.0-sources.jar
+	noextract = lucene-queryparser-9.7.0.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-core/9.7.0/lucene-core-9.7.0-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-core/9.7.0/lucene-core-9.7.0.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-analysis-common/9.7.0/lucene-analysis-common-9.7.0-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-analysis-common/9.7.0/lucene-analysis-common-9.7.0.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queries/9.7.0/lucene-queries-9.7.0-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queries/9.7.0/lucene-queries-9.7.0.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-sandbox/9.7.0/lucene-sandbox-9.7.0-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-sandbox/9.7.0/lucene-sandbox-9.7.0.pom
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queryparser/9.7.0/lucene-queryparser-9.7.0-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/apache/lucene/lucene-queryparser/9.7.0/lucene-queryparser-9.7.0.pom
+	sha256sums = 49249db193112c2cc4814c53ea069f69a48a3ca71dc093ef087f29a01a49ea6f
+	sha256sums = dfee43e49f66c8cf1aa34a2a73eac5683f75d9935dac5d3ca568e41ae98c519f
+	sha256sums = d302db8645893b64a87fd7e1f175d9d13f5f368337443f35e11b6b8a6fc21f5b
+	sha256sums = 53ad39c2af26e9aa67a5ceb02bcc5f9fb6ab5bfcb59b2e9dea45a2b3a47fe8e6
+	sha256sums = b744b3fc3c99c1dee473bfabd876c89e2fb4b21f5ee28498b29b2fb11f41c53a
+	sha256sums = 85c646bb1790b9b4530cc8ba96282b72b005dae0dfef033abc3a87cdf4e08c8b
+	sha256sums = 3d810f7d806754f0514e0c5a681cef89eac06ed630d667e6aaa5959e073b1906
+	sha256sums = b87eebb44d07ade28280dad78d4c28d913b8bef014ff63ce23866bfbb29ab4d1
+	sha256sums = a187834565b81077cd450836246f2548f09b7df964529dee5413469de2d10d1b
+	sha256sums = d03f4659b40610f7a2a9a559b334a36aff396df837d1e2a0ca39dc4dc06b185d
+
+pkgname = mingw-w64-ucrt-x86_64-java-lucene-core
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+
+pkgname = mingw-w64-ucrt-x86_64-java-lucene-analysis-common
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-lucene-core
+
+pkgname = mingw-w64-ucrt-x86_64-java-lucene-queries
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-lucene-core
+
+pkgname = mingw-w64-ucrt-x86_64-java-lucene-sandbox
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-lucene-core
+	depends = mingw-w64-ucrt-x86_64-java-lucene-queries
+
+pkgname = mingw-w64-ucrt-x86_64-java-lucene-queryparser
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-lucene-core
+	depends = mingw-w64-ucrt-x86_64-java-lucene-queries
+	depends = mingw-w64-ucrt-x86_64-java-lucene-sandbox

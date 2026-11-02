@@ -1,0 +1,90 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-management
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.0
+pkgrel=2
+_sourcever=8.0.31
+pkgdesc='Source-built System.Management with a native Windows COM backend'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codedom=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codedom=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-llvm" "${MINGW_PACKAGE_PREFIX}-lld" 'python' 'patch')
+options=('!strip' '!lto')
+source=("runtime-v${_sourcever}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v${_sourcever}"
+        prepare.py libraries.json Microsoft.pubkey.hex 0001-use-source-built-wmi-backend.patch
+        wmi-native.cpp service-security.inc 0002-secure-service-calls-in-calling-apartment.patch build-native.sh check-native.py native-exports.json LICENSE.port
+        Probe.cs PortChecks.cs ApartmentChecks.cs NativeDependencies.cs CheckAssets.cs check-installed.sh
+        check-api.cs check-api.sh README.md)
+noextract=("runtime-v${_sourcever}.tar.gz")
+sha256sums=('b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070'
+            '854ead6c4260c8fc1e8a34131d1cf4e02369222a1e1dab6f88d8bf3d2e81b8eb'
+            '1fabd5b3ac45c728cdc6cafef5fa37be41ed3b19ccc27ebcc8bc8c3128065fa9'
+            'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+            'ee1a57be71558f23e685ab0fa938f55712c6a2f92abfa46afb3e5b7b74465380'
+            '9173f4f82415583c1b9a9de980f458edb7baa85acfaf46d0265612f28f1e60ab'
+            'b87fd7c2ef8f352fe18d5b8b21bea825021bc676d0db264e5a38b8eed49f4c11'
+            'e7a85eab93182aacdb433c4ace5ecb6c9bbee6f2bb8d578fc262063fce39a8a9'
+            '7fed531a90bcb8c1fd50d98869eeb6e44a20766ff1ff1dbf684d4df00f8e265a'
+            '94c0eb67461dd7c2be53fad63411cb5d9cc06b4028454087eb559393aef06dab'
+            '72347d95b048042576b06b7482d5b3d139b10d3881e544ef9ce30797f3b85f21'
+            'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
+            '3ffdef9ff1b69d626a9e5f43b68c200a43a30496405ea3402820115d52285c5a'
+            'ce4e5dcf62f5cc2577d58cf5aecdeb0b23004d7fe1cc2ac49c99279f38a018c7'
+            'c1e5a13ee48206fa4df68fec1a576e858926e60b7d06ed0fb864c67768a4f187'
+            'd747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad'
+            '9a6232b9bf26b28361dcf6f96458cf3cff3a54d85df7272d19880a72c41bb24f'
+            '4478cf7e848ef3ebfea946817e7a45cd51a961cf03e5c8d4b89afc01f10ff2c5'
+            'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
+            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            'f6dc677d53eddeb25b46f72852fbe4156ba362b762f13deccef85fce4c6ed2d9')
+
+_env() {
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  inputs=("runtime-$_sourcever/LICENSE.TXT" "runtime-$_sourcever/THIRD-PARTY-NOTICES.TXT"
+          "runtime-$_sourcever/src/libraries/Common/src" "runtime-$_sourcever/src/libraries/System.Private.CoreLib/src")
+  while read -r id; do inputs+=("runtime-$_sourcever/src/libraries/$id"); done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+  tar -xzf "$srcdir/runtime-v$_sourcever.tar.gz" -C "$srcdir" "${inputs[@]}"
+  (cd "$srcdir/runtime-$_sourcever" && patch -p1 < "$srcdir/0001-use-source-built-wmi-backend.patch" &&
+    patch -p1 < "$srcdir/0002-secure-service-calls-in-calling-apartment.patch")
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$_sourcever" "$srcdir/prepared"
+}
+build() {
+  _env
+  bash "$srcdir/build-native.sh" "$srcdir/native"
+  mkdir -p "$srcdir/feed"
+  while read -r id; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/prepared/$id/contract/Contract.csproj")" -c Release \
+      --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/prepared/$id/Library.csproj")" -c Release \
+      -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" \
+      -p:GeneratePackageOnBuild=false -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false -p:UseSharedCompilation=false -v:minimal
+  done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+}
+check() {
+  _env
+  bash "$srcdir/check-installed.sh" "$srcdir/check" "$srcdir/prepared/localization.json" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/prepared" "$srcdir/check" "$srcdir/check-api"
+}
+package() {
+  install -Dm644 "$srcdir/feed/System.Management.8.0.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.management.8.0.0.nupkg"
+  install -Dm644 "$srcdir/runtime-$_sourcever/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/runtime-$_sourcever/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES"
+  install -Dm644 "$srcdir/prepared/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+  install -Dm644 "$srcdir/prepared/localization.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/localization.json"
+  install -Dm644 "$srcdir/LICENSE.port" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.port"
+  install -Dm644 "$srcdir/native-exports.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/native-exports.json"
+  install -Dm644 "$srcdir/0001-use-source-built-wmi-backend.patch" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/source-port.patch"
+  install -Dm644 "$srcdir/0002-secure-service-calls-in-calling-apartment.patch" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/apartment-security.patch"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+}

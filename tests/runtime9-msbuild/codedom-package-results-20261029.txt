@@ -1,0 +1,80 @@
+Original source CodeDom9.0.11 NET9 package validation
+Finished: 2026-10-29T03:29:45.869947+00:00
+Host/root: win11 /e/codex-dotnet10/codedom9pkg2.sNMMm9
+Package: mingw-w64-clang-x86_64-dotnet-codedom9-9.0.11-1-any.pkg.tar.zst
+Package SHA256: 53c643937c106ceb6768e793339ce4789a165816a2ea2e74f9f97663b5acad52
+Workflow SHA256: 76102c7654cf8df2fe2de9faf518911e2b7488f603575ada35f7d8f5b0d8b314
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-codedom9-9.0.11-1-any.pkg.tar.zst
+RESULT: exit0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-codedom9
+mingw-w64-clang-x86_64-dotnet-codedom9: 18 total files, 0 altered files
+
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,955 CLR APIs and real source CodeDom consumer;3 original annotation differences retained
+
+$ python /tmp/audit-codedom9-package.py
+RESULT: exit0;all9 archive payloads verified;125 selected original source/project/resource inputs independently match pinned archive.
+All141 collected terminal evidence hashes,recipe/SRCINFO and15 frozen workflow files verified.
+
+Original public/protected CLR API:955 expected,955 actual,0 missing,0 extra,0 changed.
+Three original nullable annotation differences remain: shared-source CodeTypeReference string constructors and ArrayElementType are nullable; the reference source is nullable-oblivious. Strict nullable metadata equality is false. These original runtime null behaviors pass.
+Original resource scope:one neutral Strings.resx with22 strings;no localized source resources exist in the pinned archive. All22 values pass runtime comparison.
+Original CLSCompliant(true),Open signing identity and unsupported-platform assembly attributes are retained.
+
+Installed consumer API comparison:
+CodeDom NET9 CLR API: expected=955 missing=0 extra=0 changed=0;original nullable annotation differences=3
+
+Installed consumer execution:
+PASS original NET9 CodeDom identity/resources,CSharp/VB Unicode generation,identifiers and documented unsupported compiler API;both generated libraries execute to42
+
+
+The first clean candidate also passed;the final clean candidate adds original CLSCompliant(true) metadata and its assertion. Production source C# changes:0.
+Source SDK8 is used only for build tasks/evaluation and restore. The NET9 restore fixture disables implicit framework refs and sets NETCoreAppMaximumVersion9.0; all compilation uses explicit source NET9 refs and source compilers.
+Execution uses the source NET10.0.5 runtime. NET9 runtime,other original framework profiles,remaining9.0.11 libraries,full MSBuild/SDK10/PowerShell7.6 and remaining compatibility gates are unfinished.
+
+Full makepkg log:
+==> Making package: mingw-w64-dotnet-codedom9 9.0.11-1 (29 Oct 2026 04:25:54)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-msbuild9-fa7cdded.tar.gz
+  -> Found codedom9-source-2.tar.gz
+==> Validating source files with sha256sums...
+    runtime-msbuild9-fa7cdded.tar.gz ... Passed
+    codedom9-source-2.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting codedom9-source-2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-codedom9"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-codedom9 9.0.11-1 (29 Oct 2026 04:27:16)
+
+Build checks:
+PASS fresh exact NET9 package/cache/asset bytes,955 CLR APIs and real source CodeDom consumer;3 original annotation differences retained
+
+Original source audit:
+PASS 125 original source/project/resource bytes;all original resource scope accounted for
+

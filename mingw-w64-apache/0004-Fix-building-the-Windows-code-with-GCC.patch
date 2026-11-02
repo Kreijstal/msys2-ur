@@ -1,0 +1,86 @@
+From d9c944029537f3c4234009c3126aa838dce1fa29 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 22:55:57 +0200
+Subject: [PATCH 4/6] Fix building the Windows code with GCC
+
+GCC enforces the directive handler prototypes (AP_HAVE_DESIGNATED_INITIALIZER)
+and, since GCC 14, treats incompatible pointer types as errors; MSVC
+accepts all of these silently.
+
+* mod_win32: ScriptInterpreterSource handler takes a const char *.
+* service.c: StartService[W] takes an array of const strings.
+* scoreboard.h: <sys/times.h> does not exist on Windows, even though
+  APR_HAVE_SYS_TIME_H is set for MinGW.
+* mod_log_forensic: include <time.h> for time().
+---
+ include/scoreboard.h               | 2 ++
+ modules/arch/win32/mod_win32.c     | 2 +-
+ modules/loggers/mod_log_forensic.c | 1 +
+ server/mpm/winnt/service.c         | 4 ++--
+ 4 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/include/scoreboard.h b/include/scoreboard.h
+index 736b443..a711dd6 100644
+--- a/include/scoreboard.h
++++ b/include/scoreboard.h
+@@ -28,8 +28,10 @@ extern "C" {
+ 
+ #if APR_HAVE_SYS_TIME_H
+ #include <sys/time.h>
++#ifndef WIN32
+ #include <sys/times.h>
+ #endif
++#endif
+ 
+ #include "ap_config.h"
+ #include "http_config.h"
+diff --git a/modules/arch/win32/mod_win32.c b/modules/arch/win32/mod_win32.c
+index bddc60d..0670f70 100644
+--- a/modules/arch/win32/mod_win32.c
++++ b/modules/arch/win32/mod_win32.c
+@@ -74,7 +74,7 @@ static void *merge_win32_dir_configs(apr_pool_t *p, void *basev, void *addv)
+ }
+ 
+ static const char *set_interpreter_source(cmd_parms *cmd, void *dv,
+-                                          char *arg)
++                                          const char *arg)
+ {
+     win32_dir_conf *d = (win32_dir_conf *)dv;
+     if (!strcasecmp(arg, "registry")) {
+diff --git a/modules/loggers/mod_log_forensic.c b/modules/loggers/mod_log_forensic.c
+index 4884f25..762412d 100644
+--- a/modules/loggers/mod_log_forensic.c
++++ b/modules/loggers/mod_log_forensic.c
+@@ -36,6 +36,7 @@
+ #if APR_HAVE_UNISTD_H
+ #include <unistd.h>
+ #endif
++#include <time.h>
+ 
+ module AP_MODULE_DECLARE_DATA log_forensic_module;
+ 
+diff --git a/server/mpm/winnt/service.c b/server/mpm/winnt/service.c
+index 2e473cf..84e05ae 100644
+--- a/server/mpm/winnt/service.c
++++ b/server/mpm/winnt/service.c
+@@ -1104,7 +1104,7 @@ apr_status_t mpm_service_start(apr_pool_t *ptemp, int argc,
+         }
+         start_argv_w[argc] = NULL;
+ 
+-        if (StartServiceW(schService, argc, start_argv_w)
++        if (StartServiceW(schService, argc, (LPCWSTR *)start_argv_w)
+             && signal_service_transition(schService, 0, /* test only */
+                                          SERVICE_START_PENDING,
+                                          SERVICE_RUNNING))
+@@ -1118,7 +1118,7 @@ apr_status_t mpm_service_start(apr_pool_t *ptemp, int argc,
+         memcpy(start_argv, argv, argc * sizeof(const char *));
+         start_argv[argc] = NULL;
+ 
+-        if (StartService(schService, argc, start_argv)
++        if (StartService(schService, argc, (LPCSTR *)start_argv)
+             && signal_service_transition(schService, 0, /* test only */
+                                          SERVICE_START_PENDING,
+                                          SERVICE_RUNNING))
+-- 
+2.55.0
+

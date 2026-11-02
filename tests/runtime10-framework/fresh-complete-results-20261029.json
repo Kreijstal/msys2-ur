@@ -1,0 +1,90 @@
+{
+  "finished_at_utc": "2026-10-29T01:06:45.038168+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/framework10fresh.gOPSWd",
+  "completed_projects": 190,
+  "shipping_implementation_outputs": 171,
+  "private_seed_outputs": 19,
+  "managed_assemblies_with_installed_corelib": 172,
+  "original_runtime_archive_inputs_verified": 6161,
+  "generated_input_hashes_verified": 495,
+  "original_resource_additional_and_policy_inputs_verified": 165,
+  "actual_reference_hashes_verified": 123,
+  "compilation_exit_code": 0,
+  "source_audit_exit_code": 0,
+  "all_original_production_sources_unchanged": true,
+  "linked_policy_assemblies": 109,
+  "public_api_entries_preserved": 41273,
+  "all_linked_api_resource_forwarder_and_pdb_checks_passed": true,
+  "all_three_real_clr10_cases_passed": true,
+  "source_dotnet_host_discovery_and_three_hosted_cases_passed": true,
+  "public_contracts_compared": 167,
+  "missing_contract_entries": 0,
+  "extra_contract_entries": 2096,
+  "changed_contract_entries": 248,
+  "strict_contract_compare_exit_code": 1,
+  "strict_reference_api_shape_parity_verified": false,
+  "commands": [
+    {
+      "command": "/usr/bin/python3 framework-workflow/build.py \"$PWD\" \"$PWD/build-plan\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/audit-source.py \"$PWD\" \"$PWD/build-plan\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-built.py build-plan fresh-linked-check",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-framework.py build-plan fresh-framework-check",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-contracts.py build-plan fresh-contract-check",
+      "exit_code": 1
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/stage-framework.py build-plan 'fresh dotnet10 \u03bb'",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 framework-workflow/check-host.py 'fresh dotnet10 \u03bb' fresh-host-check 'fresh-framework-check/complete CLR10 \u03bb/native.dll' 'fresh-framework-check/complete CLR10 \u03bb/framework.dll' 'fresh-framework-check/complete CLR10 \u03bb/javascript.dll'",
+      "exit_code": 0
+    }
+  ],
+  "attempt_history": [
+    "Initial standalone source materialization omitted five original ILLink task files and their project inputs. Those ten unchanged archive inputs were added and tool preparation resumed in the same directory.",
+    "All190 managed projects then compiled from pristine sources and the complete archive/ref/output audit passed. No implementation source edits were made.",
+    "Every fresh linked/runtime/host check passes. The strict comparison remains exit1 on2096 extra+248 changed entries, with zero missing declarations."
+  ],
+  "formal_makepkg_build": {
+    "root": "/e/codex-dotnet10/runtime10pkg1.qfZBvw",
+    "session_id": 58459,
+    "status": "confirmed live, last observed175/190; revalidate handle",
+    "completed_projects_at_last_observation": 175,
+    "total_projects": 190,
+    "terminal_exit_code": null
+  },
+  "evidence": {
+    "local_directory": "/tmp/runtime10-framework-fresh-complete",
+    "files": 3080,
+    "archive_sha256": "78ce4f3e1d45f2fe3cb19d399f2fe82ae0eaa598801eebda77f8aec05a261327",
+    "all_member_hashes_verified": true,
+    "result_files_sha256": {
+      "contract-results.json": "010faa742a0b45e3394ce841eea19becfc560652a1708b1d7320ebec10ddc25e",
+      "fresh-evidence-files.json": "e835aac6b1603092aae685dbc6e69af44d8d4ff60f39c937df89d8b6ff96c32a",
+      "runtime-results.json": "a8de76f0451a085273b442e13e61451de175aeeaa9ae9abf1ad847f8ba089f0b",
+      "host-results.json": "f59027e0261e3ebe6ad95072293dd23ec8b225fea507f79c7322b43e3ce213fa",
+      "linked-results.json": "c9a958cd4b8b656a754891f64f84b364faa058612e16cbb4d1cca60f64f7b7e4",
+      "source-audit.json": "82e719bc3f2d2eb65ccc1da450ed10408337caea5021fad2c171b65e773927be"
+    }
+  },
+  "formal_runtime10_package_built": false,
+  "full_runtime_compatibility_verified": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_count_increment": 0
+}

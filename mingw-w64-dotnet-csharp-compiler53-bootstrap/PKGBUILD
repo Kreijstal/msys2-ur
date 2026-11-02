@@ -1,0 +1,44 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-csharp-compiler53-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.3.0.2.26113.113
+pkgrel=3
+pkgdesc='Source NET10 Roslyn5.3 CSharp command-line compiler bootstrap with all localized satellites'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-generators=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard10>=20261029-1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime9-libraries>=9.0.0-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=2333221c0564852ee5ceac9c622a0b14e864d76e
+source=("roslyn-5.3.0-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        'csharp53-bootstrap-source-3.tar.gz')
+noextract=("roslyn-5.3.0-${_commit:0:8}.tar.gz")
+sha256sums=('e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb'
+            'b5184f6b98b71cd3760c1af8c75b1c4475c8d7741c1b43d76c6ed9d863572f15')
+prepare() {
+  /usr/bin/python3 "$srcdir/csharp53-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/csharp53-workflow/build-net10.py" "$srcdir/prepared" "$srcdir/net10-plan" "$srcdir/net10-build" > "$srcdir/compile.log" 2>&1
+  /usr/bin/python3 "$srcdir/csharp53-workflow/localize-net10.py" "$srcdir/prepared" "$srcdir/net10-build" "$srcdir/localized" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/csharp53-workflow/check-net10-cli.py" "$srcdir/net10-build" "$srcdir/cli-check" > "$srcdir/cli-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/csharp53-workflow/audit.py" "$srcdir" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/csharp53-workflow/stage.py" "$srcdir" "$srcdir/package-prefix" > "$srcdir/stage.log" 2>&1
+  /usr/bin/python3 "$srcdir/csharp53-workflow/check-installed.py" "$srcdir/package-prefix" "$srcdir/staged-check" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

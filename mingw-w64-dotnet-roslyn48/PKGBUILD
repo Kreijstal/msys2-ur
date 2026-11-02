@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-roslyn48
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.8.0
+pkgrel=1
+pkgdesc='Original source Roslyn4.8 original Standard2.0 Common/CSharp compiler and Workspaces libraries'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-runtime9-libraries>=9.0.0-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard>=20261028-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=e091728607ca0fc9efca55ccfb3e59259c6b5a0a
+source=("roslyn-4.8.0-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        'roslyn48-source-1.tar.gz')
+noextract=("roslyn-4.8.0-${_commit:0:8}.tar.gz")
+sha256sums=('6bca93036741be94c516ed7e6c8c8a8e11cbde8c2f8478d4f79eef66861669c6'
+            'babaf53e40f89ff60edf246ecbd79497ee0b7deba76b9b35f922cb4127584a23')
+prepare() {
+  /usr/bin/python3 "$srcdir/roslyn48-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/roslyn48-workflow/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/roslyn48-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/roslyn48-workflow/audit.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  local file
+  for file in "$srcdir/prepared/feed/"*.nupkg;do
+    install -m644 "$file" "$feed/$(basename "$file" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -m644 "$srcdir/roslyn48-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,localization,generated-sources,operation-generated-sources,source-package-audit}.json "$doc/"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-consumer-results.json"
+  install -Dm644 "$srcdir/prepared/roslyn-source/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/License.txt"
+  install -Dm644 "$srcdir/prepared/roslyn-source/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.txt"
+}

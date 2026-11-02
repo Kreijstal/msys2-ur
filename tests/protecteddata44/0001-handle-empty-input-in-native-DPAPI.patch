@@ -1,0 +1,23 @@
+--- a/src/System.Security.Cryptography.ProtectedData/src/System/Security/Cryptography/ProtectedData.cs
++++ b/src/System.Security.Cryptography.ProtectedData/src/System/Security/Cryptography/ProtectedData.cs
+@@ -15,6 +15,8 @@
+ {
+     public static partial class ProtectedData
+     {
++        private static readonly byte[] s_nonEmpty = new byte[1];
++
+         public static byte[] Protect(byte[] userData, byte[] optionalEntropy, DataProtectionScope scope)
+         {
+             if (userData == null)
+@@ -35,7 +37,10 @@
+         {
+             unsafe
+             {
+-                fixed (byte* pInputData = inputData, pOptionalEntropy = optionalEntropy)
++                // DPAPI rejects a null data pointer, even when the length is zero.
++                byte[] relevantData = inputData.Length == 0 ? s_nonEmpty : inputData;
++
++                fixed (byte* pInputData = relevantData, pOptionalEntropy = optionalEntropy)
+                 {
+                     DATA_BLOB userDataBlob = new DATA_BLOB((IntPtr)pInputData, (uint)(inputData.Length));
+                     DATA_BLOB optionalEntropyBlob = default(DATA_BLOB);

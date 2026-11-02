@@ -1,0 +1,181 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+#
+# Userland GUI only: no kernel driver (DBK32/DBK64, DBVM), no injected helper
+# DLLs (speedhack, VEH debugger, D3D hooks, Mono/.NET/Java collectors) and no
+# prebuilt binaries from the source tree.  The Lua 5.3 runtime is built
+# from Cheat Engine's own (thread-locking) Lua sources, and LuaFileSystem
+# (required by several autorun scripts) against it.
+
+_realname=cheatengine
+_lfsver=1.9.0
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=7.5
+pkgrel=1
+pkgdesc="Memory scanner, debugger and modding environment (userland GUI, built with Lazarus) (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.cheatengine.org/'
+msys2_repository_url='https://github.com/cheat-engine/cheat-engine'
+msys2_references=(
+  'aur: cheat-engine'
+)
+# The repository carries no license file (custom terms, see cheatengine.org).
+license=('custom' 'spdx:MIT')  # MIT: LuaFileSystem
+depends=("${MINGW_PACKAGE_PREFIX}-sqlite3")   # symbol database (sqlite3conn)
+# fpc-kgpc 3.2.2-3: sqlite3dyn finds libsqlite3-0.dll.
+makedepends=("${MINGW_PACKAGE_PREFIX}-lazarus"
+             "${MINGW_PACKAGE_PREFIX}-fpc-kgpc>=3.2.2-3"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+options=('!strip' '!debug')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/cheat-engine/cheat-engine/archive/refs/tags/${pkgver}.tar.gz"
+        "0001-Build-with-Lazarus-4.patch"
+        "0002-Load-MSYS2-s-SQLite-instead-of-the-bundled-sqlite3.d.patch"
+        "celauncher.pas"
+        "luafilesystem-${_lfsver}.tar.gz::https://github.com/lunarmodules/luafilesystem/archive/refs/tags/v${_lfsver//./_}.tar.gz")
+sha256sums=('5af90b468885fa9dd377119a438470573040b08aa4f1d174522b5db77ee7cf31'
+            'ef71854931b28ab995c3da3b16c1690ce1701f14e4020403fddef2cd23497a31'
+            '33dc14b0f9fdb43352e640709911021c4e9683b062e54a6458722cccb18af6ea'
+            '7389b7cb51b12003b1c2e8599c901c6721e07e6056fd3ca7de6f22ea702a1bcb'
+            '1142c1876e999b3e28d1c236bf21ffd9b023018e336ac25120fb5373aade1450')
+
+_cedir="cheat-engine-${pkgver}/Cheat Engine"
+
+prepare() {
+  cd "${srcdir}/cheat-engine-${pkgver}"
+  # The sources are CRLF; --binary keeps patch from rewriting them as LF.
+  patch --binary -Np1 -i "${srcdir}/0001-Build-with-Lazarus-4.patch"
+  patch --binary -Np1 -i "${srcdir}/0002-Load-MSYS2-s-SQLite-instead-of-the-bundled-sqlite3.d.patch"
+}
+
+build() {
+  cd "${srcdir}/${_cedir}"
+
+  # Cheat Engine's Lua 5.3 (lua53/lua53/src) has a global lua_lock for use
+  # from several threads (lua_user.c), so the stock lua53.dll would not do.
+  # Same objects and flags as upstream's 64.bat, named as cheatengine.exe
+  # imports it.
+  local _l=lua53/lua53/src _f _objs=()
+  mkdir -p "${srcdir}/lua-build"
+  for _f in lapi lcode ldebug ldo ldump lfunc lgc llex lobject lopcodes lparser \
+            lstate lstring ltable ltm lundump lvm lzio lctype lbitlib lmem ltablib \
+            lauxlib lbaselib ldblib liolib lmathlib loslib lstrlib loadlib linit \
+            lcorolib lutf8lib lua_user; do
+    ${CC:-cc} ${CFLAGS} -DLUA_BUILD_AS_DLL '-DLUA_USER_H="lua_user.h"' -I"${_l}" \
+      -c "${_l}/${_f}.c" -o "${srcdir}/lua-build/${_f}.o"
+    _objs+=("${srcdir}/lua-build/${_f}.o")
+  done
+  ${CC:-cc} -shared ${LDFLAGS} -o "${srcdir}/lua-build/lua53-64.dll" "${_objs[@]}" \
+    -Wl,--out-implib,"${srcdir}/lua-build/liblua53-64.dll.a"
+
+  # LuaFileSystem for clibs64/ (andtools, autosave and savesession require it).
+  ${CC:-cc} ${CFLAGS} -shared ${LDFLAGS} -I"${_l}" \
+    -o "${srcdir}/lua-build/lfs.dll" "${srcdir}/luafilesystem-${_lfsver//./_}/src/lfs.c" \
+    "${srcdir}/lua-build/liblua53-64.dll.a"
+
+  # Private lazbuild config dir, so the user's ~/.lazarus is not touched.
+  rm -rf "${srcdir:?}/lazconf"
+  lazbuild --pcp="$(cygpath -m "${srcdir}/lazconf")" -B --bm="Release 64-Bit" cheatengine.lpi
+
+  cd "${srcdir}"
+  mkdir -p launcher
+  fpc -O2 -Xs -FUlauncher -olauncher/cheatengine.exe celauncher.pas
+}
+
+# Assemble the installed program directory: upstream's bin/ minus every
+# prebuilt binary, plus the freshly built exe and Lua DLL.
+_stage() {
+  local _dst="$1"
+  mkdir -p "${_dst}"
+  ( cd "${srcdir}/${_cedir}/bin" && tar -cf - \
+      --exclude='*.dll' --exclude='*.exe' --exclude='*.dat' --exclude='*.dbg' \
+      --exclude='*.lib' --exclude='*.exp' --exclude='*.bat' \
+      --exclude='./win32' --exclude='./win64' --exclude='./clibs32' --exclude='./clibs64' \
+      --exclude='./lua_extra' --exclude='./autorun/dlls' \
+      . ) | tar -xf - -C "${_dst}"
+  install -m755 "${srcdir}/${_cedir}/bin/cheatengine-x86_64.exe" "${_dst}/"
+  install -m755 "${srcdir}/lua-build/lua53-64.dll" "${_dst}/"
+  install -Dm755 "${srcdir}/lua-build/lfs.dll" "${_dst}/clibs64/lfs.dll"
+}
+
+check() {
+  # Start the GUI with an extra autorun Lua script that exercises the Lua
+  # runtime, attaching to a process (Cheat Engine itself), symbol lookup,
+  # the auto assembler and the disassembler, writes the results and closes
+  # Cheat Engine again.
+  # Staged in the installed layout (lib/cheatengine next to bin/, see 0002),
+  # with MSYS2's SQLite DLL in bin/.
+  local _root="${srcdir}/test-root" _out
+  local _t="${_root}/lib/cheatengine"
+  rm -rf "${_root:?}"
+  _stage "${_t}"
+  install -Dm755 "${MINGW_PREFIX}/bin/libsqlite3-0.dll" "${_root}/bin/libsqlite3-0.dll"
+  cat > "${_t}/autorun/zz_msys2_check.lua" <<'LUA'
+local out = os.getenv('CE_MSYS2_CHECK_OUT')
+if out then
+  local f = io.open(out, 'w')
+  local ok, err = pcall(function()
+    f:write('lua=', _VERSION, '\n')
+    f:write('ceversion=', tostring(getCEVersion()), '\n')
+    local pid = getCheatEngineProcessID()
+    openProcess(pid)
+    f:write('opened=', tostring(getOpenedProcessID() == pid), '\n')
+    f:write('mz=', tostring(readSmallInteger(getAddress('kernel32.dll'))), '\n')
+    f:write('autoassemble=', tostring(autoAssemble([[
+alloc(msys2check,64)
+registersymbol(msys2check)
+msys2check:
+db 4D 53 59 53 32
+]])), '\n')
+    f:write('readback=', tostring(readString('msys2check', 5)), '\n')
+    f:write('disasm=', tostring(disassemble(getAddress('kernel32.GetProcAddress'))), '\n')
+    -- FPC's sqlite3conn, loading MSYS2's libsqlite3-0.dll
+    local c = createSQLite3Connection()
+    c.DatabaseName = os.getenv('CE_MSYS2_CHECK_DB')
+    c.Connected = true
+    local tr = createSQLTransaction()
+    tr.SQLConnection = c
+    tr.Active = true
+    c.ExecuteDirect('CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT)')
+    tr.Commit()
+    local tn = c.getTableNames()
+    f:write('sqlite=', tostring(c.Connected), ' ', tostring(tn[1]), '\n')
+    c.Connected = false
+  end)
+  f:write('pcall=', tostring(ok), ' ', tostring(err), '\n')
+  f:close()
+  closeCE()
+end
+LUA
+  _out="${_t}/check.txt"
+  CE_MSYS2_CHECK_OUT="$(cygpath -w "${_out}")" CE_MSYS2_CHECK_DB="$(cygpath -w "${_t}/check.sqlite3")" \
+    "${_t}/cheatengine-x86_64.exe" </dev/null >/dev/null 2>&1 &
+  local _pid=$! _i _winpid
+  _winpid="$(cat "/proc/${_pid}/winpid" 2>/dev/null || true)"
+  for _i in $(seq 1 60); do
+    grep -qs '^pcall=' "${_out}" && break
+    sleep 1
+  done
+  sleep 2
+  # closeCE() normally ends it; otherwise terminate it (a native process, so
+  # by its Windows PID).
+  if kill -0 "${_pid}" 2>/dev/null && [ -n "${_winpid}" ]; then
+    taskkill //F //PID "${_winpid}" >/dev/null 2>&1 || true
+  fi
+  wait "${_pid}" 2>/dev/null || true
+  cat "${_out}"
+  grep -q '^lua=Lua 5.3$' "${_out}"
+  grep -q '^opened=true$' "${_out}"
+  grep -q '^mz=23117$' "${_out}"
+  grep -q '^autoassemble=true$' "${_out}"
+  grep -q '^readback=MSYS2$' "${_out}"
+  grep -q '^sqlite=true t$' "${_out}"
+  grep -q '^pcall=true nil$' "${_out}"
+}
+
+package() {
+  _stage "${pkgdir}${MINGW_PREFIX}/lib/${_realname}"
+  install -Dm755 "${srcdir}/launcher/cheatengine.exe" "${pkgdir}${MINGW_PREFIX}/bin/cheatengine.exe"
+  install -Dm644 "${srcdir}/luafilesystem-${_lfsver//./_}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.luafilesystem"
+}

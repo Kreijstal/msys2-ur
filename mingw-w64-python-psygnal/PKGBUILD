@@ -1,0 +1,67 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=psygnal
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.16.1
+pkgrel=1
+pkgdesc="Fast Python implementation of the Qt signals/slots pattern (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/pyapp-kit/psygnal'
+msys2_repository_url='https://github.com/pyapp-kit/psygnal'
+msys2_changelog_url='https://github.com/pyapp-kit/psygnal/blob/main/CHANGELOG.md'
+msys2_references=(
+  'purl: pkg:pypi/psygnal'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-pydantic: evented pydantic models"
+            "${MINGW_PACKAGE_PREFIX}-python-wrapt: evented object proxies")
+# The optional mypyc build hook is off by default; this is the pure Python
+# implementation upstream also ships as its none-any wheel.
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-hatch-vcs")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-attrs"
+              "${MINGW_PACKAGE_PREFIX}-python-numpy"
+              "${MINGW_PACKAGE_PREFIX}-python-pydantic"
+              "${MINGW_PACKAGE_PREFIX}-python-pytest"
+              "${MINGW_PACKAGE_PREFIX}-python-pytest-asyncio"
+              "${MINGW_PACKAGE_PREFIX}-python-wrapt")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz"
+        "0001-throttler-Do-not-race-the-leading-call-with-a-dummy-timer.patch")
+sha256sums=('8e30df5e8f2a927191afacd22653924ba5ec54ca00f965f4af3ed38e37b727a9'
+            '41600f26e485c540e0b915354c6a0980d62206e02c9bbd74a5b5963876f2cf51')
+
+prepare() {
+  cd "${_realname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-throttler-Do-not-race-the-leading-call-with-a-dummy-timer.patch"
+}
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
+    ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  # Test the built wheel, not the source tree.
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk dist/*.whl
+  local _site=( "${PWD}"/chk${MINGW_PREFIX}/lib/python3*/site-packages )
+  PYTHONPATH="$(cygpath -w "${_site[0]}")" \
+    ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider tests
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/e/codex-dotnet10/cecil011.9CtNI3/check.py", line 41, in <module>
+    run('runtime',[native(consumer/'bin/Release/net8.0/Check.dll'),native(fixture/'bin/Release/net8.0/OwnedFixture.dll'),native(out/'rewritten')])
+  File "/e/codex-dotnet10/cecil011.9CtNI3/check.py", line 20, in run
+    commands.append(dict(command=command,exit_code=result.returncode));assert result.returncode==0,(label,(out/(label+'.log')).read_text()[-5000:])
+                                                                              ^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('runtime', 'Unhandled exception. System.Exception: Transferred nullable method/parameter metadata\n   at Program.Require(Boolean value, String message) in E:\\codex-dotnet10\\cecil011.9CtNI3\\consumer1\\consumer\\Program.cs:line 12\n   at Program.Main(String[] args) in E:\\codex-dotnet10\\cecil011.9CtNI3\\consumer1\\consumer\\Program.cs:line 37\n')

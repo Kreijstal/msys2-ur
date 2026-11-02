@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-private-uri430
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.3.0
+pkgrel=1
+pkgdesc='Original System.Private.Uri4.3.0 metadata carrier with separate runtime providers'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT' 'custom:Microsoft.NET.Library')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-targets110=1.1.0"
+             "${MINGW_PACKAGE_PREFIX}-python")
+options=('!strip' '!lto' '!buildflags')
+source=('corefx11-4d1af962.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/4d1af962ca0fede10beb01d197367c2f90e92c97'
+        'private-uri430-source-1.tar.gz')
+noextract=('corefx11-4d1af962.tar.gz')
+sha256sums=('1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2'
+            '4e027bc3c8152952b834589575de7fdeeb92e2bccd4bcd0187a3792218993073')
+_env() {
+  export DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+build() {
+  _env
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/private-uri430-workflow/build.py")" "$(cygpath -am "$srcdir/corefx11-4d1af962.tar.gz")" "$(cygpath -am "$srcdir/producer")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  _env
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/private-uri430-workflow/check.py")" "$(cygpath -am "$srcdir/producer/feed")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local workflow="$srcdir/private-uri430-workflow"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local licenses="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
+  mkdir -p "$doc" "$licenses"
+  install -Dm644 "$srcdir/producer/feed/System.Private.Uri.4.3.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.private.uri.4.3.0.nupkg"
+  install -m644 "$workflow/check.py" "$workflow/README.md" "$doc/"
+  cp -r "$workflow/inputs" "$doc/"
+  install -m644 "$workflow/inputs/data/dotnet_library_license.txt" "$licenses/dotnet_library_license.txt"
+  install -m644 "$workflow/inputs/data/ThirdPartyNotices.txt" "$licenses/ThirdPartyNotices.txt"
+  install -m644 "$srcdir/producer/source/LICENSE" "$licenses/CoreFX-LICENSE.txt"
+  install -m644 "$srcdir/producer/results.json" "$doc/source-build.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+}

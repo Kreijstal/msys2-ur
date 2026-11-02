@@ -1,0 +1,193 @@
+{
+  "recorded_at_utc": "2026-10-31T00:56:49.906868+00:00",
+  "VMR_commit": "05d9490471fb4b10d7ef4faa32c423e1b5adcaee",
+  "mapped_templating_commit": "069bda6132d6ac2134cc9b26d651ccb825ff212d",
+  "original_projects_and_policy_sha256": {
+    "Directory.Build.props": "761ed4b4b42fba5b1bdc82885d646cd1022c28745cdbfff76d46f9a0c151e206",
+    "src/Microsoft.TemplateEngine.Abstractions/Microsoft.TemplateEngine.Abstractions.csproj": "ee6cef31ee37ecbaebb29e472fd8845b1c3b8416399481387f58fa9c6b5599d6",
+    "src/Microsoft.TemplateEngine.Core.Contracts/Microsoft.TemplateEngine.Core.Contracts.csproj": "44c8ad44d1e9ed94172c2d23e43c76b6f40427825b95cc2ac6f96dc698f9d237",
+    "src/Microsoft.TemplateEngine.Utils/Microsoft.TemplateEngine.Utils.csproj": "f7ceed5d0218fb1300cb10b5e880c536d95d57ac1e4fe43095b15a7df1e466ef",
+    "src/Microsoft.TemplateEngine.Core/Microsoft.TemplateEngine.Core.csproj": "9e098f84241db576489d5b461e8e630181ce6df752bc8eb06f5290b1752f97b8",
+    "src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/Microsoft.TemplateEngine.Orchestrator.RunnableProjects.csproj": "82f7178cb554a84fda2e1b1fd427fc2ebfc54ef9b60a27a931faa78a91c6c952",
+    "src/Microsoft.TemplateEngine.Edge/Microsoft.TemplateEngine.Edge.csproj": "90c7574975aca9b67810a87e527aa0e481feb17cadd2389c4a0b646a42537175",
+    "src/Microsoft.TemplateSearch.Common/Microsoft.TemplateSearch.Common.csproj": "2bb6cd0c4351703f195545e1ab65962a4e5b71a5861ac550f59dc2491da31642",
+    "src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/PublicAPI.Unshipped.txt": "2d5ec67029c20a065fe1aa051e0ed80cfb9a65462889fcf708aa087c1a81d0b3",
+    "src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/Abstractions/IMacroDependency.cs": "d1f587d14f7259f26e1a9b7fe70e0cba09f3b648298aa403fc1a0ab87f86ab96"
+  },
+  "original_conditional_analyzer_package": "Directory.Build.props includes PublicApiAnalyzers only when EnableAnalyzers and EnablePublicApiAnalyzer both equal true.",
+  "original_public_API_analyzer_enabled_projects": [
+    "Microsoft.TemplateEngine.Abstractions",
+    "Microsoft.TemplateEngine.Core.Contracts",
+    "Microsoft.TemplateEngine.Utils",
+    "Microsoft.TemplateEngine.Core",
+    "Microsoft.TemplateEngine.Edge",
+    "Microsoft.TemplateSearch.Common"
+  ],
+  "original_public_API_analyzer_not_enabled_projects": [
+    "Microsoft.TemplateEngine.Orchestrator.RunnableProjects"
+  ],
+  "explicit_EnableAnalyzers_true_evaluation_proves_original_package_scope": true,
+  "probe_evidence": "tests/templateengine10/original-public-api-enabled-probe-20261031.json",
+  "bootstrap_evaluation_evidence": "tests/templateengine10/original-public-api-policy-evaluation-20261031.json",
+  "actual_analyzers_executed": false,
+  "production_source_changed": false,
+  "original_baseline_changed": false,
+  "stronger_all_seven_original_baseline_gate_still_passes": false,
+  "stronger_gate_original_missing_entries": 2,
+  "stale_baseline_type": "Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroDependency",
+  "original_source_declares_type": "Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroConfigDependency",
+  "stronger_gate_evidence": "tests/templateengine10/NET10-runtime-and-API-results-20261029.json",
+  "conclusion": "The two missing baseline entries belong to the one original project which does not enable PublicApiAnalyzers. Preserve that failing broader check and verify original analyzer scope during the fresh closure rebuild; no gate or source baseline has been relaxed.",
+  "full_dependency_goal_complete": false
+}
+{
+  "Microsoft.TemplateEngine.Abstractions": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Abstractions/Microsoft.TemplateEngine.Abstractions.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers",
+      "Microsoft.Extensions.Logging.Abstractions"
+    ]
+  },
+  "Microsoft.TemplateEngine.Core.Contracts": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Core.Contracts/Microsoft.TemplateEngine.Core.Contracts.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers"
+    ]
+  },
+  "Microsoft.TemplateEngine.Utils": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Utils/Microsoft.TemplateEngine.Utils.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers",
+      "Microsoft.Extensions.Logging.Abstractions",
+      "Newtonsoft.Json"
+    ]
+  },
+  "Microsoft.TemplateEngine.Core": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Core/Microsoft.TemplateEngine.Core.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers"
+    ]
+  },
+  "Microsoft.TemplateEngine.Orchestrator.RunnableProjects": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/Microsoft.TemplateEngine.Orchestrator.RunnableProjects.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Newtonsoft.Json"
+    ]
+  },
+  "Microsoft.TemplateEngine.Edge": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateEngine.Edge/Microsoft.TemplateEngine.Edge.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers",
+      "Microsoft.Extensions.Logging.Abstractions",
+      "NuGet.Configuration",
+      "NuGet.Credentials",
+      "NuGet.Protocol",
+      "Newtonsoft.Json"
+    ]
+  },
+  "Microsoft.TemplateSearch.Common": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "msbuild",
+      "E:/codex-dotnet10/templateflow1.JLlN9U/plan2/Microsoft.TemplateSearch.Common/Microsoft.TemplateSearch.Common.csproj",
+      "-nologo",
+      "-p:EnableAnalyzers=true",
+      "-getProperty:EnablePublicApiAnalyzer,EnableAnalyzers",
+      "-getItem:PackageReference"
+    ],
+    "exit_code": 0,
+    "properties": {
+      "EnablePublicApiAnalyzer": "true",
+      "EnableAnalyzers": "true"
+    },
+    "declared_PackageReference": [
+      "StyleCop.Analyzers",
+      "Microsoft.CodeAnalysis.PublicApiAnalyzers",
+      "Newtonsoft.Json"
+    ]
+  }
+}

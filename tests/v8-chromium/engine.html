@@ -1,0 +1,40 @@
+<!doctype html><meta charset="utf-8"><title>System V8 acceptance</title>
+<body>RUNNING</body>
+<script>
+if (window.testRunner) {
+  testRunner.dumpAsText();
+  testRunner.waitUntilDone();
+}
+(async () => {
+  const check = (condition, description) => {
+    if (!condition) throw Error(description);
+  };
+  check(21n * 2n === 42n, 'JavaScript BigInt');
+  check(await Promise.resolve(42) === 42, 'async microtasks');
+  check(new Intl.NumberFormat('de-DE').format(1234.5) === '1.234,5', 'system ICU number formatting');
+  check('i'.toLocaleUpperCase('tr') === '\u0130', 'system ICU case mapping');
+  const module = new WebAssembly.Module(new Uint8Array([
+    0,97,115,109,1,0,0,0,1,5,1,96,0,1,127,3,2,1,0,
+    7,10,1,6,97,110,115,119,101,114,0,0,10,6,1,4,0,65,42,11]));
+  check(new WebAssembly.Instance(module).exports.answer() === 42, 'WebAssembly execution');
+  const node = document.createElement('div');
+  node.textContent = '42';
+  document.body.append(node);
+  check(node.isConnected && node.textContent === '42', 'DOM wrapper');
+  const references = [];
+  for (let i = 0; i < 10000; ++i) {
+    const element = document.createElement('span');
+    element.payload = { value: i, bytes: new Uint8Array(64) };
+    if (i % 1000 === 0) references.push(element);
+  }
+  check(typeof gc === 'function', 'forced GC test support');
+  gc();
+  gc();
+  check(references.every((element, i) => element.payload.value === i * 1000), 'DOM and GC retained wrappers');
+  document.body.textContent = 'PASS: JS async Wasm ICU DOM GC';
+})().catch(error => {
+  document.body.textContent = 'FAIL: ' + error.stack;
+}).finally(() => {
+  if (window.testRunner) testRunner.notifyDone();
+});
+</script>

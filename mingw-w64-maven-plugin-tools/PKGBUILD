@@ -1,0 +1,58 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Only maven-plugin-annotations is built: the Java 5 annotations Maven
+# plugins are written with.  maven-plugin-plugin (which turns them into
+# META-INF/maven/plugin.xml) cannot run before Maven and its plugins exist;
+# java-build-helper's MojoDescriptorProcessor does that job here.
+
+_realname=maven-plugin-tools
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-maven-plugin-annotations")
+pkgver=3.15.2
+pkgrel=1
+pkgdesc="Apache Maven plugin tools (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/plugin-tools/'
+msys2_repository_url='https://github.com/apache/maven-plugin-tools'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-plugin-tools/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('0fa2e98311e90db144b32cc82be2364c92b015c6fbd7552615b4df7a38154d6a')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # test fixtures in maven-plugin-tools-annotations and -generators
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.maven.plugin-tools:maven-plugin-annotations:${pkgver} \
+    maven-plugin-annotations/src/main/java -u maven-plugin-annotations/pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # annotations only, no upstream tests
+  jb_loadcheck org.apache.maven.plugin-tools:maven-plugin-annotations
+}
+
+package_maven-plugin-annotations() {
+  pkgdesc="Java 5 annotations for writing Maven plugins (mingw-w64)"
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.plugin-tools:maven-plugin-annotations
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

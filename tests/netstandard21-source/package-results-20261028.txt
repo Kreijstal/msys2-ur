@@ -1,0 +1,197 @@
+package-results-20261028
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-28T19:10:04.545106+00:00",
+  "host": "win11",
+  "full_dependency_goal_complete": false,
+  "recipe": "mingw-w64-dotnet-netstandard21-reference",
+  "package": "mingw-w64-clang-x86_64-dotnet-netstandard21-reference 2.1.0-1",
+  "build_root": "/c/codex-dotnet10/ns21pkg.DFSRTa",
+  "formal_pacman_installed": true,
+  "source_compile_exit_code": 0,
+  "initial_clean_aggregate_exit_code_before_sdk_registration_fix": 4,
+  "final_source_verification_exit_code": 0,
+  "final_repackage_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "source_commit": "a5b5f2e1e369972c8ff1e2183979fab6099f52ef",
+  "source_archive_sha256": "e681d3377e3ffa79cb97685e3fa3966a645017fa35ed7f3aef6b3566547fb794",
+  "source_workflow_sha256": "2eceacf74bd061a443afb1f339e7beedcdb0319da15b24659b31a3b0c9a37d4d",
+  "frozen_workflow_files_verified": 10,
+  "source_compiler_warning_count": 0,
+  "unchanged_sdk_csc_compiler5_and_standard20_contract_hashes": true,
+  "package_archive": "/tmp/netstandard21-reference-package1/mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1-any.pkg.tar.zst",
+  "evidence_archive": "/tmp/netstandard21-reference-package1/netstandard21-reference-evidence1.tar.gz",
+  "evidence_archive_sha256": "6ba063fa7eb58aa3985f8b9db93f8f30b8e331c6b80f70367d6ea845d9f8a704",
+  "evidence_files_verified": 491,
+  "corrections": [
+    "Compiler /refonly does not emit the original 0x70 flag bits; explicitly retain the upstream AssemblyFlags attribute for the 121 references.",
+    "The installed SDK4 table omitted the original Standard2.1 KnownFrameworkReference. Source SDK revision5 restores it. The reference recipe now requires SDK>=8.0.131-5.",
+    "The clean source compile passed; its aggregate command stopped in the consumer check before the SDK registration fix. The corrected consumer check, source verification, repackaging and installed checks all passed."
+  ],
+  "commands": [
+    {
+      "command": "MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm",
+      "exit_code": 4,
+      "reason": "Source compile0; check stopped at missing SDK4 registration, fixed by SDK5"
+    },
+    {
+      "command": "/usr/bin/python3 src/netstandard21-reference/check.py standard-a5b5f2e1.tar.gz \"$PWD/src/built\" \"$PWD/src/consumer\"",
+      "exit_code": 0
+    },
+    {
+      "command": "MINGW_ARCH=clang64 makepkg-mingw --verifysource",
+      "exit_code": 0
+    },
+    {
+      "command": "MINGW_ARCH=clang64 makepkg-mingw -R -f --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1-any.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qk mingw-w64-clang-x86_64-dotnet-netstandard21-reference",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/netstandard21-reference/check.py standard-a5b5f2e1.tar.gz \"$PWD/src/built\" \"$PWD/installed-consumer\" /clang64/lib/dotnet/packs/NETStandard.Library.Ref/2.1.0",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1-any.pkg.tar.zst src/built installed-audit.json",
+      "exit_code": 0
+    },
+    {
+      "command": "sha256sum -c existing-tools-before.sha256",
+      "exit_code": 0
+    }
+  ]
+}
+
+Exact commands and results:
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 4
+$ /usr/bin/python3 src/netstandard21-reference/check.py standard-a5b5f2e1.tar.gz "$PWD/src/built" "$PWD/src/consumer"
+RESULT: exit 0
+$ MINGW_ARCH=clang64 makepkg-mingw --verifysource
+RESULT: exit 0
+$ MINGW_ARCH=clang64 makepkg-mingw -R -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-netstandard21-reference
+RESULT: exit 0
+$ /usr/bin/python3 src/netstandard21-reference/check.py standard-a5b5f2e1.tar.gz "$PWD/src/built" "$PWD/installed-consumer" /clang64/lib/dotnet/packs/NETStandard.Library.Ref/2.1.0
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1-any.pkg.tar.zst src/built installed-audit.json
+RESULT: exit 0
+$ sha256sum -c existing-tools-before.sha256
+RESULT: exit 0
+
+Recorded package.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-netstandard21-reference 2.1.0-1 (28 Oct 2026 19:53:16)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found standard-a5b5f2e1.tar.gz
+  -> Found netstandard21-reference-source-1.tar.gz
+  -> Found arcade-standard21-8eb29ba8.tar.gz
+==> Validating source files with sha256sums...
+    standard-a5b5f2e1.tar.gz ... Passed
+    netstandard21-reference-source-1.tar.gz ... Passed
+    arcade-standard21-8eb29ba8.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting netstandard21-reference-source-1.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+
+Recorded src/check-sdk5.log:
+PASS original Standard2.1 sources, complete forwards/metadata, original version task, fresh SDK consumer and newer-API rejection
+
+
+Recorded source-verification.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-netstandard21-reference 2.1.0-1 (28 Oct 2026 20:06:02)
+==> Retrieving sources...
+  -> Found standard-a5b5f2e1.tar.gz
+  -> Found netstandard21-reference-source-1.tar.gz
+  -> Found arcade-standard21-8eb29ba8.tar.gz
+==> Validating source files with sha256sums...
+    standard-a5b5f2e1.tar.gz ... Passed
+    netstandard21-reference-source-1.tar.gz ... Passed
+    arcade-standard21-8eb29ba8.tar.gz ... Passed
+
+
+Recorded repackage.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-netstandard21-reference 2.1.0-1 (28 Oct 2026 20:06:05)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netstandard21-reference"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netstandard21-reference 2.1.0-1 (28 Oct 2026 20:06:13)
+
+
+Recorded install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-netstandard21-reference-2.1.0-1
+
+Total Installed Size:  2.36 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-netstandard21-reference...
+
+
+Recorded qk.log:
+mingw-w64-clang-x86_64-dotnet-netstandard21-reference: 146 total files, 0 missing files
+
+
+Recorded installed-check.log:
+PASS original Standard2.1 sources, complete forwards/metadata, original version task, fresh SDK consumer and newer-API rejection
+
+
+Recorded installed-audit.log:
+PASS 132 installed payload files, all 121 original source Standard2.1 references, package paths and SHA256
+
+
+Recorded existing-tools-after.log:
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/packs/NETStandard.Library.Ref/2.0.3/ref/netstandard2.0/netstandard.dll: OK
+

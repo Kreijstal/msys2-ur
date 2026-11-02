@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=powershell-archive
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.2.6
+pkgrel=1
+_commit=87428e309898a728fb0287eab31b5cd214ceb9ba
+pkgdesc='Complete source Microsoft.PowerShell.Archive module and NuGet PSModule package'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/PowerShell/Microsoft.PowerShell.Archive'
+license=('spdx:MIT')
+# Script/data dependency consumed by PowerShell; no application-host dependency cycle.
+depends=()
+makedepends=('python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host=7.4.20")
+options=('!strip' '!lto')
+source=("archive-$pkgver.tar.gz::https://codeload.github.com/PowerShell/Microsoft.PowerShell.Archive/tar.gz/$_commit"
+        prepare.py
+        pack.py
+        check.sh
+        prepare-tests.py
+        RunUpstream.ps1
+        verify-restored.py
+        0001-preserve-reserved-device-warning-in-fallback-data.patch
+        published-source-provenance.json
+        README.md
+)
+sha256sums=('85abf447302a2a6cc938212053d5b6b91fb20e9204062db60d8f63f46bb24822'
+            '28d90678c34476df85b904cbd7f61cd138e80a826217f5d3e8f690e93c3d6d23'
+            'dfe93ab8f03303f77f9b50447a50a5801a29b6bb5fe5404c4d1aed6288407261'
+            '9dffaf31fd3aef9e08d73712bb63eb32604ce3461045cbffeba781c56c07c166'
+            'a7b92a25f11981c9d800b1c897500dfd33a2fb2f915e94782f5b59ff86b79e25'
+            'c9264bd352ab963e2d1245f130b102bcdfe2546dfdc76f5010d9c15730d3d8cf'
+            'e4487bc36dce466916ae6b8b4d934da6265307bc1490461305488c3b342a5de5'
+            '57e54fa04515f524d0d0deb174df0c93022f55ea0aa1967df93c0a3d99970c80'
+            '41403e32bde3425557a83bb6b1b18cf920bf8ceb87ad983a28b5def02c4ef548'
+            '7baaaa69639114989433df2b862b88f0176a2857932b27b0f46a5c76db4dc2d3'
+)
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/Microsoft.PowerShell.Archive-$_commit" "$srcdir/prepared"; }
+build() { /usr/bin/python3 "$srcdir/pack.py" "$srcdir/prepared" "$srcdir/feed"; }
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/Microsoft.PowerShell.Archive-$_commit" "$srcdir/feed"; }
+package() {
+  install -Dm644 "$srcdir/feed/microsoft.powershell.archive.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.powershell.archive.$pkgver.nupkg"
+  local module="$pkgdir$MINGW_PREFIX/lib/powershell/Modules/Microsoft.PowerShell.Archive/$pkgver"
+  mkdir -p "$module"
+  cp -R "$srcdir/prepared/module/." "$module/"
+  install -Dm644 "$srcdir/prepared/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -m644 "$srcdir/prepared/source-build.json" "$srcdir/published-source-provenance.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

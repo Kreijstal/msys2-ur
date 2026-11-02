@@ -1,0 +1,203 @@
+{
+  "finished_at_utc": "2026-10-29T09:06:26.577756+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/sdk10taskspkg1.GPVO8m",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "6d758dc039676462b601684a7db15ea2ec5403cad436aea9127d3a6b4869c706"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap-10.0.201-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "c5503fe3ce2963c9041034e5af867bb2ef76ee1341f0f414b41a16e78dd71da9"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "ec04cf362db2d58c7e38a4a148bd41c4ab46e41aa8f83010e59cd29569b63a6e"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "b982b46702d70671334414d4f8b46b5b268277eb8a2b00229f354b11b86434fa"
+    }
+  ],
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-tasks-bootstrap/checks/check-resources.py",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/plan",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/build",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/localized",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/resources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-tasks-bootstrap/checks/check.py",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/plan",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/build",
+          "E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/runtime"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 533,
+    "installed_original_task_execution_passed": true,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}
+
+$ makepkg --cleanbuild --force --noconfirm
+EXIT 0
+==> Making package: mingw-w64-dotnet-sdk10-tasks-bootstrap 10.0.201-1 (29 Oct 2026 09:57:38)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found sdk-v10.0.201.tar.gz
+  -> Found arcade-runtime10-4bf37ce6.tar.gz
+  -> Found sdk10-tasks-source-1.tar.gz
+==> Validating source files with sha256sums...
+    sdk-v10.0.201.tar.gz ... Passed
+    arcade-runtime10-4bf37ce6.tar.gz ... Passed
+    sdk10-tasks-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting sdk10-tasks-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sdk10-tasks-bootstrap 10.0.201-1 (29 Oct 2026 10:05:07)
+
+
+$ pacman -U --noconfirm "$PWD/mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap-10.0.201-1-any.pkg.tar.zst"
+EXIT 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap-10.0.201-1
+
+Total Installed Size:  29.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap...
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap
+EXIT 0
+mingw-w64-clang-x86_64-dotnet-sdk10-tasks-bootstrap: 629 total files, 0 altered files
+
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check
+EXIT 0
+PASS 533 installed payload hashes,112 exact resource sets,78 satellites,6 PDBs,SDK/Extensions/APICompat task execution and native NET10 Unicode app
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/prepare.log
+PASS prepared six original SDK10 NET10 project wrappers; project edges and metadata preserved
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/evaluate.log
+PASS evaluated six original NET10 profiles,299 original compiler items
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/build.log
+PASS Microsoft.DotNet.ApiSymbolExtensions 16 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.ApiCompatibility 64 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.PackageValidation 12 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.ApiCompat.Task 16 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.NET.Build.Extensions.Tasks 30 original source inputs 10.0.14.11413 10.0.14.11413
+PASS Microsoft.NET.Build.Tasks 161 original source inputs 10.0.14.11413 10.0.14.11413
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/localize.log
+PASS78 original SDK10 task/APICompat satellites,104 localized resource sets
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/audit.log
+PASS299 original Compile items, selected source/resource/project/XLF bytes match pinned SDK archive; all reference/output/satellite hashes verified
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/resource-check.log
+PASS 112 neutral/localized resource sets, 7672 exact values, 78 satellite identities, six NET10 identities and portable PDBs
+
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/runtime-check.log
+PASS original SDK10 RuntimeConfiguration/CreateAppHost,Extensions facade metadata and APICompat positive/CP0002 negative through source MSBuild18;native Unicode NET10 execution
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/stage.log
+PASS staged 533 payload files, 79 original task content files and 216 source dependency assets
+
+
+/e/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/staged-check.log
+PASS 533 installed payload hashes,112 exact resource sets,78 satellites,6 PDBs,SDK/Extensions/APICompat task execution and native NET10 Unicode app
+
+
+src/runtime-check/ApiPositive.log
+
+
+
+src/runtime-check/ApiNegative.log
+
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\src\runtime-check\Check.proj(2,3110): error : API compatibility errors between 'E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/runtime-check/owned 世界/left/Fixture.dll' (left) and 'E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/runtime-check/owned 世界/bad/Fixture.dll' (right):
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\src\runtime-check\Check.proj(2,3110): error CP0002: Member 'string Greeting.Existing()' exists on E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/runtime-check/owned 世界/left/Fixture.dll but not on E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/src/runtime-check/owned 世界/bad/Fixture.dll
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\src\runtime-check\Check.proj(2,3110): error : API breaking changes found. If those are intentional, the APICompat suppression file can be updated by rebuilding with '/p:ApiCompatGenerateSuppressionFile=true'
+
+
+installed-check/runtime/ApiPositive.log
+
+
+
+installed-check/runtime/ApiNegative.log
+
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\installed-check\runtime\Check.proj(2,3188): error : API compatibility errors between 'E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/runtime/owned 世界/left/Fixture.dll' (left) and 'E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/runtime/owned 世界/bad/Fixture.dll' (right):
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\installed-check\runtime\Check.proj(2,3188): error CP0002: Member 'string Greeting.Existing()' exists on E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/runtime/owned 世界/left/Fixture.dll but not on E:/codex-dotnet10/sdk10taskspkg1.GPVO8m/installed-check/runtime/owned 世界/bad/Fixture.dll
+E:\codex-dotnet10\sdk10taskspkg1.GPVO8m\installed-check\runtime\Check.proj(2,3188): error : API breaking changes found. If those are intentional, the APICompat suppression file can be updated by rebuilding with '/p:ApiCompatGenerateSuppressionFile=true'
+
+
+installed-check/resources/resources.log
+PASS 112 neutral/localized resource sets, 7672 exact values, 78 satellite identities, six NET10 identities and portable PDBs
+

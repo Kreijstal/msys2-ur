@@ -1,0 +1,187 @@
+Formal Roslyn4.14 Workspaces Common/CSharp original Standard2.0 package
+Clean packaging and fresh installed Standard2.0/NET8 consumers passed full API/friend/resource/MEF/refactoring/code-action/Channels and source/cache/payload checks.
+All selected production C# inputs remain unchanged; Release and original source-build SQLite exclusion are retained. No private Roslyn/runtime/Workspaces build outputs are needed.
+Both owned Workspaces Standard2.0 assets and actual nearest NET8 MEF/Humanizer and original AsyncInterfaces2.1 forwarding assets are checked against source package/output bytes.
+Nonfatal compiler/NuGet warnings are retained in warnings.json. The package warning about an MSYS root reference comes from provenance/input records; compiler selections and framework DLL hashes remain unchanged.
+VB, remaining original target variants and the full dependency objective remain open.
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-28T20:04:29.376067+00:00",
+  "full_dependency_goal_complete": false,
+  "host": "win11",
+  "build_root": "/c/codex-dotnet10/ws414pkg.NRM7Cf",
+  "recipe": "mingw-w64-dotnet-roslyn414-workspaces",
+  "package": "mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces 4.14.0-1",
+  "formal_pacman_installed": true,
+  "clean_package_build_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "source_commit": "8edf7bcd4f1594c3d68a6a567469f41dbd33dd1b",
+  "source_archive_sha256": "8cf2d365d1fad52b480f7c68b5c477cb586a935ada0eb309b0c40dacfec5fe9c",
+  "source_workflow_archive_sha256": "942b4d588c6cc90e0515aca8dd5b6db3022400a3c136841c05d2aa7e2204ea92",
+  "extracted_original_files": 20094,
+  "removed_binary_inputs": 200,
+  "production_source_changes": 0,
+  "original_selected_source_files": {
+    "Microsoft.CodeAnalysis.Workspaces": 1515,
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": 271
+  },
+  "original_public_api_declarations_verified": {
+    "Microsoft.CodeAnalysis.Workspaces": 1834,
+    "Microsoft.CodeAnalysis.CSharp.Workspaces": 56
+  },
+  "original_resource_sets": 98,
+  "original_resource_values": 3486,
+  "source_friend_and_restricted_namespace_attributes_verified": true,
+  "original_source_build_sqlite_exclusion_retained": true,
+  "original_source_archive_inputs_verified": 1895,
+  "actual_compiler_and_consumer_package_references_verified": 89,
+  "mixed_original_mef_net8_humanizer_net8_asyncinterfaces21_and_owned_standard20_assets_verified": true,
+  "separately_compiled_standard20_consumer_passed": true,
+  "existing_sdk_compiler49_compiler5_and_framework_hashes_unchanged": true,
+  "private_build_roots_required": false,
+  "frozen_workflow_source_files_verified": 11,
+  "frozen_workflow_recipe_and_srcinfo_match": true,
+  "evidence_archive": "/tmp/workspaces414-package1/workspaces414-package-evidence1.tar.gz",
+  "evidence_archive_sha256": "59bc71f6df18aa8b44c784175c58e75cc8e40295e3be69e83e2f1a063707e4a9",
+  "evidence_files_verified": 134,
+  "package_archive": "/tmp/workspaces414-package1/mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces-4.14.0-1-any.pkg.tar.zst",
+  "complete_roslyn414_targets_and_visualbasic": false,
+  "remaining": [
+    "Formal original Roslyn4.14 VisualBasic compiler/Workspaces/meta packages and remaining original NET8/NET9 target variants.",
+    "Formal Roslyn4.4 and complete runtime10 shipping-generator bundle.",
+    "Remaining required maintenance/runtime target variants.",
+    "Complete runtime/framework10, SDK/desktop10, PowerShell7.6 and remaining MMI/SQL/WindowsCompatibility/runtime gates."
+  ]
+}
+
+Exact commands and results:
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces-4.14.0-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces
+RESULT: exit 0
+$ /usr/bin/python3 src/workspaces414-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+$ /usr/bin/python3 src/workspaces414-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces-4.14.0-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Recorded package.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-roslyn414-workspaces 4.14.0-1 (28 Oct 2026 20:59:27)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.14.0-8edf7bcd.tar.gz
+  -> Found workspaces414-source-1.tar.gz
+==> Validating source files with sha256sums...
+    roslyn-4.14.0-8edf7bcd.tar.gz ... Passed
+    workspaces414-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting workspaces414-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-roslyn414-workspaces 4.14.0-1 (28 Oct 2026 21:02:25)
+
+
+Recorded src/prepare.log:
+PASS pinned Roslyn source extraction: 20094 original files; 200 binary inputs removed
+Prepared original Standard2.0 Workspaces source projects {'Microsoft.CodeAnalysis.Workspaces': 1515, 'Microsoft.CodeAnalysis.CSharp.Workspaces': 271} resource sets 98
+
+
+Recorded src/build.log:
+PASS original Workspaces4.14 netstandard2.0 package: Microsoft.CodeAnalysis.Workspaces
+PASS original Workspaces4.14 netstandard2.0 package: Microsoft.CodeAnalysis.CSharp.Workspaces
+
+
+Recorded src/check.log:
+PASS fresh source Workspaces4.14: complete APIs/friends/resources, MEF/refactoring/code actions and real source Channels9 behavior
+
+
+Recorded src/audit.log:
+PASS original Workspaces source/API/resource inputs, netstandard2.0 packages and all actual compiler/consumer cache bytes
+
+
+Recorded install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces-4.14.0-1
+
+Total Installed Size:  2.62 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces...
+
+
+Recorded qk.log:
+mingw-w64-clang-x86_64-dotnet-roslyn414-workspaces: 19 total files, 0 missing files
+
+
+Recorded installed-check.log:
+PASS fresh source Workspaces4.14: complete APIs/friends/resources, MEF/refactoring/code actions and real source Channels9 behavior
+
+
+Recorded installed-source-audit.log:
+PASS original Workspaces source/API/resource inputs, netstandard2.0 packages and all actual compiler/consumer cache bytes
+
+
+Recorded installed-package-audit.log:
+PASS ten installed files, two exact source Roslyn4.14 Workspaces NuGets, 28 managed/satellite assemblies and source licenses
+
+
+Recorded existing-tools-framework-after.log:
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.CSharp.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+
+Recorded src/installed-consumer/run.log:
+PASS five support-assembly providers load from the source framework after SDK conflict resolution
+Microsoft.CodeAnalysis.Workspaces friend attributes: actual=104 expected=104
+Microsoft.CodeAnalysis.CSharp.Workspaces friend attributes: actual=29 expected=29
+PASS source identity/location/types and all expanded friend declarations; 98 resource sets/3486 source strings
+PASS separately compiled original Standard2.0 workspace/MEF contract consumer
+PASS source9 channel backpressure, cancellation, DropOldest,2000 multiwriter items and exact completion-error propagation
+PASS: Microsoft.CodeAnalysis.Workspaces preserves all 1834 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp.Workspaces preserves all 56 upstream public API declarations
+PASS MEF-hosted CSharp workspace, Unicode documents, project references, semantic models, cross-project reference search/rename, formatting, solution changes and PE emit
+PASS CSharp simplification, real analyzer diagnostics, DocumentEditor/code-fix registration, CodeAction/ApplyChanges operation, incremental solution edits and cancellation
+

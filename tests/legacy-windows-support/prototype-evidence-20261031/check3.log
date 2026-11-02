@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/e/codex-dotnet10/legacy-windows-support.B0Hlgq/tests/legacy-windows-support/check.py", line 36, in <module>
+    run('run',[native(host/'bin/Release/net8.0/Check.dll'),native(owned),native(here/'inputs/published-runtime-metadata.json'),native(producer/'source-inputs.json')])
+  File "/e/codex-dotnet10/legacy-windows-support.B0Hlgq/tests/legacy-windows-support/check.py", line 32, in run
+    commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(label,(out/(label+'.log')).read_text()[-7000:])
+                                                                     ^^^^^^^^^^^^^^^
+AssertionError: ('run', 'Unhandled exception. System.Exception: Microsoft.Win32.Registry original runtime reference identity mismatch\n   at Program.Main(String[] args) in E:\\codex-dotnet10\\legacy-windows-support.B0Hlgq\\check3\\host\\Check.cs:line 37\n')

@@ -1,0 +1,781 @@
+{
+  "finished_at_utc": "2026-10-29T07:15:16.978409+00:00",
+  "host": "win11",
+  "remote_root": "/e/codex-dotnet10/nuget73pkg1.8g5AxB",
+  "recipe": "mingw-w64-dotnet-nuget73-core-bootstrap",
+  "package_version": "7.3.0.preview1.11413-1",
+  "source_version": "7.3.0-preview.1.11413",
+  "source_commit": "bf048eb714eb6b1912ba868edca4c7cfec454841",
+  "source_archive_sha256": "9eb1139d9abecfab7d69fd7b02cb58d20792a0cd46ffb7b2ea6a12bbfda48f12",
+  "previous_goal_turn_classification": "progress:original NET10 Roslyn task bootstrap packaged,installed and verified",
+  "current_goal_turn_classification": "progress:pinned SDK10 dependency graph traced and original NuGet7.3 NET10 foundation package cold-built,installed and verified",
+  "sdk_dependency_pin_evidence": "tests/sdk10/dependency-source-pins-20261029.json",
+  "original_vmr_profile": "DotNetBuildSourceOnly=true;DotNetBuildFromVMR=true;net10.0",
+  "original_source_compile_items": 187,
+  "original_production_source_changes": 0,
+  "original_assemblies": [
+    "NuGet.Versioning",
+    "NuGet.Frameworks",
+    "NuGet.Common",
+    "NuGet.LibraryModel"
+  ],
+  "assembly_version": "7.3.0.0",
+  "file_version": "7.3.0.11413",
+  "cold_makepkg_command": "makepkg --cleanbuild --force --noconfirm",
+  "cold_makepkg_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_check_exit_code": 0,
+  "archive_audit": {
+    "package": "mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst",
+    "package_sha256": "ce08c2269326d9e2b376c558a63e9ad0e559eb3c0489b8a87b4c905a634c423b",
+    "regular_payload_files": 92,
+    "all_payload_bytes_and_inventory_verified": true,
+    "four_source_nuget_assets_byte_match_loose_outputs": true,
+    "upstream_individual_package_satellite_exclusion_preserved": true,
+    "localized_satellites": 52,
+    "source_nuget_packages": [
+      {
+        "id": "NuGet.Versioning",
+        "version": "7.3.0-preview.1.11413",
+        "sha256": "51f314afdabf7a30259837d5fb527cc6fc7435c613a80766f02458ab91483987"
+      },
+      {
+        "id": "NuGet.Frameworks",
+        "version": "7.3.0-preview.1.11413",
+        "sha256": "01e0f8b867fbb1a384596817f6d74a364ff27a2ac0e27bae3cd87acdb01e14b4"
+      },
+      {
+        "id": "NuGet.Common",
+        "version": "7.3.0-preview.1.11413",
+        "sha256": "f8e2b7cb2be8e63a66fc7e3e794e0036c1fb51ff7637b85597699f248bc01510"
+      },
+      {
+        "id": "NuGet.LibraryModel",
+        "version": "7.3.0-preview.1.11413",
+        "sha256": "1eacb16bbdfe7d907891a4e98aba81aabe82bb472712cbd2d6a45642b72ed273"
+      }
+    ],
+    "source_audit": {
+      "original_compile_items": 187,
+      "distinct_original_source_resource_and_xlf_inputs": 228,
+      "original_xlf_inputs": 52,
+      "all_original_archive_output_and_reference_hashes_match": true,
+      "original_production_source_changes": 0
+    },
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "original_compile_items": 187,
+    "distinct_original_source_resource_and_xlf_inputs": 228,
+    "original_xlf_inputs": 52,
+    "all_original_archive_output_and_reference_hashes_match": true,
+    "original_production_source_changes": 0
+  },
+  "build_commands": [
+    {
+      "label": "NuGet.Versioning-resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Versioning/Resources.proj",
+        "-t:Generate",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Versioning/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Frameworks/Resources.proj",
+        "-t:Generate",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Frameworks/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Common/Resources.proj",
+        "-t:Generate",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.Common/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.LibraryModel/Resources.proj",
+        "-t:Generate",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/build/NuGet.LibraryModel/compile.rsp"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "localization_commands": [
+    {
+      "label": "resources",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/Resources.proj",
+        "-t:Generate",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-cs",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/cs/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-de",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/de/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-es",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/es/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-fr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/fr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-it",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/it/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-ja",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ja/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-ko",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ko/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-pl",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/pl/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-pt-BR",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/pt-BR/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-ru",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/ru/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-tr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/tr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-zh-Hans",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/zh-Hans/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Versioning-zh-Hant",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Versioning/zh-Hant/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-cs",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/cs/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-de",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/de/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-es",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/es/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-fr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/fr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-it",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/it/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-ja",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ja/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-ko",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ko/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-pl",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/pl/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-pt-BR",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/pt-BR/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-ru",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/ru/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-tr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/tr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-zh-Hans",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/zh-Hans/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Frameworks-zh-Hant",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Frameworks/zh-Hant/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-cs",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/cs/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-de",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/de/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-es",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/es/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-fr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/fr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-it",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/it/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-ja",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ja/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-ko",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ko/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-pl",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/pl/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-pt-BR",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/pt-BR/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-ru",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/ru/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-tr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/tr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-zh-Hans",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/zh-Hans/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.Common-zh-Hant",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.Common/zh-Hant/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-cs",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/cs/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-de",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/de/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-es",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/es/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-fr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/fr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-it",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/it/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-ja",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ja/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-ko",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ko/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-pl",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/pl/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-pt-BR",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/pt-BR/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-ru",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/ru/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-tr",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/tr/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-zh-Hans",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/zh-Hans/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "NuGet.LibraryModel-zh-Hant",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/mingw-w64-dotnet-nuget73-core-bootstrap/src/localized/NuGet.LibraryModel/zh-Hant/compile.rsp"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "installed_check": {
+    "command": [
+      "E:/msys64/clang64/bin/python.exe",
+      "-X",
+      "utf8",
+      "E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/checks/check.py",
+      "E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/validation-plan",
+      "E:/msys64/clang64/lib/dotnet10/library-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap",
+      "E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer",
+      "E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/expected-localization.json"
+    ],
+    "exit_code": 0,
+    "payload_files_verified": 91,
+    "original_public_api_declarations_verified": 1497,
+    "total_neutral_and_localized_values": 392,
+    "original_upstream_vectors": 19,
+    "concurrent_owned_file_lock_operations": 24,
+    "source_nuget_archive_asset_bytes_verified": true,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "consumer_commands": [
+    {
+      "label": "compile",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/compile.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "label": "execute",
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/bin/Check.dll",
+        "E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/validation-source",
+        "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/baselines",
+        "E:/codex-dotnet10/nuget73pkg1.8g5AxB/installed-check/consumer/owned-work",
+        "E:/msys64/clang64/share/doc/dotnet-nuget73-core-bootstrap/expected-localization.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_api_and_vector_input_sha256": {
+    "src/NuGet.Core/NuGet.Versioning/PublicAPI.Shipped.txt": "f70dddac687a3ecd99215892c55d7fc3cb7bf7b522de6fbec139e2b5be930847",
+    "src/NuGet.Core/NuGet.Versioning/PublicAPI.Unshipped.txt": "3c3b422dddb1efeb0fc5b228608fd8682452b2a9507d4031894bce3c4dedadbd",
+    "src/NuGet.Core/NuGet.Frameworks/PublicAPI.Shipped.txt": "3efae764755af2a3d5e18ec3c1014df9c788844a4aeae1982774442d94cc8a48",
+    "src/NuGet.Core/NuGet.Frameworks/PublicAPI.Unshipped.txt": "3c3b422dddb1efeb0fc5b228608fd8682452b2a9507d4031894bce3c4dedadbd",
+    "src/NuGet.Core/NuGet.Common/PublicAPI.Shipped.txt": "2649a49456692cb90135601b499d57a186268d86b872a817f91489a64248b6f9",
+    "src/NuGet.Core/NuGet.Common/PublicAPI.Unshipped.txt": "3c3b422dddb1efeb0fc5b228608fd8682452b2a9507d4031894bce3c4dedadbd",
+    "src/NuGet.Core/NuGet.LibraryModel/PublicAPI.Shipped.txt": "a6368a08b66bad15cd777b907adcaffdeb5d7776d70755c1351a705c87046c34",
+    "src/NuGet.Core/NuGet.LibraryModel/PublicAPI.Unshipped.txt": "3c3b422dddb1efeb0fc5b228608fd8682452b2a9507d4031894bce3c4dedadbd",
+    "test/NuGet.Core.Tests/NuGet.Versioning.Test/VersionRangeTests.cs": "4a57eb38ab14c7aff68c84dee2486a05828fe38692b55f29173bdd016f499810"
+  },
+  "original_public_api_declarations_preserved": 1497,
+  "raw_extra_api_comparison_performed": false,
+  "neutral_resource_values": 28,
+  "localized_resource_values": 364,
+  "total_resource_values_verified": 392,
+  "localized_satellites": 52,
+  "source_nuget_archives": 4,
+  "upstream_individual_library_satellite_exclusion_preserved": true,
+  "original_upstream_range_vectors": 19,
+  "owned_concurrent_file_lock_operations": 24,
+  "pacman_version": "mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap 7.3.0.preview1.11413-1",
+  "pacman_integrity": "mingw-w64-clang-x86_64-dotnet-nuget73-core-bootstrap: 129 total files, 0 altered files",
+  "formal_bootstrap_package_built": true,
+  "formal_bootstrap_package_installed": true,
+  "full_nuget73_closure_built": false,
+  "other_original_nuget_framework_profiles_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "remaining NuGet7.3 Configuration,Packaging,Protocol,DependencyResolver,ProjectModel,Commands and other original libraries",
+    "original NuGet7.3 restore/build/pack tasks,SDK resolver and full localization aggregate",
+    "exact SDK10 support libraries:DependencyModel10.0.2,IO.Hashing10.0.2,HostModel10.0.2-servicing.25612.105,Deployment.DotNet.Releases2.0.0-preview.1.25612.105",
+    "original SDK10 Build.Tasks,Extensions task and APICompat project closure",
+    "additional original NuGet/framework/tool profiles and full SDK10/WindowsDesktop10/PowerShell7.6 plus existing compatibility gates"
+  ],
+  "frozen_workflow": "mingw-w64-dotnet-nuget73-core-bootstrap/nuget73-core-source-1.tar.gz",
+  "frozen_workflow_sha256": "06080b6b3ced75974ec16cee842a459d37889f85c77b8995accfa8ef159e1416",
+  "prototype_failure_history": "The initial standalone prototype omitted LibraryModel transitive Frameworks references;corrected transitive reference closure and verified reuse of three successful projects. The subsequent fresh clean package passed all gates on its first attempt."
+}

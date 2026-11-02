@@ -1,0 +1,332 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 10bf817..7bc38b4 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -100,13 +100,19 @@ target_include_directories(GleeBug PUBLIC
+ 	.
+ )
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
++if(MINGW) # mingw
++	target_link_libraries(GleeBug PUBLIC
++		ntdll
++	)
++endif()
++
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8) # x64-msvc
+ 	target_link_libraries(GleeBug PUBLIC
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/GleeBug/ntdll_x64.lib"
+ 	)
+ endif()
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # x32-msvc
+ 	target_link_libraries(GleeBug PUBLIC
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/GleeBug/ntdll_x86.lib"
+ 	)
+diff --git a/GleeBug/Debugger.Loop.Process.cpp b/GleeBug/Debugger.Loop.Process.cpp
+index a652091..d4c9464 100644
+--- a/GleeBug/Debugger.Loop.Process.cpp
++++ b/GleeBug/Debugger.Loop.Process.cpp
+@@ -29,7 +29,7 @@ namespace GleeBug
+                                    std::make_unique<Thread>(createProcess.hThread,
+                                            mDebugEvent.dwThreadId,
+                                            createProcess.lpThreadLocalBase,
+-                                           createProcess.lpStartAddress)
++                                           (LPVOID)createProcess.lpStartAddress)
+                                  });
+         mThread = mProcess->thread = mProcess->threads.find(mDebugEvent.dwThreadId)->second.get();
+ 
+diff --git a/GleeBug/Debugger.Loop.Thread.cpp b/GleeBug/Debugger.Loop.Thread.cpp
+index d5382cd..8687f03 100644
+--- a/GleeBug/Debugger.Loop.Thread.cpp
++++ b/GleeBug/Debugger.Loop.Thread.cpp
+@@ -9,7 +9,7 @@ namespace GleeBug
+                                    std::make_unique<Thread>(createThread.hThread,
+                                            mDebugEvent.dwThreadId,
+                                            createThread.lpThreadLocalBase,
+-                                           createThread.lpStartAddress)
++                                           (LPVOID)createThread.lpStartAddress)
+                                  });
+ 
+         //set the current thread
+diff --git a/StaticEngine/TitanEngine.h b/StaticEngine/TitanEngine.h
+index 0f3af03..ac69738 100644
+--- a/StaticEngine/TitanEngine.h
++++ b/StaticEngine/TitanEngine.h
+@@ -661,6 +661,11 @@ typedef struct
+     BYTE RegisterArea[80];
+     x87FPU_t x87fpu;
+     DWORD MxCsr;
++#if defined(__GNUC__) && !defined(_MSC_VER)
++    // MSVC aligns the __declspec(align(16)) XMM registers despite
++    // pack(1); GCC and Clang do not, so pad to the same layout
++    BYTE AlignXmmRegisters[6];
++#endif
+ #ifdef _WIN64
+     XmmRegister_t XmmRegisters[16];
+     YmmRegister_t YmmRegisters[16];
+diff --git a/StaticEngine/TitanEngineEmulator.cpp b/StaticEngine/TitanEngineEmulator.cpp
+index 37d4074..0fe62e6 100644
+--- a/StaticEngine/TitanEngineEmulator.cpp
++++ b/StaticEngine/TitanEngineEmulator.cpp
+@@ -176,6 +176,18 @@ __declspec(dllexport) bool TITCALL GetAVX512Context(HANDLE hActiveThread, TITAN_
+     return false;
+ }
+ 
++// x64dbg imports these; MSVC builds delay-load TitanEngine.dll and never
++// resolve them, MinGW builds need every import at load time
++__declspec(dllexport) bool TITCALL GetAVXContext(HANDLE hActiveThread, TITAN_ENGINE_CONTEXT_t* titcontext)
++{
++    return false;
++}
++
++__declspec(dllexport) bool TITCALL SetAVXContext(HANDLE hActiveThread, TITAN_ENGINE_CONTEXT_t* titcontext)
++{
++    return false;
++}
++
+ __declspec(dllexport) bool TITCALL SetAVX512Context(HANDLE hActiveThread, TITAN_ENGINE_CONTEXT_AVX512_t* titcontext)
+ {
+     return false;
+diff --git a/StaticEngine/ntdll.h b/StaticEngine/ntdll.h
+index 00ea14c..c5e4740 100644
+--- a/StaticEngine/ntdll.h
++++ b/StaticEngine/ntdll.h
+@@ -2,11 +2,14 @@
+ 
+ #include <windows.h>
+ 
++// MSVC only: MinGW links the toolchain's ntdll (CMakeLists.txt)
++#ifdef _MSC_VER
+ #ifndef _WIN64
+ #pragma comment(lib, "ntdll_x86.lib")
+ #else
+ #pragma comment(lib, "ntdll_x64.lib")
+ #endif
++#endif // _MSC_VER
+ 
+ #define STATUS_INFO_LENGTH_MISMATCH ((NTSTATUS)0xC0000004L)
+ 
+@@ -265,9 +268,9 @@ typedef struct _THREAD_BASIC_INFORMATION
+ typedef
+ VOID
+ (*PPS_APC_ROUTINE)(
+-    __in_opt PVOID ApcArgument1,
+-    __in_opt PVOID ApcArgument2,
+-    __in_opt PVOID ApcArgument3
++    _In_opt_ PVOID ApcArgument1,
++    _In_opt_ PVOID ApcArgument2,
++    _In_opt_ PVOID ApcArgument3
+ );
+ 
+ typedef enum _PROCESSINFOCLASS
+@@ -446,121 +449,121 @@ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtSetInformationProcess(
+-    __in HANDLE ProcessHandle,
+-    __in PROCESSINFOCLASS ProcessInformationClass,
+-    __in_bcount(ProcessInformationLength) PVOID ProcessInformation,
+-    __in ULONG ProcessInformationLength
++    _In_ HANDLE ProcessHandle,
++    _In_ PROCESSINFOCLASS ProcessInformationClass,
++    _In_reads_bytes_(ProcessInformationLength) PVOID ProcessInformation,
++    _In_ ULONG ProcessInformationLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtQueryInformationProcess(
+-    __in HANDLE ProcessHandle,
+-    __in PROCESSINFOCLASS ProcessInformationClass,
+-    __out_bcount(ProcessInformationLength) PVOID ProcessInformation,
+-    __in ULONG ProcessInformationLength,
+-    __out_opt PULONG ReturnLength
++    _In_ HANDLE ProcessHandle,
++    _In_ PROCESSINFOCLASS ProcessInformationClass,
++    _Out_writes_bytes_(ProcessInformationLength) PVOID ProcessInformation,
++    _In_ ULONG ProcessInformationLength,
++    _Out_opt_ PULONG ReturnLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtQueryObject(
+-    __in HANDLE Handle,
+-    __in OBJECT_INFORMATION_CLASS ObjectInformationClass,
+-    __out_bcount_opt(ObjectInformationLength) PVOID ObjectInformation,
+-    __in ULONG ObjectInformationLength,
+-    __out_opt PULONG ReturnLength
++    _In_ HANDLE Handle,
++    _In_ OBJECT_INFORMATION_CLASS ObjectInformationClass,
++    _Out_writes_bytes_opt_(ObjectInformationLength) PVOID ObjectInformation,
++    _In_ ULONG ObjectInformationLength,
++    _Out_opt_ PULONG ReturnLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtSetSystemInformation(
+-    __in SYSTEM_INFORMATION_CLASS SystemInformationClass,
+-    __in_bcount_opt(SystemInformationLength) PVOID SystemInformation,
+-    __in ULONG SystemInformationLength
++    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
++    _In_reads_bytes_opt_(SystemInformationLength) PVOID SystemInformation,
++    _In_ ULONG SystemInformationLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtQuerySystemInformation(
+-    __in SYSTEM_INFORMATION_CLASS SystemInformationClass,
+-    __out_bcount_opt(SystemInformationLength) PVOID SystemInformation,
+-    __in ULONG SystemInformationLength,
+-    __out_opt PULONG ReturnLength
++    _In_ SYSTEM_INFORMATION_CLASS SystemInformationClass,
++    _Out_writes_bytes_opt_(SystemInformationLength) PVOID SystemInformation,
++    _In_ ULONG SystemInformationLength,
++    _Out_opt_ PULONG ReturnLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtSetInformationThread(
+-    __in HANDLE ThreadHandle,
+-    __in THREADINFOCLASS ThreadInformationClass,
+-    __in_bcount(ThreadInformationLength) PVOID ThreadInformation,
+-    __in ULONG ThreadInformationLength
++    _In_ HANDLE ThreadHandle,
++    _In_ THREADINFOCLASS ThreadInformationClass,
++    _In_reads_bytes_(ThreadInformationLength) PVOID ThreadInformation,
++    _In_ ULONG ThreadInformationLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtQueryInformationThread(
+-    __in HANDLE ThreadHandle,
+-    __in THREADINFOCLASS ThreadInformationClass,
+-    __out_bcount(ThreadInformationLength) PVOID ThreadInformation,
+-    __in ULONG ThreadInformationLength,
+-    __out_opt PULONG ReturnLength
++    _In_ HANDLE ThreadHandle,
++    _In_ THREADINFOCLASS ThreadInformationClass,
++    _Out_writes_bytes_(ThreadInformationLength) PVOID ThreadInformation,
++    _In_ ULONG ThreadInformationLength,
++    _Out_opt_ PULONG ReturnLength
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtUnmapViewOfSection(
+-    __in HANDLE ProcessHandle,
+-    __in PVOID BaseAddress
++    _In_ HANDLE ProcessHandle,
++    _In_ PVOID BaseAddress
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtSuspendThread(
+-    __in HANDLE ThreadHandle,
+-    __out_opt PULONG PreviousSuspendCount
++    _In_ HANDLE ThreadHandle,
++    _Out_opt_ PULONG PreviousSuspendCount
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtResumeThread(
+-    __in HANDLE ThreadHandle,
+-    __out_opt PULONG PreviousSuspendCount
++    _In_ HANDLE ThreadHandle,
++    _Out_opt_ PULONG PreviousSuspendCount
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtSuspendProcess(
+-    __in HANDLE ProcessHandle
++    _In_ HANDLE ProcessHandle
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtResumeProcess(
+-    __in HANDLE ProcessHandle
++    _In_ HANDLE ProcessHandle
+ );
+ 
+ NTSYSCALLAPI
+ NTSTATUS
+ NTAPI
+ NtQueueApcThread(
+-    __in HANDLE ThreadHandle,
+-    __in PPS_APC_ROUTINE ApcRoutine,
+-    __in_opt PVOID ApcArgument1,
+-    __in_opt PVOID ApcArgument2,
+-    __in_opt PVOID ApcArgument3
++    _In_ HANDLE ThreadHandle,
++    _In_ PPS_APC_ROUTINE ApcRoutine,
++    _In_opt_ PVOID ApcArgument1,
++    _In_opt_ PVOID ApcArgument2,
++    _In_opt_ PVOID ApcArgument3
+ );
+ 
+ NTSYSCALLAPI
+diff --git a/TitanEngineEmulator/Hider.h b/TitanEngineEmulator/Hider.h
+index 7e107ef..fa37883 100644
+--- a/TitanEngineEmulator/Hider.h
++++ b/TitanEngineEmulator/Hider.h
+@@ -3,11 +3,14 @@
+ #include "ntdll.h"
+ #include "PEB.h"
+ 
++// MSVC only: MinGW links the toolchain's ntdll (CMakeLists.txt)
++#ifdef _MSC_VER
+ #ifdef _WIN64
+ #pragma comment(lib, "ntdll_x64.lib")
+ #else
+ #pragma comment(lib, "ntdll_x86.lib")
+ #endif
++#endif // _MSC_VER
+ 
+ //Quote from The Ultimate Anti-Debugging Reference by Peter Ferrie
+ //Flags field exists at offset 0x0C in the heap on the 32-bit versions of Windows NT, Windows 2000, and Windows XP; and at offset 0x40 on the 32-bit versions of Windows Vista and later.
+@@ -126,7 +129,7 @@ static bool PebPatchHeapFlags(PEB_CURRENT* peb, HANDLE hProcess)
+     if(ReadProcessMemory(hProcess, (PVOID)peb->ProcessHeaps, (PVOID)heaps.data(), heaps.size() * sizeof(PVOID), nullptr) == FALSE)
+         return false;
+ 
+-    std::basic_string<uint8_t> heap;
++    std::vector<uint8_t> heap; // libc++ has no char_traits<uint8_t>
+     heap.resize(0x100); // hacky
+     for(DWORD i = 0; i < peb->NumberOfHeaps; i++)
+     {
+diff --git a/TitanEngineEmulator/TitanEngine.h b/TitanEngineEmulator/TitanEngine.h
+index d5dcebb..9a5e674 100644
+--- a/TitanEngineEmulator/TitanEngine.h
++++ b/TitanEngineEmulator/TitanEngine.h
+@@ -665,6 +665,11 @@ typedef struct
+     BYTE RegisterArea[80];
+     x87FPU_t x87fpu;
+     DWORD MxCsr;
++#if defined(__GNUC__) && !defined(_MSC_VER)
++    // MSVC aligns the __declspec(align(16)) XMM registers despite
++    // pack(1); GCC and Clang do not, so pad to the same layout
++    BYTE AlignXmmRegisters[6];
++#endif
+ #ifdef _WIN64
+     XmmRegister_t XmmRegisters[16];
+     YmmRegister_t YmmRegisters[16];

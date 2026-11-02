@@ -1,0 +1,68 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-pkcs604
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.0.4
+pkgrel=1
+pkgdesc='Original Pkcs 6.0.4 NET6 Windows and portable source bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference6-core-bootstrap=6.0.19"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sdk10-asn1-bootstrap=10.0.2.25612.105"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('pkcs604-snapshot-e37fab9f.tar.gz'
+        'arcade-runtime6-3d9c9a4d.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/3d9c9a4d3d893e903bb3295fd5b55b8e40699888'
+        'pkcs604-source-1.tar.gz')
+noextract=('pkcs604-snapshot-e37fab9f.tar.gz' 'arcade-runtime6-3d9c9a4d.tar.gz')
+sha256sums=('b7966d5ca8035410adc673fa1f359ed973de0b70714d7db68e8172d06afc988f'
+            '43a351571629a4f2b54cbe07308fa109b20b7c7511991bba0aefadcf5cb39f7d'
+            '53bc8d56729e9e692d58a41abaf8956a603d4490d44ed28426fa97ceb66fa322')
+_py() {
+  local script=$1 log=$2
+  shift 2
+  local path args=()
+  for path in "$@"; do args+=("$(cygpath -am "$path")"); done
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/pkcs604-workflow/$script")" "${args[@]}" > "$srcdir/$log" 2>&1
+}
+prepare() {
+  _py prepare.py prepare.log "$srcdir/pkcs604-snapshot-e37fab9f.tar.gz" "$srcdir/plan"
+  _py evaluate.py evaluate.log "$srcdir/plan"
+}
+build() {
+  _py build.py build.log "$srcdir/plan" "$srcdir/arcade-runtime6-3d9c9a4d.tar.gz" "$MINGW_PREFIX/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap" "$srcdir/build"
+}
+check() {
+  local refs="$MINGW_PREFIX/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap"
+  _py check.py check.log "$srcdir/plan" "$srcdir/build" "$refs" "$srcdir/check"
+  _py check-api.py api.log "$srcdir/plan" "$srcdir/build" "$refs" "$srcdir/api"
+  _py audit.py source-audit.log "$srcdir/pkcs604-snapshot-e37fab9f.tar.gz" "$srcdir/plan" "$srcdir/build" "$refs" "$srcdir/source-audit.json"
+  _py stage.py stage.log "$srcdir" "$srcdir/package-prefix"
+  # Restore needs the complete installed source feed plus this exact candidate.
+  mkdir -p "$srcdir/package-prefix/lib/dotnet/library-packs"
+  for archive in "$MINGW_PREFIX"/lib/dotnet/library-packs/*.nupkg; do
+    [[ -e "$srcdir/package-prefix/lib/dotnet/library-packs/${archive##*/}" ]] || cp "$archive" "$srcdir/package-prefix/lib/dotnet/library-packs/"
+  done
+  _py check-installed.py staged-check.log "$srcdir/package-prefix" "$srcdir/staged-check"
+  /usr/bin/python3 - "$srcdir/package-prefix" <<'PY'
+from pathlib import Path
+import json, sys
+prefix = Path(sys.argv[1])
+owned = json.loads((prefix / 'share/doc/dotnet-pkcs604/payload-sha256.json').read_text())
+for p in (prefix / 'lib/dotnet/library-packs').glob('*.nupkg'):
+    if p.relative_to(prefix).as_posix() not in owned:
+        p.unlink()
+PY
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

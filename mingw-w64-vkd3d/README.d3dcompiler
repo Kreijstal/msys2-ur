@@ -1,0 +1,62 @@
+d3dcompiler_47.dll built from vkd3d
+===================================
+
+This d3dcompiler_47.dll is an open-source stand-in for Microsoft's HLSL
+compiler DLL. It is libvkd3d-utils (the D3DCompile/D3DReflect family) and
+libvkd3d-shader (the HLSL compiler) linked statically into one DLL with the
+same export names as Windows' d3dcompiler_47.dll. It depends only on the C
+runtime and kernel32, so it can be copied next to any program.
+
+It is installed outside bin/ on purpose, so that it does not replace the
+system DLL for every program on PATH:
+
+    $MINGW_PREFIX/lib/vkd3d-d3dcompiler/d3dcompiler_47.dll
+
+To use it for one program, copy it into that program's directory (Windows
+loads DLLs from the executable's directory before System32):
+
+    cp $MINGW_PREFIX/lib/vkd3d-d3dcompiler/d3dcompiler_47.dll /path/to/app/
+
+For .NET tools (e.g. MonoGame's mgfxc via SharpDX.D3DCompiler) put it next
+to the tool's .dll/.exe; for a tool started through `dotnet tool.dll` that is
+the directory of tool.dll.
+
+What works
+----------
+- D3DCompile / D3DCompile2 / D3DCompileFromFile for vs/ps 1.x-3.0 (D3D9
+  bytecode with a CTAB constant table), SM4/SM5 including the
+  *_4_0_level_9_x profiles (DXBC), and fx_2_0 / fx_4_x / fx_5_0 effects.
+- D3DPreprocess, D3DDisassemble, D3DStripShader, D3DGetBlobPart and the
+  signature-blob helpers, D3DCreateBlob, D3DReadFileToBlob,
+  D3DWriteBlobToFile.
+- D3DReflect with ID3D11ShaderReflection (and ID3D12ShaderReflection) for
+  DXBC shaders: constant buffers, variables, types, default values, bound
+  resources, signatures.
+
+Not implemented (return E_NOTIMPL): D3DAssemble, D3DCompressShaders,
+D3DDecompressShaders, D3DCreateLinker, D3DCreateFunctionLinkingGraph,
+D3DLoadModule, D3DReflectLibrary, D3DSetBlobPart, D3DDisassembleRegion,
+D3DDisassemble10Effect, D3DDisassemble11Trace,
+D3DGetTraceInstructionOffsets. D3DCOMPILE_* optimisation and debug flags
+are accepted and ignored; vkd3d always emits its own code.
+
+The output is not byte-identical to Microsoft's compiler (different
+instruction selection and register allocation), but register and constant
+buffer layout follow the HLSL packing rules, so reflection data match.
+
+Known limitations (vkd3d 2.1 + the patches in this package):
+- fx_2_0 effects: parameters and technique/pass structure only; sampler
+  state blocks, render-state assignments and "compile vs_2_0 f()" in a
+  pass fail with "not yet implemented".
+- vkd3d's shader model 2 register allocation is less tight than fxc's:
+  long vertex shaders can exceed vs_2_0's 12 temporaries (MonoGame's
+  SkinnedEffect needs vs_3_0), and if/return flattening may read
+  uninitialised temporaries, which strict validators such as MojoShader
+  reject.
+- Output is checked against Windows' d3dcompiler_47 on MonoGame's stock
+  and test effects: SM4 (*_4_0_level_9_1) constant buffers, variables,
+  types, defaults and resource bindings match; SM2 CTAB constants
+  (names, register sets, indices, counts, types) match.
+
+Diagnostics: vkd3d prints "fixme:" lines to stderr for ignored flags. Set
+VKD3D_SHADER_DEBUG=none and VKD3D_DEBUG=none to silence them.

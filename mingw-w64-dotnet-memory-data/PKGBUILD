@@ -1,0 +1,69 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-memory-data
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.0.2
+pkgrel=1
+_commit=7e3cf643977591e9041f4c628fd4d28237398e0b
+pkgdesc='Complete original BinaryData source library for the Azure/PowerShell graph'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Azure/azure-sdk-for-net'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+options=('!strip' '!lto')
+source=("azure-sdk-$_commit.tar.gz::https://codeload.github.com/Azure/azure-sdk-for-net/tar.gz/$_commit"
+ extract.py
+ prepare.py
+ verify-build.py
+ pack.py
+ Check.cs
+ check.sh
+ check-payload.py
+ compare.py
+ InspectApi.cs
+ InspectAssemblyMetadata.cs
+ git-tree-provenance.json
+ published-identity.json
+ published-api.json
+ published-metadata.json
+ README.md
+)
+noextract=("azure-sdk-$_commit.tar.gz")
+sha256sums=('a6cb4b058f24a49b8c62594723d171f8b782026fce5d7d0274c0282472189317'
+ 'dcfd0277c2f291b7cbb28a5508ad69eb4edaab2d4bbe69de7905ca1e7f0ad270'
+ '12129283922efa990ba29bdbc3330e8fd57761ca6ce070ab9ae456e52dff41b0'
+ '5fe0884cf0ba8ebd32777b19be7636b993a5b48a8afc5c3873f60530946f2697'
+ '59d3c45674332bb1adb4de296a846fd186533a29e2e5a16c4e0079871dc2387e'
+ '8ba4e9ac5538c3e9955563d100806def2ed8d3e98cd9c7e4f758ca16c1da80f4'
+ 'e2a994e410166553a58ac8ca2c968df9ca69747a2a542b6da55c9c66ce714b35'
+ '479684014969a5d18bb306f01ebfc37a6db96511bd9afcc396647defc9866a35'
+ '98a27979c475e8274bbc1cd1537449e099eed461a7fe431dd5b1eb4cdfd093ee'
+ '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+ 'de8b3f122834b495ac439d5d27c78a9eeaa7dd56fb6637b58f5596b54517f4ce'
+ '707200fd0b8a72a25e308a3e1c2864bcbfc65add869ed8b75268c1e07b850762'
+ 'e21313398565c439ffd5c45b9e71de16c6bed5c1e47c140a00c33b2366540c74'
+ '93929b999cd46e1e6217259d8c66d63c1bbf2622aa1c24bd35ad69207ce1ff40'
+ '6fb553dac790ad57ccd9cdabef333a07a7a95dbfe28c1dfe845af566f2af0f36'
+ 'bff4f9cc9ce3405521c379ba09a79ebf2e864100922c1c064a942df6867a6f58'
+)
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/azure-sdk-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
+}
+build() {
+ export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+ /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Library.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -v:minimal
+ /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+ install -Dm644 "$srcdir/feed/System.Memory.Data.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/System.Memory.Data.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+ install -m644 "$srcdir/prepared/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

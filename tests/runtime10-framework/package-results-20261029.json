@@ -1,0 +1,79 @@
+{
+  "finished_at_utc": "2026-10-29T01:24:27.763499+00:00",
+  "host": "win11",
+  "package": "mingw-w64-clang-x86_64-dotnet-runtime10-bootstrap-10.0.5-1-any.pkg.tar.zst",
+  "package_sha256": "7875ea98fa6b13442e7f372f00f0e83771336d5f8b69aeb760c6cae557e74c79",
+  "regular_payload_files": 209,
+  "formal_pacman_installed": true,
+  "clean_build_exit_code": 0,
+  "archive_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "pacman_altered_files": 0,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "original_7_4_dependency_count_increment": 0,
+  "evidence": {
+    "local_directory": "/tmp/runtime10-package1",
+    "files": 3434,
+    "archive_sha256": "460ec0f15fe3f65d282938bc9caa19985dc96b6d707d33c9b375cc22671b013b",
+    "all_member_hashes_verified": true,
+    "actual_package_hash_verified": true,
+    "recipe_and_srcinfo_match": true
+  },
+  "recipe": "mingw-w64-dotnet-runtime10-bootstrap",
+  "build_root": "/e/codex-dotnet10/runtime10pkg1.qfZBvw",
+  "source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+  "source_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+  "completed_projects": 190,
+  "shipping_implementation_outputs": 171,
+  "private_seed_outputs": 19,
+  "managed_framework_assemblies": 172,
+  "native_framework_dlls": 7,
+  "private_seed_assemblies_shipped": 0,
+  "original_runtime_archive_inputs_verified": 6161,
+  "generated_input_hashes_verified": 495,
+  "actual_reference_hashes_verified": 123,
+  "original_linked_policy_libraries": 109,
+  "linked_public_api_entries_preserved": 41273,
+  "all_original_embedded_resources_and_pdbs_preserved": true,
+  "three_real_coreclr_cases_passed": true,
+  "three_real_hosted_cases_passed": true,
+  "installed_payload_files_verified": 208,
+  "pacman_entries": 227,
+  "installed_directory": "/clang64/lib/dotnet10",
+  "formal_runtime10_package_built": true,
+  "installed_runtime10_package_verified": true,
+  "strict_contract_compare_exit_code": 1,
+  "missing_contract_entries": 0,
+  "extra_contract_entries": 2096,
+  "changed_contract_entries": 248,
+  "strict_reference_api_shape_parity_verified": false,
+  "full_runtime_compatibility_verified": false,
+  "original_managed_production_source_changes": 0,
+  "source_workflow_files": 29,
+  "source_workflow_sha256": "75ad674d3be2cc645c850fb688228a009a90f3dbcdc49d9201ea6ec6726b2c33",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-package.py \"$PWD\"",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./*-10.0.5-1-any.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-runtime10-bootstrap",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 /clang64/share/doc/dotnet-runtime10-bootstrap/checks/check-installed.py /clang64 \"$PWD/installed-check\"",
+      "exit_code": 0
+    }
+  ]
+}

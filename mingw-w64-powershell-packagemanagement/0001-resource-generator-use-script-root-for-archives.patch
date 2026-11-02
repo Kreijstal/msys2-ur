@@ -1,0 +1,13 @@
+--- a/New-StronglyTypedCsFileForResx.ps1
++++ b/New-StronglyTypedCsFileForResx.ps1
+@@ -154,8 +154,8 @@
+     return $resultCode -replace "`r`n?|`n","`r`n"
+ }
+ 
+-$projectRoot = Split-Path $MyInvocation.InvocationName
+-$topLevel = git rev-parse --show-toplevel
++$projectRoot = $PSScriptRoot
++$topLevel = Split-Path $projectRoot
+ $topLevel = $toplevel.Replace('/', '\')
+ $expectedRoot = Join-Path $topLevel 'src'
+ $actualRoot = Resolve-Path $projectRoot

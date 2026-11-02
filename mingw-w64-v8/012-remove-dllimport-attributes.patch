@@ -1,0 +1,98 @@
+--- a/src/compiler/wasm-call-descriptors.h
++++ b/src/compiler/wasm-call-descriptors.h
+@@ -36,7 +36,7 @@
+   V8_EXPORT_PRIVATE compiler::CallDescriptor* GetLoweredCallDescriptor(
+       const compiler::CallDescriptor* original);
+ #else
+-  V8_EXPORT_PRIVATE compiler::CallDescriptor* GetLoweredCallDescriptor(
++  compiler::CallDescriptor* GetLoweredCallDescriptor(
+       const compiler::CallDescriptor* original) {
+     UNREACHABLE();
+   }
+--- a/src/execution/interrupts-scope.h
++++ b/src/execution/interrupts-scope.h
+@@ -19,7 +19,7 @@
+  public:
+   enum Mode : uint8_t { kPostponeInterrupts, kRunInterrupts, kNoop };
+ 
+-  V8_EXPORT_PRIVATE InterruptsScope(Isolate* isolate, uint32_t intercept_mask,
++  InterruptsScope(Isolate* isolate, uint32_t intercept_mask,
+                                     Mode mode)
+       : stack_guard_(nullptr),
+         intercept_mask_(intercept_mask),
+--- a/src/heap/conservative-stack-visitor.h
++++ b/src/heap/conservative-stack-visitor.h
+@@ -33,7 +33,7 @@
+ // 5) OnlyScanMainV8Heap() - returns true if the visitor does not handle the
+ // external code and trusted spaces.
+ template <typename ConcreteVisitor>
+-class V8_EXPORT_PRIVATE ConservativeStackVisitorBase
++class ConservativeStackVisitorBase
+     : public ::heap::base::StackVisitor {
+  public:
+   ConservativeStackVisitorBase(Isolate* isolate, RootVisitor* root_visitor);
+--- a/src/logging/runtime-call-stats.h
++++ b/src/logging/runtime-call-stats.h
+@@ -819,7 +819,7 @@
+ class RuntimeCallStats {
+  public:
+   enum ThreadType { kMainIsolateThread, kWorkerThread };
+-  explicit V8_EXPORT_PRIVATE RuntimeCallStats(ThreadType thread_type) {}
++  explicit RuntimeCallStats(ThreadType thread_type) {}
+ };
+ 
+ class WorkerThreadRuntimeCallStatsScope {
+--- a/src/objects/js-objects.h
++++ b/src/objects/js-objects.h
+@@ -745,7 +745,7 @@
+       PropertyNormalizationMode mode, int expected_additional_properties,
+       bool use_cache, const char* reason);
+ 
+-  V8_EXPORT_PRIVATE static void NormalizeProperties(
++  static void NormalizeProperties(
+       Isolate* isolate, DirectHandle<JSObject> object,
+       PropertyNormalizationMode mode, int expected_additional_properties,
+       const char* reason) {
+--- a/src/objects/map.h
++++ b/src/objects/map.h
+@@ -601,7 +601,7 @@
+       Isolate* isolate, DirectHandle<Map> map, ElementsKind new_elements_kind,
+       DirectHandle<JSPrototype> new_prototype, PropertyNormalizationMode mode,
+       bool use_cache, const char* reason);
+-  V8_EXPORT_PRIVATE static Handle<Map> Normalize(
++  static Handle<Map> Normalize(
+       Isolate* isolate, DirectHandle<Map> map, ElementsKind new_elements_kind,
+       DirectHandle<JSPrototype> new_prototype, PropertyNormalizationMode mode,
+       const char* reason) {
+--- a/src/objects/string-inl.h
++++ b/src/objects/string-inl.h
+@@ -851,7 +851,7 @@
+ // static
+ template <template <typename> typename HandleType>
+   requires(std::is_convertible_v<HandleType<String>, DirectHandle<String>>)
+-V8_EXPORT_PRIVATE HandleType<String> String::SlowFlatten(
++HandleType<String> String::SlowFlatten(
+     Isolate* isolate, HandleType<ConsString> cons, AllocationType allocation) {
+   DCHECK(!cons->IsFlat());
+   DCHECK_NE(cons->second()->length(), 0);  // Equivalent to !IsFlat.
+--- a/src/utils/address-map.h
++++ b/src/utils/address-map.h
+@@ -61,7 +61,7 @@
+   RootIndexMap& operator=(const RootIndexMap&) = delete;
+ 
+   // Returns true on successful lookup and sets *|out_root_list|.
+-  V8_EXPORT_PRIVATE bool Lookup(Tagged<HeapObject> obj,
++  bool Lookup(Tagged<HeapObject> obj,
+                                 RootIndex* out_root_list) const {
+     Maybe<uint32_t> maybe_index = map_->Get(obj);
+     if (maybe_index.IsJust()) {
+--- a/include/cppgc/default-platform.h
++++ b/include/cppgc/default-platform.h
+@@ -18,6 +18,6 @@
+  * libplatform internally. Exception: `GetForegroundTaskRunner()`, see below.
+  */
+-class V8_EXPORT DefaultPlatform : public Platform {
++class DefaultPlatform : public Platform {
+  public:
+   using IdleTaskSupport = v8::platform::IdleTaskSupport;
+   explicit DefaultPlatform(

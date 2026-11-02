@@ -1,0 +1,342 @@
+diff --git a/src/Register.h b/src/Register.h
+index 490e1ff..d062803 100644
+--- a/src/Register.h
++++ b/src/Register.h
+@@ -2,17 +2,9 @@
+ 
+ extern "C"
+ {
+-#include "..\xed2\include\xed-interface.h"
++#include <xed/xed-interface.h>
+ }
+ 
+-struct RegEntry
+-{
+-    const char*     Name;
+-    enum REG        RegId;
+-    xed_reg_enum_t  XedId;
+-    REGSIZE         Size;
+-};
+-
+ // BEGIN AUTO PARSING
+ // Have the compiler parse each enumeration index
+ #define DEF_REGISTER(Name, Type, XedType, Size) Type,
+@@ -22,6 +14,15 @@ enum REG
+ };
+ #undef DEF_REGISTER
+ 
++struct RegEntry
++{
++    const char*     Name;
++    enum REG        RegId;
++    xed_reg_enum_t  XedId;
++    REGSIZE         Size;
++};
++
++
+ // Have the compiler add each register into the array
+ #define DEF_REGISTER(Name, Type, XedType, Size) {Name, Type, XedType, Size},
+ static RegEntry RegisterIds[] =
+diff --git a/src/Translator.cpp b/src/Translator.cpp
+index 85a8963..7713574 100644
+--- a/src/Translator.cpp
++++ b/src/Translator.cpp
+@@ -34,7 +34,7 @@ xed_encoder_operand_t OperandToXed(InstOperand* Operand)
+         // See xed_mem_bisd @ xed-encoder-hl.h
+         o.type      = XED_ENCODER_OPERAND_TYPE_MEM;
+         o.u.mem.seg = RegToXed(Operand->Segment);
+-        o.width     = bitsize;
++        o.width_bits = bitsize;
+ 
+         if(Operand->Mem.Base)
+             o.u.mem.base = RegToXed(Operand->Mem.BaseVal);
+@@ -48,7 +48,7 @@ xed_encoder_operand_t OperandToXed(InstOperand* Operand)
+         if(Operand->Mem.Disp)
+         {
+             o.u.mem.disp.displacement       = Operand->Mem.DispVal;
+-            o.u.mem.disp.displacement_width = OpsizeToBits(Operand->Mem.DispWidth);
++            o.u.mem.disp.displacement_bits = OpsizeToBits(Operand->Mem.DispWidth);
+         }
+ 
+         return o;
+@@ -61,7 +61,9 @@ xed_encoder_operand_t OperandToXed(InstOperand* Operand)
+     return o;
+ }
+ 
+-void InstructionToXed(Inst* Instruction, xed_state_t Mode, xed_encoder_instruction_t* XedInst, unsigned int EffectiveWidth)
++// Returns true when the encoding has to carry REPNE (F2) where XED only has a
++// REP_ iclass (REPNE MOVSB and other non-comparing string instructions)
++bool InstructionToXed(Inst* Instruction, xed_state_t Mode, xed_encoder_instruction_t* XedInst, unsigned int EffectiveWidth)
+ {
+     // Convert the operands to XED's form first
+     xed_encoder_operand_t ops[4];
+@@ -69,26 +71,55 @@ void InstructionToXed(Inst* Instruction, xed_state_t Mode, xed_encoder_instructi
+     for(int i = 0; i < Instruction->OperandCount; i++)
+         ops[i] = OperandToXed(&Instruction->Operands[i]);
+ 
++    // Open-source XED has no lock prefix modifier: locked forms are
++    // separate iclasses (ADD -> ADD_LOCK)
++    // and so are the repeated string instructions (MOVSB -> REP_MOVSB)
++    xed_iclass_enum_t iclass = Instruction->Class;
++    bool prefixInIclass = false;
++    if(Instruction->Prefix != PREFIX_NONE)
++    {
++        static const char* const lockFmt[] = { "%s_LOCK", nullptr };
++        static const char* const repFmt[] = { "REP_%s", "REPE_%s", nullptr };
++        static const char* const repneFmt[] = { "REPNE_%s", "REP_%s", nullptr };
++        const char* const* fmts = Instruction->Prefix == PREFIX_LOCK ? lockFmt :
++                                  Instruction->Prefix == PREFIX_REP ? repFmt : repneFmt;
++        for(; *fmts && !prefixInIclass; fmts++)
++        {
++            char name[128];
++            snprintf(name, sizeof(name), *fmts, xed_iclass_enum_t2str(iclass));
++            xed_iclass_enum_t prefixed = str2xed_iclass_enum_t(name);
++            if(prefixed != XED_ICLASS_INVALID)
++            {
++                iclass = prefixed;
++                prefixInIclass = true;
++            }
++        }
++    }
++
+     // Create the instruction
+-    xed_inst(XedInst, Mode, Instruction->Class, EffectiveWidth, Instruction->OperandCount, ops);
++    xed_inst(XedInst, Mode, iclass, EffectiveWidth, Instruction->OperandCount, ops);
+ 
+     // Apply prefixes
+     switch(Instruction->Prefix)
+     {
+     case PREFIX_LOCK:
+-        xed_lock(XedInst);
+         break;
+     case PREFIX_REP:
+-        xed_rep(XedInst);
++        if(!prefixInIclass)
++            xed_rep(XedInst);
+         break;
+     case PREFIX_REPNEZ:
+-        xed_repne(XedInst);
++        if(!prefixInIclass)
++            xed_repne(XedInst);
+         break;
+     }
+ 
+     // Apply address size override if necessary
+     if(Instruction->AddressSizeOverride)
+         xed_addr(XedInst, Instruction->AddressSizeOverride);
++
++    return prefixInIclass && Instruction->Prefix == PREFIX_REPNEZ &&
++           strncmp(xed_iclass_enum_t2str(iclass), "REP_", 4) == 0;
+ }
+ 
+ bool TryEncode(XEDPARSE* Parse, xed_state_t State, Inst* Instruction, unsigned int Bits)
+@@ -98,7 +129,7 @@ bool TryEncode(XEDPARSE* Parse, xed_state_t State, Inst* Instruction, unsigned i
+     memset(&xedInst, 0, sizeof(xed_encoder_instruction_t));
+ 
+     // XEDParse instruction -> Xed instruction
+-    InstructionToXed(Instruction, State, &xedInst, Bits);
++    bool repneAsRep = InstructionToXed(Instruction, State, &xedInst, Bits);
+ 
+     // Conversion request -> encoder request
+     xed_encoder_request_t encReq;
+@@ -119,6 +150,22 @@ bool TryEncode(XEDPARSE* Parse, xed_state_t State, Inst* Instruction, unsigned i
+         return false;
+     }
+ 
++    if(repneAsRep)
++    {
++        // Turn the REP prefix XED emitted into REPNE
++        for(unsigned int i = 0; i < Parse->dest_size; i++)
++        {
++            unsigned char b = Parse->dest[i];
++            if(b == 0xF3)
++            {
++                Parse->dest[i] = 0xF2;
++                break;
++            }
++            if(b != 0x66 && b != 0x67 && b != 0x26 && b != 0x2E && b != 0x36 && b != 0x3E && b != 0x64 && b != 0x65)
++                break;
++        }
++    }
++
+     return true;
+ }
+ 
+diff --git a/src/Translator.h b/src/Translator.h
+index f70bffc..f4f3f82 100644
+--- a/src/Translator.h
++++ b/src/Translator.h
+@@ -6,7 +6,7 @@
+ 
+ LONGLONG TranslateRelativeCip(XEDPARSE* Parse, ULONGLONG Value, bool Signed);
+ xed_encoder_operand_t OperandToXed(InstOperand* Operand);
+-void InstructionToXed(Inst* Instruction, xed_state_t Mode, xed_encoder_instruction_t* XedInst, unsigned int EffectiveWidth);
++bool InstructionToXed(Inst* Instruction, xed_state_t Mode, xed_encoder_instruction_t* XedInst, unsigned int EffectiveWidth);
+ bool TryEncode(XEDPARSE* Parse, xed_state_t State, Inst* Instruction, unsigned int Bits);
+ bool TryRecode(XEDPARSE* Parse, xed_state_t State, Inst* Instruction, unsigned int Bits);
+ bool Translate(XEDPARSE* Parse, xed_state_t State, Inst* Instruction);
+diff --git a/src/Validator.cpp b/src/Validator.cpp
+index a609982..3ac3ab5 100644
+--- a/src/Validator.cpp
++++ b/src/Validator.cpp
+@@ -386,7 +386,7 @@ void ValidateFpuOperands(XEDPARSE* Parse, Inst* Instruction)
+             continue;
+ 
+         // String compare for _ST0
+-        const char* iformStr = xed_iform_enum_t2str(inst->_iform_enum);
++        const char* iformStr = xed_iform_enum_t2str(xed_inst_iform_enum(inst));
+         size_t iformLen = strlen(iformStr);
+ 
+         if(!strstr(iformStr, "_ST0"))
+@@ -403,6 +403,74 @@ void ValidateFpuOperands(XEDPARSE* Parse, Inst* Instruction)
+     }
+ }
+ 
++// The x87 / two-operand code below sizes operands 0 and 1 only. Open-source
++// XED, unlike the XED2 kit, does not widen an immediate that does not match
++// any form (IMUL EAX, EAX, 0x1FF failed; 0xFF picked imm8 = -1), so a third
++// immediate operand gets the smallest form width that holds its value: a
++// narrower immediate must sign-extend to the same value at the operand size.
++static bool ImmFits(ULONGLONG Value, int Bits, int OperandBits, bool Widest)
++{
++    if(OperandBits <= 0 || OperandBits > 64)
++        OperandBits = 64;
++    ULONGLONG mask = OperandBits == 64 ? ~0ULL : ((1ULL << OperandBits) - 1);
++    // The value itself has to fit the operand size (either signedness)
++    if((Value & ~mask) != 0 && (Value | mask) != ~0ULL)
++        return false;
++    if(Bits >= OperandBits)
++        return true;
++    if(Widest && Bits < 64 && (Value >> Bits) == 0)
++        return true;
++    LONGLONG extended = (LONGLONG)(Value << (64 - Bits)) >> (64 - Bits);
++    return ((ULONGLONG)extended & mask) == (Value & mask);
++}
++
++static bool ResizeThirdImmediate(XEDPARSE* Parse, Inst* Instruction)
++{
++    InstOperand* dest = &Instruction->Operands[0];
++    InstOperand* imm = &Instruction->Operands[2];
++    IClassType* type = &XedInstLookupTable[Instruction->Class];
++    int eosz = OpsizeToEosz(dest->Size);
++    int operandBits = OpsizeToBits(dest->Size);
++
++    int widths[8];
++    int widthCount = 0;
++    for(int i = 0; i < type->InstructionCount; i++)
++    {
++        const xed_inst_t* inst = type->Instructions[i];
++        if(xed_inst_noperands(inst) < 3)
++            continue;
++        const xed_operand_t* op = xed_inst_operand(inst, 2);
++        if(!xed_operand_type_is_immediate(xed_operand_type(op)))
++            continue;
++        int size = (int)xed_operand_width_bits(op, eosz ? eosz : EOSZ_64_32(Parse->x64));
++        bool known = false;
++        for(int j = 0; j < widthCount; j++)
++            known |= widths[j] == size;
++        if(!known && size > 0 && widthCount < 8)
++            widths[widthCount++] = size;
++    }
++    if(widthCount == 0)
++        return true; // nothing to choose from; leave it to the encoder
++
++    int widest = 0;
++    for(int j = 0; j < widthCount; j++)
++        widest = max(widest, widths[j]);
++    int best = INT_MAX;
++    for(int j = 0; j < widthCount; j++)
++    {
++        if(widths[j] < best && ImmFits(imm->Imm.imm, widths[j], widthCount > 1 ? operandBits : widths[j], widths[j] == widest))
++            best = widths[j];
++    }
++    if(best == INT_MAX)
++    {
++        strcpy(Parse->error, "Immediate size is too large");
++        return false;
++    }
++    imm->Size = OpsizeFromBits(best);
++    imm->BitSize = best;
++    return true;
++}
++
+ bool ValidateInstOperands(XEDPARSE* Parse, Inst* Instruction)
+ {
+     // Only the first two operands actually matter right now
+@@ -423,6 +491,13 @@ bool ValidateInstOperands(XEDPARSE* Parse, Inst* Instruction)
+     //
+     ValidateFpuOperands(Parse, Instruction);
+ 
++    if(Instruction->OperandCount >= 3 && Instruction->Operands[0].Type == OPERAND_REG &&
++            Instruction->Operands[2].Type == OPERAND_IMM && !IClassIsBranch(Instruction->Class))
++    {
++        if(!ResizeThirdImmediate(Parse, Instruction))
++            return false;
++    }
++
+     //
+     // Instructions with no operands do not apply
+     //
+@@ -563,12 +638,19 @@ void LookupTableInit()
+         const xed_inst_t* inst      = &xed_inst_table_base()[i];
+         xed_iclass_enum_t iclass    = xed_inst_iclass(inst);
+ 
++        // Skip the APX (EVEX-promoted and REX2) forms of open-source XED:
++        // XEDParse has no syntax for them and their extra operands confuse
++        // the operand size heuristics below
++        xed_extension_enum_t ext = xed_inst_extension(inst);
++        if(ext == XED_EXTENSION_APXEVEX || ext == XED_EXTENSION_APXLEGACY)
++            continue;
++
+         // Set the basic information/update the pointers
+         IClassType* type        = &XedInstLookupTable[iclass];
+         type->IClass            = iclass;
+         type->MinimumOperands   = min(xed_inst_noperands(inst), type->MinimumOperands);
+ 
+-        if(type->InstructionCount >= 32)
++        if(type->InstructionCount >= ARRAYSIZE(type->Instructions))
+             __debugbreak(); //This can actually happen when two threads call LookupTableInit with bInitialized = false, mitigated by placing LookupTableInit() in DllMain.
+ 
+         type->Instructions[type->InstructionCount++] = inst;
+diff --git a/src/Validator.h b/src/Validator.h
+index 7c229cb..877a495 100644
+--- a/src/Validator.h
++++ b/src/Validator.h
+@@ -5,7 +5,7 @@
+ struct IClassType
+ {
+     xed_iclass_enum_t   IClass;
+-    const xed_inst_t*   Instructions[32];
++    const xed_inst_t*   Instructions[256]; // open-source XED has more forms per iclass
+     int                 InstructionCount;
+     unsigned int        MinimumOperands;
+ };
+diff --git a/src/XEDParse.cpp b/src/XEDParse.cpp
+index b43016d..0ba3f91 100644
+--- a/src/XEDParse.cpp
++++ b/src/XEDParse.cpp
+@@ -1,5 +1,5 @@
+ #include "XEDParse.h"
+-#include "..\xed2\include\xed-interface.h"
++#include <xed/xed-interface.h>
+ #include "Parser.h"
+ #include "Translator.h"
+ #include "ParseTest.h"
+diff --git a/src/XEDParse.h b/src/XEDParse.h
+index f62539d..4451cce 100644
+--- a/src/XEDParse.h
++++ b/src/XEDParse.h
+@@ -3,6 +3,13 @@
+ 
+ #include <windows.h>
+ 
++#if defined(__cplusplus) && defined(XEDPARSE_BUILD) && !defined(max)
++#include <type_traits>
++// MSVC's windows.h provides min/max macros to C++ code; MinGW's does not.
++template<class A, class B> static inline typename std::common_type<A, B>::type max(A a, B b) { return a > b ? a : b; }
++template<class A, class B> static inline typename std::common_type<A, B>::type min(A a, B b) { return a < b ? a : b; }
++#endif
++
+ //XEDParse defines
+ #ifdef XEDPARSE_STATIC
+ #define XEDPARSE_EXPORT

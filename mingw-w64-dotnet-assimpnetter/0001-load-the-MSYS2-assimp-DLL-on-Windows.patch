@@ -1,0 +1,122 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] Load the MSYS2 assimp DLL on Windows
+
+The MSYS2 package does not ship AssimpNetter's prebuilt runtimes/*/native
+binaries; it uses mingw-w64 assimp's $MINGW_PREFIX/bin/libassimp-6.dll.
+
+After the upstream probes (user probing paths, runtimes/<rid>/native and the
+application directory with the default assimp.dll name), Windows also tries
+libassimp-6.dll next to the application, then $MINGW_PREFIX/bin derived from
+RuntimeEnvironment.GetRuntimeDirectory() (which is
+$MINGW_PREFIX/lib/dotnet/shared/Microsoft.NETCore.App/<version>/), and finally
+lets the OS search PATH for libassimp-6.dll.
+
+Full paths are loaded with LoadLibraryExW(LOAD_WITH_ALTERED_SEARCH_PATH) so
+the DLL's own dependencies resolve from its directory.
+---
+diff --git a/AssimpNet/Unmanaged/Platforms/UnmanagedWin32LibraryImplementation.cs b/AssimpNet/Unmanaged/Platforms/UnmanagedWin32LibraryImplementation.cs
+index 3c8caaa..16f4044 100644
+--- a/AssimpNet/Unmanaged/Platforms/UnmanagedWin32LibraryImplementation.cs
++++ b/AssimpNet/Unmanaged/Platforms/UnmanagedWin32LibraryImplementation.cs
+@@ -36,7 +36,11 @@ namespace Assimp.Unmanaged
+ 
+         protected override IntPtr NativeLoadLibrary(string path)
+         {
+-            IntPtr libraryHandle = WinNativeLoadLibrary(path);
++            //Load full paths with LOAD_WITH_ALTERED_SEARCH_PATH so the DLL's own dependencies (e.g. MSYS2's libstdc++/zlib next to
++            //libassimp-6.dll) resolve from its directory rather than only from the application directory and PATH.
++            IntPtr libraryHandle = System.IO.Path.IsPathRooted(path)
++                ? WinNativeLoadLibraryEx(path, IntPtr.Zero, LOAD_WITH_ALTERED_SEARCH_PATH)
++                : WinNativeLoadLibrary(path);
+ 
+             if(libraryHandle == IntPtr.Zero && ThrowOnLoadFailure)
+             {
+@@ -88,6 +92,11 @@ namespace Assimp.Unmanaged
+         [DllImport("kernel32.dll", CharSet = CharSet.Ansi, BestFitMapping = false, SetLastError = true, EntryPoint = "LoadLibrary")]
+         private static extern IntPtr WinNativeLoadLibrary(string fileName);
+ 
++        private const uint LOAD_WITH_ALTERED_SEARCH_PATH = 0x00000008;
++
++        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "LoadLibraryExW")]
++        private static extern IntPtr WinNativeLoadLibraryEx(string fileName, IntPtr hFile, uint flags);
++
+         [DllImport("kernel32.dll", SetLastError = true)]
+         private static extern bool FreeLibrary(IntPtr hModule);
+ 
+diff --git a/AssimpNet/Unmanaged/UnmanagedLibraryResolver.cs b/AssimpNet/Unmanaged/UnmanagedLibraryResolver.cs
+index 3a3cf3f..6aced34 100644
+--- a/AssimpNet/Unmanaged/UnmanagedLibraryResolver.cs
++++ b/AssimpNet/Unmanaged/UnmanagedLibraryResolver.cs
+@@ -162,6 +162,7 @@ namespace Assimp.Unmanaged
+         /// <item><description>Search {AppBaseDirectory}/runtimes/{RID}/native/.</description></item>
+         /// <item><description>Search {AppBaseDirectory}/.</description></item>
+         /// <item><description>Search nuget package path, e.g. {UserProfile}/.nuget/packages/{PackageId}/{PackageVersion}/runtimes/{RID}/native/.</description></item>
++        /// <item><description>Windows (MSYS2): search {AppBaseDirectory}/ for libassimp-6.dll, then $MINGW_PREFIX/bin/ derived from the shared runtime directory, then let the OS search PATH for libassimp-6.dll.</description></item>
+         /// </list>
+         /// </para>
+         /// <para>
+@@ -220,16 +221,64 @@ namespace Assimp.Unmanaged
+             if(!string.IsNullOrEmpty(pathInAppFolder))
+                 return pathInAppFolder;
+ 
++            //Check base directory for the MSYS2 DLL name as well (e.g. a copy deployed next to the app)
++            if(m_platform == Platform.Windows)
++            {
++                pathInAppFolder = TryGetExistingFile(AppContext.BaseDirectory, MsysLibName, null);
++                if(!string.IsNullOrEmpty(pathInAppFolder))
++                    return pathInAppFolder;
++            }
++
+             //Check nuget path
+             string nugetRidFolder = GetPackageRuntimeFolder(GetNugetPackagePath(), rid);
+             string pathInNugetCache = TryGetExistingFile(nugetRidFolder, libName, fallbackNames);
+             if(!string.IsNullOrEmpty(pathInNugetCache))
+                 return pathInNugetCache;
+ 
++            //MSYS2: the native library comes from the MINGW_PREFIX assimp package rather than from runtimes/*/native.
++            if(m_platform == Platform.Windows)
++            {
++                string msysBinFolder = GetMsysBinFolder();
++                if(!string.IsNullOrEmpty(msysBinFolder))
++                {
++                    string pathInMsysBin = TryGetExistingFile(msysBinFolder, MsysLibName, null);
++                    if(!string.IsNullOrEmpty(pathInMsysBin))
++                        return pathInMsysBin;
++                }
++
++                //Let the OS search PATH for the MSYS2 DLL name
++                return MsysLibName;
++            }
++
+             //Resolve failed, just return the lib name as we received it and hope the OS can resolve it
+             return libName;
+         }
+ 
++        /// <summary>
++        /// Name of the assimp DLL shipped by the MSYS2 mingw-w64 assimp package ($MINGW_PREFIX/bin).
++        /// </summary>
++        internal const string MsysLibName = "libassimp-6.dll";
++
++        /// <summary>
++        /// Derives $MINGW_PREFIX/bin from the shared runtime location, which is
++        /// $MINGW_PREFIX/lib/dotnet/shared/Microsoft.NETCore.App/{version}/, so it stays correct if the prefix is relocated.
++        /// </summary>
++        private static string GetMsysBinFolder()
++        {
++            try
++            {
++                string runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
++                if(string.IsNullOrEmpty(runtimeDir))
++                    return null;
++
++                return Path.GetFullPath(Path.Combine(runtimeDir, "..", "..", "..", "..", "..", "bin"));
++            }
++            catch(Exception)
++            {
++                return null;
++            }
++        }
++
+         private string GetPackageRuntimeFolder(string packagePath, string rid)
+         {
+             if(string.IsNullOrEmpty(packagePath))

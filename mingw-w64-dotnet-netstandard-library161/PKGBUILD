@@ -1,0 +1,45 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netstandard-library161
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.6.1
+pkgrel=1
+pkgdesc='Original NETStandard.Library1.6.1 dependency-only source metadata port'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT' 'custom:Microsoft.NET.Library')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx11-4d1af962.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/4d1af962ca0fede10beb01d197367c2f90e92c97'
+        'netstandard161-source-1.tar.gz')
+noextract=('corefx11-4d1af962.tar.gz')
+sha256sums=('1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2'
+            '20c2dd278fb8963e692fd583c53cd8bc893e1fcae6a5bbdc9cd410fca1f58b4d')
+_env() {
+  export DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+build() {
+  _env
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/netstandard161-workflow/build.py")" "$(cygpath -am "$srcdir/corefx11-4d1af962.tar.gz")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  _env
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/netstandard161-workflow/check.py")" "$(cygpath -am "$srcdir/prepared/feed")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local licenses="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
+  install -Dm644 "$srcdir/prepared/feed/NETStandard.Library.1.6.1.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/netstandard.library.1.6.1.nupkg"
+  mkdir -p "$doc/inputs" "$licenses"
+  local file
+  for file in check.py README.md;do install -m644 "$srcdir/netstandard161-workflow/$file" "$doc/";done
+  install -m644 "$srcdir/netstandard161-workflow/inputs/"* "$doc/inputs/"
+  install -m644 "$srcdir/prepared/source-inputs.json" "$doc/source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in dotnet_library_license.txt ThirdPartyNotices.txt;do install -m644 "$srcdir/netstandard161-workflow/inputs/$file" "$licenses/";done
+  install -m644 "$srcdir/prepared/source/LICENSE" "$licenses/CoreFX-LICENSE"
+  install -m644 "$srcdir/prepared/source/THIRD-PARTY-NOTICES" "$licenses/CoreFX-THIRD-PARTY-NOTICES"
+}

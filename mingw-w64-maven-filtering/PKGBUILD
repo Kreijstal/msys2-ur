@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-filtering
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.4.0
+pkgrel=1
+pkgdesc="Apache Maven shared component for filtering resources, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/shared/maven-filtering/'
+msys2_repository_url='https://github.com/apache/maven-filtering'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-sonatype-plexus-build-api"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-xml"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-interpolation"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-lang3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-filtering/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('4fc478f0b126d1e33887a95f05f7baaf7b7bc235e8216b2d6bc1461a64cc5c92')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.maven.shared:maven-filtering:${pkgver} src/main/java -u pom.xml -P sisu \
+    -- javax.inject:javax.inject org.slf4j:slf4j-api org.sonatype.plexus:plexus-build-api \
+       org.apache.maven:maven-core/provided org.apache.maven:maven-model/provided \
+       org.apache.maven:maven-settings/provided org.codehaus.plexus:plexus-utils \
+       org.codehaus.plexus:plexus-xml org.codehaus.plexus:plexus-interpolation \
+       commons-io:commons-io org.apache.commons:commons-lang3
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5, Mockito and plexus-testing
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.shared:maven-filtering
+  unzip -p "$(jb_jarpath org.apache.maven.shared:maven-filtering)" META-INF/sisu/javax.inject.Named \
+    | grep -q DefaultMavenResourcesFiltering
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.shared:maven-filtering
+}

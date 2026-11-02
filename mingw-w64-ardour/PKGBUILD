@@ -1,0 +1,297 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=ardour
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=9.8
+pkgrel=1
+pkgdesc="Professional-grade digital audio workstation (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://ardour.org/'
+msys2_repository_url='https://github.com/Ardour/ardour'
+msys2_references=(
+  'archlinux: ardour'
+)
+license=(
+  'spdx:GPL-2.0-or-later'
+  'spdx:GPL-3.0-or-later'
+  'spdx:LGPL-2.0-or-later'
+  'spdx:MIT'
+  'spdx:CC0-1.0'
+)
+groups=("${MINGW_PACKAGE_PREFIX}-pro-audio")
+depends=("${MINGW_PACKAGE_PREFIX}-aubio"
+         "${MINGW_PACKAGE_PREFIX}-cairo"
+         "${MINGW_PACKAGE_PREFIX}-cairomm"
+         "${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-fftw"
+         "${MINGW_PACKAGE_PREFIX}-fluidsynth"
+         "${MINGW_PACKAGE_PREFIX}-fontconfig"
+         "${MINGW_PACKAGE_PREFIX}-gettext-runtime"
+         "${MINGW_PACKAGE_PREFIX}-glib2"
+         "${MINGW_PACKAGE_PREFIX}-glibmm"
+         "${MINGW_PACKAGE_PREFIX}-hicolor-icon-theme"
+         "${MINGW_PACKAGE_PREFIX}-libarchive"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+         "${MINGW_PACKAGE_PREFIX}-liblo"
+         "${MINGW_PACKAGE_PREFIX}-libltc"
+         "${MINGW_PACKAGE_PREFIX}-libpng"
+         "${MINGW_PACKAGE_PREFIX}-libsamplerate"
+         "${MINGW_PACKAGE_PREFIX}-libsigc++"
+         "${MINGW_PACKAGE_PREFIX}-libsndfile"
+         "${MINGW_PACKAGE_PREFIX}-libusb"
+         "${MINGW_PACKAGE_PREFIX}-libwebsockets"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-lilv"
+         "${MINGW_PACKAGE_PREFIX}-lrdf"
+         "${MINGW_PACKAGE_PREFIX}-pango"
+         "${MINGW_PACKAGE_PREFIX}-pangomm"
+         "${MINGW_PACKAGE_PREFIX}-portaudio"
+         "${MINGW_PACKAGE_PREFIX}-rubberband"
+         "${MINGW_PACKAGE_PREFIX}-serd"
+         "${MINGW_PACKAGE_PREFIX}-taglib"
+         "${MINGW_PACKAGE_PREFIX}-termcap"
+         "${MINGW_PACKAGE_PREFIX}-vamp-plugin-sdk")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cppunit"
+             "${MINGW_PACKAGE_PREFIX}-drmingw"
+             "${MINGW_PACKAGE_PREFIX}-flac"
+             "${MINGW_PACKAGE_PREFIX}-gettext-tools"
+             "${MINGW_PACKAGE_PREFIX}-libogg"
+             "${MINGW_PACKAGE_PREFIX}-lv2"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-readline"
+             "${MINGW_PACKAGE_PREFIX}-sord"
+             "${MINGW_PACKAGE_PREFIX}-sratom"
+             "python"
+             "unzip")
+if [[ ${MINGW_PACKAGE_PREFIX} != *-clang-* ]]; then
+  # JACK is loaded at run time (libjack64.dll) and only needed for headers.
+  makedepends+=("${MINGW_PACKAGE_PREFIX}-jack2")
+  optdepends=("${MINGW_PACKAGE_PREFIX}-jack2: JACK audio/MIDI backend")
+fi
+optdepends+=("${MINGW_PACKAGE_PREFIX}-drmingw: crash reports (exchndl.dll is loaded at run time)"
+             "${MINGW_PACKAGE_PREFIX}-portaudio-asio: ASIO devices in the PortAudio backend")
+provides=('ladspa-host'
+          'lv2-host'
+          'vamp-host'
+          'vst-host'
+          'vst3-host')
+source=("https://community.ardour.org/src/Ardour-${pkgver}.0.tar.bz2"
+        "${_realname}-midi-${pkgver}.zip::http://stuff.ardour.org/loops/ArdourBundledMedia.zip"
+        '0001-Link-fftw3f_threads-for-MinGW-builds.patch'
+        '0002-Strip-absolute-source-root-path-from-build-info.patch'
+        '0003-Keep-using-the-bundled-qm-dsp-with-use-external-libs.patch'
+        '0004-mingw-point-GTK_PATH-at-Ardour-s-module-directory.patch'
+        '0005-pbd-test-port-Windows-timer-test-to-get_microseconds.patch'
+        '0006-pbd-test-copy-the-saved-locale-name-in-LocaleGuard.patch'
+        '0007-dummy-backend-link-system-libltc-with-use-external-l.patch'
+        '0008-temporal-test-use-GLib-s-PRNG-in-TimelineTest.patch'
+        '0009-pbd-initialize-RWLock-s-shared_mutex-eagerly-on-MinG.patch'
+        '0010-pbd-test-skip-the-reader-preference-RWLock-test-on-W.patch'
+        '0011-ardour-test-fix-the-MinGW-CPPUNIT_ASSERT_DOUBLES_EQU.patch'
+        '0012-pbd-test-accept-two-digit-float-exponents-on-Windows.patch'
+        '0013-Don-t-crash-when-GLib-knows-no-system-config-dir-on-.patch'
+        '0014-Find-the-bundled-VAMP-plugins-from-headless-tools-on.patch'
+        '0015-Use-mingw-x86-intrinsics-flags-when-building-with-cl.patch'
+        '0016-Add-missing-standard-includes-exposed-by-libc.patch'
+        '0017-Treat-clang-s-mingw-w64-TLS-as-native.patch'
+        '0018-vamp-pyin-keep-boost-math-normal-out-of-std-vector-s.patch'
+        '0019-pbd-don-t-hand-out-StackAllocator-s-in-object-buffer.patch'
+        '0020-pbd-test-don-t-require-a-timed-condition-wait-to-rep.patch'
+        '0021-temporal-test-don-t-abort-an-update-that-was-never-s.patch'
+        'headless-session-test.lua'
+        'check-export.py')
+noextract=("${_realname}-midi-${pkgver}.zip")
+sha256sums=('1f1a0ae658fb3b10e3fa6f9cab952ab6500955594c3773c5e9421f5e42b23d59'
+            'a00de00671cdc329b2ca35c2a5c4150af3d6588147f9dca2e3dea752aa2e234c'
+            '389d48fad1dd0f37cf03d89f9b2b7e53628d8767a4488065103edb0902b061b7'
+            'e9a59e335ad86fe0e37de2578ceea505e87b723620a93279c304e852292792ff'
+            '3a654a11f0f45a36828766d2b8193e0c4c7ab22cd12a57d24696936be9f9d737'
+            'e29e3b23ecac4704eb96308c1a2c38c1a985295d0aba04d84eafe93de7c0483f'
+            '2235d6c42d9db1b6f14b8d2947559af8d8ef7e31c703a5c52f4214a105eb1f50'
+            '32a8baa89265350a170ae8f3ad724e04e0ec3e367e90e24bd5150cf9d4849a00'
+            '31bd54d41d5a6a26559315f3d894be6ebbe4cfefc913a3bca7899a765bb0d7b7'
+            '9fd49efa77b21b5141885026f8b3fb0799afa7e8f179344bbdaf7a4b879b0647'
+            'e2523e40fd628539c4ad92afdc0f20ee2f6c87b859b3cba63a232fcc4e8a6735'
+            '0aec7deb08f3d6658881b79b6525b204bc161ce36b4c6840c86e138db36e176f'
+            'cb5b8a1b3c3061c350ff01dde557a72561625cc6a735f46e51207bb295ba3f90'
+            '9310b9708f7e0640b88b1fdb1428f6c234a047efbe73133917dc8a034405d074'
+            '8b9ab10349a712871c35fbf57c78af8d8b77ba39466b662182765543f05b4b62'
+            '7195391b6aaed153931ca13fc7de1ebc39ea3f99e8b1e4e033d05697c961dd55'
+            '41ddb50ff056b6b9df40a0188d0794f48b98011a4f25c60e61e669253701d6f4'
+            'ee18507eeb8217376bca4d673e944a769e6f35b380dc9fad598fe4abc95dd2a6'
+            'ab1a7b25195cfbfb17ace26250760c3300bcd9b0eb9c2c8d01acdf70306aa054'
+            'e3da40af21f0bde7d1221cad5c7eab5af3d9d96a5e1710945b7cd6565ef447be'
+            'cb442c815da16dbc85291cb155996d370b990b8f81ba936ce199b799e8e28ab7'
+            '065bc871044c7c37442f34d5a4d0d57b4aa2d35b45b035a7d5ec20dd6541f891'
+            'c17e609d2cea8067cbaf34cdca5cfc18f005f9900827ff79f2eb53312dc48910'
+            'f394e2a43d449aa80348497ddbc22481496c5936c69fccd22eb625636fb8e12e'
+            '4b05453426fd94f9cb859336bb8d84cd399b8dcb612e61c2b02589648a347121')
+
+_srcdir="Ardour-${pkgver}.0"
+
+apply_patch_with_msg() {
+  for _patch in "$@"; do
+    msg2 "Applying ${_patch}"
+    patch -Np1 -i "${srcdir}/${_patch}"
+  done
+}
+
+prepare() {
+  cd "${_srcdir}"
+  apply_patch_with_msg \
+    0001-Link-fftw3f_threads-for-MinGW-builds.patch \
+    0002-Strip-absolute-source-root-path-from-build-info.patch \
+    0003-Keep-using-the-bundled-qm-dsp-with-use-external-libs.patch \
+    0004-mingw-point-GTK_PATH-at-Ardour-s-module-directory.patch \
+    0005-pbd-test-port-Windows-timer-test-to-get_microseconds.patch \
+    0006-pbd-test-copy-the-saved-locale-name-in-LocaleGuard.patch \
+    0007-dummy-backend-link-system-libltc-with-use-external-l.patch \
+    0008-temporal-test-use-GLib-s-PRNG-in-TimelineTest.patch \
+    0009-pbd-initialize-RWLock-s-shared_mutex-eagerly-on-MinG.patch \
+    0010-pbd-test-skip-the-reader-preference-RWLock-test-on-W.patch \
+    0011-ardour-test-fix-the-MinGW-CPPUNIT_ASSERT_DOUBLES_EQU.patch \
+    0012-pbd-test-accept-two-digit-float-exponents-on-Windows.patch \
+    0013-Don-t-crash-when-GLib-knows-no-system-config-dir-on-.patch \
+    0014-Find-the-bundled-VAMP-plugins-from-headless-tools-on.patch \
+    0015-Use-mingw-x86-intrinsics-flags-when-building-with-cl.patch \
+    0016-Add-missing-standard-includes-exposed-by-libc.patch \
+    0017-Treat-clang-s-mingw-w64-TLS-as-native.patch \
+    0018-vamp-pyin-keep-boost-math-normal-out-of-std-vector-s.patch \
+    0019-pbd-don-t-hand-out-StackAllocator-s-in-object-buffer.patch \
+    0020-pbd-test-don-t-require-a-timed-condition-wait-to-rep.patch \
+    0021-temporal-test-don-t-abort-an-update-that-was-never-s.patch
+}
+
+build() {
+  local _backends="portaudio,dummy"
+  if [[ ${MINGW_PACKAGE_PREFIX} != *-clang-* ]]; then
+    _backends+=",jack"
+  fi
+
+  local _waf_configure_options=(
+    --prefix="${MINGW_PREFIX}"
+    --configdir="${MINGW_PREFIX}/share"
+    --check-c-compiler="${CC}"
+    --check-cxx-compiler="${CXX}"
+    --dist-target=mingw
+    --cxx17
+    --freedesktop
+    --no-phone-home
+    --optimize
+    --ptformat
+    --test
+    --use-external-libs
+    --with-backends="${_backends}"
+    --out="${srcdir}/build-${MSYSTEM}"
+  )
+
+  # waf treats CC/CXX from the environment as absolute paths.
+  unset CC CXX
+  export WAF_NO_PREFORK=1
+  export LINKFLAGS="${LDFLAGS}"
+
+  cd "${_srcdir}"
+  /usr/bin/python waf configure "${_waf_configure_options[@]}"
+  /usr/bin/python waf build
+}
+
+_ardour_test_env() {
+  local _b="${srcdir}/build-${MSYSTEM}"
+  local _s="${srcdir}/${_srcdir}"
+  local _libs="${_b}/libs"
+
+  # Uninstalled build: point Ardour at the build tree (cf. ardev_common.sh)
+  # and make every freshly built DLL loadable.
+  PATH="$(find "${_libs}" -name '*.dll' -printf '%h\n' | sort -u | tr '\n' ':')${PATH}"
+  export PATH
+  export ARDOUR_DLL_PATH="$(cygpath -m "${_libs}")"
+  export ARDOUR_BACKEND_PATH="$(cygpath -m "${_libs}/backends/dummy")"
+  export ARDOUR_PANNER_PATH="$(cygpath -m "${_libs}/panners")"
+  export ARDOUR_SURFACES_PATH="$(cygpath -m "${_libs}/surfaces/generic_midi")"
+  export ARDOUR_DATA_PATH="$(cygpath -wp "${_s}/share:${_b}:${_s}/gtk2_ardour:${_b}/gtk2_ardour")"
+  export ARDOUR_CONFIG_PATH="${ARDOUR_DATA_PATH}"
+  # also marks this as a source-tree run, so the dummy backend is listed
+  export ARDOUR_THEMES_PATH="$(cygpath -m "${_s}/gtk2_ardour/themes")"
+  export ARDOUR_TEST_PATH="$(cygpath -m "${_s}/libs/ardour/test/data")"
+  export PBD_TEST_PATH="$(cygpath -m "${_s}/libs/pbd/test")"
+  export EVORAL_TEST_PATH="$(cygpath -m "${_s}/libs/evoral/test/testdata")"
+  export MIDIPP_TEST_PATH="$(cygpath -m "${_s}/share/patchfiles")"
+  # keep the user's real Ardour configuration out of the tests
+  export LOCALAPPDATA="$(cygpath -m "${srcdir}/test-home")"
+  export APPDATA="${LOCALAPPDATA}"
+  export XDG_CONFIG_HOME="${LOCALAPPDATA}"
+  export XDG_DATA_HOME="${LOCALAPPDATA}"
+  export XDG_CACHE_HOME="${LOCALAPPDATA}"
+  export TMP="$(cygpath -m "${srcdir}/test-home")"
+  export TEMP="${TMP}"
+  mkdir -p "${srcdir}/test-home"
+}
+
+check() {
+  _ardour_test_env
+  local _b="${srcdir}/build-${MSYSTEM}"
+
+  # CppUnit suites of the core libraries.
+  local _t
+  for _t in pbd temporal evoral midi++2 audiographer ardour; do
+    msg2 "Running libs/${_t} unit tests"
+    (cd "${_b}/libs/${_t}" && ./run-tests.exe)
+  done
+
+  # Headless end-to-end run of the Lua session tool with the dummy backend.
+  msg2 "Running headless session create/export test"
+  local _t_dir="${srcdir}/test-session"
+  rm -rf "${_t_dir:?}"
+  "${_b}/luasession/ardour${pkgver%%.*}-lua.exe" \
+    "$(cygpath -m "${srcdir}/headless-session-test.lua")" \
+    "$(cygpath -m "${_t_dir}/smoke")" "$(cygpath -m "${_t_dir}/export")" \
+    | tee "${srcdir}/headless-session-test.log"
+  grep -q '^HEADLESS-SESSION-TEST-OK$' "${srcdir}/headless-session-test.log"
+  test -f "${_t_dir}/smoke/smoke.ardour"
+  # 2 s of -30 dBFS uniform noise, mono track panned centre:
+  # expect about -37.8 dBFS RMS and a peak of about 0.022
+  /usr/bin/python "${srcdir}/check-export.py" "${_t_dir}/export/smoke.wav" 2 -40 0.025
+}
+
+package() {
+  cd "${_srcdir}"
+  /usr/bin/python waf i18n --destdir="${pkgdir}"
+  /usr/bin/python waf install --destdir="${pkgdir}"
+
+  local _major=${pkgver%%.*}
+  local _p="${pkgdir}${MINGW_PREFIX}"
+  local _dlldir="${_p}/lib/${_realname}${_major}"
+
+  # Windows Ardour derives its data (share/ardour9) and module
+  # (lib/ardour9) directories from the location of the running .exe,
+  # which therefore has to live in bin/ next to Ardour's own DLLs,
+  # like in the upstream installer (tools/x-win/package.sh).
+  rm -f "${_p}/bin/${_realname}${_major}"
+  # suil's GTK2-in-Win32 UI wrapper is loaded from SUIL_MODULE_DIR=<dll-dir>/suil
+  install -d "${_dlldir}/suil"
+  mv "${_dlldir}/suil_win_in_gtk2.dll" "${_dlldir}/suil/"
+  mv "${_dlldir}"/*.dll "${_p}/bin/"
+  mv "${_dlldir}/ardour-${pkgver}.0.exe" "${_p}/bin/${_realname}${_major}.exe"
+  mv "${_dlldir}/hardour-${pkgver}.0.exe" "${_p}/bin/h${_realname}${_major}.exe"
+  mv "${_dlldir}"/ardour-vst*-scanner.exe "${_p}/bin/"
+  # Ardour refers to its VAMP plugins as libardourvampplugins:<id> etc.
+  mv "${_dlldir}"/vamp/ardourvampplugins*.dll "${_dlldir}/vamp/libardourvampplugins.dll"
+  mv "${_dlldir}"/vamp/ardourvamppyin*.dll "${_dlldir}/vamp/libardourvamppyin.dll"
+  find "${_p}" \( -name '*.dll.a' -o -name '*.a' \) -delete
+
+  install -vDm644 "${_realname}.1" -t "${_p}/share/man/man1/"
+  if [[ -d "${_p}/share/appdata" ]]; then
+    mv "${_p}/share/appdata" "${_p}/share/metainfo"
+  fi
+
+  # Upstream ships the MIDI loops as a separate, unversioned zip.
+  unzip -q "${srcdir}/${_realname}-midi-${pkgver}.zip" \
+    -d "${_p}/share/${_realname}${_major}/media/"
+
+  install -vDm644 COPYING "${_p}/share/licenses/${_realname}/COPYING"
+}

@@ -1,0 +1,45 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=jspecify
+pkgbase=mingw-w64-java-jspecify
+pkgname="${MINGW_PACKAGE_PREFIX}-java-jspecify"
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="JSpecify standard nullness annotations for Java, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://jspecify.dev/'
+msys2_repository_url='https://github.com/jspecify/jspecify'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/jspecify/jspecify/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('ea6b464eb6c720362c4cc9887739108f392dde5bb7805111a892f00a921c3fa1')
+
+_src=jspecify-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # like upstream: Java 8 class files, but compiled against the current JDK
+  # API so that @Target can name ElementType.MODULE
+  JB_TARGET=8 jb_module org.jspecify:jspecify:${pkgver} src/main/java \
+    -m 'Automatic-Module-Name: org.jspecify'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # annotations only; the conformance tests need the Gradle build and a checker
+  jb_loadcheck org.jspecify:jspecify
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.jspecify:jspecify
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-jspecify/LICENSE"
+}

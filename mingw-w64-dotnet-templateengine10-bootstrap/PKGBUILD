@@ -1,0 +1,63 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-templateengine10-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.200.preview.26113.113
+pkgrel=1
+pkgdesc='Original NET10 TemplateEngine source bootstrap with two unresolved upstream API baseline entries'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/templating'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk10-logging-abstractions-bootstrap=10.0.2.25612.105"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget6132-template-bootstrap>=6.13.2-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-sdk10-asn1-bootstrap=10.0.2.25612.105"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json1303-bootstrap=13.0.3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-publicapi334-bootstrap=3.3.4"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('templating-sdk10-vmr-05d94904.tar.gz'
+        'arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d'
+        'templateengine10-source-1.tar.gz')
+noextract=('templating-sdk10-vmr-05d94904.tar.gz' 'arcade-runtime10-4bf37ce6.tar.gz')
+sha256sums=('e78c80f2a710a26157d7cc95ee62e1dae48cbaa40c3a70d7472c29b461f4cbbb'
+            '82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66'
+            '72f22559035b556f88cf1276cbb4b0b362d233aa5f380556d1c41ad3b0463d79')
+_py() {
+  local script=$1 log=$2
+  shift 2
+  local path args=()
+  for path in "$@"; do args+=("$(cygpath -am "$path")"); done
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/templateengine10-workflow/$script")" "${args[@]}" > "$srcdir/$log" 2>&1
+}
+prepare() {
+  _py check-version-flow.py version-flow.log "$srcdir/templating-sdk10-vmr-05d94904.tar.gz" "$srcdir/arcade-runtime10-4bf37ce6.tar.gz" "$srcdir/flow"
+  _py prepare.py prepare.log "$srcdir/templating-sdk10-vmr-05d94904.tar.gz" "$srcdir/flow" "$srcdir/plan"
+  _py evaluate.py evaluate.log "$srcdir/plan"
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/templateengine10-workflow/check-restore.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/dependencies")" --strict > "$srcdir/dependencies.log" 2>&1
+  _py build.py build.log "$srcdir/plan" "$srcdir/arcade-runtime10-4bf37ce6.tar.gz" "$srcdir/dependencies" "$srcdir/build"
+  _py localize.py localization.log "$srcdir/plan" "$srcdir/build" "$srcdir/localized"
+}
+check() {
+  _py check-resources.py resources.log "$srcdir/plan" "$srcdir/build" "$srcdir/localized" "$srcdir/resource-check"
+  local result=0
+  _py check.py runtime-API.log "$srcdir/plan" "$srcdir/dependencies" "$srcdir/build" "$srcdir/runtime-check" || result=$?
+  # Preserve the strict check's failure; require its complete unchanged report
+  # and successful compiler/runtime/strict restore checks in a separate check.
+  test "$result" -eq 1
+  _py check-api-baseline.py original-API-failure.log "$srcdir/runtime-check"
+  _py check-source-analyzer.py additional-source-analyzer.log "$srcdir/plan" "$srcdir/build" "$srcdir/public-api-analyzer-probe"
+  _py audit.py source-audit.log "$srcdir/templating-sdk10-vmr-05d94904.tar.gz" "$srcdir/plan" "$srcdir/build" "$srcdir/localized" "$srcdir/source-audit.json" "$srcdir/dependencies" "$srcdir/runtime-check"
+  _py stage.py stage.log "$srcdir" "$srcdir/package-prefix"
+  _py check-installed.py staged-check.log "$srcdir/package-prefix" "$srcdir/staged-check"
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

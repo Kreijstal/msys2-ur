@@ -1,0 +1,87 @@
+{
+  "finished_at_utc": "2026-10-29T02:04:54.582914+00:00",
+  "host": "win11",
+  "source_commit": "2333221c0564852ee5ceac9c622a0b14e864d76e",
+  "source_version": "5.3.0-2.26113.113",
+  "original_framework": "net10.0",
+  "original_vmr_source_only_profile": true,
+  "all_six_primary_projects_compiled": true,
+  "original_project_compile_items": {
+    "Microsoft.CodeAnalysis": 1042,
+    "Microsoft.CodeAnalysis.CSharp": 1151,
+    "csc": 11,
+    "Microsoft.CodeAnalysis.VisualBasic": 915,
+    "vbc": 11,
+    "VBCSCompiler": 27
+  },
+  "vb_generator_source_files": {
+    "VBSyntaxGenerator": 17,
+    "VBErrorFactsGenerator": 1,
+    "BoundTreeGenerator": 3
+  },
+  "five_regenerated_vb_files_and_grammar_match_pinned_baselines": true,
+  "vb_bootstrap_compiler": "source4.9.2 on NET8",
+  "client_bootstrap_compiler": "new source5.3 on NET10",
+  "real_net10_vbc_execution_passed": true,
+  "emitted_linq_async_vb_program_execution_passed": true,
+  "unicode_response_file_passed": true,
+  "invalid_source_exit_code": 1,
+  "invalid_source_diagnostic": "BC30451",
+  "production_source_changes": 0,
+  "commands": [
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/evaluate-net10-toolset.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared /e/codex-dotnet10/roslyn53-net10-evaluation2 /e/codex-dotnet10/roslyn53-net10-toolset-plan2",
+      "exit_code": 0
+    },
+    {
+      "command": "bash /e/codex-dotnet10/vb-bootstrap-inputs/build-generators.sh /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-vb-generators1",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/build-net10-vb.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-net10-toolset-plan2 /e/codex-dotnet10/roslyn53-net10-build4 /e/codex-dotnet10/roslyn53-vb-generators1 /e/codex-dotnet10/roslyn53-vb-net10-build2",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/build-net10-clients.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-net10-toolset-plan2 /e/codex-dotnet10/roslyn53-net10-localized1 /e/codex-dotnet10/roslyn53-vb-net10-build2 /e/codex-dotnet10/roslyn53-net10-clients1",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/check-net10-vbc.py /e/codex-dotnet10/roslyn53-net10-clients1 \"/e/codex-dotnet10/roslyn53-net10-vbc-check2 \u03bb\"",
+      "exit_code": 0
+    }
+  ],
+  "evidence": {
+    "local_directory": "/tmp/roslyn53-net10-toolset-prototype1",
+    "evidence_members_verified": 181,
+    "archive_sha256": "e648f5dfb7b0b6331aa867df4f619daceda91a305ccd2af11332d766afd77d5c",
+    "all_member_hashes_verified": true,
+    "original_vb_and_client_archive_inputs_verified": 944,
+    "all_five_regenerated_vb_files_and_grammar_match_pinned_baselines": true,
+    "all_six_original_net10_compiler_projects_compiled": true,
+    "real_net10_vbc_execution_passed": true,
+    "emitted_linq_async_program_execution_passed": true,
+    "compiler_server_execution_verified": false,
+    "visualbasic_localized_satellites_built": false,
+    "formal_full_toolset_package_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "initial_attempts": [
+    "The first VB compile failed on spaces in an unquoted import alias. The second fresh build normalizes that alias and succeeds.",
+    "The first VB application fixture omitted the original SDK _MYTYPE=Empty setting and requested desktop My helpers. The corrected fixture preserves that original NET10 SDK setting and succeeds."
+  ],
+  "visualbasic_all_original_api_and_localized_resources_verified": false,
+  "compiler_server_execution_verified": false,
+  "full_original_toolset_package_installed": false,
+  "all_framework_profiles_built": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "original_sdk10_vb_mytype_default_policy": {
+    "source_archive_sha256": "3c9173ca31f070e662f705ebf6bc58c5a809fba78a407c3fb1f14274582ec85d",
+    "original_file": "sdk-10.0.201/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.VisualBasic.targets",
+    "original_file_sha256": "4a944f5a4aec09967a34bec3164c1666f86248ee204f738f5bd567399d6c1337",
+    "non_netframework_default_mytype": "Empty",
+    "source_default_policy_verified": true
+  }
+}

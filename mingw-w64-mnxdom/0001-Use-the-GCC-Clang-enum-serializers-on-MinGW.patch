@@ -1,0 +1,29 @@
+Use the GCC/Clang enum serializers on MinGW
+
+BaseTypes.h picks its nlohmann::json enum (de)serializers by _WIN32: an
+adl_serializer partial specialization that only MSVC needs, and free
+from_json/to_json functions for GCC and Clang. On MinGW, GCC rejects the
+partial specialization ("after instantiation") and clang wants
+'j.template get<>()' in it. Key the choice on _MSC_VER instead.
+
+diff --git a/src/BaseTypes.h b/src/BaseTypes.h
+index d0d88bc..ec7eff7 100644
+--- a/src/BaseTypes.h
++++ b/src/BaseTypes.h
+@@ -1017,7 +1017,7 @@ private:
+ 
+ namespace nlohmann {
+ 
+-#if defined(_WIN32)
++#if defined(_MSC_VER)
+ // This general adl_serializer is enabled only for enum types.
+ // For some reason MSC does not like the direct function definitions below.
+ template<typename EnumType>
+@@ -1051,6 +1051,7 @@ struct adl_serializer<EnumType, std::enable_if_t<std::is_enum_v<EnumType>>>
+ };
+ #else
+ // Clang works with the adl_specialization above, but GCC does not.
++// (Keyed on the compiler, not on _WIN32: MinGW GCC needs this branch too.)
+ namespace detail {
+ 
+ template<typename BasicJsonType, typename EnumType,

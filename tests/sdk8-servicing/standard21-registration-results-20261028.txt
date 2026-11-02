@@ -1,0 +1,131 @@
+standard21-registration-results-20261028
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-28T19:10:04.545106+00:00",
+  "host": "win11",
+  "full_dependency_goal_complete": false,
+  "recipe": "mingw-w64-dotnet-sdk8-servicing",
+  "package": "mingw-w64-clang-x86_64-dotnet-sdk8-servicing 8.0.131-5",
+  "build_root": "/c/codex-dotnet10/sdk8reg.CSLFxi",
+  "formal_pacman_installed": true,
+  "final_clean_package_build_exit_code": 0,
+  "managed_assemblies_recompiled": false,
+  "source_sdk_seed_version": "8.0.131-4",
+  "source_sdk_seed_sha256": "a9a92676702275054ae88d09540071c5e2757055c17f0ac1040e0f22151fb0d0",
+  "source_workflow_sha256": "a1f13bf900f3c3486b9bb6ee13cc6a69c00b5204c66e254c09f222122655d6b1",
+  "frozen_workflow_files_verified": 5,
+  "package_archive": "/tmp/sdk8-registration-package1/mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5-any.pkg.tar.zst",
+  "evidence_archive": "/tmp/sdk8-registration-package1/sdk8-registration-evidence1.tar.gz",
+  "evidence_archive_sha256": "be026e899b888f4a73cbc370fc42a6acb0b1c9f2f22bf9b8e51dbce31096840a",
+  "evidence_files_verified": 17,
+  "commands": [
+    {
+      "command": "MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5-any.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qk mingw-w64-clang-x86_64-dotnet-sdk8-servicing",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-registration-installed.py ./mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5-any.pkg.tar.zst installed-audit.json",
+      "exit_code": 0
+    }
+  ],
+  "corrections_before_final_clean_build": [
+    "Original installer Versions.props uses the MSBuild XML namespace.",
+    "The registration template is inside CDATA; parse the actual original template entry."
+  ]
+}
+
+Exact commands and results:
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-sdk8-servicing
+RESULT: exit 0
+$ /usr/bin/python3 audit-registration-installed.py ./mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5-any.pkg.tar.zst installed-audit.json
+RESULT: exit 0
+
+Recorded package3.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-sdk8-servicing 8.0.131-5 (28 Oct 2026 20:03:45)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst
+  -> Found dotnet-sdk8-registration-source-1.tar.gz
+  -> Found README.md
+==> Validating source files with sha256sums...
+    mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst ... Passed
+    dotnet-sdk8-registration-source-1.tar.gz ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-sdk8-registration-source-1.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+==> Starting check()...
+PASS retained source SDK payload and original framework registration
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk8-servicing"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sdk8-servicing 8.0.131-5 (28 Oct 2026 20:04:24)
+
+
+Recorded install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-5
+
+Total Installed Size:  189.55 MiB
+Net Upgrade Size:        0.20 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-sdk8-servicing...
+New optional dependencies for mingw-w64-clang-x86_64-dotnet-sdk8-servicing
+    mingw-w64-clang-x86_64-dotnet-netstandard21-reference: source reference pack for netstandard2.1
+
+
+Recorded qk.log:
+mingw-w64-clang-x86_64-dotnet-sdk8-servicing: 1376 total files, 0 missing files
+
+
+Recorded installed-audit.log:
+PASS installed source SDK payload, original framework registration and preserved bytes: 1157 files
+

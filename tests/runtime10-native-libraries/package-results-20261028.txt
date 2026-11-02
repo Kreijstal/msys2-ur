@@ -1,0 +1,43 @@
+Runtime10 original native compression/globalization bootstrap package — final clean build and installed checks passed
+Finished UTC: 2026-10-28T23:38:57.104339+00:00
+Windows root: /c/codex-dotnet10/nativelibs10pkg.QWAmQZ
+Installed: mingw-w64-clang-x86_64-dotnet-runtime10-native-bootstrap 10.0.5-1
+
+Exact commands:
+$ makepkg -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-runtime10-native-bootstrap-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+$ /usr/bin/python3 src/native10-workflow/check.py "$PWD/src" "$PWD/src/native-output" "$PWD/installed-check" /clang64/lib/dotnet-bootstrap10/native-libraries/10.0.5
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-runtime10-native.py
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-runtime10-native-bootstrap
+RESULT: exit 0
+
+Both original Windows shared native targets built;101 steps,93 C units,2 resource units.
+336 native-library archive files and78 additional actual original compiler inputs verified.
+Three explicit native-library port files plus two exact previously verified common CoreCLR port files.
+Two CMake PDB-install conditions and one guarded missing SDK constant; allocator/fail-fast implementation retained.
+The Windows SDK constant value is supported by https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/winnt.h .
+Private version-resource location and llvm-windres macro stringification are recorded.
+Pinned vendored zlib-ng and Brotli sources retained. All required36/20 exports present; actual36/46.
+Both AMD64 DLLs have source file version10.0.526.11800/product10.0.5 and correct per-library descriptions.
+Native stream ABI deflate/inflate levels1/6/9,CRC32 vector,Brotli round trip,direct ICU loading/version all pass before and after installation.
+15 installed payload files match archive and tested DLL hashes; pacman25 entries,0 altered.
+Initial clean attempt exited4 only due to import-library filename assumption in ABI harness; all101 compile steps and independent native audit passed.
+Corrected focused probe0,followed by a complete fresh clean makepkg0 and installed checks0.
+Package SHA256: aabf1e7451d195f695955c6ef2695f9c9f65c7c97149cb14466a9737d43c9886
+Workflow SHA256: 217b988346d44a38cea7184b72ea0ae9e1a0e8561325197bcb0f12391d5f8541
+Evidence SHA256: 900f66a1ebe00156092382f0331fdcb770bf7d70fdd488c9c3ecceb45f9fe684 (64 files)
+Evidence archive: /tmp/runtime10-native-bootstrap-package1/evidence.tar.gz
+
+Full dependency goal remains active and incomplete. Remaining:
+- complete the original171 managed runtime implementations and19 private seed projects
+- full shared-framework layout/metadata and installed managed/native integration
+- strict source/ref API parity assessment and original compatibility policies
+- original NET10 build-tool hosts and exact dependency profiles
+- static/NativeAOT, debugger/DAC, COM and broader native/runtime behavior
+- native MsQuic2.4.16 and original QUIC runtime integration
+- SDK10.0.201, WindowsDesktop10 and PowerShell7.6 complete graph
+- earlier MMI3 remote/provider/ownership, SQL/native and full Windows.Compatibility gates

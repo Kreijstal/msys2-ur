@@ -1,0 +1,54 @@
+From 236eab7a8006097e331b627f407f58db8c521d46 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 16:05:34 +0100
+Subject: [PATCH] product: restrict org.apache.ant to the packaged 1.10.15
+ bundle
+
+The community products restrict the target platform's org.apache.ant
+plug-in to version 1.99.1. That version is not an Apache Ant release but
+a stub published in DBeaver's p2 repository ("Apache Ant minimum
+package", vendor DBeaver Corp): seven classes exporting only
+org.apache.tools.ant.types.selectors, which is what Eclipse quick search
+(org.eclipse.text.quicksearch, part of the CE product) uses from the
+org.apache.ant bundle it requires with bundle-version 1.10.0 or later.
+The stub is a binary artifact without a corresponding source release.
+
+MSYS2 packages Apache Ant 1.10.15, built from source, as the OSGi bundle
+org.apache.ant 1.10.15 (eclipse-orbit-ant), and quick search is built
+against it. Restrict the filter to 1.10.15 so a Tycho build of the CE
+and Microsoft Store products resolves against the same Ant bundle as the
+MSYS2 product assembly.
+---
+ product/community-msstore/pom.xml | 2 +-
+ product/community/pom.xml         | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/product/community-msstore/pom.xml b/product/community-msstore/pom.xml
+index 4c12ce8..30cc1a8 100644
+--- a/product/community-msstore/pom.xml
++++ b/product/community-msstore/pom.xml
+@@ -61,7 +61,7 @@
+                             <type>eclipse-plugin</type>
+                             <id>org.apache.ant</id>
+                             <restrictTo>
+-                                <version>1.99.1</version>
++                                <version>1.10.15</version>
+                             </restrictTo>
+                         </filter>
+                     </filters>
+diff --git a/product/community/pom.xml b/product/community/pom.xml
+index e1a4773..5fd0406 100644
+--- a/product/community/pom.xml
++++ b/product/community/pom.xml
+@@ -54,7 +54,7 @@
+                             <type>eclipse-plugin</type>
+                             <id>org.apache.ant</id>
+                             <restrictTo>
+-                                <version>1.99.1</version>
++                                <version>1.10.15</version>
+                             </restrictTo>
+                         </filter>
+                     </filters>
+-- 
+2.55.0
+

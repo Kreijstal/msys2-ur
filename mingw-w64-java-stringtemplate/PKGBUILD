@@ -1,0 +1,82 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-stringtemplate
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-stringtemplate")
+pkgver=3.2.1
+pkgrel=1
+pkgdesc="stringtemplate Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.stringtemplate.org/'
+license=('spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-antlr")
+source=('https://repo.maven.apache.org/maven2/org/antlr/stringtemplate/3.2.1/stringtemplate-3.2.1-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/antlr/stringtemplate/3.2.1/stringtemplate-3.2.1.pom')
+noextract=('stringtemplate-3.2.1-sources.jar'
+         'stringtemplate-3.2.1.pom')
+sha256sums=('e89759cae39bbad890c3afc94895c335556a973fea8577351d8e2da28dcfbd03' 'b45e82655aa5a48f33d13a43e4345426b156335b35e24b5aea12db5823c16a16')
+_artifacts=('org.antlr:stringtemplate:3.2.1')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=8
+  jb_module org.antlr:stringtemplate:3.2.1 upstream/stringtemplate \
+    -r resources/stringtemplate -u stringtemplate-3.2.1.pom -- \
+    antlr:antlr
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with antlr:antlr org.antlr:stringtemplate
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-stringtemplate() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-antlr")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.antlr:stringtemplate
+  _license stringtemplate 3.2.1
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

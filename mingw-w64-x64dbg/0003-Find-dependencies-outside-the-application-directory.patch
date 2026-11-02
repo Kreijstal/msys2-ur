@@ -1,0 +1,62 @@
+diff --git a/src/bridge/bridgemain.cpp b/src/bridge/bridgemain.cpp
+index 364e8bb4..4a43c724 100644
+--- a/src/bridge/bridgemain.cpp
++++ b/src/bridge/bridgemain.cpp
+@@ -208,11 +208,19 @@ BRIDGE_IMPEXP const wchar_t* BridgeInit(BRIDGE_CONFIG* config)
+ 
+     // Imported DLLs (DBG)
+     LOADLIBRARY(titanEngineDll);
++#ifdef __MINGW32__
++    // MinGW builds import these without delay loading; jansson, XEDParse
++    // and the C++ runtime may live outside the application directory
++    loadIfExists(L"LLVMDemangle.dll");
++    loadIfExists(L"lz4file.dll");
++    loadIfExists(L"DeviceNameResolver.dll");
++#else
+     LOADLIBRARY(L"LLVMDemangle.dll");
+     LOADLIBRARY(L"lz4.dll");
+     LOADLIBRARY(L"jansson.dll");
+     LOADLIBRARY(L"DeviceNameResolver.dll");
+     LOADLIBRARY(L"XEDParse.dll");
++#endif // __MINGW32__
+     //loadIfExists(L"asmjit.dll"); // only loaded with user interaction
+     //loadIfExists(L"Scylla.dll"); // only loaded with user interaction
+     loadIfExists(L"msdia140.dll");
+diff --git a/src/exe/signaturecheck.cpp b/src/exe/signaturecheck.cpp
+index dbfc8407..978d4870 100644
+--- a/src/exe/signaturecheck.cpp
++++ b/src/exe/signaturecheck.cpp
+@@ -465,6 +465,24 @@ bool InitializeSignatureCheck()
+         if(!pSetDllDirectoryW(L""))
+             return false;
+ 
++#ifdef X64DBG_EXTRA_DLL_DIRECTORY
++        // MinGW packages install x64dbg in <prefix>/lib/x64dbg/x64 and its
++        // dependencies (Qt, the C++ runtime, ...) in <prefix>/bin, which the
++        // restricted search order below would no longer find through PATH.
++        // Added first, so it is searched after the application directory.
++        {
++            std::wstring extraDir = szApplicationDir;
++            extraDir += L"" X64DBG_EXTRA_DLL_DIRECTORY;
++            wchar_t szExtraDir[MAX_PATH] = L"";
++            if(GetFullPathNameW(extraDir.c_str(), _countof(szExtraDir), szExtraDir, nullptr))
++            {
++                auto attributes = GetFileAttributesW(szExtraDir);
++                if(attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY))
++                    pAddDllDirectory(szExtraDir);
++            }
++        }
++#endif // X64DBG_EXTRA_DLL_DIRECTORY
++
+         // Thanks to daax for finding this order
+         // > If more than one directory has been added, the order in which those directories are searched is unspecified.
+         // Reversing ntdll shows that it is using a singly-linked list, so the order is the opposite in which you add it
+@@ -510,7 +528,7 @@ bool InitializeSignatureCheck()
+         return false;
+ #endif // DEBUG_SIGNATURE_CHECKS
+ 
+-#ifndef _DEBUG
++#if !defined(_DEBUG) && defined(_MSC_VER)
+     // Safely load the MSVC runtime DLLs (since they cannot be delay loaded)
+     auto loadRuntimeDll = [&szSystemDir](const wchar_t* szDll) -> HMODULE
+     {

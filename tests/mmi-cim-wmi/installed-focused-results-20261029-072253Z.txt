@@ -1,0 +1,56 @@
+Installed MMI/CIM/WMI focused test 2026-10-29T07:22:53Z
+Root: /e/codex-dotnet10/cim-wmi-current-test.KpXFem
+
+mingw-w64-clang-x86_64-powershell 7.4.20-2
+mingw-w64-clang-x86_64-dotnet-management 8.0.0-2
+mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1
+mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3
+
+$ timeout -k 10 180 bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer
+RESULT: exit 0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\cim-wmi-current-test.KpXFem\combined-consumer\check.csproj (in 376 ms).
+  check -> E:\codex-dotnet10\cim-wmi-current-test.KpXFem\combined-consumer\bin\Release\net8.0\check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.27
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+WMI: System.Management, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS installed source-built CIM/MMI and WMI share one process, agree on OS build 26200, survive GC and load no Framework implementations
+This uses the experimental MMI3 contract port; full PowerShell/remote/ownership compatibility remains open.
+
+
+$ MSYS2_ARG_CONV_EXCL='*' timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File E:/codex-dotnet10/cim-wmi-current-test.KpXFem/tests/powershell-full-sdk/CimWmiSmoke.ps1
+RESULT: exit 0
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+
+
+$ MSYS2_ARG_CONV_EXCL='*' timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File E:/codex-dotnet10/cim-wmi-current-test.KpXFem/tests/powershell-full-sdk/CimWmiSmoke.ps1
+RESULT: exit 0
+PASS packaged MMI direct local query/disposal, original CIM cmdlets and source System.Management WMI OS/GetOwner/disposal
+
+
+$ MSYS2_ARG_CONV_EXCL='*' timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File E:/codex-dotnet10/cim-wmi-current-test.KpXFem/tests/powershell-full-sdk/WmiStaProbe.ps1
+RESULT: exit 0
+PASS source WMI local enumeration in STA
+
+

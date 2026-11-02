@@ -1,0 +1,61 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-libktxsharp
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.9.2
+pkgrel=1
+pkgdesc='Source-built LibKTX (KtxSharp) KTX 1 texture container library for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/mcraiha/libktxsharp'
+license=('spdx:Unlicense')
+_commit=b734fc93966ecb0354757c48b814200fc1f15f46
+_tree=libktxsharp-${_commit}
+_project=lib/KtxSharp.csproj
+_id=LibKTX
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("libktxsharp-b734fc93966ecb0354757c48b814200fc1f15f46.tar.gz::https://codeload.github.com/mcraiha/libktxsharp/tar.gz/b734fc93966ecb0354757c48b814200fc1f15f46" prepare.py check.cs)
+sha256sums=('d661603ffb3500edfb6dc54a04fd44cb7505f72e5b2176d4a752267fa9b943ad'
+            '5e14c8d7f82b73ec754612c62843b01012003fb1763b5598475d49c29cb56e1a'
+            'bebefbd7312934f8e4a6c5ddf82a78289a0caf0f4ee3b197ffd641bb3e9732c5')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" libktxsharp "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:GeneratePackageOnBuild=false \
+    -p:AssemblyVersion=0.9.2.0 -p:FileVersion=0.9.2.0 -p:InformationalVersion="$pkgver+$_commit" \
+    -p:RepositoryCommit="$_commit" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:EnablePackageValidation=false -p:WarningsAsErrors= -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

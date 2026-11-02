@@ -1,0 +1,155 @@
+From 93a193b5632dcc60340b849fd1e6267c157682de Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 10:30:22 +0100
+Subject: [PATCH 4/4] Keep user data in %LOCALAPPDATA%\Simba in the MSYS2
+ layout
+
+Simba is a portable program: its includes, plugins, scripts, fonts,
+packages, dumps and settings all live next to the executable
+(GetSimbaPath = Application.Location), and script processes, the file
+browser and RunCommand use that directory as their working directory.
+
+MSYS2 installs simba.exe in the shared <prefix>/bin.  When
+<prefix>/share/simba exists (installed by the package), let
+GetSimbaPath return %LOCALAPPDATA%\Simba (created on demand) instead,
+and use GetSimbaPath instead of Application.Location for those working
+directories.  A copy of Simba run from anywhere else keeps the portable
+behaviour.
+---
+ Source/forms/simba.filebrowserform.pas |  6 +++---
+ Source/simba.files.pas                 | 11 +++++++++++
+ Source/simba.process.pas               | 12 ++++++------
+ Source/simba.scriptinstance.pas        |  4 ++--
+ 4 files changed, 22 insertions(+), 11 deletions(-)
+
+diff --git a/Source/forms/simba.filebrowserform.pas b/Source/forms/simba.filebrowserform.pas
+index 12484c4..dfa6037 100644
+--- a/Source/forms/simba.filebrowserform.pas
++++ b/Source/forms/simba.filebrowserform.pas
+@@ -81,7 +81,7 @@ implementation
+ {$R *.lfm}
+ 
+ uses
+-  fileutil, clipbrd, lazfileutils,
++  fileutil, clipbrd, lazfileutils, simba.files,
+   simba.scripttabsform, simba.main, simba.nativeinterface;
+ 
+ procedure TSimbaFileBrowser.DoCreateNodeClass(var NodeClass: TTreeNodeClass);
+@@ -132,7 +132,7 @@ procedure TSimbaFileBrowser.DoFindFiles;
+   end;
+ 
+ begin
+-  FFiles.Info := FileInfo(Application.Location, True);
++  FFiles.Info := FileInfo(GetSimbaPath(), True);
+ 
+   Build(@FFiles);
+ end;
+@@ -193,7 +193,7 @@ begin
+   Node := GetNodeAt(X, Y);
+   if (Node is TSimbaFileBrowserNode) then
+   begin
+-    FileName := CreateRelativePath(TSimbaFileBrowserNode(Node).FileInfo.FileName, Application.Location);
++    FileName := CreateRelativePath(TSimbaFileBrowserNode(Node).FileInfo.FileName, GetSimbaPath());
+     if (FileName = '')  then
+       Exit;
+ 
+diff --git a/Source/simba.files.pas b/Source/simba.files.pas
+index 86ed912..6ea2e2e 100644
+--- a/Source/simba.files.pas
++++ b/Source/simba.files.pas
+@@ -341,6 +341,17 @@ end;
+ function GetSimbaPath: String;
+ begin
+   Result := IncludeTrailingPathDelimiter(Application.Location);
++  {$IFDEF WINDOWS}
++  // MSYS2 installs simba.exe in <prefix>\bin (marked by <prefix>\share\simba).
++  // Keep the user's scripts, includes, plugins, packages and settings in
++  // %LOCALAPPDATA%\Simba instead of the shared prefix.
++  if DirectoryExists(Result + '..\share\simba') and (GetEnvironmentVariable('LOCALAPPDATA') <> '') then
++  begin
++    Result := IncludeTrailingPathDelimiter(GetEnvironmentVariable('LOCALAPPDATA')) + 'Simba' + DirectorySeparator;
++    if not DirectoryExists(Result) then
++      ForceDirectories(Result);
++  end;
++  {$ENDIF}
+ end;
+ 
+ function GetDataPath: String;
+diff --git a/Source/simba.process.pas b/Source/simba.process.pas
+index a97fcad..b294814 100644
+--- a/Source/simba.process.pas
++++ b/Source/simba.process.pas
+@@ -167,7 +167,7 @@ end;
+ 
+ function TSimbaProcess.RunCommand(Executable: String; Commands: TStringArray; out Output: String): TProcessExitStatus;
+ begin
+-  Process.RunCommandInDir(Application.Location, Executable, Commands, Output, Result, [poStderrToOutPut]);
++  Process.RunCommandInDir(GetSimbaPath(), Executable, Commands, Output, Result, [poStderrToOutPut]);
+ end;
+ 
+ function TSimbaProcess.RunCommand(Executable: String; Commands: TStringArray): TProcessID;
+@@ -178,7 +178,7 @@ begin
+ 
+   Process := TProcess.Create(nil);
+   try
+-    Process.CurrentDirectory := Application.Location;
++    Process.CurrentDirectory := GetSimbaPath();
+     Process.Executable := Executable;
+     Process.Options := Process.Options + [poStderrToOutPut];
+     Process.Parameters.AddStrings(Commands);
+@@ -257,7 +257,7 @@ begin
+         Parameters[I] := '-' + Parameters[I]
+     end;
+ 
+-  Result := Self.RunCommandInDir(Application.Location, Application.ExeName, Parameters + ['--run', Script], Output);
++  Result := Self.RunCommandInDir(GetSimbaPath(), Application.ExeName, Parameters + ['--run', Script], Output);
+ end;
+ 
+ function TSimbaProcess.RunScript(Script: String; Parameters: TStringArray): TProcessID;
+@@ -274,7 +274,7 @@ begin
+         Parameters[I] := '-' + Parameters[I]
+     end;
+ 
+-  Result := Self.RunCommandInDir(Application.Location, Application.ExeName, Parameters + ['--run', Script]);
++  Result := Self.RunCommandInDir(GetSimbaPath(), Application.ExeName, Parameters + ['--run', Script]);
+ end;
+ 
+ function TSimbaProcess.RunScriptOutputToFile(Script: String; Parameters: TStringArray; OutputFileName: String): TProcessID;
+@@ -292,10 +292,10 @@ begin
+     end;
+ 
+   {$IFDEF UNIX}
+-  Result := Self.RunCommandInDir(Application.Location, GetEnvironmentVariable('SHELL'), ['-c', Application.ExeName + ' ' + String.Join(' ', Parameters) + ' --run ' + Script + ' > ' + OutputFileName]);
++  Result := Self.RunCommandInDir(GetSimbaPath(), GetEnvironmentVariable('SHELL'), ['-c', Application.ExeName + ' ' + String.Join(' ', Parameters) + ' --run ' + Script + ' > ' + OutputFileName]);
+   {$ENDIF}
+   {$IFDEF WINDOWS}
+-  Result := Self.RunCommandInDir(Application.Location, GetEnvironmentVariable('COMSPEC'), ['/c', Application.ExeName + ' ' + String.Join(' ', Parameters) + ' --run ' + Script + ' > ' + OutputFileName]);
++  Result := Self.RunCommandInDir(GetSimbaPath(), GetEnvironmentVariable('COMSPEC'), ['/c', Application.ExeName + ' ' + String.Join(' ', Parameters) + ' --run ' + Script + ' > ' + OutputFileName]);
+   {$ENDIF}
+ end;
+ 
+diff --git a/Source/simba.scriptinstance.pas b/Source/simba.scriptinstance.pas
+index 8c63dba..9cdfa7e 100644
+--- a/Source/simba.scriptinstance.pas
++++ b/Source/simba.scriptinstance.pas
+@@ -84,7 +84,7 @@ type
+ implementation
+ 
+ uses
+-  forms, lazloggerbase,
++  forms, lazloggerbase, simba.files,
+   simba.outputform, simba.scripttabsform, simba.scripttab;
+ 
+ // todo ensure finished
+@@ -229,7 +229,7 @@ begin
+ 
+   FProcess := TProcess.Create(nil);
+   FProcess.PipeBufferSize := 16 * 1024;
+-  FProcess.CurrentDirectory := Application.Location;
++  FProcess.CurrentDirectory := GetSimbaPath();
+   FProcess.Options := FProcess.Options + [poUsePipes, poStderrToOutPut];
+   FProcess.Executable := Application.ExeName;
+ end;
+-- 
+2.55.0
+

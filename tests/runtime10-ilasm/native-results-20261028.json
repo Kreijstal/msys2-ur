@@ -1,0 +1,96 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-28",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "evidence_archive_sha256": "b4a17bd4439375ebd9cce1e0d7e45766e5f86e5f32da2b33865aa4b4ce0e8881",
+  "local_evidence": "/tmp/netstandard20-maintenance1/evidence",
+  "full_dependency_goal_complete": false,
+  "native_image_sha256": "4a7669ac0b78bdaf76548de643880df3fde1bf03eb9f61425fa848befa1ba25f",
+  "amd64": true,
+  "cet_compatible": true,
+  "file_version": "10.0.526.11800",
+  "original_coreclr_port_files_verified": 64,
+  "additional_native_patch_files_verified": 2,
+  "full_runtime10_complete": false,
+  "formal_ilasm_package_installed": false,
+  "build_exit_code": 0,
+  "image_audit_exit_code": 0,
+  "resource_integration_check_exit_code": 0,
+  "resource_cases": {
+    "llvm-two-sections": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "c350368b130acc6208ef888da8591cadf461b250f80b936fd8e18363c1304a96",
+      "native_version_payload_matches": true
+    },
+    "leading-debug-three-sections": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "f773bb6a55bf24b8a171869215db5b09b6f315e4166c208a72cd3cd6beac9565",
+      "native_version_payload_matches": true
+    },
+    "eight-byte-section-name": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "3f937ee2b98f59dde3743f02cd17f00edc6518db8623368a14b542449b254822",
+      "native_version_payload_matches": true
+    },
+    "invalid-symbol-section": {
+      "exit_code": 1,
+      "expected_success": false,
+      "input_sha256": "6b254b4bb1cc88c410a05f566dfa6174d9079d0a68aaca9e74faadc8ba9c8fe3",
+      "native_version_payload_matches": false
+    },
+    "truncated-resource": {
+      "exit_code": 1,
+      "expected_success": false,
+      "input_sha256": "df6688aef525a2d5e7e6bb9f521ce7235b78db48ea2d90c6b173afc4082b8bc3",
+      "native_version_payload_matches": false
+    }
+  },
+  "production_unsafe_il_changes": 0,
+  "final_cet_native_image_resource_tests_passed": true,
+  "additional_native_patches": {
+    "runtime_source_version": "10.0.5",
+    "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+    "runtime_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+    "patches": {
+      "resource-section-index.patch": "625edb07f68a8cfed4676755d2a51fc7926db69762f66a947925a1391629e66c",
+      "cetcompat.patch": "bec119f9444dad76b4f8136d8e697a5034f37d4eababc03efe0904d5a053c06e"
+    },
+    "changed_files": {
+      "src/coreclr/dlls/mscorpe/ceefilegenwriter.cpp": {
+        "original_sha256": "39d7e152c357b9b1f20eb3568ae6b8447bd155cc034b0ef69d1dc10fa80e6e52",
+        "ported_sha256": "387e1ffdccb2117efcf22439a63f3386ab5a50bfd48d0b7e2cd07020a5b63c84"
+      },
+      "src/coreclr/ilasm/CMakeLists.txt": {
+        "original_sha256": "348d8d92f4c668cf64ea3998850b326970e7b949898cb7d977270fb5c8719c3f",
+        "ported_sha256": "03f79da96da60d36ce0bcceaf432bde1faf103cab6fe9ae9893af8427144fbed"
+      }
+    },
+    "extends_coreclr_port_manifest": "tests/runtime10-coreclr/port-source-inputs.json",
+    "production_unsafe_il_changes": 0,
+    "extends_coreclr_port_manifest_sha256": "648d476a41ca985c8cfe0e3771bf6a3a886d5e0bdb10ec301d343b37d8db1624"
+  },
+  "initial_resource_failure": "Original ILAsm rejected LLVM two-section resource COFF with HRESULT0x80070714; corrected actual section-index validation.",
+  "corrected_cet_linker_spelling": "LINKER:--Xlink=/CETCOMPAT",
+  "final_coreclr_source_manifest_used": true,
+  "earlier_builder_root_manifest_superseded_for_this_audit": true,
+  "formal_pacman_installed": false,
+  "commands": [
+    {
+      "command": "ninja -C \"$ROOT/coreclr-build\" -j2 ilasm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 \"$ROOT/ilasm-check-resources.py\" \"$ROOT\" \"$ROOT/maintenance20-1\" \"$ROOT/ilasm-resource-check2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/bin/python.exe \"$(cygpath -am \"$ROOT/ilasm-workflow/check-image.py\")\" \"$(cygpath -am \"$ROOT\")\"",
+      "exit_code": 0
+    }
+  ]
+}

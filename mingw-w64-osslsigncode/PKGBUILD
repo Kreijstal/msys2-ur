@@ -1,0 +1,34 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=osslsigncode
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.14
+pkgrel=1
+pkgdesc='OpenSSL-based Authenticode signing and verification tool'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/mtrojnar/osslsigncode'
+license=('spdx:GPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-openssl" "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-cmake" "${MINGW_PACKAGE_PREFIX}-ninja")
+source=("osslsigncode-$pkgver.tar.gz::https://codeload.github.com/mtrojnar/osslsigncode/tar.gz/refs/tags/$pkgver" 0001-use-portable-windows-library-names.patch check.sh)
+sha256sums=('0f033fd6069387d2e489fbd2187e62f624764eb8c2758ee94e3e793e5150b5c5'
+            '0eefa88a80ec0f4928e762fc9210602e66d775289de6399977d789237b3b8df7'
+            '08790b3a57cd1f7a2b669e42346cbbc7df2ee0a6b49fcdbce948aa8a2f6e4817')
+prepare() { cd "$srcdir/osslsigncode-$pkgver";patch -Np1 -i "$srcdir/0001-use-portable-windows-library-names.patch"; }
+build() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export CFLAGS="$CFLAGS -ffile-prefix-map=$(cygpath -am "$srcdir")=."
+  "$MINGW_PREFIX/bin/cmake.exe" -S "$srcdir/osslsigncode-$pkgver" -B "$srcdir/build" -G Ninja \
+    -DCMAKE_C_COMPILER="$(cygpath -am "$MINGW_PREFIX/bin/clang.exe")" -DCMAKE_MAKE_PROGRAM="$(cygpath -am "$MINGW_PREFIX/bin/ninja.exe")" \
+    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$MINGW_PREFIX" -DBUILD_TESTING=OFF
+  "$MINGW_PREFIX/bin/cmake.exe" --build "$srcdir/build"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/build/osslsigncode.exe" "$srcdir/check"; }
+package() {
+  install -Dm755 "$srcdir/build/osslsigncode.exe" "$pkgdir$MINGW_PREFIX/bin/osslsigncode.exe"
+  install -Dm644 "$srcdir/osslsigncode-$pkgver/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -m644 "$srcdir/osslsigncode-$pkgver/NEWS.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/NEWS.md"
+  install -Dm644 "$srcdir/osslsigncode-$pkgver/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -m644 "$srcdir/osslsigncode-$pkgver/COPYING.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/COPYING"
+}

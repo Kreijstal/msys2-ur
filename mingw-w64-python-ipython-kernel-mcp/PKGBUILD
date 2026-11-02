@@ -1,0 +1,57 @@
+_realname=ipython-kernel-mcp
+_commit=3c0c701066342668dc9f56a25609f1167c030b8a
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MCP bridge to an existing shared IPython kernel (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/asanchezleache/ipython-kernel-mcp'
+msys2_repository_url='https://github.com/asanchezleache/ipython-kernel-mcp'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-mcp>=2"
+         "${MINGW_PACKAGE_PREFIX}-python-jupyter_client>=8")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-ipykernel: start an IPython kernel"
+            "${MINGW_PACKAGE_PREFIX}-python-jupyter_console: manually use the same kernel")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-ipykernel")
+options=('!strip')
+source=("${_realname}-${_commit}.tar.gz::https://github.com/asanchezleache/ipython-kernel-mcp/archive/${_commit}.tar.gz"
+        0001-interrupt-the-connected-kernel.patch
+        check-kernel.py)
+sha256sums=('7a77ab679f555bf2acf64cf9a13d42c28664ddf0c70383a9a8c4e90fda207800'
+            '46220d3c73d0ef302177b356fef29c9f3b4b6fa399b2c5301ba96040b0ca3d5c'
+            'fdb3f1dfa9c6977e5ddec97e744218f39eff23e1bc69f4f8860da83cacd52dc5')
+
+prepare() {
+  cd "${_realname}-${_commit}" || return
+  patch -p1 -i "${srcdir}/0001-interrupt-the-connected-kernel.patch"
+}
+
+build() {
+  cp -r "${_realname}-${_commit}" "python-build-${MSYSTEM}"
+  cd "python-build-${MSYSTEM}" || return
+  "${MINGW_PREFIX}/bin/python" -m build --wheel --no-isolation --skip-dependency-check
+}
+
+check() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir=check dist/*.whl
+  cd check"${MINGW_PREFIX}"/lib/python3*/site-packages || return
+  # PYTHONPATH also points the subprocess at this staged wheel, not an old install.
+  PYTHONPATH="$(pwd -W)"
+  export PYTHONPATH
+  "${MINGW_PREFIX}/bin/python" "${srcdir}/check-kernel.py"
+}
+
+package() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

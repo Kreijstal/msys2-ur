@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/e/codex-dotnet10/msbuild16tasks.nMyvQP/check-tasks.py", line 30, in <module>
+    run('run',[native(host/'bin/Release/net8.0/Check.dll'),native(owned),native(here/'inputs/tasks16-published-metadata.json'),native(here/'inputs/tasks16-published-resources.json')])
+  File "/e/codex-dotnet10/msbuild16tasks.nMyvQP/check-tasks.py", line 21, in run
+    commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(label,(out/(label+'.log')).read_text()[-6500:])
+                                                                     ^^^^^^^^^^^^^^^
+AssertionError: ('run', 'Unhandled exception. System.Exception: Original published resource strings and embedded file bytes\n   at Program.Require(Boolean value, String message) in E:\\codex-dotnet10\\msbuild16tasks.nMyvQP\\check2\\host\\Check.cs:line 22\n   at Program.Main(String[] args) in E:\\codex-dotnet10\\msbuild16tasks.nMyvQP\\check2\\host\\Check.cs:line 65\n')

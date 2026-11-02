@@ -1,0 +1,36 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-sdk10-support-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.2.25612.105
+pkgrel=1
+pkgdesc='Exact SDK10 NET10 source Hashing DependencyModel and HostModel bootstrap libraries'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/dotnet'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-sdk10-vmr-44525024.tar.gz' 'sdk10-support-source-1.tar.gz')
+noextract=('runtime-sdk10-vmr-44525024.tar.gz')
+sha256sums=('5a13eccf58c85316c3282bf65de3e53e1adc46f254cac3fc46f0ba7118e3e8d3' '98e882df51c67b184daf124733578cd6ad5c76fa9ec9148cd3d8482863698a88')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/prepare.py")" "$(cygpath -am "$srcdir/runtime-sdk10-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/audit.py")" "$(cygpath -am "$srcdir")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/check-api.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/api-check")" > "$srcdir/api-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-support-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

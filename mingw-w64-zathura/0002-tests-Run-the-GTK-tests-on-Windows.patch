@@ -1,0 +1,88 @@
+From c80146fa411333e075cc527700f63d9dc63fd5b1 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 20:37:36 +0100
+Subject: [PATCH 2/2] tests: Run the GTK tests on Windows
+
+GTK draws on the Windows desktop directly, so the session, config and
+setting tests run without xvfb-run. They need an interactive desktop and
+are in a separate gui suite.
+
+g_file_set_contents() replaces the file, which Windows refuses while the
+descriptor from g_file_open_tmp() is still open.
+---
+ tests/meson.build   | 13 ++++++++++++-
+ tests/test_config.c |  6 ++++--
+ 2 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/tests/meson.build b/tests/meson.build
+index bb4abc15..571dd5a7 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -45,7 +45,8 @@ test('utils', utils,
+ 
+ xvfb = find_program('xvfb-run', required: get_option('tests-x11'))
+ weston = find_program('weston', required: get_option('tests-wayland'))
+-if xvfb.found() or weston.found()
++windows_gui = host_machine.system() == 'windows'
++if xvfb.found() or weston.found() or windows_gui
+   session = executable('test_session', files('test_session.c'),
+     dependencies: build_dependencies + test_dependencies,
+     include_directories: include_directories,
+@@ -115,6 +116,16 @@ if xvfb.found()
+   )
+ endif
+ 
++# GTK draws on the Windows desktop directly, there is no display server to
++# start. The tests need an interactive desktop session, so they are in their
++# own suite that can be left out on headless hosts.
++if windows_gui
++  gui_env = ['GTK_A11Y=none']
++  test('gui_session', session, timeout: 60*60, protocol: 'tap', suite: 'gui', env: env + gui_env)
++  test('gui_config', config, timeout: 60*60, is_parallel: false, protocol: 'tap', suite: 'gui', env: gui_env)
++  test('gui_setting', setting, timeout: 60*60, is_parallel: false, protocol: 'tap', suite: 'gui', env: gui_env)
++endif
++
+ # Weston-headless test for Wayland environments
+ if weston.found()
+   weston_session = find_program(meson.current_source_dir() / 'weston_session.sh')
+diff --git a/tests/test_config.c b/tests/test_config.c
+index 91487f64..6fdca7fa 100644
+--- a/tests/test_config.c
++++ b/tests/test_config.c
+@@ -30,6 +30,8 @@ static void test_config_parse_modifier_keys(void) {
+   int fd         = g_file_open_tmp(NULL, &filename, NULL);
+   g_assert_cmpint(fd, !=, -1);
+   g_assert_nonnull(filename);
++  /* g_file_set_contents() replaces the file, which Windows refuses while it is open. */
++  close(fd);
+ 
+   /* Test various modifier key combinations that previously failed */
+   if (g_file_set_contents(filename,
+@@ -42,7 +44,6 @@ static void test_config_parse_modifier_keys(void) {
+   }
+   g_assert_true(girara_config_parse(session, filename));
+ 
+-  close(fd);
+   g_remove(filename);
+   g_free(filename);
+   girara_session_destroy(session);
+@@ -62,6 +63,8 @@ static void test_config_parse(void) {
+   int fd         = g_file_open_tmp(NULL, &filename, NULL);
+   g_assert_cmpint(fd, !=, -1);
+   g_assert_nonnull(filename);
++  /* g_file_set_contents() replaces the file, which Windows refuses while it is open. */
++  close(fd);
+   if (g_file_set_contents(filename,
+                           "set test1 config-string\n"
+                           "set test2 2\n",
+@@ -79,7 +82,6 @@ static void test_config_parse(void) {
+   g_assert_true(girara_setting_get(session, "test2", &real_val));
+   g_assert_cmpint(real_val, ==, 2);
+ 
+-  close(fd);
+   g_remove(filename);
+   g_free(filename);
+   girara_session_destroy(session);
+-- 
+2.55.0
+

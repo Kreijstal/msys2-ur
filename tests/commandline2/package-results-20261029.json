@@ -1,0 +1,91 @@
+{
+  "finished_at_utc": "2026-10-29T09:41:22.491260+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/commandline2pkg1.FaO0xK",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "0bf875e1284c98b769543e8d6717754f942fc862d68e2f90bc82e14dc9f1c55d"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap-2.0.2-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "bbe6fa202dfa944045f1f77fdc2e4b0d8faac36383d38cc9bbf8993ace2b961c"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap mingw-w64-clang-x86_64-dotnet-commandline",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "de5e118bf8477bce7e427a29cc61e636dad0ac635b161bf7168667abd9b66029"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-commandline2-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "500793b0176dda5130e9fddb25b49a1afeebc9c4408275f6678e3887dad1bd91"
+    }
+  ],
+  "installed_check": {
+    "command": [
+      "E:/msys64/clang64/bin/python.exe",
+      "-X",
+      "utf8",
+      "E:/msys64/clang64/share/doc/dotnet-commandline2-bootstrap/checks/check.py",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/plan",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/build",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/localized",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/consumer"
+    ],
+    "exit_code": 0,
+    "payload_files_verified": 18,
+    "both_original_archive_profiles_verified": true,
+    "actual_source_NuGet73_NET10_archive_restore_passed": true,
+    "original_cultures": 14,
+    "archive_satellites": 28,
+    "source_runtime_executions": 3,
+    "unchanged_upstream_tokenization_cases_per_execution": 9,
+    "NS2_reference_only_dependencies_runtime_substituted": false,
+    "original_NS2_memory_package_runtime_closure_verified": false,
+    "full_original_trim_analyzer_integration": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "actual_feed_restore": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+      "E:/msys64/clang64/lib/dotnet10/build-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap/bin/MSBuild.dll",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/feed-restore/Consumer.proj",
+      "-t:Restore",
+      "-nologo",
+      "-v:minimal"
+    ],
+    "exit_code": 0,
+    "actual_source_NuGet73_restore": true,
+    "exact_NET10_compile_runtime_assets_selected": true,
+    "NS2_Memory_dependency_not_substituted_into_NET10": true,
+    "restored_archive_sha256": "fa079a2de8b4f657d416be751e0c4337b09a230f2b83c0164643065bc7e8266c",
+    "original_NS2_memory_package_runtime_closure_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "exact_vmr_files_verified": 405,
+    "original_compile_items_per_framework": 74,
+    "original_frameworks": [
+      "net10.0",
+      "netstandard2.0"
+    ],
+    "original_xlf_inputs": 14,
+    "satellites": 28,
+    "all_source_policy_resource_reference_output_hashes_match": true,
+    "original_production_source_changes": 0,
+    "full_original_framework_runtime_dependency_closure": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "full_original_framework_runtime_dependency_closure": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

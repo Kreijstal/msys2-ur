@@ -1,0 +1,66 @@
+Original JSON10, encoder and pipelines NET8 NuGets — clean package and installed checks passed
+
+Package: mingw-w64-clang-x86_64-dotnet-json10-net8 10.0.5-1
+Windows root: /c/codex-dotnet10/json10pkg.sHIrJ6
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-json10-net8-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-json10-net8
+RESULT: exit 0
+
+$ /usr/bin/python3 src/json10-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 src/json10-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-json-package.py ./mingw-w64-clang-x86_64-dotnet-json10-net8-10.0.5-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Three original NET8 runtime NuGets use all 405 unchanged C# inputs and 425 audited archive inputs. Original versioning.targets restores CLS compliance and preserves alias, neutral resource language, Serviceable/PreferInbox and native DLL-search policy. The original IsTrimmable metadata is retained; source ILLink processing and trimming/AOT execution are still open. All 1,381 listed public/protected API declarations and checked shapes pass (JSON1086, encoder212, pipelines83), along with three resource sets / 263 strings. XML docs retain 1,967 members (JSON1606, encoder249, pipelines112). JSON retains the source-only Roslyn4.4 JSON analyzer plus 13 satellites, from the installed original generator bundle.
+
+Fresh installed restores verify every source package/cache DLL and exact NET8 runtime asset. Generated JSON contracts compile through the packaged analyzer and execute, including Unicode/schema/DOM/new duplicate-property rejection, PipeReader/PipeWriter serialization and asynchronous enumeration. Separate pipe tests exercise backpressure, cancellation and completion; HTML/JavaScript/URL encoder cases pass. Existing SDK/compiler/shared-framework hashes remain unchanged. pacman verifies22 entries including directories; all13 regular payload files match exact package bytes.
+
+The original ref project includes common, netcoreapp and type-forward reference files. One pinned upstream source/reference difference is explicitly checked: JsonStringEnumConverter<T>.CreateConverter is JsonConverter in the ref file and JsonConverter? in the unchanged implementation. Only that exact original difference is accepted; unknown API/shape changes still fail. The initial consumer-glob failure and incomplete-baseline prototype are preserved in evidence; a subsequent complete clean rebuild and installed audits all pass. The source CLS omission in earlier unshipped fixtures is corrected: no CS3021 warnings remain. CS8500 and MSB3243 warnings remain in producer logs; actual peer reference paths are independently verified.
+
+--- src/installed-consumer/run.log ---
+PASS source identity, target, CLS, versions, aliases, resources and library metadata: System.Text.Json
+PASS source identity, target, CLS, versions, aliases, resources and library metadata: System.Text.Encodings.Web
+PASS source identity, target, CLS, versions, aliases, resources and library metadata: System.IO.Pipelines
+PASS all 3 original resource sets / 263 strings
+VERIFIED original reference/source nullable annotation difference: M:System.Text.Json.Serialization.JsonStringEnumConverter`1.CreateConverter(System.Type,System.Text.Json.JsonSerializerOptions)
+PASS System.Text.Json: all 1086 original public/protected declarations and checked shapes
+PASS System.Text.Encodings.Web: all 212 original public/protected declarations and checked shapes
+PASS System.IO.Pipelines: all 83 original public/protected declarations and checked shapes
+PASS generated JSON10 Unicode contracts, schema/DOM/duplicates, pipe serialization/streaming/cancellation/backpressure and encoders
+
+--- installed-source-audit.log ---
+PASS source/archive/metadata/peer/Regex10/three original NET8 NuGet/docs/analyzer audits
+
+--- installed-package-audit.log ---
+PASS 13 exact installed files, three NET8 runtime DLLs/XML docs and original JSON analyzer/13 satellites in three NuGets
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-json10-net8: 22 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/System.Reflection.Metadata.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Text.Json.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Text.Encodings.Web.dll: OK
+
+Package SHA256: e0ae0159f5581b74de9347238f486f8c3fc20c2615eee56d46712519ee208196
+Evidence: /tmp/json10-net8-package1/json10-net8-package-evidence1.tar.gz
+Evidence SHA256: 022da3ffdf26e00a5cb5f3f1d82d9ca32a6e1dd89bb98cfd4e553db77d7fb284
+All 579 evidence files and all15 frozen workflow files, PKGBUILD and .SRCINFO verified.
+
+Other original target variants, source ILLink/attribute/AOT gates, final SDK targeting-pack integration, complete managed/native framework/SDK/desktop10, PowerShell7.6 and all earlier compatibility gates remain open.

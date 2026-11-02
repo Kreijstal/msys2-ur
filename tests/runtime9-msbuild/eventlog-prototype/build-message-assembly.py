@@ -1,0 +1,6 @@
+from pathlib import Path
+import subprocess,json,hashlib,sys
+root=Path(sys.argv[1]).resolve();out=root/'messages-build3';prefix=Path(subprocess.check_output(['cygpath','-am','/clang64'],text=True).strip());host=prefix/'lib/dotnet10/dotnet.exe';compiler=prefix/'lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll';refs=prefix/'lib/dotnet/packs/NETStandard.Library.Ref/2.0.3/ref/netstandard2.0';assert len(list(refs.glob('*.dll')))>100
+key=out/'Microsoft.pubkey';key.write_bytes(bytes.fromhex((root/'Microsoft.pubkey.hex').read_text()));info=out/'AssemblyInfo.cs';info.write_text('[assembly:System.Reflection.AssemblyVersion("9.0.0.11")]\n[assembly:System.Runtime.Versioning.TargetFramework(".NETStandard,Version=v2.0")]\n')
+args=['/nostdlib+','/target:library','/publicsign+','/keyfile:"'+key.as_posix()+'"','/win32res:"'+(out/'EventLogMessages.res').as_posix()+'"','/out:"'+(out/'System.Diagnostics.EventLog.Messages.dll').as_posix()+'"',*['/reference:"'+p.as_posix()+'"' for p in refs.glob('*.dll')],'"'+info.as_posix()+'"'];rsp=out/'compile.rsp';rsp.write_text('\n'.join(args)+'\n');r=subprocess.run([str(host),str(compiler),'-noconfig','@'+rsp.as_posix()]);assert r.returncode==0
+print('PASS original message assembly NETStandard2.0 built from regenerated Win32 resources')

@@ -1,0 +1,66 @@
+Original Roslyn4.14 VB compiler, Workspaces and metapackage — installed validation passed
+
+Package: mingw-w64-clang-x86_64-dotnet-roslyn414-visualbasic 4.14.0-1
+Windows build root: /c/codex-dotnet10/vb414pkg.ePc2xf
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-roslyn414-visualbasic-4.14.0-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-roslyn414-visualbasic
+RESULT: exit 0
+
+$ /usr/bin/python3 src/visualbasic414-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 src/visualbasic414-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-roslyn414-visualbasic-4.14.0-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Verified 909 compiler and 235 Workspaces original VB inputs, six regenerated files (five VB plus grammar), 6,096 compiler API declarations, 49 MEF exports and 42 services. The original Workspaces public API baseline is empty. Compiler resources: 14 sets / 25,312 values; Workspaces: 42 / 700. Source audit: 1,225 original inputs and 84 actual package references. Installed payload: 17 regular files, three NuGets, 28 managed/satellite assemblies. pacman -Qk counts 26 entries including directories, none missing.
+
+The prototype audit accidentally selected upstream fixture projects; the final frozen workflow scopes selection to the five actual build projects. The subsequent clean package build, installed consumers and audits all passed. Only NU1603 compiler/Workspaces warning codes remain. makepkg reports MSYS-root references in provenance records. Existing SDK/compiler/runtime hashes are unchanged. Original NET8/NET9 variants and the full dependency goal remain open.
+
+--- src/installed-consumer/run.log ---
+PASS source compiler identity, 14 resource sets/25312 strings and thirteen satellite assemblies
+PASS VB syntax/semantics, generics, query/XML literals, anonymous types, iterator, async/await, analyzer callbacks, portable PDB and executed IL
+PASS checked/unchecked emitted arithmetic, errors and localized diagnostics, source generation, embedded VB runtime templates, cancellation and no Framework implementation
+PASS source identity, 235 original source inputs, 19 friends, embedded VB support and 42 resource sets/700 strings
+DEFAULT EXPORT Microsoft.CodeAnalysis.VisualBasic.Classification.VisualBasicSyntaxClassificationService attribute=System.Composition.ExportAttribute name= metadata=[Microsoft.CodeAnalysis.Host.Mef.ExportLanguageServiceAttribute(typeof(Microsoft.CodeAnalysis.Classification.ISyntaxClassificationService), "Visual Basic", "Default")];[System.Composition.ExportAttribute()];[System.Composition.SharedAttribute()]
+PASS every one of 49 MEF export parts activates and all 42 VB language services/factories resolve
+PASS MEF VB/CSharp workspaces, Unicode documents, case-insensitive/cross-language reference search and rename, VB formatting, project-reference emit and executed IL
+PASS VB simplification, real analyzer/code-fix actions, DocumentEditor/SyntaxGenerator with executed output, incremental edits, cancellation and no Framework implementations
+PASS 29 original compiler friend declarations / 28 unique emitted identities
+PASS: Microsoft.CodeAnalysis.VisualBasic preserves all 6096 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.VisualBasic.Workspaces preserves all 0 upstream public API declarations
+PASS original VB4.14 compiler, Workspaces and API contracts
+
+--- installed-source-audit.log ---
+PASS original VB4.14 archive inputs and actual compiler/consumer source-package caches
+
+--- installed-package-audit.log ---
+PASS seventeen installed files, three exact source Roslyn4.14 NuGets, 28 managed/satellite assemblies, both meta dependencies and source licenses
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-roslyn414-visualbasic: 26 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/vbc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.CSharp.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+Package SHA256: ad29269b554895777c394256776acd7c1421e4cb834b496f7d3c151e0bce0526
+Evidence: /tmp/roslyn414-visualbasic-package1/roslyn414-visualbasic-package-evidence1.tar.gz
+Evidence SHA256: 600ae92c2130a46f80a6521ba975baf3fb20055cab3209467e176fb7ab739954
+199 evidence files and all 17 frozen workflow inputs verified.

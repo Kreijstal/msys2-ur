@@ -1,0 +1,53 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/bridge/Bridge.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/host/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/host/bin/Release/net8.0/Check.dll",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/check4/owned",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/tests/legacy-windows-support/inputs/published-runtime-metadata.json",
+        "E:/codex-dotnet10/legacy-windows-support.B0Hlgq/prepared2/source-inputs.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_public_API_entries": 106,
+  "original_runtime_reference_identity_sets_equal": true,
+  "all_source_strings_and_encoding_data_bytes_verified": true,
+  "isolated_original_implementation_versions_executed": true,
+  "original_NS13_consumer_compiler_references_only_source_contracts": true,
+  "candidate_DLL_sha256": {
+    "Microsoft.Win32.Registry": "890cc5f25f930bddb3faa8dd3ed75dbb30ad599437aad90bf6958f9ea6a8313a",
+    "System.Text.Encoding.CodePages": "3313a610840d2b0621e27fb7b7892c6b7be5fce20e84600f5ce540bdb1f27814"
+  },
+  "native_registry_owned_subtree_cleanup_verified": true,
+  "full_dependency_goal_complete": false
+}

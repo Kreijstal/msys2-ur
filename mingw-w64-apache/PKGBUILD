@@ -1,0 +1,197 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=apache
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.4.69
+pkgrel=1
+_aprver=1.7.6
+pkgdesc='Apache HTTP Server (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://httpd.apache.org'
+msys2_repository_url='https://github.com/apache/httpd'
+msys2_references=(
+  "cpe: cpe:/a:apache:http_server"
+)
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-apr"
+         "${MINGW_PACKAGE_PREFIX}-apr-util"
+         "${MINGW_PACKAGE_PREFIX}-brotli"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-jansson"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-lua54"
+         "${MINGW_PACKAGE_PREFIX}-nghttp2"
+         "${MINGW_PACKAGE_PREFIX}-openldap"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-pcre2"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+backup=("${MINGW_PREFIX#/}/etc/httpd/httpd.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-autoindex.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-dav.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-default.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-info.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-languages.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-manual.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-mpm.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-multilang-errordoc.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-ssl.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-userdir.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/httpd-vhosts.conf"
+        "${MINGW_PREFIX#/}/etc/httpd/extra/proxy-html.conf")
+# The Windows-specific parts of httpd (os/win32, the WinNT MPM) include a few
+# private APR headers (apr_arch_*.h), which the apr package does not install;
+# take them from the matching APR source release.
+source=("https://archive.apache.org/dist/httpd/httpd-${pkgver}.tar.bz2"
+        "https://archive.apache.org/dist/apr/apr-${_aprver}.tar.bz2"
+        "0001-cmake-support-building-with-MinGW.patch"
+        "0002-core-resolve-relative-Directory-paths-against-Server.patch"
+        "0003-win32-use-the-MSYS2-filesystem-layout-for-the-compil.patch"
+        "0004-Fix-building-the-Windows-code-with-GCC.patch"
+        "0005-winnt-let-apr-util-find-its-driver-DLLs-in-lib-apr-u.patch"
+        "0006-mod_ldap-keep-MSYS2-s-OpenLDAP-DLL-loaded.patch"
+        "apr-private-headers-mingw.patch")
+sha256sums=('c5e6ebc66e349b87d7fc6916ae7cc2a808ed348003de134cf9e9d89d3e2cc73d'
+            '49030d92d2575da735791b496dc322f3ce5cff9494779ba8cc28c7f46c5deb32'
+            '0f17ff8425e54ccf16014454bd8489d486ebb20ff5b1f8d6299c359845cb93b0'
+            'adc62b17ffa4762d3b906a3d2a72a4062ff84fcadbfbb8b5792031279f6180bd'
+            '4c2f930aa28d335b0e52c214054b309e1d3faeb638997484b43e502f880a2c33'
+            'cfa8d011fe63420fb3511cd8980dda9ea1e8ef257e2f472fff797f26b3b178e4'
+            'd07a30554ed3984d1d8cc1e3931b9c5fee3b704d50c850c88c35c8379590fe66'
+            'd0d5a552a6edf5a2e2ca1b5a9d35652f4b27036b48b8ba28fc4740b1e3b6c5bb'
+            'adcc95422f6613056397ce112669420d271f1382949bf6327978d5421e301368')
+noextract=("apr-${_aprver}.tar.bz2")
+
+prepare() {
+  cd "${srcdir}/httpd-${pkgver}"
+  # 0001: make the (Windows-only) CMake build work with MinGW and make the
+  #       install layout configurable
+  # 0002: relative <Directory> paths are relative to ServerRoot, so the
+  #       default config can be fully relative and thus relocatable
+  # 0003: compiled-in defaults (httpd.conf location, logs, runtime dir)
+  #       for the MSYS2 layout below ${MINGW_PREFIX}
+  # 0004: source fixes the Windows-only code needs to compile with GCC
+  # 0005: let apr-util find its crypto/dbd/dbm/ldap driver DLLs, which
+  #       live in ${MINGW_PREFIX}/lib/apr-util-1 (not on the DLL path)
+  # 0006: pin libldap.dll; unloading it calls WSACleanup() and breaks
+  #       Winsock after the preflight config pass
+  patch -p1 -i "${srcdir}/0001-cmake-support-building-with-MinGW.patch"
+  patch -p1 -i "${srcdir}/0002-core-resolve-relative-Directory-paths-against-Server.patch"
+  patch -p1 -i "${srcdir}/0003-win32-use-the-MSYS2-filesystem-layout-for-the-compil.patch"
+  patch -p1 -i "${srcdir}/0004-Fix-building-the-Windows-code-with-GCC.patch"
+  patch -p1 -i "${srcdir}/0005-winnt-let-apr-util-find-its-driver-DLLs-in-lib-apr-u.patch"
+  patch -p1 -i "${srcdir}/0006-mod_ldap-keep-MSYS2-s-OpenLDAP-DLL-loaded.patch"
+
+  # httpd.exe derives ServerRoot from its own location (the parent of bin\),
+  # so the shipped config must not pin it to the build-time prefix.
+  sed -i 's|^ServerRoot "@@ServerRoot@@"|# ServerRoot defaults to the parent directory of bin\\httpd.exe, i.e. the\n# MSYS2 environment prefix; all relative paths below are relative to it.\n#ServerRoot "C:/msys64@MINGW_PREFIX@"|' \
+    docs/conf/httpd.conf.in
+  sed -i "s|@MINGW_PREFIX@|${MINGW_PREFIX}|" docs/conf/httpd.conf.in
+
+  rm -rf "${srcdir}/apr-private"
+  mkdir -p "${srcdir}/apr-private"
+  bsdtar -xf "${srcdir}/apr-${_aprver}.tar.bz2" -C "${srcdir}/apr-private" \
+    --strip-components 2 "apr-${_aprver}/include/arch/win32" \
+    "apr-${_aprver}/include/arch/apr_private_common.h"
+  # same fix MSYS2's apr package applies to its own build
+  patch -d "${srcdir}/apr-private" -p1 -i "${srcdir}/apr-private-headers-mingw.patch"
+}
+
+build() {
+  local _p _aprpriv
+  _p="$(cygpath -m "${MINGW_PREFIX}")"
+  _aprpriv="$(cygpath -m "${srcdir}/apr-private")"
+  # APLOG_MARK records __FILE__; keep build paths out of the binaries
+  CFLAGS+=" -fmacro-prefix-map=$(cygpath -m "${srcdir}")/="
+
+  # Modules marked "O" upstream (examples/test modules) stay off, except a
+  # few generally useful ones that the autoconf build has in "all".
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -S "httpd-${pkgver}" -B "build-${MSYSTEM}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+    -DINSTALL_PDB=OFF \
+    -DINSTALL_MANUAL=ON \
+    -DAPR_INCLUDE_DIR="${_p}/include/apr-1" \
+    -DAPR_LIBRARIES="${_p}/lib/libapr-1.dll.a;${_p}/lib/libaprutil-1.dll.a" \
+    -DEXTRA_INCLUDES="${_aprpriv};${_aprpriv}/arch/win32" \
+    -DPCRE_INCLUDE_DIR="${_p}/include" \
+    -DPCRE_LIBRARIES="${_p}/lib/libpcre2-8.dll.a" \
+    -DPCRE_CFLAGS=-DHAVE_PCRE2 \
+    -DNGHTTP2_INCLUDE_DIR="${_p}/include" \
+    -DNGHTTP2_LIBRARIES="${_p}/lib/libnghttp2.dll.a" \
+    -DBROTLI_INCLUDE_DIR="${_p}/include" \
+    -DBROTLI_LIBRARIES="${_p}/lib/libbrotlienc.dll.a;${_p}/lib/libbrotlicommon.dll.a" \
+    -DCURL_INCLUDE_DIR="${_p}/include" \
+    -DCURL_LIBRARIES="${_p}/lib/libcurl.dll.a" \
+    -DJANSSON_INCLUDE_DIR="${_p}/include" \
+    -DJANSSON_LIBRARIES="${_p}/lib/libjansson.dll.a" \
+    -DLUA_INCLUDE_DIR="${_p}/include/lua5.4" \
+    -DLUA_LIBRARY="${_p}/lib/liblua5.4.dll.a" \
+    -DENABLE_CERN_META=I \
+    -DENABLE_DATA=I \
+    -DENABLE_ECHO=I \
+    -DENABLE_IDENT=I \
+    -DENABLE_MIME_MAGIC=I \
+    -DENABLE_REFLECTOR=I \
+    -DMODULES_DIR=lib/httpd/modules \
+    -Drel_sysconfdir=etc/httpd \
+    -Drel_logfiledir=var/log/httpd \
+    -Drel_runtimedir=var/run/httpd \
+    -Dexp_sysconfdir=etc/httpd \
+    -Dexp_logfiledir=var/log/httpd \
+    -Dexp_runtimedir=var/run/httpd \
+    -Dexp_htdocsdir=share/httpd/htdocs \
+    -Dexp_cgidir=share/httpd/cgi-bin \
+    -Dexp_iconsdir=share/httpd/icons \
+    -Dexp_errordir=share/httpd/error \
+    -Dexp_manualdir=share/httpd/manual
+
+  cmake --build "build-${MSYSTEM}"
+}
+
+check() {
+  # run the freshly built server against the generated config in a scratch
+  # ServerRoot laid out like the package
+  local _root="${srcdir}/test-root-${MSYSTEM}"
+  rm -rf "${_root}"
+  mkdir -p "${_root}"/{bin,lib/httpd/modules,etc,var/log/httpd,var/run/httpd,share/httpd}
+  cp -r "build-${MSYSTEM}/conf" "${_root}/etc/httpd"
+  cp "build-${MSYSTEM}"/*.so "${_root}/lib/httpd/modules/"
+  cp "build-${MSYSTEM}"/{httpd.exe,libhttpd.dll} "${_root}/bin/"
+  cp -r "httpd-${pkgver}/docs/docroot" "${_root}/share/httpd/htdocs"
+  mkdir -p "${_root}"/share/httpd/{cgi-bin,icons,error}
+  "${_root}/bin/httpd.exe" -V
+  "${_root}/bin/httpd.exe" -t
+  rm -rf "${_root}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install "build-${MSYSTEM}"
+
+  local _d="${pkgdir}${MINGW_PREFIX}"
+  # headers go below include/httpd (they include e.g. os.h)
+  mkdir -p "${_d}/include/httpd"
+  mv "${_d}"/include/*.h "${_d}/include/httpd/"
+  install -d "${_d}/share/httpd"
+  mv "${_d}/manual" "${_d}/share/httpd/manual"
+
+  # configuration (generated from docs/conf/*.in by the CMake build)
+  install -d "${_d}/etc/httpd/extra"
+  install -Dm644 -t "${_d}/etc/httpd" "build-${MSYSTEM}"/conf/{httpd.conf,mime.types,magic,charset.conv}
+  install -Dm644 -t "${_d}/etc/httpd/extra" "build-${MSYSTEM}"/conf/extra/*.conf
+
+  cd "${srcdir}/httpd-${pkgver}"
+  cp -r docs/docroot "${_d}/share/httpd/htdocs"
+  cp -r docs/icons "${_d}/share/httpd/icons"
+  cp -r docs/error "${_d}/share/httpd/error"
+  install -d "${_d}/share/httpd/cgi-bin"
+  install -d "${_d}"/var/{log/httpd,run/httpd}
+
+  install -Dm644 LICENSE "${_d}/share/licenses/${_realname}/LICENSE"
+  install -Dm644 NOTICE "${_d}/share/licenses/${_realname}/NOTICE"
+}

@@ -1,0 +1,67 @@
+pkgbase = mingw-w64-dotnet-stylecop-analyzers
+	pkgdesc = Source-built StyleCop analyzers and code fixes for .NET 8
+	pkgver = 1.2.0.beta556
+	pkgrel = 1
+	url = https://github.com/DotNetAnalyzers/StyleCopAnalyzers
+	arch = any
+	license = spdx:MIT
+	license = spdx:Apache-2.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-targeting-pack>=8.0.131-2
+	makedepends = git
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	options = !strip
+	options = !lto
+	source = stylecop::git+https://github.com/DotNetAnalyzers/StyleCopAnalyzers#commit=73a46ae2e65e7870fefe35e2c4c12bb7152f4ec5
+	source = prepare.py
+	source = verify-source.py
+	source = source-inputs.json
+	source = upstream-commit.txt
+	source = build-libraries.sh
+	source = build.sh
+	source = pack.py
+	source = CheckPrototype.cs
+	source = CheckGenerated.cs
+	source = CheckFixtures.cs
+	source = CheckSpecialFixes.cs
+	source = ExtractFixtures.cs
+	source = InspectInventory.cs
+	source = check.sh
+	source = ExpectedInventory.json
+	source = UpstreamFixtures.json
+	source = published-metadata-provenance.json
+	source = README.md
+	source = Apache-2.0.txt
+	sha256sums = SKIP
+	sha256sums = 60fbc111cf86095dfbc1e2bd40b113512fa26c02e2f5116df0717bc64109005e
+	sha256sums = 49b142710e55bfeb59098598bb55d07ee87f30debf05dc03a95fa4312bc0c6a5
+	sha256sums = 826a524a9b46418adc68e3854f404d389f8c0312ae75b26ca7e2a0bb53d0645e
+	sha256sums = 3fbd4f186eebb184ff6d99458d6412b30bfde1cd31b64c0e24505e30b5c99b6e
+	sha256sums = 5db39bf1c6fcc98d832695fd06b333dc46654544ac72ccded36c794307a6e522
+	sha256sums = c989e297a6cd57a516dbdc1443b848ee4abad6c731c4a8a566d5324578177658
+	sha256sums = eb5d80d4344eef953c6936ccb0d94afda0fcec670475364fbb50f4599f0ef8e7
+	sha256sums = 7eeaafdac0df82a32ca0cb136b423b7ec46f78172b1e21003e558ccc02f6f561
+	sha256sums = a13de0ddd0b7f455495ab936ff8fc4a2817cccc2ef7927289805d5930064e7c4
+	sha256sums = ccb0ae281d1642fd6719f99f2bd6c30245628cb8c1c8f47d0fa5ac13c891076d
+	sha256sums = 9a3ab56686339d1dd1e32f3fe9516464aa75073414a48e5b3960d5ec79e30266
+	sha256sums = 88d698418b2c664b9e18be90615a6341b3bdda7657357eee6adff2c205e379b5
+	sha256sums = 96187d226e96e7cb99857747f2a83a2b6e44c370c7a32247266993ca8a73935d
+	sha256sums = 4af7684b3822b6d4c3558b9e4d72d8e5f994a06993d6c5494331ff84f8267951
+	sha256sums = a54fb397a4245de96aec8f0c8af7a13be5f6694705d73ce47f7a3081d96fefa0
+	sha256sums = 8208b31d35a8691e5c793a7ded1ae1232de9bf19a21b5d1741f242c601bd3775
+	sha256sums = 401f1f058ff7476520ef8f7719ceba42498d3689b4dd786599cb42c13a524599
+	sha256sums = 430c26b5c011102a4f259892f0c8c2d119eeff52474c32507586c0ab584e617c
+	sha256sums = 074e6e32c86a4c0ef8b3ed25b721ca23aca83df277cd88106ef7177c354615ff
+
+pkgname = mingw-w64-clang-x86_64-dotnet-stylecop-analyzers
+	pkgdesc = Source-built StyleCop.Analyzers beta.556 dependency package
+	depends = mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable=1.2.0.beta556
+
+pkgname = mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable
+	pkgdesc = Source-built StyleCop.Analyzers 1.2.0.556 analyzer and code-fix implementation
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2

@@ -1,0 +1,85 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-org-ow2-sat4j-pb
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-pb")
+pkgver=2.3.6
+pkgrel=1
+pkgdesc="org-ow2-sat4j-pb Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.sat4j.org/'
+license=('spdx:EPL-1.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-core")
+source=('bundle.bnd'
+         'https://repo.maven.apache.org/maven2/org/ow2/sat4j/org.ow2.sat4j.pb/2.3.6/org.ow2.sat4j.pb-2.3.6-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/ow2/sat4j/org.ow2.sat4j.pb/2.3.6/org.ow2.sat4j.pb-2.3.6.pom')
+noextract=('org.ow2.sat4j.pb-2.3.6-sources.jar'
+         'org.ow2.sat4j.pb-2.3.6.pom')
+sha256sums=('68c22273de29467984a7c82d04fa843ab5fe97e889a08e60b01caa070b043985'
+         '3d26e09d14211598383fb22e46eb36128e7ffc8381fcc671d4c75510ec3da4c0'
+         '211f94a75e94d8ecb7835caad3ababa703593af5eefc34bdfe4a661f8077b5e2')
+_artifacts=('org.ow2.sat4j:org.ow2.sat4j.pb:2.3.6')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.ow2.sat4j:org.ow2.sat4j.pb:2.3.6 upstream/org.ow2.sat4j.pb \
+    -r resources/org.ow2.sat4j.pb -u org.ow2.sat4j.pb-2.3.6.pom -b bundle.bnd -- \
+    org.ow2.sat4j:org.ow2.sat4j.core
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.ow2.sat4j:org.ow2.sat4j.core org.ow2.sat4j:org.ow2.sat4j.pb
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-org-ow2-sat4j-pb() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-org-ow2-sat4j-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --plugin org.ow2.sat4j:org.ow2.sat4j.pb
+  _license org.ow2.sat4j.pb 2.3.6
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

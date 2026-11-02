@@ -1,0 +1,22 @@
+--- a/third_party/perfetto/gn/perfetto_cc_proto_descriptor.gni
++++ b/third_party/perfetto/gn/perfetto_cc_proto_descriptor.gni
+@@ -33,7 +33,7 @@
+       descriptor_file_path =
+           get_label_info(invoker.descriptor_target, "target_gen_dir") +
+           "/${invoker.descriptor_name}"
+-      if (build_with_chromium) {
++      if (build_with_chromium || perfetto_build_with_embedder) {
+         deps = [ "${invoker.descriptor_target}_gen" ]
+       } else {
+         deps = [ invoker.descriptor_target ]
+--- a/third_party/protobuf/proto_library.gni
++++ b/third_party/protobuf/proto_library.gni
+@@ -712,7 +712,7 @@
+           public_deps += [ "$_this_dir:protobuf_lite" ]
+         }
+ 
+-        if (is_win) {
++        if (is_msvc) {
+           cflags = [
+             # disable: C4125 decimal digit terminates octal escape sequence
+             # Protoc generates such sequences frequently, there's no obvious

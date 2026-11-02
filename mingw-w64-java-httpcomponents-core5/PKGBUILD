@@ -1,0 +1,102 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-httpcomponents-core5
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-httpcore5"
+         "${MINGW_PACKAGE_PREFIX}-java-httpcore5-h2")
+pkgver=5.1.3
+pkgrel=1
+pkgdesc="httpcomponents-core5 Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.1.3/httpcore5-5.1.3-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5/5.1.3/httpcore5-5.1.3.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.1.3/httpcore5-h2-5.1.3-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/httpcomponents/core5/httpcore5-h2/5.1.3/httpcore5-h2-5.1.3.pom')
+noextract=('httpcore5-5.1.3-sources.jar'
+         'httpcore5-5.1.3.pom'
+         'httpcore5-h2-5.1.3-sources.jar'
+         'httpcore5-h2-5.1.3.pom')
+sha256sums=('97696503c77792102fb84d107932a47acd92563bcbf7a11775894b03b0c8afaa'
+         '7fc2b8045809f3f27ac9d4d9e99b9d34621b6371cf93c7313ecd84a5af0e9bae'
+         'dde9ca3aa4f3866e73c7d0acafda350ae5f9c14a399ef57c99eacc702c85eb24'
+         '2bc0317a148edc9aefea3ec1535394efced3d137d62f7ff5656d0b03f94c0786')
+_artifacts=('org.apache.httpcomponents.core5:httpcore5:5.1.3'
+         'org.apache.httpcomponents.core5:httpcore5-h2:5.1.3')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+  # Use OpenJDK JSSE; the optional Conscrypt provider needs an unbuilt native TLS library.
+  rm -f upstream/httpcore5-h2/org/apache/hc/core5/http2/ssl/Conscrypt*.java
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.apache.httpcomponents.core5:httpcore5:5.1.3 upstream/httpcore5 \
+    -r resources/httpcore5 -u httpcore5-5.1.3.pom
+  jb_module org.apache.httpcomponents.core5:httpcore5-h2:5.1.3 upstream/httpcore5-h2 \
+    -r resources/httpcore5-h2 -u httpcore5-h2-5.1.3.pom -- \
+    org.apache.httpcomponents.core5:httpcore5
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.apache.httpcomponents.core5:httpcore5
+  jb_loadcheck --with org.apache.httpcomponents.core5:httpcore5 org.apache.httpcomponents.core5:httpcore5-h2
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-httpcore5() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.httpcomponents.core5:httpcore5
+  _license httpcore5 5.1.3
+}
+
+package_java-httpcore5-h2() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-httpcore5")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.httpcomponents.core5:httpcore5-h2
+  _license httpcore5-h2 5.1.3
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

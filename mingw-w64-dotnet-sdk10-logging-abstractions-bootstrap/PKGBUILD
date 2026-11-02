@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-sdk10-logging-abstractions-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.2.25612.105
+pkgrel=1
+pkgdesc='Original SDK-pinned NET10 DI and logging abstractions with NS2 Roslyn4.4 generator; nullable gate open'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/sdk'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('sdk10-extensions-vmr-44525024.tar.gz'
+        'arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d'
+        'sdk10-logging-abstractions-source-1.tar.gz')
+noextract=('sdk10-extensions-vmr-44525024.tar.gz' 'arcade-runtime10-4bf37ce6.tar.gz')
+sha256sums=('b5593cec79d6d8a97ec5efe452a89fe2978b8f90a3da4c43b3d0e1d72e4c2594'
+            '82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66'
+            'eb797ed4134469e06f73836a8d1badfc5160488410cd1a3040c45082a53e1d5f')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/prepare.py")" "$(cygpath -am "$srcdir/sdk10-extensions-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/evaluate.py")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/evaluate.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/arcade-runtime10-4bf37ce6.tar.gz")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/localize.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  local strict_api_exit=0
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/check-api.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/api-check")" > "$srcdir/api-check.log" 2>&1 || strict_api_exit=$?
+  printf '%s\n' "$strict_api_exit" > "$srcdir/strict-api.exit"
+  [[ $strict_api_exit -eq 1 ]]
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/check-api-baseline.py")" "$(cygpath -am "$srcdir/api-check")" > "$srcdir/api-baseline.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/audit.py")" "$(cygpath -am "$srcdir/sdk10-extensions-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/source-audit.json")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/check-resources.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/resource-check")" > "$srcdir/resource-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/sdk10-logging-abstractions-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

@@ -1,0 +1,145 @@
+{
+  "source_commit": "8321c729934c0f8be754953439b88e6e1c120c24",
+  "source_archive_sha256": "f5ebd955cac6ff630689bf6cee2f2c2ffe30b1c7b22c4106d12bb3982abc6c69",
+  "original_projects": {
+    "src/System.Numerics.Vectors/ref/System.Numerics.Vectors.csproj": {
+      "sha256": "23cbc9cc190f7651979d9537091f34477606d44eb0c5f356cb300d5cae4ef37b",
+      "Compile_items": [
+        "System.Numerics.Vectors.cs"
+      ],
+      "Reference_items": [
+        "mscorlib",
+        "System.Numerics",
+        "System.Runtime"
+      ],
+      "conditional_partial_facade_properties": [
+        {
+          "condition": "'$(TargetGroup)' == 'netfx' OR '$(TargetGroup)' == 'net46'",
+          "value": "true"
+        }
+      ]
+    },
+    "src/System.Numerics.Vectors/src/Configurations.props": {
+      "sha256": "12b50ca06fda5b201ecb96118b7d65983c60e37f2e47d86ee14a0730b0da4b88",
+      "Compile_items": [],
+      "Reference_items": [],
+      "conditional_partial_facade_properties": []
+    },
+    "src/System.Numerics.Vectors/src/System.Numerics.Vectors.csproj": {
+      "sha256": "b08e532096b30529d455988de47d5a7b5334598e5bd0ccc9f30905f15e480b08",
+      "Compile_items": [
+        "..\\..\\Common\\src\\System\\Numerics\\Hashing\\HashHelpers.cs",
+        "System\\Numerics\\ConstantHelper.cs",
+        "System\\Numerics\\JitIntrinsicAttribute.cs",
+        "System\\Numerics\\Register.cs",
+        "System\\Numerics\\Vector.cs",
+        "System\\Numerics\\Vector_Operations.cs",
+        "System\\MathF.cs",
+        "System\\Numerics\\Matrix3x2.cs",
+        "System\\Numerics\\Matrix4x4.cs",
+        "System\\Numerics\\Plane.cs",
+        "System\\Numerics\\Quaternion.cs",
+        "System\\Numerics\\Vector2.cs",
+        "System\\Numerics\\Vector2_Intrinsics.cs",
+        "System\\Numerics\\Vector3.cs",
+        "System\\Numerics\\Vector3_Intrinsics.cs",
+        "System\\Numerics\\Vector4.cs",
+        "System\\Numerics\\Vector4_Intrinsics.cs"
+      ],
+      "Reference_items": [
+        "mscorlib",
+        "System.Numerics",
+        "System.Diagnostics.Contracts",
+        "System.Diagnostics.Tools",
+        "System.Globalization",
+        "System.Resources.ResourceManager",
+        "System.Runtime",
+        "System.Runtime.Extensions"
+      ],
+      "conditional_partial_facade_properties": [
+        {
+          "condition": "'$(TargetGroup)'=='netfx' OR '$(TargetGroup)'=='net46'",
+          "value": "true"
+        }
+      ]
+    }
+  },
+  "original_runtime_profiles": [
+    "net46",
+    "netstandard1.0",
+    "netstandard2.0",
+    "portable-net45+win8+wp8+wpa81"
+  ],
+  "original_reference_profiles": [
+    "net46",
+    "netstandard1.0",
+    "netstandard2.0"
+  ],
+  "NET46_references": [
+    "mscorlib/4.0.0.0/b77a5c561934e089",
+    "System.Numerics/4.0.0.0/b77a5c561934e089"
+  ],
+  "NET46_is_original_partial_facade": true,
+  "NET46_public_API_entries": 133,
+  "NS10_NS2_public_API_entries": 497,
+  "required_followup": [
+    "reproduce and validate all seven NET46 exported type forwarders alongside the 133 defined API entries",
+    "compile original NET46 Vectors inputs using installed source public reference contracts; check all seven original forwarders",
+    "replay original partial-facade versus portable compile selections and type forwarding",
+    "preserve byte-identical original portable alias and all seven DLL profiles"
+  ],
+  "formal_package_built": false,
+  "full_dependency_goal_complete": false,
+  "original_portable_alias_DLL_byte_identical_to_NS10": true,
+  "original_NS10_and_portable_DLL_sha256": "7fa8d511f1d314a2c409e0a5a2146daf058abe046487a5af4393c56a3cc2efe7",
+  "NET46_exported_type_forwarders": [
+    {
+      "name": "System.Numerics.Matrix3x2",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Matrix4x4",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Plane",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Quaternion",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Vector2",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Vector3",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    },
+    {
+      "name": "System.Numerics.Vector4",
+      "is_forwarder": true,
+      "attributes": "Forwarder",
+      "scope": "System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"
+    }
+  ],
+  "NET46_runtime_and_reference_forwarders_exactly_equal": true,
+  "other_five_profiles_export_no_forwarders": true,
+  "exported_type_metadata_evidence": "tests/reference-annotator/vectors440-exported-types-metadata-20261031.json",
+  "NET46_selected_source_reference_contracts_package": "mingw-w64-dotnet-netframework46-contracts-bootstrap 20261031-1",
+  "NET46_selected_source_reference_contracts_installed_and_public_API_verified": true,
+  "NET46_selected_source_reference_contracts_evidence": "tests/netframework46-contracts/package-results-20261031.json"
+}

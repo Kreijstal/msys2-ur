@@ -1,0 +1,19 @@
+From: MSYS2-UR
+Subject: Accept MSYS2's Python 3.14-compatible pywin32 310 build
+
+MSYS2 builds and patches pywin32 310 for its current Python, rather than
+using the upstream CPython wheels. The SDK's standard-handle and Job Object
+APIs are already present in this build. Keep the dependency in both Python
+metadata and pacman, with the downstream build number accepted explicitly.
+
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -146,7 +146,7 @@ dependencies = [
+     "sse-starlette>=3.0.0",
+     "uvicorn>=0.31.1; sys_platform != 'emscripten'",
+     "jsonschema>=4.20.0",
+-    "pywin32>=311; sys_platform == 'win32'",
++    "pywin32>=310; sys_platform == 'win32'",
+     "pyjwt[crypto]>=2.10.1",
+     "typing-extensions>=4.13.0",
+     "typing-inspection>=0.4.1",

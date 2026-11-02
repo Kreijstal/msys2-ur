@@ -1,0 +1,25 @@
+--- a/PlaceholderStream.cs
++++ b/PlaceholderStream.cs
+@@ -127,7 +127,21 @@
+         /// </summary>
+         public override int Read(byte[] buffer, int offset, int count)
+         {
+-            // Delegate to the underlying stream
++            // SslStream on .NET 8 can request a larger buffer than the current
++            // handshake message. Return the available TDS payload rather than
++            // waiting for the peer's next TLS flight to fill that buffer.
++            if (InnerStream is Microsoft.SqlServer.TDS.AutoTDSStream auto && count > 0)
++            {
++                var tds = auto.InnerTDSStream;
++                if (tds.IncomingPacketHeader == null || tds.IncomingPacketPosition == tds.IncomingPacketHeader.Length)
++                {
++                    int first = auto.Read(buffer, offset, 1);
++                    if (first == 0 || count == 1) return first;
++                    int available = tds.IncomingPacketHeader.Length - tds.IncomingPacketPosition;
++                    return first + (available == 0 ? 0 : auto.Read(buffer, offset + first, Math.Min(count - first, available)));
++                }
++                count = Math.Min(count, tds.IncomingPacketHeader.Length - tds.IncomingPacketPosition);
++            }
+             return InnerStream.Read(buffer, offset, count);
+         }
+ 

@@ -1,0 +1,368 @@
+{
+  "finished_at_utc": "2026-10-29T04:49:23.440744+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-eventlog9",
+  "build_root": "/e/codex-dotnet10/eventlog9pkg1.7teLX6",
+  "package_version": "9.0.11-1",
+  "package": "mingw-w64-clang-x86_64-dotnet-eventlog9-9.0.11-1-any.pkg.tar.zst",
+  "package_sha256": "e830ea03a5436fa638efe49e5cc0d8e3c8500d2ea7b156b9355b8bb8b1c75af0",
+  "regular_payload_files": 14,
+  "source_nuget_sha256": "8a75f1a777a916a8510310787025e59ff00b06529e5eea92c9febc64ba47361e",
+  "evidence_files_verified": 390,
+  "evidence_archive_sha256": "ed80570a54454cb3fbedcb95f7a3ae032d24022a86babdbfc75220250537db21",
+  "frozen_workflow_matches_repository": true,
+  "interop_archive_inputs_independently_verified": 3512,
+  "source_commit": "fa7cdded37981a97cec9a3e233c4a6af58a91c57",
+  "source_archive_sha256": "63ab12fafdec8559d59d25e21ddaf0edbde90d6c538b44d4cbb6f693a61e90df",
+  "frozen_workflow_sha256": "66317a10c221fe09370a7b49db15adb69962ab38e66ed7a6a42454ac8abbc386",
+  "formal_clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "formal_clean_build_exit_code": 0,
+  "formal_pacman_installed": true,
+  "install_exit_code": 0,
+  "installed_payload_audit_exit_code": 0,
+  "installed_consumer_exit_code": 0,
+  "pacman_entries": 23,
+  "pacman_altered_files": 0,
+  "installed_regular_payloads_byte_equal": 14,
+  "original_archive_inputs_verified": 196,
+  "original_selected_cs_files": 66,
+  "original_production_cs_changes": 0,
+  "original_targets": [
+    "net9.0-windows",
+    "net9.0"
+  ],
+  "original_message_assembly_target": "netstandard2.0",
+  "original_main_assembly_version": "9.0.0.0",
+  "original_message_assembly_version": "9.0.0.11",
+  "all3_version_signing_framework_cls_and_platform_identities_verified": true,
+  "original_clr_api_entries_per_main_assembly": 419,
+  "clr_api_missing_extra_changed": 0,
+  "strict_nullable_metadata_equal": true,
+  "neutral_resource_strings": 41,
+  "original_xml_verified": true,
+  "original_message_resource_regenerated_from_mc_and_original_numeric_rc": true,
+  "regenerated_message_resource_byte_identical_to_original": true,
+  "native_message_ids_checked": 65536,
+  "unsupported_metadata_and5_pnse_apis_verified": true,
+  "windows_runtime_nuget_asset_selection_verified": true,
+  "installed_consumer": {
+    "commands": [
+      {
+        "label": "restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/Restore.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "api",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/check-api.py",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/prepared/r",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/selected-build/System.Diagnostics.EventLog.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/api"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "consumer",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/check-consumer.py",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/selected-build",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "unsupported-api",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/check-api.py",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/prepared/r",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/cache/system.diagnostics.eventlog/9.0.11/lib/net9.0/System.Diagnostics.EventLog.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/unsupported-api"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "unsupported-consumer",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/check-unsupported.py",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/cache/system.diagnostics.eventlog/9.0.11/lib/net9.0/System.Diagnostics.EventLog.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/unsupported-consumer"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "native-messages",
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/check-messages.py",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/cache/system.diagnostics.eventlog/9.0.11/runtimes/win/lib/net9.0/System.Diagnostics.EventLog.Messages.dll",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/native-messages"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "source_package_sha256": "8a75f1a777a916a8510310787025e59ff00b06529e5eea92c9febc64ba47361e",
+    "selected_library_sha256": "d3c82c75f9929c4412dfd42a27ac536b69072bd55242df31008d58c7a3bdff1e",
+    "exact_source_package_cache_and_consumed_dll_bytes_match": true,
+    "original_target": "net9.0",
+    "net9_compile_and_runtime_assets_selected": true,
+    "original_intellisense_xml_documentation_verified": true,
+    "original_clr_api_entries": 419,
+    "clr_api_missing_extra_changed": 0,
+    "original_nullable_annotation_differences": [],
+    "strict_nullable_metadata_equal": true,
+    "neutral_resource_strings": 41,
+    "original_source_contains_localized_resources": false,
+    "original_neutral_resources_complete": true,
+    "execution_framework": "source NET10.0.5",
+    "formal_installed_feed": true,
+    "windows_runtime_asset_selection_verified": true,
+    "unsupported_platform_api_and_throwing_behavior_passed": true,
+    "native_message_ids_passed": 65536,
+    "other_original_framework_profiles_built": false,
+    "full_msbuild_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "live_windows_consumer": {
+    "commands": [
+      {
+        "label": "compile-native",
+        "command": [
+          "E:/msys64/clang64/bin/clang.exe",
+          "-std=c11",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/inputs/native-query.c",
+          "-lwevtapi",
+          "-municode",
+          "-o",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer/native-query.exe"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "compile-probe",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "execute",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer/Probe.dll",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/consumer/native-query.exe"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "source_library_sha256": "d3c82c75f9929c4412dfd42a27ac536b69072bd55242df31008d58c7a3bdff1e",
+    "native_win32_fixture_sha256": "3421d5eab82c9fd4c38aba802f786351955a5954d5231d1e2cd54529ff6d9557",
+    "original_target": "net9.0-windows",
+    "execution_framework": "source NET10.0.5",
+    "classic_and_modern_readonly_queries_passed": true,
+    "independent_native_record_crosscheck_passed": true,
+    "metadata_xpath_bookmark_and_callback_passed": true,
+    "invalid_query_and_missing_log_passed": true,
+    "repeated_gc_native_handle_lifecycle_cases": 20,
+    "neutral_resource_values_passed": true,
+    "formal_package_built": false,
+    "other_original_framework_profiles_built": false,
+    "full_msbuild_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "unsupported_consumer": {
+    "commands": [
+      {
+        "label": "compile",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/unsupported-consumer/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "execute",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/unsupported-consumer/Probe.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "unsupported_library_sha256": "56c2bd330c68af032ba9e45e7179d9312f99950ff0f84963f95f63d4dd4919c0",
+    "original_metadata_and5_api_exceptions_passed": true,
+    "full_dependency_goal_complete": false
+  },
+  "native_message_consumer": {
+    "commands": [
+      {
+        "label": "compile",
+        "command": [
+          "E:/msys64/clang64/bin/clang.exe",
+          "-std=c11",
+          "-Wall",
+          "-Wextra",
+          "-Werror",
+          "-municode",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/eventlog9-workflow/inputs/native-messages.c",
+          "-o",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/native-messages/native-messages.exe"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "execute",
+        "command": [
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/native-messages/native-messages.exe",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/installed-consumer/native-messages/System.Diagnostics.EventLog.Messages.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "source_message_assembly_sha256": "b877a44ae53819f1fe19277be8158bdb915a351e32fdad2d2781c03fcb6e61b3",
+    "message_ids_checked": 65536,
+    "unicode_insertions_passed": true,
+    "full_dependency_goal_complete": false
+  },
+  "identity_policy_check": {
+    "commands": [
+      {
+        "label": "compile",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/eventlog9pkg1.7teLX6/identity-check/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "execute",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/identity-check/Probe.dll",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/prepared/unsupported-build/System.Diagnostics.EventLog.dll",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/prepared/build/System.Diagnostics.EventLog.dll",
+          "E:/codex-dotnet10/eventlog9pkg1.7teLX6/src/prepared/messages/System.Diagnostics.EventLog.Messages.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_version_policy_verified": true,
+    "all3_assembly_identities_frameworks_cls_and_platforms_passed": true,
+    "original_message_version": "9.0.0.11",
+    "full_dependency_goal_complete": false
+  },
+  "documentation": {
+    "package_id": "Microsoft.Private.Intellisense",
+    "version": "9.0.0-preview-20241010.1",
+    "package_sha256": "227bc364165d241eeb122e410216e9cbdb955400402475477c506e7ce8c4117c",
+    "member": "IntellisenseFiles/net/1033/System.Diagnostics.EventLog.xml",
+    "xml_sha256": "86b4629b00e4015ad2cb3c8bd3f7cb2b3019a203143e882f9913db525787a4bc",
+    "original_intellisense_policy": true,
+    "no_implementation_binaries": true
+  },
+  "private_genfacades_source": {
+    "arcade_commit": "6666973b629b24e259162dba03486c23af464bab",
+    "arcade_archive_sha256": "6305eac8a59c6cc9675f82afaac365f8519d8cb8e55bec6a98c9eeb6951b4a2c",
+    "archive_files": {
+      "LICENSE.TXT": "ae48df11a335dc1a615f4f938b69cba73bcf4485c4f97af49b38efb0f216353b",
+      "eng/Versions.props": "497d39481a57a631baeed95e2c1e1d5ca405f35d48bfa3326cc9da169dc79874",
+      "src/Common/Internal/BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572",
+      "src/Microsoft.DotNet.Arcade.Sdk/tools/TargetFrameworkDefaults.props": "082d5e411698633dbee2f78e91d5dfe2033fb1f2ba0493bdb70983707e0c809f",
+      "src/Microsoft.DotNet.GenFacades/ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+      "src/Microsoft.DotNet.GenFacades/GenPartialFacadeSource.cs": "564f0a7324dd0a8ed9c58da46fb5d9739c3c144161b991b2d025da9c4b0835f9",
+      "src/Microsoft.DotNet.GenFacades/GenPartialFacadeSourceGenerator.cs": "d6c7676e199d6c01b9ffc77b6d143f9d77840da93c2719521f56b5c06643b742",
+      "src/Microsoft.DotNet.GenFacades/Microsoft.DotNet.GenFacades.csproj": "4aa6ef29210279e549ddcf52e5c5e16d58c8b228e18993850f05e76f875eafb2",
+      "src/Microsoft.DotNet.GenFacades/NotSupportedAssemblyGenerator.cs": "d1dd8b02654717527d7aa2ea3cdf3fc50c533c405606511819917668d00691eb",
+      "src/Microsoft.DotNet.GenFacades/RoslynBuildTask.cs": "b6c49331ea1d988f77578283490c4d7f34461e7586640dd8e25092a0ef84c143",
+      "src/Microsoft.DotNet.GenFacades/SourceGenerator.cs": "c74b5dd766d310730eaf54929849e8fa1038fcafb6cd179f1b77b2c80170c53a",
+      "src/Microsoft.DotNet.GenFacades/TypeParser.cs": "fd1cb1458d143702dee3165cddd6804cfd0b7d9cabe9cd81c130c603719d45d7",
+      "src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.ClearVersion.targets": "56ca6f12848f16d8a749c4ec1c6e81ceb767e1953c097484bfef979eb4bd77c3",
+      "src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.NotSupported.targets": "3cb255bcce25bee3d99aae8635a2b83e8bc18848b3869073a2674cb59a411de0",
+      "src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.PartialFacadeSource.targets": "0d5990e0f0a715d2e5fc8ac14a09b4aa903c6c39a207f7173d0e818c55ed5303",
+      "src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.targets": "017bc7d7cc04bbfe325501b8c80573a93db7b1c6b8980994e9879eb717880c81"
+    },
+    "original_cs": {
+      "src/Microsoft.DotNet.GenFacades/ClearAssemblyReferenceVersions.cs": "946f05a407e5f919f55093a1ab7f532a4272a86d0e5cd8ca3a4bddcc4c45781b",
+      "src/Microsoft.DotNet.GenFacades/GenPartialFacadeSource.cs": "564f0a7324dd0a8ed9c58da46fb5d9739c3c144161b991b2d025da9c4b0835f9",
+      "src/Microsoft.DotNet.GenFacades/GenPartialFacadeSourceGenerator.cs": "d6c7676e199d6c01b9ffc77b6d143f9d77840da93c2719521f56b5c06643b742",
+      "src/Microsoft.DotNet.GenFacades/NotSupportedAssemblyGenerator.cs": "d1dd8b02654717527d7aa2ea3cdf3fc50c533c405606511819917668d00691eb",
+      "src/Microsoft.DotNet.GenFacades/RoslynBuildTask.cs": "b6c49331ea1d988f77578283490c4d7f34461e7586640dd8e25092a0ef84c143",
+      "src/Microsoft.DotNet.GenFacades/SourceGenerator.cs": "c74b5dd766d310730eaf54929849e8fa1038fcafb6cd179f1b77b2c80170c53a",
+      "src/Microsoft.DotNet.GenFacades/TypeParser.cs": "fd1cb1458d143702dee3165cddd6804cfd0b7d9cabe9cd81c130c603719d45d7",
+      "src/Common/Internal/BuildTask.cs": "62cc755b3bfc635db520c4bad47d14c72d04a1de3acc22ffe1b22e5bca407572"
+    },
+    "production_cs_changes": 0,
+    "original_frameworks": [
+      "net9.0",
+      "net472"
+    ],
+    "bootstrap_framework": "net8.0",
+    "declared_roslyn_version": "4.8.0",
+    "bootstrap_roslyn_version": "4.14.0",
+    "declared_msbuild_tasks_version": "17.8.29",
+    "bootstrap_msbuild_version": "17.8.49",
+    "full_original_tool_profiles_complete": false,
+    "full_dependency_goal_complete": false
+  },
+  "original_genfacades_frameworks": [
+    "net9.0",
+    "net472"
+  ],
+  "bootstrap_genfacades_framework": "net8.0",
+  "bootstrap_genfacades_roslyn": "4.14.0",
+  "original_genfacades_roslyn": "4.8.0",
+  "original_genfacades_msbuild_tasks": "17.8.29",
+  "bootstrap_genfacades_msbuild": "17.8.49",
+  "bootstrap_interop_generator_framework": "net8.0",
+  "original_interop_generator_framework": "netstandard2.0",
+  "bootstrap_interop_source_workspaces": "4.9.2",
+  "full_original_generator_profiles_built": false,
+  "original_preview_toolchain_verified": false,
+  "other_original_framework_profiles_built": false,
+  "execution_framework": "source NET10.0.5",
+  "source_net9_runtime_supplied": false,
+  "full_msbuild_built": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "original_7_4_dependency_count_increment": 0,
+  "full_dependency_goal_complete": false,
+  "installed_evidence_archive_sha256": "7d3ea1746601a4d7e4e7ab011c29ae1ba34ef7833cdff75605413726b47fee8c"
+}

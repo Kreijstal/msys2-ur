@@ -1,0 +1,74 @@
+{
+  "date_utc": "2026-10-28",
+  "finished_at_utc": "2026-10-28 15:15 UTC",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/cim-wmi-user-test.6v0FzU",
+  "packages": [
+    "mingw-w64-clang-x86_64-powershell 7.4.20-2",
+    "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+    "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3",
+    "mingw-w64-clang-x86_64-dotnet-sdk8-servicing 8.0.131-4"
+  ],
+  "harness_sha256": "c5ba69d7d7bda7e1597d66cb0ceabeae2fa2fd7bd716bfc51435150b9899db01",
+  "wmi_helper_sha256": "5ad9216604da79304537f5330a485114641541c6fc889ba4171c8bf249281a59",
+  "checks": [
+    {
+      "name": "powershell-mta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-user-test.6v0FzU/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-sta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-user-test.6v0FzU/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-wmi-sta",
+      "command": "timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-user-test.6v0FzU/tests/powershell-full-sdk/WmiStaProbe.ps1",
+      "exit_code": 0,
+      "log_sha256": "76b4e351007b81902980ac04c8b279478cfe2e46ff9fcf9dbc15372459a234f9"
+    },
+    {
+      "name": "mmi3",
+      "command": "timeout -k 10 300 bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer",
+      "exit_code": 0,
+      "log_sha256": "9ef99cd08dc6fdf6726d1d5fd2d39e5cff409b25719f6bb31a0658622d19d23d"
+    },
+    {
+      "name": "wmi-mta",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-wmi.sh wmi-mta-retry-consumer",
+      "exit_code": 0,
+      "log_sha256": "d6b86a9324058891f5f1c162db7103d608a2b4f7b2e59443f972d96d78234e34"
+    },
+    {
+      "name": "wmi-sta",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-source-wmi-sta.sh wmi-sta-retry-consumer",
+      "exit_code": 0,
+      "log_sha256": "241701babcd8e5bab994bd01cc6e1ce4a979e1830632639615523722423e80ed"
+    },
+    {
+      "name": "combined",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer",
+      "exit_code": 0,
+      "log_sha256": "20dc486497c9e34b5eb2feb2212437eb0f85b9d621e1442686e4733e46c938be"
+    }
+  ],
+  "all_passed": true,
+  "initial_harness_failures": [
+    {
+      "name": "wmi-mta",
+      "exit_code": 127
+    },
+    {
+      "name": "wmi-sta",
+      "exit_code": 1
+    }
+  ],
+  "correction": "Uploaded missing mingw-w64-dotnet-management test helpers, then reran only the two WMI checks with fresh consumer directories.",
+  "full_remote_provider_ownership_compatibility_verified": false,
+  "implementation_changed": false,
+  "full_dependency_goal_complete": false
+}

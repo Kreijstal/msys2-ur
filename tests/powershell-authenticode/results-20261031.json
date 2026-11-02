@@ -1,0 +1,197 @@
+{
+  "recorded_at_utc": "2026-10-31T02:03:31.019272+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/powershell-authenticode.ygozXM",
+  "packages": [
+    "mingw-w64-clang-x86_64-powershell 7.4.20-3",
+    "mingw-w64-clang-x86_64-dotnet-security-extensions 1.4.0-1",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-4"
+  ],
+  "reproducible_command": "bash tests/powershell-authenticode/check.sh NEW_OUTPUT",
+  "initial_fixture_generation_command": "bash generate-fixtures.sh fixtures",
+  "original_PowerShell_source_sha256": {
+    "PowerShell-7.4.20/src/System.Management.Automation/security/Authenticode.cs": "a281508a760e7af2a6b18cffc45aafe4a9e204ca9a405730b4eaa0ddd6a2083d",
+    "PowerShell-7.4.20/src/System.Management.Automation/security/MshSignature.cs": "44cd75d9a9cf0e79a0a0451d732b6124c4fe5c2c79440b1fee3f31633efc981e"
+  },
+  "Check_ps1_sha256": "5e933e987b0595bc5a996eb569012a1b35eba04daad0a7b02d19c7b117c2993b",
+  "results": {
+    "STA": {
+      "PowerShellVersion": "7.4.20",
+      "Apartment": "STA",
+      "Checks": [
+        {
+          "File": "fixture.exe",
+          "NativeState": "Unsigned",
+          "NativeReason": "NoSignerCert",
+          "Status": "NotSigned",
+          "SignatureType": "None",
+          "IsOSBinary": false,
+          "SignerThumbprint": null,
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "unsigned.ps1",
+          "NativeState": "Unsigned",
+          "NativeReason": "NoSignerCert",
+          "Status": "NotSigned",
+          "SignatureType": "None",
+          "IsOSBinary": false,
+          "SignerThumbprint": null,
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "signed.exe",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "signed.ps1",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "timestamped.exe",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": "F09502D64C97B841B932D3158949B8EB913BBD57"
+        },
+        {
+          "File": "tampered.exe",
+          "NativeState": "Invalid",
+          "NativeReason": "BadDigest",
+          "Status": "HashMismatch",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "kernel32.dll",
+          "NativeState": "SignedAndTrusted",
+          "NativeReason": "None",
+          "Status": "Valid",
+          "SignatureType": "Catalog",
+          "IsOSBinary": true,
+          "SignerThumbprint": "AD714D3C4B2B794A95441375C954130E9109EF4C",
+          "TimestampThumbprint": "69B28015A2ADDA169476A9077C56330337E048CB"
+        }
+      ],
+      "SourceWrapper": "E:\\msys64\\clang64\\lib\\powershell\\7\\getfilesiginforedistwrapper.dll",
+      "SourceNativeProvider": "E:\\msys64\\clang64\\lib\\powershell\\7\\runtimes\\win-x64\\native\\msys-file-signature.dll",
+      "InstalledSourceArchive": "E:\\msys64\\clang64\\lib\\dotnet\\library-packs\\microsoft.security.extensions.1.4.0.nupkg",
+      "ExactSourceArchiveBytesVerified": true,
+      "OriginalPowerShellNonValidSignatureWinVerifyTrustFallbackVerified": true,
+      "CertificatesAddedToTrustStores": false,
+      "RevocationExplicitDistrustExpiredEnterpriseMultipleSignaturesVerified": false,
+      "FullDependencyGoalComplete": false
+    },
+    "MTA": {
+      "PowerShellVersion": "7.4.20",
+      "Apartment": "MTA",
+      "Checks": [
+        {
+          "File": "fixture.exe",
+          "NativeState": "Unsigned",
+          "NativeReason": "NoSignerCert",
+          "Status": "NotSigned",
+          "SignatureType": "None",
+          "IsOSBinary": false,
+          "SignerThumbprint": null,
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "unsigned.ps1",
+          "NativeState": "Unsigned",
+          "NativeReason": "NoSignerCert",
+          "Status": "NotSigned",
+          "SignatureType": "None",
+          "IsOSBinary": false,
+          "SignerThumbprint": null,
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "signed.exe",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "signed.ps1",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "timestamped.exe",
+          "NativeState": "SignedAndNotTrusted",
+          "NativeReason": "UntrustedRoot",
+          "Status": "UnknownError",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": "F09502D64C97B841B932D3158949B8EB913BBD57"
+        },
+        {
+          "File": "tampered.exe",
+          "NativeState": "Invalid",
+          "NativeReason": "BadDigest",
+          "Status": "HashMismatch",
+          "SignatureType": "Authenticode",
+          "IsOSBinary": false,
+          "SignerThumbprint": "C9503EED27551F45A65078F3DB3B2C1D6D915A37",
+          "TimestampThumbprint": null
+        },
+        {
+          "File": "kernel32.dll",
+          "NativeState": "SignedAndTrusted",
+          "NativeReason": "None",
+          "Status": "Valid",
+          "SignatureType": "Catalog",
+          "IsOSBinary": true,
+          "SignerThumbprint": "AD714D3C4B2B794A95441375C954130E9109EF4C",
+          "TimestampThumbprint": "69B28015A2ADDA169476A9077C56330337E048CB"
+        }
+      ],
+      "SourceWrapper": "E:\\msys64\\clang64\\lib\\powershell\\7\\getfilesiginforedistwrapper.dll",
+      "SourceNativeProvider": "E:\\msys64\\clang64\\lib\\powershell\\7\\runtimes\\win-x64\\native\\msys-file-signature.dll",
+      "InstalledSourceArchive": "E:\\msys64\\clang64\\lib\\dotnet\\library-packs\\microsoft.security.extensions.1.4.0.nupkg",
+      "ExactSourceArchiveBytesVerified": true,
+      "OriginalPowerShellNonValidSignatureWinVerifyTrustFallbackVerified": true,
+      "CertificatesAddedToTrustStores": false,
+      "RevocationExplicitDistrustExpiredEnterpriseMultipleSignaturesVerified": false,
+      "FullDependencyGoalComplete": false
+    }
+  },
+  "local_cases_per_apartment": 7,
+  "actual_packaged_GetAuthenticodeSignature_executed": true,
+  "initial_test_expectation_failure": "Expected NotTrusted for self-signed PE; original PowerShell falls back to WinVerifyTrust, whose untrusted-root HRESULT maps to UnknownError. Test corrected against original source, with direct native SignedAndNotTrusted/UntrustedRoot still required.",
+  "production_code_changed": false,
+  "full_policy_provider_and_vendor_private_behavior_compatibility_verified": false,
+  "full_dependency_goal_complete": false,
+  "successful_powershell_commands": [
+    "env MSYS2_ARG_CONV_EXCL='*' timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File E:/codex-dotnet10/powershell-authenticode.ygozXM/Check.ps1 -Fixtures E:/codex-dotnet10/powershell-authenticode.ygozXM/fixtures -Feed E:/msys64/clang64/lib/dotnet/library-packs -Output E:/codex-dotnet10/powershell-authenticode.ygozXM/STA-2.json",
+    "env MSYS2_ARG_CONV_EXCL='*' timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File E:/codex-dotnet10/powershell-authenticode.ygozXM/Check.ps1 -Fixtures E:/codex-dotnet10/powershell-authenticode.ygozXM/fixtures -Feed E:/msys64/clang64/lib/dotnet/library-packs -Output E:/codex-dotnet10/powershell-authenticode.ygozXM/MTA-2.json"
+  ]
+}

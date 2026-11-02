@@ -1,0 +1,83 @@
+Original source MetadataLoadContext9.0.11 NET9 package validation
+Finished: 2026-10-29T03:40:56.227158+00:00
+Host/root: win11 /e/codex-dotnet10/mlc9pkg1.7i3Nis
+Package: mingw-w64-clang-x86_64-dotnet-metadataloadcontext9-9.0.11-1-any.pkg.tar.zst
+Package SHA256: fd934b54d2a4dfd3babfd407f2fa774706793a43586da68c0b149d5d83cc5e29
+Workflow SHA256: 30a32bcf10bfe44c1af61721f5cee34f994024d872dbe41489ebc168df48468d
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-metadataloadcontext9-9.0.11-1-any.pkg.tar.zst
+RESULT: exit0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-metadataloadcontext9
+mingw-w64-clang-x86_64-dotnet-metadataloadcontext9: 19 total files, 0 altered files
+
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+$ /clang64/bin/python.exe -X utf8 check-mlc-net10.py installed-consumer/selected-build/System.Reflection.MetadataLoadContext.dll installed-net10-check
+RESULT: exit0
+PASS real source NET10 compiler metadata inspection with source NET9 library
+
+$ python /tmp/audit-mlc9-package.py
+RESULT: exit0;all10 archive payloads verified;145 selected original source/project/resource inputs independently match pinned archive.
+All148 terminal evidence hashes and source recipe/SRCINFO/frozen16 workflow files verified.
+
+Original source servicing OOB assembly version9.0.0.11 is preserved,derived from original Versions.props and Directory.Build.targets/targeting-pack classification.
+Public/protected CLR API:16 expected,16 actual,0 missing,0 extra,0 changed,0 nullable annotation differences.
+All53 original neutral resource values pass;the pinned source has no localized resource inputs.
+
+Installed execution:
+PASS source NET9 MetadataLoadContext:servicing identity,all53 resources,Unicode/generics/attributes/byref/defaults,resolver/cache,path/stream/bytes,x86 PE,isolation,invalid inputs,disposal and no fixture execution
+
+Actual source NET10 metadata case:
+PASS MetadataLoadContext9.0.11 inspects real source NET10 CoreLib,Roslyn factory and csc entry point without runtime loading
+
+
+Before the clean build,two prototype fixture issues were corrected:resource-set lifetime and metadata RawDefaultValue usage. Original production C# changes:0.
+Source SDK8 is used only for build tasks/evaluation and restore. The NET9 restore fixture disables implicit framework refs and sets NETCoreAppMaximumVersion9.0;all compilation uses explicit source NET9 refs and source compilers.
+Execution uses the source NET10.0.5 runtime. NET9 runtime,other original framework profiles,remaining9.0.11 libraries,full MSBuild/SDK10/PowerShell7.6 and remaining compatibility gates are unfinished.
+
+Full makepkg log:
+==> Making package: mingw-w64-dotnet-metadataloadcontext9 9.0.11-1 (29 Oct 2026 04:36:15)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-msbuild9-fa7cdded.tar.gz
+  -> Found metadataloadcontext9-source-1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-msbuild9-fa7cdded.tar.gz ... Passed
+    metadataloadcontext9-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting metadataloadcontext9-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-metadataloadcontext9"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-metadataloadcontext9 9.0.11-1 (29 Oct 2026 04:37:47)
+
+Build checks:
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+Original source audit:
+PASS 145 original source/project/resource bytes;all original resource scope accounted for
+

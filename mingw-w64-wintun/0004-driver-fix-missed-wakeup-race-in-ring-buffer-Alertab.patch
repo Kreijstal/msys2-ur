@@ -1,0 +1,68 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Simon Rozman <simon.rozman@amebis.si>
+Date: Tue, 24 Feb 2026 15:47:17 -0800
+Subject: [PATCH 4/8] driver: fix missed-wakeup race in ring buffer Alertable
+ signaling
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add MemoryBarrier() between store-load pairs in the Dekker-style
+synchronization used by the Receive ring's Alertable/Tail protocol.
+
+On x86-64, WriteRelease/ReadAcquire only prevent compiler reordering and
+provide acquire/release semantics, but do not emit MFENCE — the only
+instruction that prevents store-load reordering across cores. Without a
+full barrier, both the userspace producer and the kernel consumer can
+simultaneously read stale values:
+
+  Userspace: STORE(Tail)  ...  LOAD(Alertable) -> sees FALSE (stale)
+  Driver:    STORE(Alertable=TRUE) ... LOAD(Tail) -> sees old tail
+
+The driver then enters KeWaitForMultipleObjects with no pending
+SetEvent, sleeping until a TCP retransmission (typically 4-5s later)
+re-triggers the send path and wins the race.
+
+The fix adds MemoryBarrier() (MFENCE on x86) on both sides:
+- api/session.c WintunSendPacket: between WriteULongRelease(Tail) and
+  ReadAcquire(Alertable)
+- driver/twintun.c TunProcessReceiveData: between
+  WriteRelease(Alertable, TRUE) and ReadULongAcquire(Tail)
+
+This guarantees that at least one side always observes the other's
+store, preventing the missed wakeup while preserving the Alertable
+optimization that avoids unnecessary SetEvent syscalls.
+
+Reported-by: Alexey Lapuka <alexey@twingate.com>
+Reference: https://lists.zx2c4.com/pipermail/wireguard/2026-February/009523.html
+Signed-off-by: Simon Rozman <simon.rozman@amebis.si>
+(cherry picked from commit ec0a6b98456fe1ba52567bb2add4bbf5f64315a1)
+---
+ api/session.c   | 1 +
+ driver/wintun.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/api/session.c b/api/session.c
+index ab96c64..13d5bca 100644
+--- a/api/session.c
++++ b/api/session.c
+@@ -302,6 +302,7 @@ WintunSendPacket(TUN_SESSION *Session, const BYTE *Packet)
+     if (Session->Descriptor.Receive.Ring->Tail != Session->Receive.TailRelease)
+     {
+         WriteULongRelease(&Session->Descriptor.Receive.Ring->Tail, Session->Receive.TailRelease);
++        MemoryBarrier();
+         if (ReadAcquire(&Session->Descriptor.Receive.Ring->Alertable))
+             SetEvent(Session->Descriptor.Receive.TailMoved);
+     }
+diff --git a/driver/wintun.c b/driver/wintun.c
+index 797eaee..5adf230 100644
+--- a/driver/wintun.c
++++ b/driver/wintun.c
+@@ -481,6 +481,7 @@ TunProcessReceiveData(_Inout_ TUN_CTX *Ctx)
+             if (RingHead == RingTail)
+             {
+                 WriteRelease(&Ring->Alertable, TRUE);
++                MemoryBarrier();
+                 RingTail = ReadULongAcquire(&Ring->Tail);
+                 if (RingHead == RingTail)
+                 {

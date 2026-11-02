@@ -1,0 +1,67 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-azure-core
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.38.0
+pkgrel=1
+_commit=dae9516a40d0661a3351c3f6ddf0e0eb85ea2f6b
+pkgdesc='Complete original Azure.Core source library for the Azure/PowerShell graph'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Azure/azure-sdk-for-net'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-memory-data=1.0.2" "${MINGW_PACKAGE_PREFIX}-dotnet-clientmodel=1.0.0")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+options=('!strip' '!lto')
+source=("azure-sdk-$_commit.tar.gz::https://codeload.github.com/Azure/azure-sdk-for-net/tar.gz/$_commit"
+ extract.py
+ prepare.py
+ verify-build.py
+ pack.py
+ Check.cs
+ check.sh
+ check-payload.py
+ compare.py
+ InspectApi.cs
+ InspectAssemblyMetadata.cs
+ source-inputs.json
+ published-api.json
+ published-metadata.json
+ README.md
+)
+noextract=("azure-sdk-$_commit.tar.gz")
+sha256sums=('f4e39501839027264cf5f5e8456c443376658b6030b15f6d18f4268520f1114f'
+ 'b9ef4a8390cd7dad758e836467893de0ac56438f2877a26ab6f2b6e29a3408e5'
+ 'f2330ca7bbabbcfd1bf4f89dbfe4b04e036b5f0dd876857622441edfc700cb6e'
+ '34d8a3aa61895e6d421043994edebe4c9bc3da7e048aa5652ece12e8b76f0359'
+ 'b8db6b796826217268e95cb01b8f6224b4749bcb364577c92fa132b7dc0d4bcf'
+ '0bf7832b9c64a369d39323ddd5a0162f2a693d96a5743249e80320fa08b98281'
+ 'ec4b1ea650cd082f8f504d3674a8ad1f3c3540ba28beb111690e02dd92cffbf4'
+ '512aadf468e0f51fce70869718b1818db927c87ee924fa29dadd963b2605b7fe'
+ '98a27979c475e8274bbc1cd1537449e099eed461a7fe431dd5b1eb4cdfd093ee'
+ '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+ 'de8b3f122834b495ac439d5d27c78a9eeaa7dd56fb6637b58f5596b54517f4ce'
+ '186b98442a74f2c4e873706bdb077c32faba04c2095d91581d2154d820ebb20b'
+ 'e74801c012ca60d53a98ade48ff06e595f08a28ad5f2ebce4eab66f4341079c5'
+ 'bf35f18dc55a615cfaa380539cd008c232ee17b0c6c4dfa2c869017044ac11b5'
+ 'f52f611f35c820a292d63858221458e57bf57daba56533856002f981cf5ea1b1'
+)
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/azure-sdk-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
+}
+build() {
+ export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+ /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Library.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -v:minimal
+ /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+ install -Dm644 "$srcdir/feed/Azure.Core.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/Azure.Core.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+ install -m644 "$srcdir/prepared/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

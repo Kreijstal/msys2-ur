@@ -1,0 +1,30 @@
+ProtectedData9 original NET9 source package — 9.0.11-1
+Host: win11; root: /e/codex-dotnet10/protected9pkg1.EMeOr2
+Package: mingw-w64-clang-x86_64-dotnet-protecteddata9-9.0.11-1-any.pkg.tar.zst
+SHA256: 8d0cd158bb9fcd847c53d84f95b7776d8fb2571960d376bf308c4406c15a0c75
+
+makepkg --cleanbuild --force --noconfirm: exit 0
+pacman -U --noconfirm "$PWD/mingw-w64-clang-x86_64-dotnet-protecteddata9-9.0.11-1-any.pkg.tar.zst": exit 0
+pacman -Qkk mingw-w64-clang-x86_64-dotnet-protecteddata9: exit 0; 21 entries, zero altered files
+12 installed regular payloads byte-equal to package outputs.
+
+Original ProtectedData sources: 13 CS; archive source/project/resource inputs including generator CS: 139
+Independent archive verification of extracted interop sources: 3512 inputs.
+Both complete original generator projects rebuilt privately for NET8 using source Workspaces4.9.2.
+Original generator NETStandard2.0 target and original preview SDK/compiler reproduction remain unfinished.
+7 CLR API entries, zero missing/extra/changed; nullable metadata equal.
+Both neutral resource values and original pinned IntelliSense XML pass.
+24 real user/machine DPAPI roundtrips; 4 independent native C crosschecks; 40 GC lifecycle checks.
+Empty/Unicode/binary inputs, entropy, unchanged input buffers, tampering/null/errors and original unknown-scope behavior pass.
+Source NET10.0.5 executes original NET9 consumer; no NET9 runtime is supplied.
+
+Fresh installed feed commands:
+{"label": "restore", "command": ["E:/msys64/clang64/lib/dotnet/dotnet.exe", "restore", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/Restore.csproj", "--configfile", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/NuGet.config", "-v:minimal"], "exit_code": 0}
+{"label": "api", "command": ["E:/msys64/clang64/bin/python.exe", "-X", "utf8", "E:/codex-dotnet10/protected9pkg1.EMeOr2/src/protecteddata9-workflow/check-api.py", "E:/codex-dotnet10/protected9pkg1.EMeOr2/src/prepared/r", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/selected-build/System.Security.Cryptography.ProtectedData.dll", "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/api"], "exit_code": 0}
+{"label": "consumer", "command": ["E:/msys64/clang64/bin/python.exe", "-X", "utf8", "E:/codex-dotnet10/protected9pkg1.EMeOr2/src/protecteddata9-workflow/check-consumer.py", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/selected-build", "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-9.0.11/ref/net9.0", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer"], "exit_code": 0}
+{"label": "compile-native", "command": ["E:/msys64/clang64/bin/clang.exe", "-std=c11", "-Wall", "-Wextra", "-Werror", "E:/codex-dotnet10/protected9pkg1.EMeOr2/src/protecteddata9-workflow/inputs/native-dpapi.c", "-lcrypt32", "-o", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer/native-dpapi.exe"], "exit_code": 0}
+{"label": "compile-probe", "command": ["E:/msys64/clang64/lib/dotnet10/dotnet.exe", "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll", "-noconfig", "@E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer/compile.rsp"], "exit_code": 0}
+{"label": "execute", "command": ["E:/msys64/clang64/lib/dotnet10/dotnet.exe", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer/Probe.dll", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer", "E:/codex-dotnet10/protected9pkg1.EMeOr2/installed-consumer/consumer/native-dpapi.exe"], "exit_code": 0}
+
+Other original framework profiles, MSBuild18/SDK10, desktop10, PowerShell7.6 and broader compatibility gates remain open.
+No increment to original PowerShell7.4 dependency counters; full goal remains active.

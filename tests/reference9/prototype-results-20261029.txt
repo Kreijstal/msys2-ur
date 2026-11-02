@@ -1,0 +1,34 @@
+Original source NET9 9.0.11 reference graph prototype validation
+Host/root: win11 /e/codex-dotnet10/reference9proto1.o2jJA5
+Build and validation: exit0
+164 public reference assemblies;20 private stubs;197 original C# inputs;282 original project/property inputs.
+All 1705 collected evidence hashes,184 output hashes,and479 selected original archive files independently verified.
+
+$ /usr/bin/python3 workflow/prepare.py . prepared
+$ bash workflow/build.sh . prepared
+RESULT: exit0
+$ bash validation-workflow/check.sh . prepared
+RESULT: exit0
+PASS complete original public contract/stub metadata graph; net9 API consumer compiles and net8 control rejects it
+PASS 197 original C# inputs and 282 project/property inputs match pristine runtime9 source;20 original-target generated stubs
+
+Consumer cases:
+net9: exit0
+['/clang64/lib/dotnet/dotnet.exe', 'E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll', '-noconfig', '@E:/codex-dotnet10/reference9proto1.o2jJA5/prepared/consumer/net9.rsp']
+Microsoft (R) Visual C# Compiler version 5.0.0 (m612 bootstrap) ()
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+net8-negative-control: exit1
+['/clang64/lib/dotnet/dotnet.exe', 'E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll', '-noconfig', '@E:/codex-dotnet10/reference9proto1.o2jJA5/prepared/consumer/net8-negative-control.rsp']
+Microsoft (R) Visual C# Compiler version 5.0.0 (m612 bootstrap) ()
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+validation-workflow\inputs\Net9Consumer.cs(8,24): error CS0246: The type or namespace name 'Lock' could not be found (are you missing a using directive or an assembly reference?)
+validation-workflow\inputs\Net9Consumer.cs(10,52): error CS1061: 'string[]' does not contain a definition for 'CountBy' and no accessible extension method 'CountBy' accepting a first argument of type 'string[]' could be found (are you missing a using directive or an assembly reference?)
+
+
+Matching original Arcade version task: {'arcade_source_commit': '6666973b629b24e259162dba03486c23af464bab', 'original_task_sha256': 'e0bc140b716fb1c43b4609e877a357b422cdd4b213021bd919df04e963c8a02f', 'runtime_source_date_utc': '2025-10-17T23:03:31+00:00', 'build_number': '20251017.0', 'build_number_origin': 'Pinned runtime archive commit date; reproducible source build, not an official Microsoft build number', 'version_prefix': '9.0.11', 'file_version': '9.0.1125.51700', 'upstream_task_vectors_checked': 3, 'private_build_only_task': True}
+
+Formal makepkg clean build is running in /e/codex-dotnet10/reference9pkg1.C9Nf81;session34780. This report does not claim package success or installation.
+Exact OOB implementation libraries,other framework profiles,full MSBuild/SDK10/PowerShell7.6 and all compatibility gates remain.

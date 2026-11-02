@@ -1,0 +1,26 @@
+--- a/build/php.m4
++++ b/build/php.m4
+@@ -762,7 +762,22 @@
+ AS_VAR_IF([php_cxx_done],, [
+   AC_PROG_CXX
+   AC_PROG_CXXCPP
+-  PHP_ADD_LIBRARY([stdc++])
++  AC_LANG_PUSH([C++])
++  AC_CACHE_CHECK([whether the C++ compiler uses libc++],
++    [php_cv_cxx_uses_libcxx], [
++      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
++#include <cstddef>
++#ifndef _LIBCPP_VERSION
++# error Not using libc++
++#endif
++      ]], [[]])],
++      [php_cv_cxx_uses_libcxx=yes],
++      [php_cv_cxx_uses_libcxx=no])
++  ])
++  AC_LANG_POP([C++])
++  AS_VAR_IF([php_cv_cxx_uses_libcxx], [yes],
++    [PHP_ADD_LIBRARY([c++])],
++    [PHP_ADD_LIBRARY([stdc++])])
+   php_cxx_done=yes
+ ])
+ ])

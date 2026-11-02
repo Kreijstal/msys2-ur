@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/e/codex-dotnet10/dataflow46.SBN9up/tests/netstandard13-contracts/check.py", line 45, in <module>
+    run('probe-dataflow-build',[host,native(compiler_DLL),'-noconfig','@'+native(out/'probe-dataflow.rsp')])
+  File "/e/codex-dotnet10/dataflow46.SBN9up/tests/netstandard13-contracts/check.py", line 20, in run
+    commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(label,(out/(label+'.log')).read_text()[-7000:])
+                                                                     ^^^^^^^^^^^^^^^
+AssertionError: ('probe-dataflow-build', "Microsoft (R) Visual C# Compiler version 4.4.0 (1ce8866c)\nCopyright (C) Microsoft Corporation. All rights reserved.\n\ncheck-contracts6\\ProbeDataflow.cs(37,9): error CS0103: The name 'Console' does not exist in the current context\n")

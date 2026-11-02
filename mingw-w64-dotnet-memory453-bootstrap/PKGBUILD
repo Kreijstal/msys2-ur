@@ -1,0 +1,58 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-memory453-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.5.3
+pkgrel=1
+pkgdesc='Original Memory4.5.3 Standard1.1/2.0 source bootstrap with exact old dependencies'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-buffers440-bootstrap=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-vectors440-bootstrap=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-unsafe452-bootstrap=4.5.2"
+             "${MINGW_PACKAGE_PREFIX}-llvm" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx21-memory453-c6cf7902.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/c6cf790234e063b855fcdb50f3fb1b3cfac73275'
+        'sbrp-5aeee273.tar.gz::https://codeload.github.com/dotnet/source-build-reference-packages/tar.gz/5aeee2738338530a92d7f6caa2c7d5f569fed3c4'
+        'corefx10-codepages-9688ddbb.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/9688ddbb62c04189cac4c4a06e31e93377dccd41'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'memory453-source-1.tar.gz')
+noextract=('corefx21-memory453-c6cf7902.tar.gz' 'sbrp-5aeee273.tar.gz' 'corefx10-codepages-9688ddbb.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('013a4d6cfd81398e3899a6594d497343329865ab802350955e95f28e8d0c2091'
+            '2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79'
+            '986a512c70d55ed7a1ed8cbb9d8323017c9cc83e77e95e833c7b91f42e4ef601'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '1e7dee0bf7806a68980df1e90f138122d6d880b44f90e8373070d83021fd154d')
+build() {
+  /usr/bin/python3 "$srcdir/memory453-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/memory453-workflow/build-interop.py" "$srcdir/sbrp-5aeee273.tar.gz" "$srcdir/corefx10-codepages-9688ddbb.tar.gz" "$srcdir/interop" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/interop.log" 2>&1
+  /usr/bin/python3 "$srcdir/memory453-workflow/build.py" "$srcdir/corefx21-memory453-c6cf7902.tar.gz" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" "$srcdir/interop" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/memory453-workflow/pack.py" "$srcdir/prepared" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/memory453-workflow/check-interop.py" "$srcdir/interop" "$srcdir/interop-check" > "$srcdir/interop-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/memory453-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/memory453-workflow/check.py" "$srcdir/prepared" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" --feed "$srcdir/prepared/feed" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/System.Memory.4.5.3.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.memory.4.5.3.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check.py; do install -m644 "$srcdir/memory453-workflow/$file" "$doc/$file"; done
+  for file in "$srcdir/memory453-workflow/inputs/"*; do install -m644 "$file" "$doc/inputs/"; done
+  install -m644 "$srcdir/prepared/results.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/interop/results.json" "$doc/interop-source-inputs.json"
+  install -m644 "$srcdir/interop-check/results.json" "$doc/interop-check-results.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+  install -Dm644 "$srcdir/interop/source/sbrp/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/SBRP-LICENSE.txt"
+}

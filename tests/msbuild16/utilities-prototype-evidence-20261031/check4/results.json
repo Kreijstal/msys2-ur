@@ -1,0 +1,54 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/bridge/Bridge.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/host/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/host/bin/Release/net8.0/Check.dll",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check4/owned",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/tests/msbuild16/inputs/utilities16-published-metadata.json",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/prepared3/producer-audit.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_public_API_entries": 487,
+  "original_runtime_dependency_identity_sets_equal": true,
+  "original_NS2_PackageReference_consumer": true,
+  "isolated_original_implementations_executed": true,
+  "consumer_DLL_sha256": {
+    "Microsoft.Build.Utilities.Core": "ce004dd13ef2b3df99400f2be0b390f7525bc592e0c898c1cf54651247b9363a",
+    "Microsoft.Build.Framework": "1fde0e4723eba89c3740067699b599e1c38b8e408e9a06576ebaa347ff98dbc8",
+    "System.Collections.Immutable": "1a8e73287414dea2531cc2abb623a6ab32a5cefa8d17e43b5c7ed70af81a19e5",
+    "Microsoft.Win32.Registry": "890cc5f25f930bddb3faa8dd3ed75dbb30ad599437aad90bf6958f9ea6a8313a",
+    "System.Text.Encoding.CodePages": "3313a610840d2b0621e27fb7b7892c6b7be5fce20e84600f5ce540bdb1f27814"
+  },
+  "full_dependency_goal_complete": false
+}

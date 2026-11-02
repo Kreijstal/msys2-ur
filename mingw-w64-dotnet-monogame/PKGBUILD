@@ -1,0 +1,253 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-monogame
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.8.6
+pkgrel=1
+pkgdesc='Source-built MonoGame DesktopGL framework, content pipeline (mgcb, mgfxc), MSBuild task and templates for the .NET 8 bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://monogame.net/'
+license=('spdx:MS-PL AND MIT AND Apache-2.0')
+_commit=c610a529667336f63da323c6057274258727664b
+_stbimagesharp=0ec6394bb7184e0576a3fa2e382a487c7ee82e9b
+_stbimagewritesharp=c14f96af618175c73c1cbedbf613c6a0d3c996ee
+_cppnet=3dc3eb2db05be9d80b7cc5d00d5814cbe8f0ded2
+_templates=90600c8d8efb14a6e7ab6950c76a2f79e8e44f45
+_tree=MonoGame-${_commit}
+_sdkver=8.0.131
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=${_sdkver}"
+         "${MINGW_PACKAGE_PREFIX}-SDL2"
+         "${MINGW_PACKAGE_PREFIX}-openal"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-monogame-mojoshader"
+         "${MINGW_PACKAGE_PREFIX}-vkd3d-d3dcompiler"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nvorbis"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-assimpnetter"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-bcnencoder"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-libktxsharp"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-yamldotnet"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-commandline")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=${_sdkver}"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-stb"
+             'python')
+optdepends=("${MINGW_PACKAGE_PREFIX}-ffmpeg: audio and video content (ffmpeg/ffprobe)")
+options=('!strip' '!lto')
+source=("MonoGame-${_commit}.tar.gz::https://codeload.github.com/MonoGame/MonoGame/tar.gz/${_commit}"
+        "StbImageSharp-${_stbimagesharp}.tar.gz::https://codeload.github.com/StbSharp/StbImageSharp/tar.gz/${_stbimagesharp}"
+        "StbImageWriteSharp-${_stbimagewritesharp}.tar.gz::https://codeload.github.com/StbSharp/StbImageWriteSharp/tar.gz/${_stbimagewritesharp}"
+        "CppNet-${_cppnet}.tar.gz::https://codeload.github.com/MonoGame/CppNet/tar.gz/${_cppnet}"
+        "MonoGame.Templates-${_templates}.tar.gz::https://codeload.github.com/MonoGame/MonoGame.Templates/tar.gz/${_templates}"
+        0001-DesktopGL-use-MSYS2-SDL2-and-OpenAL-Soft.patch
+        0002-mgfxc-compile-with-the-vkd3d-d3dcompiler-instead-of-SharpDX.patch
+        0003-Content.Pipeline-source-built-and-MSYS2-dependencies.patch
+        0004-ContentBuilderParams-port-to-System.CommandLine-3.patch
+        0005-SkinnedEffect-compile-vertex-shaders-as-vs_3_0-for-OpenGL.patch
+        0006-Content.Builder.Task-use-the-installed-mgcb.patch
+        prepare.py
+        check.cs
+        check-content.py
+        mgcb.sh
+        README.msys2)
+sha256sums=('c41362c549777e1213d320be8e28968a6692f4bb9c6de360d25ce3fa61ab8165'
+            '24cfef1285cb5aeb38195c5f59df3cb13a8393b36185ac857a1163cb993047b7'
+            'bbd51c9f0f8f7a46f846f9293d9d4eba75a659f8435ddce7aa892b6ff3ba668f'
+            '5322ce17fde12692315a257a387063763bd8d4b679e54cc6cb60c1596b3dac00'
+            '6495d23165c4fa3d6be2e7232231789567555e6f4c1ec428c31178c1e10d96c8'
+            'ba2e9f6df58bcef87c42ba6fe2b31fa8c4a792d85b1751c8e24ad73f86e637d6'
+            '08e0736628d4cf9515a392194fefbe733d2bcb9bf7f859178a80aaef912568c4'
+            '3c28442916647dd5b8fb407a6d41d414b2369b2383a47cb82a5b613fdab34cc3'
+            '1226720405afbe9c989d65763fcab04fbe51d40fe7d84b9616ab3da235b9ffd6'
+            '29124728fcd73830dd9c1931479f996757af282a540dd7902672255a335e9f38'
+            '8ee852c8af03f49092931485787ed9be713da014d1de00c1db5fc24591af7e3d'
+            '265663da3dfc3bac20a8d44d58e17468589ab9a04831072d87b2a198b63e74d9'
+            'a7f98c52897a2c5eee43f9ba1a93440972cb30fdbc8fe083d8ae3d4ee8a9f2e9'
+            '1a8efa81f0f111eea00745e71ff17d0e4819206db292451720cdc0b6f2f49726'
+            '63dd46153df54f70f9a04416326411c7a25becc42c54b0def5a6da5a35c78f35'
+            'fb7408edaf81e22879d57f0c654ee69e28803e8dbef95d161d019cb917165e89')
+
+_stock_effects=(AlphaTestEffect BasicEffect DualTextureEffect EnvironmentMapEffect SkinnedEffect SpriteEffect)
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/nuget-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1
+  export VKD3D_SHADER_DEBUG=none VKD3D_DEBUG=none
+  # mgcb/mgfxc take /option:value switches; keep MSYS from rewriting them as paths.
+  export MSYS2_ARG_CONV_EXCL='/'
+  _dotnet="$MINGW_PREFIX/lib/dotnet/dotnet.exe"
+  _feedsrc=$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")
+  _props=(-c Release -p:Version=$pkgver -p:PackageVersion=$pkgver -p:DisableNativeBuild=True
+          -p:RestoreSources="$_feedsrc" -p:NuGetAudit=false -p:UseSharedCompilation=false
+          -p:EnableNETAnalyzers=false -p:WarningsAsErrors= -p:ContinuousIntegrationBuild=true
+          -p:IncludeSymbols=false -v:minimal)
+}
+
+prepare() {
+  cd "$srcdir/$_tree"
+  local _sub
+  for _sub in ThirdParty/StbImageSharp:StbImageSharp-${_stbimagesharp} \
+              ThirdParty/StbImageWriteSharp:StbImageWriteSharp-${_stbimagewritesharp} \
+              external/CppNet:CppNet-${_cppnet} \
+              external/MonoGame.Templates:MonoGame.Templates-${_templates}; do
+    rm -rf "${_sub%%:*}"
+    cp -a "$srcdir/${_sub#*:}" "${_sub%%:*}"
+  done
+  local _p
+  for _p in "$srcdir"/00*.patch; do
+    msg2 "Applying ${_p##*/}"
+    patch --binary -Np1 -i "$_p"
+  done
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree" "$pkgver"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+  cp "$srcdir/NuGet.config" NuGet.config
+}
+
+# Non-system DLLs that $1 (in $MINGW_PREFIX/bin) needs, recursively, including $1.
+_dll_closure() {
+  local _todo=("$@") _seen=() _dll _dep
+  while ((${#_todo[@]})); do
+    _dll=${_todo[0]}; _todo=("${_todo[@]:1}")
+    [[ " ${_seen[*]} " == *" $_dll "* ]] && continue
+    _seen+=("$_dll")
+    for _dep in $(objdump -p "$(cygpath -m "$MINGW_PREFIX/bin/$_dll")" | sed -n 's/^\s*DLL Name: //p'); do
+      [[ -f "$MINGW_PREFIX/bin/$_dep" ]] && _todo+=("$_dep")
+    done
+  done
+  printf '%s\n' "${_seen[@]}"
+}
+
+build() {
+  _env
+  cd "$srcdir/$_tree"
+
+  # Native texture helper of the content pipeline (stb from the MSYS2 stb
+  # package); C++ runtime linked in so it only needs system DLLs.
+  local _native=Artifacts/native/mgpipeline/windows/x64/Release
+  mkdir -p "$_native"
+  ${CXX:-c++} ${CXXFLAGS} -std=c++17 -shared -static \
+    -DDLL_EXPORT -DNDEBUG -DSTB_IMAGE_IMPLEMENTATION -DSTB_IMAGE_WRITE_IMPLEMENTATION \
+    -DSTB_IMAGE_RESIZE_IMPLEMENTATION -DSTBI_WINDOWS_UTF8 -DSTBIW_WINDOWS_UTF8 \
+    -Inative/pipeline/include -Inative/monogame/include -I"$MINGW_PREFIX/include/stb" \
+    -o "$_native/mgpipeline.dll" native/pipeline/mgcp_texture.cpp
+
+  # DesktopGL games get SDL2 and OpenAL Soft (and what they link) copied
+  # from the MSYS2 prefix of the building SDK.
+  local _dlls
+  _dlls=$(_dll_closure SDL2.dll libopenal-1.dll | paste -sd';')
+  msg2 "DesktopGL native libraries: $_dlls"
+  sed -i "s|@MSYS2_NATIVE_DLLS@|$_dlls|" MonoGame.Framework/MonoGame.Framework.DesktopGL.targets
+
+  # Stage 1: mgfxc (it only needs the framework's reference assembly, so the
+  # framework is first built with empty stock effect resources).
+  local _fx _res=MonoGame.Framework/Platform/Graphics/Effect/Resources
+  for _fx in "${_stock_effects[@]}"; do : > "$_res/$_fx.ogl.mgfxo"; done
+  "$_dotnet" build Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj "${_props[@]}" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:UseAppHost=false
+
+  # Stage 2: the stock effects, from their .fx sources, with this mgfxc
+  # (vkd3d d3dcompiler_47 + MojoShader).
+  for _fx in "${_stock_effects[@]}"; do
+    msg2 "mgfxc $_fx.fx (OpenGL)"
+    "$_dotnet" Artifacts/MonoGame.Effect.Compiler/Release/mgfxc.dll \
+      "$(cygpath -m "$_res/$_fx.fx")" "$(cygpath -m "$_res/$_fx.ogl.mgfxo")" /Profile:OpenGL
+    [[ -s "$_res/$_fx.ogl.mgfxo" ]]
+  done
+
+  # Stage 3: packages for the offline feed.
+  local _proj
+  for _proj in MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj \
+               MonoGame.Framework.Content.Pipeline/MonoGame.Framework.Content.Pipeline.csproj \
+               Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj \
+               Tools/MonoGame.Content.Builder/MonoGame.Content.Builder.csproj \
+               Tools/MonoGame.Content.Builder.Task/MonoGame.Content.Builder.Task.csproj \
+               external/MonoGame.Templates/CSharp/MonoGame.Templates.CSharp.csproj; do
+    msg2 "Packing $_proj"
+    "$_dotnet" pack "$_proj" "${_props[@]}" -o "$(cygpath -m "$srcdir/feed")" \
+      --configfile "$(cygpath -m "$srcdir/NuGet.config")"
+  done
+
+  # Framework-dependent mgcb and mgfxc for $MINGW_PREFIX/lib/monogame.
+  for _proj in mgcb:Tools/MonoGame.Content.Builder/MonoGame.Content.Builder.csproj \
+               mgfxc:Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj; do
+    "$_dotnet" publish "${_proj#*:}" "${_props[@]}" -p:UseAppHost=false -p:SatelliteResourceLanguages=en \
+      -o "$(cygpath -m "$srcdir/stage/${_proj%%:*}")" --configfile "$(cygpath -m "$srcdir/NuGet.config")"
+  done
+}
+
+check() {
+  _env
+  local _feed=$(cygpath -m "$srcdir/feed")
+  rm -rf "$srcdir/check"
+  mkdir -p "$srcdir/check/content" "$srcdir/check/app"
+  cd "$srcdir/check"
+
+  # mgfxc: a custom effect for both shader backends.
+  local _fx=$(cygpath -m "$srcdir/$_tree/Tools/MonoGame.Content.Builder.Editor/Templates/Effect.fx")
+  "$_dotnet" "$(cygpath -m "$srcdir/stage/mgfxc/mgfxc.dll")" "$_fx" effect.ogl.mgfxo /Profile:OpenGL
+  "$_dotnet" "$(cygpath -m "$srcdir/stage/mgfxc/mgfxc.dll")" "$_fx" effect.dx11.mgfxo /Profile:DirectX_11
+  head -c4 effect.ogl.mgfxo | grep -q MGFX
+  head -c4 effect.dx11.mgfxo | grep -q MGFX
+
+  # mgcb: texture (stb via mgpipeline), sprite font (FreeType), stock-style and
+  # custom effects (vkd3d + MojoShader), model (Assimp) and XML content.
+  /usr/bin/python3 "$srcdir/check-content.py" "$srcdir/check/content" \
+    "$srcdir/$_tree/external/MonoGame.Templates/CSharp/content/MonoGame.ItemTemplate.SpriteFont.CSharp/Roboto-Bold.ttf" \
+    "$srcdir/$_tree/MonoGame.Framework/Platform/Graphics/Effect/Resources" "$_fx"
+  (cd content && "$_dotnet" "$(cygpath -m "$srcdir/stage/mgcb/mgcb.dll")" /@:Content.mgcb /platform:DesktopGL \
+    /outputDir:bin /intermediateDir:obj /rebuild)
+  local _x
+  for _x in texture font basic custom model; do
+    [[ -s "content/bin/$_x.xnb" ]] || { echo "missing $_x.xnb"; return 1; }
+  done
+
+  # The packages restore offline from the feed and the framework carries the
+  # source-built stock effects; the built content loads through the
+  # ContentManager readers that need no graphics device.
+  cp "$srcdir/check.cs" app/Program.cs
+  cat > app/check.csproj <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit><MonoGameCopyNativeLibraries>true</MonoGameCopyNativeLibraries></PropertyGroup>
+<ItemGroup><PackageReference Include="MonoGame.Framework.DesktopGL" Version="[$pkgver]" /><PackageReference Include="MonoGame.Framework.Content.Pipeline" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$_dotnet" run --project "$(cygpath -m "$srcdir/check/app/check.csproj")" -c Release \
+    -p:RestoreSources="$_feed;$_feedsrc" -p:UseSharedCompilation=false -- "$(cygpath -m "$srcdir/check/content/bin")"
+
+  # Every MSYS2 DLL that the copied native libraries link must be copied too.
+  local _out=app/bin/Release/net8.0 _dll _dep
+  for _dll in "$_out"/*.dll; do
+    for _dep in $(objdump -p "$(cygpath -m "$_dll")" | sed -n 's/^\s*DLL Name: //p'); do
+      if [[ -f "$MINGW_PREFIX/bin/$_dep" && ! -f "$_out/$_dep" ]]; then
+        echo "${_dll##*/} needs $_dep, which was not copied next to the app"; return 1
+      fi
+    done
+  done
+}
+
+package() {
+  local _lib="$pkgdir$MINGW_PREFIX/lib"
+  local _nupkg _id
+  for _nupkg in "$srcdir"/feed/*.nupkg; do
+    _id=$(basename "$_nupkg")
+    if [[ $_id == MonoGame.Templates.CSharp.* ]]; then
+      # Bundled with the SDK's own templates so `dotnet new mgdesktopgl` works
+      # without `dotnet new install`.
+      install -Dm644 "$_nupkg" "$_lib/dotnet/templates/${_sdkver}/${_id,,}"
+    else
+      install -Dm644 "$_nupkg" "$_lib/dotnet/library-packs/${_id,,}"
+    fi
+  done
+  mkdir -p "$_lib/monogame"
+  cp -r "$srcdir/stage/mgcb" "$srcdir/stage/mgfxc" "$_lib/monogame/"
+  install -Dm755 "$srcdir/mgcb.sh" "$pkgdir$MINGW_PREFIX/bin/mgcb"
+  sed 's/mgcb/mgfxc/g' "$srcdir/mgcb.sh" > "$srcdir/mgfxc.sh"
+  install -Dm755 "$srcdir/mgfxc.sh" "$pkgdir$MINGW_PREFIX/bin/mgfxc"
+  install -Dm644 "$srcdir/$_tree/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.txt"
+  install -Dm644 "$srcdir/$_tree/external/CppNet/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/CppNet.LICENSE"
+  install -Dm644 "$srcdir/README.msys2" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.msys2"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

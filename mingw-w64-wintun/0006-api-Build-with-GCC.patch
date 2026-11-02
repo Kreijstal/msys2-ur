@@ -1,0 +1,189 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 25 Oct 2026 06:01:10 +0100
+Subject: [PATCH 6/8] api: Build with GCC
+
+GCC rejects a few things MSVC lets through:
+
+- __FUNCTION__ is not a string literal, so it cannot be widened with L##.
+  Pass the standard __func__ as a narrow string instead; this also logs
+  the function name as a prefix of the out-of-memory message rather than
+  as the whole format string.
+- An empty __VA_ARGS__ leaves a trailing comma unless it is ##__VA_ARGS__.
+- RET_ERROR's (SetLastError(Error), 0) is not a null pointer constant
+  when Ret is a pointer.
+- NopLogger returns BOOL where WINTUN_LOGGER_CALLBACK returns VOID, and
+  CreateThread() and VerQueryValueW() get pointers of mismatched types.
+- mingw-w64 has no DECLSPEC_ALLOCATOR, and its delayimp.h declares
+  __pfnDliNotifyHook2 without const.
+---
+ api/driver.c   |  2 +-
+ api/logger.c   |  3 +--
+ api/logger.h   | 42 ++++++++++++++++++++++--------------------
+ api/main.c     |  5 +++++
+ api/rundll32.c |  4 ++--
+ 5 files changed, 31 insertions(+), 25 deletions(-)
+
+diff --git a/api/driver.c b/api/driver.c
+index f3e67eb..c14fdda 100644
+--- a/api/driver.c
++++ b/api/driver.c
+@@ -163,7 +163,7 @@ VersionOfFile(_In_z_ LPCWSTR Filename)
+         LastError = LOG_LAST_ERROR(L"Failed to get %s version info", Filename);
+         goto out;
+     }
+-    if (!VerQueryValueW(VersionInfo, L"\\", &FixedInfo, &FixedInfoLen))
++    if (!VerQueryValueW(VersionInfo, L"\\", (VOID **)&FixedInfo, &FixedInfoLen))
+     {
+         LastError = LOG_LAST_ERROR(L"Failed to get %s version info root", Filename);
+         goto out;
+diff --git a/api/logger.c b/api/logger.c
+index 8f394a6..7e5ee84 100644
+--- a/api/logger.c
++++ b/api/logger.c
+@@ -12,10 +12,9 @@
+ #include <wchar.h>
+ #include <stdlib.h>
+ 
+-static BOOL CALLBACK
++static VOID CALLBACK
+ NopLogger(_In_ WINTUN_LOGGER_LEVEL Level, _In_ DWORD64 Timestamp, _In_z_ LPCWSTR LogLine)
+ {
+-    return TRUE;
+ }
+ 
+ WINTUN_LOGGER_CALLBACK Logger = NopLogger;
+diff --git a/api/logger.h b/api/logger.h
+index 94a50a9..965b8a5 100644
+--- a/api/logger.h
++++ b/api/logger.h
+@@ -82,11 +82,15 @@ LoggerLastErrorFmt(_In_z_ _Printf_format_string_ LPCWSTR Format, ...)
+ VOID
+ LoggerGetRegistryKeyPath(_In_ HKEY Key, _Out_writes_z_(MAX_REG_PATH) LPWSTR Path);
+ 
+-#define LOG(lvl, msg, ...) (LoggerLogFmt((lvl), msg, __VA_ARGS__))
+-#define LOG_ERROR(err, msg, ...) (LoggerErrorFmt((err), msg, __VA_ARGS__))
+-#define LOG_LAST_ERROR(msg, ...) (LoggerLastErrorFmt(msg, __VA_ARGS__))
++#define LOG(lvl, msg, ...) (LoggerLogFmt((lvl), msg, ##__VA_ARGS__))
++#define LOG_ERROR(err, msg, ...) (LoggerErrorFmt((err), msg, ##__VA_ARGS__))
++#define LOG_LAST_ERROR(msg, ...) (LoggerLastErrorFmt(msg, ##__VA_ARGS__))
+ 
+-#define RET_ERROR(Ret, Error) ((Error) == ERROR_SUCCESS ? (Ret) : (SetLastError(Error), 0))
++#define RET_ERROR(Ret, Error) ((Error) != ERROR_SUCCESS && (SetLastError(Error), TRUE) ? 0 : (Ret))
++
++#ifndef DECLSPEC_ALLOCATOR
++#    define DECLSPEC_ALLOCATOR
++#endif
+ 
+ _Must_inspect_result_
+ DECLSPEC_ALLOCATOR
+@@ -94,12 +98,12 @@ static inline _Return_type_success_(return != NULL)
+ _Post_maybenull_
+ _Post_writable_byte_size_(Size)
+ VOID *
+-LoggerAlloc(_In_z_ LPCWSTR Function, _In_ DWORD Flags, _In_ SIZE_T Size)
++LoggerAlloc(_In_z_ LPCSTR Function, _In_ DWORD Flags, _In_ SIZE_T Size)
+ {
+     VOID *Data = HeapAlloc(ModuleHeap, Flags, Size);
+     if (!Data)
+     {
+-        LoggerLogFmt(WINTUN_LOG_ERR, Function, L"Out of memory (flags: 0x%x, requested size: 0x%zx)", Flags, Size);
++        LoggerLogFmt(WINTUN_LOG_ERR, L"%hs: Out of memory (flags: 0x%x, requested size: 0x%zx)", Function, Flags, Size);
+         SetLastError(ERROR_OUTOFMEMORY);
+     }
+     return Data;
+@@ -110,23 +114,21 @@ static inline _Return_type_success_(return != NULL)
+ _Post_maybenull_
+ _Post_writable_byte_size_(Size)
+ VOID *
+-LoggerReAlloc(_In_z_ LPCWSTR Function, _In_ DWORD Flags, _Frees_ptr_opt_ LPVOID Mem, _In_ SIZE_T Size)
++LoggerReAlloc(_In_z_ LPCSTR Function, _In_ DWORD Flags, _Frees_ptr_opt_ LPVOID Mem, _In_ SIZE_T Size)
+ {
+     VOID *Data = Mem ? HeapReAlloc(ModuleHeap, Flags, Mem, Size) : HeapAlloc(ModuleHeap, Flags, Size);
+     if (!Data)
+     {
+-        LoggerLogFmt(WINTUN_LOG_ERR, Function, L"Out of memory (flags: 0x%x, requested size: 0x%zx)", Flags, Size);
++        LoggerLogFmt(WINTUN_LOG_ERR, L"%hs: Out of memory (flags: 0x%x, requested size: 0x%zx)", Function, Flags, Size);
+         SetLastError(ERROR_OUTOFMEMORY);
+     }
+     return Data;
+ }
+ 
+-#define __L(x) L##x
+-#define _L(x) __L(x)
+-#define Alloc(Size) LoggerAlloc(_L(__FUNCTION__), 0, Size)
+-#define ReAlloc(Mem, Size) LoggerReAlloc(_L(__FUNCTION__), 0, Mem, Size)
+-#define Zalloc(Size) LoggerAlloc(_L(__FUNCTION__), HEAP_ZERO_MEMORY, Size)
+-#define ReZalloc(Mem, Size) LoggerReAlloc(_L(__FUNCTION__), HEAP_ZERO_MEMORY, Mem, Size)
++#define Alloc(Size) LoggerAlloc(__func__, 0, Size)
++#define ReAlloc(Mem, Size) LoggerReAlloc(__func__, 0, Mem, Size)
++#define Zalloc(Size) LoggerAlloc(__func__, HEAP_ZERO_MEMORY, Size)
++#define ReZalloc(Mem, Size) LoggerReAlloc(__func__, HEAP_ZERO_MEMORY, Mem, Size)
+ 
+ _Must_inspect_result_
+ DECLSPEC_ALLOCATOR
+@@ -134,7 +136,7 @@ static inline _Return_type_success_(return != NULL)
+ _Post_maybenull_
+ _Post_writable_byte_size_((NumberOfElements) * (SizeOfOneElement))
+ VOID *
+-LoggerAllocArray(_In_z_ LPCWSTR Function, _In_ DWORD Flags, _In_ SIZE_T NumberOfElements, _In_ SIZE_T SizeOfOneElement)
++LoggerAllocArray(_In_z_ LPCSTR Function, _In_ DWORD Flags, _In_ SIZE_T NumberOfElements, _In_ SIZE_T SizeOfOneElement)
+ {
+     SIZE_T Size;
+     if (FAILED(SIZETMult(NumberOfElements, SizeOfOneElement, &Size)))
+@@ -148,7 +150,7 @@ _Post_maybenull_
+ _Post_writable_byte_size_((NumberOfElements) * (SizeOfOneElement))
+ VOID *
+ LoggerReAllocArray(
+-    _In_z_ LPCWSTR Function,
++    _In_z_ LPCSTR Function,
+     _In_ DWORD Flags,
+     _Frees_ptr_opt_ LPVOID Mem,
+     _In_ SIZE_T NumberOfElements,
+@@ -159,10 +161,10 @@ LoggerReAllocArray(
+         return NULL;
+     return LoggerReAlloc(Function, Flags, Mem, Size);
+ }
+-#define AllocArray(Count, Size) LoggerAllocArray(_L(__FUNCTION__), 0, Count, Size)
+-#define ReAllocArray(Mem, Count, Size) LoggerReAllocArray(_L(__FUNCTION__), 0, Mem, Count, Size)
+-#define ZallocArray(Count, Size) LoggerAllocArray(_L(__FUNCTION__), HEAP_ZERO_MEMORY, Count, Size)
+-#define ReZallocArray(Mem, Count, Size) LoggerReAllocArray(_L(__FUNCTION__), HEAP_ZERO_MEMORY, Mem, Count, Size)
++#define AllocArray(Count, Size) LoggerAllocArray(__func__, 0, Count, Size)
++#define ReAllocArray(Mem, Count, Size) LoggerReAllocArray(__func__, 0, Mem, Count, Size)
++#define ZallocArray(Count, Size) LoggerAllocArray(__func__, HEAP_ZERO_MEMORY, Count, Size)
++#define ReZallocArray(Mem, Count, Size) LoggerReAllocArray(__func__, HEAP_ZERO_MEMORY, Mem, Count, Size)
+ 
+ static inline VOID
+ Free(_Frees_ptr_opt_ VOID *Ptr)
+diff --git a/api/main.c b/api/main.c
+index 32d04d1..a827e7b 100644
+--- a/api/main.c
++++ b/api/main.c
+@@ -40,7 +40,12 @@ DelayedLoadLibraryHook(unsigned dliNotify, PDelayLoadInfo pdli)
+     return (FARPROC)Library;
+ }
+ 
++#ifdef __MINGW32__
++/* mingw-w64's delayimp.h declares the hook without const */
++PfnDliHook __pfnDliNotifyHook2 = DelayedLoadLibraryHook;
++#else
+ const PfnDliHook __pfnDliNotifyHook2 = DelayedLoadLibraryHook;
++#endif
+ 
+ static BOOL InitializeSecurityObjects(VOID)
+ {
+diff --git a/api/rundll32.c b/api/rundll32.c
+index a547747..cda8ce4 100644
+--- a/api/rundll32.c
++++ b/api/rundll32.c
+@@ -251,8 +251,8 @@ ExecuteRunDll32(
+                                                 .Response = Response,
+                                                 .ResponseCapacity = ResponseCapacity };
+     HANDLE ThreadStdout = NULL, ThreadStderr = NULL;
+-    if ((ThreadStdout = CreateThread(NULL, 0, ProcessStdout, &ProcessStdoutState, 0, NULL)) == NULL ||
+-        (ThreadStderr = CreateThread(NULL, 0, ProcessStderr, StreamRStderr, 0, NULL)) == NULL)
++    if ((ThreadStdout = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessStdout, &ProcessStdoutState, 0, NULL)) == NULL ||
++        (ThreadStderr = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProcessStderr, StreamRStderr, 0, NULL)) == NULL)
+     {
+         LastError = LOG_LAST_ERROR(L"Failed to spawn readers");
+         goto cleanupThreads;

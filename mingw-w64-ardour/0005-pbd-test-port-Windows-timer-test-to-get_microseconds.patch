@@ -1,0 +1,48 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:48:49 +0100
+Subject: [PATCH] pbd/test: port Windows timer test to PBD::get_microseconds()
+
+windows_timer_utils_test.cc, which is only built for Windows targets
+with --test, still calls PBD::QPC::check_timer_valid() and
+PBD::QPC::get_microseconds(). The QPC namespace was removed from
+pbd/windows_timer_utils.h when the microsecond clock moved to
+pbd/microseconds.h, so `waf --test` no longer compiles on mingw.
+
+Test the monotonicity of the replacement PBD::get_microseconds()
+instead; the multimedia timer part of the test is unchanged.
+---
+ libs/pbd/test/windows_timer_utils_test.cc | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/libs/pbd/test/windows_timer_utils_test.cc b/libs/pbd/test/windows_timer_utils_test.cc
+index 003c116..54f095f 100644
+--- a/libs/pbd/test/windows_timer_utils_test.cc
++++ b/libs/pbd/test/windows_timer_utils_test.cc
+@@ -1,5 +1,6 @@
+ #include "windows_timer_utils_test.h"
+ 
++#include "pbd/microseconds.h"
+ #include "pbd/windows_timer_utils.h"
+ 
+ #include <windows.h>
+@@ -13,17 +14,14 @@ CPPUNIT_TEST_SUITE_REGISTRATION (WindowsTimerUtilsTest);
+ void
+ WindowsTimerUtilsTest::testQPC ()
+ {
+-	// performs basically the same test
+-	CPPUNIT_ASSERT (PBD::QPC::check_timer_valid());
+-
+-	int64_t last_timer_val = PBD::QPC::get_microseconds ();
++	int64_t last_timer_val = PBD::get_microseconds ();
+ 	CPPUNIT_ASSERT (last_timer_val >= 0);
+ 
+ 	int64_t min_interval = 1000000;
+ 	int64_t max_interval = 0;
+ 
+ 	for (int i = 0; i < 10000; ++i) {
+-		int64_t timer_val = PBD::QPC::get_microseconds ();
++		int64_t timer_val = PBD::get_microseconds ();
+ 		CPPUNIT_ASSERT (timer_val >= 0);
+ 		// try and test for non-syncronized TSC(AMD K8/etc)
+ 		CPPUNIT_ASSERT (timer_val >= last_timer_val);

@@ -1,0 +1,56 @@
+Original .NET10 public reference contracts — clean build and installed validation passed
+
+Package: mingw-w64-clang-x86_64-dotnet-reference10 10.0.5-1
+Windows root: /c/codex-dotnet10/ref10pkg.f8kV1A
+Installed refs: /clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-reference10-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-reference10
+RESULT: exit 0
+
+$ /usr/bin/python3 src/reference10-workflow/check-installed.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-validation"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-reference10-10.0.5-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Installed-check process environment only: DOTNET_ROOT/DOTNET_ROOT_X64=/clang64/lib/dotnet (native paths), DOTNET_CLI_HOME=src/installed-validation/cli-home, NUGET_PACKAGES=src/installed-validation/cache, DOTNET_CLI_TELEMETRY_OPTOUT=1 and MSBuildEnableWorkloadResolver=false.
+
+All 186 reference/stub projects build with the source compiler5 and original source SDK8 evaluation. All 167 public contracts ship; the 19 private facade stubs are build inputs only. The complete original identity/key/version/marker/dependency graph passes, including 22 original zero-reference-version policies and the VisualBasic.Core15 version override. The unchanged original Arcade tasks, archive and VMR mapping are pinned; all five signing-key policies match original Arcade source. Source audit: 203 original C# inputs, 286 original project/property files, 286 independently replayed project clones and 490 archive inputs. Compiler warnings: 31 CS8500 and 13 CS8617, no compiler errors.
+
+A fresh installed consumer compiles a C#14 field-backed property and .NET10 Sequence, AsyncEnumerable.Range and threading Lock against all 167 installed references (exit0). The same source fails against all 163 NET8 references with the expected missing APIs (exit1, required negative control). No .NET10 consumer is executed before the matching managed framework exists.
+
+--- installed-check.log ---
+PASS 167 public contracts,19 original facade stubs and metadata graph; net10 API consumer compiles and net8 control rejects it
+PASS exact installed contract bytes and fresh complete metadata/NET10 positive/NET8 negative consumer gates
+
+--- installed-package-audit.log ---
+PASS all 178 installed payload files and 167 exact source reference assemblies; no private facade stubs shipped
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-reference10: 190 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/vbc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+--- src/prepared/audit.log ---
+PASS 203 original C# inputs and 286 project/property inputs match pristine runtime10 source;19 original-target generated stubs
+
+Package SHA256: 28adfe8dfdbf1969f82d8ee3dd2c0090e1689d17a9dda7ce25fd09e7eb72b69f
+Evidence: /tmp/reference10-package1/reference10-package-evidence1.tar.gz
+Evidence SHA256: cbeaebbf4cec989adba7eb4c063eed60cb19be3c3c9228065b5232664b242420
+All 2,481 evidence files and all 26 frozen workflow files, PKGBUILD and .SRCINFO verified.
+
+This installs source reference contracts in a separate reference-packs directory. Formal generators, final SDK targeting-pack integration, complete managed/native framework10, SDK/desktop10, PowerShell7.6 and the broader dependency/compatibility goal remain open.

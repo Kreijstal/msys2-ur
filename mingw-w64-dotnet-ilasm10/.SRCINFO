@@ -1,0 +1,31 @@
+pkgbase = mingw-w64-dotnet-ilasm10
+	pkgdesc = Source-built .NET10 native IL assembler with MinGW resource handling
+	pkgver = 10.0.5
+	pkgrel = 1
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk8-servicing=8.0.131
+	makedepends = mingw-w64-clang-x86_64-cc
+	makedepends = mingw-w64-clang-x86_64-cmake
+	makedepends = mingw-w64-clang-x86_64-ninja
+	makedepends = mingw-w64-clang-x86_64-llvm
+	makedepends = mingw-w64-clang-x86_64-uasm
+	makedepends = mingw-w64-clang-x86_64-python
+	makedepends = python
+	makedepends = patch
+	depends = mingw-w64-clang-x86_64-cc-libs
+	noextract = runtime-v10.0.5.tar.gz
+	noextract = maintenance-ab95a1f1.tar.gz
+	options = !strip
+	options = !lto
+	options = !buildflags
+	options = !debug
+	source = runtime-v10.0.5.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v10.0.5
+	source = dotnet-ilasm10-source-1.tar.gz
+	source = maintenance-ab95a1f1.tar.gz::https://codeload.github.com/dotnet/maintenance-packages/tar.gz/ab95a1f103b49919ba02577a99f3173405bb50ca
+	sha256sums = 1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a
+	sha256sums = bda8b3a735b501c0b51f491984decf81928412fa62a74f5ddbd4b914df3c168a
+	sha256sums = 6e6f764834ebf0d9135d0c0dff9d78209df629eee496192c022a531e7f915a7e
+
+pkgname = mingw-w64-clang-x86_64-dotnet-ilasm10

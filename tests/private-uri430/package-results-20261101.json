@@ -1,0 +1,93 @@
+{
+  "finished_at_utc": "2026-11-01T08:57:46.416801+00:00",
+  "recipe": "mingw-w64-dotnet-private-uri430",
+  "package": "mingw-w64-clang-x86_64-dotnet-private-uri4304.3.0-1",
+  "source_build_root": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "cwd": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-package.py mingw-w64-clang-x86_64-dotnet-private-uri430-4.3.0-1-any.pkg.tar.zst src archive-audit.json",
+      "cwd": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-private-uri430-4.3.0-1-any.pkg.tar.zst",
+      "cwd": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-private-uri430/check.py E:/msys64/clang64/lib/dotnet/library-packs E:/codex-dotnet10/private-uri430pkg1.mnD6zw/installed-check E:/msys64/clang64",
+      "cwd": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-private-uri430",
+      "cwd": "/e/codex-dotnet10/private-uri430pkg1.mnD6zw",
+      "exit_code": 0
+    }
+  ],
+  "source_archive_SHA256": "4e027bc3c8152952b834589575de7fdeeb92e2bccd4bcd0187a3792218993073",
+  "source_archive_files": 8,
+  "source_commit": "4d1af962ca0fede10beb01d197367c2f90e92c97",
+  "original_DLL_count": 0,
+  "original_dependencies_preserved": true,
+  "archive_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-private-uri430-4.3.0-1-any.pkg.tar.zst",
+    "artifact_SHA256": "a2a4434d37abf10bfe535ff049ed2dba08897e974a50f41f66bf97b071cc0347",
+    "source_NuGet_SHA256": "30c7d52067f2b4c441fd20f32a9467494e2ee9f48cd271e422ba9927534dcf80",
+    "original_DLL_count": 0,
+    "all_original_data_and_pinned_source_verified": true,
+    "fresh_restore_checks": 2,
+    "runtime_implementation_not_claimed": true,
+    "full_dependency_goal_complete": false
+  },
+  "installed_checks": {
+    "checks": [
+      {
+        "framework": "netstandard1.3",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/private-uri430pkg1.mnD6zw/installed-check/netstandard1.3/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/private-uri430pkg1.mnD6zw/installed-check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "framework": "netcore50",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/private-uri430pkg1.mnD6zw/installed-check/netcore50/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/private-uri430pkg1.mnD6zw/installed-check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "source_NuGet_SHA256": "30c7d52067f2b4c441fd20f32a9467494e2ee9f48cd271e422ba9927534dcf80",
+    "all_original_data_and_dependencies_verified": true,
+    "original_DLL_count": 0,
+    "runtime_implementation_not_claimed": true,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_audit": "mingw-w64-clang-x86_64-dotnet-private-uri430: 26 total files, 0 altered files",
+  "feed_audit": {
+    "before_count": 314,
+    "after_count": 315,
+    "all_previous_archives_unchanged": true,
+    "added": [
+      "system.private.uri.4.3.0.nupkg"
+    ]
+  },
+  "runtime_implementation_not_claimed": true,
+  "full_dependency_goal_complete": false,
+  "evidence": "tests/private-uri430/package-results-20261101.txt"
+}

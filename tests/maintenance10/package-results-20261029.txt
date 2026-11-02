@@ -1,0 +1,36 @@
+Source maintenance update companion: clean build, package and installed validation
+Package: mingw-w64-clang-x86_64-dotnet-maintenance-netstandard10 20261029-1
+Windows root: /e/codex-dotnet10/maintenance10pkg1.R4sjnw
+Shipped source-only archives: System.Memory4.6.3, Unsafe6.1.2, Tasks.Extensions4.6.3.
+Original source commit: f62ca0009b038cab4725a720f386623a969d73ad.
+Private build:133 original C# inputs +1 original Unsafe IL input; all15 original dependency/profile groups and10 inbox placeholders verified.
+Only three updated archives ship. Existing Buffer/Vector ownership and all five older maintenance archives are unchanged.
+Portable installed suite: identities, public keys, native/managed versions, original documented APIs,42 Unsafe methods,3 resource sets/19 strings, isolated execution and all fresh consumer cache bytes pass.
+Inbox installed suite: original higher-framework placeholder selection and actual source framework type ownership pass.
+13 regular payload files; pacman22 entries,0 altered.
+
+Exact commands, run from the Windows root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ /usr/bin/python3 audit-package.py "$PWD"
+RESULT: exit 0
+$ pacman -U --noconfirm ./*.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-maintenance-netstandard10
+RESULT: exit 0
+$ /usr/bin/python3 installed-workflow/check-installed.py "$PWD" "$PWD/src/prepared" "$PWD/installed-consumer" /clang64/lib/dotnet/library-packs --resume
+RESULT: exit 0
+$ /usr/bin/python3 src/maintenance-netstandard/check-inbox.py "$PWD/src/prepared" "$PWD/installed-inbox-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+Retained attempt history:
+Clean source makepkg build, original private-graph checks and independent archive audit passed on the first attempt.
+Installed consumer initially completed build/runtime checks then hit a test-harness path-prefix assertion. Corrected the invocation root and producer-evidence lookup, and resumed the same consumer/cache. The complete installed portable/cache audit and separate inbox check then passed. No production source/package implementation changed.
+Initial evidence collector included its own previous manifest, causing downloaded hash verification to reject that manifest. Excluding the mutable manifest from its members and collecting again produced 210 independently verified files. The first downloaded attempt is retained separately.
+
+Package SHA256: 0bc83d0c0acc371591413b6d2128fecbc31a2e9d5dc432d5110734d0216aacac
+Source workflow:19 files SHA256 b9401875a74f8ab7d394d500d4e7c7a16b490679bba8fd845ded1f1c1c8c2fce
+Evidence:210 files SHA256 df05858c3457db942b8d745a56f1507a6521c51bb6008ac9bc98834256a09f7f
+Local evidence and downloaded package: /tmp/maintenance10-package1
+
+NET10/PowerShell7.6 integration, legacy Framework profiles and the full dependency goal remain open. The original7.4 dependency completion counts are unchanged.

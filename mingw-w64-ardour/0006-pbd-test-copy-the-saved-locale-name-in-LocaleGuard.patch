@@ -1,0 +1,49 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:50:10 +0100
+Subject: [PATCH] pbd/test: copy the saved locale name in LocaleGuard
+
+LocaleGuard kept the pointer returned by setlocale (LC_ALL, NULL) and
+passed it back to setlocale() in its destructor. The C standard only
+guarantees that string until the next setlocale() call; the UCRT frees
+it when the locale is changed, so restoring the previous locale reads
+freed memory, fails, and the CPPUNIT_ASSERT in the destructor calls
+std::terminate() in the middle of StringConvertTest on Windows.
+
+Keep a std::string copy of the previous locale name instead.
+---
+ libs/pbd/test/string_convert_test.cc | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/libs/pbd/test/string_convert_test.cc b/libs/pbd/test/string_convert_test.cc
+index 27a24c5..b8a856d 100644
+--- a/libs/pbd/test/string_convert_test.cc
++++ b/libs/pbd/test/string_convert_test.cc
+@@ -25,9 +25,11 @@ public:
+ 	// previous setting when going out of scope
+ 	LocaleGuard (const std::string& locale)
+ 	{
+-		m_previous_locale = setlocale (LC_ALL, NULL);
++		const char* prev = setlocale (LC_ALL, NULL);
+ 
+-		CPPUNIT_ASSERT (m_previous_locale != NULL);
++		CPPUNIT_ASSERT (prev != NULL);
++		/* the returned string is only valid until the next setlocale() call */
++		m_previous_locale = prev;
+ 
+ 		const char* new_locale = setlocale (LC_ALL, locale.c_str ());
+ 
+@@ -40,11 +42,11 @@ public:
+ 
+ 	~LocaleGuard ()
+ 	{
+-		CPPUNIT_ASSERT (setlocale (LC_ALL, m_previous_locale) != NULL);
++		CPPUNIT_ASSERT (setlocale (LC_ALL, m_previous_locale.c_str ()) != NULL);
+ 	}
+ 
+ private:
+-	const char* m_previous_locale;
++	std::string m_previous_locale;
+ };
+ 
+ static

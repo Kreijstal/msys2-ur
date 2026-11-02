@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:27:03 +0100
+Subject: [PATCH 2/4] Strip absolute source-root path from embedded build-info
+
+tools/autowaf.py prepends -I<abspath-of-srcdir> to CFLAGS/CXXFLAGS,
+and wscript then dumps the full flag list into libs/ardour/config_text.cc
+(the runtime `ardour_config_info` string compiled into libardour). That
+leaks the build-host srcdir into the shipped DLL, which makepkg's QA
+check flags as a $srcdir reference.
+
+Filter the absolute -I entry out before writing the build-info string.
+The compile-time -I flag itself is left intact.
+---
+ wscript | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/wscript b/wscript
+index 32fb336..e43e9f2 100644
+--- a/wscript
++++ b/wscript
+@@ -1595,8 +1595,13 @@ const char* const ardour_config_info = "\\n\\
+     write_config_text('Mac ppc Architecture',  opts.ppc)
+     write_config_text('Mac arm64 Architecture',  opts.arm64)
+     config_text.write("\\n\\\n")
+-    write_config_text('C compiler flags',      conf.env['CFLAGS'])
+-    write_config_text('C++ compiler flags',    conf.env['CXXFLAGS'])
++    # Do not leak the absolute build directory (added as -I by autowaf)
++    # into the build-info string compiled into libardour.
++    _abs_src = os.path.abspath('.')
++    def _strip_srcdir(flags):
++        return [f for f in flags if f != '-I' + _abs_src]
++    write_config_text('C compiler flags',      _strip_srcdir(conf.env['CFLAGS']))
++    write_config_text('C++ compiler flags',    _strip_srcdir(conf.env['CXXFLAGS']))
+     write_config_text('Linker flags',          conf.env['LINKFLAGS'])
+ 
+     config_text.write ('";\n}\n')

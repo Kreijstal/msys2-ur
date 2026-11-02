@@ -1,0 +1,108 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-antlr4
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+         "${MINGW_PACKAGE_PREFIX}-java-antlr4")
+pkgver=4.13.2
+pkgrel=1
+pkgdesc="antlr4 Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:BSD-3-Clause')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-antlr-runtime"
+             "${MINGW_PACKAGE_PREFIX}-java-icu4j"
+             "${MINGW_PACKAGE_PREFIX}-java-org-abego-treelayout-core"
+             "${MINGW_PACKAGE_PREFIX}-java-st4")
+source=('https://repo.maven.apache.org/maven2/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/antlr/antlr4-runtime/4.13.2/antlr4-runtime-4.13.2.pom'
+         'https://repo.maven.apache.org/maven2/org/antlr/antlr4/4.13.2/antlr4-4.13.2-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/antlr/antlr4/4.13.2/antlr4-4.13.2.pom')
+noextract=('antlr4-runtime-4.13.2-sources.jar'
+         'antlr4-runtime-4.13.2.pom'
+         'antlr4-4.13.2-sources.jar'
+         'antlr4-4.13.2.pom')
+sha256sums=('4100b1df2f38152d8502e89195b94654d9aa22f5b6c47aca7b6a7f3194b5fbb0'
+         '03ce07a2796c511b0c94dc14fd86ccdd6e3828c57967ad2383de304e0d11ba79'
+         '99ae731cbd6d90aa4179fd7ac22754c23938ea5b6f54f4f986b67c155de5986e'
+         '809ee49706dce3674988babfcad36b3c5a0e2fd5cfa0a51209103963e857261b')
+_artifacts=('org.antlr:antlr4-runtime:4.13.2'
+         'org.antlr:antlr4:4.13.2')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.antlr:antlr4-runtime:4.13.2 upstream/antlr4-runtime \
+    -r resources/antlr4-runtime -u antlr4-runtime-4.13.2.pom
+  jb_module org.antlr:antlr4:4.13.2 upstream/antlr4 \
+    -r resources/antlr4 -u antlr4-4.13.2.pom -- \
+    org.antlr:antlr4-runtime org.antlr:antlr-runtime org.antlr:ST4 org.abego.treelayout:org.abego.treelayout.core com.ibm.icu:icu4j
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.antlr:antlr4-runtime
+  jb_loadcheck --with org.antlr:antlr4-runtime --with org.antlr:antlr-runtime --with org.antlr:ST4 --with org.abego.treelayout:org.abego.treelayout.core --with com.ibm.icu:icu4j org.antlr:antlr4
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-antlr4-runtime() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.antlr:antlr4-runtime
+  _license antlr4-runtime 4.13.2
+}
+
+package_java-antlr4() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+           "${MINGW_PACKAGE_PREFIX}-java-antlr-runtime"
+           "${MINGW_PACKAGE_PREFIX}-java-st4"
+           "${MINGW_PACKAGE_PREFIX}-java-org-abego-treelayout-core"
+           "${MINGW_PACKAGE_PREFIX}-java-icu4j")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.antlr:antlr4
+  _license antlr4 4.13.2
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

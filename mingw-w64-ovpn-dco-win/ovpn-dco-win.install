@@ -1,0 +1,18 @@
+_ovpn_dco_notice() {
+  cat <<'NOTICE'
+==> ovpn-dco-win: this is an UNSIGNED build of the OpenVPN DCO kernel driver.
+    It loads on ReactOS. On Windows it loads only with test signing enabled
+    (bcdedit /set testsigning on, then reboot). Normal Windows installations
+    need OpenVPN's official signed ovpn-dco driver instead.
+    The files are in <prefix>/lib/ovpn-dco-win/{win10,win11}; win10 is the
+    NetAdapterCx 2.0 build, win11 the NetAdapterCx 2.1 build.
+NOTICE
+}
+
+post_install() {
+  _ovpn_dco_notice
+}
+
+post_upgrade() {
+  _ovpn_dco_notice
+}

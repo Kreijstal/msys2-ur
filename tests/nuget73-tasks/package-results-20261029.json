@@ -1,0 +1,191 @@
+{
+  "finished_at_utc": "2026-10-29T09:25:45.220134+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/nuget73taskspkg1.9VfZJM",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "fe597b0df9d1984b22e741c22e3b77a539a65d2eeda0d5301ef600ceda48f24d"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "fcc89f4543eb52097d80153437c46173c63d1572e44cb1f6ba63c9b88d35b978"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "2df13c4a6a609c33740696fc4b29e367db9f4db7b1f0d4fb285627fafc2e9323"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "427cdfdb44497ab110f7f58f66b8f26cd7fca3aadc65cef4e298c39387cdbaf3"
+    }
+  ],
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check-resources.py",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/plan",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/build",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/localized",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/resources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check.py",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/plan",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/build",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap/bin"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 436,
+    "installed_pack_classic_and_static_restore_and_sdk_resolver_passed": true,
+    "installed_resource_values": 756,
+    "original_satellites": 39,
+    "portable_pdbs": 4,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "runtime_checks": {
+    "commands": [
+      {
+        "label": "compile-payload",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "pack-input-restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Empty.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "pack",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Pack.proj",
+          "-t:Pack",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/classic/Consumer.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "static-graph-restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/NuGet.Build.Tasks.Console.dll",
+          "Recursive=true",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/static/Consumer.proj",
+          "RestoreConfigFile=E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/NuGet.config"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "restore-negative",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/missing/Consumer.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 1
+      },
+      {
+        "label": "sdk-resolver",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Sdk.proj",
+          "-t:OwnedSdk",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_pack_task_created_two_packages": true,
+    "classic_restore_three_package_graph": true,
+    "static_graph_console_restore_three_package_graph": true,
+    "original_NET10_assets_and_source_archive_bytes_verified": true,
+    "missing_package_rejected_NU1101": true,
+    "actual_msbuild_NuGetSdkResolver_discovery_and_imports": true,
+    "owned_unicode_sdk_props_targets_passed": true,
+    "process_scoped_environment_and_private_caches": true,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "original_compile_items": 77,
+    "unique_original_compile_inputs": 74,
+    "selected_archive_inputs_verified": 140,
+    "original_xlf_inputs": 39,
+    "source_profile_policy_resource_manifest_reference_output_and_satellite_hashes_verified": true,
+    "original_VMR_version_flow_policy": {
+      "vmr": "05d9490471fb4b10d7ef4faa32c423e1b5adcaee",
+      "files": {
+        "repo-projects/nuget-client.proj": "54c0a640ca4de1ebe851a770520145cc804198be32a46781acba80e4a0a656ca",
+        "repo-projects/Directory.Build.props": "ade49c5423274812ea1c62495ff246788d62d1c7db9b3c6c6e09f6210353c855",
+        "repo-projects/Directory.Build.targets": "c84183c21a9b8e65c639f24feb787e3726b5389683223f3e937cd82062b015c8",
+        "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/WritePackageVersionsProps.cs": "6c479eddd9c5a46988bd33728fef85c324c6383ae9ad42eeaa626c618179c33b",
+        "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/VersionDetailsHelper.cs": "39b2de5ae656c23e784dcb892be152714a2ff691b8883e34c095c3e730f8f856"
+      }
+    },
+    "original_production_source_changes": 0,
+    "formal_package_built": false,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "full_nuget73_closure_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

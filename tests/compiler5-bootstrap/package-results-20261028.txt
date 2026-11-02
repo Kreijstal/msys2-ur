@@ -1,0 +1,190 @@
+Compiler5 bootstrap package — clean build, install and installed validation passed
+Finished UTC: 2026-10-28T16:58:51Z
+Host: win11
+Build root: /c/codex-dotnet10/c5pkg.PXBNJM
+Package: mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap 5.0.0-1
+
+This is a NET8 adapter for the declared source bootstrap compiler, not a new complete upstream Roslyn5 build.
+366 original runtime9 C# inputs; 371 archive inputs audited; 27 installed payload files verified.
+Full PowerShell dependency goal remains open.
+
+Exact validation commands (Windows commands run from the build root; local commands from the repository):
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap-5.0.0-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap
+RESULT: exit 0
+
+$ /usr/bin/python3 src/compiler5-bootstrap/check.py src/prepared installed-check /clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-package.py ./mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap-5.0.0-1-any.pkg.tar.zst src/prepared evidence/package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c evidence/existing-compilers-before.sha256
+RESULT: exit 0
+
+$ python mingw-w64-dotnet-compiler5-bootstrap/make-source.py
+RESULT: exit 0
+
+$ bash -n mingw-w64-dotnet-compiler5-bootstrap/PKGBUILD mingw-w64-dotnet-compiler5-bootstrap/build.sh mingw-w64-dotnet-compiler5-bootstrap/check.sh
+RESULT: exit 0
+
+$ python -m py_compile mingw-w64-dotnet-compiler5-bootstrap/*.py tests/compiler5-bootstrap/audit-package.py
+RESULT: exit 0
+
+Original runtime9 build emitted MSB3243 and two CS8500 warnings.
+Functional checks deliberately emitted C5PKG001 to prove analyzer execution.
+
+Evidence SHA256: b5162c001fd8c4c412b3f70f41b61d346dea636f1cd2add3b374749cd2aba60a
+Package SHA256: 91400a18903b18efedceef8d169c84834f5d7f1e270d0e0edbc581c9619a2781
+
+Logs:
+
+--- makepkg.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-compiler5-bootstrap 5.0.0-1 (28 Oct 2026 17:48:45)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v9.0.0.tar.gz
+  -> Found compiler5-bootstrap-source-1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-v9.0.0.tar.gz ... Passed
+    compiler5-bootstrap-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting compiler5-bootstrap-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+Prepared source Compiler5 package host and runtime9: {'System.Collections.Immutable': 134, 'System.Reflection.Metadata': 232}
+==> Starting build()...
+PASS explicit source runtime9 host dependencies and unchanged compiler libraries
+PASS packaged Compiler5 host and original source Immutable9/Metadata9 build
+==> Starting check()...
+PASS source Compiler5 SDK build/generator/analyzer/runtime9/CSharp14/Unicode-RSP/error checks
+PASS original runtime9 archive inputs and installed source Compiler5 provenance
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-compiler5-bootstrap 5.0.0-1 (28 Oct 2026 17:56:58)
+
+
+--- libraries-build.log ---
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Collections.Immutable\Build.csproj (in 239 ms).
+  Restored C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj (in 239 ms).
+  Build -> C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Collections.Immutable\bin\Release\net8.0\System.Collections.Immutable.dll
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Collections.Immutable, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Collections.Immutable, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Collections.Immutable, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+  Consider app.config remapping of assembly "System.Collections.Immutable, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" from Version "8.0.0.0" [E:\msys64\clang64\lib\dotnet\packs\Microsoft.NETCore.App.Ref\8.0.31\ref\net8.0\System.Collections.Immutable.dll] to Version "9.0.0.0" [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Collections.Immutable\bin\Release\net8.0\System.Collections.Immutable.dll] to solve conflict and get rid of warning.
+C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\runtime-source\src\libraries\Common\src\System\HexConverter.cs(196,70): warning CS8500: This takes the address of, gets the size of, or declares a pointer to a managed type ('ReadOnlySpan<byte>') [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\runtime-source\src\libraries\Common\src\System\HexConverter.cs(197,33): warning CS8500: This takes the address of, gets the size of, or declares a pointer to a managed type ('ReadOnlySpan<byte>') [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+  Build -> C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\bin\Release\net8.0\System.Reflection.Metadata.dll
+
+Build succeeded.
+
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Microsoft.Common.CurrentVersion.targets(2382,5): warning MSB3243: No way to resolve conflict between "System.Collections.Immutable, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" and "System.Collections.Immutable, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a". Choosing "System.Collections.Immutable, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" arbitrarily. [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\runtime-source\src\libraries\Common\src\System\HexConverter.cs(196,70): warning CS8500: This takes the address of, gets the size of, or declares a pointer to a managed type ('ReadOnlySpan<byte>') [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\runtime-source\src\libraries\Common\src\System\HexConverter.cs(197,33): warning CS8500: This takes the address of, gets the size of, or declares a pointer to a managed type ('ReadOnlySpan<byte>') [C:\codex-dotnet10\c5pkg.PXBNJM\src\prepared\System.Reflection.Metadata\Build.csproj]
+    3 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:44.47
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap-5.0.0-1
+
+Total Installed Size:  10.65 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap...
+
+
+--- pacman-Qk.log ---
+mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap: 37 total files, 0 missing files
+
+
+--- installed-check.log ---
+PASS source Compiler5 SDK build/generator/analyzer/runtime9/CSharp14/Unicode-RSP/error checks
+
+
+--- installed-check/build.log ---
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\consumer\Build.csproj (in 304 ms).
+  Restored C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\generator\Build.csproj (in 304 ms).
+  Build -> C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\generator\bin\Release\net8.0\OwnedGenerator.dll
+C:\codex-dotnet10\c5pkg.PXBNJM\src\compiler5-bootstrap\inputs\Probe.cs(9,1): warning C5PKG001: Original source compiler analyzer callback [C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\consumer\Build.csproj]
+  Build -> C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\consumer\bin\Release\net8.0\Probe.dll
+
+Build succeeded.
+
+C:\codex-dotnet10\c5pkg.PXBNJM\src\compiler5-bootstrap\inputs\Probe.cs(9,1): warning C5PKG001: Original source compiler analyzer callback [C:\codex-dotnet10\c5pkg.PXBNJM\installed-check\consumer\Build.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:26.71
+
+
+--- installed-check/run.log ---
+PASS source Compiler5 CSharp14 extension property, generator output=42 and emitted execution
+
+
+--- installed-check/negative.log ---
+installed-check\broken.cs(1,14): error CS1001: Identifier expected
+installed-check\broken.cs(1,15): error CS1513: } expected
+
+
+--- package-audit.log ---
+PASS installed package archive, compiler provenance, source runtime9 assets and dedicated paths
+
+
+--- existing-compilers-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/csc49.cmd: OK
+/clang64/lib/dotnet-bootstrap/roslyn-5.0.0/csc.exe: OK
+

@@ -1,0 +1,59 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-publicapi334-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.3.4
+pkgrel=1
+pkgdesc='Source PublicApiAnalyzers original NS2 profiles with Roslyn4.4 bootstrap ports'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn-analyzers'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=22ea6422f85b05ca0793cc3b76375487be407f5d
+source=("roslyn-analyzers-publicapi-22ea6422.tar.gz::https://codeload.github.com/dotnet/roslyn-analyzers/tar.gz/$_commit"
+        'publicapi334-source-1.tar.gz'
+        'published-publicapianalyzers334-metadata-only.nupkg::https://api.nuget.org/v3-flatcontainer/microsoft.codeanalysis.publicapianalyzers/3.3.4/microsoft.codeanalysis.publicapianalyzers.3.3.4.nupkg')
+noextract=('roslyn-analyzers-publicapi-22ea6422.tar.gz' 'published-publicapianalyzers334-metadata-only.nupkg')
+sha256sums=('49a992347546aef48cb31673b294bd1b10c30e68bbb53be61d411bb0d7219e1e'
+            'd550a9703aeedca3737191c0a0f65f82483451a0e90b34231a564e99738bb34a'
+            '5a61b7ae142ccabf2e47ad89e0c75f27d6fd2f1eda12ee802fd9cd4acd157611')
+
+_py() {
+  local script=$1 log=$2
+  shift 2
+  local path args=()
+  for path in "$@"; do args+=("$(cygpath -am "$path")"); done
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/publicapi334-workflow/$script")" "${args[@]}" > "$srcdir/$log" 2>&1
+}
+prepare() {
+  _py snapshot.py snapshot.log "$srcdir/roslyn-analyzers-publicapi-22ea6422.tar.gz" "$srcdir/original-inputs" "$srcdir/publicapi334-snapshot.tar.gz"
+  _py prepare-inputs.py prepare.log "$srcdir/original-inputs/source" "$srcdir/project-inputs.json"
+}
+build() {
+  _py build.py build.log "$srcdir/publicapi334-snapshot.tar.gz" "$srcdir/project-inputs.json" "$srcdir/build"
+  _py localize.py localization.log "$srcdir/build" "$srcdir/localized"
+  _py restore-codefix.py dependencies.log "$srcdir/dependencies"
+  _py check-codefix.py codefix-check.log "$srcdir/build" "$srcdir/dependencies" "$srcdir/codefix-check"
+  _py generate-package-config.py package-config.log "$srcdir/roslyn-analyzers-publicapi-22ea6422.tar.gz" "$srcdir/build" "$srcdir/codefix-check" "$srcdir/package-config"
+}
+check() {
+  _py check-cli.py cli-check.log "$srcdir/build" "$srcdir/cli-check"
+  _py check-metadata.py metadata-check.log "$srcdir/build" "$srcdir/published-publicapianalyzers334-metadata-only.nupkg" "$srcdir/metadata-check"
+  _py check-resources.py resource-check.log "$srcdir/build" "$srcdir/localized" "$srcdir/resources-check"
+  _py check-package-config.py config-comparison.log "$srcdir/package-config" "$srcdir/published-publicapianalyzers334-metadata-only.nupkg" "$srcdir/package-config-comparison.json"
+  _py audit.py audit.log "$srcdir/roslyn-analyzers-publicapi-22ea6422.tar.gz" "$srcdir/build" "$srcdir/package-config-comparison.json" "$srcdir/source-audit.json"
+  _py stage.py stage.log "$srcdir" "$srcdir/package-prefix"
+  _py check-installed.py staged-check.log "$srcdir/package-prefix" "$srcdir/staged-check"
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

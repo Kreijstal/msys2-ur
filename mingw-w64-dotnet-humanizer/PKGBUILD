@@ -1,0 +1,46 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-humanizer
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.14.1
+pkgrel=2
+pkgdesc='Source Humanizer original Standard2.0 target and retained NET8 port'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Humanizr/Humanizer'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=3ebc38de585fc641a04b0e78ed69468453b0f8a1
+source=("humanizer-${_commit:0:8}.tar.gz::https://codeload.github.com/Humanizr/Humanizer/tar.gz/${_commit}"
+        'humanizer-source-2.tar.gz')
+noextract=("humanizer-${_commit:0:8}.tar.gz")
+sha256sums=('a98e80e9ca23c4ec17699481bd4b145e5477ba6f2ea8082956724428048c38db'
+            'ee13b58a9ccc6a7bfe5f2c9ff0dab938cbbcb037203c7300df9ac3253f507d92')
+prepare() {
+  /usr/bin/python3 "$srcdir/humanizer-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/humanizer-workflow/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/humanizer-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer-standard" netstandard2.0 > "$srcdir/check-standard.log" 2>&1
+  /usr/bin/python3 "$srcdir/humanizer-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer-net8" net8.0 > "$srcdir/check-net8.log" 2>&1
+}
+package() {
+  local prepared="$srcdir/prepared"
+  local original="$prepared/Humanizer-$_commit"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  install -Dm644 "$prepared/feed/Humanizer.Core.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/humanizer.core.$pkgver.nupkg"
+  install -Dm644 "$original/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$original/src/Humanizer/Bytes/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.Bytes"
+  install -Dm644 "$original/src/Humanizer/Inflections/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.Inflections"
+  mkdir -p "$doc"
+  install -m644 "$prepared/source-inputs.json" "$doc/"
+  install -m644 "$srcdir/humanizer-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/consumer-standard/results.json" "$doc/build-standard-results.json"
+  install -m644 "$srcdir/consumer-net8/results.json" "$doc/build-net8-results.json"
+}

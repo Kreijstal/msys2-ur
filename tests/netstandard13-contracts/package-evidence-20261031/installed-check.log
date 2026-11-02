@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/clang64/share/doc/dotnet-legacy-ns13-contracts-bootstrap/check.py", line 26, in <module>
+    run('probe-build',[host,native(compiler/'csc.dll'),'-noconfig','@'+native(out/'probe.rsp')])
+  File "/clang64/share/doc/dotnet-legacy-ns13-contracts-bootstrap/check.py", line 19, in run
+    commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(label,(out/(label+'.log')).read_text()[-7000:])
+                                                                     ^^^^^^^^^^^^^^^
+AssertionError: ('probe-build', 'Could not execute because the specified command or file was not found.\nPossible reasons for this include:\n  * You misspelled a built-in dotnet command.\n  * You intended to execute a .NET program, but dotnet-E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/csc.dll does not exist.\n  * You intended to run a global tool, but a dotnet-prefixed executable with this name could not be found on the PATH.\n')

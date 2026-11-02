@@ -1,0 +1,40 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# plexus-xml 3.x carries the XML classes of plexus-utils 3.x for plugins
+# that already depend on the split artifact while running on Maven 3.
+
+_realname=plexus-xml
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=3.0.1
+pkgrel=1
+pkgdesc="Plexus XML utilities (Maven 3 line), built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-xml/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-xml'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-xml/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('dc04615c78e6ae256e56b1caab3f9baec9d20d4ada562c0b6c3719aa740a7986')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.codehaus.plexus:plexus-xml:${pkgver} src/main/java -r src/main/resources -u pom.xml \
+    -m "Automatic-Module-Name: org.codehaus.plexus.xml"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5 (Jupiter) and JMH, which are not packaged
+  jb_loadcheck org.codehaus.plexus:plexus-xml
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-xml
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE.txt"
+}

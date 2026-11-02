@@ -1,0 +1,201 @@
+Standalone source native ILAsm10 — packaged, installed and validated
+Finished UTC: 2026-10-28T17:48:56Z
+Build root: /c/codex-dotnet10/ilapkg.VEN2S0
+Package: mingw-w64-clang-x86_64-dotnet-ilasm10 10.0.5-1
+Entry point: /clang64/bin/ilasm10.exe
+
+Native target built successfully in 146 Ninja steps, without private CoreCLR/cDAC outputs.
+First aggregate makepkg returned4 only because the source auditor omitted a materialized README symlink.
+The auditor was corrected; all8,297 archive inputs and79 patch paths match exact patch replay.
+9 actual assembler compile units, generated version headers, AMD64/CET and source file version10.0.526.11800 pass.
+Final source checksum validation and makepkg repackage both returned0; all installed checks returned0.
+
+Installed checks: original Unsafe6.1.1 IL, identity/Microsoft key/42 public methods, portable PDB,
+three valid COFF resource layouts with exact VERSIONINFO bytes, two malformed resource rejections,
+Unicode/space source path, emitted IL loop execution, exact installed archive/source bytes and native imports.
+All10 installed payload files verified; native executable imports Windows system APIs and no CLR runtime.
+Existing SDK compiler and Compiler5 host hashes are unchanged.
+
+Native compiler warning groups: {"-Wmissing-exception-spec": 12, "-Wmacro-redefined": 16, "-Wnontrivial-memcall": 8, "-Wdeprecated-register": 4, "-Wunused-command-line-argument": 1}
+Configure warnings and complete compiler diagnostics remain in the evidence archive.
+Full PowerShell dependency goal and complete runtime/SDK10 remain open.
+
+Exact commands (remote commands from build root; local syntax/archive commands from repository):
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 4 — Native build and functional checks passed; original source auditor missed a materialized README symlink
+
+$ bash src/ilasm10/audit.sh src/prepared runtime-v10.0.5.tar.gz
+RESULT: exit 0 — Corrected source audit; no executable recompilation
+
+$ MINGW_ARCH=clang64 makepkg-mingw --verifysource
+RESULT: exit 0 — Final source checksums
+
+$ MINGW_ARCH=clang64 makepkg-mingw -R -f --noconfirm
+RESULT: exit 0 — Final package from tested native output and verified source archive
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-ilasm10-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0 — Installation
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-ilasm10
+RESULT: exit 0 — 17 filesystem entries, no missing files
+
+$ /clang64/bin/python.exe "$(cygpath -am src/ilasm10/check-image.py)" "$(cygpath -am src/prepared)" "$(cygpath -am /clang64/bin/ilasm10.exe)"
+RESULT: exit 0 — Installed AMD64/CET/source-version/port-input checks
+
+$ /usr/bin/python3 src/ilasm10/check.py src/prepared src/maintenance-ab95a1f1.tar.gz installed-check /clang64/bin/ilasm10.exe
+RESULT: exit 0 — Installed original IL/resources/PDB/Unicode/loop execution
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-ilasm10-10.0.5-1-any.pkg.tar.zst src/prepared evidence/installed-package-audit.json
+RESULT: exit 0 — All ten installed payload files and native imports
+
+$ sha256sum -c evidence/existing-compilers-before.sha256
+RESULT: exit 0 — Existing SDK and Compiler5 host unchanged
+
+$ python mingw-w64-dotnet-ilasm10/make-source.py
+RESULT: exit 0 — Deterministic workflow archive reproduces pinned SHA256
+
+$ python -m py_compile mingw-w64-dotnet-ilasm10/*.py tests/runtime10-ilasm/audit-installed-package.py
+RESULT: exit 0 — Final Python syntax validation
+
+$ bash -n mingw-w64-dotnet-ilasm10/PKGBUILD mingw-w64-dotnet-ilasm10/build.sh mingw-w64-dotnet-ilasm10/audit.sh
+RESULT: exit 0 — Final shell syntax validation
+
+Evidence SHA256: 2d0eae93cb94229b681bcf3913ee3205b63d02fa978d110e8a90031c030b3551
+Package SHA256: 4203cd3ed3f43fe1d017f9cfad36d7c75d6469d4e82421230eedbd0899805b62
+Image SHA256: c0bb1a61c27eede5457e341e9134521958da55d20978d790d7c5e11afe93e42e
+
+Logs:
+
+--- makepkg-initial.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-ilasm10 10.0.5-1 (28 Oct 2026 18:42:40)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v10.0.5.tar.gz
+  -> Found dotnet-ilasm10-source-1.tar.gz
+  -> Found maintenance-ab95a1f1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-v10.0.5.tar.gz ... Passed
+    dotnet-ilasm10-source-1.tar.gz ... Passed
+    maintenance-ab95a1f1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting dotnet-ilasm10-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+Extracted native source inputs: 8297 removed binaries: 1
+PASS pinned native source and zero-fuzz host/CoreCLR/ILAsm port patches
+==> Starting build()...
+PASS exact original Arcade version task and three upstream vectors: 20260218.0 -> 10.0.526.11800
+PASS native host product10.0.5 and original Arcade source file version 10.0.526.11800
+PASS source native ILAsm AMD64/CET/version and all frozen CoreCLR plus additional source port hashes
+PASS standalone source native ILAsm target; no runtime or cDAC generator build
+==> Starting check()...
+PASS original Unsafe IL/42 methods/portable PDB, five COFF resource cases, Unicode input path and emitted IL execution
+Traceback (most recent call last):
+  File "C:/codex-dotnet10/ilapkg.VEN2S0/src/ilasm10/audit-native.py", line 35, in <module>
+    assert verified==set(record['original_file_sha256'])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+
+--- makepkg-repackage.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-ilasm10 10.0.5-1 (28 Oct 2026 18:46:37)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-ilasm10"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-ilasm10 10.0.5-1 (28 Oct 2026 18:46:44)
+
+
+--- source-audit-retry.log ---
+PASS native source archive, exact patch replay, generated versions and actual ILAsm compile inputs
+
+
+--- source-verify.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-ilasm10 10.0.5-1 (28 Oct 2026 18:46:31)
+==> Retrieving sources...
+  -> Found runtime-v10.0.5.tar.gz
+  -> Found dotnet-ilasm10-source-1.tar.gz
+  -> Found maintenance-ab95a1f1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-v10.0.5.tar.gz ... Passed
+    dotnet-ilasm10-source-1.tar.gz ... Passed
+    maintenance-ab95a1f1.tar.gz ... Passed
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-ilasm10-10.0.5-1
+
+Total Installed Size:  1.58 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-ilasm10...
+
+
+--- pacman-Qk.log ---
+mingw-w64-clang-x86_64-dotnet-ilasm10: 17 total files, 0 missing files
+
+
+--- installed-image-check.log ---
+PASS source native ILAsm AMD64/CET/version and all frozen CoreCLR plus additional source port hashes
+
+
+--- installed-check.log ---
+PASS original Unsafe IL/42 methods/portable PDB, five COFF resource cases, Unicode input path and emitted IL execution
+
+
+--- installed-check/metadata.log ---
+PASS original Unsafe IL identity, key, 42 public methods and emitted portable PDB
+
+
+--- installed-check/resources.log ---
+PASS ILAsm resource case llvm-two-sections
+PASS ILAsm resource case leading-debug-three-sections
+PASS ILAsm resource case eight-byte-section-name
+PASS ILAsm resource case invalid-symbol-section
+PASS ILAsm resource case truncated-resource
+
+
+--- installed-package-audit.log ---
+PASS exact installed assembler archive/source bytes, dedicated paths and native imports
+
+
+--- existing-compilers-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+

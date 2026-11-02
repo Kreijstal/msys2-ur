@@ -1,0 +1,82 @@
+From 65ca909fc7436b3e2f13565a1794044a62476708 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 09:56:10 +0100
+Subject: [PATCH] openssl: load the OpenSSL 3 DLLs on Windows
+
+FPC 3.2.2's openssl unit only knows the OpenSSL 1.0 (libeay32.dll,
+ssleay32.dll) and 1.1 (libcrypto-1_1-x64.dll, libssl-1_1-x64.dll) DLL
+names on Windows.  MSYS2 ships only OpenSSL 3 (libcrypto-3-x64.dll,
+libssl-3-x64.dll), so InitSSLInterface always fails there and no
+program using openssl/opensslsockets/fphttpclient can do TLS (found
+while packaging Simba, which embedded its own OpenSSL 1.1 DLLs to work
+around exactly this).
+
+Upstream fixed this on fixes_3_2 by rewriting the loader around arrays
+of DLL names, with libssl-3-x64 first.  Backport only the behaviour and
+leave the unit's interface untouched (so its interface CRC, and every
+precompiled unit that uses it, stays valid):
+
+* LoadLibraries: on Windows try the OpenSSL 3 libcrypto/libssl pair
+  first, as a matched pair, then fall back to the 3.2.2 search;
+* resolve SSL_get_peer_certificate as SSL_get1_peer_certificate when the
+  old name is missing (OpenSSL 3 only has it as a macro), like fixes_3_2.
+
+The rest of the 3.2.2 entry point handling already copes with OpenSSL 3;
+that is what Linux distributions load through the unversioned libssl.so.
+---
+ packages/openssl/src/openssl.pas | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/packages/openssl/src/openssl.pas b/packages/openssl/src/openssl.pas
+index d561dca..03bf40a 100644
+--- a/packages/openssl/src/openssl.pas
++++ b/packages/openssl/src/openssl.pas
+@@ -4896,6 +4896,9 @@ begin
+   _SslWrite := GetProcAddr(SSLLibHandle, 'SSL_write');
+   _SslPending := GetProcAddr(SSLLibHandle, 'SSL_pending');
+   _SslGetPeerCertificate := GetProcAddr(SSLLibHandle, 'SSL_get_peer_certificate');
++  // OpenSSL 3.0 renamed it; the old name is only a macro there.
++  if not Assigned(_SslGetPeerCertificate) then
++    _SslGetPeerCertificate := GetProcAddr(SSLLibHandle, 'SSL_get1_peer_certificate');
+   _SslGetVersion := GetProcAddr(SSLLibHandle, 'SSL_get_version');
+   _SslCtxSetVerify := GetProcAddr(SSLLibHandle, 'SSL_CTX_set_verify');
+   _SslGetCurrentCipher := GetProcAddr(SSLLibHandle, 'SSL_get_current_cipher');
+@@ -5615,12 +5618,35 @@ end;
+ 
+ Function LoadLibraries : Boolean;
+ 
++{$IFDEF MSWINDOWS}
++const
++  { OpenSSL 3.x, tried first as a matched pair (as in FPC fixes_3_2).  Kept
++    out of the interface so the unit's interface CRC stays that of 3.2.2. }
++  DLLSSLName3x  = {$IFDEF WIN64}'libssl-3-x64.dll'{$ELSE}'libssl-3.dll'{$ENDIF};
++  DLLUtilName3x = {$IFDEF WIN64}'libcrypto-3-x64.dll'{$ELSE}'libcrypto-3.dll'{$ENDIF};
++{$ENDIF MSWINDOWS}
+ begin
+   Result:=False;
+ {$IFDEF DARWIN}  
+   // Mac OS no longer allows you to load the unversioned one. Bug ID 36484.
+   DLLVERSIONS[1]:=DLLVERSIONS[2];
+ {$ENDIF}
++  {$IFDEF MSWINDOWS}
++  // Prefer an OpenSSL 3 libcrypto/libssl pair.  Never mix a libssl and a
++  // libcrypto of different major versions.
++  SSLUtilHandle := LoadLib(DLLUtilName3x);
++  if (SSLUtilHandle <> 0) then
++    begin
++    SSLLibHandle := LoadLib(DLLSSLName3x);
++    if (SSLLibHandle <> 0) then
++      begin
++      Result := True;
++      Exit;
++      end;
++    FreeLibrary(SSLUtilHandle);
++    SSLUtilHandle := 0;
++    end;
++  {$ENDIF MSWINDOWS}
+   SSLUtilHandle := LoadLib(DLLUtilName);
+   SSLLibHandle := LoadLib(DLLSSLName);
+   {$IFDEF MSWINDOWS}
+-- 
+2.55.0
+

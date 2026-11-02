@@ -1,0 +1,48 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=monogame-mojoshader
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.0.0.7
+pkgrel=1
+pkgdesc="MonoGame's MojoShader (Direct3D 9 shader bytecode to GLSL translator) used by mgfxc (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/MonoGame/MonoGame.Library.MojoShader'
+license=('spdx:Zlib')
+_commit=ccee6db59dc703b9b93838f4554f025e3e0c35b3
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-cmake" "${MINGW_PACKAGE_PREFIX}-ninja")
+source=("MonoGame.Library.MojoShader-${_commit}.tar.gz::https://codeload.github.com/MonoGame/MonoGame.Library.MojoShader/tar.gz/${_commit}"
+        check.c)
+sha256sums=('6ee7851748fc6abf4a0ddc11a56f0d443904d332b0e892dc4466d8729c660f5d'
+            'ef254645cbee3b67477fb0ea63d5187424656e4ae2cf8b40963fd1873afc4181')
+
+build() {
+  # Same options as MonoGame's Windows build of mojoshader.dll (all profiles,
+  # effect support, no HLSL compiler). Like that build, the DLL exports only
+  # what MonoGame's fork marks DLLEXPORT (MOJOSHADER_parse, parseExpression,
+  # runPreshader); mgfxc only calls MOJOSHADER_parse.
+  # The bundled GL/gl.h expects MSVC's <windows.h> to define WINGDIAPI;
+  # the GL prototypes are unused (entry points are loaded at runtime).
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -S "MonoGame.Library.MojoShader-${_commit}/mojoshader" -B "build-${MSYSTEM}" -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+      -DCMAKE_C_FLAGS="${CFLAGS} -DWINGDIAPI= -Wno-unused-but-set-variable -Wno-unused-variable" \
+      -DBUILD_SHARED_LIBS=ON -DCOMPILER_SUPPORT=OFF
+  cmake --build "build-${MSYSTEM}"
+}
+
+check() {
+  cd "build-${MSYSTEM}"
+  ${CC:-cc} ${CFLAGS} -DDLLEXPORT= -I"${srcdir}/MonoGame.Library.MojoShader-${_commit}/mojoshader" \
+    -o check.exe "${srcdir}/check.c" libmojoshader.dll.a
+  ./check.exe
+}
+
+package() {
+  local _src="MonoGame.Library.MojoShader-${_commit}/mojoshader"
+  install -Dm755 "build-${MSYSTEM}/libmojoshader.dll" "${pkgdir}${MINGW_PREFIX}/bin/libmojoshader.dll"
+  install -Dm644 "build-${MSYSTEM}/libmojoshader.dll.a" "${pkgdir}${MINGW_PREFIX}/lib/libmojoshader.dll.a"
+  install -Dm644 "${_src}/mojoshader.h" "${pkgdir}${MINGW_PREFIX}/include/mojoshader/mojoshader.h"
+  install -Dm644 "${_src}/mojoshader_version.h" "${pkgdir}${MINGW_PREFIX}/include/mojoshader/mojoshader_version.h"
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

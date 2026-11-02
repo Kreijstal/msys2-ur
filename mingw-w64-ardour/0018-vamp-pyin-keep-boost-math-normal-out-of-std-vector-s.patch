@@ -1,0 +1,102 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 06:44:49 +0100
+Subject: [PATCH 18/18] vamp-pyin: keep boost::math::normal out of
+ std::vector's ADL scope
+
+With current libc++, std::vector relocates its buffer with an unqualified
+swap() on element pointers. For vector<boost::math::normal> ADL also
+finds the unconstrained boost::math::swap(T&, T&) template from
+boost/math/tools/utility.hpp, and the call is ambiguous:
+
+  __split_buffer:195:5: error: call to 'swap' is ambiguous
+  MonoNoteHMM.cpp:111:20: note: in instantiation of member function
+  'std::vector<boost::math::normal_distribution<>>::push_back'
+
+Store the distributions in a small non-template wrapper struct in the
+global namespace, whose associated namespaces do not include
+boost::math.
+---
+ libs/vamp-pyin/MonoNoteHMM.cpp | 14 +++++++-------
+ libs/vamp-pyin/MonoNoteHMM.h   | 12 +++++++++++-
+ 2 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/libs/vamp-pyin/MonoNoteHMM.cpp b/libs/vamp-pyin/MonoNoteHMM.cpp
+index 9d9be8c..96c4613 100644
+--- a/libs/vamp-pyin/MonoNoteHMM.cpp
++++ b/libs/vamp-pyin/MonoNoteHMM.cpp
+@@ -67,7 +67,7 @@ MonoNoteHMM::calculateObsProb(const vector<pair<double, double> > pitchProb)
+                     }
+                 }
+                 tempProb = std::pow(minDistProb, par.yinTrust) *
+-                           boost::math::pdf(pitchDistr[i],
++                           boost::math::pdf(pitchDistr[i].d,
+                                             pitchProb[minDistCandidate].first);
+             } else {
+                 tempProb = 1;
+@@ -108,7 +108,7 @@ MonoNoteHMM::build()
+     // observation distributions
+     for (size_t iState = 0; iState < par.n; ++iState)
+     {
+-        pitchDistr.push_back(boost::math::normal(0,1));
++        pitchDistr.push_back(MonoNotePitchDistribution(0,1));
+         if (iState % par.nSPP == 2)
+         {
+             // silent state starts tracking
+@@ -122,9 +122,9 @@ MonoNoteHMM::build()
+     {
+         size_t index = iPitch * par.nSPP;
+         double mu = par.minPitch + iPitch * 1.0/par.nPPS;
+-        pitchDistr[index] = boost::math::normal(mu, par.sigmaYinPitchAttack);
+-        pitchDistr[index+1] = boost::math::normal(mu, par.sigmaYinPitchStable);
+-        pitchDistr[index+2] = boost::math::normal(mu, 1.0); // dummy
++        pitchDistr[index] = MonoNotePitchDistribution(mu, par.sigmaYinPitchAttack);
++        pitchDistr[index+1] = MonoNotePitchDistribution(mu, par.sigmaYinPitchStable);
++        pitchDistr[index+2] = MonoNotePitchDistribution(mu, 1.0); // dummy
+     }
+ 
+     boost::math::normal noteDistanceDistr(0, par.sigma2Note);
+@@ -195,11 +195,11 @@ MonoNoteHMM::build()
+ double
+ MonoNoteHMM::getMidiPitch(size_t index)
+ {
+-    return pitchDistr[index].mean();
++    return pitchDistr[index].d.mean();
+ }
+ 
+ double
+ MonoNoteHMM::getFrequency(size_t index)
+ {
+-    return 440 * pow(2, (pitchDistr[index].mean()-69)/12);
++    return 440 * pow(2, (pitchDistr[index].d.mean()-69)/12);
+ }
+diff --git a/libs/vamp-pyin/MonoNoteHMM.h b/libs/vamp-pyin/MonoNoteHMM.h
+index 28f1566..d73cc87 100644
+--- a/libs/vamp-pyin/MonoNoteHMM.h
++++ b/libs/vamp-pyin/MonoNoteHMM.h
+@@ -24,6 +24,16 @@
+ 
+ using std::vector;
+ 
++/* Wrapper outside namespace boost::math: with libc++, vector's internal
++ * unqualified swap() of element pointers would otherwise also find the
++ * unconstrained boost::math::swap() via ADL and be ambiguous.
++ */
++struct MonoNotePitchDistribution
++{
++    MonoNotePitchDistribution (double mean, double sd) : d (mean, sd) {}
++    boost::math::normal d;
++};
++
+ class MonoNoteHMM : public SparseHMM
+ {
+ public:
+@@ -33,7 +43,7 @@ public:
+     double getFrequency(size_t index);
+     void build();
+     MonoNoteParameters par;
+-    vector<boost::math::normal> pitchDistr;
++    vector<MonoNotePitchDistribution> pitchDistr;
+ };
+ 
+ #endif

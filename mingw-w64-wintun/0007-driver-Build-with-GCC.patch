@@ -1,0 +1,169 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 25 Oct 2026 06:10:33 +0100
+Subject: [PATCH 7/8] driver: Build with GCC
+
+- MmProbeAndLockPages() raises on a bad user buffer. GCC has no
+  try/except, so probe in a helper that uses the ReactOS PSEH macros
+  there and keeps try/except for MSVC.
+- Spell the security descriptor's alignment DECLSPEC_ALIGN(8), which the
+  WDK and GCC headers both map to their compiler's syntax.
+- Link the send NBL with if/else: the two arms of the ?: are pointers of
+  different types, which GCC rejects.
+- Cast the out-pointers of ObReferenceObjectByHandle() to VOID **, the
+  thread routine to KSTART_ROUTINE * and the process to PRKPROCESS.
+- Forward-declare TunDispatchPnp under its own name.
+---
+ driver/wintun.c | 64 +++++++++++++++++++++++++++++++++----------------
+ 1 file changed, 43 insertions(+), 21 deletions(-)
+
+diff --git a/driver/wintun.c b/driver/wintun.c
+index 5adf230..1993f0a 100644
+--- a/driver/wintun.c
++++ b/driver/wintun.c
+@@ -9,6 +9,9 @@
+ #include <ndis.h>
+ #include <ntstrsafe.h>
+ #include "undocumented.h"
++#ifndef _MSC_VER
++#    include <pseh/pseh2.h>
++#endif
+ 
+ #pragma warning(disable : 4100) /* unreferenced formal parameter */
+ #pragma warning(disable : 4200) /* nonstandard: zero-sized array in struct/union */
+@@ -183,7 +186,7 @@ static DRIVER_DISPATCH *NdisDispatchDeviceControl, *NdisDispatchClose, *NdisDisp
+ static ERESOURCE TunDispatchCtxGuard, TunDispatchDeviceListLock;
+ static RTL_STATIC_LIST_HEAD(TunDispatchDeviceList);
+ /* Binary representation of O:SYD:P(A;;FA;;;SY)(A;;FA;;;BA)S:(ML;;NWNRNX;;;HI) */
+-static SECURITY_DESCRIPTOR *TunDispatchSecurityDescriptor = (SECURITY_DESCRIPTOR *)(__declspec(align(8)) UCHAR[]){
++static SECURITY_DESCRIPTOR *TunDispatchSecurityDescriptor = (SECURITY_DESCRIPTOR *)(DECLSPEC_ALIGN(8) UCHAR[]){
+     0x01, 0x00, 0x14, 0x90, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x00, 0x00, 0x00, 0x30, 0x00, 0x00,
+     0x00, 0x02, 0x00, 0x1c, 0x00, 0x01, 0x00, 0x00, 0x00, 0x11, 0x00, 0x14, 0x00, 0x07, 0x00, 0x00, 0x00, 0x01, 0x01,
+     0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x30, 0x00, 0x00, 0x02, 0x00, 0x34, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00,
+@@ -300,8 +303,10 @@ TunSendNetBufferLists(
+ 
+     Ctx->Device.Send.RingTail = TUN_RING_WRAP(RingTail + RequiredRingSpace, RingCapacity);
+     TunNblInitialize(NetBufferLists, Ctx->Device.Send.RingTail);
+-    *(Ctx->Device.Send.ActiveNbls.Head ? &NET_BUFFER_LIST_NEXT_NBL_EX(Ctx->Device.Send.ActiveNbls.Tail)
+-                                       : &Ctx->Device.Send.ActiveNbls.Head) = NetBufferLists;
++    if (Ctx->Device.Send.ActiveNbls.Head)
++        NET_BUFFER_LIST_NEXT_NBL_EX(Ctx->Device.Send.ActiveNbls.Tail) = NetBufferLists;
++    else
++        Ctx->Device.Send.ActiveNbls.Head = NetBufferLists;
+     Ctx->Device.Send.ActiveNbls.Tail = NetBufferLists;
+ 
+     KeReleaseInStackQueuedSpinLock(&LockHandle);
+@@ -588,6 +593,31 @@ cleanup:
+ 
+ #define IS_POW2(x) ((x) && !((x) & ((x)-1)))
+ 
++_IRQL_requires_max_(APC_LEVEL)
++_Must_inspect_result_
++static NTSTATUS
++TunProbeAndLockPages(_Inout_ MDL *Mdl)
++{
++#ifdef _MSC_VER
++    try
++    {
++        MmProbeAndLockPages(Mdl, UserMode, IoWriteAccess);
++    }
++    except(EXCEPTION_EXECUTE_HANDLER) { return STATUS_INVALID_USER_BUFFER; }
++    return STATUS_SUCCESS;
++#else
++    /* GCC has no try/except, but the ReactOS PSEH macros */
++    NTSTATUS Status = STATUS_SUCCESS;
++    _SEH2_TRY
++    {
++        MmProbeAndLockPages(Mdl, UserMode, IoWriteAccess);
++    }
++    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER) { Status = STATUS_INVALID_USER_BUFFER; }
++    _SEH2_END;
++    return Status;
++#endif
++}
++
+ _IRQL_requires_max_(PASSIVE_LEVEL)
+ _Must_inspect_result_
+ static NTSTATUS
+@@ -638,19 +668,15 @@ TunRegisterBuffers(_Inout_ TUN_CTX *Ctx, _Inout_ IRP *Irp)
+                 EVENT_MODIFY_STATE,
+                 *ExEventObjectType,
+                 UserMode,
+-                &Ctx->Device.Send.TailMoved,
++                (VOID **)&Ctx->Device.Send.TailMoved,
+                 NULL)))
+         goto cleanupResetOwner;
+ 
+     Ctx->Device.Send.Mdl = IoAllocateMdl(Rrb.Send.Ring, Rrb.Send.RingSize, FALSE, FALSE, NULL);
+     if (Status = STATUS_INSUFFICIENT_RESOURCES, !Ctx->Device.Send.Mdl)
+         goto cleanupSendTailMoved;
+-    try
+-    {
+-        Status = STATUS_INVALID_USER_BUFFER;
+-        MmProbeAndLockPages(Ctx->Device.Send.Mdl, UserMode, IoWriteAccess);
+-    }
+-    except(EXCEPTION_EXECUTE_HANDLER) { goto cleanupSendMdl; }
++    if (!NT_SUCCESS(Status = TunProbeAndLockPages(Ctx->Device.Send.Mdl)))
++        goto cleanupSendMdl;
+ 
+     Ctx->Device.Send.Ring =
+         MmGetSystemAddressForMdlSafe(Ctx->Device.Send.Mdl, NormalPagePriority | MdlMappingNoExecute);
+@@ -674,19 +700,15 @@ TunRegisterBuffers(_Inout_ TUN_CTX *Ctx, _Inout_ IRP *Irp)
+                 SYNCHRONIZE | EVENT_MODIFY_STATE,
+                 *ExEventObjectType,
+                 UserMode,
+-                &Ctx->Device.Receive.TailMoved,
++                (VOID **)&Ctx->Device.Receive.TailMoved,
+                 NULL)))
+         goto cleanupSendUnlockPages;
+ 
+     Ctx->Device.Receive.Mdl = IoAllocateMdl(Rrb.Receive.Ring, Rrb.Receive.RingSize, FALSE, FALSE, NULL);
+     if (Status = STATUS_INSUFFICIENT_RESOURCES, !Ctx->Device.Receive.Mdl)
+         goto cleanupReceiveTailMoved;
+-    try
+-    {
+-        Status = STATUS_INVALID_USER_BUFFER;
+-        MmProbeAndLockPages(Ctx->Device.Receive.Mdl, UserMode, IoWriteAccess);
+-    }
+-    except(EXCEPTION_EXECUTE_HANDLER) { goto cleanupReceiveMdl; }
++    if (!NT_SUCCESS(Status = TunProbeAndLockPages(Ctx->Device.Receive.Mdl)))
++        goto cleanupReceiveMdl;
+ 
+     Ctx->Device.Receive.Ring =
+         MmGetSystemAddressForMdlSafe(Ctx->Device.Receive.Mdl, NormalPagePriority | MdlMappingNoExecute);
+@@ -699,7 +721,7 @@ TunRegisterBuffers(_Inout_ TUN_CTX *Ctx, _Inout_ IRP *Irp)
+     InitializeObjectAttributes(&ObjectAttributes, NULL, OBJ_KERNEL_HANDLE, NULL, NULL);
+     if (Status = NDIS_STATUS_FAILURE,
+         !NT_SUCCESS(PsCreateSystemThread(
+-            &Ctx->Device.Receive.Thread, THREAD_ALL_ACCESS, &ObjectAttributes, NULL, NULL, TunProcessReceiveData, Ctx)))
++            &Ctx->Device.Receive.Thread, THREAD_ALL_ACCESS, &ObjectAttributes, NULL, NULL, (KSTART_ROUTINE *)TunProcessReceiveData, Ctx)))
+         goto cleanupFlagsConnected;
+ 
+     Ctx->Device.OwningProcessId = PsGetCurrentProcessId();
+@@ -764,7 +786,7 @@ TunUnregisterBuffers(_Inout_ TUN_CTX *Ctx, _In_ FILE_OBJECT *Owner)
+ 
+     PKTHREAD ThreadObject;
+     if (NT_SUCCESS(
+-            ObReferenceObjectByHandle(Ctx->Device.Receive.Thread, SYNCHRONIZE, NULL, KernelMode, &ThreadObject, NULL)))
++            ObReferenceObjectByHandle(Ctx->Device.Receive.Thread, SYNCHRONIZE, NULL, KernelMode, (VOID **)&ThreadObject, NULL)))
+     {
+         KeWaitForSingleObject(ThreadObject, Executive, KernelMode, FALSE, NULL);
+         ObDereferenceObject(ThreadObject);
+@@ -876,7 +898,7 @@ TunDispatchClose(DEVICE_OBJECT *DeviceObject, IRP *Irp)
+ }
+ 
+ _Dispatch_type_(IRP_MJ_PNP)
+-static DRIVER_DISPATCH_PAGED DispatchPnp;
++static DRIVER_DISPATCH_PAGED TunDispatchPnp;
+ _Use_decl_annotations_
+ static NTSTATUS
+ TunDispatchPnp(DEVICE_OBJECT *DeviceObject, IRP *Irp)
+@@ -925,7 +947,7 @@ TunDispatchPnp(DEVICE_OBJECT *DeviceObject, IRP *Irp)
+         Status = PsLookupProcessByProcessId(HandleTable->Handles[Index].UniqueProcessId, &Process);
+         if (!NT_SUCCESS(Status))
+             continue;
+-        KeStackAttachProcess(Process, &ApcState);
++        KeStackAttachProcess((PRKPROCESS)Process, &ApcState);
+         if (!VerifierFlags)
+             Status = ObReferenceObjectByHandle(
+                 HandleTable->Handles[Index].HandleValue, 0, NULL, UserMode, &Object, &HandleInfo);

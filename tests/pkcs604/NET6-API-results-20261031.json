@@ -1,0 +1,144 @@
+{
+  "commands": [
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/tool.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/contract.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/fixture-reference.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/fixture-equivalent-override.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/fixture-new-public-member.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+        "-noconfig",
+        "@E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/fixture-changed-nullable-override.rsp"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/Api.dll",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/contract/System.Security.Cryptography.Pkcs.dll",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/build/windows/bin/System.Security.Cryptography.Pkcs.dll",
+        "E:/codex-dotnet10/runtime6ref1.bQRloj/build/ref/net6.0",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/windows-comparison.json"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/Api.dll",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/contract/System.Security.Cryptography.Pkcs.dll",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/build/portable/bin/System.Security.Cryptography.Pkcs.dll",
+        "E:/codex-dotnet10/runtime6ref1.bQRloj/build/ref/net6.0",
+        "E:/codex-dotnet10/pkcs604proto1.cFrupi/api2/portable-comparison.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_contract_source_sha256": {
+    "src/libraries/System.Security.Cryptography.Pkcs/ref/System.Security.Cryptography.Pkcs.cs": "dc9ff0bad2dc17dde9ce07038fccabc69dee3372084727a590f8b5f0aa543976",
+    "src/libraries/System.Security.Cryptography.Pkcs/ref/System.Security.Cryptography.Pkcs.netcoreapp.cs": "46aa91d4e3e4990a64562312e9185d7dba9ac38d3a74740649e1c5e311a6fc1b"
+  },
+  "reference_contract_sha256": "c922526904fcc2d3ad11b0689844a49eb409ec972e6632b9d178a17bcc920cb8",
+  "inherited_override_checker_positive_and_negative_fixtures": [
+    {
+      "case": "equivalent-override",
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "case": "new-public-member",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    },
+    {
+      "case": "changed-nullable-override",
+      "exit_code": 1,
+      "expected_exit_code": 1
+    }
+  ],
+  "projects": {
+    "windows": {
+      "exit_code": 0,
+      "implementation_sha256": "071a1c42a18d92048e9959902a7d82c004489e03da2de51a84bb1bb06a428730",
+      "comparison": {
+        "expected_entries": 383,
+        "original_declared_entries": 382,
+        "inherited_equivalent_overrides": [
+          "M:System.Security.Cryptography.Pkcs.Pkcs9LocalKeyId.CopyFrom(System.Security.Cryptography.AsnEncodedData)"
+        ],
+        "actual_entries": 383,
+        "missing": [],
+        "extra": [],
+        "changed": [],
+        "total_differences": 0,
+        "nullable_annotation_differences": [],
+        "strict_nullable_metadata_equal": true,
+        "full_dependency_goal_complete": false
+      }
+    },
+    "portable": {
+      "exit_code": 0,
+      "implementation_sha256": "4d3aeddac6f882479a04fe5924fe35a21986ecae58719438fe20c03665037d7f",
+      "comparison": {
+        "expected_entries": 383,
+        "original_declared_entries": 382,
+        "inherited_equivalent_overrides": [
+          "M:System.Security.Cryptography.Pkcs.Pkcs9LocalKeyId.CopyFrom(System.Security.Cryptography.AsnEncodedData)"
+        ],
+        "actual_entries": 383,
+        "missing": [],
+        "extra": [],
+        "changed": [],
+        "total_differences": 0,
+        "nullable_annotation_differences": [],
+        "strict_nullable_metadata_equal": true,
+        "full_dependency_goal_complete": false
+      }
+    }
+  },
+  "full_custom_attribute_and_constraint_comparison_performed": false,
+  "full_dependency_goal_complete": false
+}

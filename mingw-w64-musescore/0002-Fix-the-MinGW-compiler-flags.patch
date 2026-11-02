@@ -1,0 +1,28 @@
+Fix the MinGW compiler flags
+
+-mno-ms-bitfields (https://musescore.org/node/22048, from the Qt 4 days)
+changes the layout of structs with bit-fields away from the ABI that the
+system Qt and all other MinGW libraries are built with, e.g. QSizePolicy.
+Drop it, and define UNICODE/_UNICODE for clang-based MinGW toolchains too,
+not only for GCC (CC_IS_MINGW is only set for GCC).
+
+diff --git a/buildscripts/cmake/SetupBuildEnvironment.cmake b/buildscripts/cmake/SetupBuildEnvironment.cmake
+index 019be14b..f4241149 100644
+--- a/buildscripts/cmake/SetupBuildEnvironment.cmake
++++ b/buildscripts/cmake/SetupBuildEnvironment.cmake
+@@ -83,10 +83,11 @@ if(CC_IS_MSVC)
+     add_link_options("/NODEFAULTLIB:LIBCMT")
+ endif()
+ 
+-# MinGW-specific
+-if(CC_IS_MINGW)
+-    # https://musescore.org/node/22048
+-    add_compile_options(-mno-ms-bitfields)
++# MinGW-specific (GCC and Clang)
++if(MINGW)
++    # No -mno-ms-bitfields (https://musescore.org/node/22048): it changes the
++    # layout of bit-field structs away from the ABI the system Qt and the
++    # other MinGW libraries are built with.
+ 
+     if(NOT MUSE_COMPILE_BUILD_64)
+         add_link_options("-Wl,--large-address-aware")

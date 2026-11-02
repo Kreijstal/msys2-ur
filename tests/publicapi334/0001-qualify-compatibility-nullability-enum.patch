@@ -1,0 +1,38 @@
+--- a/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.Impl.cs
++++ b/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.Impl.cs
+@@ -930,7 +930,7 @@
+                 {
+                     if (!_ignoreTopLevelNullability &&
+                         symbol.IsReferenceType &&
+-                        symbol.NullableAnnotation() == NullableAnnotation.None)
++                        symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         return true;
+                     }
+@@ -954,7 +954,7 @@
+ 
+                 public override bool VisitArrayType(IArrayTypeSymbol symbol)
+                 {
+-                    if (symbol.NullableAnnotation() == NullableAnnotation.None)
++                    if (symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         return true;
+                     }
+@@ -971,7 +971,7 @@
+                 public override bool VisitTypeParameter(ITypeParameterSymbol symbol)
+                 {
+                     if (symbol.IsReferenceType &&
+-                        symbol.NullableAnnotation() == NullableAnnotation.None)
++                        symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         // Example:
+                         // I<TReferenceType~>
+@@ -998,7 +998,7 @@
+                 private static bool CheckTypeParameterConstraints(ITypeParameterSymbol symbol)
+                 {
+                     if (symbol.HasReferenceTypeConstraint() &&
+-                        symbol.ReferenceTypeConstraintNullableAnnotation() == NullableAnnotation.None)
++                        symbol.ReferenceTypeConstraintNullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         // where T : class~
+                         return true;

@@ -1,0 +1,1978 @@
+{
+  "commands": [
+    {
+      "label": "direct-build",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/direct/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "embedded-pdb",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "exec",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/direct/bin/Release/net8.0/Check.dll"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-csproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-csproj/Data.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-pack-csproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "pack",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-csproj/Data.csproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-o",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-csproj/packed",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-clean-csproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-csproj/Data.csproj",
+        "-t:Clean",
+        "-p:Configuration=Release",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-msbuildproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-msbuildproj/Data.msbuildproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-pack-msbuildproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "pack",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-msbuildproj/Data.msbuildproj",
+        "-c",
+        "Release",
+        "--no-restore",
+        "-o",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-msbuildproj/packed",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "notargets-clean-msbuildproj",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/notargets-msbuildproj/Data.msbuildproj",
+        "-t:Clean",
+        "-p:Configuration=Release",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "multi-build",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/multi/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "child-build",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/child/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "transitive-build",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/parent/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-0-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TF_BUILD=True"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-0-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TF_BUILD=True",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-1-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_ACTIONS=true"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-1-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_ACTIONS=true",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-2-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR=True"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-2-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR=True",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-3-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI=true"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-3-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI=true",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-4-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS=true"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-4-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS=true",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-5-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLECI=true"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-5-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLECI=true",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-6-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CODEBUILD_BUILD_ID=abc:123",
+        "-p:AWS_REGION=us-east-1"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-6-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CODEBUILD_BUILD_ID=abc:123",
+        "-p:AWS_REGION=us-east-1",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-7-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_ID=123",
+        "-p:BUILD_URL=https://buildserver.invalid/jenkins/job/MyJobName/123/"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-7-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_ID=123",
+        "-p:BUILD_URL=https://buildserver.invalid/jenkins/job/MyJobName/123/",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-8-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_ID=123",
+        "-p:PROJECT_ID=234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-8-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_ID=123",
+        "-p:PROJECT_ID=234",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-9-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TEAMCITY_VERSION=10"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-9-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TEAMCITY_VERSION=10",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-10-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:JB_SPACE_API_URL=https://api.invalid/url"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "ci-10-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:JB_SPACE_API_URL=https://api.invalid/url",
+        "-p:ContinuousIntegrationBuild=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-0-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/pull/1234/merge"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-0-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/pull/1234/merge",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-1-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-1-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-2-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-2-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:GITHUB_REF=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-3-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_SOURCEBRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-3-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_SOURCEBRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-4-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_SOURCEBRANCH=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-4-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUILD_SOURCEBRANCH=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-5-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-5-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-6-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-6-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-7-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-7-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-8-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-8-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-9-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-9-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-10-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-10-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:APPVEYOR_PULL_REQUEST_NUMBER=1234",
+        "-p:APPVEYOR_REPO_TAG_NAME=refs/tags/v1.2.3",
+        "-p:APPVEYOR_REPO_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-11-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TEAMCITY_BUILD_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-11-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TEAMCITY_BUILD_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-12-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-12-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-13-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-13-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-14-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=1234",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-14-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=1234",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-15-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=false",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-15-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:TRAVIS_PULL_REQUEST=false",
+        "-p:TRAVIS_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-16-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-16-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-17-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-17-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-18-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-18-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-19-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-19-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-20-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-20-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-21-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-21-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-22-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-22-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CIRCLE_PR_NUMBER=1234",
+        "-p:CIRCLE_TAG=refs/tags/v1.2.3",
+        "-p:CIRCLE_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-23-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-23-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-24-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-24-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-25-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-25-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-26-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-26-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-27-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-27-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-28-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-28-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-29-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-29-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-30-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-30-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-31-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-31-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-32-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-32-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-33-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-33-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-34-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-34-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-35-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-35-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-36-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-36-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-37-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-37-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:CI_COMMIT_TAG=refs/tags/v1.2.3",
+        "-p:CI_MERGE_REQUEST_IID=1234",
+        "-p:CI_EXTERNAL_PULL_REQUEST_IID=5678",
+        "-p:CI_COMMIT_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-38-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-38-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-39-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-39-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-40-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-40-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-41-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-41-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-42-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-42-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-43-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-43-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-44-0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "branch-44-1",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:BUDDY_EXECUTION_PULL_REQUEST_NO=1234",
+        "-p:BUDDY_EXECUTION_BRANCH=refs/heads/my-branch",
+        "-p:BUDDY_EXECUTION_TAG=refs/tags/v1.2.3",
+        "-p:RepositoryBranch=explicitly-set"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "override-DebugType-embedded",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:DebugType=embedded"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "override-DebugType-portable",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:DebugType=portable"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "override-PublishRepositoryUrl-true",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:PublishRepositoryUrl=true"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "override-PublishRepositoryUrl-false",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:Probe",
+        "-nologo",
+        "-v:quiet",
+        "-p:PublishRepositoryUrl=false"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "version-17.7.0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:_ReproducibleBuildsMSBuildVersionCheck",
+        "-nologo",
+        "-v:minimal",
+        "-warnAsError",
+        "-p:_ReproducibleBuildsMSBuildVersion=17.7.0"
+      ],
+      "exit_code": 1,
+      "expected_exit_code": 1
+    },
+    {
+      "label": "version-17.8.0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:_ReproducibleBuildsMSBuildVersionCheck",
+        "-nologo",
+        "-v:minimal",
+        "-warnAsError",
+        "-p:_ReproducibleBuildsMSBuildVersion=17.8.0"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    },
+    {
+      "label": "version-17.9.0",
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/polysharpbuildtools1.yN9tzp/check-focused3/Policy.proj",
+        "-t:_ReproducibleBuildsMSBuildVersionCheck",
+        "-nologo",
+        "-v:minimal",
+        "-warnAsError",
+        "-p:_ReproducibleBuildsMSBuildVersion=17.9.0"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0
+    }
+  ],
+  "upstream_CI_vectors_executed": 22,
+  "upstream_branch_vectors_executed": 90,
+  "original_MSBuild_version_guard_cases": 3,
+  "default_and_explicit_policy_overrides": true,
+  "actual_embedded_PDB": true,
+  "NoTargets_project_extensions": [
+    "csproj",
+    "msbuildproj"
+  ],
+  "NoTargets_data_pack_and_clean": true,
+  "original_build_MultiTargeting_and_Transitive_imports": true,
+  "exact_cached_archive_and_original_content_bytes": true,
+  "full_dependency_goal_complete": false
+}

@@ -1,0 +1,62 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=dbeaver-common
+_commit=5658d5409f14f6d99aa76d42692960666029ede9
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-dbeaver-utils"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-jdbc-api"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-rest-client")
+pkgver=2.9.0.r20261004.g5658d540
+pkgrel=1
+pkgdesc="DBeaver shared utilities and JDBC/REST APIs, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-common'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-gson")
+source=("${_realname}-${_commit}.tar.gz::https://github.com/dbeaver/dbeaver-common/archive/${_commit}.tar.gz")
+sha256sums=('d8c2adfd5cfe04f5630fdaaea5c74bb168d36fc51da45d4bbbf8e612df7262b3')
+
+prepare() {
+  find "${_realname}-${_commit}" -type f \( -name '*.jar' -o -name '*.class' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  export JB_QUALIFIER=v20261004
+  cd "${_realname}-${_commit}/modules"
+  jb_bundles -- org.jkiss.utils com.dbeaver.jdbc.api com.dbeaver.rest.client
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_bundle_loadcheck org.jkiss.utils com.dbeaver.jdbc.api com.dbeaver.rest.client
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+  install -Dm644 "${_realname}-${_commit}/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/${pkgname}/LICENSE.md"
+}
+
+package_dbeaver-utils() {
+  depends=("${MINGW_PACKAGE_PREFIX}-eclipse-orbit-gson")
+  _package org.jkiss.utils
+}
+package_dbeaver-jdbc-api() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-utils")
+  _package com.dbeaver.jdbc.api
+}
+package_dbeaver-rest-client() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-utils")
+  _package com.dbeaver.rest.client
+}
+
+# Generate the environment-prefixed split package entry points.
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

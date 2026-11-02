@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netcore20-contracts-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=1
+pkgdesc='Selected original NETCore2.0 source reference contracts and complete compiler facade'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-unsafe452-bootstrap=4.5.2" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx-netcore20-8321c729.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/8321c729934c0f8be754953439b88e6e1c120c24'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'netcore20-contracts-source-1.tar.gz')
+noextract=('corefx-netcore20-8321c729.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('f5ebd955cac6ff630689bf6cee2f2c2ffe30b1c7b22c4106d12bb3982abc6c69'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '9e18a30405674a157bd289ed29e2b6abdc848af4a1258377003af43f742245bb')
+build() {
+  /usr/bin/python3 "$srcdir/netcore20-contracts-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/netcore20-contracts-workflow/build.py" "$srcdir/corefx-netcore20-8321c729.tar.gz" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/netcore20-contracts-workflow/build-facade.py" "$srcdir/prepared" "$srcdir/facade" > "$srcdir/facade.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/netcore20-contracts-workflow/audit.py" "$srcdir/prepared" "$srcdir/facade" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/netcore20-contracts-workflow/check.py" "$srcdir/prepared" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local pack="$pkgdir$MINGW_PREFIX/lib/dotnet/reference-packs/netcore20-contracts-bootstrap"
+  local file
+  mkdir -p "$pack/ref" "$doc/inputs"
+  for file in "$srcdir/prepared/ref/"*.dll; do install -m644 "$file" "$pack/ref/"; done
+  for file in README.md check.py; do install -m644 "$srcdir/netcore20-contracts-workflow/$file" "$doc/$file"; done
+  for file in "$srcdir/netcore20-contracts-workflow/inputs/"*; do install -m644 "$file" "$doc/inputs/"; done
+  install -m644 "$srcdir/prepared/results.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/facade/results.json" "$doc/facade-results.json"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+}

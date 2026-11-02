@@ -1,0 +1,43 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-solutionpersistence
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.0.52
+pkgrel=1
+pkgdesc='Source NET8 Visual Studio SLN/SLNX solution persistence library'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/vs-solutionpersistence'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn53=5.3.0.2.26113.113"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=19c3ca7dc997dba2b3a86f6c666e9f717f34c8fe
+source=("solutionpersistence-1.0.52-${_commit:0:8}.tar.gz::https://codeload.github.com/microsoft/vs-solutionpersistence/tar.gz/$_commit"
+        'solutionpersistence-source-2.tar.gz')
+noextract=("solutionpersistence-1.0.52-${_commit:0:8}.tar.gz")
+sha256sums=('e7aef92baac548f21ecabf7fabbd940554327ee681791585e6fbeaea04356880'
+            '91ff794d24a08e6d9c559b55cd3a36bf937e947f56719fbcdba8abac07db2ad8')
+prepare() {
+  /clang64/bin/python.exe "$(cygpath -am "$srcdir/solutionpersistence-workflow/prepare.py")" "$(cygpath -am "$srcdir/solutionpersistence-1.0.52-${_commit:0:8}.tar.gz")" "$(cygpath -am "$srcdir/prepared")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/solutionpersistence-workflow/build.sh" "$srcdir/prepared"
+}
+check() {
+  /usr/bin/python3 "$srcdir/solutionpersistence-workflow/check.py" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/solutionpersistence-workflow/audit.py" "$srcdir/solutionpersistence-1.0.52-${_commit:0:8}.tar.gz" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  install -m644 "$srcdir/prepared/feed/Microsoft.VisualStudio.SolutionPersistence.1.0.52.nupkg" "$feed/microsoft.visualstudio.solutionpersistence.1.0.52.nupkg"
+  install -m644 "$srcdir/prepared/"{source-inputs,source-audit}.json "$doc/"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-consumer-results.json"
+  install -m644 "$srcdir/solutionpersistence-workflow/README.md" "$doc/"
+  install -Dm644 "$srcdir/prepared/source/vs-solutionpersistence-$_commit/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+}

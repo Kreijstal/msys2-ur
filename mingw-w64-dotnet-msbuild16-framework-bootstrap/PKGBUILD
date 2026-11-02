@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-msbuild16-framework-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=16.0.461
+pkgrel=1
+pkgdesc='Original source MSBuild Framework16 Standard2.0 dependency-pruning port'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/msbuild'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('msbuild16-6ff56ef6.tar.gz::https://codeload.github.com/microsoft/msbuild/tar.gz/6ff56ef63c3a1c9785d42fe2564d904ebd225ea0'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'msbuild16-framework-source-1.tar.gz')
+noextract=('msbuild16-6ff56ef6.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('04907cbf4ade0101998006e955d7c5ca567e19342340ee71fcd36612158c6726'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '7d317a6501bb5b091dd883072b4df1aad5e6d30469e8a76ab544f97386bdba2b')
+prepare() {
+  /usr/bin/python3 "$srcdir/msbuild16-framework-workflow/prepare-framework.py" "$srcdir/msbuild16-6ff56ef6.tar.gz" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/msbuild16-framework-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  bash "$srcdir/msbuild16-framework-workflow/build-framework.sh" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/msbuild16-framework-workflow/audit-framework.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/msbuild16-framework-workflow/check-framework.py" "$srcdir/prepared" "$srcdir/check" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  install -Dm644 "$srcdir/prepared/feed/Microsoft.Build.Framework.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.build.framework.$pkgver.nupkg"
+  mkdir -p "$doc/inputs"
+  local file
+  for file in README.md check-framework.py;do install -m644 "$srcdir/msbuild16-framework-workflow/$file" "$doc/$file";done
+  for file in Api.cs FrameworkCheck.cs framework16-published-api.json published-api-provenance.json;do install -m644 "$srcdir/msbuild16-framework-workflow/inputs/$file" "$doc/inputs/$file";done
+  install -m644 "$srcdir/prepared/source-inputs.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE THIRDPARTYNOTICES.txt;do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file";done
+}

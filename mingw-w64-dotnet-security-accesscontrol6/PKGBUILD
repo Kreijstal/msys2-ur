@@ -1,0 +1,67 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-security-accesscontrol6
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=6.0.1
+pkgrel=1
+_sourcever=189fbbd88d97dd6d65515ba2da05b62eab4e5039
+pkgdesc='Full source-built System.Security.AccessControl 6.0.1 Windows port for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python')
+options=('!strip' '!lto')
+source=("runtime-${_sourcever}.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/${_sourcever}"
+        prepare.py libraries.json Microsoft.pubkey.hex Fixture.cs Runner.cs check.sh check-api.cs check-api.sh README.md)
+noextract=("runtime-${_sourcever}.tar.gz")
+sha256sums=('edc08a6ea7adb9d231fb4e9f8279d99f3cec37a4bf5f254f038cdf9d5669525e'
+            '2b5707ed6385001a8a5cb8d11a3695870163c7c028ad8048b4ee35d48c09b88a'
+            '67f1bed39a4c0fce540473dcfc4cd62672fd0a53033f3f4829b865c298068433'
+            'f590f89e2667ca399aa6e436a8c8d3855bbcec19228980320920bad70e5bfd3f'
+            'acff1c19e98c71b65e74ae8c6b6049fb90633f47bae3a6ebe36341f7f473bb32'
+            'b978c4392b4c2eb64016949907432e32b49795cd5f9664d7da449b0275d71a68'
+            '066a2aecf97ed4977b25d74c450fad51abbe3f33ec38b81db304af20f3ca83dd'
+            'f2f865f6b1a6e567c7f2b87fba1fa2d4b52e4e3d9d54877e09f40c9857b26b52'
+            '18fa3eb6195d768a93788cd3a1a02fa95a488474c0ba5dd3a021a9c26373433f'
+            '260dd73c95527d111499b76831bc020f3a7d0b727cdd8f5e70cba6d1da1554d4')
+
+_env() {
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  inputs=("runtime-$_sourcever/LICENSE.TXT" "runtime-$_sourcever/THIRD-PARTY-NOTICES.TXT"
+          "runtime-$_sourcever/src/libraries/Common/src" "runtime-$_sourcever/src/libraries/System.Private.CoreLib/src")
+  while read -r id; do inputs+=("runtime-$_sourcever/src/libraries/$id"); done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+  tar -xzf "$srcdir/runtime-$_sourcever.tar.gz" -C "$srcdir" "${inputs[@]}"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/runtime-$_sourcever" "$srcdir/prepared"
+}
+build() {
+  _env
+  mkdir -p "$srcdir/feed"
+  while read -r id; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/prepared/$id/contract/Contract.csproj")" -c Release \
+      --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/prepared/$id/Library.csproj")" -c Release \
+      -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/prepared/NuGet.config")" \
+      -p:GeneratePackageOnBuild=false -p:ImportDirectoryBuildProps=false -p:ImportDirectoryBuildTargets=false -p:UseSharedCompilation=false -v:minimal
+  done < <(/usr/bin/python3 -c 'import json,sys; [print(x["id"]) for x in json.load(open(sys.argv[1]))]' "$srcdir/libraries.json")
+}
+check() {
+  _env
+  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/prepared/localization.json" "$srcdir/feed"
+  bash "$srcdir/check-api.sh" "$srcdir/prepared" "$srcdir/check/fixture" "$srcdir/check-api"
+}
+package() {
+  install -Dm644 "$srcdir/feed/System.Security.AccessControl.6.0.1.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.security.accesscontrol.6.0.1.nupkg"
+  install -Dm644 "$srcdir/runtime-$_sourcever/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/runtime-$_sourcever/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES"
+  install -Dm644 "$srcdir/prepared/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+  install -Dm644 "$srcdir/prepared/localization.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/localization.json"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+}

@@ -1,0 +1,73 @@
+--- a/src/openvpnserv/interactive.c
++++ b/src/openvpnserv/interactive.c
+@@ -208,10 +208,10 @@
+ 
+ typedef enum
+ {
+-    peek,
+-    peek_timed,
+-    read,
+-    write
++    async_peek,
++    async_peek_timed,
++    async_read,
++    async_write
+ } async_op_t;
+ 
+ static DWORD
+@@ -236,7 +236,7 @@
+         goto out;
+     }
+ 
+-    if (op == write)
++    if (op == async_write)
+     {
+         success = WriteFile(pipe, buffer, size, NULL, &overlapped);
+     }
+@@ -255,14 +255,14 @@
+         handles[i + 1] = events[i];
+     }
+ 
+-    res = WaitForMultipleObjects(count + 1, handles, FALSE, op == peek ? INFINITE : IO_TIMEOUT);
++    res = WaitForMultipleObjects(count + 1, handles, FALSE, op == async_peek ? INFINITE : IO_TIMEOUT);
+     if (res != WAIT_OBJECT_0)
+     {
+         CancelIo(pipe);
+         goto out;
+     }
+ 
+-    if (op == peek || op == peek_timed)
++    if (op == async_peek || op == async_peek_timed)
+     {
+         PeekNamedPipe(pipe, NULL, 0, NULL, &bytes, NULL);
+     }
+@@ -280,25 +280,25 @@
+ static DWORD
+ PeekNamedPipeAsync(HANDLE pipe, DWORD count, LPHANDLE events)
+ {
+-    return AsyncPipeOp(peek, pipe, NULL, 0, count, events);
++    return AsyncPipeOp(async_peek, pipe, NULL, 0, count, events);
+ }
+ 
+ static DWORD
+ PeekNamedPipeAsyncTimed(HANDLE pipe, DWORD count, LPHANDLE events)
+ {
+-    return AsyncPipeOp(peek_timed, pipe, NULL, 0, count, events);
++    return AsyncPipeOp(async_peek_timed, pipe, NULL, 0, count, events);
+ }
+ 
+ static DWORD
+ ReadPipeAsync(HANDLE pipe, LPVOID buffer, DWORD size, DWORD count, LPHANDLE events)
+ {
+-    return AsyncPipeOp(read, pipe, buffer, size, count, events);
++    return AsyncPipeOp(async_read, pipe, buffer, size, count, events);
+ }
+ 
+ static DWORD
+ WritePipeAsync(HANDLE pipe, LPVOID data, DWORD size, DWORD count, LPHANDLE events)
+ {
+-    return AsyncPipeOp(write, pipe, data, size, count, events);
++    return AsyncPipeOp(async_write, pipe, data, size, count, events);
+ }
+ 
+ static VOID

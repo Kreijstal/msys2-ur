@@ -1,0 +1,64 @@
+Complete original managed runtime10 implementation prototype
+Host: win11
+Root: /c/codex-dotnet10/framework10build.dQWG7O
+190/190 projects: 171 shipping implementations + 19 private seeds; 172 runtime assemblies with installed CoreLib.
+Pinned original runtime inputs: 6161; generated inputs: 495; resource/additional/policy inputs: 165.
+109 original library-policy outputs preserve 41273 public API entries, resources, forwarders and readable PDBs. Original ILLink initializer optimizations separately validated: 89.
+Installed native compression/globalization and complete framework probes pass on installed CLR10. Source dotnet host discovers only the isolated10.0.5 runtime and passes all three probes.
+167 public contracts: 0 missing, 2096 extra, 248 changed. Strict comparison remains exit1; full parity is not claimed.
+
+Exact commands (prototype root):
+$ /usr/bin/python3 framework-workflow/build.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan
+RESULT: exit 0
+Complete original 190-project graph
+$ /usr/bin/python3 framework-workflow/build.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan System.Runtime.InteropServices.JavaScript
+RESULT: exit 0
+Original Windows PNSE generation target and affected project closure
+$ /usr/bin/python3 framework-workflow/audit-source.py /c/codex-dotnet10/corelib10pkg.XF6xcA/src build-plan
+RESULT: exit 0
+
+$ /usr/bin/python3 framework-workflow/check-built.py build-plan complete-linked-check2
+RESULT: exit 0
+
+$ /usr/bin/python3 framework-workflow/check-framework.py build-plan complete-framework-check
+RESULT: exit 1
+Native case passed; broader case initially failed on test-only Int64-to-Int32 cast
+$ /usr/bin/python3 framework-workflow/check-framework.py build-plan complete-framework-check2 framework
+RESULT: exit 0
+
+$ /usr/bin/python3 framework-workflow/check-framework.py build-plan javascript-windows-check javascript
+RESULT: exit 0
+
+$ /usr/bin/python3 framework-workflow/check-contracts.py build-plan complete-contract-check2
+RESULT: exit 1
+All 167 public contracts; zero missing entries, strict extra/shape differences retained
+$ /usr/bin/python3 framework-workflow/stage-framework.py build-plan 'complete dotnet10 λ'
+RESULT: exit 0
+
+$ /usr/bin/python3 framework-workflow/check-host.py 'complete dotnet10 λ' complete-host-check 'complete-framework-check/complete CLR10 λ/native.dll' 'complete-framework-check2/complete CLR10 λ/framework.dll' 'javascript-windows-check/complete CLR10 λ/javascript.dll'
+RESULT: exit 0
+
+
+Retained attempt history:
+The first five expanded source audits failed on harness handling of generated XML paths, relative policy paths and backslashes; the sixth passed. The seventh expanded coverage to installed source compiler/generator/GenFacades tool bytes and passed.
+The first full linked audit treated the original ILLink BeforeFieldInit optimization as a public API change. The revised checker separately validates its exact allowed transition; all 109 linked outputs pass.
+The first broader runtime fixture failed because DataTable SUM(Int32) returns Int64. Correcting only the fixture cast and rerunning only the affected case passed.
+The first full contract audit found 203 missing JavaScript entries. The original Windows unsupported-platform GenFacades target was added to the adapter; its focused rebuild, behavior test and all 203 entries now pass. Strict comparison still fails on 2096 extra and 248 changed entries.
+The pristine standalone extraction/evaluation passed, then tool preparation failed because ILLink task sources were omitted by the extractor. All five unchanged task sources and five project inputs were added from the pinned archive, and the same build directory resumed. This is not a completed clean rebuild.
+
+Evidence: 3220 files, archive SHA256 afa981d5f5a6a05e8b01006d76e6eb4a9f1c84bbc1339ca7868454aa19a0730e.
+Local downloaded evidence: /tmp/runtime10-framework-complete-evidence. Every manifest member hash was verified.
+
+Standalone rebuild: /e/codex-dotnet10/framework10fresh.gOPSWd; live session58835 must be revalidated. It has passed original resource/ILLink/templating tool builds and all56 ASN.1 comparisons and begun compilation. It is not a completed clean build.
+No formal managed runtime10 package or SDK10/PowerShell7.6 completion is claimed. Dependency completion counts are unchanged.
+
+Remaining:
+Finish pristine standalone rebuild and formal managed/runtime packaging with installed checks
+Review strict implementation/reference extra and changed API entries; zero missing declarations does not establish full semantic parity
+SDK10.0.201 and complete WindowsDesktop10/PowerShell7.6 dependency graph
+Original NET10 build-tool/compiler profiles and standard version closures
+MsQuic2.4.16 and QUIC, browser, COM, R2R/AOT, debugger/DAC and broader runtime coverage
+Original MMI3 remote/auth/provider/ownership, SQLserver/LocalDB/shared-memory/FILESTREAM, Compatibility, WPF and WinForms8 gates
+
+Corrected extractor validation: clang64/python.exe framework-workflow/prepare-source.py NEW_ARCHIVE_ROOT -> exit0. All24852 pristine materialized file hashes match the standalone build input set.
+Standalone rebuild subsequently observed at11/190; session58835 remains live.

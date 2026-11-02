@@ -1,0 +1,367 @@
+{
+  "recorded_at_utc": "2026-10-31T12:03:39.359995+00:00",
+  "previous_goal_turn_classification": "progress: original Roslyn3.4 strict source bootstrap",
+  "current_goal_turn_classification": "progress",
+  "recipe": "mingw-w64-dotnet-metadata16-contracts-bootstrap",
+  "package_version": "20261031-1",
+  "build_root": "/e/codex-dotnet10/metadata16contractspkg1.jUwT4z",
+  "original_reference_assembly_count": 4,
+  "original_public_API_entries": 1172,
+  "artifact_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-metadata16-contracts-bootstrap-20261031-1-any.pkg.tar.zst",
+    "artifact_sha256": "db85d428640dc95e984a4876abd0c6ece074705672d870f73c7b25e5c1b4edc4",
+    "source_reference_DLLs": 4,
+    "original_API_entries": 1172,
+    "exact_producer_payload_bytes": true,
+    "original_Interop_layout_and_Conditional_checks_passed": true,
+    "runtime_implementation_or_NuGet_payloads": 0,
+    "payload_sha256": {
+      "clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.IO.Compression.dll": "78117c213b8f22c36f02dbd48eef07b88266efcd6d7a9e33a150e878ec43154f",
+      "clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Reflection.Extensions.dll": "09df627f7896e4a38e0b51d0234395687f39d5f0b0656d8095c39a420c941cb8",
+      "clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Text.Encoding.Extensions.dll": "5f27e44b572a5cc9905e2f3fdd6c7deebef64ae93739ac729b968cefbe0a8552",
+      "clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Runtime.InteropServices.dll": "5d03d605c7f8d1f2411c0776f190d971cb909f6b894e763d59a1ee414abe4958"
+    },
+    "full_dependency_goal_complete": false
+  },
+  "installed": {
+    "source_feed_archives_unchanged": 286,
+    "installed_reference_count": 4,
+    "installed_metadata_check_exit_code": 0,
+    "installed_Interop_layout_check_exit_code": 0
+  },
+  "pacman_check": "mingw-w64-clang-x86_64-dotnet-metadata16-contracts-bootstrap: 46 total files, 0 altered files\n",
+  "clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "clean_build_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-package.py mingw-w64-clang-x86_64-dotnet-metadata16-contracts-bootstrap-20261031-1-any.pkg.tar.zst src artifact-audit.json",
+  "artifact_audit_exit_code": 0,
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-metadata16-contracts-bootstrap-20261031-1-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "producer_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/metadata16-contracts-workflow/build-inspector.py",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/check/inspector",
+          "E:/msys64/clang64"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/check/inspector/bin/Release/net8.0/Inspect.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/check/metadata.json",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/ref/System.IO.Compression.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/ref/System.Reflection.Extensions.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/ref/System.Text.Encoding.Extensions.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/ref/System.Runtime.InteropServices.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_API_entries": {
+      "System.IO.Compression": 93,
+      "System.Reflection.Extensions": 54,
+      "System.Text.Encoding.Extensions": 36,
+      "System.Runtime.InteropServices": 989
+    },
+    "reference_assemblies_only": true,
+    "original_implementations_executed": false,
+    "full_NETStandard_targeting_pack": false,
+    "historical_runtimes_verified": false
+  },
+  "producer_Interop_check": {
+    "commands": [
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/interop-check/Check.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/interop-check/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/interop-check/bin/Release/net8.0/Check.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/interop/ref",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/metadata16-contracts-workflow/interop/inputs/published-interop-ns11.json",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/metadata16-contracts-workflow/interop/inputs/interop-layouts.json",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/metadata16-contracts-workflow/interop/inputs/interop-conditionals.json"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_public_API_entries": 989,
+    "original_identity_dependencies_and_reference_marker_verified": true,
+    "original_COM_layout_field_offsets_and_Conditional_attributes_verified": true,
+    "published_DLL_executed_or_used_as_compiler_reference": false
+  },
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-metadata16-contracts-bootstrap/build-inspector.py",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-check/inspector",
+          "E:/msys64/clang64"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-check/inspector/bin/Release/net8.0/Inspect.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-check/metadata.json",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.IO.Compression.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Reflection.Extensions.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Text.Encoding.Extensions.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref/System.Runtime.InteropServices.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_API_entries": {
+      "System.IO.Compression": 93,
+      "System.Reflection.Extensions": 54,
+      "System.Text.Encoding.Extensions": 36,
+      "System.Runtime.InteropServices": 989
+    },
+    "reference_assemblies_only": true,
+    "original_implementations_executed": false,
+    "full_NETStandard_targeting_pack": false,
+    "historical_runtimes_verified": false
+  },
+  "installed_Interop_check": {
+    "commands": [
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-interop-check/Check.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-interop-check/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/installed-interop-check/bin/Release/net8.0/Check.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap/ref",
+          "E:/msys64/clang64/share/doc/dotnet-metadata16-contracts-bootstrap/interop/inputs/published-interop-ns11.json",
+          "E:/msys64/clang64/share/doc/dotnet-metadata16-contracts-bootstrap/interop/inputs/interop-layouts.json",
+          "E:/msys64/clang64/share/doc/dotnet-metadata16-contracts-bootstrap/interop/inputs/interop-conditionals.json"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_public_API_entries": 989,
+    "original_identity_dependencies_and_reference_marker_verified": true,
+    "original_COM_layout_field_offsets_and_Conditional_attributes_verified": true,
+    "published_DLL_executed_or_used_as_compiler_reference": false
+  },
+  "source_compiler44": {
+    "source_archive_sha256": "9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11",
+    "source_commit": "1ce8866c9de4c2d67351ef6863699dee03b0804a",
+    "original_csc_compile_items": {
+      "src/Compilers/Core/CommandLine/BuildProtocol.cs": "045e1fe836b52132d3135d8d8bf9d58a22faae5291bcd5ee17015a39b35a9abe",
+      "src/Compilers/Core/CommandLine/ConsoleUtil.cs": "ff6608923c69ca40cf547e3d3977fb3d3155f1ef12f511f82a34a4d7e34681e7",
+      "src/Compilers/Core/CommandLine/NativeMethods.cs": "e17993eef8691c4fc4ee0e7807d8776db5ec517e05ce5a7f26c6cf05ed7e2355",
+      "src/Compilers/Core/CommandLine/CompilerServerLogger.cs": "2e50ccb9ede744b2d29e946e88a940ae2b92b1bc6616b8e1cfce2a4152cd3c14",
+      "src/Compilers/Shared/RuntimeHostInfo.cs": "8ec8e57f2b61002ee7e1b7ab9006a048c944b8aa3aa8f92dfeac3ae74b278e43",
+      "src/Compilers/Shared/NamedPipeUtil.cs": "406bb2b9622fffde6a8854ca8f31bb1935f5db176d1a2116b27b18dd0cbcc06e",
+      "src/Compilers/Shared/BuildClient.cs": "c4f212a43e2e7941321a9b5c8bec5d73f3186a2a68359a309e5ec47aa95001bc",
+      "src/Compilers/Shared/BuildServerConnection.cs": "2dbd6ff1218a95835644c9938793d5661d58fc2fc0b66fccfa2ed9597c516b50",
+      "src/Compilers/Shared/ExitingTraceListener.cs": "f850d8901b5eb7f9ce885a1bae9eadd4348943c386d218a8f45ae5178ecd350b",
+      "src/Compilers/Shared/Csc.cs": "35e9bc538b2402beb33fd016b168530c799ff8a02807773c8b8c155e2227e2a8",
+      "src/Compilers/CSharp/csc/Program.cs": "985b6c9eb174bf96307580956c7229203abf63cda33beea9abd8ca7e735a15e3"
+    },
+    "original_csc_source_changes": 0,
+    "library_packages": [
+      "Microsoft.CodeAnalysis.Common/4.4.0",
+      "Microsoft.CodeAnalysis.CSharp/4.4.0"
+    ],
+    "original_cli_host_retargeted_to_NET8_bootstrap": true
+  },
+  "source_reference_build": {
+    "source_archive_sha256": "2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79",
+    "libraries": {
+      "System.IO.Compression": {
+        "original_framework": "netstandard1.1",
+        "original_source": "src/referencePackages/src/system.io.compression/4.3.0/ref/netstandard1.1/System.IO.Compression.cs",
+        "source_sha256": "7c458d538b9763bede55b87dd49e97cd941eeda7733ecf09658da700569766c3",
+        "reference_inputs": {
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.IO/4.0.0.0/System.IO.dll": "d5f2d97bd9c9aa99ef0275de4646a07e832abd84872a8360338184a9960b5723",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Runtime/4.0.0.0/System.Runtime.dll": "5823618780f9a06486846e2579571f39384a12af2a77c45b093f16d28a8e8e40",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Text.Encoding/4.0.0.0/System.Text.Encoding.dll": "146be48484a7c36f2466c23a8f69bdec72c788490dc6519842f8c54ca06579a9",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Threading.Tasks/4.0.0.0/System.Threading.Tasks.dll": "2cdf9941bea6159449d8ae7679b25214affde0fca0669c5cb10fe021156c9b8c"
+        },
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/compiler44/bin/Release/net8.0/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/references/System.IO.Compression/compile.rsp"
+        ],
+        "exit_code": 0,
+        "DLL_sha256": "b6e67febfd27bf5034934758a8d40072584172abebf97a5eb27f8e9301bcd667",
+        "reference_only": true
+      },
+      "System.Reflection.Extensions": {
+        "original_framework": "netstandard1.0",
+        "original_source": "src/referencePackages/src/system.reflection.extensions/4.3.0/ref/netstandard1.0/System.Reflection.Extensions.cs",
+        "source_sha256": "e4989ebf62145e638d33cd69efccc15a0d8c65e7687a5add8cbae58e3fc0e12a",
+        "reference_inputs": {
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.IO/4.0.0.0/System.IO.dll": "d5f2d97bd9c9aa99ef0275de4646a07e832abd84872a8360338184a9960b5723",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Reflection.Primitives/4.0.0.0/System.Reflection.Primitives.dll": "5306df39e5e2674d8c7ff5eddc5946cc173160a2ce16f9ef2dda0413fccc0c8a",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Reflection/4.0.0.0/System.Reflection.dll": "a3ca599447c44ce02d26c282feed6ca472779d74c86380c7a7f611e620d36b6c",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Runtime/4.0.0.0/System.Runtime.dll": "5823618780f9a06486846e2579571f39384a12af2a77c45b093f16d28a8e8e40",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Text.Encoding/4.0.0.0/System.Text.Encoding.dll": "146be48484a7c36f2466c23a8f69bdec72c788490dc6519842f8c54ca06579a9",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Threading.Tasks/4.0.0.0/System.Threading.Tasks.dll": "2cdf9941bea6159449d8ae7679b25214affde0fca0669c5cb10fe021156c9b8c"
+        },
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/compiler44/bin/Release/net8.0/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/references/System.Reflection.Extensions/compile.rsp"
+        ],
+        "exit_code": 0,
+        "DLL_sha256": "09df627f7896e4a38e0b51d0234395687f39d5f0b0656d8095c39a420c941cb8",
+        "reference_only": true
+      },
+      "System.Text.Encoding.Extensions": {
+        "original_framework": "netstandard1.0",
+        "original_source": "src/referencePackages/src/system.text.encoding.extensions/4.3.0/ref/netstandard1.0/System.Text.Encoding.Extensions.cs",
+        "source_sha256": "f7ace48a8a5eb8741f499e352dddc316a4068eb3dd09d70fb694a7700f9a3722",
+        "reference_inputs": {
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Runtime/4.0.0.0/System.Runtime.dll": "5823618780f9a06486846e2579571f39384a12af2a77c45b093f16d28a8e8e40",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Text.Encoding/4.0.0.0/System.Text.Encoding.dll": "146be48484a7c36f2466c23a8f69bdec72c788490dc6519842f8c54ca06579a9"
+        },
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/compiler44/bin/Release/net8.0/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/references/System.Text.Encoding.Extensions/compile.rsp"
+        ],
+        "exit_code": 0,
+        "DLL_sha256": "2028a6215cf418c04ebe654ce524b3f753f5049abbabdc24af62dacb794da718",
+        "reference_only": true
+      }
+    },
+    "original_sources_modified": 0,
+    "original_assemblies_executed": false,
+    "full_metadata_validation_complete": false
+  },
+  "source_Interop_build": {
+    "original_file_sha256": {
+      "sbrp/LICENSE.txt": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310",
+      "sbrp/src/SourceBuildAssemblyMetdata.cs": "4b15f1e65d09b6c36222afff0bb2926ac2dfc19f6d093187d247141351ca9085",
+      "sbrp/src/referencePackages/Directory.Build.props": "b5a4d2ed5bc99750476151621b26cec81f791264219d0d9dab245c1fc62b669f",
+      "sbrp/src/referencePackages/src/system.runtime.interopservices/4.3.0/System.Runtime.InteropServices.4.3.0.csproj": "9bcf849e5c8d2a137a2c346252ceb4ca6e70c3df14dba2a77e7f30853929a7c6",
+      "sbrp/src/referencePackages/src/system.runtime.interopservices/4.3.0/ref/netstandard1.1/System.Runtime.InteropServices.cs": "6abd3a2eeeeb0c4936795c63517d1da09e145ecdc0c308dbd5fcabb9772fc8e8",
+      "corefx/LICENSE": "18647d26bc4c4d892a5fd29de1264d10906b3124cafa98313300ff300441c7f0",
+      "corefx/THIRD-PARTY-NOTICES": "28f39f3ef955042b0908fd762bdfd511ff8c3fc0f4ccb357f6998a5f0ea102af",
+      "corefx/src/System.Runtime.InteropServices/ref/System.Runtime.InteropServices.cs": "a4fe2e9ce049625fe8fd2e87b4a3cddaf8f66c175f042dfd6280550eebf7843f",
+      "corefx/src/System.Runtime.InteropServices/ref/System.Runtime.InteropServices.csproj": "3d062b37bc46d50fd48d1f86430342cd8964c157692b21e71ae34887edd24cd9"
+    },
+    "generated_port_sha256": "13d1fc61ae1b2dbf633b4da6d90461f7070656b9e669c9802d6b442c70ea5446",
+    "source_reference_sha256": {
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.IO/4.0.0.0/System.IO.dll": "d5f2d97bd9c9aa99ef0275de4646a07e832abd84872a8360338184a9960b5723",
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Reflection.Primitives/4.0.0.0/System.Reflection.Primitives.dll": "5306df39e5e2674d8c7ff5eddc5946cc173160a2ce16f9ef2dda0413fccc0c8a",
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Reflection/4.0.0.0/System.Reflection.dll": "a3ca599447c44ce02d26c282feed6ca472779d74c86380c7a7f611e620d36b6c",
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Runtime/4.0.0.0/System.Runtime.dll": "5823618780f9a06486846e2579571f39384a12af2a77c45b093f16d28a8e8e40",
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Text.Encoding/4.0.0.0/System.Text.Encoding.dll": "146be48484a7c36f2466c23a8f69bdec72c788490dc6519842f8c54ca06579a9",
+      "E:/msys64/clang64/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts/System.Threading.Tasks/4.0.0.0/System.Threading.Tasks.dll": "2cdf9941bea6159449d8ae7679b25214affde0fca0669c5cb10fe021156c9b8c"
+    },
+    "original_source_files_modified_in_place": 0,
+    "generated_source_port_restores_four_attributes_and_three_COM_structs": true,
+    "reference_only": true,
+    "original_NoWarn": [
+      "1701",
+      "1702",
+      "NU1603",
+      "NU1605",
+      "NU5125",
+      "CS0109",
+      "CS0169",
+      "CS0618",
+      "CS0649",
+      "CS3001",
+      "CS3002",
+      "CS3003",
+      "CS3008",
+      "CS3009",
+      "CS0659",
+      "CS0108",
+      "CS0684",
+      "CS0809",
+      "NU5130",
+      "NU5128",
+      "NU5131",
+      "NU5048",
+      "CS8632",
+      "RS1025",
+      "RS1026"
+    ],
+    "command": [
+      "/clang64/lib/dotnet/dotnet.exe",
+      "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/compiler44/bin/Release/net8.0/csc.dll",
+      "-noconfig",
+      "@E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/interop/compile.rsp"
+    ],
+    "exit_code": 0,
+    "DLL_sha256": "5d03d605c7f8d1f2411c0776f190d971cb909f6b894e763d59a1ee414abe4958",
+    "original_buildtools_host_replayed": false
+  },
+  "metadata_port": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/restored/Tool.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/restored/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/restored/bin/Release/net8.0/RestoreAttributes.dll",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/metadata16-contracts-workflow/inputs",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/references",
+          "E:/codex-dotnet10/metadata16contractspkg1.jUwT4z/src/restored/ref"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "source_metadata_projection": true,
+    "original_implementation_executed": false,
+    "Microsoft_private_key_signatures_reproduced": false
+  },
+  "full_NETStandard_targeting_pack": false,
+  "historical_runtime_or_full_NuGet_dependency_graph_verified": false,
+  "full_dependency_goal_complete": false,
+  "evidence_archive": "/tmp/metadata16-contracts-package-evidence/package-evidence.tar.gz",
+  "evidence_archive_sha256": "802bf24d6e7fc5090e470239660e17665dd7f333ebb0f474502f42371bd2b1e4"
+}

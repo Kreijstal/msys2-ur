@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-polysharp-build-tools
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=1
+pkgdesc='Original source ReproducibleBuilds1.2.25 and NoTargets2.0.1 MSBuild data packages'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Sergio0694/PolySharp'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('reproducible-builds-714df2e1.tar.gz::https://codeload.github.com/dotnet/reproducible-builds/tar.gz/714df2e17493c71d0db054727f62a82810eeac7d'
+        'msbuildsdks-notargets201-16d7ef2a.tar.gz::https://codeload.github.com/microsoft/MSBuildSdks/tar.gz/16d7ef2aa63f1aadf9fa9b3348260228e12872ad'
+        prepare.py check.py contracts.json README.md)
+noextract=('reproducible-builds-714df2e1.tar.gz' 'msbuildsdks-notargets201-16d7ef2a.tar.gz')
+sha256sums=(
+            'b06b4a70eb7e4db87f7b122b45175b7511d4f6d56b9d2f82f4d28986a479865e'
+            'f02871e461a2c362a7bb785a67bccd0c57d22560ac5f07b17d20b8d27a8ee483'
+            '055495b3e2b2ed9d4a0fb04ad46adcf00300786cffe3cf492adefbd39f2c9185'
+            'e7c67f37849d3f8c2113681ab639d12e4f43b0d822f2c5b4f6a8431feb05da02'
+            'a51ab034df06945a82296208bea0ef16d13efa74c79fd84c75ba5bb5a5511ae1'
+            '640669e18d2f5e97a7ff1b9671b1af5bd44f6cb0d26092e28d24e00223f7df2a')
+_env() {
+  export DOTNET_ROOT=$(cygpath -am "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+}
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir" "$srcdir/prepared"; }
+build() {
+  _env
+  for name in DotNet.ReproducibleBuilds Microsoft.Build.NoTargets; do
+    "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -am "$srcdir/prepared/$name/Data.csproj")" -c Release \
+      -o "$(cygpath -am "$srcdir/feed")" --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" \
+      -p:NoBuild=true -p:UseSharedCompilation=false -v:minimal
+  done
+}
+check() {
+  _env
+  /usr/bin/python3 "$srcdir/check.py" "$srcdir/check" "$srcdir/feed" "$srcdir/prepared"
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs" "$doc"
+  local file
+  for file in "$srcdir/feed/"*.nupkg; do install -m644 "$file" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/$(basename "$file" | tr '[:upper:]' '[:lower:]')"; done
+  for file in check.py contracts.json README.md; do install -m644 "$srcdir/$file" "$doc/$file"; done
+  for file in source-results.json upstream-vectors.json; do install -m644 "$srcdir/prepared/$file" "$doc/$file"; done
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in DotNet.ReproducibleBuilds Microsoft.Build.NoTargets; do
+    install -Dm644 "$srcdir/prepared/$file/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file/LICENSE"
+  done
+}

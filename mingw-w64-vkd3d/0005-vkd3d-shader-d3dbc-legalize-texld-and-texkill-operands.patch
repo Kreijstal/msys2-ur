@@ -1,0 +1,98 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] vkd3d-shader/d3dbc: Legalize texld and texkill operands.
+
+Before shader model 3, texld takes its texture coordinate without a
+swizzle or modifier, and texkill always tests all four components of its
+operand (encoded as an .xyzw destination). vkd3d emitted e.g.
+"texld r0, r1.xyyy, s0" and "texkill r0.x", which the d3d9 runtime and
+MojoShader (MonoGame's OpenGL path) reject. Copy such operands to a new
+vec4 SSA value before register allocation; read an input register with a
+"xy(z)" swizzle whole instead, as fxc does.
+---
+--- a/libs/vkd3d-shader/d3dbc.c
++++ b/libs/vkd3d-shader/d3dbc.c
+@@ -2529,6 +2529,74 @@
+     }
+ }
+ 
++/* D3D9 restrictions that the generic vsir passes do not know about:
++ *  - before shader model 3, texld takes its texture coordinate without a
++ *    swizzle or modifier;
++ *  - texkill tests all four components of its operand, which it encodes as
++ *    a destination with an .xyzw write mask.
++ * Copy such operands to a new vec4 SSA value first. A coordinate read from
++ * an input register with a "xy(z)" swizzle is instead read whole, as fxc
++ * does: texld only uses the components its sampler needs. MojoShader (and
++ * the d3d9 runtime) reject the unrestricted forms. */
++static bool d3dbc_texcoord_swizzle_can_widen(uint32_t swizzle)
++{
++    return swizzle == VKD3D_SHADER_SWIZZLE(X, X, X, X)
++            || swizzle == VKD3D_SHADER_SWIZZLE(X, Y, Y, Y)
++            || swizzle == VKD3D_SHADER_SWIZZLE(X, Y, Z, Z);
++}
++
++static enum vkd3d_result d3dbc_legalize_texture_operands(struct vsir_program *program)
++{
++    struct vsir_program_iterator it = vsir_program_iterator(&program->instructions);
++    const struct vkd3d_shader_version *version = &program->shader_version;
++    struct vkd3d_shader_instruction *ins, *mov;
++    struct vkd3d_shader_location location;
++    struct vsir_program_iterator mov_it;
++    struct vsir_src_operand *src;
++    bool input;
++    unsigned int id;
++
++    if (version->type != VKD3D_SHADER_TYPE_PIXEL)
++        return VKD3D_OK;
++
++    for (ins = vsir_program_iterator_head(&it); ins; ins = vsir_program_iterator_next(&it))
++    {
++        if (ins->opcode != VSIR_OP_TEXKILL && (ins->opcode != VSIR_OP_TEXLD || version->major >= 3))
++            continue;
++        if (!ins->src_count)
++            continue;
++
++        src = &ins->src[0];
++        input = src->reg.type == VSIR_REGISTER_INPUT || src->reg.type == VSIR_REGISTER_TEXTURE;
++        if (!src->modifiers && src->swizzle == VKD3D_SHADER_NO_SWIZZLE
++                && (input || src->reg.type == VSIR_REGISTER_SSA))
++            continue;
++
++        if (ins->opcode == VSIR_OP_TEXLD && input && !src->modifiers
++                && !(ins->flags & (VKD3DSI_TEXLD_PROJECT | VKD3DSI_TEXLD_BIAS))
++                && d3dbc_texcoord_swizzle_can_widen(src->swizzle))
++        {
++            src->swizzle = VKD3D_SHADER_NO_SWIZZLE;
++            continue;
++        }
++
++        location = ins->location;
++        if (!(mov = vsir_program_iterator_insert_before(&it, &mov_it, 1)))
++            return VKD3D_ERROR_OUT_OF_MEMORY;
++        if (!vsir_instruction_init_with_params(program, mov, &location, VSIR_OP_MOV, 1, 1))
++            return VKD3D_ERROR_OUT_OF_MEMORY;
++        ins = vsir_program_iterator_current(&it);
++        src = &ins->src[0];
++
++        id = program->ssa_count++;
++        vsir_dst_operand_init_ssa_f32v4(&mov->dst[0], id);
++        mov->src[0] = *src;
++        vsir_src_operand_init_ssa_f32v4(src, id);
++    }
++
++    return VKD3D_OK;
++}
++
+ int d3dbc_compile(struct vsir_program *program, uint64_t config_flags,
+         const struct vkd3d_shader_compile_info *compile_info, const struct vkd3d_shader_code *ctab,
+         struct vkd3d_shader_code *out, struct vkd3d_shader_message_context *message_context)
+@@ -2541,6 +2609,9 @@
+     if ((result = vsir_program_optimize(program, config_flags, compile_info, message_context)))
+         return result;
+ 
++    if ((result = d3dbc_legalize_texture_operands(program)) < 0)
++        return result;
++
+     if ((result = vsir_program_allocate_temp_registers(program, config_flags, compile_info, message_context)) < 0)
+         return result;
+ 

@@ -1,0 +1,43 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-visualbasic53-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.3.0.2.26113.113
+pkgrel=2
+pkgdesc='Source NET10 Roslyn5.3 VisualBasic compiler and shared compiler server bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap=5.3.0.2.26113.113-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard10>=20261029-1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime9-libraries>=9.0.0-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=2333221c0564852ee5ceac9c622a0b14e864d76e
+source=("roslyn-5.3.0-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        'visualbasic53-bootstrap-source-2.tar.gz')
+noextract=("roslyn-5.3.0-${_commit:0:8}.tar.gz")
+sha256sums=('e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb'
+            'cdfec3ccddab90a680c158e8634e868cfed9cd145f35349e7d3ebf80b1b339f3')
+prepare() {
+  /usr/bin/python3 "$srcdir/vb53-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/vb53-workflow/build.sh" "$srcdir" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/vb53-workflow/check-net10-vbc.py" "$srcdir/localized" "$srcdir/vbc-check λ" > "$srcdir/vbc-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/vb53-workflow/check-net10-server.py" "$srcdir/localized" "$srcdir/server-check λ" > "$srcdir/server-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/vb53-workflow/audit.py" "$srcdir" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/vb53-workflow/stage.py" "$srcdir" "$srcdir/package-prefix" > "$srcdir/stage.log" 2>&1
+  /usr/bin/python3 "$srcdir/vb53-workflow/check-installed.py" "$srcdir/package-prefix" "$srcdir/staged-check" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

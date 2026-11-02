@@ -1,0 +1,79 @@
+// Symbol formatting follows the MIT-licensed PublicApiAnalyzers 3.3.4 format.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+
+internal static class CheckApi
+{
+    private static readonly SymbolDisplayFormat Format = new(
+        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        propertyStyle: SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        memberOptions: SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeContainingType |
+            SymbolDisplayMemberOptions.IncludeExplicitInterface | SymbolDisplayMemberOptions.IncludeModifiers | SymbolDisplayMemberOptions.IncludeConstantValue,
+        parameterOptions: SymbolDisplayParameterOptions.IncludeExtensionThis | SymbolDisplayParameterOptions.IncludeParamsRefOut |
+            SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeDefaultValue,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.UseSpecialTypes | (SymbolDisplayMiscellaneousOptions)(1 << 6) |
+            (SymbolDisplayMiscellaneousOptions)(1 << 8));
+
+    internal static void Run(IEnumerable<MetadataReference> framework, string assembly, string baseline, params string[] extra)
+    {
+        var target = MetadataReference.CreateFromFile(assembly);
+        var references = framework.Concat(extra.Select(p => MetadataReference.CreateFromFile(p))).Append(target);
+        var compilation = CSharpCompilation.Create("ApiGate", references: references,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, metadataImportOptions: MetadataImportOptions.All));
+        var symbol = (IAssemblySymbol)compilation.GetAssemblyOrModuleSymbol(target)!;
+        var actual = new HashSet<string>();
+        var unannotated = new HashSet<string>();
+        var unannotatedFormat=Format.WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+        string ExperimentalPrefix(ISymbol symbol) {
+            for (ISymbol? current = symbol; current != null; current = current.ContainingSymbol) {
+                var attributes = current.GetAttributes();
+                foreach (var attribute in attributes)
+                    if (attribute.AttributeClass?.ToDisplayString() == "System.Diagnostics.CodeAnalysis.ExperimentalAttribute" &&
+                        attribute.ConstructorArguments.Length != 0 && attribute.ConstructorArguments[0].Value is string diagnosticId)
+                        return "[" + diagnosticId + "]";
+            }
+            return "";
+        }
+        void Add(ISymbol member) {
+            var signature = ExperimentalPrefix(member) + member.ToDisplayString(Format);
+            ITypeSymbol? result = member switch {
+                IMethodSymbol m => m.ReturnType, IFieldSymbol f => f.Type,
+                IEventSymbol e => e.Type, _ => null,
+            };
+            if (result != null) signature += " -> " + result.ToDisplayString(Format);
+            actual.Add(signature);
+            string legacy=ExperimentalPrefix(member)+member.ToDisplayString(unannotatedFormat);
+            if(result != null) legacy += " -> "+result.ToDisplayString(unannotatedFormat);
+            unannotated.Add(legacy);
+        }
+        void Visit(INamespaceOrTypeSymbol container) {
+            foreach (var member in container.GetMembers()) {
+                if (member is INamespaceSymbol ns) { Visit(ns); continue; }
+                if (member.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal)) continue;
+                if (member is INamedTypeSymbol type) { Add(type); Visit(type); continue; }
+                if (member is IPropertySymbol property) {
+                    if (property.GetMethod is { DeclaredAccessibility: Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal } get) Add(get);
+                    if (property.SetMethod is { DeclaredAccessibility: Accessibility.Public or Accessibility.Protected or Accessibility.ProtectedOrInternal } set) Add(set);
+                } else Add(member);
+            }
+        }
+        Visit(symbol.GlobalNamespace);
+        File.WriteAllLines(baseline + ".actual.txt", actual.OrderBy(s => s));
+        File.WriteAllLines(baseline+".actual-unannotated.txt",unannotated.OrderBy(s=>s));
+        var lines = File.ReadLines(baseline).Where(s => s.Length > 0 && !s.StartsWith('#')).ToArray();
+        var removed = lines.Where(s => s.StartsWith("*REMOVED*")).Select(s => s[9..].TrimStart('~')).ToHashSet();
+        var expected = lines.Where(s => !s.StartsWith("*REMOVED*")).Where(s => !removed.Contains(s.TrimStart('~'))).Distinct().ToArray();
+        // Upstream3.3.4 marks both annotated and unannotated names, with optional '~', visited.
+        var missing = expected.Where(s => s.StartsWith('~') ? !actual.Contains(s[1..]) && !unannotated.Contains(s[1..]) : !actual.Contains(s)).ToArray();
+        File.WriteAllText(baseline+".report.json",System.Text.Json.JsonSerializer.Serialize(new {expected_entries=expected.Length,missing,legacy_oblivious_entries_compared_without_reference_annotations=true,explicitly_annotated_entries_compared_exactly=true}));
+        foreach (var entry in missing.Take(30)) Console.Error.WriteLine("Missing public API: " + entry);
+        Check.Require(missing.Length == 0, symbol.Name + ": " + missing.Length + " of " + expected.Length + " upstream API declarations missing");
+        Console.WriteLine("PASS: " + symbol.Name + " preserves all " + expected.Length + " upstream public API declarations");
+    }
+}

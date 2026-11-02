@@ -1,0 +1,72 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-java-rhino
+pkgname="${MINGW_PACKAGE_PREFIX}-java-rhino"
+pkgver=1.7.7
+pkgrel=1
+pkgdesc="Rhino JavaScript engine and XML support, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/mozilla/rhino'
+license=('spdx:MPL-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.7/rhino-1.7.7-sources.jar'
+        'https://repo.maven.apache.org/maven2/org/mozilla/rhino/1.7.7/rhino-1.7.7.pom')
+noextract=('rhino-1.7.7-sources.jar' 'rhino-1.7.7.pom')
+sha256sums=('12f043ce0915f59389935c4e85f8f19053f8462c1b475457cabb6e5a0a835181'
+            '14fdc6f4ed8449cc628d814849b7b9f4ca14e5df105bf62799ba8c403b35f944')
+
+prepare() {
+  mkdir -p upstream resources
+  bsdtar -xf rhino-1.7.7-sources.jar -C upstream
+  find upstream -type f \( -name '*.class' -o -name '*.jar' \) -delete
+  cp -r upstream/rhino1.7.7/src/. resources/
+  cp -r upstream/rhino1.7.7/xmlimplsrc/. resources/
+  find resources -name '*.java' -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # Match the upstream library sources. The separate shell/debugger and
+  # test/example applications are not part of this engine package.
+  JB_RELEASE=8 jb_module org.mozilla:rhino:${pkgver} upstream/rhino1.7.7/src \
+    -s upstream/rhino1.7.7/xmlimplsrc -r resources -u rhino-${pkgver}.pom
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.mozilla:rhino
+  mkdir -p smoke
+  cat > smoke/RhinoEval.java <<'JAVA'
+import org.mozilla.javascript.*;
+public class RhinoEval {
+  public static void main(String[] args) {
+    Context context = Context.enter();
+    try {
+      for (int optimization : new int[]{-1, 0, 9}) {
+        context.setOptimizationLevel(optimization);
+        Scriptable scope = context.initStandardObjects();
+        Object result = context.evaluateString(scope, "[6, 7].reduce(function(a,b){return a*b;})", "test", 1, null);
+        if (Context.toNumber(result) != 42) throw new AssertionError(result);
+      }
+      System.out.println("Rhino interpreted and compiled JavaScript passed");
+    } finally { Context.exit(); }
+  }
+}
+JAVA
+  local cp=$(jb_cp org.mozilla:rhino)
+  javac --release 21 -d "$(jb_w smoke)" -cp "$cp" "$(jb_w smoke/RhinoEval.java)"
+  java -cp "$(jb_w smoke);$cp" RhinoEval
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.mozilla:rhino
+  install -Dm644 rhino-${pkgver}.pom "${pkgdir}${MINGW_PREFIX}/share/licenses/java-rhino/UPSTREAM.pom"
+  find upstream/rhino1.7.7/src upstream/rhino1.7.7/xmlimplsrc -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ { if (header != "" && !seen[header]++) print header; collecting=0 }
+    collecting { header=header $0 "\n" }
+  ' {} + > SOURCE-COPYRIGHTS.txt
+  install -m644 SOURCE-COPYRIGHTS.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-rhino/SOURCE-COPYRIGHTS.txt"
+}

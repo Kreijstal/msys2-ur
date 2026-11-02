@@ -1,0 +1,92 @@
+Original Newtonsoft.Json13.0.3 NETStandard2 source package
+
+$ cd /e/codex-dotnet10/newtonsoft1303pkg2.RmndU1 && makepkg --force --noconfirm
+RESULT: exit 0; cold build, original233 source checks, staged archive and consumer passed.
+
+$ python tests/newtonsoft1303/audit-package.py /tmp/newtonsoft1303-package/mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap-13.0.3-1-any.pkg.tar.zst /tmp/dotnet10-sources/newtonsoft-json-13.0.3.tar.gz /tmp/newtonsoft1303-package/audit.json
+RESULT: exit 0; actual payload inventory/bytes and original source archive agree.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/newtonsoft1303pkg2.RmndU1/mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap-13.0.3-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-newtonsoft-json1303-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/newtonsoft1303pkg2.RmndU1/installed-check
+RESULT: exit 0
+PASS original NS2 profile, two unchanged upstream regressions; Newtonsoft.Json typed/Unicode/dynamic/JSON-path/XML and original strong identity
+
+PASS installed package inventory, original NETStandard2 archive and isolated source consumer
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap
+mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap: 20 total files, 0 altered files
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-29T07:33:55.605435+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/newtonsoft1303pkg2.RmndU1",
+  "recipe": "mingw-w64-dotnet-newtonsoft-json1303-bootstrap",
+  "package_version": "13.0.3-1",
+  "source_version": "13.0.3",
+  "original_framework": "netstandard2.0",
+  "original_source_files": 233,
+  "original_production_source_changes": 0,
+  "assembly_version": "13.0.0.0",
+  "file_version": "13.0.3.32229",
+  "original_file_version_policy_verified": true,
+  "reference_assets": 113,
+  "cold_makepkg_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_check_exit_code": 0,
+  "package_sha256": "b9645dbe49184d64ef49bfa2355b833634709ee73deeeec53e1ac9402ede1062",
+  "regular_payload_files": 10,
+  "pacman_integrity": "mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap: 20 total files, 0 altered files",
+  "original_upstream_regression_methods": 2,
+  "formal_package_built": true,
+  "formal_package_installed": true,
+  "full_upstream_test_suite_run": false,
+  "other_original_framework_profiles_built": false,
+  "full_dependency_goal_complete": false,
+  "initial_package_check_failure": "Nested installed-test Python process used CP1252 to read UTF8 fixture; archive2 explicitly supplies -X utf8; no original production source changed",
+  "remaining": [
+    "Other original Newtonsoft framework profiles, full upstream tests and original analyzer/SourceLink build tools",
+    "NuGet7.3 core closure package/localization, restore/build/pack tools and SDK resolver",
+    "Exact SDK10 support libraries, original Build.Tasks/APICompat/Extensions closure and full SDK10/PowerShell7.6 graph",
+    "Existing MMI remote/provider/ownership, SQL/native/Windows.Compatibility, desktop and runtime compatibility gates"
+  ],
+  "evidence": "tests/newtonsoft1303/package-results-20261029.txt",
+  "json_evidence": "tests/newtonsoft1303/package-results-20261029.json"
+}
+
+Clean makepkg log:
+==> Making package: mingw-w64-dotnet-newtonsoft-json1303-bootstrap 13.0.3-1 (29 Oct 2026 08:31:05)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found newtonsoft-json-13.0.3.tar.gz
+  -> Found newtonsoft1303-source-2.tar.gz
+==> Validating source files with sha256sums...
+    newtonsoft-json-13.0.3.tar.gz ... Passed
+    newtonsoft1303-source-2.tar.gz ... Passed
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting newtonsoft1303-source-2.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-newtonsoft-json1303-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-newtonsoft-json1303-bootstrap 13.0.3-1 (29 Oct 2026 08:31:41)

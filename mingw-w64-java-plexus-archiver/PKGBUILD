@@ -1,0 +1,97 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=plexus-archiver
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=4.10.4
+pkgrel=1
+pkgdesc="Plexus archiver components (jar, zip, tar, ...), built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-archiver/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-archiver'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-io"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+         "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-aircompressor"
+         "${MINGW_PACKAGE_PREFIX}-java-xz"
+         "${MINGW_PACKAGE_PREFIX}-java-zstd-jni")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jsr305"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-inject")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+              "${MINGW_PACKAGE_PREFIX}-java-guice"
+              "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-archiver/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('4d10482eb3a4f68346402381546113db808113bdd62bf78a5a5a66b4850b3a54')
+# the test resources contain symbolic links that bsdtar cannot create here
+noextract=("${_realname}-${pkgver}.tar.gz")
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "${_src}/src/test/resources/symlinks"
+  # test fixtures
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.codehaus.plexus:plexus-archiver:${pkgver} src/main/java -u pom.xml -P sisu \
+    -c com.google.code.findbugs:jsr305 \
+    -- javax.inject:javax.inject org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-io \
+       org.apache.commons:commons-compress org.slf4j:slf4j-api io.airlift:aircompressor \
+       org.tukaani:xz/runtime com.github.luben:zstd-jni/runtime
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5 and AssertJ; look the jar and tar.zst
+  # archivers up through Sisu, as Maven's plugins do, and use them
+  jb_loadcheck org.codehaus.plexus:plexus-archiver
+  local t="${srcdir}/smoke" cp
+  rm -rf "${t}"
+  mkdir -p "${t}/in/p"
+  echo hello > "${t}/in/p/hello.txt"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.io.File;
+import org.codehaus.plexus.*;
+import org.codehaus.plexus.archiver.*;
+import org.codehaus.plexus.archiver.manager.ArchiverManager;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    PlexusContainer p = new DefaultPlexusContainer(new DefaultContainerConfiguration()
+        .setClassPathScanning(PlexusConstants.SCANNING_INDEX).setAutoWiring(true));
+    ArchiverManager m = p.lookup(ArchiverManager.class);
+    for (String type : new String[] {"jar", "tar.zst", "tar.xz", "tar.snappy"}) {
+      Archiver ar = m.getArchiver(type);
+      File out = new File(a[1], "out." + type);
+      ar.setDestFile(out);
+      ar.addDirectory(new File(a[0]));
+      ar.createArchive();
+      UnArchiver un = m.getUnArchiver(type);
+      File dir = new File(a[1], "x-" + type);
+      dir.mkdirs();
+      un.setSourceFile(out);
+      un.setDestDirectory(dir);
+      un.extract();
+      if (!new File(dir, "p/hello.txt").isFile()) throw new AssertionError(type);
+      System.out.println("plexus-archiver " + type + " ok (" + out.length() + " bytes)");
+    }
+  }
+}
+JAVA
+  cp=$(jb_cp org.codehaus.plexus:plexus-archiver org.eclipse.sisu:org.eclipse.sisu.plexus \
+    'com.google.inject:guice#classes' org.slf4j:slf4j-simple)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java --enable-native-access=ALL-UNNAMED -cp "$(jb_w "${t}");${cp}" Smoke "$(jb_w "${t}/in")" "$(jb_w "${t}")"
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-archiver
+}

@@ -1,0 +1,2671 @@
+{
+  "fixtures": [
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <[|p|]>This is a paragraph.</p>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is a paragraph.</para>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlParagraphWithAttributeAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <[|p|] attr=\"value\">This is a paragraph.</p>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para attr=\"value\">This is a paragraph.</para>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestPrefixAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <not:p>This is a paragraph.</not:p>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlCodeAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>This is <[|tt|]>code</tt>.</para>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is <c>code</c>.</para>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlCodeBlockAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>This is a code block:</para>\n/// <[|pre|]>\n/// code goes here\n/// more code here\n/// </pre>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is a code block:</para>\n/// <code>\n/// code goes here\n/// more code here\n/// </code>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlOrderedListAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <[|ol|]>\n/// <li>Item 1</li>\n/// <li>Item 2</li>\n/// </ol>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <list type=\"number\">\n/// <item><description>Item 1</description></item>\n/// <item><description>Item 2</description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlUnorderedListAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <[|ul|]>\n/// <li>Item 1</li>\n/// <li>Item 2</li>\n/// </ul>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <list type=\"bullet\">\n/// <item><description>Item 1</description></item>\n/// <item><description>Item 2</description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC200UnitTests.cs/TestHtmlUnorderedListMultilineItemAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC200UseXmlDocumentationSyntax",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC200CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <[|ul|]>\n/// <li>\n///     Item 1\n/// </li>\n/// </ul>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <para>This is an ordered list:</para>\n/// <list type=\"bullet\">\n/// <item><description>\n///     Item 1\n/// </description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC201UnitTests.cs/TestListItemsWithoutDescriptionAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC201CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <list type=\"number\">\n/// <[|item|]>Item 1</item>\n/// <[|item|]>Item 2</item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <list type=\"number\">\n/// <item><description>Item 1</description></item>\n/// <item><description>Item 2</description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC201UnitTests.cs/TestMultilineListItemsWithoutDescriptionAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC201CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <list type=\"number\">\n/// <[|item|]>\n///     Item 1\n/// </item>\n/// <[|item|]>\n///     Item 2\n/// </item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n/// <remarks>\n/// <list type=\"number\">\n/// <item><description>\n///     Item 1\n/// </description></item>\n/// <item><description>\n///     Item 2\n/// </description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC201UnitTests.cs/TestListItemsWithEmptyDescriptionAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC201CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <list type=\"number\">\n/// <item><description></description></item>\n/// <item><description/></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC201UnitTests.cs/TestListItemsWithTermAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC201ItemShouldHaveDescription",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC201CodeFixProvider",
+      "source": "\n/// <remarks>\n/// <list type=\"number\">\n/// <item><term>Item 1</term></item>\n/// <item><term>Item 2</term><description>Description</description></item>\n/// </list>\n/// </remarks>\nclass TestClass { }\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC202UnitTests.cs/TestElementsUsedCorrectlyAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC202UseSectionElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC202CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a value.\n    /// </summary>\n    /// <typeparam name=\"T\">The type of value</typeparam>\n    /// <param name=\"value\">The value</param>\n    void Method<T>(int value)\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC202UnitTests.cs/TestParamUsedAsParamRefAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC202UseSectionElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC202CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a <$$param name=\"value\"/>.\n    /// </summary>\n    void Method(int value)\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a <paramref name=\"value\"/>.\n    /// </summary>\n    void Method(int value)\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC202UnitTests.cs/TestTypeParamUsedAsTypeParamRefAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC202UseSectionElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC202CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a <$$typeparam name=\"T\"/>.\n    /// </summary>\n    void Method<T>()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a <typeparamref name=\"T\"/>.\n    /// </summary>\n    void Method<T>()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC203UnitTests.cs/TestCodeUsedAsExampleAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC203UseBlockElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC203CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <example>\n    /// <code>\n    /// this is some code...\n    /// </code>\n    /// </example>\n    void Method()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC203UnitTests.cs/TestCodeUsedAsInlineWithinParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC203UseBlockElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC203CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <remarks>\n    /// <para>Executes some <$$code>code</code>.</para>\n    /// </remarks>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <remarks>\n    /// <para>Executes some <c>code</c>.</para>\n    /// </remarks>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC203UnitTests.cs/TestCodeUsedAsInlineAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC203UseBlockElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC203CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Executes some <$$code>code</code>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Executes some <c>code</c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC204UnitTests.cs/TestElementsUsedCorrectlyAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC204UseInlineElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC204CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a <paramref name=\"value\"/> of type <typeparamref name=\"T\"/>.\n    /// </summary>\n    void Method<T>(int value)\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC204UnitTests.cs/TestParamRefUsedAsParamAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC204UseInlineElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC204CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a value.\n    /// </summary>\n    /// <$$paramref name=\"value\">The value</paramref>\n    void Method(int value)\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a value.\n    /// </summary>\n    /// <param name=\"value\">The value</param>\n    void Method(int value)\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC204UnitTests.cs/TestTypeParamUsedAsTypeParamRefAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC204UseInlineElementsCorrectly",
+      "fix": "DocumentationAnalyzers.PortabilityRules.DOC204CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a value.\n    /// </summary>\n    /// <$$typeparamref name=\"T\">The type of value</typeparamref>\n    void Method<T>()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Pass in a value.\n    /// </summary>\n    /// <typeparam name=\"T\">The type of value</typeparam>\n    void Method<T>()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#0",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"bool\"/>\n/// <see langword=\"bool\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#1",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"byte\"/>\n/// <see langword=\"byte\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#2",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"sbyte\"/>\n/// <see langword=\"sbyte\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#3",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"short\"/>\n/// <see langword=\"short\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#4",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"ushort\"/>\n/// <see langword=\"ushort\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#5",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"int\"/>\n/// <see langword=\"int\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#6",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"uint\"/>\n/// <see langword=\"uint\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#7",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"long\"/>\n/// <see langword=\"long\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#8",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"ulong\"/>\n/// <see langword=\"ulong\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#9",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"double\"/>\n/// <see langword=\"double\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#10",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"float\"/>\n/// <see langword=\"float\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#11",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"decimal\"/>\n/// <see langword=\"decimal\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#12",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"string\"/>\n/// <see langword=\"string\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#13",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"char\"/>\n/// <see langword=\"char\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#14",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"void\"/>\n/// <see langword=\"void\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#15",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"object\"/>\n/// <see langword=\"object\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#16",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"typeof\"/>\n/// <see langword=\"typeof\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#17",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"sizeof\"/>\n/// <see langword=\"sizeof\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#18",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"null\"/>\n/// <see langword=\"null\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#19",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"true\"/>\n/// <see langword=\"true\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#20",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"false\"/>\n/// <see langword=\"false\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#21",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"if\"/>\n/// <see langword=\"if\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#22",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"else\"/>\n/// <see langword=\"else\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#23",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"while\"/>\n/// <see langword=\"while\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#24",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"for\"/>\n/// <see langword=\"for\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#25",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"foreach\"/>\n/// <see langword=\"foreach\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#26",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"do\"/>\n/// <see langword=\"do\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#27",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"switch\"/>\n/// <see langword=\"switch\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#28",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"case\"/>\n/// <see langword=\"case\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#29",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"default\"/>\n/// <see langword=\"default\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#30",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"try\"/>\n/// <see langword=\"try\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#31",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"catch\"/>\n/// <see langword=\"catch\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#32",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"finally\"/>\n/// <see langword=\"finally\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#33",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"lock\"/>\n/// <see langword=\"lock\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#34",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"goto\"/>\n/// <see langword=\"goto\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#35",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"break\"/>\n/// <see langword=\"break\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#36",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"continue\"/>\n/// <see langword=\"continue\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#37",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"return\"/>\n/// <see langword=\"return\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#38",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"throw\"/>\n/// <see langword=\"throw\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#39",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"public\"/>\n/// <see langword=\"public\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#40",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"private\"/>\n/// <see langword=\"private\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#41",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"internal\"/>\n/// <see langword=\"internal\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#42",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"protected\"/>\n/// <see langword=\"protected\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#43",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"static\"/>\n/// <see langword=\"static\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#44",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"readonly\"/>\n/// <see langword=\"readonly\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#45",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"sealed\"/>\n/// <see langword=\"sealed\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#46",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"const\"/>\n/// <see langword=\"const\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#47",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"fixed\"/>\n/// <see langword=\"fixed\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#48",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"stackalloc\"/>\n/// <see langword=\"stackalloc\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#49",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"volatile\"/>\n/// <see langword=\"volatile\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#50",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"new\"/>\n/// <see langword=\"new\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#51",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"override\"/>\n/// <see langword=\"override\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#52",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"abstract\"/>\n/// <see langword=\"abstract\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#53",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"virtual\"/>\n/// <see langword=\"virtual\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#54",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"event\"/>\n/// <see langword=\"event\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#55",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"extern\"/>\n/// <see langword=\"extern\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#56",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"ref\"/>\n/// <see langword=\"ref\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#57",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"out\"/>\n/// <see langword=\"out\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#58",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"in\"/>\n/// <see langword=\"in\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#59",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"is\"/>\n/// <see langword=\"is\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#60",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"as\"/>\n/// <see langword=\"as\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#61",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"params\"/>\n/// <see langword=\"params\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#62",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"__arglist\"/>\n/// <see langword=\"__arglist\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#63",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"__makeref\"/>\n/// <see langword=\"__makeref\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#64",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"__reftype\"/>\n/// <see langword=\"__reftype\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#65",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"__refvalue\"/>\n/// <see langword=\"__refvalue\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#66",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"this\"/>\n/// <see langword=\"this\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#67",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"base\"/>\n/// <see langword=\"base\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#68",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"namespace\"/>\n/// <see langword=\"namespace\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#69",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"using\"/>\n/// <see langword=\"using\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#70",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"class\"/>\n/// <see langword=\"class\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#71",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"struct\"/>\n/// <see langword=\"struct\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#72",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"interface\"/>\n/// <see langword=\"interface\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#73",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"enum\"/>\n/// <see langword=\"enum\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#74",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"delegate\"/>\n/// <see langword=\"delegate\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#75",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"checked\"/>\n/// <see langword=\"checked\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#76",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"unchecked\"/>\n/// <see langword=\"unchecked\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#77",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"unsafe\"/>\n/// <see langword=\"unsafe\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#78",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"operator\"/>\n/// <see langword=\"operator\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#79",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"explicit\"/>\n/// <see langword=\"explicit\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#80",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"implicit\"/>\n/// <see langword=\"implicit\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#81",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"yield\"/>\n/// <see langword=\"yield\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#82",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"partial\"/>\n/// <see langword=\"partial\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#83",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"alias\"/>\n/// <see langword=\"alias\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#84",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"global\"/>\n/// <see langword=\"global\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#85",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"assembly\"/>\n/// <see langword=\"assembly\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#86",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"module\"/>\n/// <see langword=\"module\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#87",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"type\"/>\n/// <see langword=\"type\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#88",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"field\"/>\n/// <see langword=\"field\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#89",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"method\"/>\n/// <see langword=\"method\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#90",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"param\"/>\n/// <see langword=\"param\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#91",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"property\"/>\n/// <see langword=\"property\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#92",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"typevar\"/>\n/// <see langword=\"typevar\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#93",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"get\"/>\n/// <see langword=\"get\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#94",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"set\"/>\n/// <see langword=\"set\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#95",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"add\"/>\n/// <see langword=\"add\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#96",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"remove\"/>\n/// <see langword=\"remove\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#97",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"where\"/>\n/// <see langword=\"where\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#98",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"from\"/>\n/// <see langword=\"from\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#99",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"group\"/>\n/// <see langword=\"group\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#100",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"join\"/>\n/// <see langword=\"join\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#101",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"into\"/>\n/// <see langword=\"into\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#102",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"let\"/>\n/// <see langword=\"let\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#103",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"by\"/>\n/// <see langword=\"by\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#104",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"select\"/>\n/// <see langword=\"select\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#105",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"orderby\"/>\n/// <see langword=\"orderby\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#106",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"on\"/>\n/// <see langword=\"on\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#107",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"equals\"/>\n/// <see langword=\"equals\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#108",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"ascending\"/>\n/// <see langword=\"ascending\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#109",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"descending\"/>\n/// <see langword=\"descending\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#110",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"nameof\"/>\n/// <see langword=\"nameof\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#111",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"async\"/>\n/// <see langword=\"async\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#112",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"await\"/>\n/// <see langword=\"await\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#113",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"when\"/>\n/// <see langword=\"when\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#114",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"or\"/>\n/// <see langword=\"or\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#115",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"and\"/>\n/// <see langword=\"and\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#116",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"not\"/>\n/// <see langword=\"not\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#118",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"with\"/>\n/// <see langword=\"with\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#119",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"init\"/>\n/// <see langword=\"init\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#120",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"record\"/>\n/// <see langword=\"record\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#121",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"managed\"/>\n/// <see langword=\"managed\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#122",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"unmanaged\"/>\n/// <see langword=\"unmanaged\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#123",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"required\"/>\n/// <see langword=\"required\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#124",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"scoped\"/>\n/// <see langword=\"scoped\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#125",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"file\"/>\n/// <see langword=\"file\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestSpacesNotAllowedAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"null\"/>\n/// <see [|langword|]=\" null\"/>\n/// <see [|langword|]=\"null \"/>\n/// <see [|langword|]=\" null \"/>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestEscapesAllowedAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see langword=\"n&#117;ll\"/>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestEmptyAndFullElementsValidatedAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see [|langword|]=\"not a keyword\"/>\n/// <see [|langword|]=\"not a keyword\"></see>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestOtherAttributesIgnoredAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see Langword=\"not a keyword\"/>\n/// <see x:langword=\"not a keyword\"/>\n/// <see name=\"not a keyword\"/>\n/// <see cref=\"System.String\"/>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC207UnitTests.cs/TestOtherElementsIgnoredAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <p:see langword=\"not a keyword\"/>\n/// </summary>\n/// \nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestAbsoluteUriAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see href=\"https://github.com\"/>\n/// <see href=\"https://github.com\"></see>\n/// </summary>\n/// <seealso href=\"https://github.com\"/>\n/// <seealso href=\"https://github.com\"></see>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestRelativeUriAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see href=\"docs/index.md\"/>\n/// <see href=\"docs/index.md\"></see>\n/// </summary>\n/// <seealso href=\"docs/index.md\"/>\n/// <seealso href=\"docs/index.md\"></see>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestEscapesAllowedAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see href=\"https://gith&#117;b.com\"/>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestEmptyAndFullElementsValidatedAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see [|href|]=\"https://\"/>\n/// <see [|href|]=\"https://\"></see>\n/// </summary>\n/// <seealso [|href|]=\"https://\"/>\n/// <seealso [|href|]=\"https://\"></see>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestOtherAttributesIgnoredAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <see Href=\"https://\"/>\n/// <see x:href=\"https://\"/>\n/// <see name=\"https://\"/>\n/// <see cref=\"System.String\"/>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "PortabilityRules/DOC209UnitTests.cs/TestOtherElementsIgnoredAsync",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC209UseSeeHrefCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "\n/// <summary>\n/// <p:see href=\"https://\"/>\n/// </summary>\n/// <p:seealso href=\"https://\"/>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestMultiParagraphSummaryAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Para 1\n///\n/// Para 2\n/// </summary>\nclass TestClass { }\n",
+      "expected": "\n///$$ <summary>\n/// <para>Para 1</para>\n/// <para>Para 2</para>\n/// </summary>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestSingleParagraphSummaryAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Para 1\n/// </summary>\nclass TestClass { }\n",
+      "expected": "\n///$$ <summary>\n/// Para 1\n/// </summary>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestSingleParagraphRemarksAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <remarks>\n/// Para 1\n/// </remarks>\nclass TestClass { }\n",
+      "expected": "\n///$$ <remarks>\n/// <para>Para 1</para>\n/// </remarks>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestParamElementNotRenderedAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\nclass TestClass {\n    ///$$ <param name=\"param\">Provide a value for `param`.</param>\n    void Method(int param) { }\n}\n",
+      "expected": "\nclass TestClass {\n    ///$$ <param name=\"param\">Provide a value for `param`.</param>\n    void Method(int param) { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestBulletedListAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Para 1\n///\n/// * Item 1\n/// * Item 2\n/// * Item 3\n/// </summary>\nclass TestClass { }\n",
+      "expected": "\n///$$ <summary>\n/// <para>Para 1</para>\n/// <list type=\"bullet\">\n/// <item><description>Item 1</description></item>\n/// <item><description>Item 2</description></item>\n/// <item><description>Item 3</description></item>\n/// </list>\n/// </summary>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestNumberedListAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Para 1\n///\n/// 1. Item 1\n/// 1. Item 2\n/// 1. Item 3\n/// </summary>\nclass TestClass { }\n",
+      "expected": "\n///$$ <summary>\n/// <para>Para 1</para>\n/// <list type=\"number\">\n/// <item><description>Item 1</description></item>\n/// <item><description>Item 2</description></item>\n/// <item><description>Item 3</description></item>\n/// </list>\n/// </summary>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestExampleCodeAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Summary text\n/// </summary>\n/// <example>\n/// The following example shows constructing a new `TestClass` instance:\n///\n/// ```csharp\n/// var x = new TestClass();\n/// ```\n/// </example>\nclass TestClass { }\n",
+      "expected": "\n///$$ <summary>\n/// Summary text\n/// </summary>\n/// <example>\n/// <para>The following example shows constructing a new <c>TestClass</c> instance:</para>\n/// <code language=\"csharp\">\n/// var x = new TestClass();\n/// </code>\n/// </example>\nclass TestClass { }\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestParameterReferenceAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\nclass TestClass {\n    ///$$ <summary>\n    /// Provide a value for `param`.\n    /// </summary>\n    void Method(int param) { }\n}\n",
+      "expected": "\nclass TestClass {\n    ///$$ <summary>\n    /// Provide a value for <paramref name=\"param\"/>.\n    /// </summary>\n    void Method(int param) { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestLocalTypeParameterReferenceAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\n///$$ <summary>\n/// Provide a value for `T`.\n/// </summary>\nclass TestClass<T> {\n    ///$$ <summary>\n    /// Provide a value for `T2`.\n    /// </summary>\n    void Method<T2>() { }\n}\n",
+      "expected": "\n///$$ <summary>\n/// Provide a value for <typeparamref name=\"T\"/>.\n/// </summary>\nclass TestClass<T> {\n    ///$$ <summary>\n    /// Provide a value for <typeparamref name=\"T2\"/>.\n    /// </summary>\n    void Method<T2>() { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC900UnitTests.cs/TestPropertyDocumentationWithCodeBlockAsync",
+      "analyzer": "DOC900RenderAsMarkdown",
+      "fix": "DOC900CodeFixProvider",
+      "source": "\nclass TestClass {\n    ///$$ <summary>\n    /// Provide a `value`.\n    /// </summary>\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass {\n    ///$$ <summary>\n    /// Provide a <c>value</c>.\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#0",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    class NestedClass { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    class NestedClass { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#1",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    TestClass() { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    TestClass() { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#2",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    public static explicit operator bool(TestClass obj) => true;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    public static explicit operator bool(TestClass obj) => true;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#3",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    delegate void NestedDelegate();\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    delegate void NestedDelegate();\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#4",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    ~TestClass() { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    ~TestClass() { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#5",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    enum NestedEnum { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    enum NestedEnum { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#6",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    event System.EventHandler Member { add { } remove { } }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    event System.EventHandler Member { add { } remove { } }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#7",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    event System.EventHandler Member;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    event System.EventHandler Member;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#8",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    int field;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int field;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#9",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    int this[int value] => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int this[int value] => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#10",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    interface NestedInterface { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    interface NestedInterface { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#11",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    int Method() => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Method() => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#12",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    public static TestClass operator -(TestClass obj) => default(TestClass);\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    public static TestClass operator -(TestClass obj) => default(TestClass);\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#13",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberSingleLineCommentToDocumentationCommentAsync#14",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment|]\n    struct NestedStruct { }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    struct NestedStruct { }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberMultipleSingleLineCommentToDocumentationCommentAsync",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment\n    // The comment continues|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// The comment continues\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestCommentWithEscapedCharactersAsync",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// X&Y <- 'Z' -> \"W\"|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// X&amp;Y &lt;- 'Z' -&gt; \"W\"\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestConversionIgnoresCommentsSeparatedFromMemberAsync",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    // This is not part of the comment\n\n    [|// This is a comment\n    // The comment continues|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    // This is not part of the comment\n\n    /// <summary>\n    /// This is a comment\n    /// The comment continues\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberMultipleParagraphSingleLineCommentToDocumentationCommentAsync",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|// This is a comment\n    //\n    // The comment continues|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// \n    /// The comment continues\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMemberMultipleParagraphMultiLineCommentToDocumentationCommentAsync",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/* This is a comment\n     *\n     * The comment continues\n     */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// \n    /// The comment continues\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment1Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/* This is a comment */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment2Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/*\n     * This is a comment */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment3Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/*\n     * This is a comment\n     */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment4Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/* This is a comment\n     */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// This is a comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment5Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/**/|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// \n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMultiLineComment6Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    [|/* */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// \n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMixedComment1Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    // Line comment\n    [|/* Block comment */|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    // Line comment\n    /// <summary>\n    /// Block comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "RefactoringRules/DOC901UnitTests.cs/TestMixedComment2Async",
+      "analyzer": "DocumentationAnalyzers.RefactoringRules.DOC901ConvertToDocumentationComment",
+      "fix": "DocumentationAnalyzers.RefactoringRules.DOC901CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /* Block comment */\n    [|// Line comment|]\n    int Property => 3;\n}\n",
+      "expected": "\nclass TestClass\n{\n    /* Block comment */\n    /// <summary>\n    /// Line comment\n    /// </summary>\n    int Property => 3;\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestNoDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestSummaryDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>Remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestTwoSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <para>Remarks.</para>\n/// <para>Remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestMultipleBlockElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <!-- Supported XML documentation comment block-level elements -->\n/// <code>Remarks.</code>\n/// <list><item>Item</item></list>\n/// <note><para>Remarks.</para></note>\n/// <para>Remarks.</para>\n/// <!-- Supported SHFB elements which may be block-level elements -->\n/// <inheritdoc/>\n/// <token>SomeTokenName</token>\n/// <include />\n/// <quote>Quote</quote>\n/// <!-- Supported HTML block-level elements -->\n/// <div>Remarks.</div>\n/// <p>Remarks.</p>\n/// <h1>Heading</h1>\n/// <h2>Heading</h2>\n/// <h3>Heading</h3>\n/// <h4>Heading</h4>\n/// <h5>Heading</h5>\n/// <h6>Heading</h6>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestSimpleInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>Remarks.</remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks><para>Remarks.</para></remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestMultiLineInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestMultiLineParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// Line 2.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Remarks.\n/// Line 2.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestFirstParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <para>Paragraph 2.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Remarks.</para>\n/// <para>Paragraph 2.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestInlineParagraphAndCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <code>Code.</code>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Remarks.</para>\n/// <code>Code.</code>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestCodeAndInlineParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <code>Code.</code>\n/// Remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <code>Code.</code>\n/// <para>Remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestThreeInlineParagraphsWithOtherElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Leading remarks.\n/// <code>Code.</code>\n/// <para>Remarks.</para>\n/// <note>Note.</note>\n/// Closing remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Leading remarks.</para>\n/// <code>Code.</code>\n/// <para>Remarks.</para>\n/// <note><para>Note.</para></note>\n/// <para>Closing remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC100UnitTests.cs/TestSeeIsAnInlineElementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC100PlaceTextInParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Leading remarks.\n/// <see cref=\"ClassName\"/>\n/// <para>Remarks.</para>\n/// <note>Note.</note>\n/// Closing remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <para>Leading remarks.\n/// <see cref=\"ClassName\"/></para>\n/// <para>Remarks.</para>\n/// <note><para>Note.</para></note>\n/// <para>Closing remarks.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestNoDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestSummaryDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <para>Summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestTwoSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <para>Summary.</para>\n/// <para>Summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestMultipleBlockElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <!-- Supported XML documentation comment block-level elements -->\n/// <code>Summary.</code>\n/// <list><item>Item</item></list>\n/// <note><para>Summary.</para></note>\n/// <para>Summary.</para>\n/// <!-- Supported SHFB elements which may be block-level elements -->\n/// <inheritdoc/>\n/// <token>SomeTokenName</token>\n/// <include />\n/// <!-- Supported HTML block-level elements -->\n/// <div>Summary.</div>\n/// <p>Summary.</p>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestSimpleInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>Summary.</summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestMultiLineParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Remarks.\n/// Line 2.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestFirstParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// <para>Paragraph 2.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <summary>\n/// <para>Summary.</para>\n/// <para>Paragraph 2.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestFirstParagraphInlineBlockInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <para>Paragraph 2.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestInlineParagraphAndCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// <code>Code.</code>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <summary>\n/// <para>Summary.</para>\n/// <code>Code.</code>\n/// </summary>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestInlineParagraphAndCodeInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <code>Code.</code>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestCodeAndInlineParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <code>Code.</code>\n/// Summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <summary>\n/// <code>Code.</code>\n/// <para>Summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestCodeAndInlineParagraphInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <code>Code.</code>\n/// Remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestThreeInlineParagraphsWithOtherElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Leading summary.\n/// <code>Code.</code>\n/// <para>Summary.</para>\n/// <note>Note.</note>\n/// Closing summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <summary>\n/// <para>Leading summary.</para>\n/// <code>Code.</code>\n/// <para>Summary.</para>\n/// <note>Note.</note>\n/// <para>Closing summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestThreeInlineParagraphsWithOtherElementsInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Leading remarks.\n/// <code>Code.</code>\n/// <para>Remarks.</para>\n/// <note>Note.</note>\n/// Closing remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC101UnitTests.cs/TestSeeIsAnInlineElementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC101UseChildBlocksConsistently",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Leading summary.\n/// <see cref=\"ClassName\"/>.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestNoDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestSummaryDocumentationAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <para>Summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestTwoSimpleParagraphBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <para>Summary.</para>\n/// <para>Summary.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestMultipleBlockElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <!-- Supported XML documentation comment block-level elements -->\n/// <code>Summary.</code>\n/// <list><item>Item</item></list>\n/// <note><para>Summary.</para></note>\n/// <para>Summary.</para>\n/// <!-- Supported SHFB elements which may be block-level elements -->\n/// <inheritdoc/>\n/// <token>SomeTokenName</token>\n/// <include />\n/// <!-- Supported HTML block-level elements -->\n/// <div>Summary.</div>\n/// <p>Summary.</p>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestSimpleInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>Summary.</summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestMultiLineParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Remarks.\n/// Line 2.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestFirstParagraphInlineBlockAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// <para>Paragraph 2.</para>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestFirstParagraphInlineBlockInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <para>Paragraph 2.</para>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestInlineParagraphAndCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary.\n/// <code>Code.</code>\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestInlineParagraphAndCodeInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Remarks.\n/// <code>Code.</code>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestCodeAndInlineParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// <code>Code.</code>\n/// Summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestCodeAndInlineParagraphInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <code>Code.</code>\n/// Remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestThreeInlineParagraphsWithOtherElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Leading summary.\n/// <code>Code.</code>\n/// <para>Summary.</para>\n/// <note>Note.</note>\n/// Closing summary.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestThreeInlineParagraphsWithOtherElementsInRemarksAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// Leading remarks.\n/// <code>Code.</code>\n/// <para>Remarks.</para>\n/// <note>Note.</note>\n/// Closing remarks.\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestSeeIsAnInlineElementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <summary>\n/// Leading summary.\n/// <see cref=\"ClassName\"/>.\n/// </summary>\npublic class ClassName\n{\n}",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestExceptionElementsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\nusing System;\npublic class ClassName\n{\n    /// <exception cref=\"ArgumentNullException\">If <paramref name=\"x\"/> is <see langword=\"null\"/>.</exception>\n    /// <exception cref=\"ArgumentException\">\n    /// If <paramref name=\"x\"/> is empty.\n    /// <para>-or-</para>\n    /// <para>If <paramref name=\"y\"/> is empty.</para>\n    /// </exception>\n    public void MethodName(string x, string y)\n    {\n    }\n}",
+      "expected": "\nusing System;\npublic class ClassName\n{\n    /// <exception cref=\"ArgumentNullException\"><para>If <paramref name=\"x\"/> is <see langword=\"null\"/>.</para></exception>\n    /// <exception cref=\"ArgumentException\">\n    /// If <paramref name=\"x\"/> is empty.\n    /// <para>-or-</para>\n    /// <para>If <paramref name=\"y\"/> is empty.</para>\n    /// </exception>\n    public void MethodName(string x, string y)\n    {\n    }\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC102UnitTests.cs/TestListItemsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC102UseChildBlocksConsistentlyAcrossElementsOfTheSameKind",
+      "fix": "DocumentationAnalyzers.StyleRules.BlockLevelDocumentationCodeFixProvider",
+      "source": "\n/// <remarks>\n/// <list type=\"bullet\">\n/// <item>Item 1.</item>\n/// <item><para>Item 2.</para></item>\n/// </list>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "expected": "\n/// <remarks>\n/// <list type=\"bullet\">\n/// <item><para>Item 1.</para></item>\n/// <item><para>Item 2.</para></item>\n/// </list>\n/// </remarks>\npublic class ClassName\n{\n}",
+      "configured": true,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestApostropheReplacementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// Don[|&apos;|]t use <![CDATA[&apos;]]> this <element attr=\"&apos;\" attr2='&apos;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Don't use <![CDATA[&apos;]]> this <element attr=\"&apos;\" attr2='&apos;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestApostropheReplacementByNumberAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// Don[|&#39;|]t use <![CDATA[&#39;]]> this <element attr=\"&#39;\" attr2='&#39;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Don't use <![CDATA[&#39;]]> this <element attr=\"&#39;\" attr2='&#39;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestQuoteReplacementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// Don[|&quot;|]t use <![CDATA[&quot;]]> this <element attr=\"&quot;\" attr2='&quot;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Don\"t use <![CDATA[&quot;]]> this <element attr=\"&quot;\" attr2='&quot;'/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestHtmlEntityReplacementAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// From A&rarr;B.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// From A\u2192B.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": true,
+      "compilerWarnings": true
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestUnknownEntityNotReplacedAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// Unknown entity &myEntity;.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Unknown entity &myEntity;.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": true,
+      "compilerWarnings": true
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestHtmlEntityReplacementInInvalidXmlAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// From A&rarr;B.\n/// <p>\n/// An unterminated second paragraph...\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// From A\u2192B.\n/// <p>\n/// An unterminated second paragraph...\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": true,
+      "compilerWarnings": true
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestNoCodeFixForRequiredEntityAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// Processing for <c>&lt;code&gt;</c> elements.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Processing for <c>&lt;code&gt;</c> elements.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC103UnitTests.cs/TestNoCodeFixForInvalidXmlAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC103UseUnicodeCharacters",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC103CodeFixProvider",
+      "source": "\n/// <summary>\n/// From A to B.\n/// <p>\n/// An unterminated second paragraph...\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// From A to B.\n/// <p>\n/// An unterminated second paragraph...\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": true,
+      "compilerWarnings": true
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#0",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>null</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"null\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#1",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>static</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"static\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#2",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>virtual</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"virtual\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#3",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>true</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"true\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#4",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>false</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"false\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#5",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>abstract</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"abstract\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#6",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>sealed</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"sealed\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#7",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>async</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"async\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestRecognizedKeywordAsync#8",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is [|<c>await</c>|].\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// The keyword is <see langword=\"await\"/>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestNonKeywordsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is <c>public</c>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestNonDiagnosticPotentialCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// The keyword is <c>&#97;wait</c>.\n    /// The keyword is <c> true</c>.\n    /// The keyword is <c>true </c>.\n    /// The keyword is <c> true </c>.\n    /// The keyword is <c>true\n    /// </c>.\n    /// The keyword is <c>\n    /// true</c>.\n    /// The keyword is <c>\n    /// true\n    /// </c>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestNonDiagnosticCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// The keyword is <c>not-keyword</c>.\n    /// The keyword is <c>True</c>.\n    /// The keyword is <c>true&gt;</c>.\n    /// The keyword is <c>&gt;true</c>.\n    /// The keyword is <c><em>true</em></c>.\n    /// The keyword is <c><em>true</em>true</c>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC104UnitTests.cs/TestNonCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC104UseSeeLangword",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC104CodeFixProvider",
+      "source": "\n/// <summary>\n/// The keyword is <p:c>true</p:c>.\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestParameterNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter [|<c>a</c>|].\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter <paramref name=\"a\"/>.\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestParameterNameEncodedAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter [|<c>&#97;</c>|].\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter <paramref name=\"&#97;\"/>.\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestParameterNameMatchesKeywordAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider parameter [|<c>true</c>|].\n    /// </summary>\n    void Method(int @true)\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider parameter <paramref name=\"true\"/>.\n    /// </summary>\n    void Method(int @true)\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestNonDiagnosticPotentialCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter <c> a</c>.\n    /// Consider a parameter <c>a </c>.\n    /// Consider a parameter <c> a </c>.\n    /// Consider a parameter <c>a\n    /// </c>.\n    /// Consider a parameter <c>\n    /// a</c>.\n    /// Consider a parameter <c>\n    /// a\n    /// </c>.\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestNonDiagnosticCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter <c>b</c>.\n    /// Consider a parameter <c>A</c>.\n    /// Consider a parameter <c>a&gt;</c>.\n    /// Consider a parameter <c>&gt;a</c>.\n    /// Consider a parameter <c><em>a</em></c>.\n    /// Consider a parameter <c><em>a</em>a</c>.\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC105UnitTests.cs/TestNonCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC105UseParamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC105CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a parameter <p:c>a</p:c>.\n    /// </summary>\n    void Method(int a)\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestTypeParameterNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter [|<c>a</c>|].\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter <typeparamref name=\"a\"/>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestTypeParameterNameEncodedAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter [|<c>&#97;</c>|].\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter <typeparamref name=\"&#97;\"/>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestTypeParameterNameMatchesKeywordAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider type parameter [|<c>true</c>|].\n    /// </summary>\n    void Method<@true>()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider type parameter <typeparamref name=\"true\"/>.\n    /// </summary>\n    void Method<@true>()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestNonDiagnosticPotentialCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter <c> a</c>.\n    /// Consider a type parameter <c>a </c>.\n    /// Consider a type parameter <c> a </c>.\n    /// Consider a type parameter <c>a\n    /// </c>.\n    /// Consider a type parameter <c>\n    /// a</c>.\n    /// Consider a type parameter <c>\n    /// a\n    /// </c>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestNonDiagnosticCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter <c>b</c>.\n    /// Consider a type parameter <c>A</c>.\n    /// Consider a type parameter <c>a&gt;</c>.\n    /// Consider a type parameter <c>&gt;a</c>.\n    /// Consider a type parameter <c><em>a</em></c>.\n    /// Consider a type parameter <c><em>a</em>a</c>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC106UnitTests.cs/TestNonCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC106UseTypeparamref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC106CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type parameter <p:c>a</p:c>.\n    /// </summary>\n    void Method<a>()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestPropertyNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property [|<c>a</c>|].\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property <see cref=\"a\"/>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestPropertyNameEncodedAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property [|<c>&#97;</c>|].\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property <see cref=\"&#97;\"/>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestFieldNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a = 3;\n\n    /// <summary>\n    /// Consider a member [|<c>a</c>|].\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    int a = 3;\n\n    /// <summary>\n    /// Consider a member <see cref=\"a\"/>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestEventNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    event System.EventHandler a;\n\n    /// <summary>\n    /// Consider a member [|<c>a</c>|].\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    event System.EventHandler a;\n\n    /// <summary>\n    /// Consider a member <see cref=\"a\"/>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestMethodNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a() => 3;\n\n    /// <summary>\n    /// Consider a member <c>a</c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestContainingNamespaceNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nnamespace a\n{\n    class TestClass\n    {\n        /// <summary>\n        /// Consider a containing namespace <c>a</c>.\n        /// </summary>\n        void Method()\n        {\n        }\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestContainingTypeNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass a\n{\n    class TestClass\n    {\n        /// <summary>\n        /// Consider a containing type <c>a</c>.\n        /// </summary>\n        void Method()\n        {\n        }\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestNestedTypeNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a nested type <c>a</c>.\n    /// </summary>\n    void Method()\n    {\n    }\n\n    class a { }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestSiblingTypeNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    /// <summary>\n    /// Consider a type <c>a</c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n\nclass a { }\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestPropertyNameMatchesKeywordAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int @true => 3;\n\n    /// <summary>\n    /// Consider property [|<c>true</c>|].\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": "\nclass TestClass\n{\n    int @true => 3;\n\n    /// <summary>\n    /// Consider property <see cref=\"true\"/>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestNonDiagnosticPotentialCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property <c> a</c>.\n    /// Consider a property <c>a </c>.\n    /// Consider a property <c> a </c>.\n    /// Consider a property <c>a\n    /// </c>.\n    /// Consider a property <c>\n    /// a</c>.\n    /// Consider a property <c>\n    /// a\n    /// </c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestNonDiagnosticCasesAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property <c>b</c>.\n    /// Consider a property <c>A</c>.\n    /// Consider a property <c>a&gt;</c>.\n    /// Consider a property <c>&gt;a</c>.\n    /// Consider a property <c><em>a</em></c>.\n    /// Consider a property <c><em>a</em>a</c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC107UnitTests.cs/TestNonCodeAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC107UseSeeCref",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC107CodeFixProvider",
+      "source": "\nclass TestClass\n{\n    int a => 3;\n\n    /// <summary>\n    /// Consider a property <p:c>a</p:c>.\n    /// </summary>\n    void Method()\n    {\n    }\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptyParagraphElementSeparatesParagraphsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// $$<para/>\n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Summary 1\n/// \n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptySeeElementSeparatesParagraphsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// <see cref=\"TestClass\"/>\n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestPrefixedParagraphElementSeparatesParagraphsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// <html:p/>\n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptyElementWithMissingNameAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// <\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptyHtmlParagraphElementSeparatesParagraphsAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// $$<p/>\n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Summary 1\n/// \n/// Summary 2\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptyParagraphBeforeFullParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// $$<para/>\n/// <para>Summary 2</para>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Summary 1\n/// \n/// <para>Summary 2</para>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "StyleRules/DOC108UnitTests.cs/TestEmptyHtmlParagraphBeforeFullHtmlParagraphAsync",
+      "analyzer": "DocumentationAnalyzers.StyleRules.DOC108AvoidEmptyParagraphs",
+      "fix": "DocumentationAnalyzers.StyleRules.DOC108CodeFixProvider",
+      "source": "\n/// <summary>\n/// Summary 1\n/// $$<p/>\n/// <p>Summary 2</p>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "expected": "\n/// <summary>\n/// Summary 1\n/// \n/// <p>Summary 2</p>\n/// </summary>\nclass TestClass\n{\n}\n",
+      "configured": false,
+      "compilerWarnings": false
+    },
+    {
+      "label": "owned:EmptyLangwordRejected",
+      "analyzer": "DocumentationAnalyzers.PortabilityRules.DOC207UseSeeLangwordCorrectly",
+      "fix": "Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider",
+      "source": "/// <summary><see [|langword|]=\"\"/><see [|langword|]=\"\"></see></summary>\nclass TestClass {}\n",
+      "expected": null,
+      "configured": false,
+      "compilerWarnings": false
+    }
+  ],
+  "skipped": [
+    "PortabilityRules/DOC207UnitTests.cs/TestRecognizedKeywordsAsync#117: current Roslyn keyword enum has no text spelling; covered by owned empty-langword negative"
+  ]
+}

@@ -1,23 +1,37 @@
 pkgbase = mingw-w64-java-slf4j
-	pkgdesc = Simple Logging Facade for Java (mingw-w64)
-	pkgver = 1.7.36
+	pkgdesc = slf4j Java libraries, built from source
+	pkgver = 2.0.17
 	pkgrel = 1
-	url = https://www.slf4j.org/
+	url = http://www.slf4j.org
 	arch = any
 	license = spdx:MIT
-	checkdepends = mingw-w64-ucrt-x86_64-java-junit4
 	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
-	source = slf4j-1.7.36.tar.gz::https://github.com/qos-ch/slf4j/archive/refs/tags/v_1.7.36.tar.gz
-	sha256sums = a2deaffa191c81abbf830d4060eb84129f31b9b3b945b7791344e8875b595286
+	noextract = slf4j-api-2.0.17-sources.jar
+	noextract = slf4j-api-2.0.17.pom
+	noextract = slf4j-simple-2.0.17-sources.jar
+	noextract = slf4j-simple-2.0.17.pom
+	noextract = jcl-over-slf4j-2.0.17-sources.jar
+	noextract = jcl-over-slf4j-2.0.17.pom
+	source = https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.pom
+	source = https://repo.maven.apache.org/maven2/org/slf4j/slf4j-simple/2.0.17/slf4j-simple-2.0.17-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/slf4j/slf4j-simple/2.0.17/slf4j-simple-2.0.17.pom
+	source = https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17.pom
+	sha256sums = db0d08d8efa05ad19d174d747bd9d8e68dbb02b596812fe7b3a681656e346694
+	sha256sums = 150c40287f7cecdc21b9380caac98e928c4f33c023db6b348df1c5ac977026bf
+	sha256sums = 30b660e79419bfcebd678e75bdfe3644eaf325f50253a68395d93634da5953df
+	sha256sums = fb30e8e2f6aea2d29842798677ed4541b9b2255715c158350ca2c5f5c7b864b0
+	sha256sums = 197984bfbccbf5c9201b8152c98d0d8f77253fb4ef1c59a57cf3e28d5ecf119c
+	sha256sums = 61a4468aa3c1f33c9f7925111f26e23392d9f5ab71ee0cbc287183fc1b52afc5
 
 pkgname = mingw-w64-ucrt-x86_64-java-slf4j-api
-	pkgdesc = Simple Logging Facade for Java, API (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
 
 pkgname = mingw-w64-ucrt-x86_64-java-slf4j-simple
-	pkgdesc = Simple Logging Facade for Java, simple System.err binding (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
 	depends = mingw-w64-ucrt-x86_64-java-slf4j-api
 
 pkgname = mingw-w64-ucrt-x86_64-java-jcl-over-slf4j
-	pkgdesc = Jakarta Commons Logging API implemented over SLF4J (mingw-w64)
-	license = spdx:Apache-2.0
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
 	depends = mingw-w64-ucrt-x86_64-java-slf4j-api

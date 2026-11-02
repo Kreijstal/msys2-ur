@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 06:44:49 +0100
+Subject: [PATCH 17/18] Treat clang's mingw-w64 TLS as native
+
+wscript defines MINGW_NATIVE_TLS, which routes access to the
+thread_local Temporal::TempoMap::_tempo_map_p through an exported
+accessor, only when `$CC -v` reports a GCC configured with --enable-tls.
+Clang targeting mingw-w64 always uses native TLS (no emutls), but its
+-v output has no such configure line, so the inline TempoMap::use()/
+fetch() reference the TLS variable across the DLL boundary and lld
+fails:
+
+  ld.lld: error: unable to automatically import from
+  _ZN8Temporal8TempoMap12_tempo_map_pE with relocation type
+  IMAGE_REL_AMD64_SECREL in libs/ardour/async_midi_port.cc.1.o
+
+Enable MINGW_NATIVE_TLS for clang as well.
+---
+ wscript | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/wscript b/wscript
+index e38fe01..87a6804 100644
+--- a/wscript
++++ b/wscript
+@@ -1284,6 +1284,9 @@ int main () { return 0; }
+         # gcc -v prints configure flags to stderr, not stdout
+         gcc_config = subprocess.run([str(conf.env['CC'][0]), '-v'], capture_output=True, text=True).stderr
+         have_native_tls = '--enable-tls' in gcc_config
++        # clang does not use emutls for mingw-w64 targets; its TLS is always native
++        if 'clang version' in gcc_config:
++            have_native_tls = True
+ 
+         if have_native_tls:
+             conf.env.append_value('CFLAGS', '-DMINGW_NATIVE_TLS')

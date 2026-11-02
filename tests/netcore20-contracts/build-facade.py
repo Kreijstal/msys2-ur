@@ -1,0 +1,13 @@
+"""Generate the complete original NETCore2.0 netstandard facade from declarations."""
+from pathlib import Path
+import functools,hashlib,json,os,shutil,subprocess,sys
+root,out=(Path(s).resolve() for s in sys.argv[1:]);assert not out.exists();out.mkdir();here=Path(__file__).parent
+native=functools.lru_cache(None)(lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip());sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+shutil.copy2(here/'inputs/FacadePort.cs',out/'Program.cs')
+(out/'Port.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="Mono.Cecil" Version="[0.11.0]"/></ItemGroup></Project>\n')
+(out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="source" value="'+native(Path('/clang64/lib/dotnet/library-packs'))+'"/></packageSources></configuration>\n')
+env=dict(os.environ,DOTNET_ROOT=native(Path('/clang64/lib/dotnet')),DOTNET_ROOT_X64=native(Path('/clang64/lib/dotnet')),DOTNET_CLI_HOME=native(out/'cli-home'),NUGET_PACKAGES=native(out/'cache'),MSBuildEnableWorkloadResolver='false',DOTNET_CLI_TELEMETRY_OPTOUT='1');dotnet='/clang64/lib/dotnet/dotnet.exe';commands=[]
+for label,cmd in [('build',[dotnet,'build',native(out/'Port.csproj'),'-c','Release','--configfile',native(out/'NuGet.config'),'-p:UseSharedCompilation=false','-v:minimal']),('port',[dotnet,native(out/'bin/Release/net8.0/Port.dll'),native(here/'inputs/netstandard20-forwarders.json'),native(here/'inputs/netstandard20-facade-published.json'),native(here/'inputs/Open.pubkey.hex'),native(root/'ref/netstandard.dll')])]:
+ with (out/(label+'.log')).open('w') as log:r=subprocess.run(cmd,env=env,stdout=log,stderr=subprocess.STDOUT)
+ commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(out/(label+'.log')).read_text(errors='replace')
+(out/'results.json').write_text(json.dumps(dict(commands=commands,facade_sha256=sha(root/'ref/netstandard.dll'),source_helper_sha256=sha(here/'inputs/FacadePort.cs'),declarative_metadata_sha256=sha(here/'inputs/netstandard20-forwarders.json'),original_forwarders=2417,original_reference_scopes=86,published_DLL_executed_or_used_as_compiler_reference=False,published_implementation_bodies_copied=False,original_metadata_facade_source_port=True,full_dependency_goal_complete=False),indent=2)+'\n');print((out/'port.log').read_text())

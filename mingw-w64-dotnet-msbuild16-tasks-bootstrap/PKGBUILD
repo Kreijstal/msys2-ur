@@ -1,0 +1,55 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-msbuild16-tasks-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=16.0.461
+pkgrel=1
+pkgdesc='Original MSBuild Tasks16 Standard2.0 source bootstrap with exact dependencies'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/msbuild'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-msbuild16-framework-bootstrap=16.0.461"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-msbuild16-utilities-bootstrap=16.0.461"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codedom44-bootstrap=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-dataflow46-bootstrap=4.6.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-corefx21-metadata-bootstrap>=20261031-1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-windows-support-bootstrap>=20261031-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('msbuild16-6ff56ef6.tar.gz::https://codeload.github.com/microsoft/msbuild/tar.gz/6ff56ef63c3a1c9785d42fe2564d904ebd225ea0'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'arcade-msbuild16-26e4b7ad.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/26e4b7ad355f3c08eea8296d1733ada986d6edf3'
+        'msbuild16-tasks-source-1.tar.gz')
+noextract=('msbuild16-6ff56ef6.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz' 'arcade-msbuild16-26e4b7ad.tar.gz')
+sha256sums=('04907cbf4ade0101998006e955d7c5ca567e19342340ee71fcd36612158c6726'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '5e731e4cd049e2c71bb376a69e2535c4bb3983fea5870911336db5d564c37180'
+            '39a63bd5a5e74992a90f9939e13aa00881da3ade1901f04aeb1c10a256cfe87f')
+prepare() {
+  /usr/bin/python3 "$srcdir/msbuild16-tasks-workflow/prepare-tasks.py" "$srcdir/msbuild16-6ff56ef6.tar.gz" "$srcdir/arcade-msbuild16-26e4b7ad.tar.gz" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/msbuild16-tasks-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  bash "$srcdir/msbuild16-tasks-workflow/build-tasks.sh" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/msbuild16-tasks-workflow/audit-tasks.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/msbuild16-tasks-workflow/check-tasks.py" "$srcdir/prepared" "$srcdir/check" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/Microsoft.Build.Tasks.Core.16.0.461.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.build.tasks.core.16.0.461.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check-tasks.py;do install -m644 "$srcdir/msbuild16-tasks-workflow/$file" "$doc/$file";done
+  for file in Api.cs TasksBridge.cs TasksCheck.cs tasks16-published-metadata.json tasks16-published-resources.json tasks16-published-provenance.json;do install -m644 "$srcdir/msbuild16-tasks-workflow/inputs/$file" "$doc/inputs/$file";done
+  install -m644 "$srcdir/prepared/source-inputs.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE THIRDPARTYNOTICES.txt;do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file";done
+}

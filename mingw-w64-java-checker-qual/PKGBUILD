@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-java-checker-qual
+pkgname="${MINGW_PACKAGE_PREFIX}-java-checker-qual"
+pkgver=3.43.0
+pkgrel=1
+pkgdesc="Checker Framework annotation APIs, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://checkerframework.org/'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('https://repo.maven.apache.org/maven2/org/checkerframework/checker-qual/3.43.0/checker-qual-3.43.0-sources.jar'
+        'https://repo.maven.apache.org/maven2/org/checkerframework/checker-qual/3.43.0/checker-qual-3.43.0.pom')
+noextract=('checker-qual-3.43.0-sources.jar' 'checker-qual-3.43.0.pom')
+sha256sums=('d6bdee58964cd05aabfca4e44947d3cbdada6bf617ed618b62b3b0d5a21de339'
+            '9313bf53b3efd8aaca266eea8b96e307976b65c0b16510cc6f02319fbaebed43')
+
+prepare() {
+  mkdir -p upstream resources
+  bsdtar -xf checker-qual-3.43.0-sources.jar -C upstream
+  find upstream -type f \( -name '*.class' -o -name '*.jar' \) -delete
+  cp -r upstream/. resources/
+  find resources -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+  rm -f resources/META-INF/MANIFEST.MF
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  JB_RELEASE=8 jb_module org.checkerframework:checker-qual:${pkgver} upstream -r resources \
+    -u checker-qual-${pkgver}.pom
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.checkerframework:checker-qual
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.checkerframework:checker-qual
+  install -Dm644 checker-qual-${pkgver}.pom "${pkgdir}${MINGW_PREFIX}/share/licenses/java-checker-qual/UPSTREAM.pom"
+  find upstream -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ { if (header != "" && !seen[header]++) print header; collecting=0 }
+    collecting { header=header $0 "\n" }
+  ' {} + > SOURCE-COPYRIGHTS.txt
+  install -m644 SOURCE-COPYRIGHTS.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/java-checker-qual/SOURCE-COPYRIGHTS.txt"
+}

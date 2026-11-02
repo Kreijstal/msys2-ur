@@ -1,0 +1,44 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netcore-platforms212
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.1.2
+pkgrel=1
+_commit=6851cc781ad2ff33d4a0f429a6fc1ab85abaff86
+pkgdesc='Original source Microsoft.NETCore.Platforms2.1.2 RID graph for original CodePages4.5.1 restores'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx-platforms212-6851cc78.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/6851cc781ad2ff33d4a0f429a6fc1ab85abaff86'
+        prepare.py Check.cs check.sh README.md)
+noextract=('corefx-platforms212-6851cc78.tar.gz')
+sha256sums=('80c9002e283d6fea5f75c9c7210a09a9a53038aed6bb661fe74b144d6f8a93ac'
+            '7a5b8c52970d0769ba92d3c47299d261171eb39fc1ca141bc8fefe75eb3f82f8'
+            'aafb6573c90e8cfb5db88bb19e6c2f0c0cec104a256b1b59bb7c314b1a34ec7b'
+            '00e22151207dfce253a37ec10b69ce25ad42b58fb136791cc1e9a18b0f31eaf5'
+            '86a8a6174e2377574c1275b4c6a89028313d3babc50fc75d241b0a307ed8e937')
+_env() {
+  export DOTNET_ROOT=$(cygpath -am "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/empty-packages")
+}
+prepare() {
+  tar -xzf "$srcdir/corefx-platforms212-6851cc78.tar.gz" -C "$srcdir" corefx-6851cc781ad2ff33d4a0f429a6fc1ab85abaff86/pkg/Microsoft.NETCore.Platforms corefx-6851cc781ad2ff33d4a0f429a6fc1ab85abaff86/LICENSE.TXT corefx-6851cc781ad2ff33d4a0f429a6fc1ab85abaff86/THIRD-PARTY-NOTICES.TXT
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/corefx-6851cc781ad2ff33d4a0f429a6fc1ab85abaff86" "$srcdir/prepared"
+}
+build() {
+  _env
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -am "$srcdir/prepared/Graph.csproj")" -c Release \
+    -o "$(cygpath -am "$srcdir/feed")" --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" \
+    -p:NoBuild=true -p:UseSharedCompilation=false -v:minimal
+}
+check() { _env; bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+  install -Dm644 "$srcdir/feed/Microsoft.NETCore.Platforms.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.netcore.platforms.$pkgver.nupkg"
+  install -Dm644 "$srcdir/prepared/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/prepared/THIRD-PARTY-NOTICES" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES"
+  for file in README.md Check.cs check.sh;do install -Dm644 "$srcdir/$file" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/$file";done
+}

@@ -1,0 +1,136 @@
+{
+  "date_utc": "2026-10-29T00:19:37.652906+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-maintenance-netstandard10",
+  "package_version": "20261029-1",
+  "build_root": "/e/codex-dotnet10/maintenance10pkg1.R4sjnw",
+  "source_commit": "f62ca0009b038cab4725a720f386623a969d73ad",
+  "source_archive_sha256": "76d2a3bcca49a0463e8bdf4dd79c0772bc899d7427b3d4ade0120036e48df5eb",
+  "shipped_packages": {
+    "System.Memory": "4.6.3",
+    "System.Runtime.CompilerServices.Unsafe": "6.1.2",
+    "System.Threading.Tasks.Extensions": "4.6.3"
+  },
+  "private_dependency_packages_not_shipped": {
+    "System.Buffers": "4.6.1",
+    "System.Numerics.Vectors": "4.6.1"
+  },
+  "production_csharp_inputs_verified": 133,
+  "original_unsafe_il_sources": 1,
+  "preserved_private_graph_profile_groups": 15,
+  "inbox_placeholders": 10,
+  "installed_runtime_checks": {
+    "source_assemblies": 5,
+    "all_source_locations_identities_versions_keys_verified": true,
+    "original_resource_sets": 3,
+    "original_resource_values": 19,
+    "documented_api_counts": {
+      "System.Runtime.CompilerServices.Unsafe": {
+        "original_documented_declarations": 41,
+        "public_or_protected": 41,
+        "other_documented_declarations": 0
+      },
+      "System.Buffers": {
+        "original_documented_declarations": 25,
+        "public_or_protected": 9,
+        "other_documented_declarations": 16
+      },
+      "System.Numerics.Vectors": {
+        "original_documented_declarations": 473,
+        "public_or_protected": 467,
+        "other_documented_declarations": 6
+      },
+      "System.Memory": {
+        "original_documented_declarations": 432,
+        "public_or_protected": 398,
+        "other_documented_declarations": 34
+      },
+      "System.Threading.Tasks.Extensions": {
+        "original_documented_declarations": 137,
+        "public_or_protected": 97,
+        "other_documented_declarations": 40
+      }
+    },
+    "unsafe_public_methods": 42,
+    "isolated_source_runtime_consumer_passed": true,
+    "full_dependency_goal_complete": false
+  },
+  "all_preexisting_maintenance_archive_hashes_unchanged": {
+    "system.memory.4.6.2.nupkg": "0fc497a88d6430168a1f51be496110d806ce1942a29da30e4357df246fd3f94a",
+    "system.runtime.compilerservices.unsafe.6.1.1.nupkg": "c661e624ff0f3e59f3fc8341856da1046acdeb551bebdee5d16e03da859ce426",
+    "system.threading.tasks.extensions.4.6.2.nupkg": "c1a7ef834713bbebe7024c4301c62152a2cbc1a3f221d2a115fc9876872f02ef",
+    "system.buffers.4.6.1.nupkg": "8d1a8d5a017d252ccd9e27884518228da5fa12a9c68779bff18d3a3da354bb0e",
+    "system.numerics.vectors.4.6.1.nupkg": "00f2f9643e1f703724345b60aa03919101efd089e3b4861bfee2f4337956533d"
+  },
+  "package_archive_sha256": "0bc83d0c0acc371591413b6d2128fecbc31a2e9d5dc432d5110734d0216aacac",
+  "regular_payload_files": 13,
+  "pacman_entries": 22,
+  "pacman_altered_files": 0,
+  "clean_build_exit_code": 0,
+  "install_exit_code": 0,
+  "independent_archive_audit_exit_code": 0,
+  "installed_portable_suite_exit_code": 0,
+  "installed_inbox_suite_exit_code": 0,
+  "source_production_changes": 0,
+  "source_workflow_files": 19,
+  "source_workflow_sha256": "b9401875a74f8ab7d394d500d4e7c7a16b490679bba8fd845ded1f1c1c8c2fce",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-package.py \"$PWD\"",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./*.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-maintenance-netstandard10",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 installed-workflow/check-installed.py \"$PWD\" \"$PWD/src/prepared\" \"$PWD/installed-consumer\" /clang64/lib/dotnet/library-packs --resume",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/maintenance-netstandard/check-inbox.py \"$PWD/src/prepared\" \"$PWD/installed-inbox-consumer\" /clang64/lib/dotnet/library-packs",
+      "exit_code": 0
+    }
+  ],
+  "attempt_history": [
+    "Clean source makepkg build, original private-graph checks and independent archive audit passed on the first attempt.",
+    "Installed consumer initially completed build/runtime checks then hit a test-harness path-prefix assertion. Corrected the invocation root and producer-evidence lookup, and resumed the same consumer/cache. The complete installed portable/cache audit and separate inbox check then passed. No production source/package implementation changed.",
+    "Initial evidence collector included its own previous manifest, causing downloaded hash verification to reject that manifest. Excluding the mutable manifest from its members and collecting again produced 210 independently verified files. The first downloaded attempt is retained separately."
+  ],
+  "evidence": {
+    "local_directory": "/tmp/maintenance10-package1",
+    "files": 210,
+    "archive_sha256": "df05858c3457db942b8d745a56f1507a6521c51bb6008ac9bc98834256a09f7f",
+    "every_manifest_member_hash_verified": true,
+    "package_sha256_verified": true,
+    "recipe_and_srcinfo_match_archive": true,
+    "result_files_sha256": {
+      "installed-inbox-results.json": "24365df00a69b40cde0e0edad2319a9dc26e9fe42046437f03a717c4d77e35bb",
+      "existing-feed-before-install.json": "bab3ce2e71977b5bccc1a4cb3c36258d565091400b528b60320b69c734ad6efc",
+      "artifact-audit.json": "39efd9e428c6a7c1cfbe0fb839f39f3e4e4e30f8f3ec20c01a72d39f30b875e6",
+      "installed-consumer-results.json": "74cde3f2f3cc171789c5693621d787a975ca8b2733a0410ee90b4f66a0460d93",
+      "evidence-files.json": "bf9816f11e8431f16973e54e5604fcc9dcc9f31a76741ca131434c6cecb4f836",
+      "build-consumer-results.json": "855059efc2df75173acc0ba100ac21bc991228c1faf1b5b61a52d4ae7b09a7c2"
+    }
+  },
+  "legacy_framework_profiles_built": false,
+  "powershell76_generator_integration_verified": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "original_7_4_dependency_count_increment": 0,
+  "additional_new_version_source_archives_installed": 3,
+  "remaining": [
+    "PowerShell7.6 generator/SDK10 integration against these exact source-built dependencies",
+    "Original legacy Framework implementation profiles",
+    "Fresh Roslyn5.0 PowerShell and Roslyn5.3 SDK tool/library graphs; source pins resolved separately",
+    "Existing full PowerShell runtime/desktop/auth/database/compatibility gates"
+  ]
+}

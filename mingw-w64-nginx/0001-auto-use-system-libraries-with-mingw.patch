@@ -1,0 +1,56 @@
+From 76e0980037283fca79f07877fcefe69f5ee9d385 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 04:32:12 +0200
+Subject: [PATCH 1/2] auto: use the system OpenSSL, PCRE and zlib with MinGW
+
+The win32 checks for system libraries were skipped for every compiler
+because MSVC has no standard library search path. MinGW gcc and clang
+do, so run the same feature checks as on Unix.
+---
+ auto/lib/openssl/conf | 2 +-
+ auto/lib/pcre/conf    | 2 +-
+ auto/lib/zlib/conf    | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/auto/lib/openssl/conf b/auto/lib/openssl/conf
+index 3068cae..433ea36 100644
+--- a/auto/lib/openssl/conf
++++ b/auto/lib/openssl/conf
+@@ -54,7 +54,7 @@ if [ $OPENSSL != NONE ]; then
+ 
+ else
+ 
+-    if [ "$NGX_PLATFORM" != win32 ]; then
++    if [ "$NGX_PLATFORM" != win32 -o "$NGX_CC_NAME" = gcc -o "$NGX_CC_NAME" = clang ]; then
+ 
+         OPENSSL=NO
+ 
+diff --git a/auto/lib/pcre/conf b/auto/lib/pcre/conf
+index cdf1809..081f761 100644
+--- a/auto/lib/pcre/conf
++++ b/auto/lib/pcre/conf
+@@ -68,7 +68,7 @@ if [ $PCRE != NONE ]; then
+ 
+ else
+ 
+-    if [ "$NGX_PLATFORM" != win32 ]; then
++    if [ "$NGX_PLATFORM" != win32 -o "$NGX_CC_NAME" = gcc -o "$NGX_CC_NAME" = clang ]; then
+         PCRE=NO
+     fi
+ 
+diff --git a/auto/lib/zlib/conf b/auto/lib/zlib/conf
+index 239592e..bd21c47 100644
+--- a/auto/lib/zlib/conf
++++ b/auto/lib/zlib/conf
+@@ -42,7 +42,7 @@ if [ $ZLIB != NONE ]; then
+ 
+ else
+ 
+-    if [ "$NGX_PLATFORM" != win32 ]; then
++    if [ "$NGX_PLATFORM" != win32 -o "$NGX_CC_NAME" = gcc -o "$NGX_CC_NAME" = clang ]; then
+         ZLIB=NO
+ 
+         # FreeBSD, Solaris, Linux
+-- 
+2.56.0
+

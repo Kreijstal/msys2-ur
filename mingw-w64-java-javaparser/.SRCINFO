@@ -1,0 +1,33 @@
+pkgbase = mingw-w64-java-javaparser
+	pkgdesc = javaparser Java libraries, built from source
+	pkgver = 3.26.2
+	pkgrel = 1
+	url = https://github.com/dbeaver/dbeaver-deps-ce
+	arch = any
+	license = spdx:LGPL-2.1-or-later
+	makedepends = mingw-w64-ucrt-x86_64-java-jsr305
+	makedepends = mingw-w64-ucrt-x86_64-java-checker-qual
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-guava
+	makedepends = mingw-w64-ucrt-x86_64-java-javassist
+	noextract = javaparser-core-3.26.2-sources.jar
+	noextract = javaparser-core-3.26.2.pom
+	noextract = javaparser-symbol-solver-core-3.26.2-sources.jar
+	noextract = javaparser-symbol-solver-core-3.26.2.pom
+	source = https://repo.maven.apache.org/maven2/com/github/javaparser/javaparser-core/3.26.2/javaparser-core-3.26.2-sources.jar
+	source = https://repo.maven.apache.org/maven2/com/github/javaparser/javaparser-core/3.26.2/javaparser-core-3.26.2.pom
+	source = https://repo.maven.apache.org/maven2/com/github/javaparser/javaparser-symbol-solver-core/3.26.2/javaparser-symbol-solver-core-3.26.2-sources.jar
+	source = https://repo.maven.apache.org/maven2/com/github/javaparser/javaparser-symbol-solver-core/3.26.2/javaparser-symbol-solver-core-3.26.2.pom
+	sha256sums = e450a5f8c86af0b0a5db5096ffbd1a794a86ff2e6a8a55266e28b3ad4df70c40
+	sha256sums = f312ba81707d56db4486c1f9ad1a6e03c36a99acf1e089a186ea7478a71344b8
+	sha256sums = 56b31772e89243ad9c96068117d807f0c7e7f1255ac5d8ee151ba68b536bad52
+	sha256sums = d9c39bdaef48640e3d00a7d28a81fab44b4919e8b898c50e3d0e23db87385773
+
+pkgname = mingw-w64-ucrt-x86_64-java-javaparser-core
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+
+pkgname = mingw-w64-ucrt-x86_64-java-javaparser-symbol-solver-core
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-javaparser-core
+	depends = mingw-w64-ucrt-x86_64-java-javassist
+	depends = mingw-w64-ucrt-x86_64-java-guava

@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-protecteddata44
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.4.0
+pkgrel=1
+pkgdesc='CoreFX ProtectedData 4.4.0 original NETStandard2 source profiles with empty-input backport'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference=2.0.3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-genfacades10-bootstrap=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('protecteddata44-snapshot-8321c729.tar.gz' 'protecteddata44-source-1.tar.gz')
+noextract=('protecteddata44-snapshot-8321c729.tar.gz')
+sha256sums=('c69ee661412027223f5236819e653bf2d0a7d593a7e487f78d34616ec52bbf99'
+            'e2acc0e09490190d30292aa1aedfb9c17c4d629f3d782529b7bb907a46bbb3e2')
+_py() {
+  local script=$1 log=$2
+  shift 2
+  local path args=()
+  for path in "$@"; do args+=("$(cygpath -am "$path")"); done
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/protecteddata44-workflow/$script")" "${args[@]}" > "$srcdir/$log" 2>&1
+}
+build() {
+  _py build.py build.log "$srcdir/protecteddata44-snapshot-8321c729.tar.gz" "$srcdir/windows"
+  _py portable.py portable.log "$srcdir/windows" "$srcdir/portable"
+}
+check() {
+  _py check.py windows-check.log "$srcdir/windows" "$srcdir/windows-check"
+  _py check-portable.py portable-check.log "$srcdir/portable" "$srcdir/portable-check"
+  _py check-api.py windows-api.log "$srcdir/windows" "$srcdir/windows-api"
+  _py check-api.py portable-api.log "$srcdir/portable" "$srcdir/portable-api"
+  _py check-regression.py regression.log "$srcdir/windows" "$srcdir/windows-check" "$srcdir/regression"
+  _py audit.py source-audit.log "$srcdir/protecteddata44-snapshot-8321c729.tar.gz" "$srcdir/windows" "$srcdir/portable" "$srcdir/source-audit.json"
+  _py stage.py stage.log "$srcdir" "$srcdir/package-prefix"
+  _py check-installed.py staged-check.log "$srcdir/package-prefix" "$srcdir/staged-check"
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

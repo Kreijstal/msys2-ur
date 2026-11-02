@@ -1,0 +1,52 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-codepages451-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.5.1
+pkgrel=1
+pkgdesc='Original CodePages4.5.1 five source implementations and eight original DLL assets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore20-contracts-bootstrap=20261031"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-unsafe452-bootstrap=4.5.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms212=2.1.2"
+             "${MINGW_PACKAGE_PREFIX}-llvm" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx11-registry-4d1af962.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/4d1af962ca0fede10beb01d197367c2f90e92c97'
+        'corefx21-codepages451-99ce22c3.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/99ce22c306b07f99ddae60f443d23a983ae78f7b'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'codepages451-source-1.tar.gz')
+noextract=('corefx11-registry-4d1af962.tar.gz' 'corefx21-codepages451-99ce22c3.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2'
+            '87d9ed6638b66ed119df9c8923df0fec0b5467819371f297c474f23bb1ff204a'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '1c9e22622415c6beecf5583997e25221648663a61b9a97294d502c186efff97d')
+build() {
+  /usr/bin/python3 "$srcdir/codepages451-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/codepages451-workflow/build.py" "$srcdir/corefx11-registry-4d1af962.tar.gz" "$srcdir/corefx21-codepages451-99ce22c3.tar.gz" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/codepages451-workflow/pack.py" "$srcdir/prepared" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/codepages451-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/codepages451-workflow/check.py" "$srcdir/prepared" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" --feed "$srcdir/prepared/feed" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/System.Text.Encoding.CodePages.4.5.1.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.text.encoding.codepages.4.5.1.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check.py original-profile-requirements-20261031.json; do install -m644 "$srcdir/codepages451-workflow/$file" "$doc/$file"; done
+  for file in "$srcdir/codepages451-workflow/inputs/"*; do install -m644 "$file" "$doc/inputs/"; done
+  install -m644 "$srcdir/prepared/results.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do install -Dm644 "$srcdir/prepared/sources/current/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+  for file in LICENSE THIRD-PARTY-NOTICES; do install -Dm644 "$srcdir/prepared/sources/legacy/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/legacy-$file"; done
+}

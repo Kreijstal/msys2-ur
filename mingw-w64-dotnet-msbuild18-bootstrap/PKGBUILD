@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-msbuild18-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=18.3.0.26113.113
+pkgrel=2
+pkgdesc='Source NET10 MSBuild18 bootstrap with original version policy and localized resources'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/msbuild'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-solutionpersistence=1.0.52"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-configuration9=9.0.11"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-metadataloadcontext9=9.0.11"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-resources-extensions9=9.0.11"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codedom9>=9.0.11-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-pkcs9=9.0.11"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml9=9.0.11")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-generators=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=228caa11ad0046ccb599530abd9aba4e1979b5e9
+_arcade=987d1a73ea67d323c0fc7537bce8ec65d87eb43f
+_sourcever=5.0.0-1.25277.114
+_sourcefeed=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/flat2
+source=("msbuild-sdk10-228caa11.tar.gz::https://codeload.github.com/dotnet/msbuild/tar.gz/$_commit"
+        "arcade-msbuild18-987d1a73.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/$_arcade"
+        "microsoft.codeanalysis.contracts.$_sourcever.nupkg::$_sourcefeed/microsoft.codeanalysis.contracts/$_sourcever/microsoft.codeanalysis.contracts.$_sourcever.nupkg"
+        "microsoft.codeanalysis.collections.$_sourcever.nupkg::$_sourcefeed/microsoft.codeanalysis.collections/$_sourcever/microsoft.codeanalysis.collections.$_sourcever.nupkg"
+        "microsoft.codeanalysis.pooledobjects.$_sourcever.nupkg::$_sourcefeed/microsoft.codeanalysis.pooledobjects/$_sourcever/microsoft.codeanalysis.pooledobjects.$_sourcever.nupkg"
+        'msbuild18-bootstrap-source-2.tar.gz')
+noextract=("msbuild-sdk10-228caa11.tar.gz" "arcade-msbuild18-987d1a73.tar.gz"
+           "microsoft.codeanalysis.contracts.$_sourcever.nupkg"
+           "microsoft.codeanalysis.collections.$_sourcever.nupkg"
+           "microsoft.codeanalysis.pooledobjects.$_sourcever.nupkg")
+sha256sums=('fff679ff42b8f821d75c31921ad938900bf66c530a143ddef27c5ce239736e45'
+            '85d88d61027f75faa8a11fe04c0d1e0572eb3330610f1bb971954f6fb787ec9c'
+            '7613b5ba957ba01667db49d98d89363315eaf14114213bab185012d3424c0b10'
+            '7956c4437110b99eb70887c1ed3dbb5c08c062b8b9f5f4079dccfdd638cd47fd'
+            'b872225038cf0810f0c184f9204c2e4bc8a57ccd0f1265ca0b98efafdd9f3334'
+            '164c80a7011d2181114d0bc1b59d81e3da177ec8dd2fd8f46966ec0975353a6f')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/msbuild18-workflow/prepare.py")" \
+    "$(cygpath -am "$srcdir")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/msbuild18-workflow/build.py")" \
+    "$(cygpath -am "$srcdir")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/msbuild18-workflow/audit.py")" \
+    "$(cygpath -am "$srcdir")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/msbuild18-workflow/stage.py")" \
+    "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/msbuild18-workflow/check-installed.py")" \
+    "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

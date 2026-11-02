@@ -1,0 +1,53 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-maintenance-netstandard
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+# This is the source bundle's packaging snapshot, not an upstream library version.
+pkgver=20261028
+pkgrel=2
+pkgdesc='Source .NET Standard maintenance primitives with original newer-framework inbox assets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/maintenance-packages'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-ilasm10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-llvm" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('maintenance-6b84308c.tar.gz::https://codeload.github.com/dotnet/maintenance-packages/tar.gz/6b84308c9ad012f53240d72c1d716d7e42546483'
+        'maintenance-ab95a1f1.tar.gz::https://codeload.github.com/dotnet/maintenance-packages/tar.gz/ab95a1f103b49919ba02577a99f3173405bb50ca'
+        'maintenance-netstandard-source-1.tar.gz')
+noextract=('maintenance-6b84308c.tar.gz' 'maintenance-ab95a1f1.tar.gz')
+sha256sums=('5f8a5d6a7fe51c06216d21eb06fd2c4ad4bae2b4a3b13319a74d790919b7492c'
+            '6e6f764834ebf0d9135d0c0dff9d78209df629eee496192c022a531e7f915a7e'
+            'efe207ca12fc639e0281c1d4fdc1f18b83787bd5e57751b38f58aa9dab959aca')
+prepare() {
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/build.py" "$srcdir" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/check-inbox.py" "$srcdir/prepared" "$srcdir/inbox-consumer" > "$srcdir/inbox-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/audit-production.py" "$srcdir" "$srcdir/prepared" > "$srcdir/production-audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/maintenance-netstandard/audit-assets.py" "$srcdir" "$srcdir/prepared" > "$srcdir/asset-audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  local archive
+  for archive in "$srcdir/prepared/feed/"*.nupkg;do
+    install -m644 "$archive" "$feed/$(basename "$archive" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -m644 "$srcdir/maintenance-netstandard/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,resources,asset-audit,production-audit}.json "$doc/"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-check-results.json"
+  install -m644 "$srcdir/inbox-consumer/results.json" "$doc/build-inbox-results.json"
+  install -Dm644 "$srcdir/prepared/maintenance-packages-6b84308c9ad012f53240d72c1d716d7e42546483/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/maintenance-6b84308c-LICENSE"
+  install -Dm644 "$srcdir/prepared/maintenance-packages-ab95a1f103b49919ba02577a99f3173405bb50ca/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/maintenance-ab95a1f1-LICENSE"
+}

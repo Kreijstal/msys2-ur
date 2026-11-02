@@ -1,0 +1,19 @@
+_wintun_notice() {
+  cat <<'NOTICE'
+==> wintun: this is an UNSIGNED build of the Wintun driver (wintun.sys),
+    embedded in wintun.dll and installed on demand from its driver store.
+    It loads on ReactOS. On Windows it loads only with test signing enabled
+    (bcdedit /set testsigning on, then reboot) after you sign the files
+    yourself; normal Windows installations need WireGuard's official signed
+    wintun.dll instead.
+    The standalone driver files are in <prefix>/lib/wintun.
+NOTICE
+}
+
+post_install() {
+  _wintun_notice
+}
+
+post_upgrade() {
+  _wintun_notice
+}

@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:52:11 +0100
+Subject: [PATCH] Use mingw x86 intrinsics flags when building with clang for
+ Windows
+
+The 'clang' compiler flags dictionary is tailored to Apple clang and
+blanks the x86 intrinsics flags, including 'xsaveintrin' (-mxsave),
+which the mingw code path adds because libs/pbd/fpu.cc calls _xgetbv().
+Building with clang for mingw-w64 (MSYS2 CLANG64) therefore fails:
+
+  libs/pbd/fpu.cc:217:9: error: '__builtin_ia32_xgetbv' needs target
+  feature xsave
+
+Add a 'clang-mingw' dictionary, selected for --dist-target=mingw, that
+keeps -mxsave and -DUSE_XMMINTRIN like the GCC one.
+---
+ wscript | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/wscript b/wscript
+index ecf3393..e38fe01 100644
+--- a/wscript
++++ b/wscript
+@@ -158,6 +158,13 @@ clang_dict['generic-arm64'] = [ '-arch', 'arm64' ]
+ clang_dict['full-optimization'] = [ '-O3', '-fomit-frame-pointer', '-ffast-math', '-fno-finite-math-only' ]
+ compiler_flags_dictionaries['clang'] = clang_dict
+ 
++# clang targeting mingw-w64 (e.g. MSYS2 CLANG64) needs the same x86
++# intrinsics flags as mingw GCC: _xgetbv() requires -mxsave.
++clang_mingw_dict = clang_dict.copy()
++clang_mingw_dict['xsaveintrin'] = '-mxsave'
++clang_mingw_dict['xmmintrinsics'] = '-DUSE_XMMINTRIN'
++compiler_flags_dictionaries['clang-mingw'] = clang_mingw_dict
++
+ clang_darwin_dict = compiler_flags_dictionaries['clang'].copy()
+ clang_darwin_dict['cxx-strict'] = [ '-ansi', '-Wnon-virtual-dtor', '-Woverloaded-virtual', ]
+ clang_darwin_dict['full-optimization'] = [ '-O3', '-ffast-math', '-fno-finite-math-only' ]
+@@ -472,6 +479,8 @@ int main() { return 0; }''',
+                 compiler_name = 'clang15-darwin'
+             else:
+                 compiler_name = 'clang-darwin'
++        elif Options.options.dist_target == 'mingw':
++            compiler_name = 'clang-mingw'
+         else:
+             compiler_name = 'clang'
+     elif conf.env['MSVC_COMPILER']:

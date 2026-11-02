@@ -1,0 +1,145 @@
+From df0ee3b98f23f0d05ccb118a65d64e8ff2b3480a Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 21:49:40 +0100
+Subject: [PATCH 3/3] Build the WGC capture session with mingw-w64 headers
+
+Windows.Graphics.Capture is the only capturer that can grab windows that
+GDI and DXGI duplication cannot (hardware-accelerated and occluded ones),
+so keep it rather than dropping RTC_ENABLE_WIN_WGC on MinGW. Everything it
+uses exists in mingw-w64 except two MSVC SDK conveniences:
+
+* <wrl/event.h> and Microsoft::WRL::Callback are not provided. The session
+  registers a single handler, for GraphicsCaptureItem::Closed, so implement
+  that delegate locally as a small agile COM object that forwards Invoke()
+  to OnItemClosed(). MSVC builds keep using WRL::Callback.
+
+* The SDK's ABI::...::Capture::IID_IGraphicsCaptureSession2/3 constants are
+  plain macros in the widl-generated mingw-w64 headers, not namespace
+  members. Query through IID_PPV_ARGS() instead, which derives the IID from
+  the interface type and works with both toolchains.
+---
+ .../win/wgc_capture_session.cc                | 73 +++++++++++++++++--
+ 1 file changed, 67 insertions(+), 6 deletions(-)
+
+diff --git a/src/modules/desktop_capture/win/wgc_capture_session.cc b/src/modules/desktop_capture/win/wgc_capture_session.cc
+index 8c74c2bf..da66509d 100644
+--- a/src/modules/desktop_capture/win/wgc_capture_session.cc
++++ b/src/modules/desktop_capture/win/wgc_capture_session.cc
+@@ -15,9 +15,13 @@
+ #include <windows.graphics.directX.direct3d11.interop.h>
+ #include <windows.graphics.h>
+ #include <wrl/client.h>
++#if !defined(__MINGW32__)
+ #include <wrl/event.h>
++#endif
+ 
+ #include <algorithm>
++#include <atomic>
++#include <functional>
+ #include <memory>
+ #include <utility>
+ #include <vector>
+@@ -37,6 +41,59 @@ namespace WGC = ABI::Windows::Graphics::Capture;
+ namespace webrtc {
+ namespace {
+ 
++#if defined(__MINGW32__)
++// mingw-w64 provides <wrl/client.h> but not <wrl/event.h>, so there is no
++// Microsoft::WRL::Callback. The session subscribes to exactly one event, so
++// implement that one delegate by hand: an agile, reference-counted COM object
++// forwarding Invoke() to a std::function.
++using ItemClosedEventHandler =
++    ABI::Windows::Foundation::ITypedEventHandler<WGC::GraphicsCaptureItem*,
++                                                 IInspectable*>;
++
++class ItemClosedHandler final : public ItemClosedEventHandler {
++ public:
++  using Handler = std::function<HRESULT(WGC::IGraphicsCaptureItem*,
++                                        IInspectable*)>;
++
++  explicit ItemClosedHandler(Handler handler) : handler_(std::move(handler)) {}
++
++  IFACEMETHODIMP QueryInterface(REFIID riid, void** object) override {
++    if (!object) {
++      return E_POINTER;
++    }
++    if (riid == __uuidof(IUnknown) || riid == __uuidof(IAgileObject) ||
++        riid == __uuidof(ItemClosedEventHandler)) {
++      *object = this;
++      AddRef();
++      return S_OK;
++    }
++    *object = nullptr;
++    return E_NOINTERFACE;
++  }
++
++  IFACEMETHODIMP_(ULONG) AddRef() override { return ++ref_count_; }
++
++  IFACEMETHODIMP_(ULONG) Release() override {
++    const ULONG count = --ref_count_;
++    if (count == 0) {
++      delete this;
++    }
++    return count;
++  }
++
++  IFACEMETHODIMP Invoke(WGC::IGraphicsCaptureItem* sender,
++                        IInspectable* args) override {
++    return handler_(sender, args);
++  }
++
++ private:
++  ~ItemClosedHandler() = default;
++
++  std::atomic<ULONG> ref_count_{1};
++  Handler handler_;
++};
++#endif  // defined(__MINGW32__)
++
+ // We must use a BGRA pixel format that has 4 bytes per pixel, as required by
+ // the DesktopFrame interface.
+ constexpr auto kPixelFormat = ABI::Windows::Graphics::DirectX::
+@@ -127,10 +184,18 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+   // closed (e.g. application window is closed or monitor is disconnected). If
+   // it is, we should abort the capture.
+   item_closed_token_ = std::make_unique<EventRegistrationToken>();
++#if defined(__MINGW32__)
++  ComPtr<ItemClosedHandler> closed_handler;
++  closed_handler.Attach(new ItemClosedHandler(
++      [this](WGC::IGraphicsCaptureItem* sender, IInspectable* args) {
++        return OnItemClosed(sender, args);
++      }));
++#else
+   auto closed_handler =
+       Microsoft::WRL::Callback<ABI::Windows::Foundation::ITypedEventHandler<
+           WGC::GraphicsCaptureItem*, IInspectable*>>(
+           this, &WgcCaptureSession::OnItemClosed);
++#endif
+   HRESULT hr =
+       item_->add_Closed(closed_handler.Get(), item_closed_token_.get());
+   if (FAILED(hr)) {
+@@ -181,9 +246,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+ 
+   if (!options.prefer_cursor_embedded()) {
+     ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession2> session2;
+-    if (SUCCEEDED(session_->QueryInterface(
+-            ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession2,
+-            &session2))) {
++    if (SUCCEEDED(session_->QueryInterface(IID_PPV_ARGS(&session2)))) {
+       session2->put_IsCursorCaptureEnabled(false);
+     }
+   }
+@@ -194,9 +257,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
+   // experience more inline with the DXGI capture path.
+   // This requires 10.0.20348.0 or later, which practically means Windows 11.
+   ComPtr<ABI::Windows::Graphics::Capture::IGraphicsCaptureSession3> session3;
+-  if (SUCCEEDED(session_->QueryInterface(
+-          ABI::Windows::Graphics::Capture::IID_IGraphicsCaptureSession3,
+-          &session3))) {
++  if (SUCCEEDED(session_->QueryInterface(IID_PPV_ARGS(&session3)))) {
+     session3->put_IsBorderRequired(false);
+   }
+ 
+-- 
+2.55.0
+

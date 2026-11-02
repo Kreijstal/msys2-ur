@@ -1,0 +1,162 @@
+--- a/bootstrap/m612/chain.sh
++++ b/bootstrap/m612/chain.sh
+@@ -6,8 +6,8 @@
+ here=$(cd "$(dirname "$0")" && pwd)
+ . "$here/../env-m612.sh"
+ R() { cygpath -m "$M612/roslyn-$1/csc.exe"; }
+-start=${1:-1}
+-step() { local n=$1; shift; [ "$n" -ge "$start" ] || return 0; log "chain step $n: $*"; "$@"; }
++start=${1:-1}; stop=${2:-50}
++step() { local n=$1; shift; [ "$n" -ge "$start" ] && [ "$n" -le "$stop" ] || return 0; log "chain step $n: $*"; "$@"; }
+ 
+ # 1-4: Roslyn from the seed csc 3.9 (C# 9) up to 4.8 (C# 12), seed package assemblies
+ step 1 bash "$here/roslyn.sh" 4.0.1 "$SEED_CSC"
+--- a/bootstrap/m612/common.sh
++++ b/bootstrap/m612/common.sh
+@@ -79,7 +79,7 @@
+ }
+ 
+ # fetch_tarball <url> <file>
+-fetch_tarball() { [ -f "$2" ] || { log "fetch $1"; curl -fsSL -o "$2.part" "$1" && mv "$2.part" "$2"; }; }
++fetch_tarball() { [ -f "$2" ] || die "package source closure missing: $2 ($1)"; }
+ # delete_binaries <tree> : provenance rule, no PE/archives/object files survive
+ delete_binaries() {
+   scan_binaries "$1" > "$1/.deleted-binaries.txt" || true
+--- a/bootstrap/m612/roslyn.sh
++++ b/bootstrap/m612/roslyn.sh
+@@ -153,7 +153,7 @@
+ step_test() {
+   # compile and run every tests/csNN.cs up to the language version of $V
+   local T=$B/obj/test maxlang n t rc=0; mkdir -p "$T"; cd "$T"
+-  case $V in 4.0.*|4.1.*|4.2.*|4.3.*) maxlang=10 ;; 4.4.*|4.5.*|4.6.*|4.7.*) maxlang=11 ;; 4.8.*|4.9.*|4.10.*|4.11.*) maxlang=12 ;; 4.1[2-9].*) maxlang=13 ;; *) maxlang=14 ;; esac
++  case $V in 4.0.*|4.1.*|4.2.*|4.3.*) maxlang=10 ;; 4.4.*|4.5.*|4.6.*|4.7.*) maxlang=11 ;; 4.8.*|4.9.*|4.10.*|4.11.*) maxlang=12 ;; 4.1[2-9].*|5.0.0-p4) maxlang=13 ;; *) maxlang=14 ;; esac
+   for t in "$here"/tests/cs[0-9][0-9].cs; do
+     n=$(basename "$t" .cs); [ "${n#cs}" -le "$maxlang" ] || continue
+     mono "$OUT/csc.exe" -nologo -langversion:latest -out:$n.exe "$(cygpath -m "$t")" "$(cygpath -m "$here/tests/polyfill.cs")" || { rc=1; continue; }
+--- a/bootstrap/m612/netfx-pkgs.sh
++++ b/bootstrap/m612/netfx-pkgs.sh
+@@ -44,6 +44,12 @@
+   fi
+   if [ ! -d "$RT/src/installer/managed" ]; then   # Microsoft.NET.HostModel
+     tar -C "$RT" --strip-components=1 -xzf "$M612/src/runtime-$RT_VER.tar.gz" "runtime-$RT_VER/src/installer/managed"
++    delete_binaries "$RT"
++  fi
++  # HostModel shares Win32-resource readers with the CoreCLR compiler tools.
++  if [ ! -d "$RT/src/coreclr/tools/Common" ]; then
++    tar -C "$RT" --strip-components=1 -xzf "$M612/src/runtime-$RT_VER.tar.gz" \
++      "runtime-$RT_VER/src/coreclr/tools/Common" "runtime-$RT_VER/LICENSE.TXT" "runtime-$RT_VER/THIRD-PARTY-NOTICES.TXT"
+     delete_binaries "$RT"
+   fi
+   # managed-only fixes (the native tree for corehost.sh is a separate copy)
+--- a/bootstrap/m612/corehost.sh
++++ b/bootstrap/m612/corehost.sh
+@@ -37,7 +37,9 @@
+     mkdir -p "$SRC"
+     tar -C "$SRC" --strip-components=1 -xzf "$tb"
+     delete_binaries "$SRC"
+-    zcat "$tb" | git get-tar-commit-id > "$SRC/.commit"
++    # git reads only the tar header; gzip may get SIGPIPE after it exits.
++    (set +o pipefail; gzip -dc "$tb" | git get-tar-commit-id) > "$SRC/.commit"
++    [ -s "$SRC/.commit" ] || die "source tarball lacks a commit identity"
+     touch "$SRC/.extracted"
+   fi
+   apply_patches "$SRC" "$P"
+--- a/bootstrap/m612/vbc.sh
++++ b/bootstrap/m612/vbc.sh
+@@ -122,6 +122,13 @@
+ }
+ 
+ step_install() {
++  # vbc was compiled against the current source-built package assemblies.
++  # The shared prefix still has Roslyn step 4's seed copies unless refreshed.
++  local d
++  for d in $(pkg_runtime_files System.Collections.Immutable System.Reflection.Metadata System.Memory \
++    System.Buffers System.Runtime.CompilerServices.Unsafe System.Threading.Tasks.Extensions System.Numerics.Vectors); do
++    cp "$d" "$OUT/"
++  done
+   cp "$B"/obj/{Microsoft.CodeAnalysis.VisualBasic.dll,vbc.exe} "$OUT/"
+   cp "$B"/obj/Microsoft.CodeAnalysis.VisualBasic.pdb "$B"/obj/vbc.pdb "$OUT/" 2>/dev/null || true
+   cp "$B/src/Compilers/VisualBasic/vbc/App.config" "$OUT/vbc.exe.config"
+--- a/bootstrap/m612/tools/csproj_items.py
++++ b/bootstrap/m612/tools/csproj_items.py
+@@ -309,6 +309,8 @@
+     ap.add_argument('--default-items', action='store_true',
+                     help='SDK default Compile glob (**/*.cs minus bin/obj) unless the project sets EnableDefaultCompileItems=false')
+     a = ap.parse_args()
++    if not os.path.isabs(a.project) and os.environ.get("PWD"):
++        a.project = os.path.join(os.environ["PWD"], a.project)
+     props = {}
+     for kv in a.p:
+         k, _, v = kv.partition('='); props[k] = v
+@@ -347,7 +349,9 @@
+         key = os.path.normpath(p)
+         if key in seen: continue
+         seen.add(key)
+-        rel = os.path.relpath(p) if os.path.isabs(p) else p
++        # Native Windows getcwd resolves junctions; Bash PWD preserves the
++        # logical project directory used by callers to prefix these items.
++        rel = os.path.relpath(p, os.environ.get("PWD") or os.getcwd()) if os.path.isabs(p) else p
+         rel = rel.replace('\\', '/')
+         print(rel + ('\t' + meta.get(a.meta, '') if a.meta else ''))
+ 
+--- a/bootstrap/m612/tools/s12missing.py
++++ b/bootstrap/m612/tools/s12missing.py
+@@ -19,6 +19,12 @@
+ # NU1603 (warning as error in some repos): "X depends on Y (>= V) but Y V was not found"
+ for m in re.finditer(r'NU1603: (?:Warning As Error: )?.*? depends on (\S+) \(>= ([^)]+)\) but', text):
+     ids.setdefault(m.group(1), set()).add(m.group(2).strip())
++# A newer seed can satisfy a >= range while being incompatible with the TFM
++# or causing a downgrade of another central version. Build the exact direct
++# references from SBRP instead of treating that newer selection as sufficient.
++exact_references = bool(re.search(r'error NU(?:1202|1109):', text))
++refs = os.path.join(sbrp, 'src', 'referencePackages', 'src')
++text_only = os.path.join(sbrp, 'src', 'textOnlyPackages', 'src')
+ # requested ranges from the assets files
+ for dp, dn, fn in os.walk(tree):
+     dn[:] = [d for d in dn if d not in ('.git', 'node_modules')]
+@@ -29,6 +35,11 @@
+             continue
+         for fw in j.get('project', {}).get('frameworks', {}).values():
+             for name, d in fw.get('dependencies', {}).items():
++                if exact_references and 'version' in d:
++                    version = re.sub(r'[\[\]()\s]', '', d['version']).split(',')[0].lstrip('>=')
++                    if (os.path.isdir(os.path.join(refs, name.lower(), version)) or
++                            os.path.isdir(os.path.join(text_only, name.lower(), version))):
++                        ids.setdefault(name, set()).add(d['version'])
+                 for i in ids:
+                     if i.lower() == name.lower() and 'version' in d:
+                         ids[i].add(d['version'])
+--- a/bootstrap/m612/chain.sh
++++ b/bootstrap/m612/chain.sh
+@@ -119,7 +119,7 @@
+ #     fixed targeting pack, the seed feed, then Arcade, xliff-tasks, Roslyn, MSBuild, Newtonsoft.Json, xdt,
+ #     NuGet.Client, command-line-api, templating, deployment-tools, sourcelink and dotnet/sdk with
+ #     `dotnet build` of their own project files, and m612/dotnet-sdk-8.0.131-stage2 laid out from their outputs
+-step 45 env STAGE=2 bash "$here/s12-stage.sh"
++step 45 env STAGE=2 bash "$here/s12-stage.sh" "${DOTNET_S12_START:-1}"
+ # 46: the end-to-end SDK proof on the stage-2 root
+ step 46 env ROOT="$M612/dotnet-sdk-8.0.131-stage2" TESTDIR="$M612/test/sdk-stage2" bash "$here/sdk-net8-test.sh" \
+   info new pkgref addpackage multi roslyncore generators selfcontained trimmed
+--- a/bootstrap/m612/s12-common.sh
++++ b/bootstrap/m612/s12-common.sh
+@@ -168,17 +168,17 @@
+   cd "$tree"
+   versions_props
+   for t in "${tgts[@]}"; do
+-    s12_restore "$L-restore.log" "$tree" dn restore "$t" "${P[@]}" -v:m || die "$name: restore of $t failed ($L-restore.log)"
++    s12_restore "$L-restore.log" "$tree" dn restore "$(m "$tree/$t")" "${P[@]}" -v:m || die "$name: restore of $t failed ($L-restore.log)"
+   done
+   echo "TIME $name restore $((SECONDS - t0)) s"; t0=$SECONDS
+   for t in "${tgts[@]}"; do
+-    dn build "$t" --no-restore "${P[@]}" -v:m -bl:"$(w "$L-$(basename "$t").binlog")" > "$L-build.log" 2>&1 \
++    dn build "$(m "$tree/$t")" --no-restore "${P[@]}" -v:m -bl:"$(w "$L-$(basename "$t").binlog")" > "$L-build.log" 2>&1 \
+       || { grep -E ': error' "$L-build.log" | sed 's/ \[[A-Z]:.*//' | sort -u | head -40; die "$name: build of $t failed ($L-build.log)"; }
+   done
+   echo "TIME $name build $((SECONDS - t0)) s"; t0=$SECONDS
+   if [ -z "${S12_NOPACK:-}" ]; then
+     for t in "${tgts[@]}"; do
+-      dn pack "$t" --no-restore "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
++      dn pack "$(m "$tree/$t")" --no-restore "${P[@]}" -v:m > "$L-pack.log" 2>&1 \
+         || { grep -E ': error' "$L-pack.log" | sed 's/ \[[A-Z]:.*//' | sort -u | head -40; die "$name: pack of $t failed ($L-pack.log)"; }
+     done
+     echo "TIME $name pack $((SECONDS - t0)) s"

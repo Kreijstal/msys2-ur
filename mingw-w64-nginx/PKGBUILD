@@ -1,0 +1,110 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=nginx
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.30.6
+pkgrel=1
+pkgdesc='Lightweight HTTP server and IMAP/POP3/SMTP/TCP/UDP proxy (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://nginx.org'
+msys2_repository_url='https://github.com/nginx/nginx'
+license=('spdx:BSD-2-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-pcre2"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "make")
+backup=("${MINGW_PREFIX#/}/etc/nginx/fastcgi.conf"
+        "${MINGW_PREFIX#/}/etc/nginx/fastcgi_params"
+        "${MINGW_PREFIX#/}/etc/nginx/koi-utf"
+        "${MINGW_PREFIX#/}/etc/nginx/koi-win"
+        "${MINGW_PREFIX#/}/etc/nginx/mime.types"
+        "${MINGW_PREFIX#/}/etc/nginx/nginx.conf"
+        "${MINGW_PREFIX#/}/etc/nginx/scgi_params"
+        "${MINGW_PREFIX#/}/etc/nginx/uwsgi_params"
+        "${MINGW_PREFIX#/}/etc/nginx/win-utf")
+source=("https://nginx.org/download/${_realname}-${pkgver}.tar.gz"
+        "0001-auto-use-system-libraries-with-mingw.patch"
+        "0002-win32-prefix-from-executable-location.patch")
+sha256sums=('3cf46f5ed7504d460125866b7bea99fb357f31d887e2e63b35503310e9b8b6c8'
+            '53040ce4de0ca44827a454167362a67efd57290c8d4b80db0de4bef3e1e0910f'
+            'd8cd351d0918613c95d0788d60a98820036d97066611db3ed64bfdc3a5918855')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  # 0001: run the system OpenSSL/PCRE2/zlib checks for MinGW too
+  # 0002: an empty --prefix means the parent of bin\nginx.exe, so the
+  #       relative paths below resolve inside ${MINGW_PREFIX} wherever
+  #       MSYS2 is installed
+  patch -p1 -i "${srcdir}/0001-auto-use-system-libraries-with-mingw.patch"
+  patch -p1 -i "${srcdir}/0002-win32-prefix-from-executable-location.patch"
+
+  sed -i 's|root   html;|root   share/nginx/html;|' conf/nginx.conf
+}
+
+build() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  # nginx configures in the source tree. HTTP/3 (QUIC), thread pools and
+  # the dynamic module loader are not implemented for win32.
+  ./configure \
+    --crossbuild=win32 \
+    --with-cc="${CC}" \
+    --with-cc-opt="${CPPFLAGS} ${CFLAGS} -DNGX_PREFIX_FROM_EXE=1" \
+    --with-ld-opt="${LDFLAGS}" \
+    --prefix= \
+    --conf-path=etc/nginx/nginx.conf \
+    --pid-path=var/run/nginx.pid \
+    --lock-path=var/run/nginx.lock \
+    --error-log-path=var/log/nginx/error.log \
+    --http-log-path=var/log/nginx/access.log \
+    --http-client-body-temp-path=var/lib/nginx/client-body \
+    --http-proxy-temp-path=var/lib/nginx/proxy \
+    --http-fastcgi-temp-path=var/lib/nginx/fastcgi \
+    --http-scgi-temp-path=var/lib/nginx/scgi \
+    --http-uwsgi-temp-path=var/lib/nginx/uwsgi \
+    --with-pcre-jit \
+    --with-http_ssl_module \
+    --with-http_v2_module \
+    --with-http_realip_module \
+    --with-http_addition_module \
+    --with-http_sub_module \
+    --with-http_dav_module \
+    --with-http_flv_module \
+    --with-http_mp4_module \
+    --with-http_gunzip_module \
+    --with-http_gzip_static_module \
+    --with-http_auth_request_module \
+    --with-http_random_index_module \
+    --with-http_secure_link_module \
+    --with-http_slice_module \
+    --with-http_stub_status_module \
+    --with-mail \
+    --with-mail_ssl_module \
+    --with-stream \
+    --with-stream_ssl_module \
+    --with-stream_realip_module \
+    --with-stream_ssl_preread_module
+
+  make
+}
+
+check() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  mkdir -p "${srcdir}"/test-prefix/var/{log/nginx,lib/nginx,run}
+  cp -r conf "${srcdir}/test-prefix/etc-nginx"
+  ./objs/nginx.exe -V
+  ./objs/nginx.exe -t -p "${srcdir}/test-prefix" \
+    -c "${srcdir}/test-prefix/etc-nginx/nginx.conf"
+}
+
+package() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  install -Dm755 objs/nginx.exe "${pkgdir}${MINGW_PREFIX}/bin/nginx.exe"
+  install -Dm644 -t "${pkgdir}${MINGW_PREFIX}/etc/nginx" conf/*
+  install -Dm644 -t "${pkgdir}${MINGW_PREFIX}/share/nginx/html" html/*
+  install -Dm644 objs/nginx.8 "${pkgdir}${MINGW_PREFIX}/share/man/man8/nginx.8"
+  install -d "${pkgdir}${MINGW_PREFIX}"/var/{log/nginx,lib/nginx,run}
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

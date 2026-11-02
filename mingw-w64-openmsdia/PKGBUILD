@@ -1,0 +1,54 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=openmsdia
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+_commit=5f3a7b43d05af1d3bf1e10acf2246553cfc5821c
+pkgver=0.0.0.r87.5f3a7b4
+pkgrel=1
+pkgdesc='Clean-room open reimplementation of msdia140.dll, the DIA SDK PDB reader (mingw-w64)'
+arch=('any')
+# The Makefile and the generated COM declarations target the clang ABI
+mingw_arch=('clang64')
+url='https://github.com/Kreijstal/openmsdia'
+msys2_repository_url='https://github.com/Kreijstal/openmsdia'
+license=('spdx:AGPL-3.0-or-later')
+makedepends=("${MINGW_PACKAGE_PREFIX}-clang"
+             "${MINGW_PACKAGE_PREFIX}-lld"
+             "${MINGW_PACKAGE_PREFIX}-llvm"
+             "${MINGW_PACKAGE_PREFIX}-llvm-tools"
+             "${MINGW_PACKAGE_PREFIX}-libc++"
+             "${MINGW_PACKAGE_PREFIX}-zlib"
+             "${MINGW_PACKAGE_PREFIX}-zstd"
+             "${MINGW_PACKAGE_PREFIX}-python"
+             "git"
+             "make")
+source=("git+https://github.com/Kreijstal/openmsdia.git#commit=${_commit}")
+sha256sums=('SKIP')
+
+build() {
+  cd "${srcdir}/${_realname}"
+  # msdia140.dll links LLVM's PDB readers, libc++ and zlib/zstd statically
+  # and imports only Windows DLLs. The walker is used by check().
+  make -j$(nproc) build/msdia140.dll build/dia_walk.exe build/test_vtables.exe
+}
+
+check() {
+  cd "${srcdir}/${_realname}"
+  # exports, vtable layouts, no high-level LLVM PDB layer
+  make check
+  # walk the clang test corpus and compare with the real DLL's output
+  make corpus
+  make score | tee score.log
+}
+
+package() {
+  cd "${srcdir}/${_realname}"
+  # A drop-in for programs that load msdia140.dll by name (LoadLibrary or
+  # registration-free COM); it is not registered with regsvr32.
+  install -Dm755 build/msdia140.dll "${pkgdir}${MINGW_PREFIX}/bin/msdia140.dll"
+  install -Dm755 build/dia_walk.exe "${pkgdir}${MINGW_PREFIX}/bin/openmsdia-walk.exe"
+  install -Dm644 -t "${pkgdir}${MINGW_PREFIX}/include/openmsdia" include/openmsdia/*.h
+  install -Dm644 README.md "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/README.md"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

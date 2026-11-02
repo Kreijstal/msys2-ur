@@ -1,0 +1,60 @@
+Original source ILLink10 NET8 bootstrap host — clean package and installed checks passed
+
+Package: mingw-w64-clang-x86_64-dotnet-illink10-bootstrap 10.0.5-1
+Windows root: /c/codex-dotnet10/il10pkg.RkLua8
+Installed launcher: /clang64/bin/illink10-bootstrap
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-illink10-bootstrap-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-illink10-bootstrap
+RESULT: exit 0
+
+$ /clang64/bin/illink10-bootstrap --help
+RESULT: exit 0
+
+$ /usr/bin/python3 src/illink10-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-check" /clang64/lib/dotnet/tool-packs/illink-10.0.5-bootstrap
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-illink10-bootstrap-10.0.5-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+All seven production projects build from unchanged original C# inputs (772 total): Cecil137, Rocks12, Pdb36, Mdb9, Immutable130, Metadata229 and ILLink219. Exact source/archive/actual-compiler-input audits verify587 runtime inputs and197 Cecil inputs, including original VMR Git blob IDs. Cecil archive binaries134 are rejected. Runtime and Arcade archives, source version task and Microsoft/Open keys are pinned and checked. The tool is a NET8 bootstrap host port of the original NET10 ILLink project; the two supporting BCL projects use their upstream-supported NET8 target. It does not claim a completed original NET10 tool host.
+
+The normalized deps.json retains actual PE assembly/file versions for13 entries without changing DLL bytes. Installed host traces confirm the tool loads its exact source Metadata10 and Immutable10 assets. The actual installed tool rewrites a real executable in entrypoint mode and a real library in library mode. Both rewritten outputs execute. Reflection/generics/Unicode resources, linked portable PDBs, virtual/interface/generic behavior and nonzero malformed-root exit pass. A Cecil metadata comparison preserves all16 public surface entries and generic constraints while removing one unused internal type and two methods (types6→5; methods10→8). These fixture gates do not claim a fresh source CoreLib10 rewrite or full runtime10 execution with this formal tool.
+
+The clean producer has575 warnings and zero compiler errors. Warnings remain in the evidence; category occurrence counts include repeated build-summary output. The only packaging warning is MSYS-root references in provenance records. pacman verifies32 entries including directories, none missing; all21 regular installed payload files match the package. Existing SDK/compiler/framework hashes remain unchanged.
+
+--- installed-check.log ---
+PASS source ILLink10 app/library rewrites, source10 host providers, linked execution, library API/generic/resource/symbol and invalid-root checks
+
+--- src/installed-check/OwnedApp-run.log ---
+PASS linked reflection/generics/Unicode resource/framework execution
+
+--- src/installed-check/library-run.log ---
+PASS linked library virtual/interface/generic execution
+
+--- installed-package-audit.log ---
+PASS 21 installed ILLink/bootstrap files, seven exact source assemblies and actual normalized dependency versions
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-illink10-bootstrap: 32 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+Package SHA256: 1a6291dbaebd9656506296da83d4219d9b12bab1537ad4550fc7ddd8f9c9bf7a
+Evidence: /tmp/illink10-bootstrap-package1/illink10-bootstrap-package-evidence1.tar.gz
+Evidence SHA256: d2cd299597c0dc8d417fc8bd895f839971e9a7e157e06125627404659dcef4f4
+All1,110 evidence files and all19 frozen workflow files, PKGBUILD and .SRCINFO verified.
+
+Original NET10 host/profile, source framework/CoreLib rewrites, ILLink tasks/NuGet integration, remaining target variants, complete runtime/targeting/SDK/desktop10, PowerShell7.6 and earlier compatibility gates remain open.

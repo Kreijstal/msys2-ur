@@ -1,0 +1,83 @@
+Original source NRBF9.0.11 NET9 package validation
+Finished: 2026-10-29T03:58:45.113077+00:00
+Host/root: win11 /e/codex-dotnet10/nrbf9pkg2.sGo7xP
+Package: mingw-w64-clang-x86_64-dotnet-nrbf9-9.0.11-2-any.pkg.tar.zst
+Package SHA256: 5b5718bf6bc5dacef199b694dbb0081f341132c093444de61eb7f6b502bda87d
+Workflow SHA256: 5a582c26f41850c694cf07b4daefb9577b3b227e8e2ee2d20e3acdd5f69ba618
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-nrbf9-9.0.11-2-any.pkg.tar.zst
+RESULT: exit0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-nrbf9
+mingw-w64-clang-x86_64-dotnet-nrbf9: 20 total files, 0 altered files
+
+$ /clang64/bin/python.exe -X utf8 src/nrbf9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+$ python /tmp/audit-nrbf9-package.py
+RESULT: exit0;11 payloads verified;56 selected original source/project/resource/policy inputs independently match pinned archive.
+All167 terminal evidence hashes,source recipe/SRCINFO and16 frozen workflow files verified.
+
+All81 public/protected CLR API entries and nullable annotations match.
+Original implicit source selection includes44 library files plus2 shared sources. Production source changes:0.
+Original desktop targeting-pack assembly9.0.0.0,CLSCompliant(false),experimental SYSLIB5005 and16 resource values are preserved.
+Original compiler-generated XML documentation is included and producer/package/cache bytes match.
+
+Installed reader execution:
+PASS source NRBF9:16 resource values,14 source NET8 payloads,Unicode/primitives/arrays/classes/shared cycles,record map,stream ownership,6 invalid inputs and no described-type loading
+
+Independent source NET8 producer:
+PASS source NET8 formatter generated14 owned NRBF fixtures;no deserialization performed
+
+
+Bootstrap language policy: {"original_sdk_version": "9.0.111", "original_source_language_setting": "preview", "bootstrap_compiler": "source Roslyn5.3", "bootstrap_language_version": "13.0", "reason": "Use CSharp13 Span overload semantics;newer preview mode selects ReadOnlySpan overloads for unchanged source", "original_preview_toolchain_verified": false}
+The source requests SDK9.0.111/preview. Source Roslyn5.3 preview Span overload rules reject unchanged source;CSharp13 semantics compile it. This adapter is explicit. Exact original preview toolchain remains unverified.
+Before packaging,the fixture was corrected to acknowledge the original experimental diagnostic and use the documented ArrayRecord API for jagged arrays.
+Release1 was superseded by release2 to add original XML documentation;release2 passed a fresh clean build and installation.
+
+NET9 runtime,other original framework profiles,upstream preview compiler support,Resources.Extensions and remaining9.0.11 libraries,full MSBuild/SDK10/PowerShell7.6 and all remaining compatibility gates are unfinished.
+
+Full makepkg log:
+==> Making package: mingw-w64-dotnet-nrbf9 9.0.11-2 (29 Oct 2026 04:55:20)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-msbuild9-fa7cdded.tar.gz
+  -> Found nrbf9-source-2.tar.gz
+==> Validating source files with sha256sums...
+    runtime-msbuild9-fa7cdded.tar.gz ... Passed
+    nrbf9-source-2.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting nrbf9-source-2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-nrbf9"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-nrbf9 9.0.11-2 (29 Oct 2026 04:56:45)
+
+Build checks:
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+Original source audit:
+PASS 56 original source/project/resource bytes;all original resource scope accounted for
+

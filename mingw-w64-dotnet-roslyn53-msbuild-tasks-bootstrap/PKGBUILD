@@ -1,0 +1,40 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-roslyn53-msbuild-tasks-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.3.0.2.26113.113
+pkgrel=1
+pkgdesc='Source NET10 Roslyn5.3 MSBuild tasks and original compiler targets bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-msbuild18-bootstrap>=18.3.0.26113.113-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-visualbasic53-bootstrap>=5.3.0.2.26113.113-2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('roslyn-sdk10-2333221c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/2333221c0564852ee5ceac9c622a0b14e864d76e'
+        'msbuild-17.11.48-02bf6629.tar.gz::https://codeload.github.com/dotnet/msbuild/tar.gz/02bf66295b64ab368d12933041f7281aad186a2d'
+        'microsoft.codeanalysis.collections.4.2.0-1.22102.8.nupkg::https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/flat2/microsoft.codeanalysis.collections/4.2.0-1.22102.8/microsoft.codeanalysis.collections.4.2.0-1.22102.8.nupkg'
+        'roslyn53-msbuild-tasks-source-2.tar.gz')
+noextract=('roslyn-sdk10-2333221c.tar.gz' 'msbuild-17.11.48-02bf6629.tar.gz' 'microsoft.codeanalysis.collections.4.2.0-1.22102.8.nupkg')
+sha256sums=('e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb'
+            'd862cc76d748f649894ec189fb6f6e9dabec8dbd2e96505650b0a487ba645d53'
+            '854de69d3c5f2a92e06757d48dc136e9fa7887814a999917dc689733ee2431a8'
+            'd5324d14d864b13bf1b82d2274b31c59a357f7a57407c101d737baa5c63639b3')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/roslyn53-tasks-workflow/prepare.py")" "$(cygpath -am "$srcdir")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/roslyn53-tasks-workflow/build.py")" "$(cygpath -am "$srcdir")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/roslyn53-tasks-workflow/audit.py")" "$(cygpath -am "$srcdir")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/roslyn53-tasks-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/roslyn53-tasks-workflow/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

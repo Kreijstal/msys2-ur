@@ -1,0 +1,317 @@
+{
+  "finished_at_utc": "2026-10-31T13:36:38.852722+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-reflection430",
+  "installed_version": "mingw-w64-clang-x86_64-dotnet-reflection430 4.3.0-1",
+  "source_build_root": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+  "prototype_root": "/e/codex-dotnet10/reflection430.xVc2s8",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "cwd": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/reflection430-workflow/audit-package.py mingw-w64-clang-x86_64-dotnet-reflection430-4.3.0-1-any.pkg.tar.zst src archive-audit.json",
+      "cwd": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-reflection430-4.3.0-1-any.pkg.tar.zst",
+      "cwd": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-reflection430/check.py E:/msys64/clang64/lib/dotnet/library-packs E:/codex-dotnet10/reflection430pkg1.8BCAFX/installed-check E:/msys64/clang64 E:/codex-dotnet10/reflection430pkg1.8BCAFX/src/compiler44/bin/Release/net8.0",
+      "cwd": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-reflection430",
+      "cwd": "/e/codex-dotnet10/reflection430pkg1.8BCAFX",
+      "exit_code": 0
+    }
+  ],
+  "workflow_source_archive_sha256": "bef3978aab1daa50818c6079b5e3bcf452deeff49dccd497c6d1e4c3af627bf6",
+  "workflow_source_files": 93,
+  "source_reference_archive_sha256": "2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79",
+  "source_reference_commit": "5aeee2738338530a92d7f6caa2c7d5f569fed3c4",
+  "source_CoreFX_archive_sha256": "1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2",
+  "source_CoreFX_commit": "4d1af962ca0fede10beb01d197367c2f90e92c97",
+  "original_CSharp_reference_source_changes": 0,
+  "original_reference_profiles": 3,
+  "original_NET462_forwarding_facades": 1,
+  "original_API_entries": 1513,
+  "original_NET462_type_forwards": 34,
+  "original_DLL_asset_paths": 6,
+  "original_framework_markers": 22,
+  "original_dependency_groups": 16,
+  "original_localized_XML_paths": 40,
+  "source_archives": {
+    "System.Reflection": {
+      "sha256": "1a2f6c61fd3e34f88032b2af404b60145747014cca487744a2ecbef8eb078d58",
+      "markers": 22,
+      "original_data_and_reference_paths_verified": true,
+      "original_dependencies_and_framework_selection_verified": true
+    }
+  },
+  "contracts": {
+    "System.Reflection-net462": {
+      "API_entries": 0,
+      "identity": "System.Reflection, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "6f31c8b256c7647d0089673bb3aecc9b09ac5a7561a446221a130089c27b9c62",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    },
+    "System.Reflection-netstandard1.0": {
+      "API_entries": 432,
+      "identity": "System.Reflection, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "edb40da2fe58f54e0e9ad9976022d617fd4a62e3d97874bd106a10c953ee8a57",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    },
+    "System.Reflection-netstandard1.3": {
+      "API_entries": 438,
+      "identity": "System.Reflection, Version=4.0.10.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "29cae55fa4d8dabb1afa7c66553f8b79983ca554f20ff91b90e14bd508d2256f",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    },
+    "System.Reflection-netstandard1.5": {
+      "API_entries": 643,
+      "identity": "System.Reflection, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "reference_assembly_sha256": "1d3f3440ae105a1eb7dd14b4db377b0255fa0cafbc9bc641f534dd61dc3cc510",
+      "compile_consumer_passed": true,
+      "original_native_versions_and_resources_verified": true
+    }
+  },
+  "archive_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-reflection430-4.3.0-1-any.pkg.tar.zst",
+    "artifact_sha256": "a33a10f9adb827a84bb6047929d87a2d7ef1124dbd6228d8bdce1f871711d174",
+    "source_nupkg_sha256": {
+      "System.Reflection": "1a2f6c61fd3e34f88032b2af404b60145747014cca487744a2ecbef8eb078d58"
+    },
+    "original_source_changes": 0,
+    "original_reference_profiles": 4,
+    "API_entries": 1513,
+    "original_framework_markers": 22,
+    "all_original_data_bytes_and_asset_paths_verified": true,
+    "exact_checked_source_archives": true,
+    "original_NET462_runtime_facades": 1,
+    "historical_runtime_and_provider_closure_complete": false,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_file_audit": "mingw-w64-clang-x86_64-dotnet-reflection430: 177 total files, 0 altered files",
+  "feed_audit": {
+    "before_count": 291,
+    "after_count": 292,
+    "all_previous_archives_unchanged": true,
+    "added": [
+      "system.reflection.4.3.0.nupkg"
+    ]
+  },
+  "required_checks_passed": true,
+  "exact_installed_and_producer_archive_hashes_match": true,
+  "all_original_data_and_dependency_groups_preserved": true,
+  "all_original_native_versions_and_resources_verified": true,
+  "original_NS13_PROJECTKREL_suffix_filename_and_US_English_version_resource_restored_from_data": true,
+  "generated_NET462_facade_forwarder_source_sha256": "1e17903e35d8e0e58d174e82df8f1f275d44cc7ea3deb80cc4d571aaa70ebc65",
+  "NET46_source_seed_supplies_all_34_original_NET462_forwarding_targets": true,
+  "all_34_original_forwarder_names_flags_scopes_and_nesting_verified": true,
+  "five_core_forwarded_types_resolved_and_constructor_property_executed_on_source_NET8": true,
+  "source_Framework_seed_sha256": "4440b80c05c1e5c02eff67f69e3f60debb0b715b4b0835c8c1c0bcaa1f06016f",
+  "fresh_restore_probes": {
+    "netstandard1.0": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.IO. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.IO",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.0"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Reflection.Primitives. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Reflection.Primitives",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.0"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.0"
+          ]
+        }
+      ],
+      "exact_original_compile_and_runtime_assets_verified": true
+    },
+    "netstandard1.3": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.IO. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.IO",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.3"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Reflection.Primitives. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Reflection.Primitives",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.3"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.3"
+          ]
+        }
+      ],
+      "exact_original_compile_and_runtime_assets_verified": true
+    },
+    "netstandard1.5": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.IO. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.IO",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.5"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Reflection.Primitives. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Reflection.Primitives",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.5"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            ".NETStandard,Version=v1.5"
+          ]
+        }
+      ],
+      "exact_original_compile_and_runtime_assets_verified": true
+    },
+    "net8.0": {
+      "exit_code": 1,
+      "diagnostics": [
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.IO. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.IO",
+          "targetGraphs": [
+            "net8.0"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Reflection.Primitives. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Reflection.Primitives",
+          "targetGraphs": [
+            "net8.0"
+          ]
+        },
+        {
+          "code": "NU1101",
+          "level": "Error",
+          "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): candidate",
+          "libraryId": "System.Runtime",
+          "targetGraphs": [
+            "net8.0"
+          ]
+        }
+      ],
+      "exact_original_compile_and_runtime_assets_verified": true
+    },
+    "net462": {
+      "exit_code": 0,
+      "diagnostics": [],
+      "exact_original_compile_and_runtime_assets_verified": true
+    }
+  },
+  "installed_extension_integration": {
+    "command": "/clang64/lib/dotnet/dotnet.exe restore E:/codex-dotnet10/reflection430pkg1.8BCAFX/extensions-integration1/Probe.csproj --configfile E:/codex-dotnet10/reflection430pkg1.8BCAFX/extensions-integration1/NuGet.config -v:minimal",
+    "restore_exit_code": 1,
+    "diagnostics": [
+      {
+        "code": "NU1101",
+        "level": "Error",
+        "message": "Unable to find package System.Runtime. No packages exist with this id in source(s): installed-source",
+        "libraryId": "System.Runtime",
+        "targetGraphs": [
+          ".NETStandard,Version=v1.3"
+        ]
+      },
+      {
+        "code": "NU1101",
+        "level": "Error",
+        "message": "Unable to find package System.IO. No packages exist with this id in source(s): installed-source",
+        "libraryId": "System.IO",
+        "targetGraphs": [
+          ".NETStandard,Version=v1.3"
+        ]
+      },
+      {
+        "code": "NU1101",
+        "level": "Error",
+        "message": "Unable to find package System.Reflection.Primitives. No packages exist with this id in source(s): installed-source",
+        "libraryId": "System.Reflection.Primitives",
+        "targetGraphs": [
+          ".NETStandard,Version=v1.3"
+        ]
+      }
+    ],
+    "four_exact_installed_source_archives_and_original_compile_assets_verified": true,
+    "System_Reflection_missing_package_error_eliminated": true,
+    "original_dependency_closure_complete": false
+  },
+  "prototype_initial_duplicate_transitive_Runtime_identities_failure_retained": "/e/codex-dotnet10/reflection430.xVc2s8/build1.log",
+  "prototype_initial_NS13_native_version_difference_evidence_retained": "/e/codex-dotnet10/reflection430.xVc2s8/metadata-audit1",
+  "runtime_any_or_AOT_provider_packages_supplied": false,
+  "original_dependency_closure_complete": false,
+  "original_NET462_targeting_pack_or_runtime_execution_verified": false,
+  "original_historical_build_tools_replayed": false,
+  "full_dependency_goal_complete": false,
+  "next_IO_and_Primitives_source_acquisition": "tests/reflection430/next-io-primitives-acquisition-20261031.json",
+  "remaining_requirements": [
+    "Original System.Runtime4.3.0 including all references and complete277-forwarder NET462 facade",
+    "Original System.IO4.3.0 including all reference/facade profiles",
+    "Original System.Reflection.Primitives4.3.0 with all reference/data assets",
+    "Exact original runtime.any/AOT providers and core-library/URI dependency scopes",
+    "Original historical runtime/upstream workflow closure",
+    "Existing full PowerShell compatibility, remote/provider/ownership, native/database/desktop/COM/R2R/AOT/debugger and NET10/PowerShell7.6 gates"
+  ],
+  "direct_dependency_catalog_counts_unchanged": true,
+  "evidence": "tests/reflection430/package-results-20261031.txt",
+  "json_evidence": "tests/reflection430/package-results-20261031.json"
+}

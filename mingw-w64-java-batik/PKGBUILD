@@ -1,0 +1,544 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-batik
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-constants"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-i18n"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-ext"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-xml"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-css"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-svggen"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-parser"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-gvt"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-dom"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-svg-dom"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-anim"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-script"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-bridge"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-transcoder"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-codec"
+         "${MINGW_PACKAGE_PREFIX}-java-batik-svgrasterizer")
+pkgver=1.18
+pkgrel=1
+pkgdesc="batik Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-rhino"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-xml-apis"
+             "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext"
+             "${MINGW_PACKAGE_PREFIX}-java-xmlgraphics-commons")
+source=('https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-shared-resources/1.18/batik-shared-resources-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-shared-resources/1.18/batik-shared-resources-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-constants/1.18/batik-constants-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-constants/1.18/batik-constants-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-i18n/1.18/batik-i18n-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-i18n/1.18/batik-i18n-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-ext/1.18/batik-ext-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-ext/1.18/batik-ext-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-util/1.18/batik-util-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-util/1.18/batik-util-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-xml/1.18/batik-xml-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-xml/1.18/batik-xml-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-awt-util/1.18/batik-awt-util-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-awt-util/1.18/batik-awt-util-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-css/1.18/batik-css-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-css/1.18/batik-css-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svggen/1.18/batik-svggen-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svggen/1.18/batik-svggen-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-parser/1.18/batik-parser-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-parser/1.18/batik-parser-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-gvt/1.18/batik-gvt-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-gvt/1.18/batik-gvt-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-dom/1.18/batik-dom-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-dom/1.18/batik-dom-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svg-dom/1.18/batik-svg-dom-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svg-dom/1.18/batik-svg-dom-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.18/batik-anim-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.18/batik-anim-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-script/1.18/batik-script-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-script/1.18/batik-script-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-bridge/1.18/batik-bridge-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-bridge/1.18/batik-bridge-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-transcoder/1.18/batik-transcoder-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-transcoder/1.18/batik-transcoder-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-codec/1.18/batik-codec-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-codec/1.18/batik-codec-1.18.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svgrasterizer/1.18/batik-svgrasterizer-1.18-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-svgrasterizer/1.18/batik-svgrasterizer-1.18.pom')
+noextract=('batik-shared-resources-1.18-sources.jar'
+         'batik-shared-resources-1.18.pom'
+         'batik-constants-1.18-sources.jar'
+         'batik-constants-1.18.pom'
+         'batik-i18n-1.18-sources.jar'
+         'batik-i18n-1.18.pom'
+         'batik-ext-1.18-sources.jar'
+         'batik-ext-1.18.pom'
+         'batik-util-1.18-sources.jar'
+         'batik-util-1.18.pom'
+         'batik-xml-1.18-sources.jar'
+         'batik-xml-1.18.pom'
+         'batik-awt-util-1.18-sources.jar'
+         'batik-awt-util-1.18.pom'
+         'batik-css-1.18-sources.jar'
+         'batik-css-1.18.pom'
+         'batik-svggen-1.18-sources.jar'
+         'batik-svggen-1.18.pom'
+         'batik-parser-1.18-sources.jar'
+         'batik-parser-1.18.pom'
+         'batik-gvt-1.18-sources.jar'
+         'batik-gvt-1.18.pom'
+         'batik-dom-1.18-sources.jar'
+         'batik-dom-1.18.pom'
+         'batik-svg-dom-1.18-sources.jar'
+         'batik-svg-dom-1.18.pom'
+         'batik-anim-1.18-sources.jar'
+         'batik-anim-1.18.pom'
+         'batik-script-1.18-sources.jar'
+         'batik-script-1.18.pom'
+         'batik-bridge-1.18-sources.jar'
+         'batik-bridge-1.18.pom'
+         'batik-transcoder-1.18-sources.jar'
+         'batik-transcoder-1.18.pom'
+         'batik-codec-1.18-sources.jar'
+         'batik-codec-1.18.pom'
+         'batik-svgrasterizer-1.18-sources.jar'
+         'batik-svgrasterizer-1.18.pom')
+sha256sums=('a7d4ad327376ecbfaf6d66d4f07b847886a5906ac94ea31de3435846b35a631c'
+         '4afa33e19ca730f9072fdf7019fd9797625e937ed86f6bf9bd584b8f9f9cffc4'
+         'd91b8dc42b55a270846176b01bf3915a22ae34c5291903a50697ec11b226f017'
+         '0d93f88a7b0b0a0930fc259ced257b747472c46197c918f20b785bbf8edeb0cd'
+         '910c7affd0943b8f6691933d4cfa7d5d47bdb7011fcfa317e9158949de12cf08'
+         '70d31240612efee5e0efa4c1841dca9865a9d11efd02582455bed924c74369d1'
+         'e5917cb2238a2f5dbacecfcaeab193a26195a72ca725c4165bf7f8f60babdfbd'
+         'aa9489514b51af47f478324498f8f28d6eb60af4a6bc9da3493f86545f8e31bb'
+         '54438f5a4dfe0dad566f76098f9595ba0eb87511fc0a173e6dc6c9914f48f1cd'
+         '09b5cd71f8dc7bfcab9647d3c067fee3a1af13338e5c9c19c991d02e64786c47'
+         '04ac057513b5ada22d3a1e2bdf181b2dfc0f14ac50715ca286c4d0fb89e9fa6f'
+         '8036d80817edf9f7bc49df27fa00997c56c9a24aaf9231fcfcae592ff6035ca9'
+         'c43d3697816a8c5ce189d6ae1114f1e02e5113d048b08bb0ed6ee2cde289cbc9'
+         'dd03be38771e66b88f238dec91483951ce4e39e941517808dfa738282dd9aed3'
+         '2aa4f2042a3297c30ead65a3c64c87fdaae13787e4219bf399344555b5105312'
+         '4b605427b0903431d00bc71afaeed9c79f39633b5e21fccf7d85cd97639be009'
+         'a906d7119b2fd0919089869fb140453594fcea1a1345be4662c7cb92b6eb9a6d'
+         '71b25da807cbd85177def3322d216a92d3c8015471b2c65470e6d22911a837f8'
+         'e042eb041eabf4d141075d26ace1cfe082b80611677450cdae6648806e338b4d'
+         '72b3fd0c94ade9d1b212eb2a32c2e40841d63353c8dc651bc0e3ab30fa6ea1c3'
+         '236125d4094eeae5c7a56ac80cd966fd3c005b50548e951f86026f4d5df3e8c2'
+         '79c9f0f15b1ec014f72119d86900b0e48af1bbb07583046fc934bd51e74dbd6e'
+         'c4410cc5005ce6715694650ecb0ab0aa1f4fc9e575f6dd69a0ed2514beeae24b'
+         'bff7c9669953609c514e76b467221332033a62189960ec97fcb94af61584f0e5'
+         '2b51813818cc51ede000c2d512d908208e5cd4040f05215fe372d1b7eef31ddb'
+         '1f5fdf38097ccfe2863d745100d481b62c79cfe9c63008d09a86a4a49508b581'
+         '2cbbe0c563950806e002ad06efea85e0b18ac0461a20af82b5eb04c55c37208d'
+         'b9d01d43f7083f86fdbfb49f090600d1e9ce59ccfdc403a2308968a7dd70f4fc'
+         'a384418bdef8a1399a986eb15a108ba0a9f51f6e15af8fb94c220e38bec19107'
+         'fd9101fa35435349e41db2b5dc37ab1625afb5a9545a253ada14ec721180da06'
+         '6254033e47d15227fd0dc813f2568b0730d0e135a9e9ef5315794f697eae721c'
+         '5f8745cfd353a54906569e1cb2bf3c0c53ebc0c4e2311f25c5b0e67287c53762'
+         '6b8d58b7fc0d70eea4bca0964ed707e5f91c0ed7ada5b7922b957b9c14ee719e'
+         '40f2ad80113698a3eb3c63dde3888240efac27254b6e1dcc3d4b463c340c9920'
+         '9924c7d71a029d0b3462b16db4a7279ef3c5d92c8268f2ede960e06a3238581f'
+         'f08795fd61b531491d352e2eb634ae99da8dd898efebd71b8aaf506651877129'
+         'b74ef853e7381d2619fed6c9c526813bc14eb831bec2e72be40979d7c46b928e'
+         '6c2342778a89ecdc95d2ea0427a40dc21ab604078dcb1731b121eb74633bd43e')
+_artifacts=('org.apache.xmlgraphics:batik-shared-resources:1.18'
+         'org.apache.xmlgraphics:batik-constants:1.18'
+         'org.apache.xmlgraphics:batik-i18n:1.18'
+         'org.apache.xmlgraphics:batik-ext:1.18'
+         'org.apache.xmlgraphics:batik-util:1.18'
+         'org.apache.xmlgraphics:batik-xml:1.18'
+         'org.apache.xmlgraphics:batik-awt-util:1.18'
+         'org.apache.xmlgraphics:batik-css:1.18'
+         'org.apache.xmlgraphics:batik-svggen:1.18'
+         'org.apache.xmlgraphics:batik-parser:1.18'
+         'org.apache.xmlgraphics:batik-gvt:1.18'
+         'org.apache.xmlgraphics:batik-dom:1.18'
+         'org.apache.xmlgraphics:batik-svg-dom:1.18'
+         'org.apache.xmlgraphics:batik-anim:1.18'
+         'org.apache.xmlgraphics:batik-script:1.18'
+         'org.apache.xmlgraphics:batik-bridge:1.18'
+         'org.apache.xmlgraphics:batik-transcoder:1.18'
+         'org.apache.xmlgraphics:batik-codec:1.18'
+         'org.apache.xmlgraphics:batik-svgrasterizer:1.18')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+  # Jacl is excluded by upstream's build. Jython is an optional backend;
+  # retain the JavaScript engine used by SVG while omitting these adapters.
+  rm -rf upstream/batik-script/org/apache/batik/script/{jacl,jpython}
+  sed -i '/^org\.apache\.batik\.script\.\(jacl\|jpython\)\./d' resources/batik-bridge/META-INF/services/org.apache.batik.script.InterpreterFactory
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.apache.xmlgraphics:batik-shared-resources:1.18 - \
+    -r resources/batik-shared-resources -u batik-shared-resources-1.18.pom
+  jb_module org.apache.xmlgraphics:batik-constants:1.18 upstream/batik-constants \
+    -r resources/batik-constants -u batik-constants-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources
+  jb_module org.apache.xmlgraphics:batik-i18n:1.18 upstream/batik-i18n \
+    -r resources/batik-i18n -u batik-i18n-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources
+  jb_module org.apache.xmlgraphics:batik-ext:1.18 upstream/batik-ext \
+    -r resources/batik-ext -u batik-ext-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources
+  jb_module org.apache.xmlgraphics:batik-util:1.18 upstream/batik-util \
+    -r resources/batik-util -u batik-util-1.18.pom -- \
+    org.apache.xmlgraphics:batik-constants org.apache.xmlgraphics:batik-i18n org.apache.xmlgraphics:batik-shared-resources
+  jb_module org.apache.xmlgraphics:batik-xml:1.18 upstream/batik-xml \
+    -r resources/batik-xml -u batik-xml-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util
+  jb_module org.apache.xmlgraphics:batik-awt-util:1.18 upstream/batik-awt-util \
+    -r resources/batik-awt-util -u batik-awt-util-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:xmlgraphics-commons
+  jb_module org.apache.xmlgraphics:batik-css:1.18 upstream/batik-css \
+    -r resources/batik-css -u batik-css-1.18.pom -- \
+    org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:xmlgraphics-commons xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-svggen:1.18 upstream/batik-svggen \
+    -r resources/batik-svggen -u batik-svggen-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util
+  jb_module org.apache.xmlgraphics:batik-parser:1.18 upstream/batik-parser \
+    -r resources/batik-parser -u batik-parser-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-xml xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-gvt:1.18 upstream/batik-gvt \
+    -r resources/batik-gvt -u batik-gvt-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util
+  jb_module org.apache.xmlgraphics:batik-dom:1.18 upstream/batik-dom \
+    -r resources/batik-dom -u batik-dom-1.18.pom -- \
+    org.apache.xmlgraphics:batik-css org.apache.xmlgraphics:batik-ext org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-xml xml-apis:xml-apis xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-svg-dom:1.18 upstream/batik-svg-dom \
+    -r resources/batik-svg-dom -u batik-svg-dom-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-css org.apache.xmlgraphics:batik-dom org.apache.xmlgraphics:batik-ext org.apache.xmlgraphics:batik-parser org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-anim:1.18 upstream/batik-anim \
+    -r resources/batik-anim -u batik-anim-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-css org.apache.xmlgraphics:batik-dom org.apache.xmlgraphics:batik-ext org.apache.xmlgraphics:batik-parser org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-svg-dom org.apache.xmlgraphics:batik-util xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-script:1.18 upstream/batik-script \
+    -r resources/batik-script -u batik-script-1.18.pom -- \
+    org.apache.xmlgraphics:batik-anim org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util org.mozilla:rhino?
+
+  jb_module org.apache.xmlgraphics:batik-bridge:1.18 upstream/batik-bridge \
+    -r resources/batik-bridge -u batik-bridge-1.18.pom -- \
+    org.apache.xmlgraphics:batik-anim org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-css org.apache.xmlgraphics:batik-dom org.apache.xmlgraphics:batik-gvt org.apache.xmlgraphics:batik-parser org.apache.xmlgraphics:batik-script org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-svg-dom org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-xml org.apache.xmlgraphics:xmlgraphics-commons xml-apis:xml-apis-ext org.mozilla:rhino?
+
+  jb_module org.apache.xmlgraphics:batik-transcoder:1.18 upstream/batik-transcoder \
+    -r resources/batik-transcoder -u batik-transcoder-1.18.pom -- \
+    org.apache.xmlgraphics:batik-anim org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-bridge org.apache.xmlgraphics:batik-dom org.apache.xmlgraphics:batik-gvt org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-svggen org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-xml xml-apis:xml-apis-ext
+  jb_module org.apache.xmlgraphics:batik-codec:1.18 upstream/batik-codec \
+    -r resources/batik-codec -u batik-codec-1.18.pom -- \
+    org.apache.xmlgraphics:batik-awt-util org.apache.xmlgraphics:batik-bridge org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-transcoder org.apache.xmlgraphics:batik-util
+  jb_module org.apache.xmlgraphics:batik-svgrasterizer:1.18 upstream/batik-svgrasterizer \
+    -r resources/batik-svgrasterizer -u batik-svgrasterizer-1.18.pom -- \
+    org.apache.xmlgraphics:batik-parser org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-transcoder org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-codec
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-constants
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-i18n
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-ext
+  jb_loadcheck --with org.apache.xmlgraphics:batik-constants --with org.apache.xmlgraphics:batik-i18n --with org.apache.xmlgraphics:batik-shared-resources org.apache.xmlgraphics:batik-util
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-xml
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:xmlgraphics-commons org.apache.xmlgraphics:batik-awt-util
+  jb_loadcheck --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:xmlgraphics-commons --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-css
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-svggen
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:batik-xml --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-parser
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-gvt
+  jb_loadcheck --with org.apache.xmlgraphics:batik-css --with org.apache.xmlgraphics:batik-ext --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:batik-xml --with xml-apis:xml-apis --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-dom
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-css --with org.apache.xmlgraphics:batik-dom --with org.apache.xmlgraphics:batik-ext --with org.apache.xmlgraphics:batik-parser --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-svg-dom
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-css --with org.apache.xmlgraphics:batik-dom --with org.apache.xmlgraphics:batik-ext --with org.apache.xmlgraphics:batik-parser --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-svg-dom --with org.apache.xmlgraphics:batik-util --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-anim
+  jb_loadcheck --with org.apache.xmlgraphics:batik-anim --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-util --with org.mozilla:rhino org.apache.xmlgraphics:batik-script
+  jb_loadcheck --with org.apache.xmlgraphics:batik-anim --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-css --with org.apache.xmlgraphics:batik-dom --with org.apache.xmlgraphics:batik-gvt --with org.apache.xmlgraphics:batik-parser --with org.apache.xmlgraphics:batik-script --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-svg-dom --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:batik-xml --with org.apache.xmlgraphics:xmlgraphics-commons --with xml-apis:xml-apis-ext --with org.mozilla:rhino org.apache.xmlgraphics:batik-bridge
+  jb_loadcheck --with org.apache.xmlgraphics:batik-anim --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-bridge --with org.apache.xmlgraphics:batik-dom --with org.apache.xmlgraphics:batik-gvt --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-svggen --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:batik-xml --with xml-apis:xml-apis-ext org.apache.xmlgraphics:batik-transcoder
+  jb_loadcheck --with org.apache.xmlgraphics:batik-awt-util --with org.apache.xmlgraphics:batik-bridge --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-transcoder --with org.apache.xmlgraphics:batik-util org.apache.xmlgraphics:batik-codec
+  jb_loadcheck --with org.apache.xmlgraphics:batik-parser --with org.apache.xmlgraphics:batik-shared-resources --with org.apache.xmlgraphics:batik-transcoder --with org.apache.xmlgraphics:batik-util --with org.apache.xmlgraphics:batik-codec org.apache.xmlgraphics:batik-svgrasterizer
+  mkdir -p smoke
+  cat > smoke/BatikRender.java <<'JAVA'
+import java.io.*;
+import org.apache.batik.transcoder.*;
+import org.apache.batik.transcoder.image.PNGTranscoder;
+import org.apache.batik.bridge.RhinoInterpreter;
+public class BatikRender {
+  public static void main(String[] args) throws Exception {
+    String svg = "<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4'><rect width='4' height='4' fill='#00ff00'/></svg>";
+    ByteArrayOutputStream png = new ByteArrayOutputStream();
+    new PNGTranscoder().transcode(new TranscoderInput(new StringReader(svg)), new TranscoderOutput(png));
+    var image = javax.imageio.ImageIO.read(new ByteArrayInputStream(png.toByteArray()));
+    if (image.getWidth()!=4 || image.getHeight()!=4 || (image.getRGB(1,1)&0xffffff)!=0x00ff00) throw new AssertionError("SVG rendering");
+    RhinoInterpreter interpreter = new RhinoInterpreter(new java.net.URL("file:/bootstrap.svg"), new org.apache.batik.script.ImportInfo());
+    try {
+      if (((Number)interpreter.evaluate("6 * 7")).intValue()!=42) throw new AssertionError("SVG JavaScript");
+    } finally { interpreter.dispose(); }
+    System.out.println("Batik SVG-to-PNG pixels and JavaScript interpreter passed");
+  }
+}
+JAVA
+  local cp=$(jb_cp org.apache.xmlgraphics:batik-transcoder org.apache.xmlgraphics:batik-codec org.mozilla:rhino)
+  javac --release 21 -d "$(jb_w smoke)" -cp "$cp" "$(jb_w smoke/BatikRender.java)"
+  java -Djava.awt.headless=true -cp "$(jb_w smoke);$cp" BatikRender
+
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-batik-shared-resources() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-shared-resources
+  _license batik-shared-resources 1.18
+}
+
+package_java-batik-constants() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-constants
+  _license batik-constants 1.18
+}
+
+package_java-batik-i18n() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-i18n
+  _license batik-i18n 1.18
+}
+
+package_java-batik-ext() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-ext
+  _license batik-ext 1.18
+}
+
+package_java-batik-util() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-constants"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-i18n"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-util
+  _license batik-util 1.18
+}
+
+package_java-batik-xml() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-xml
+  _license batik-xml 1.18
+}
+
+package_java-batik-awt-util() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlgraphics-commons")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-awt-util
+  _license batik-awt-util 1.18
+}
+
+package_java-batik-css() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlgraphics-commons"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-css
+  _license batik-css 1.18
+}
+
+package_java-batik-svggen() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-svggen
+  _license batik-svggen 1.18
+}
+
+package_java-batik-parser() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-xml"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-parser
+  _license batik-parser 1.18
+}
+
+package_java-batik-gvt() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-gvt
+  _license batik-gvt 1.18
+}
+
+package_java-batik-dom() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-css"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-ext"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-xml"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-dom
+  _license batik-dom 1.18
+}
+
+package_java-batik-svg-dom() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-css"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-ext"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-parser"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-svg-dom
+  _license batik-svg-dom 1.18
+}
+
+package_java-batik-anim() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-css"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-ext"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-parser"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-svg-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-anim
+  _license batik-anim 1.18
+}
+
+package_java-batik-script() {
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-rhino: SVG JavaScript execution")
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-anim"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-script
+  _license batik-script 1.18
+}
+
+package_java-batik-bridge() {
+  optdepends=("${MINGW_PACKAGE_PREFIX}-java-rhino: SVG JavaScript execution")
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-anim"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-css"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-gvt"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-parser"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-script"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-svg-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-xml"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlgraphics-commons"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-bridge
+  _license batik-bridge 1.18
+}
+
+package_java-batik-transcoder() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-anim"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-bridge"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-dom"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-gvt"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-svggen"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-xml"
+           "${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-transcoder
+  _license batik-transcoder 1.18
+}
+
+package_java-batik-codec() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-awt-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-bridge"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-transcoder"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-codec
+  _license batik-codec 1.18
+}
+
+package_java-batik-svgrasterizer() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-parser"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-shared-resources"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-transcoder"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-util"
+           "${MINGW_PACKAGE_PREFIX}-java-batik-codec")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.xmlgraphics:batik-svgrasterizer
+  _license batik-svgrasterizer 1.18
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

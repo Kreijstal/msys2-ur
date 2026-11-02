@@ -1,0 +1,205 @@
+Subject: DesktopGL: use the MSYS2 SDL2 and OpenAL Soft DLLs
+
+diff --git a/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj b/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
+index 7a2fe6c..0917e28 100644
+--- a/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
++++ b/MonoGame.Framework/MonoGame.Framework.DesktopGL.csproj
+@@ -17,9 +17,6 @@
+     <None Include="..\README-packages.md" Pack="true" PackagePath="\"/>
+   </ItemGroup>
+ 
+-  <ItemGroup>
+-    <PackageReference Include="MonoGame.Library.SDL" Version="2.32.10.2" />
+-  </ItemGroup>
+ 
+   <ItemGroup>
+     <Compile Remove="bin\**\*" />
+@@ -51,6 +48,7 @@
+     <Compile Include="Platform\Utilities\CurrentPlatform.cs" />
+     <Compile Include="Platform\Utilities\FuncLoader.Desktop.cs" />
+     <Compile Include="Platform\Utilities\InteropHelpers.cs" />
++    <Compile Include="Platform\Utilities\Msys2Native.cs" />
+     <Compile Include="Platform\Utilities\ReflectionHelpers.Default.cs" />
+     <Compile Include="Platform\Media\MediaLibrary.Default.cs" />
+     <Compile Include="Platform\Media\MediaPlayer.Default.cs" />
+diff --git a/MonoGame.Framework/MonoGame.Framework.DesktopGL.targets b/MonoGame.Framework/MonoGame.Framework.DesktopGL.targets
+index 7e350cb..4a572bb 100644
+--- a/MonoGame.Framework/MonoGame.Framework.DesktopGL.targets
++++ b/MonoGame.Framework/MonoGame.Framework.DesktopGL.targets
+@@ -4,4 +4,24 @@
+     <MonoGamePlatform>DesktopGL</MonoGamePlatform>
+   </PropertyGroup>
+ 
++  <!--
++    MSYS2 packaging: SDL2 and OpenAL Soft are the DLLs of the MSYS2 SDL2 and
++    openal packages, taken from the prefix of the .NET SDK doing the build
++    ($MINGW_PREFIX/lib/dotnet -> $MINGW_PREFIX/bin) and copied next to the
++    game. Set MonoGameCopyNativeLibraries=false to ship them yourself, or
++    MonoGameNativeLibraryDir to take them from somewhere else.
++  -->
++  <PropertyGroup>
++    <MonoGameNativeLibraryDir Condition="'$(MonoGameNativeLibraryDir)' == ''">$([MSBuild]::NormalizeDirectory('$(NetCoreRoot)', '..', '..', 'bin'))</MonoGameNativeLibraryDir>
++  </PropertyGroup>
++
++  <ItemGroup Condition="'$(MonoGameCopyNativeLibraries)' != 'false' And '$(OS)' == 'Windows_NT'">
++    <MonoGameNativeLibrary Include="@MSYS2_NATIVE_DLLS@" />
++    <None Include="@(MonoGameNativeLibrary->'$(MonoGameNativeLibraryDir)%(Identity)')" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
++  </ItemGroup>
++
++  <Target Name="_MonoGameCheckNativeLibraries" BeforeTargets="Build" Condition="'$(MonoGameCopyNativeLibraries)' != 'false' And '$(OS)' == 'Windows_NT'">
++    <Error Condition="!Exists('$(MonoGameNativeLibraryDir)%(MonoGameNativeLibrary.Identity)')" Text="MonoGame: %(MonoGameNativeLibrary.Identity) not found in $(MonoGameNativeLibraryDir) (install the MSYS2 SDL2 and openal packages, or set MonoGameNativeLibraryDir / MonoGameCopyNativeLibraries=false)." />
++  </Target>
++
+ </Project>
+diff --git a/MonoGame.Framework/Platform/OpenAL.targets b/MonoGame.Framework/Platform/OpenAL.targets
+index 9961870..5cb1f7a 100644
+--- a/MonoGame.Framework/Platform/OpenAL.targets
++++ b/MonoGame.Framework/Platform/OpenAL.targets
+@@ -37,8 +37,8 @@
+   
+   <!-- DesktopGL has its own Song implementation, and need OpenAL binaries -->
+   <ItemGroup Condition="$(DefineConstants.Contains('NO_AUDIO')) != 'true' And $(DefineConstants.Contains('DESKTOPGL'))">
+-    <PackageReference Include="MonoGame.Library.OpenAL" Version="1.24.3.4" />
+-	<PackageReference Include="NVorbis" Version="0.10.4" />
++    <!-- MSYS2: OpenAL Soft comes from the MSYS2 openal package (libopenal-1.dll). -->
++    <PackageReference Include="NVorbis" Version="0.10.4" />
+ 
+     <Compile Include="Platform\Media\OggStream.NVorbis.cs" />
+     <Compile Include="Platform\Media\Song.NVorbis.cs" />
+diff --git a/MonoGame.Framework/Platform/Utilities/FuncLoader.Desktop.cs b/MonoGame.Framework/Platform/Utilities/FuncLoader.Desktop.cs
+index 468b2ae..b1316cd 100644
+--- a/MonoGame.Framework/Platform/Utilities/FuncLoader.Desktop.cs
++++ b/MonoGame.Framework/Platform/Utilities/FuncLoader.Desktop.cs
+@@ -70,6 +70,10 @@ namespace MonoGame.Framework.Utilities
+             if (ret == IntPtr.Zero)
+                 ret = LoadLibrary(Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, libname));
+ 
++            // MSYS2 packaging: the library from the MSYS2 prefix of the .NET runtime
++            if (ret == IntPtr.Zero && CurrentPlatform.OS == OS.Windows)
++                ret = MonoGame.Msys2.Msys2Native.LoadFromPrefix(libname);
++
+             // Try loading system library
+             if (ret == IntPtr.Zero)
+                 ret = LoadLibrary(libname);
+diff --git a/MonoGame.Framework/Platform/Utilities/Msys2Native.cs b/MonoGame.Framework/Platform/Utilities/Msys2Native.cs
+new file mode 100644
+index 0000000..53834ad
+--- /dev/null
++++ b/MonoGame.Framework/Platform/Utilities/Msys2Native.cs
+@@ -0,0 +1,116 @@
++// MonoGame - Copyright (C) MonoGame Foundation, Inc
++// This file is subject to the terms and conditions defined in
++// file 'LICENSE.txt', which is part of this source code package.
++
++// MSYS2 packaging: native libraries come from the MSYS2 prefix that the
++// .NET runtime itself is installed in ($MINGW_PREFIX/lib/dotnet), instead
++// of MonoGame.Library.* / MonoGame.Tool.* NuGet packages with prebuilt
++// binaries. A copy next to the application always wins.
++
++using System;
++using System.IO;
++using System.Reflection;
++using System.Runtime.CompilerServices;
++using System.Runtime.InteropServices;
++
++namespace MonoGame.Msys2
++{
++    internal static class Msys2Native
++    {
++        private static string? _prefix;
++        private static bool _prefixResolved;
++
++        /// <summary>
++        /// The MSYS2 environment prefix (e.g. C:/msys64/clang64), from
++        /// MONOGAME_MSYS2_PREFIX or derived from the running .NET runtime
++        /// ($prefix/lib/dotnet/shared/Microsoft.NETCore.App/x.y.z/).
++        /// Null when the runtime is not an MSYS2 one.
++        /// </summary>
++        public static string? Prefix
++        {
++            get
++            {
++                if (_prefixResolved)
++                    return _prefix;
++                _prefixResolved = true;
++
++                var env = Environment.GetEnvironmentVariable("MONOGAME_MSYS2_PREFIX");
++                if (!string.IsNullOrEmpty(env) && Directory.Exists(Path.Combine(env, "bin")))
++                    return _prefix = Path.GetFullPath(env);
++
++                try
++                {
++                    var runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
++                    var prefix = Path.GetFullPath(Path.Combine(runtimeDir, "..", "..", "..", "..", ".."));
++                    if (File.Exists(Path.Combine(prefix, "lib", "dotnet", "dotnet.exe")) && Directory.Exists(Path.Combine(prefix, "bin")))
++                        _prefix = prefix;
++                }
++                catch (Exception)
++                {
++                }
++                return _prefix;
++            }
++        }
++
++        /// <summary>Maps MonoGame's DllImport names to MSYS2 DLL names.</summary>
++        public static string? MapName(string libraryName)
++        {
++            switch (libraryName)
++            {
++                case "openal": return "libopenal-1.dll";
++                case "mojoshader": return "libmojoshader.dll";
++                case "freetype": return "libfreetype-6.dll";
++                case "SDL2.dll": return "SDL2.dll";
++                case "mgpipeline": return "mgpipeline.dll";
++                default: return null;
++            }
++        }
++
++        /// <summary>Loads an MSYS2 DLL by full path from $prefix/bin, so its own dependencies resolve there too.</summary>
++        public static IntPtr LoadFromPrefix(string fileName)
++        {
++            var prefix = Prefix;
++            if (prefix == null)
++                return IntPtr.Zero;
++            var path = Path.Combine(prefix, "bin", fileName);
++            if (File.Exists(path) && NativeLibrary.TryLoad(path, out var handle))
++                return handle;
++            return IntPtr.Zero;
++        }
++
++        private static IntPtr Resolve(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
++        {
++            var fileName = MapName(libraryName);
++            if (fileName == null || !OperatingSystem.IsWindows())
++                return IntPtr.Zero;
++
++            foreach (var local in new[] {
++                Path.Combine(AppContext.BaseDirectory, fileName),
++                Path.Combine(AppContext.BaseDirectory, "runtimes", "win-x64", "native", fileName) })
++            {
++                if (File.Exists(local) && NativeLibrary.TryLoad(local, out var handle))
++                    return handle;
++            }
++
++            if (NativeLibrary.TryLoad(libraryName, assembly, searchPath, out var fallback))
++                return fallback;
++
++            return LoadFromPrefix(fileName);
++        }
++
++#pragma warning disable CA2255 // ModuleInitializer in a library is intentional here.
++        [ModuleInitializer]
++        internal static void Register()
++        {
++            try
++            {
++                NativeLibrary.SetDllImportResolver(typeof(Msys2Native).Assembly, Resolve);
++            }
++            catch (InvalidOperationException)
++            {
++                // A resolver was already registered for this assembly.
++            }
++        }
++#pragma warning restore CA2255
++    }
++}

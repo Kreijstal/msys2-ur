@@ -1,0 +1,53 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-illink10-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.5
+pkgrel=1
+pkgdesc='Original source ILLink10 and exact Cecil bootstrap host on NET8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31-3")
+makedepends=(
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-v10.0.5.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v10.0.5'
+        'illink10-bootstrap-source-1.tar.gz'
+        'arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d'
+        'cecil-27abc572.tar.gz::https://codeload.github.com/dotnet/cecil/tar.gz/27abc57253a0d3010418e877fdfb35f9fa6806b9')
+noextract=('runtime-v10.0.5.tar.gz' 'arcade-runtime10-4bf37ce6.tar.gz' 'cecil-27abc572.tar.gz')
+sha256sums=('1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a'
+            '85dcad871262fe06b8a736ada2c03223b4b2a20a0ade943fa87578021e9e9532'
+            '82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66'
+            '3d82d4708f93dabd7442bcdb6f2667489fdd3ee2162d821b96d8aad62c33d019')
+prepare() {
+  /usr/bin/python3 "$srcdir/illink10-workflow/prepare.py" "$srcdir" "$srcdir/cecil-27abc572.tar.gz" "$srcdir/prepared" >"$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/illink10-workflow/build.sh" "$srcdir" "$srcdir/prepared" >"$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/illink10-workflow/audit-source.py" "$srcdir" "$srcdir/prepared" >"$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/illink10-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/check" >"$srcdir/check.log" 2>&1
+}
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/tool-packs/illink-10.0.5-bootstrap"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target" "$doc"
+  install -m644 "$srcdir/prepared/illink/bin/Release/net8.0/"*.dll "$target/"
+  install -m644 "$srcdir/prepared/illink/bin/Release/net8.0/illink.deps.json" "$srcdir/prepared/illink/bin/Release/net8.0/illink.runtimeconfig.json" "$target/"
+  install -Dm755 "$srcdir/illink10-workflow/illink10-bootstrap.sh" "$pkgdir$MINGW_PREFIX/bin/illink10-bootstrap"
+  install -m644 "$srcdir/illink10-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,source-audit}.json "$doc/"
+  install -m644 "$srcdir/prepared/illink/bin/Release/net8.0/illink.deps.json.version-metadata.json" "$doc/"
+  install -m644 "$srcdir/version-build-inputs.json" "$doc/"
+  install -m644 "$srcdir/check/results.json" "$doc/build-check-results.json"
+  install -Dm644 "$srcdir/r/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/runtime-LICENSE.TXT"
+  install -Dm644 "$srcdir/r/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/runtime-THIRD-PARTY-NOTICES.TXT"
+  install -Dm644 "$srcdir/Arcade-LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Arcade-LICENSE.TXT"
+  install -Dm644 "$srcdir/prepared/cecil-source/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/cecil-LICENSE.txt"
+}

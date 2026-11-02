@@ -1,0 +1,13 @@
+--- a/src/coreclr/ilasm/CMakeLists.txt
++++ b/src/coreclr/ilasm/CMakeLists.txt
+@@ -80,6 +80,10 @@
+   ${ILASM_RESOURCES}
+ )
+ 
++if(MINGW)
++    target_link_options(ilasm PRIVATE "LINKER:--Xlink=/CETCOMPAT")
++endif()
++
+ set(ILASM_LINK_LIBRARIES
+   utilcodestaticnohost
+   mscorpe

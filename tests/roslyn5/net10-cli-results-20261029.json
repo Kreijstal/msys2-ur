@@ -1,0 +1,114 @@
+{
+  "finished_at_utc": "2026-10-29T01:32:20.475825+00:00",
+  "host": "win11",
+  "source_commit": "2333221c0564852ee5ceac9c622a0b14e864d76e",
+  "source_archive_sha256": "e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb",
+  "nuget_version": "5.3.0-2.26113.113",
+  "original_target": "net10.0",
+  "original_profile": "DotNetBuildSourceOnly=true;DotNetBuildFromVMR=true;NetCurrent=net10.0",
+  "build_root": "/e/codex-dotnet10/roslyn53-net10-build4",
+  "evaluation_root": "/e/codex-dotnet10/roslyn53-net10-plan1",
+  "compiler_host": "installed source Compiler5.0 bootstrap on NET8; not a fresh SDK5.3 compiler host",
+  "execution_host": "/clang64/lib/dotnet10/dotnet.exe",
+  "production_source_changes": 0,
+  "compile_exit_code": 0,
+  "real_cli_check_exit_code": 0,
+  "source_audit_exit_code": 0,
+  "original_project_compile_items": {
+    "Microsoft.CodeAnalysis": 1042,
+    "Microsoft.CodeAnalysis.CSharp": 1151,
+    "csc": 11
+  },
+  "original_csharp_regenerated_baselines_replaced_by_five_fresh_sources": true,
+  "net10_framework_reference_assemblies": 167,
+  "csharp14_extension_property_execution_passed": true,
+  "generated_regex_execution_passed": true,
+  "unicode_response_file_passed": true,
+  "net10_common_and_csharp_target_identity_passed": true,
+  "invalid_source_exit_code": 1,
+  "invalid_source_diagnostic": "CS0103",
+  "commands": [
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/build-net10.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared /e/codex-dotnet10/roslyn53-net10-plan1 /e/codex-dotnet10/roslyn53-net10-build4",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/check-net10-cli.py /e/codex-dotnet10/roslyn53-net10-build4 \"/e/codex-dotnet10/roslyn53-net10-cli-check1 \u03bb\"",
+      "exit_code": 0
+    },
+    {
+      "command": "python tests/roslyn5/audit-net10-evidence.py /tmp/roslyn53-net10-prototype1/roslyn53-net10-evidence1.tar.gz /tmp/dotnet10-sources/roslyn-sdk10-2333221c.tar.gz /tmp/roslyn53-net10-prototype1/source-audit.json",
+      "exit_code": 0
+    }
+  ],
+  "evidence": {
+    "local_directory": "/tmp/roslyn53-net10-prototype1",
+    "evidence_members_verified": 66,
+    "evidence_archive_sha256": "610e75e63f9a55336f597d35ce269ac8ce9a6b0f503da8ad6b397a41b21effbf",
+    "original_archive_inputs_verified": 2210,
+    "original_project_compile_items": {
+      "Microsoft.CodeAnalysis": 1042,
+      "Microsoft.CodeAnalysis.CSharp": 1151,
+      "csc": 11
+    },
+    "all_original_selected_sources_match_pinned_archive": true,
+    "all_recorded_products_and_emitted_regex_sources_match_evidence": true,
+    "real_net10_cli_execution_passed": true,
+    "commands": [
+      {
+        "label": "version",
+        "command": [
+          "/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/roslyn53-net10-build4/bin/csc.dll",
+          "-noconfig",
+          "-version"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "compile",
+        "command": [
+          "/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/roslyn53-net10-build4/bin/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/roslyn53-net10-cli-check1 \u03bb/compiler \u03bb.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "execute",
+        "command": [
+          "/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/roslyn53-net10-cli-check1 \u03bb/probe.dll"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "negative",
+        "command": [
+          "/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/roslyn53-net10-build4/bin/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/roslyn53-net10-cli-check1 \u03bb/negative.rsp"
+        ],
+        "exit_code": 1
+      }
+    ],
+    "formal_net10_compiler_package_built": false,
+    "all_localized_satellites_and_cli_integration_audited": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "attempt_history": [
+    "First compile failed because original NET10 GeneratedRegex methods needed the source Regex generator.",
+    "Second attempt supplied the generator but the generated-source output directory was absent.",
+    "Third attempt compiled Common but CSharp had a duplicate CommitHash attribute from an unrelated generated friends file included by a broad resource-wrapper glob.",
+    "Fourth fresh build explicitly selects resource wrappers, generates original Regex implementations and completes Common, CSharp and csc. CLI check and pinned original source audit both pass."
+  ],
+  "formal_net10_compiler_package_built": false,
+  "all_localized_satellites_and_cli_integration_audited": false,
+  "original_cli_and_all_framework_profiles_complete": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false
+}

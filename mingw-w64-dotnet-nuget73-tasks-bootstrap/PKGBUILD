@@ -1,0 +1,42 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-nuget73-tasks-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=7.3.0.preview1.11413
+pkgrel=1
+pkgdesc='Original NET10 NuGet7.3 restore pack static-graph tasks and SDK resolver bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/NuGet/NuGet.Client'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-msbuild18-bootstrap>=18.3.0.26113.113-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-libraries-bootstrap=7.3.0.preview1.11413")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('nuget-sdk10-bf048eb7.tar.gz::https://codeload.github.com/NuGet/NuGet.Client/tar.gz/bf048eb714eb6b1912ba868edca4c7cfec454841'
+        'nuget73-tasks-source-1.tar.gz')
+noextract=('nuget-sdk10-bf048eb7.tar.gz')
+sha256sums=('9eb1139d9abecfab7d69fd7b02cb58d20792a0cd46ffb7b2ea6a12bbfda48f12' 'a85589cef5a8b99ccd497b617473050146225cb356f3f6a60eaa89cf2282c8fa')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/prepare.py")" "$(cygpath -am "$srcdir/nuget-sdk10-bf048eb7.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/flow.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/flow")" > "$srcdir/flow.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/evaluate.py")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/evaluate.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/localize.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/audit.py")" "$(cygpath -am "$srcdir/nuget-sdk10-bf048eb7.tar.gz")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/source-audit.json")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/check-resources.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/resource-check")" > "$srcdir/resource-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/nuget73-tasks-workflow/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

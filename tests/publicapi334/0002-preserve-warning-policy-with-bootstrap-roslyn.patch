@@ -1,0 +1,774 @@
+--- a/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.Impl.cs
++++ b/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.Impl.cs
+@@ -151,7 +151,7 @@
+                 }
+             }
+ 
+-            private void CheckPropertyAccessor(SymbolAnalysisContext symbolContext, IMethodSymbol accessor)
++            private void CheckPropertyAccessor(SymbolAnalysisContext symbolContext, IMethodSymbol? accessor)
+             {
+                 if (accessor == null)
+                 {
+@@ -286,7 +286,7 @@
+                     if (publicApiName.Name != publicApiName.NameWithNullability)
+                     {
+                         // '#nullable enable' would be useful and should be set
+-                        reportDiagnosticAtLocations(GetDiagnostic(ShouldAnnotatePublicApiFilesRule, ShouldAnnotateInternalApiFilesRule), ImmutableDictionary<string, string>.Empty);
++                        reportDiagnosticAtLocations(GetDiagnostic(ShouldAnnotatePublicApiFilesRule, ShouldAnnotateInternalApiFilesRule), ImmutableDictionary<string, string?>.Empty);
+                     }
+                 }
+ 
+@@ -307,7 +307,7 @@
+                         !CanTypeBeExtended(method.ContainingType.BaseType))
+                     {
+                         string errorMessageName = GetErrorMessageName(method, isImplicitlyDeclaredConstructor);
+-                        ImmutableDictionary<string, string> propertyBag = ImmutableDictionary<string, string>.Empty;
++                        ImmutableDictionary<string, string?> propertyBag = ImmutableDictionary<string, string?>.Empty;
+                         var locations = isImplicitlyDeclaredConstructor ? method.ContainingType.Locations : method.Locations;
+                         reportDiagnostic(Diagnostic.Create(GetDiagnostic(ExposedNoninstantiableTypePublic, ExposedNoninstantiableTypeInternal), locations[0], propertyBag, errorMessageName));
+                     }
+@@ -344,7 +344,7 @@
+                             {
+                                 string errorMessageName = GetErrorMessageName(method, isImplicitlyDeclaredConstructor);
+                                 var diagnostic = GetDiagnostic(AvoidMultipleOverloadsWithOptionalParametersPublic, AvoidMultipleOverloadsWithOptionalParametersInternal);
+-                                reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string>.Empty, errorMessageName, diagnostic.HelpLinkUri);
++                                reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string?>.Empty, errorMessageName, diagnostic.HelpLinkUri);
+                                 break;
+                             }
+ 
+@@ -357,7 +357,7 @@
+                                 {
+                                     string errorMessageName = GetErrorMessageName(method, isImplicitlyDeclaredConstructor);
+                                     var diagnostic = GetDiagnostic(OverloadWithOptionalParametersShouldHaveMostParametersPublic, OverloadWithOptionalParametersShouldHaveMostParametersInternal);
+-                                    reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string>.Empty, errorMessageName, diagnostic.HelpLinkUri);
++                                    reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string?>.Empty, errorMessageName, diagnostic.HelpLinkUri);
+                                     break;
+                                 }
+                                 else if (!overloadHasOptionalParams)
+@@ -369,7 +369,7 @@
+                                     {
+                                         string errorMessageName = GetErrorMessageName(method, isImplicitlyDeclaredConstructor);
+                                         var diagnostic = GetDiagnostic(OverloadWithOptionalParametersShouldHaveMostParametersPublic, OverloadWithOptionalParametersShouldHaveMostParametersInternal);
+-                                        reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string>.Empty, errorMessageName, diagnostic.HelpLinkUri);
++                                        reportDiagnosticAtLocations(diagnostic, ImmutableDictionary<string, string?>.Empty, errorMessageName, diagnostic.HelpLinkUri);
+                                         break;
+                                     }
+                                 }
+@@ -381,7 +381,7 @@
+                 return;
+ 
+                 // local functions
+-                void reportDiagnosticAtLocations(DiagnosticDescriptor descriptor, ImmutableDictionary<string, string> propertyBag, params object[] args)
++                void reportDiagnosticAtLocations(DiagnosticDescriptor descriptor, ImmutableDictionary<string, string?> propertyBag, params object[] args)
+                 {
+                     foreach (var location in locationsToReport)
+                     {
+@@ -402,7 +402,7 @@
+                     string errorMessageName = GetErrorMessageName(symbol, isImplicitlyDeclaredConstructor);
+                     // Compute public API names for any stale siblings to remove from unshipped text (e.g. during signature change of unshipped public API).
+                     var siblingPublicApiNamesToRemove = GetSiblingNamesToRemoveFromUnshippedText(symbol, cancellationToken);
+-                    ImmutableDictionary<string, string> propertyBag = ImmutableDictionary<string, string>.Empty
++                    ImmutableDictionary<string, string?> propertyBag = ImmutableDictionary<string, string?>.Empty
+                         .Add(ApiNamePropertyBagKey, publicApiName)
+                         .Add(MinimalNamePropertyBagKey, errorMessageName)
+                         .Add(ApiNamesOfSiblingsToRemovePropertyBagKey, siblingPublicApiNamesToRemove);
+@@ -414,7 +414,7 @@
+                 {
+                     // Public API missing annotations in public API file - report diagnostic.
+                     string errorMessageName = GetErrorMessageName(symbol, isImplicitlyDeclaredConstructor);
+-                    ImmutableDictionary<string, string> propertyBag = ImmutableDictionary<string, string>.Empty
++                    ImmutableDictionary<string, string?> propertyBag = ImmutableDictionary<string, string?>.Empty
+                         .Add(ApiNamePropertyBagKey, publicApiName.Name)
+                         .Add(ApiNameWithNullabilityPropertyBagKey, withObliviousIfNeeded(publicApiName.NameWithNullability))
+                         .Add(MinimalNamePropertyBagKey, errorMessageName)
+@@ -434,7 +434,7 @@
+                     // Public API using oblivious types in public API file - report diagnostic.
+                     string errorMessageName = GetErrorMessageName(symbol, isImplicitlyDeclaredConstructor);
+ 
+-                    reportDiagnosticAtLocations(GetDiagnostic(ObliviousPublicApiRule, ObliviousInternalApiRule), ImmutableDictionary<string, string>.Empty, errorMessageName);
++                    reportDiagnosticAtLocations(GetDiagnostic(ObliviousPublicApiRule, ObliviousInternalApiRule), ImmutableDictionary<string, string?>.Empty, errorMessageName);
+                 }
+ 
+                 bool lookupPublicApi(ApiName overloadPublicApiName, out ApiLine overloadPublicApiLine)
+@@ -667,8 +667,8 @@
+                 {
+                     foreach (var attribute in compilation.Assembly.GetAttributes())
+                     {
+-                        if (attribute.AttributeClass.Equals(typeForwardedToAttribute) &&
+-                            attribute.AttributeConstructor.Parameters.Length == 1 &&
++                        if (typeForwardedToAttribute.Equals(attribute.AttributeClass) &&
++                            attribute.AttributeConstructor?.Parameters.Length == 1 &&
+                             attribute.ConstructorArguments.Length == 1 &&
+                             attribute.ConstructorArguments[0].Value is INamedTypeSymbol forwardedType)
+                         {
+@@ -678,7 +678,7 @@
+                                 forwardedType = forwardedType.ConstructedFrom;
+                             }
+ 
+-                            VisitForwardedTypeRecursively(forwardedType, reportDiagnostic, obsoleteAttribute, attribute.ApplicationSyntaxReference.GetSyntax(cancellationToken).GetLocation(), cancellationToken);
++                            VisitForwardedTypeRecursively(forwardedType, reportDiagnostic, obsoleteAttribute, attribute.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation() ?? Location.None, cancellationToken);
+                         }
+                     }
+                 }
+@@ -724,7 +724,7 @@
+                     }
+ 
+                     Location location = GetLocationFromApiLine(pair.Value);
+-                    ImmutableDictionary<string, string> propertyBag = ImmutableDictionary<string, string>.Empty.Add(ApiNamePropertyBagKey, pair.Value.Text);
++                    ImmutableDictionary<string, string?> propertyBag = ImmutableDictionary<string, string?>.Empty.Add(ApiNamePropertyBagKey, pair.Value.Text);
+                     reportDiagnostic(Diagnostic.Create(GetDiagnostic(RemoveDeletedPublicApiRule, RemoveDeletedInternalApiRule), location, propertyBag, pair.Value.Text));
+                 }
+             }
+@@ -930,7 +930,7 @@
+                 {
+                     if (!_ignoreTopLevelNullability &&
+                         symbol.IsReferenceType &&
+-                        symbol.NullableAnnotation() == NullableAnnotation.None)
++                        symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         return true;
+                     }
+@@ -954,7 +954,7 @@
+ 
+                 public override bool VisitArrayType(IArrayTypeSymbol symbol)
+                 {
+-                    if (symbol.NullableAnnotation() == NullableAnnotation.None)
++                    if (symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         return true;
+                     }
+@@ -971,7 +971,7 @@
+                 public override bool VisitTypeParameter(ITypeParameterSymbol symbol)
+                 {
+                     if (symbol.IsReferenceType &&
+-                        symbol.NullableAnnotation() == NullableAnnotation.None)
++                        symbol.NullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         // Example:
+                         // I<TReferenceType~>
+@@ -998,7 +998,7 @@
+                 private static bool CheckTypeParameterConstraints(ITypeParameterSymbol symbol)
+                 {
+                     if (symbol.HasReferenceTypeConstraint() &&
+-                        symbol.ReferenceTypeConstraintNullableAnnotation() == NullableAnnotation.None)
++                        symbol.ReferenceTypeConstraintNullableAnnotation() == global::Analyzer.Utilities.Lightup.NullableAnnotation.None)
+                     {
+                         // where T : class~
+                         return true;
+--- a/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.cs
++++ b/src/PublicApiAnalyzers/Core/Analyzers/DeclarePublicApiAnalyzer.cs
+@@ -320,7 +320,7 @@
+ 
+                 if (file.IsApiFile)
+                 {
+-                    SourceText text = additionalText.GetText(cancellationToken);
++                    SourceText? text = additionalText.GetText(cancellationToken);
+ 
+                     if (text is null)
+                     {
+--- a/src/PublicApiAnalyzers/Core/CodeFixes/AnnotatePublicApiFix.cs
++++ b/src/PublicApiAnalyzers/Core/CodeFixes/AnnotatePublicApiFix.cs
+@@ -33,10 +33,10 @@
+ 
+             foreach (Diagnostic diagnostic in context.Diagnostics)
+             {
+-                string minimalSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.MinimalNamePropertyBagKey];
+-                string publicSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey];
+-                string publicSymbolNameWithNullability = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNameWithNullabilityPropertyBagKey];
+-                string fileName = diagnostic.Properties[DeclarePublicApiAnalyzer.FileName];
++                string minimalSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.MinimalNamePropertyBagKey]!;
++                string publicSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey]!;
++                string publicSymbolNameWithNullability = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNameWithNullabilityPropertyBagKey]!;
++                string fileName = diagnostic.Properties[DeclarePublicApiAnalyzer.FileName]!;
+ 
+                 TextDocument? document = project.GetPublicApiDocument(fileName);
+ 
+@@ -100,30 +100,30 @@
+ 
+             public override string Title { get; }
+ 
+-            protected override async Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
++            protected override async Task<Solution?> GetChangedSolutionAsync(CancellationToken cancellationToken)
+             {
+                 var updatedPublicSurfaceAreaText = new List<(DocumentId, SourceText)>();
+ 
+                 foreach (var (project, diagnostics) in _diagnosticsToFix)
+                 {
+-                    IEnumerable<IGrouping<SyntaxTree, Diagnostic>> groupedDiagnostics =
++                    IEnumerable<IGrouping<SyntaxTree?, Diagnostic>> groupedDiagnostics =
+                         diagnostics
+                             .Where(d => d.Location.IsInSource)
+                             .GroupBy(d => d.Location.SourceTree);
+ 
+                     var allChanges = new Dictionary<string, Dictionary<string, string>>();
+ 
+-                    foreach (IGrouping<SyntaxTree, Diagnostic> grouping in groupedDiagnostics)
++                    foreach (IGrouping<SyntaxTree?, Diagnostic> grouping in groupedDiagnostics)
+                     {
+-                        Document document = project.GetDocument(grouping.Key);
++                        Document? document = grouping.Key is null ? null : project.GetDocument(grouping.Key);
+ 
+                         if (document is null)
+                         {
+                             continue;
+                         }
+ 
+-                        SyntaxNode root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+-                        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
++                        SyntaxNode? root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
++                        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+ 
+                         foreach (Diagnostic diagnostic in grouping)
+                         {
+@@ -136,10 +136,10 @@
+                                     continue;
+                             }
+ 
+-                            string oldName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey];
+-                            string newName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNameWithNullabilityPropertyBagKey];
++                            string oldName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey]!;
++                            string newName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNameWithNullabilityPropertyBagKey]!;
+                             bool isShipped = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiIsShippedPropertyBagKey] == "true";
+-                            string fileName = diagnostic.Properties[DeclarePublicApiAnalyzer.FileName];
++                            string fileName = diagnostic.Properties[DeclarePublicApiAnalyzer.FileName]!;
+ 
+                             if (!allChanges.TryGetValue(fileName, out var mapToUpdate))
+                             {
+@@ -185,9 +185,9 @@
+                 {
+                     case FixAllScope.Document:
+                         {
+-                            ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document).ConfigureAwait(false);
++                            ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document ?? throw new global::System.InvalidOperationException("Document scope requires a document.")).ConfigureAwait(false);
+                             diagnosticsToFix.Add(new KeyValuePair<Project, ImmutableArray<Diagnostic>>(fixAllContext.Project, diagnostics));
+-                            title = string.Format(CultureInfo.InvariantCulture, PublicApiAnalyzerResources.AddAllItemsInDocumentToTheApiTitle, fixAllContext.Document.Name);
++                            title = string.Format(CultureInfo.InvariantCulture, PublicApiAnalyzerResources.AddAllItemsInDocumentToTheApiTitle, fixAllContext.Document!.Name);
+                             break;
+                         }
+ 
+--- a/src/PublicApiAnalyzers/Core/CodeFixes/DeclarePublicApiFix.cs
++++ b/src/PublicApiAnalyzers/Core/CodeFixes/DeclarePublicApiFix.cs
+@@ -36,9 +36,9 @@
+             foreach (Diagnostic diagnostic in context.Diagnostics)
+             {
+                 bool isPublic = diagnostic.Id == DiagnosticIds.DeclarePublicApiRuleId;
+-                string minimalSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.MinimalNamePropertyBagKey];
+-                string publicSurfaceAreaSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey];
+-                ImmutableHashSet<string> siblingSymbolNamesToRemove = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagKey]
++                string minimalSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.MinimalNamePropertyBagKey]!;
++                string publicSurfaceAreaSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey]!;
++                ImmutableHashSet<string> siblingSymbolNamesToRemove = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagKey]!
+                     .Split(DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagValueSeparator.ToCharArray())
+                     .ToImmutableHashSet();
+ 
+@@ -63,7 +63,7 @@
+ 
+             foreach (var additional in project.AdditionalDocuments)
+             {
+-                var file = new PublicApiFile(additional.FilePath, isPublic);
++                var file = new PublicApiFile(additional.FilePath ?? additional.Name, isPublic);
+ 
+                 if (file.IsApiFile && !file.IsShipping)
+                 {
+@@ -196,9 +196,9 @@
+ 
+             public override string EquivalenceKey { get; }
+ 
+-            protected override Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
+-            {
+-                return _createChangedAdditionalDocument(cancellationToken);
++            protected override async Task<Solution?> GetChangedSolutionAsync(CancellationToken cancellationToken)
++            {
++                return await _createChangedAdditionalDocument(cancellationToken).ConfigureAwait(false);
+             }
+         }
+ 
+@@ -220,7 +220,7 @@
+ 
+             public override string Title { get; }
+ 
+-            protected override async Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
++            protected override async Task<Solution?> GetChangedSolutionAsync(CancellationToken cancellationToken)
+             {
+                 var updatedPublicSurfaceAreaText = new List<KeyValuePair<DocumentId, SourceText>>();
+                 var addedPublicSurfaceAreaText = new List<KeyValuePair<ProjectId, SourceText>>();
+@@ -235,7 +235,7 @@
+                         await publicSurfaceAreaAdditionalDocument.GetTextAsync(cancellationToken).ConfigureAwait(false) :
+                         null;
+ 
+-                    IEnumerable<IGrouping<SyntaxTree, Diagnostic>> groupedDiagnostics =
++                    IEnumerable<IGrouping<SyntaxTree?, Diagnostic>> groupedDiagnostics =
+                         diagnostics
+                             .Where(d => d.Location.IsInSource)
+                             .GroupBy(d => d.Location.SourceTree);
+@@ -243,17 +243,17 @@
+                     var newSymbolNames = new SortedSet<string>(IgnoreCaseWhenPossibleComparer.Instance);
+                     var symbolNamesToRemoveBuilder = PooledHashSet<string>.GetInstance();
+ 
+-                    foreach (IGrouping<SyntaxTree, Diagnostic> grouping in groupedDiagnostics)
+-                    {
+-                        Document document = project.GetDocument(grouping.Key);
++                    foreach (IGrouping<SyntaxTree?, Diagnostic> grouping in groupedDiagnostics)
++                    {
++                        Document? document = grouping.Key is null ? null : project.GetDocument(grouping.Key);
+ 
+                         if (document == null)
+                         {
+                             continue;
+                         }
+ 
+-                        SyntaxNode root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+-                        SemanticModel semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
++                        SyntaxNode? root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
++                        SemanticModel? semanticModel = await document.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+ 
+                         foreach (Diagnostic diagnostic in grouping)
+                         {
+@@ -265,11 +265,11 @@
+                                 continue;
+                             }
+ 
+-                            string publicSurfaceAreaSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey];
++                            string publicSurfaceAreaSymbolName = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamePropertyBagKey]!;
+ 
+                             newSymbolNames.Add(publicSurfaceAreaSymbolName);
+ 
+-                            string siblingNamesToRemove = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagKey];
++                            string siblingNamesToRemove = diagnostic.Properties[DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagKey]!;
+                             if (siblingNamesToRemove.Length > 0)
+                             {
+                                 var namesToRemove = siblingNamesToRemove.Split(DeclarePublicApiAnalyzer.ApiNamesOfSiblingsToRemovePropertyBagValueSeparator.ToCharArray());
+@@ -310,7 +310,7 @@
+                 using var uniqueProjectPaths = PooledHashSet<string>.GetInstance();
+                 foreach (KeyValuePair<ProjectId, SourceText> pair in addedPublicSurfaceAreaText)
+                 {
+-                    var project = newSolution.GetProject(pair.Key);
++                    var project = newSolution.GetProject(pair.Key) ?? throw new global::System.InvalidOperationException("The fix project no longer exists.");
+                     if (uniqueProjectPaths.Add(project.FilePath ?? project.Name))
+                     {
+                         newSolution = AddPublicApiFiles(project, pair.Value, _isPublic);
+@@ -331,9 +331,9 @@
+                 {
+                     case FixAllScope.Document:
+                         {
+-                            ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document).ConfigureAwait(false);
++                            ImmutableArray<Diagnostic> diagnostics = await fixAllContext.GetDocumentDiagnosticsAsync(fixAllContext.Document ?? throw new global::System.InvalidOperationException("Document scope requires a document.")).ConfigureAwait(false);
+                             diagnosticsToFix.Add(new KeyValuePair<Project, ImmutableArray<Diagnostic>>(fixAllContext.Project, diagnostics));
+-                            title = string.Format(CultureInfo.InvariantCulture, PublicApiAnalyzerResources.AddAllItemsInDocumentToTheApiTitle, fixAllContext.Document.Name);
++                            title = string.Format(CultureInfo.InvariantCulture, PublicApiAnalyzerResources.AddAllItemsInDocumentToTheApiTitle, fixAllContext.Document!.Name);
+                             break;
+                         }
+ 
+--- a/src/PublicApiAnalyzers/Core/CodeFixes/NullableEnablePublicApiFix.cs
++++ b/src/PublicApiAnalyzers/Core/CodeFixes/NullableEnablePublicApiFix.cs
+@@ -77,7 +77,7 @@
+ 
+             public override string Title { get; }
+ 
+-            protected override async Task<Solution> GetChangedSolutionAsync(CancellationToken cancellationToken)
++            protected override async Task<Solution?> GetChangedSolutionAsync(CancellationToken cancellationToken)
+             {
+                 var updatedSurfaceAreaText = new List<(DocumentId, SourceText)>();
+ 
+--- a/src/PublicApiAnalyzers/Core/CodeFixes/PublicApiFixHelpers.cs
++++ b/src/PublicApiAnalyzers/Core/CodeFixes/PublicApiFixHelpers.cs
+@@ -35,7 +35,7 @@
+ 
+         internal static DocumentId? CreateDocIdFromEquivalenceKey(this FixAllContext fixAllContext, out bool isPublic)
+         {
+-            var split = fixAllContext.CodeActionEquivalenceKey.Split(SemicolonSplit, StringSplitOptions.RemoveEmptyEntries);
++            var split = (fixAllContext.CodeActionEquivalenceKey ?? throw new global::System.InvalidOperationException("A fix-all action requires an equivalence key.")).Split(SemicolonSplit, StringSplitOptions.RemoveEmptyEntries);
+ 
+             isPublic = bool.Parse(split[^1]);
+ 
+--- a/src/Utilities/Compiler/Extensions/IMethodSymbolExtensions.cs
++++ b/src/Utilities/Compiler/Extensions/IMethodSymbolExtensions.cs
+@@ -153,7 +153,7 @@
+             INamedTypeSymbol? constructedInterface = typeArgument != null ? interfaceType?.Construct(typeArgument) : interfaceType;
+ 
+             return constructedInterface?.GetMembers(interfaceMethodName).FirstOrDefault() is IMethodSymbol interfaceMethod &&
+-                SymbolEqualityComparer.Default.Equals(method, method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod));
++                Roslyn12SymbolEqualityComparer.Default.Equals(method, method.ContainingType.FindImplementationForInterfaceMember(interfaceMethod));
+         }
+ 
+         /// <summary>
+@@ -214,7 +214,7 @@
+ 
+             // Identify the implementor of IAsyncDisposable.Dispose in the given method's containing type and check
+             // if it is the given method.
+-            return SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTaskType) &&
++            return Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTaskType) &&
+                 method.Parameters.IsEmpty &&
+                 method.IsImplementationOfInterfaceMethod(null, iAsyncDisposable, "DisposeAsync");
+         }
+@@ -269,7 +269,7 @@
+         /// </summary>
+         private static bool HasDisposeCloseAsyncMethodSignature(this IMethodSymbol method, INamedTypeSymbol? taskType)
+             => taskType != null && method.Parameters.IsEmpty && method.Name == "CloseAsync" &&
+-                SymbolEqualityComparer.Default.Equals(method.ReturnType, taskType);
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, taskType);
+ 
+         /// <summary>
+         /// Checks if the given method has the signature "Task DisposeAsync()" or "ValueTask DisposeAsync()".
+@@ -281,8 +281,8 @@
+             return method.Name == "DisposeAsync" &&
+                 method.MethodKind == MethodKind.Ordinary &&
+                 method.Parameters.IsEmpty &&
+-                (SymbolEqualityComparer.Default.Equals(method.ReturnType, task) ||
+-                 SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTask));
++                (Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, task) ||
++                 Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, valueTask));
+         }
+ 
+         /// <summary>
+@@ -293,7 +293,7 @@
+             return method.Name == "DisposeCoreAsync" &&
+                 method.MethodKind == MethodKind.Ordinary &&
+                 method.IsOverride &&
+-                SymbolEqualityComparer.Default.Equals(method.ReturnType, task) &&
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, task) &&
+                 method.Parameters.Length == 1 &&
+                 method.Parameters[0].Type.SpecialType == SpecialType.System_Boolean;
+         }
+@@ -323,7 +323,7 @@
+             if (method.ContainingType.IsDisposable(iDisposable, iAsyncDisposable))
+             {
+                 if (IsDisposeImplementation(method, iDisposable) ||
+-                    (SymbolEqualityComparer.Default.Equals(method.ContainingType, iDisposable) &&
++                    (Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType, iDisposable) &&
+                      method.HasDisposeMethodSignature())
+ #if CODEANALYSIS_V3_OR_BETTER
+                     || (method.ContainingType.IsRefLikeType &&
+@@ -384,15 +384,15 @@
+         public static bool IsSerializationConstructor([NotNullWhen(returnValue: true)] this IMethodSymbol? method, INamedTypeSymbol? serializationInfoType, INamedTypeSymbol? streamingContextType)
+             => method.IsConstructor() &&
+                 method.Parameters.Length == 2 &&
+-                SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, serializationInfoType) &&
+-                SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, streamingContextType);
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, serializationInfoType) &&
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, streamingContextType);
+ 
+         public static bool IsGetObjectData([NotNullWhen(returnValue: true)] this IMethodSymbol? method, INamedTypeSymbol? serializationInfoType, INamedTypeSymbol? streamingContextType)
+             => method?.Name == "GetObjectData" &&
+                 method.ReturnsVoid &&
+                 method.Parameters.Length == 2 &&
+-                SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, serializationInfoType) &&
+-                SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, streamingContextType);
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, serializationInfoType) &&
++                Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, streamingContextType);
+ 
+         /// <summary>
+         /// Checks if the method is a property getter.
+@@ -448,7 +448,7 @@
+             {
+                 foreach (var member in methods)
+                 {
+-                    if (!SymbolEqualityComparer.Default.Equals(member, method))
++                    if (!Roslyn12SymbolEqualityComparer.Default.Equals(member, method))
+                     {
+                         yield return member;
+                     }
+@@ -499,7 +499,7 @@
+         /// <param name="taskType">Task type.</param>
+         public static bool IsTaskFromResultMethod(this IMethodSymbol method, [NotNullWhen(returnValue: true)] INamedTypeSymbol? taskType)
+             => method.Name.Equals("FromResult", StringComparison.Ordinal) &&
+-               SymbolEqualityComparer.Default.Equals(method.ContainingType, taskType);
++               Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType, taskType);
+ 
+         /// <summary>
+         /// Determine if the specific method is a Task.ConfigureAwait(bool) method.
+@@ -510,7 +510,7 @@
+             => method.Name.Equals("ConfigureAwait", StringComparison.Ordinal) &&
+                method.Parameters.Length == 1 &&
+                method.Parameters[0].Type.SpecialType == SpecialType.System_Boolean &&
+-               SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, genericTaskType);
++               Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, genericTaskType);
+ 
+ #if HAS_IOPERATION
+         /// <summary>
+@@ -532,7 +532,7 @@
+             // Local functions.
+             IBlockOperation? ComputeTopmostOperationBlock(IMethodSymbol unused)
+             {
+-                if (!SymbolEqualityComparer.Default.Equals(method.ContainingAssembly, compilation.Assembly))
++                if (!Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingAssembly, compilation.Assembly))
+                 {
+                     return null;
+                 }
+@@ -586,7 +586,7 @@
+         {
+             for (var i = 0; i < methodSymbol.Parameters.Length; i++)
+             {
+-                if (SymbolEqualityComparer.Default.Equals(parameterSymbol, methodSymbol.Parameters[i]))
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(parameterSymbol, methodSymbol.Parameters[i]))
+                 {
+                     return i;
+                 }
+@@ -615,7 +615,7 @@
+         {
+             // "System.Threading.Monitor.Enter(object)" OR "System.Threading.Monitor.Enter(object, bool)"
+             return method.Name == "Enter" &&
+-                   SymbolEqualityComparer.Default.Equals(method.ContainingType, systemThreadingMonitor) &&
++                   Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType, systemThreadingMonitor) &&
+                    method.ReturnsVoid &&
+                    !method.Parameters.IsEmpty &&
+                    method.Parameters[0].Type.SpecialType == SpecialType.System_Object;
+@@ -623,19 +623,19 @@
+ 
+         public static bool IsInterlockedExchangeMethod(this IMethodSymbol method, INamedTypeSymbol? systemThreadingInterlocked)
+         {
+-            Debug.Assert(SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, systemThreadingInterlocked));
++            Debug.Assert(Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, systemThreadingInterlocked));
+ 
+             // "System.Threading.Interlocked.Exchange(ref T, T)"
+             return method.Name == "Exchange" &&
+                    method.Parameters.Length == 2 &&
+                    method.Parameters[0].RefKind == RefKind.Ref &&
+                    method.Parameters[1].RefKind != RefKind.Ref &&
+-                   SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, method.Parameters[1].Type);
++                   Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, method.Parameters[1].Type);
+         }
+ 
+         public static bool IsInterlockedCompareExchangeMethod(this IMethodSymbol method, INamedTypeSymbol? systemThreadingInterlocked)
+         {
+-            Debug.Assert(SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, systemThreadingInterlocked));
++            Debug.Assert(Roslyn12SymbolEqualityComparer.Default.Equals(method.ContainingType.OriginalDefinition, systemThreadingInterlocked));
+ 
+             // "System.Threading.Interlocked.CompareExchange(ref T, T, T)"
+             return method.Name == "CompareExchange" &&
+@@ -643,8 +643,8 @@
+                    method.Parameters[0].RefKind == RefKind.Ref &&
+                    method.Parameters[1].RefKind != RefKind.Ref &&
+                    method.Parameters[2].RefKind != RefKind.Ref &&
+-                   SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, method.Parameters[1].Type) &&
+-                   SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, method.Parameters[2].Type);
++                   Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[0].Type, method.Parameters[1].Type) &&
++                   Roslyn12SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type, method.Parameters[2].Type);
+         }
+ 
+         public static bool HasParameterWithDelegateType(this IMethodSymbol methodSymbol)
+@@ -664,7 +664,7 @@
+             }
+             else
+             {
+-                if (SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, typeSymbol))
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(methodSymbol.ContainingType, typeSymbol))
+                 {
+                     return true;
+                 }
+--- a/src/Utilities/Compiler/Extensions/ISymbolExtensions.cs
++++ b/src/Utilities/Compiler/Extensions/ISymbolExtensions.cs
+@@ -401,14 +401,14 @@
+ 
+             // this doesn't account for type conversion but FxCop implementation seems doesn't either
+             // so this should match FxCop implementation.
+-            return SymbolEqualityComparer.Default.Equals(type2, type1);
++            return Roslyn12SymbolEqualityComparer.Default.Equals(type2, type1);
+         }
+ 
+         /// <summary>
+         /// Check whether return type, parameters count and parameter types are same for the given methods.
+         /// </summary>
+         public static bool ReturnTypeAndParametersAreSame(this IMethodSymbol method, IMethodSymbol otherMethod)
+-            => SymbolEqualityComparer.Default.Equals(method.ReturnType, otherMethod.ReturnType) &&
++            => Roslyn12SymbolEqualityComparer.Default.Equals(method.ReturnType, otherMethod.ReturnType) &&
+                method.ParametersAreSame(otherMethod);
+ 
+         /// <summary>
+@@ -417,7 +417,7 @@
+         public static bool IsFromMscorlib(this ISymbol symbol, Compilation compilation)
+         {
+             var @object = compilation.GetSpecialType(SpecialType.System_Object);
+-            return SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, @object.ContainingAssembly);
++            return Roslyn12SymbolEqualityComparer.Default.Equals(symbol.ContainingAssembly, @object.ContainingAssembly);
+         }
+ 
+         /// <summary>
+@@ -430,7 +430,7 @@
+                 cancellationToken.ThrowIfCancellationRequested();
+ 
+                 // does not account for method with optional parameters
+-                if (SymbolEqualityComparer.Default.Equals(method, overload) || overload.Parameters.Length != method.Parameters.Length)
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(method, overload) || overload.Parameters.Length != method.Parameters.Length)
+                 {
+                     // either itself, or signature is not same
+                     continue;
+@@ -442,7 +442,7 @@
+                     continue;
+                 }
+ 
+-                if (SymbolEqualityComparer.Default.Equals(overload.Parameters[parameterIndex].Type, type))
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(overload.Parameters[parameterIndex].Type, type))
+                 {
+                     // we no longer interested in this overload. there can be only 1 match
+                     return overload;
+@@ -516,7 +516,7 @@
+         public static bool IsImplementationOfInterfaceMember(this ISymbol symbol, [NotNullWhen(returnValue: true)] ISymbol? interfaceMember)
+         {
+             return interfaceMember != null &&
+-                SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(interfaceMember));
++                Roslyn12SymbolEqualityComparer.Default.Equals(symbol, symbol.ContainingType.FindImplementationForInterfaceMember(interfaceMember));
+         }
+ 
+         /// <summary>
+@@ -667,7 +667,7 @@
+ 
+             while (symbol != null)
+             {
+-                if (symbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attribute)))
++                if (symbol.GetAttributes().Any(attr => Roslyn12SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attribute)))
+                 {
+                     return true;
+                 }
+@@ -706,7 +706,7 @@
+ 
+             while (symbol != null)
+             {
+-                if (symbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attribute)))
++                if (symbol.GetAttributes().Any(attr => Roslyn12SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attribute)))
+                 {
+                     return true;
+                 }
+@@ -736,7 +736,7 @@
+             {
+                 for (int i = 0; i < attributes.Length; i++)
+                 {
+-                    if (SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, attributes[i]))
++                    if (Roslyn12SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, attributes[i]))
+                     {
+                         isAttributePresent[i] = true;
+                     }
+@@ -760,7 +760,7 @@
+                 return Enumerable.Empty<AttributeData>();
+             }
+ 
+-            return symbol.GetAttributes().Where(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeType));
++            return symbol.GetAttributes().Where(attr => Roslyn12SymbolEqualityComparer.Default.Equals(attr.AttributeClass, attributeType));
+         }
+ 
+         /// <summary>
+--- a/src/Utilities/Compiler/Extensions/ITypeSymbolExtensions.cs
++++ b/src/Utilities/Compiler/Extensions/ITypeSymbolExtensions.cs
+@@ -97,7 +97,7 @@
+             if (!baseTypesOnly && candidateBaseType.TypeKind == TypeKind.Interface)
+             {
+                 var allInterfaces = symbol.AllInterfaces.OfType<ITypeSymbol>();
+-                if (SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType))
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType))
+                 {
+                     // Candidate base type is not a constructed generic type, so use original definition for interfaces.
+                     allInterfaces = allInterfaces.Select(i => i.OriginalDefinition);
+@@ -123,7 +123,7 @@
+ 
+             while (symbol != null)
+             {
+-                if (SymbolEqualityComparer.Default.Equals(symbol, candidateBaseType))
++                if (Roslyn12SymbolEqualityComparer.Default.Equals(symbol, candidateBaseType))
+                 {
+                     return true;
+                 }
+@@ -160,7 +160,7 @@
+ 
+             static bool IsInterfaceOrImplementsInterface(ITypeSymbol type, INamedTypeSymbol? interfaceType)
+                 => interfaceType != null &&
+-                   (SymbolEqualityComparer.Default.Equals(type, interfaceType) || type.AllInterfaces.Contains(interfaceType));
++                   (Roslyn12SymbolEqualityComparer.Default.Equals(type, interfaceType) || type.AllInterfaces.Contains(interfaceType));
+         }
+ 
+         /// <summary>
+@@ -208,7 +208,7 @@
+                 {
+                     foreach (var attributeClassData in currentAttributeClass.GetAttributes())
+                     {
+-                        if (!SymbolEqualityComparer.Default.Equals(attributeClassData.AttributeClass, attributeUsageAttribute))
++                        if (!Roslyn12SymbolEqualityComparer.Default.Equals(attributeClassData.AttributeClass, attributeUsageAttribute))
+                         {
+                             continue;
+                         }
+@@ -372,9 +372,9 @@
+                 RoslynDebug.Assert(iReadOnlyCollectionOfT != null);
+ 
+                 return type.OriginalDefinition is INamedTypeSymbol originalDefinition &&
+-                    (SymbolEqualityComparer.Default.Equals(iCollection, originalDefinition) ||
+-                     SymbolEqualityComparer.Default.Equals(iCollectionOfT, originalDefinition) ||
+-                     SymbolEqualityComparer.Default.Equals(iReadOnlyCollectionOfT, originalDefinition));
++                    (Roslyn12SymbolEqualityComparer.Default.Equals(iCollection, originalDefinition) ||
++                     Roslyn12SymbolEqualityComparer.Default.Equals(iCollectionOfT, originalDefinition) ||
++                     Roslyn12SymbolEqualityComparer.Default.Equals(iReadOnlyCollectionOfT, originalDefinition));
+             }
+         }
+     }
+--- a/src/Utilities/Compiler/Extensions/OperationBlockAnalysisContextExtension.cs
++++ b/src/Utilities/Compiler/Extensions/OperationBlockAnalysisContextExtension.cs
+@@ -53,14 +53,14 @@
+                     descendants[0] is IThrowOperation throwOperation &&
+                     throwOperation.GetThrownExceptionType() is ITypeSymbol createdExceptionType)
+                 {
+-                    if (SymbolEqualityComparer.Default.Equals(
++                    if (Roslyn12SymbolEqualityComparer.Default.Equals(
+                             context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNotImplementedException),
+                             createdExceptionType.OriginalDefinition) ||
+-                        SymbolEqualityComparer.Default.Equals(
++                        Roslyn12SymbolEqualityComparer.Default.Equals(
+                             context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemNotSupportedException),
+                             createdExceptionType.OriginalDefinition) ||
+                         (checkPlatformNotSupported &&
+-                        SymbolEqualityComparer.Default.Equals(
++                        Roslyn12SymbolEqualityComparer.Default.Equals(
+                             context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemPlatformNotSupportedException),
+                             createdExceptionType.OriginalDefinition)))
+                     {
+--- a/src/Utilities/Compiler/SymbolEqualityComparer.cs
++++ b/src/Utilities/Compiler/SymbolEqualityComparer.cs
+@@ -5,9 +5,9 @@
+ {
+     using System.Collections.Generic;
+ 
+-    internal sealed class SymbolEqualityComparer : IEqualityComparer<ISymbol?>
++    internal sealed class Roslyn12SymbolEqualityComparer : IEqualityComparer<ISymbol?>
+     {
+-        private SymbolEqualityComparer()
++        private Roslyn12SymbolEqualityComparer()
+         {
+         }
+ 
+@@ -19,7 +19,7 @@
+         public int GetHashCode(ISymbol? obj)
+             => obj?.GetHashCode() ?? 0;
+ 
+-        public static SymbolEqualityComparer Default { get; } = new();
++        public static Roslyn12SymbolEqualityComparer Default { get; } = new();
+     }
+ }
+ #endif
+--- a/src/Utilities/Compiler/WellKnownTypeProvider.cs
++++ b/src/Utilities/Compiler/WellKnownTypeProvider.cs
+@@ -30,7 +30,7 @@
+                 () =>
+                 {
+                     return ImmutableHashSet.Create<IAssemblySymbol>(
+-                        SymbolEqualityComparer.Default,
++                        Roslyn12SymbolEqualityComparer.Default,
+                         Compilation.Assembly.Modules
+                             .SelectMany(m => m.ReferencedAssemblySymbols)
+                             .ToArray());
+@@ -201,7 +201,7 @@
+         {
+             return typeSymbol != null
+                 && typeSymbol.OriginalDefinition != null
+-                && SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition,
++                && Roslyn12SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition,
+                     GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1))
+                 && typeSymbol is INamedTypeSymbol namedTypeSymbol
+                 && namedTypeSymbol.TypeArguments.Length == 1
+--- a/src/Utilities/Workspaces/SyntaxGeneratorExtensions.cs
++++ b/src/Utilities/Workspaces/SyntaxGeneratorExtensions.cs
+@@ -431,7 +431,7 @@
+         {
+             return generator.ThrowStatement(generator.ObjectCreationExpression(
+                 generator.TypeExpression(
+-                    compilation.GetOrCreateTypeByMetadataName(SystemNotImplementedExceptionTypeName))));
++                    compilation.GetOrCreateTypeByMetadataName(SystemNotImplementedExceptionTypeName) ?? throw new global::System.InvalidOperationException("System.NotImplementedException is unavailable."))));
+         }
+ 
+         public static SyntaxNode? TryGetContainingDeclaration(this SyntaxGenerator generator, SyntaxNode? node, DeclarationKind kind)

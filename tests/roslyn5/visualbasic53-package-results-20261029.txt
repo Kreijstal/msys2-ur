@@ -1,0 +1,47 @@
+Source NET10 Roslyn5.3 VB/client/server companion — installed release2
+mingw-w64-clang-x86_64-dotnet-visualbasic53-bootstrap-5.3.0.2.26113.113-2-any.pkg.tar.zst
+Build root: /e/codex-dotnet10/vb53pkg1.YDkT7p
+
+Fresh release1 clean build, full API/resource/source/staged/installed checks: exit 0.
+Final release2 only changes process-local host selection in the launchers plus README/manifest. All compiled DLLs, satellites, PDBs and other payload bytes remain identical.
+Original source: VB915 items, vbc11 items, server27 items; generators17+1+3 files. All five regenerated VB sources and grammar match original baselines.
+Source audit:1007 original archive inputs,1114 actual compiler/reference input hashes. Production source changes:0.
+All6096 original APIs,14 resource sets/25228 strings,13 satellites,29 friend declarations/28 unique identities and four embedded templates pass.
+Full VB behavior checks pass:generics,LINQ/XML literals,anonymous types,iterators,async/await,analyzers,generators,PDBs,overflow,localized errors,embedded runtime and cancellation.
+Real compiler-server checks pass four CSharp/VB requests,emitted program execution,negative diagnostics,no local fallback and explicit owned shutdown.
+Final CMD and MSYS clients each auto-start and share one NET10 server despite an inherited SDK8 host. Windows process image/PID,no fallback and shutdown are verified.
+SDK8 Vbc task invokes the installed NET10 vbc53.cmd and executes emitted NET8 output. SDK10 MSBuild/tasks remain open.
+Payload67 files,66 manifested;pacman94 entries,0 altered. CSharp companion owns disjoint files and remains byte-verified. Together:all six primary NET10 projects and39 localized satellites.
+
+Exact commands and scope:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0 — Fresh release1 builds all VB/client/server sources and validates complete staged profile
+$ makepkg --repackage --nodeps --force --noconfirm
+RESULT: exit 0 — Release2 launcher-only repack before atomic upgrade of its exact CSharp dependency
+$ /usr/bin/python3 audit-package.py "$PWD" 2
+RESULT: exit 0 — Actual final VB archive and disjoint CSharp ownership
+$ pacman -U --noconfirm /e/codex-dotnet10/csharp53pkg1.nBgulw/*-5.3.0.2.26113.113-3-any.pkg.tar.zst /e/codex-dotnet10/vb53pkg1.YDkT7p/*-5.3.0.2.26113.113-2-any.pkg.tar.zst
+RESULT: exit 0 — Paired upgrade resolves exact companion dependency
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap mingw-w64-clang-x86_64-dotnet-visualbasic53-bootstrap
+RESULT: exit 0 — 106 + 94 entries, zero altered
+$ /usr/bin/python3 /clang64/share/doc/dotnet-visualbasic53-bootstrap/checks/check-installed.py /clang64 "$PWD/installed-check"
+RESULT: exit 0 — Fresh release1 installed VB API/resource/compiler/client/server suite; assembly bytes unchanged in release2
+$ /usr/bin/python3 /e/codex-dotnet10/check-net10-vbc-msbuild.py /clang64 "$PWD/msbuild-hotfix-check λ"
+RESULT: exit 0 — Final vbc53.cmd via original SDK8 Vbc task, emitted NET8 program execution
+$ /clang64/bin/python.exe -X utf8 E:/codex-dotnet10/check-net10-server-autostart.py E:/msys64/clang64 "E:/codex-dotnet10/vb53pkg1.YDkT7p/autostart-cmd2 λ" --cmd
+RESULT: exit 0 — Final native CMD clients override inherited SDK8 host, auto-start/share/stop a verified NET10 process
+$ /clang64/bin/python.exe -X utf8 E:/codex-dotnet10/check-net10-server-autostart.py E:/msys64/clang64 "E:/codex-dotnet10/vb53pkg1.YDkT7p/autostart-shell λ" --shell
+RESULT: exit 0 — Final MSYS clients override inherited SDK8 host, auto-start/share/stop a verified NET10 process
+
+The first prototype final friend fixture expected29 emitted attributes. The source repeats one identity; VB emits28 unique identities, all of which exactly match the original29 declarations. The fixture now verifies every unique identity and records both counts.
+Automatic startup initially selected the default SDK8 host from PATH; DOTNET_ROOT alone does not select Roslyn's child host. Both CMD and MSYS launchers now set process-local DOTNET_HOST_PATH to the source NET10 host. No production/compiler/assembly bytes changed.
+Native Python fixture corrections specify UTF8 response/log encoding and proper CMD response-file quoting. Final probes verify wrong inherited host override, actual Windows process identity, two actual server responses, no fallback and owned shutdown.
+The first release2 repackage attempt stopped at the exact CSharp3 dependency, which had not yet been installed. The archive was then repackaged without dependency checks, and both packages were installed together with normal pacman dependency/integrity checks.
+Original source-directory provenance and original compiler warnings remain visible. Full runtime compatibility is not inferred from these compiler checks.
+
+Final package SHA256: 0699fcca1832cf806ac8d7dfe4160e68174fdfc391f55e4c2d0ba3bba4407999
+Frozen workflow:27 files SHA256 cdfec3ccddab90a680c158e8634e868cfed9cd145f35349e7d3ebf80b1b339f3
+Evidence:482 files SHA256 3fcf83cafd4ef8e9e8aa2547653a1379d44252222e67579285c9ec8861897896;all member/package/source/recipe/SRCINFO hashes verified.
+Local evidence: /tmp/visualbasic53-bootstrap-package2
+
+Other compiler frameworks/tool-host profiles,source SDK10 MSBuild/compiler tasks,WindowsDesktop10,PowerShell7.6 and remaining dependency/compatibility gates remain unfinished.

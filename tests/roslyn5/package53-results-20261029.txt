@@ -1,0 +1,28 @@
+mingw-w64-dotnet-roslyn53 — installed package validation
+mingw-w64-clang-x86_64-dotnet-roslyn53-5.3.0.2.26113.113-1-any.pkg.tar.zst
+Windows build root: /e/codex-dotnet10/roslyn53pkg1.WzBs8V
+Clean makepkg, actual archive audit, install and fresh installed checks: all exit0.
+Original Common/CSharp netstandard2.0 libraries: 1042+1146 CSharp production files; original generator tools and five regenerated source files.
+All 10,560 upstream public API declarations, 13 cultures and 28 resource sets / 39,508 strings pass. CSharp14 extension property execution, diagnostics/cancellation, analyzers, incremental generation and portable PDB pass.
+Two source NuGet packages, 28 primary/satellite DLLs. Producer references remain exact; runtime dependency constraints are minimums; paired Common stays exact. Metadata adapter checks every non-nuspec byte unchanged.
+Visible source warnings and NU1603 remain. NU1608 is treated as an error and no conflicts remain.
+Original NET10 Common/CSharp/csc profiles and full SDK10 are separate unfinished work.
+Payload:13 regular files; pacman:23 entries,0 altered.
+
+Exact commands from Windows build root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ /usr/bin/python3 audit-roslyn53-package.py "$PWD"
+RESULT: exit 0
+$ pacman -U --noconfirm ./*-5.3.0.2.26113.113-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-roslyn53
+RESULT: exit 0
+$ /usr/bin/python3 src/roslyn53-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+Package SHA256: 991fc1899d8c77c43f01d777b51a2c8c04bdbeb2f28119d4ad42ebf08b4e66fe
+Frozen workflow:13 files SHA256 ef85cd9280ee8c754bacbb6c1d857253a872629394dbcb772289522642dceef1
+Evidence:228 files SHA256 1bb4beb41e61d81d154542582d6077c299e9a18ecd066cde5f5ea7032167447c; every member, actual package and frozen recipe verified.
+Local evidence: /tmp/roslyn53-package1
+Full dependency goal remains incomplete.

@@ -1,0 +1,22 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] uflvplayer: do not embed the prebuilt Flash SWF players under FPC
+
+flvplayer.RES only carries two compiled Flash movies (FLVPLAYER and
+NETPLAYER RCDATA) for the Adobe Flash ActiveX control.  The Free Pascal
+build replaces that control with a stub whose constructor raises
+EFlashUnavailable (fpc/ShockwaveEx_fpc.inc), so the movies can never be
+played.  Do not link the prebuilt binaries into Ares.exe; init_flv_player
+and the net player already bail out when the resource is missing.
+---
+--- a/uflvplayer.pas
++++ b/uflvplayer.pas
+@@ -43,7 +43,9 @@
+ 
+ implementation
+ 
++{$IFNDEF FPC}
+ {$R flvplayer.res}
++{$ENDIF} // FPC: no Flash ActiveX (see fpc/ShockwaveEx_fpc.inc), so the prebuilt SWF players are not embedded
+ 
+ uses
+  umediar,helper_diskio,vars_global,ufrmmain,ares_types,helper_strings,

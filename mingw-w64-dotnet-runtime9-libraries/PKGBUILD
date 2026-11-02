@@ -1,0 +1,55 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-runtime9-libraries
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=9.0.0
+pkgrel=3
+pkgdesc='Source runtime9 Standard2.0 libraries, Standard2.1 async forwarder and NET8 MEF targets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard>=20261028-2"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-maintenance-netstandard10>=20261029-1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard21-reference=2.1.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-v9.0.0.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v9.0.0'
+        'runtime9-libraries-source-3.tar.gz')
+noextract=('runtime-v9.0.0.tar.gz')
+sha256sums=('32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def'
+            'a8e78bb441b2cf63e4617b487a5b6668a23b177c1efd95f7cdcb3d84e7f898c1')
+prepare() {
+  /usr/bin/python3 "$srcdir/runtime9-libraries/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/runtime9-libraries/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/runtime9-libraries/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/runtime9-libraries/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/new-maintenance-consumer" --new-maintenance > "$srcdir/new-maintenance-check.log" 2>&1
+  /usr/bin/python3 "$srcdir/runtime9-libraries/check-net8.py" "$srcdir/prepared" "$srcdir/net8-consumer" > "$srcdir/check-net8.log" 2>&1
+  /usr/bin/python3 "$srcdir/runtime9-libraries/audit.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  local file
+  for file in "$srcdir/prepared/feed/"*.nupkg;do
+    install -m644 "$file" "$feed/$(basename "$file" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -m644 "$srcdir/runtime9-libraries/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,localization,source-package-audit}.json "$doc/"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-consumer-results.json"
+  install -m644 "$srcdir/new-maintenance-consumer/results.json" "$doc/build-new-maintenance-results.json"
+  cp -R "$srcdir/prepared/dependency-policy" "$doc/"
+  install -m644 "$srcdir/net8-consumer/results.json" "$doc/build-net8-consumer-results.json"
+  install -Dm644 "$srcdir/prepared/runtime-source/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+  install -Dm644 "$srcdir/prepared/runtime-source/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+}

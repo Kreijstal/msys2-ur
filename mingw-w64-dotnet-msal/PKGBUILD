@@ -1,0 +1,64 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+pkgbase=mingw-w64-dotnet-msal
+pkgname=("${MINGW_PACKAGE_PREFIX}-dotnet-msal" "${MINGW_PACKAGE_PREFIX}-dotnet-msal-extensions")
+pkgver=4.61.3
+pkgrel=1
+_commit=88df64013795d4e3716e1f677600f8164ffdb542
+pkgdesc='Complete original MSAL .NET6 source branch and encrypted cache extension on source .NET8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/AzureAD/microsoft-authentication-library-for-dotnet'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31" 'python')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2")
+options=('!strip' '!lto')
+source=("msal-$_commit.tar.gz::https://codeload.github.com/AzureAD/microsoft-authentication-library-for-dotnet/tar.gz/$_commit"
+ extract.py prepare.py verify-build.py pack.py Check.cs check.sh check-payload.py compare.py InspectApi.cs InspectAssemblyMetadata.cs source-inputs.json
+ Microsoft.Identity.Client.api.json Microsoft.Identity.Client.metadata.json Microsoft.Identity.Client.Extensions.Msal.api.json Microsoft.Identity.Client.Extensions.Msal.metadata.json README.md)
+noextract=("msal-$_commit.tar.gz")
+sha256sums=('a8d47494284ba9d9743be4c071aea1dc5f1a466a4973f43fbb9e0b23a8d131e9'
+ '9cf7633ad6e070531ca695ff4b9e42786e0541659552c5eecc02f2934b8f248a'
+ 'd7bce3dc1322bf2b28c6318b4a996344bfe3a70ae65aa61400ded7cd58136403'
+ '2daf79445c95626be944211f860c84c9c218e08f452e1d76f7df776e24ebcc8f'
+ 'bcebef684318ecf7feff3e376f7c38d3e5759a8075392184f590e27a8e585b7a'
+ '28c4b5a1ea020b12cf1142130307d5367df165c1cc36471ef66d58d042bf3ef1'
+ '2db2d748f4db02fb7dd147b4f00080a49813f681aeca4989412d3e5fa1beef64'
+ 'e7902b576521c92cc0cc65d7b541c67947354440c6e20f66cb3a35bd3ea9599f'
+ '0e90d7e2168c9b0dde78bcccd4139d1a1f1f21c724373779b14ad8e9c1ed4f1b'
+ '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+ 'cff877b7ed8de75d17fda388d619af136c440b6a486bcdb6a52ad6983d05dae5'
+ '36b2cc3efcc451dd1c46745d8d64612f8ef2594b0b399f823ad1b54d4fe3a17d'
+ '3e905d2588fb3216508fb296b2f76dfdb58902df4786a031d5d08507c8f459eb'
+ '1430a1f778bd183a359ca82d176c0692055686a7ab33752eb6b63b445b9d5981'
+ '81f501592e3d95dab26d2d201777edfd0bef2e6de5a87636b115c3dff0913398'
+ 'c85fbe161d192dc100a1b942abfbdeba8e49734d18df8405cb86ebb1f649253e'
+ 'f1f69853c2071d1413692c9900a1d967b3c8f33c883709b372f9a8e69064fb28'
+)
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/msal-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
+}
+build() {
+ export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+ /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/src/client/Microsoft.Identity.Client.Extensions.Msal/Microsoft.Identity.Client.Extensions.Msal.csproj")" -c Release --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -p:CscToolPath="$(cygpath -am /clang64/lib/dotnet/compiler-packs/roslyn-4.9.2)" -p:CscToolExe=csc49.cmd -v:minimal
+ /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+_package() {
+ local name=$1 suffix=$2
+ install -Dm644 "$srcdir/feed/$name.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/$name.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/LICENSE"
+ install -m644 "$srcdir/source/ThirdPartyNotice.txt" "$pkgdir$MINGW_PREFIX/share/licenses/dotnet-$suffix/"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/README.md"
+ install -m644 "$srcdir/prepared/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/dotnet-$suffix/"
+}
+package_mingw-w64-clang-x86_64-dotnet-msal() {
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions=6.35.0" "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5")
+ _package Microsoft.Identity.Client msal
+}
+package_mingw-w64-clang-x86_64-dotnet-msal-extensions() {
+ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-msal=4.61.3" "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata=8.0.31")
+ _package Microsoft.Identity.Client.Extensions.Msal msal-extensions
+}

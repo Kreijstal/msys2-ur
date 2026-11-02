@@ -1,0 +1,65 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-metadata16-contracts-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=1
+pkgdesc='Four original source legacy compiler references for Metadata1.6 Standard1.1'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/source-build-reference-packages'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('sbrp-5aeee273.tar.gz::https://codeload.github.com/dotnet/source-build-reference-packages/tar.gz/5aeee2738338530a92d7f6caa2c7d5f569fed3c4'
+        'corefx10-codepages-9688ddbb.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/9688ddbb62c04189cac4c4a06e31e93377dccd41'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'metadata16-contracts-source-1.tar.gz')
+noextract=('sbrp-5aeee273.tar.gz' 'corefx10-codepages-9688ddbb.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79'
+            '986a512c70d55ed7a1ed8cbb9d8323017c9cc83e77e95e833c7b91f42e4ef601'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '8ae85d223d7cc75d6a95453d2584030c652a4b1d936f05ea37146ca117a77d32')
+build() {
+  local workflow="$srcdir/metadata16-contracts-workflow"
+  /usr/bin/python3 "$workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  local prefix=$(cygpath -am "$MINGW_PREFIX")
+  local compiler=$(cygpath -am "$srcdir/compiler44/bin/Release/net8.0")
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/build.py")" "$(cygpath -am "$srcdir/sbrp-5aeee273.tar.gz")" "$(cygpath -am "$srcdir/references")" "$prefix" "$compiler" > "$srcdir/references.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/restore.py")" "$(cygpath -am "$srcdir/references")" "$(cygpath -am "$srcdir/restored")" "$prefix" > "$srcdir/restore.log" 2>&1
+  /usr/bin/python3 "$workflow/interop/build-interop.py" "$srcdir/sbrp-5aeee273.tar.gz" "$srcdir/corefx10-codepages-9688ddbb.tar.gz" "$srcdir/interop" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/interop.log" 2>&1
+  mkdir "$srcdir/ref"
+  install -m644 "$srcdir/restored/ref/"*.dll "$srcdir/ref/"
+  install -m644 "$srcdir/interop/ref/System.Runtime.InteropServices.dll" "$srcdir/ref/"
+}
+check() {
+  local workflow="$srcdir/metadata16-contracts-workflow"
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/check.py")" "$(cygpath -am "$srcdir/ref")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$workflow/interop/check-interop.py" "$srcdir/interop" "$srcdir/interop-check" > "$srcdir/interop-check.log" 2>&1
+}
+package() {
+  local root="$pkgdir$MINGW_PREFIX/lib/dotnet/reference-packs/metadata16-ns11-contracts-bootstrap"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$root/ref" "$doc/inputs" "$doc/metadata-inputs" "$doc/interop/inputs"
+  install -m644 "$srcdir/ref/"*.dll "$root/ref/"
+  local file
+  for file in check.py build-inspector.py README.md;do install -m644 "$srcdir/metadata16-contracts-workflow/$file" "$doc/";done
+  for file in "$srcdir/metadata16-contracts-workflow/inputs/"*.json;do install -m644 "$file" "$doc/inputs/";done
+  install -m644 "$srcdir/metadata16-contracts-workflow/metadata-inputs/"*.cs "$doc/metadata-inputs/"
+  install -m644 "$srcdir/metadata16-contracts-workflow/interop/check-interop.py" "$doc/interop/"
+  install -m644 "$srcdir/metadata16-contracts-workflow/interop/inputs/"* "$doc/interop/inputs/"
+  install -m644 "$srcdir/references/results.json" "$doc/source-reference-build.json"
+  install -m644 "$srcdir/restored/results.json" "$doc/metadata-port-results.json"
+  install -m644 "$srcdir/interop/results.json" "$doc/interop-source-build.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  install -m644 "$srcdir/interop-check/results.json" "$doc/producer-interop-check-results.json"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -Dm644 "$srcdir/interop/source/sbrp/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/SBRP-LICENSE.txt"
+  install -Dm644 "$srcdir/interop/source/corefx/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/CoreFX-LICENSE.txt"
+  install -Dm644 "$srcdir/interop/source/corefx/THIRD-PARTY-NOTICES" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES"
+}

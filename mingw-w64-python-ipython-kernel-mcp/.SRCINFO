@@ -1,0 +1,25 @@
+pkgbase = mingw-w64-python-ipython-kernel-mcp
+	pkgdesc = MCP bridge to an existing shared IPython kernel (mingw-w64)
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/asanchezleache/ipython-kernel-mcp
+	arch = any
+	license = spdx:MIT
+	checkdepends = mingw-w64-ucrt-x86_64-python-ipykernel
+	makedepends = mingw-w64-ucrt-x86_64-python-build
+	makedepends = mingw-w64-ucrt-x86_64-python-installer
+	makedepends = mingw-w64-ucrt-x86_64-python-setuptools
+	depends = mingw-w64-ucrt-x86_64-python
+	depends = mingw-w64-ucrt-x86_64-python-mcp>=2
+	depends = mingw-w64-ucrt-x86_64-python-jupyter_client>=8
+	optdepends = mingw-w64-ucrt-x86_64-python-ipykernel: start an IPython kernel
+	optdepends = mingw-w64-ucrt-x86_64-python-jupyter_console: manually use the same kernel
+	options = !strip
+	source = ipython-kernel-mcp-3c0c701066342668dc9f56a25609f1167c030b8a.tar.gz::https://github.com/asanchezleache/ipython-kernel-mcp/archive/3c0c701066342668dc9f56a25609f1167c030b8a.tar.gz
+	source = 0001-interrupt-the-connected-kernel.patch
+	source = check-kernel.py
+	sha256sums = 7a77ab679f555bf2acf64cf9a13d42c28664ddf0c70383a9a8c4e90fda207800
+	sha256sums = 46220d3c73d0ef302177b356fef29c9f3b4b6fa399b2c5301ba96040b0ca3d5c
+	sha256sums = fdb3f1dfa9c6977e5ddec97e744218f39eff23e1bc69f4f8860da83cacd52dc5
+
+pkgname = mingw-w64-ucrt-x86_64-python-ipython-kernel-mcp

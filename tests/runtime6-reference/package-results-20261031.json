@@ -1,0 +1,160 @@
+{
+  "finished_at_utc": "2026-10-31T00:05:32.889540+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/reference6pkg1.8BWvzL",
+  "recipe": "mingw-w64-dotnet-reference6-core-bootstrap",
+  "package_version": "6.0.19-1",
+  "source_commit": "e37fab9fc9f7bce120a7165491ed392a73f8ab51",
+  "workflow_sha256": "08332aa0a680d7e76ab1588ce55c59a0f0efc159c4d0fc8a3f106a54d0cbde74",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "archive_audit_command": "python tests/runtime6-reference/audit-package.py mingw-w64-dotnet-reference6-core-bootstrap/mingw-w64-clang-x86_64-dotnet-reference6-core-bootstrap-6.0.19-1-any.pkg.tar.zst mingw-w64-dotnet-reference6-core-bootstrap/runtime6-reference-snapshot-e37fab9f.tar.gz tests/runtime6-reference/package-audit-20261031.json",
+  "archive_audit_exit_code": 0,
+  "archive_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-reference6-core-bootstrap-6.0.19-1-any.pkg.tar.zst",
+    "artifact_sha256": "49aafa34a01ba0625826692ac491784dcebcea8a536249bf0a163bc227366339",
+    "payload_files": 155,
+    "original_core_reference_assemblies": 137,
+    "original_compile_inputs": 167,
+    "original_source_changes": 0,
+    "original_source_and_reference_payload_hashes_verified": true,
+    "compatibility_facades_built": false,
+    "complete_targeting_pack_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "original_snapshot_files_verified": 4480,
+    "original_core_contract_projects": 137,
+    "original_compile_items": 167,
+    "unique_original_compile_files": 167,
+    "all_source_reference_and_output_hashes_verified": true,
+    "compiler_inputs_use_only_own_NET6_contract_graph": true,
+    "original_framework_and_warnings_as_errors_preserved": true,
+    "original_production_source_changes": 0,
+    "compatibility_facades_built": false,
+    "complete_targeting_pack_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "build_validation": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/metadata-tool.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/metadata-tool.dll",
+          "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/build/ref/net6.0",
+          "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/expected.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/consumer.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/consumer.dll"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/negative-net6.rsp"
+        ],
+        "exit_code": 1
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/reference6pkg1.8BWvzL/src/check/positive-net8.rsp"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "core_reference_assemblies": 137,
+    "all_original_metadata_and_reference_closure_checks_passed": true,
+    "actual_NET6_only_reference_consumer_compiled_and_executed_on_source_NET8": true,
+    "NET8_only_API_rejected_by_NET6_and_accepted_by_NET8_control": true,
+    "original_production_source_changes": 0,
+    "compatibility_facades_built": false,
+    "complete_targeting_pack_built": false,
+    "original_NET6_runtime_host_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "staged_check": {
+    "command": [
+      "E:/msys64/clang64/bin/python.exe",
+      "-X",
+      "utf8",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/package-prefix/share/doc/dotnet-reference6-core-bootstrap/checks/validate.py",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/staged-check/build",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/staged-check/build",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/src/staged-check/fresh-check"
+    ],
+    "exit_code": 0,
+    "payload_files_verified": 155,
+    "installed_core_reference_assemblies": 137,
+    "fresh_metadata_reference_closure_consumer_and_NET8_only_negative_checks_passed": true,
+    "compatibility_facades_built": false,
+    "complete_targeting_pack_built": false,
+    "original_NET6_runtime_host_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-reference6-core-bootstrap-6.0.19-1-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-reference6-core-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/reference6pkg1.8BWvzL/installed-check",
+  "installed_check_exit_code": 0,
+  "installed_check": {
+    "command": [
+      "E:/msys64/clang64/bin/python.exe",
+      "-X",
+      "utf8",
+      "E:/msys64/clang64/share/doc/dotnet-reference6-core-bootstrap/checks/validate.py",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/installed-check/build",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/installed-check/build",
+      "E:/codex-dotnet10/reference6pkg1.8BWvzL/installed-check/fresh-check"
+    ],
+    "exit_code": 0,
+    "payload_files_verified": 155,
+    "installed_core_reference_assemblies": 137,
+    "fresh_metadata_reference_closure_consumer_and_NET8_only_negative_checks_passed": true,
+    "compatibility_facades_built": false,
+    "complete_targeting_pack_built": false,
+    "original_NET6_runtime_host_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_check_command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-reference6-core-bootstrap",
+  "pacman_check_exit_code": 0,
+  "pacman_check_output": "mingw-w64-clang-x86_64-dotnet-reference6-core-bootstrap: 172 total files, 0 altered files",
+  "existing_NET8_and_NET10_System_Runtime_references_unchanged": true,
+  "existing_reference_hashes": [
+    "b7181d0736760c22045973b601b579bb25605c03c69dfd078079e903af19e5e3",
+    "7c5751e3890dc6caacee47ef5fb0ac503be9607d67f4683a7895d767e2b856ef"
+  ],
+  "installed_pack": "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap",
+  "compatibility_facades_built": false,
+  "complete_targeting_pack_built": false,
+  "original_NET6_runtime_host_built": false,
+  "Pkcs604_formal_package_installed": false,
+  "NuGet6132_rebuilt_against_exact_Immutable8_ProtectedData44_Pkcs604": false,
+  "full_dependency_goal_complete": false
+}

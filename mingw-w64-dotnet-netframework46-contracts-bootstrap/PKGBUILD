@@ -1,0 +1,43 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netframework46-contracts-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=20261031
+pkgrel=1
+pkgdesc='Selected Framework4.6 public reference contract source ports for legacy Vectors builds'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/source-build-reference-packages'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'netframework46-contracts-source-2.tar.gz')
+noextract=('roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '772a73926626a4740c842cef3462378ba7f868d495d5caa8a6f622e21cbde46a')
+build() {
+  /usr/bin/python3 "$srcdir/netframework46-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/netframework46-workflow/build-port.py" "$srcdir/netframework46-workflow/generated" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/netframework46-workflow/check.py" "$srcdir/prepared/ref" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local pack="$pkgdir$MINGW_PREFIX/lib/dotnet/reference-packs/netframework46-contracts-bootstrap"
+  local file
+  mkdir -p "$pack/ref" "$doc/inputs" "$doc/generated"
+  install -m644 "$srcdir/prepared/ref/"*.dll "$pack/ref/"
+  for file in README.md check.py generation-provenance-20261031.json; do install -m644 "$srcdir/netframework46-workflow/$file" "$doc/"; done
+  for file in "$srcdir/netframework46-workflow/inputs/"*; do install -m644 "$file" "$doc/inputs/"; done
+  for file in "$srcdir/netframework46-workflow/generated/"*.cs; do install -m644 "$file" "$doc/generated/"; done
+  install -m644 "$srcdir/prepared/results.json" "$doc/results.json"
+  install -m644 "$srcdir/prepared/compiled/results.json" "$doc/source-compile-results.json"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in SDK-LICENSE.txt SBRP-LICENSE.txt ReferenceAssemblies-LICENSE.txt; do install -Dm644 "$srcdir/netframework46-workflow/inputs/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+}

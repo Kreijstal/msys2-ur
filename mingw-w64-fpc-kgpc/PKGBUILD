@@ -21,7 +21,7 @@ pkgbase="mingw-w64-${_realname}-kgpc"
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc"
          "${MINGW_PACKAGE_PREFIX}-${_realname}-kgpc-src")
 pkgver=3.2.2
-pkgrel=2
+pkgrel=3
 # FPC source git tag (GitLab) and the KGPC release tag used as the bootstrap
 # seed.  KGPC 0.0.7 is the first revision that fully self-cycles win64 FPC 3.2.2
 # to a fixpoint (the FreeAndNil untyped-var pointer-store fix, PR #762).
@@ -56,10 +56,14 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
 options=('!strip' '!debug')   # ppcx64.exe is a self-contained PE; the .ppu/.o units must not be stripped
 source=("fpc-${pkgver}.tar.gz::https://gitlab.com/freepascal.org/fpc/source/-/archive/${_fpctag}/source-${_fpctag}.tar.gz"
         "kgpc-${_kgpc_tag}.tar.gz::https://github.com/Kreijstal/Pascal-Compiler/archive/refs/tags/${_kgpc_tag}.tar.gz"
-        "0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch")
+        "0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch"
+        "0002-openssl-load-the-OpenSSL-3-DLLs-on-Windows.patch"
+        "0003-sqlite3-also-load-libsqlite3-0.dll-on-Windows.patch")
 sha256sums=('c15ae8c7b1fd1e6da4194d669d538b833516af3251afca5de5bec50727c3528f'
             '13cdba1b9cd8cc0d442812feddfdf666f3403725071470ff30ce9fc94462238d'
-            'b372e4cd4f334c2f503f84955cffb7b516657a477f7b7c2998272c1d312796c4')
+            'b372e4cd4f334c2f503f84955cffb7b516657a477f7b7c2998272c1d312796c4'
+            'a2a196ab5a3b9eabdf27b93eea9656279848b7e1dea4ba65eedeac18f1e790a3'
+            'c119a1cbeeb4b7b8d89c72fd4d5530fb7ba7c09ec5e1fc5985587a83ccb48937')
 
 _fpctarget="x86_64-win64"
 
@@ -71,6 +75,12 @@ prepare() {
 
   # {$R *.rc}: llvm-windres (CLANG64) chokes on FPC's "--include <dir>\".
   patch -d fpc -Np1 -i "${srcdir}/0001-comprsrc-strip-trailing-delimiter-from-windres-include.patch"
+
+  # openssl unit: MSYS2 only has OpenSSL 3 (libssl-3-x64.dll), which 3.2.2
+  # cannot find; backport of the fixes_3_2 DLL search.
+  patch -d fpc -Np1 -i "${srcdir}/0002-openssl-load-the-OpenSSL-3-DLLs-on-Windows.patch"
+  # sqlite3dyn: MSYS2's SQLite DLL is libsqlite3-0.dll, not sqlite3.dll.
+  patch -d fpc -Np1 -i "${srcdir}/0003-sqlite3-also-load-libsqlite3-0.dll-on-Windows.patch"
 }
 
 build() {

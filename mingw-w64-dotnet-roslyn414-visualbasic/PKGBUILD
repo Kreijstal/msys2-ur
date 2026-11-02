@@ -1,0 +1,55 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-roslyn414-visualbasic
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.14.0
+pkgrel=1
+pkgdesc='Original source Roslyn4.14 Standard2.0 VB compiler, Workspaces and metapackage'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-roslyn414=4.14.0"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn414-workspaces=4.14.0")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=8edf7bcd4f1594c3d68a6a567469f41dbd33dd1b
+source=("roslyn-4.14.0-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/$_commit"
+        'roslyn414-visualbasic-source-1.tar.gz'
+        'arcade-roslyn414-1cfa39f8.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/1cfa39f82d00b3659a3d367bc344241946e10681')
+noextract=("roslyn-4.14.0-${_commit:0:8}.tar.gz" 'arcade-roslyn414-1cfa39f8.tar.gz')
+sha256sums=('8cf2d365d1fad52b480f7c68b5c477cb586a935ada0eb309b0c40dacfec5fe9c'
+            '7d92ae67d8c0b6a34dc3c4a03759be883bcc96ee1e15e18198d668a8eab1f958'
+            'f3de8289da570f5c1ce269163e8b25ef12062a4a6dc9620d2bd16c1aba3c3f59')
+prepare() {
+  /usr/bin/python3 "$srcdir/visualbasic414-workflow/prepare.py" "$srcdir" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/visualbasic414-workflow/build.sh" "$srcdir" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/visualbasic414-workflow/check.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/visualbasic414-workflow/audit.py" "$srcdir" "$srcdir/prepared" "$srcdir/consumer" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  local file
+  for file in "$srcdir/prepared/feed/"*.nupkg;do
+    install -m644 "$file" "$feed/$(basename "$file" | tr '[:upper:]' '[:lower:]')"
+  done
+  install -m644 "$srcdir/visualbasic414-workflow/README.md" "$doc/"
+  install -m644 "$srcdir/prepared/"{source-inputs,tool-inputs,source-package-audit,arcade-policy}.json "$doc/"
+  install -m644 "$srcdir/prepared/Arcade.ProjectDefaults.props" "$doc/"
+  install -m644 "$srcdir/prepared/compiler/localization.json" "$doc/compiler-localization.json"
+  install -m644 "$srcdir/prepared/workspaces/localization.json" "$doc/workspaces-localization.json"
+  install -m644 "$srcdir/prepared/compiler/source-items.json" "$doc/compiler-source-items.json"
+  install -m644 "$srcdir/prepared/workspaces/source-items.json" "$doc/workspaces-source-items.json"
+  install -m644 "$srcdir/consumer/results.json" "$doc/build-consumer-results.json"
+  install -Dm644 "$srcdir/prepared/roslyn-source/License.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/License.txt"
+  install -Dm644 "$srcdir/prepared/roslyn-source/THIRD-PARTY-NOTICES.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.txt"
+  install -Dm644 "$srcdir/visualbasic414-workflow/inputs/arcade-LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Arcade-LICENSE.TXT"
+}

@@ -1,0 +1,169 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "date_utc": "2026-10-28",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/c1.1BZ8KU",
+  "evidence_archive_sha256": "b4a17bd4439375ebd9cce1e0d7e45766e5f86e5f32da2b33865aa4b4ce0e8881",
+  "local_evidence": "/tmp/netstandard20-maintenance1/evidence",
+  "full_dependency_goal_complete": false,
+  "native_image_sha256": "4a7669ac0b78bdaf76548de643880df3fde1bf03eb9f61425fa848befa1ba25f",
+  "amd64": true,
+  "cet_compatible": true,
+  "file_version": "10.0.526.11800",
+  "original_coreclr_port_files_verified": 64,
+  "additional_native_patch_files_verified": 2,
+  "full_runtime10_complete": false,
+  "formal_ilasm_package_installed": false,
+  "build_exit_code": 0,
+  "image_audit_exit_code": 0,
+  "resource_integration_check_exit_code": 0,
+  "resource_cases": {
+    "llvm-two-sections": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "c350368b130acc6208ef888da8591cadf461b250f80b936fd8e18363c1304a96",
+      "native_version_payload_matches": true
+    },
+    "leading-debug-three-sections": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "f773bb6a55bf24b8a171869215db5b09b6f315e4166c208a72cd3cd6beac9565",
+      "native_version_payload_matches": true
+    },
+    "eight-byte-section-name": {
+      "exit_code": 0,
+      "expected_success": true,
+      "input_sha256": "3f937ee2b98f59dde3743f02cd17f00edc6518db8623368a14b542449b254822",
+      "native_version_payload_matches": true
+    },
+    "invalid-symbol-section": {
+      "exit_code": 1,
+      "expected_success": false,
+      "input_sha256": "6b254b4bb1cc88c410a05f566dfa6174d9079d0a68aaca9e74faadc8ba9c8fe3",
+      "native_version_payload_matches": false
+    },
+    "truncated-resource": {
+      "exit_code": 1,
+      "expected_success": false,
+      "input_sha256": "df6688aef525a2d5e7e6bb9f521ce7235b78db48ea2d90c6b173afc4082b8bc3",
+      "native_version_payload_matches": false
+    }
+  },
+  "production_unsafe_il_changes": 0,
+  "final_cet_native_image_resource_tests_passed": true,
+  "additional_native_patches": {
+    "runtime_source_version": "10.0.5",
+    "runtime_source_commit": "081d220c0a773ffb7c6bea6b48727833576a65ef",
+    "runtime_archive_sha256": "1692acae5e3adfd625452fbc9db4fd4e982c10e38189358ae245c74dd5514d7a",
+    "patches": {
+      "resource-section-index.patch": "625edb07f68a8cfed4676755d2a51fc7926db69762f66a947925a1391629e66c",
+      "cetcompat.patch": "bec119f9444dad76b4f8136d8e697a5034f37d4eababc03efe0904d5a053c06e"
+    },
+    "changed_files": {
+      "src/coreclr/dlls/mscorpe/ceefilegenwriter.cpp": {
+        "original_sha256": "39d7e152c357b9b1f20eb3568ae6b8447bd155cc034b0ef69d1dc10fa80e6e52",
+        "ported_sha256": "387e1ffdccb2117efcf22439a63f3386ab5a50bfd48d0b7e2cd07020a5b63c84"
+      },
+      "src/coreclr/ilasm/CMakeLists.txt": {
+        "original_sha256": "348d8d92f4c668cf64ea3998850b326970e7b949898cb7d977270fb5c8719c3f",
+        "ported_sha256": "03f79da96da60d36ce0bcceaf432bde1faf103cab6fe9ae9893af8427144fbed"
+      }
+    },
+    "extends_coreclr_port_manifest": "tests/runtime10-coreclr/port-source-inputs.json",
+    "production_unsafe_il_changes": 0,
+    "extends_coreclr_port_manifest_sha256": "648d476a41ca985c8cfe0e3771bf6a3a886d5e0bdb10ec301d343b37d8db1624"
+  },
+  "initial_resource_failure": "Original ILAsm rejected LLVM two-section resource COFF with HRESULT0x80070714; corrected actual section-index validation.",
+  "corrected_cet_linker_spelling": "LINKER:--Xlink=/CETCOMPAT",
+  "final_coreclr_source_manifest_used": true,
+  "earlier_builder_root_manifest_superseded_for_this_audit": true,
+  "formal_pacman_installed": false,
+  "commands": [
+    {
+      "command": "ninja -C \"$ROOT/coreclr-build\" -j2 ilasm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 \"$ROOT/ilasm-check-resources.py\" \"$ROOT\" \"$ROOT/maintenance20-1\" \"$ROOT/ilasm-resource-check2\"",
+      "exit_code": 0
+    },
+    {
+      "command": "/clang64/bin/python.exe \"$(cygpath -am \"$ROOT/ilasm-workflow/check-image.py\")\" \"$(cygpath -am \"$ROOT\")\"",
+      "exit_code": 0
+    }
+  ]
+}
+
+ilasm10-build4.log
+ninja: Entering directory `C:/codex-dotnet10/c1.1BZ8KU/coreclr-build'
+[0/1] Re-running CMake...
+-- Using CMake version 4.4.4
+-- ZLIB_HEADER_VERSION: 1.3.1
+-- ZLIBNG_HEADER_VERSION: 2.2.5
+-- Arch detected: 'x86_64'
+-- Basearch of 'x86_64' has been detected as: 'x86'
+-- Architecture-specific source files: arch/x86/x86_features.c;arch/x86/chunkset_sse2.c;arch/x86/compare256_sse2.c;arch/x86/slide_hash_sse2.c;arch/x86/adler32_ssse3.c;arch/x86/chunkset_ssse3.c;arch/x86/adler32_sse42.c;arch/x86/crc32_pclmulqdq.c;arch/x86/slide_hash_avx2.c;arch/x86/chunkset_avx2.c;arch/x86/compare256_avx2.c;arch/x86/adler32_avx2.c;arch/x86/adler32_avx512.c;arch/x86/chunkset_avx512.c;arch/x86/adler32_avx512_vnni.c;arch/x86/crc32_vpclmulqdq.c
+-- The following features have been enabled:
+
+ * CMAKE_BUILD_TYPE, Build type: Release (selected)
+ * XSAVE, Support XSAVE intrinsics using "-mxsave"
+ * SSSE3_ADLER32, Support SSSE3-accelerated adler32, using "-mssse3"
+ * SSE42_CRC, Support SSE4.2 optimized adler32 hash generation, using "-msse4.2"
+ * PCLMUL_CRC, Support CRC hash generation using PCLMULQDQ, using "-msse4.2 -mpclmul"
+ * AVX2_SLIDEHASH, Support AVX2 optimized slide_hash, using "-mavx2 -mbmi2"
+ * AVX2_CHUNKSET, Support AVX2 optimized chunkset, using "-mavx2 -mbmi2"
+ * AVX2_COMPARE256, Support AVX2 optimized compare256, using "-mavx2 -mbmi2"
+ * AVX2_ADLER32, Support AVX2-accelerated adler32, using "-mavx2 -mbmi2"
+ * AVX512_ADLER32, Support AVX512-accelerated adler32, using "-mavx512f -mavx512dq -mavx512bw -mavx512vl -mbmi2 -mtune=cascadelake"
+ * AVX512_CHUNKSET, Support AVX512 optimized chunkset, using "-mavx512f -mavx512dq -mavx512bw -mavx512vl -mbmi2 -mtune=cascadelake"
+ * AVX512VNNI_ADLER32, Support AVX512VNNI adler32, using "-mavx512f -mavx512dq -mavx512bw -mavx512vl -mavx512vnni -mbmi2 -mtune=cascadelake"
+ * VPCLMUL_CRC, Support CRC hash generation using VPCLMULQDQ, using "-mpclmul -mvpclmulqdq -mavx512f -mavx512f -mavx512dq -mavx512bw -mavx512vl -mbmi2 -mtune=cascadelake"
+ * WITH_GZFILEOP, Compile with support for gzFile related functions
+ * ZLIB_COMPAT, Compile with zlib compatible API
+ * WITH_SANITIZER, Enable sanitizer support
+ * WITH_GTEST, Build gtest_zlib
+ * WITH_OPTIM, Build with optimisation
+ * WITH_NEW_STRATEGIES, Use new strategies
+ * WITH_RUNTIME_CPU_DETECTION, Build with runtime CPU detection
+ * WITH_AVX2, Build with AVX2
+ * WITH_AVX512, Build with AVX512
+ * WITH_AVX512VNNI, Build with AVX512 VNNI
+ * WITH_SSE2, Build with SSE2
+ * WITH_SSSE3, Build with SSSE3
+ * WITH_SSE42, Build with SSE42
+ * WITH_PCLMULQDQ, Build with PCLMULQDQ
+ * WITH_VPCLMULQDQ, Build with VPCLMULQDQ
+
+-- The following features have been disabled:
+
+ * ZLIB_SYMBOL_PREFIX, Publicly exported symbols DO NOT have a custom prefix
+ * ZLIB_ENABLE_TESTS, Build test binaries
+ * ZLIBNG_ENABLE_TESTS, Test zlib-ng specific API
+ * WITH_FUZZERS, Build test/fuzz
+ * WITH_BENCHMARKS, Build test/benchmarks
+ * WITH_BENCHMARK_APPS, Build application benchmarks
+ * WITH_NATIVE_INSTRUCTIONS, Instruct the compiler to use the full instruction set on this host (gcc/clang -march=native)
+ * WITH_MAINTAINER_WARNINGS, Build with project maintainer warnings
+ * WITH_CODE_COVERAGE, Enable code coverage reporting
+ * WITH_INFLATE_STRICT, Build with strict inflate distance checking
+ * WITH_INFLATE_ALLOW_INVALID_DIST, Build with zero fill for inflate invalid distances
+ * INSTALL_UTILS, Copy minigzip and minideflate during install
+
+-- Build type is 'Release'
+-- Compiler is not EMSCRIPTEN
+-- Configuring done (3.6s)
+-- Generating done (2.0s)
+-- Build files have been written to: C:/codex-dotnet10/c1.1BZ8KU/coreclr-build
+[1/2] Linking CXX executable ilasm\ilasm.exe
+clang++: warning: argument unused during compilation: '-pie' [-Wunused-command-line-argument]
+
+ilasm-resource-check2.log
+PASS ILAsm resource case llvm-two-sections
+PASS ILAsm resource case leading-debug-three-sections
+PASS ILAsm resource case eight-byte-section-name
+PASS ILAsm resource case invalid-symbol-section
+PASS ILAsm resource case truncated-resource
+
+ilasm-image-check2.log
+PASS source native ILAsm AMD64/CET/version and all frozen CoreCLR plus additional source port hashes

@@ -1,0 +1,100 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Apache Maven Wagon: the transport API and the file and HTTP providers that
+# Maven's distribution includes.  The other providers (ftp, ssh, scm,
+# webdav) are not built.
+
+_realname=maven-wagon
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-maven-wagon-provider-api"
+         "${MINGW_PACKAGE_PREFIX}-maven-wagon-file"
+         "${MINGW_PACKAGE_PREFIX}-maven-wagon-http-shared"
+         "${MINGW_PACKAGE_PREFIX}-maven-wagon-http")
+pkgver=3.5.3
+pkgrel=1
+pkgdesc="Apache Maven Wagon transport abstraction (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/wagon/'
+msys2_repository_url='https://github.com/apache/maven-wagon'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+             "${MINGW_PACKAGE_PREFIX}-java-httpclient"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-wagon/archive/refs/tags/wagon-${pkgver}.tar.gz")
+sha256sums=('b09db0c849a82055c13482c03c14d8e4931eb1bad7a449d530d94655230acb16')
+
+_src=${_realname}-wagon-${pkgver}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local g=org.apache.maven.wagon p=wagon-providers
+  jb_module ${g}:wagon-provider-api:${pkgver} wagon-provider-api/src/main/java \
+    -u wagon-provider-api/pom.xml -- org.codehaus.plexus:plexus-utils
+  # Plexus descriptors: javadoc @plexus.component tags (FileWagon) or a
+  # hand-written components.xml (HttpWagon), as plexus-component-metadata
+  jb_module ${g}:wagon-file:${pkgver} ${p}/wagon-file/src/main/java -u ${p}/wagon-file/pom.xml \
+    -P plexus -- ${g}:wagon-provider-api org.codehaus.plexus:plexus-utils
+  # commons-logging is provided by jcl-over-slf4j (as in Maven's lib/)
+  jb_module ${g}:wagon-http-shared:${pkgver} ${p}/wagon-http-shared/src/main/java \
+    -u ${p}/wagon-http-shared/pom.xml \
+    -- ${g}:wagon-provider-api org.apache.httpcomponents:httpclient \
+       org.apache.httpcomponents:httpcore org.codehaus.plexus:plexus-utils org.slf4j:slf4j-api
+  jb_module ${g}:wagon-http:${pkgver} ${p}/wagon-http/src/main/java \
+    -r ${p}/wagon-http/src/main/resources -u ${p}/wagon-http/pom.xml -P plexus \
+    -- ${g}:wagon-http-shared org.apache.httpcomponents:httpclient \
+       'org.slf4j:jcl-over-slf4j/runtime'
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local g=org.apache.maven.wagon
+  # upstream tests need EasyMock, Jetty 9 and plexus-container-default
+  jb_loadcheck ${g}:wagon-provider-api ${g}:wagon-file ${g}:wagon-http-shared ${g}:wagon-http
+  unzip -p "$(jb_jarpath ${g}:wagon-file)" META-INF/plexus/components.xml | grep -q '<role-hint>file</role-hint>'
+  unzip -p "$(jb_jarpath ${g}:wagon-http)" META-INF/plexus/components.xml | grep -q '<role-hint>https</role-hint>'
+}
+
+package_maven-wagon-provider-api() {
+  pkgdesc="Apache Maven Wagon provider API (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.wagon:wagon-provider-api
+}
+
+package_maven-wagon-file() {
+  pkgdesc="Apache Maven Wagon file provider (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-maven-wagon-provider-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.wagon:wagon-file
+}
+
+package_maven-wagon-http-shared() {
+  pkgdesc="Apache Maven Wagon shared HTTP code (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-maven-wagon-provider-api"
+           "${MINGW_PACKAGE_PREFIX}-java-httpclient"
+           "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.wagon:wagon-http-shared
+}
+
+package_maven-wagon-http() {
+  pkgdesc="Apache Maven Wagon HTTP provider (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-maven-wagon-http-shared"
+           "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.wagon:wagon-http
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

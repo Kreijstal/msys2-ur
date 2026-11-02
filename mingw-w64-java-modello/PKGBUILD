@@ -1,0 +1,140 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Modello generates the model classes and XML readers/writers of Maven and
+# Plexus from .mdo descriptions.  Built are the core and the generators
+# Maven needs (java, xml, xpp3); PKGBUILDs run it through
+# org.codehaus.modello.ModelloCli, as GNU Guix does, via jb_modello.
+
+_realname=modello
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-modello-core"
+         "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-java"
+         "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-xml"
+         "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-xpp3")
+pkgver=2.6.0
+pkgrel=1
+pkgdesc="Modello data model code generator (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/modello/'
+msys2_repository_url='https://github.com/codehaus-plexus/modello'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-build-api"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+             "${MINGW_PACKAGE_PREFIX}-java-guice"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-xml"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-simple")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/modello/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('68f2029e2bf7e2cab1c04f501d2049776eb8e7d7bb84b822a3eee41a6d1a72f5')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local g=org.codehaus.modello p=modello-plugins
+  # all components are JSR-330 @Named: index them like sisu-maven-plugin
+  jb_module ${g}:modello-core:${pkgver} modello-core/src/main/java -u modello-core/pom.xml -P sisu \
+    -- org.codehaus.plexus:plexus-build-api org.eclipse.sisu:org.eclipse.sisu.plexus \
+       'com.google.inject:guice/runtime' org.codehaus.plexus:plexus-utils \
+       org.codehaus.plexus:plexus-xml org.slf4j:slf4j-api
+  jb_module ${g}:modello-plugin-java:${pkgver} ${p}/modello-plugin-java/src/main/java \
+    -u ${p}/modello-plugin-java/pom.xml -P sisu \
+    -- ${g}:modello-core org.codehaus.plexus:plexus-utils org.codehaus.plexus:plexus-build-api
+  jb_module ${g}:modello-plugin-xml:${pkgver} ${p}/modello-plugin-xml/src/main/java \
+    -r ${p}/modello-plugin-xml/src/main/resources -u ${p}/modello-plugin-xml/pom.xml -P sisu \
+    -- ${g}:modello-core "${g}:modello-plugin-java?" org.codehaus.plexus:plexus-utils
+  jb_module ${g}:modello-plugin-xpp3:${pkgver} ${p}/modello-plugin-xpp3/src/main/java \
+    -u ${p}/modello-plugin-xpp3/pom.xml -P sisu \
+    -- ${g}:modello-plugin-java org.codehaus.plexus:plexus-utils ${g}:modello-plugin-xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local g=org.codehaus.modello
+  jb_loadcheck ${g}:modello-core ${g}:modello-plugin-java ${g}:modello-plugin-xpp3
+  # modello-plugin-java is an optional dependency of the xml plugin
+  jb_loadcheck --with ${g}:modello-plugin-java ${g}:modello-plugin-xml
+  # upstream tests need JUnit 5 and plexus-testing; instead generate the
+  # Maven 4.0.0 POM model (from upstream's maven-model IT) with the java
+  # and xpp3 generators, compile it and read a POM with it
+  local t="${srcdir}/modello-check" cp mode
+  rm -rf "${t}"
+  mkdir -p "${t}/src" "${t}/classes"
+  cp=$(jb_cp ${g}:modello-plugin-xpp3 org.slf4j:slf4j-simple)
+  for mode in java xpp3-reader xpp3-writer; do
+    java -cp "${cp}" org.codehaus.modello.ModelloCli \
+      "$(jb_w modello-maven-plugin/src/it/maven-model/src/main/mdo/maven.mdo)" ${mode} \
+      "$(jb_w "${t}/src")" 4.0.0 false 8
+  done
+  jb_javac -d "$(jb_w "${t}/classes")" -cp "$(jb_cp org.codehaus.plexus:plexus-utils)" -proc:none -- "${t}/src"
+  cat > "${t}/ReadPom.java" <<'JAVA'
+import java.io.FileReader;
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+public class ReadPom {
+  public static void main(String[] a) throws Exception {
+    Model m = new MavenXpp3Reader().read(new FileReader(a[0]));
+    System.out.println("modello check: read " + m.getGroupId() + ":" + m.getArtifactId());
+    if (!"modello".equals(m.getArtifactId())) throw new AssertionError(m.getArtifactId());
+  }
+}
+JAVA
+  local rcp="$(jb_w "${t}/classes");$(jb_cp org.codehaus.plexus:plexus-utils)"
+  javac -nowarn -d "$(jb_w "${t}/classes")" -cp "${rcp}" "$(jb_w "${t}/ReadPom.java")"
+  java -cp "${rcp}" ReadPom pom.xml
+}
+
+package_java-modello-core() {
+  pkgdesc="Modello data model code generator, core (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-build-api"
+           "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+           "${MINGW_PACKAGE_PREFIX}-java-guice"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-xml"
+           "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.modello:modello-core
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-modello-core/LICENSE.txt"
+}
+
+package_java-modello-plugin-java() {
+  pkgdesc="Modello Java generator (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-modello-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.modello:modello-plugin-java
+}
+
+package_java-modello-plugin-xml() {
+  pkgdesc="Modello XML model support (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-modello-core")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.modello:modello-plugin-xml
+}
+
+package_java-modello-plugin-xpp3() {
+  pkgdesc="Modello XPP3 reader and writer generators (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-modello-plugin-java"
+           "${MINGW_PACKAGE_PREFIX}-java-modello-plugin-xml")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.modello:modello-plugin-xpp3
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

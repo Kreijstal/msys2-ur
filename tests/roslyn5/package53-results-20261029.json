@@ -1,0 +1,126 @@
+{
+  "finished_at_utc": "2026-10-29T01:24:27.763499+00:00",
+  "host": "win11",
+  "package": "mingw-w64-clang-x86_64-dotnet-roslyn53-5.3.0.2.26113.113-1-any.pkg.tar.zst",
+  "package_sha256": "991fc1899d8c77c43f01d777b51a2c8c04bdbeb2f28119d4ad42ebf08b4e66fe",
+  "regular_payload_files": 13,
+  "formal_pacman_installed": true,
+  "clean_build_exit_code": 0,
+  "archive_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "pacman_altered_files": 0,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "original_7_4_dependency_count_increment": 0,
+  "evidence": {
+    "local_directory": "/tmp/roslyn53-package1",
+    "files": 228,
+    "archive_sha256": "1bb4beb41e61d81d154542582d6077c299e9a18ecd066cde5f5ea7032167447c",
+    "all_member_hashes_verified": true,
+    "actual_package_hash_verified": true,
+    "recipe_and_srcinfo_match": true
+  },
+  "recipe": "mingw-w64-dotnet-roslyn53",
+  "build_root": "/e/codex-dotnet10/roslyn53pkg1.WzBs8V",
+  "nuget_version": "5.3.0-2.26113.113",
+  "original_library_target": "netstandard2.0",
+  "source_commit": "2333221c0564852ee5ceac9c622a0b14e864d76e",
+  "source_archive_sha256": "e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb",
+  "original_production_cs": {
+    "Microsoft.CodeAnalysis": 1042,
+    "Microsoft.CodeAnalysis.CSharp": 1146
+  },
+  "original_generator_cs": {
+    "CSharpSyntaxGenerator": 20,
+    "BoundTreeGenerator": 3,
+    "CSharpErrorFactsGenerator": 1
+  },
+  "original_source_archive_inputs_verified": 2256,
+  "actual_producer_and_consumer_package_references_verified": 41,
+  "source_nuget_packages": 2,
+  "source_dlls_including_satellites": 28,
+  "public_api_declarations": {
+    "Microsoft.CodeAnalysis": 4288,
+    "Microsoft.CodeAnalysis.CSharp": 6272
+  },
+  "localized_resource_sets": 28,
+  "localized_resource_strings": 39508,
+  "localization_cultures": 13,
+  "csharp14_execution_analyzer_generator_pdb_diagnostics_passed": true,
+  "original_resx_xlf_coverage_verified": true,
+  "original_production_source_changes": 0,
+  "nu1608_conflicts_absent": true,
+  "pacman_entries": 23,
+  "original_cli_and_all_framework_variants_complete": false,
+  "full_sdk53_compiler_graph_built": false,
+  "visible_source_warning_codes": {
+    "Microsoft.CodeAnalysis": [
+      "CS8629",
+      "CS8767",
+      "CS8604",
+      "CS8603",
+      "CS8602",
+      "CS8605",
+      "CS8774",
+      "CS8601",
+      "NU1603",
+      "CS8775",
+      "CS8777",
+      "CS8762",
+      "CS8620",
+      "CS8619",
+      "CS8600",
+      "CS8618",
+      "CS8819"
+    ],
+    "Microsoft.CodeAnalysis.CSharp": [
+      "CS8629",
+      "CS8604",
+      "CS8603",
+      "CS8602",
+      "CS8605",
+      "CS8631",
+      "CS8601",
+      "NU1603",
+      "CS8777",
+      "CS8762",
+      "CS8620",
+      "CS8619",
+      "CS8600",
+      "CS8618"
+    ]
+  },
+  "warning_notes": [
+    "Original source nullable/static-analysis warnings remain visible.",
+    "NU1603 remains for Platforms>=1.1.0 resolving source-built1.1.2; original package readme advisory remains. NU1608 is an error, with no suppression."
+  ],
+  "exact_paired_common_version_preserved": true,
+  "runtime_dependencies_packaged_as_minimums": true,
+  "all_non_nuspec_bytes_unchanged_by_metadata_adapter": true,
+  "source_workflow_files": 13,
+  "source_workflow_sha256": "ef85cd9280ee8c754bacbb6c1d857253a872629394dbcb772289522642dceef1",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-roslyn53-package.py \"$PWD\"",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./*-5.3.0.2.26113.113-1-any.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-roslyn53",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/roslyn53-workflow/check.py \"$PWD/src\" \"$PWD/src/prepared\" \"$PWD/src/installed-consumer\" /clang64/lib/dotnet/library-packs",
+      "exit_code": 0
+    }
+  ]
+}

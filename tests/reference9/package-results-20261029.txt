@@ -1,0 +1,75 @@
+Source NET9 9.0.11 reference package validation
+Finished: 2026-10-29T03:18:07.262482+00:00
+Host/root: win11 /e/codex-dotnet10/reference9pkg1.C9Nf81
+Package: mingw-w64-clang-x86_64-dotnet-reference9-servicing-9.0.11-1-any.pkg.tar.zst
+Package SHA256: 2bc8cc40816d2e195bc9f2192ac7fa604149e927c91ab923760f8abaec4390f3
+
+Commands run from package root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-reference9-servicing-9.0.11-1-any.pkg.tar.zst
+RESULT: exit0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-reference9-servicing
+mingw-w64-clang-x86_64-dotnet-reference9-servicing: 187 total files, 0 altered files
+
+$ /usr/bin/python3 audit-installed-references.py mingw-w64-clang-x86_64-dotnet-reference9-servicing-9.0.11-1-any.pkg.tar.zst src/prepared installed-payload-audit.json
+RESULT: exit0
+PASS all 175 installed payload files and 164 exact source reference assemblies; no private facade stubs shipped
+
+$ /usr/bin/python3 check-installed-references.py src src/prepared installed-check2 src/reference9-workflow/validate.py
+RESULT: exit0
+PASS complete original public contract/stub metadata graph; net9 API consumer compiles and net8 control rejects it
+PASS exact installed164 NET9 contracts,fresh metadata/NET9 positive/NET8 negative consumer gates
+
+
+164 public contract DLLs installed;20 private stubs built and excluded from the package.
+All175 shipped payloads and5 original Arcade key policies verified.
+All1921 collected evidence hashes and source recipe/SRCINFO/frozen workflow match.
+Independent local archive audit matched479 original C#/project inputs and all164 shipped DLL hashes.
+Original source audit also checks the original graph declaration and all private project clone transformations.
+
+Initial post-install helper failure: missing copied projects.json. Corrected helper and fresh installed-check2 passed. No production package change.
+
+NET9 references do not provide a NET9 runtime. Full targeting-pack generators/SDK integration,other framework variants,the exact9.0.11 OOB implementation packages,full MSBuild/SDK10,PowerShell7.6 and remaining compatibility gates are unfinished.
+
+Full makepkg log:
+==> Making package: mingw-w64-dotnet-reference9-servicing 9.0.11-1 (29 Oct 2026 04:04:03)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-msbuild9-fa7cdded.tar.gz
+  -> Found arcade-runtime9-6666973b.tar.gz
+  -> Found reference9-source-1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-msbuild9-fa7cdded.tar.gz ... Passed
+    arcade-runtime9-6666973b.tar.gz ... Passed
+    reference9-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting reference9-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-reference9-servicing"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-reference9-servicing 9.0.11-1 (29 Oct 2026 04:15:24)
+
+Build-time checks:
+PASS complete original public contract/stub metadata graph; net9 API consumer compiles and net8 control rejects it
+PASS 197 original C# inputs and 282 project/property inputs match pristine runtime9 source;20 original-target generated stubs
+

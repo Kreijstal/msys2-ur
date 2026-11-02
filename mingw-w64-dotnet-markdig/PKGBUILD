@@ -1,0 +1,60 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-markdig
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.33.0
+pkgrel=1
+pkgdesc='Source-built signed Markdig Markdown parser for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/xoofx/markdig'
+license=('spdx:BSD-2-Clause')
+_commit=7d40bc118bc28095f01699d3d1759ae5a1c18b80
+_tree=markdig-${_commit}
+_project=src/Markdig.Signed/Markdig.Signed.csproj
+_id=Markdig.Signed
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("markdig-${_commit}.tar.gz::https://codeload.github.com/xoofx/markdig/tar.gz/${_commit}"
+        prepare.py check.cs)
+sha256sums=('2db4a1a57a57da1a3c3dc47b3885625c190f96b9e8d0964f5e416f1652893fe4' 'b30578b9fc9f7a4ece847a2c46a5336623de6a1ea7e44025f383ddc1ddef6c05' '919fa30c0d119f11bd706c34dd258aea6148a07296d8f3956d5f3ea728cc3c69')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:GeneratePackageOnBuild=false -p:TargetFrameworks=net8.0 -p:TargetFramework=net8.0 \
+    -p:RepositoryCommit="$_commit" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:EnablePackageValidation=false -p:EnableTrimAnalyzer=false -p:EnableAotAnalyzer=false -p:EnableSingleFileAnalyzer=false \
+    -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -p:LangVersion=12.0 -p:AssemblyVersion=0.33.0.0 -p:FileVersion=0.33.0.0 -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECTFILE
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECTFILE
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" \
+    -p:RestoreAdditionalProjectSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" -p:UseSharedCompilation=false
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/license.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

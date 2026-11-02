@@ -1,0 +1,46 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-dataflow46-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.6.0
+pkgrel=1
+pkgdesc='Original Dataflow4.6 Standard1.0/1.1 source bootstrap with disclosed Standard2 compatibility assets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx10-dataflow46-9688ddbb.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/9688ddbb62c04189cac4c4a06e31e93377dccd41'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'dataflow46-source-1.tar.gz')
+noextract=('corefx10-dataflow46-9688ddbb.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('986a512c70d55ed7a1ed8cbb9d8323017c9cc83e77e95e833c7b91f42e4ef601'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '8940c89c903472324794e2507ea5eec1ffb16af5ea27a5a3ac49a9ede27962c9')
+build() {
+  /usr/bin/python3 "$srcdir/dataflow46-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/dataflow46-workflow/build.py" "$srcdir/corefx10-dataflow46-9688ddbb.tar.gz" "$MINGW_PREFIX/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/dataflow46-workflow/pack.py" "$srcdir/prepared" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/dataflow46-workflow/audit.py" "$srcdir/prepared" "$MINGW_PREFIX/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/dataflow46-workflow/check.py" "$srcdir/prepared" "$MINGW_PREFIX/lib/dotnet/reference-packs/legacy-ns13-contracts-bootstrap/contracts" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" --feed "$srcdir/prepared/feed" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/System.Threading.Tasks.Dataflow.4.6.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.threading.tasks.dataflow.4.6.0.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check.py; do install -m644 "$srcdir/dataflow46-workflow/$file" "$doc/$file"; done
+  for file in Api.cs Check.cs Bridge.cs original-dataflow-netstandard1.0.json original-dataflow-netstandard1.1.json source-contract-build-matrix.json published-provenance.json; do install -m644 "$srcdir/dataflow46-workflow/inputs/$file" "$doc/inputs/$file"; done
+  install -m644 "$srcdir/prepared/results.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE THIRD-PARTY-NOTICES; do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+}

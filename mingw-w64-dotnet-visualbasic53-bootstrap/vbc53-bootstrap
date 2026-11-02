@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+prefix=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+export DOTNET_ROOT=$(cygpath -am "$prefix/lib/dotnet10")
+export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_MULTILEVEL_LOOKUP=0 DOTNET_ROLL_FORWARD=Disable
+export DOTNET_HOST_PATH="$DOTNET_ROOT/dotnet.exe"
+args=()
+for arg in "$@"; do
+  if [[ $arg == @* && -f ${arg:1} ]]; then args+=("@$(cygpath -am "${arg:1}")")
+  elif [[ -f $arg || -d $arg ]]; then args+=("$(cygpath -am "$arg")")
+  else args+=("$arg")
+  fi
+done
+export MSYS2_ARG_CONV_EXCL='*'
+exec "$prefix/lib/dotnet10/dotnet.exe" "$(cygpath -am "$prefix/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/vbc.dll")" "${args[@]}"

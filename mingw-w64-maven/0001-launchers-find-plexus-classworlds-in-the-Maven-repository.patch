@@ -1,0 +1,31 @@
+Subject: launchers: find plexus-classworlds in the system Maven repository
+
+The packaged Maven has no boot/ directory: the launcher jar is the one in
+share/maven-repo, next to MAVEN_HOME (share/maven).  The version is filled
+in by the PKGBUILD.
+
+---
+
+--- a/apache-maven/src/bin/mvn
++++ b/apache-maven/src/bin/mvn
+@@ -106,7 +106,7 @@
+   exit 1
+ fi
+ 
+-CLASSWORLDS_JAR=`echo "${MAVEN_HOME}"/boot/plexus-classworlds-*.jar`
++CLASSWORLDS_JAR=`echo "${MAVEN_HOME}"/../maven-repo/org/codehaus/plexus/plexus-classworlds/@CLASSWORLDS_VERSION@/plexus-classworlds-@CLASSWORLDS_VERSION@.jar`
+ CLASSWORLDS_LAUNCHER=org.codehaus.plexus.classworlds.launcher.Launcher
+ 
+ # For Cygwin, switch paths to Windows format before running java
+
+--- a/apache-maven/src/bin/mvn.cmd
++++ b/apache-maven/src/bin/mvn.cmd
+@@ -173,7 +173,7 @@
+ @REM do not let MAVEN_PROJECTBASEDIR end with a single backslash which would escape the double quote. This happens when .mvn at drive root.
+ if "_%MAVEN_PROJECTBASEDIR:~-1%"=="_\" set "MAVEN_PROJECTBASEDIR=%MAVEN_PROJECTBASEDIR%\"
+ 
+-for %%i in ("%MAVEN_HOME%"\boot\plexus-classworlds-*) do set CLASSWORLDS_JAR="%%i"
++for %%i in ("%MAVEN_HOME%"\..\maven-repo\org\codehaus\plexus\plexus-classworlds\@CLASSWORLDS_VERSION@\plexus-classworlds-@CLASSWORLDS_VERSION@.jar) do set CLASSWORLDS_JAR="%%i"
+ set CLASSWORLDS_LAUNCHER=org.codehaus.plexus.classworlds.launcher.Launcher
+ 
+ @REM MNG-8248

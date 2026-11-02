@@ -1,0 +1,36 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-java-cts
+pkgname="${MINGW_PACKAGE_PREFIX}-java-cts"
+pkgver=1.7.2
+pkgrel=1
+pkgdesc="cts Java library, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/orbisgis/cts'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21" "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('cts-1.7.2.tar.gz::https://github.com/orbisgis/cts/archive/refs/tags/v1.7.2.tar.gz')
+sha256sums=('2bd3e355cb83f1a7212474c7d26e624c6faf88903af7c2ecf672ddbf8fd12124')
+
+prepare() {
+  find . -type f \( -name '*.class' -o -name '*.jar' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd cts-1.7.2
+  JB_RELEASE=8 jb_module org.orbisgis:cts:${pkgver} src/main/java -r src/main/resources -u pom.xml -- org.slf4j:slf4j-api
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.orbisgis:cts
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.orbisgis:cts
+  install -Dm644 "cts-1.7.2/LICENSE.md" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-cts/LICENSE"
+}

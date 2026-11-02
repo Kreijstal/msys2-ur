@@ -1,0 +1,12 @@
+Source NET10 CSharp compiler bootstrap — installed release3
+mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap-5.3.0.2.26113.113-3-any.pkg.tar.zst
+Release3 sets process-local DOTNET_HOST_PATH in CMD/MSYS launchers so server startup uses NET10 while SDK8 remains the default.
+The validated clean compiler,26 satellites,PDBs and all other payload bytes remain unchanged. Only two launchers,README and manifest changed.
+makepkg --repackage --force --noconfirm:exit0. Actual archive audit:exit0. Paired install:exit0. Pacman106 entries,0 altered.
+Both entrypoints override a wrong inherited SDK8 host and auto-start/share/stop a verified NET10 server,without local fallback. Original SDK8 Csc task hotfix retest:exit0.
+Exact shared validation commands and server evidence:tests/roslyn5/visualbasic53-package-results-20261029.txt
+Package SHA256:f83819da8e438d691dd7ccc3b60b42ac4d29033d2c2233621e3a1dda90bf7838
+Frozen workflow23 files SHA256:b5184f6b98b71cd3760c1af8c75b1c4475c8d7741c1b43d76c6ed9d863572f15
+Evidence378 files SHA256:831c9b216acd659563845511be7e992657a84d126e29ab9816866281b032be3f;all hashes verified.
+Local evidence:/tmp/csharp53-bootstrap-package3
+Full SDK10,other compiler frameworks,PowerShell7.6 and remaining dependency gates are unfinished.

@@ -1,0 +1,76 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-system-text-json8
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.5
+pkgrel=1
+_commit=81cabf2857a01351e5ab578947c7403a5b128ad1
+pkgdesc='Complete source System.Text.Json .NET8 library and original generator variants'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp-workspaces=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2" 'python')
+options=('!strip' '!lto')
+source=("runtime-$_commit.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/$_commit"
+  extract.py
+  prepare.py
+  verify-build.py
+  pack.py
+  prepare-check.py
+  verify-consumer.py
+  verify-sdk.py
+  check.sh
+  Check.cs
+  SdkSample.cs
+  InspectApi.cs
+  InspectAssemblyMetadata.cs
+  compare.py
+  Open.pubkey.hex
+  published-metadata.json
+  published-api.json
+  README.md
+)
+noextract=("runtime-$_commit.tar.gz")
+sha256sums=(
+ 'bbd5b1651bfc4c75b67ef23b71af58f6441401185f22233daefd35cc9ec72cfd'
+ '9ca75e675c416eed3b78fd2a49dd4b2ed1997008e456ead7a2be8adca7ab57a7'
+ 'ce12fcf39889308e8975dbd1956d8c4f0e9c562942f6770da62dc105a36d81f1'
+ 'e106ee13e0cd867308d7db53cb1384d92b6ecb783cb07a5cbcd715ede7a23829'
+ 'bd30af5b25419f4c27b5aed501bbe5f5081562877b4b974bfe49b35d87336967'
+ '50816f9f6c2d6468e3e1f0a731b7d52280a241823657f7a0c4dd24cac4588667'
+ '2fc6bc6c5115ff45b9120b1b79c536fc219ffdd4d6ec0e74885310b2e8f7481d'
+ 'eaf599ed09ffa9d115b6cb28a4d4398339cebb1ee7deec6d85d97c0302cb2aad'
+ 'ae91f40ac32f98aa84beff3614cbebbecb616a86c5df314ce2827db7cf4b785f'
+ '03df7a19181901c22c7e5c6af8ba94de48ad0d57101fee1b32944979e2934098'
+ '35db41e17e957c6288b7c8760dd836bae8d393cc8b3bb9d199dc88eae3d227e5'
+ '040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1'
+ '9d420de15e3dae9f398fbad440bd6ac37c890a0169303e24bf9c476f7bdad6ae'
+ '5849ad335f639e4e8fe542b4b0b940d59fd017f2ba5d28b281b753bb580c95ec'
+ '68908864c4084a0713b7201ff84082db6c158afcbf9cafef0f4a83204759afa5'
+ 'b1666a1b0874f33fde442f78a4618668ecf6eefae41590f1fc2dad95d55578d8'
+ '3689639beeab22fa9a5c8b0df30cf7f1cfefe1dbb301edf3b623174002bcd654'
+ '9fbfd65c33a16e83cb3dd8d56e3c0fe7d9fdbe00e0a9e3481bf024cd1f75b24b'
+)
+prepare() {
+ /usr/bin/python3 "$srcdir/extract.py" "$srcdir/runtime-$_commit.tar.gz" "$srcdir/source"
+ /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared"
+}
+build() {
+ export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+ export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/cache")
+ /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/prepared/Lib/Library.csproj")" -c Release \
+  --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false \
+  -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -v:minimal
+ /usr/bin/python3 "$srcdir/verify-build.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/cache"
+ /usr/bin/python3 "$srcdir/pack.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+ install -Dm644 "$srcdir/feed/System.Text.Json.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/System.Text.Json.$pkgver.nupkg"
+ install -Dm644 "$srcdir/source/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -m644 "$srcdir/source/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+ install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+ install -m644 "$srcdir/prepared/verified-build.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/source-inventory.json"
+}

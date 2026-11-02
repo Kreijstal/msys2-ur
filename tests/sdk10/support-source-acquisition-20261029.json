@@ -1,0 +1,105 @@
+{
+  "source_archives": [
+    {
+      "repository": "runtime",
+      "commit": "9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+      "url": "https://codeload.github.com/dotnet/runtime/tar.gz/9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+      "path": "/tmp/dotnet10-sources/runtime-sdk10-9ffface2.tar.gz",
+      "bytes": 95071238,
+      "sha256": "a6e2e3052e8e1387bf4755f80e61b60acaaf9943441283311ae5fa07b5b0ef7a"
+    },
+    {
+      "repository": "deployment-tools",
+      "commit": "6ebef72019b85958ae78d0da73ea49a161c7a28a",
+      "url": "https://codeload.github.com/dotnet/deployment-tools/tar.gz/6ebef72019b85958ae78d0da73ea49a161c7a28a",
+      "path": "/tmp/dotnet10-sources/deployment-tools-sdk10-6ebef720.tar.gz",
+      "bytes": 1493715,
+      "sha256": "c77cc65bd2291a94a9915db1201bc3bb293359612c9eec7d0c6a668d174e9a0e"
+    }
+  ],
+  "original_project_inputs": [
+    {
+      "repository": "runtime",
+      "source_commit": "9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+      "project": "src/installer/managed/Microsoft.NET.HostModel/Microsoft.NET.HostModel.csproj",
+      "sha256": "30633458db019975643422de09853d2882d265e6c685c135a28eb2985e1c15c8",
+      "original_target_frameworks": [
+        "$(NetCoreAppToolCurrent);$(NetFrameworkToolCurrent)"
+      ],
+      "package_references": [],
+      "project_references": [],
+      "built": false
+    },
+    {
+      "repository": "runtime",
+      "source_commit": "9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+      "project": "src/libraries/Microsoft.Extensions.DependencyModel/src/Microsoft.Extensions.DependencyModel.csproj",
+      "sha256": "26b84add1ecc5db50cdff7d6a5e90f274656f0c0d7dff8f2b815f6b623459cc3",
+      "original_target_frameworks": [
+        "$(NetCoreAppCurrent);$(NetCoreAppPrevious);$(NetCoreAppMinimum);netstandard2.0;$(NetFrameworkMinimum)"
+      ],
+      "package_references": [
+        {
+          "Include": "System.Buffers",
+          "Version": "$(SystemBuffersVersion)"
+        },
+        {
+          "Include": "System.Memory",
+          "Version": "$(SystemMemoryVersion)"
+        }
+      ],
+      "project_references": [
+        {
+          "Include": "$(LibrariesProjectRoot)System.Text.Encodings.Web\\src\\System.Text.Encodings.Web.csproj"
+        },
+        {
+          "Include": "$(LibrariesProjectRoot)System.Text.Json\\src\\System.Text.Json.csproj"
+        }
+      ],
+      "built": false
+    },
+    {
+      "repository": "runtime",
+      "source_commit": "9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+      "project": "src/libraries/System.IO.Hashing/src/System.IO.Hashing.csproj",
+      "sha256": "88e304f6e7552b6ae5e730290cee3e23b394a85334747c41dddec304a1d697c2",
+      "original_target_frameworks": [
+        "$(NetCoreAppCurrent);$(NetCoreAppPrevious);$(NetCoreAppMinimum);netstandard2.0;$(NetFrameworkMinimum)"
+      ],
+      "package_references": [
+        {
+          "Include": "System.Buffers",
+          "Version": "$(SystemBuffersVersion)"
+        },
+        {
+          "Include": "System.Memory",
+          "Version": "$(SystemMemoryVersion)"
+        }
+      ],
+      "project_references": [],
+      "built": false
+    },
+    {
+      "repository": "deployment-tools",
+      "source_commit": "6ebef72019b85958ae78d0da73ea49a161c7a28a",
+      "project": "src/Microsoft.Deployment.DotNet.Releases/src/Microsoft.Deployment.DotNet.Releases.csproj",
+      "sha256": "42a61f5f177118d3fce08f593fc03a3ef4688e30897f026cbf1b676de5bd5472",
+      "original_target_frameworks": [
+        "netstandard2.0"
+      ],
+      "package_references": [
+        {
+          "Include": "System.Text.Json"
+        }
+      ],
+      "project_references": [],
+      "built": false
+    }
+  ],
+  "source_only_archives_downloaded": true,
+  "published_implementation_binaries_downloaded": false,
+  "all_original_profiles_preserved": true,
+  "all_required_support_libraries_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

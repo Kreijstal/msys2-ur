@@ -1,0 +1,66 @@
+{
+  "finished_at_utc": "2026-10-28T16:47:22Z",
+  "host": "win11",
+  "root": "/c/codex-dotnet10/cim-wmi-retest.xSEZJe",
+  "packages": [
+    "mingw-w64-clang-x86_64-powershell 7.4.20-2",
+    "mingw-w64-clang-x86_64-dotnet-management 8.0.0-2",
+    "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-1",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing 8.0.31-3"
+  ],
+  "checks": [
+    {
+      "name": "combined",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-mmi3-combined.sh combined-consumer",
+      "exit_code": 0,
+      "log_sha256": "67b495e716a57cbff5840c5f186a6a74b63ba03a4788ea6f493680f5ab56212d"
+    },
+    {
+      "name": "mmi3",
+      "command": "timeout -k 10 300 bash mingw-w64-dotnet-mmi3/check.sh mmi3-consumer",
+      "exit_code": 0,
+      "log_sha256": "a37c17e2562bd836ed500622cdf1c04eb72a99e4d5d54d465e4ab95573c5b5ee"
+    },
+    {
+      "name": "powershell-mta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.xSEZJe/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-sta",
+      "command": "timeout -k 10 90 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.xSEZJe/tests/powershell-full-sdk/CimWmiSmoke.ps1",
+      "exit_code": 0,
+      "log_sha256": "2396e461e1afbcdaccf1674e24de344ffd9ac9f7561f8bbdcc5391d4994f6b36"
+    },
+    {
+      "name": "powershell-wmi-sta",
+      "command": "timeout -k 10 60 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File C:/codex-dotnet10/cim-wmi-retest.xSEZJe/tests/powershell-full-sdk/WmiStaProbe.ps1",
+      "exit_code": 0,
+      "log_sha256": "76b4e351007b81902980ac04c8b279478cfe2e46ff9fcf9dbc15372459a234f9"
+    },
+    {
+      "name": "wmi-mta",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-wmi.sh wmi-mta-consumer",
+      "exit_code": 0,
+      "log_sha256": "057eaa5e8301ebe4ed94f4eb211c80defa292feec8f92d61c3ed841f8c817259"
+    },
+    {
+      "name": "wmi-sta",
+      "command": "timeout -k 10 180 bash tests/mmi-cim-wmi/check-source-wmi-sta.sh wmi-sta-consumer",
+      "exit_code": 0,
+      "log_sha256": "aee0df04f5abb581eddd02382b24cce9eeca86db63985dd27b7e37fb0d0ffe40"
+    }
+  ],
+  "all_passed": true,
+  "implementation_changed": false,
+  "full_remote_provider_ownership_compatibility_verified": false,
+  "harness_matches_local_repository": true,
+  "harness_hashes": {
+    "tests/powershell-full-sdk/CimWmiSmoke.ps1": "b7f3781e2eeb20c48c580521ced1d062022e1a1210522c76dd820928d3c24533",
+    "tests/powershell-full-sdk/WmiStaProbe.ps1": "3a1c7e265671cfa182d7f790d0220a0a398979538fbced68e30eb606b0d4433a",
+    "tests/mmi-cim-wmi/check-wmi.sh": "f184603d81a15939866be416e27fccaa43a07c8bd608f8fd235d034261e3b1af",
+    "tests/mmi-cim-wmi/check-source-wmi-sta.sh": "50226c2c5759db6dd9a517e50967b41d6c638e183e66d39a9e3ca33d6e086195",
+    "tests/mmi-cim-wmi/check-mmi3-combined.sh": "6e579ccf284e1561c9e43c4e3fa2deca3436688212f5c399e70b075ef4bae0d3"
+  }
+}

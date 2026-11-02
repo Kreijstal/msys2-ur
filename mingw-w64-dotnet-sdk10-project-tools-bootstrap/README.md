@@ -1,0 +1,1 @@
+Builds three unchanged SDK10 NET10 resolver/template/project-tool profiles with source dependencies. See ../tests/sdk10-project-tools/README.md for original framework constraints, validation and remaining work.

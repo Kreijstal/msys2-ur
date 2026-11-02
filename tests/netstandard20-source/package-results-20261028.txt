@@ -1,0 +1,289 @@
+Source .NET Standard reference package — corrected clean revision2 build and installed validation passed
+Finished UTC: 2026-10-28T17:33:26Z
+Build root: /c/codex-dotnet10/nsref2.FXfNes
+Package: mingw-w64-clang-x86_64-dotnet-netstandard-reference 2.0.3-2
+
+117 original assemblies compiled; 113 shipped assets; 112 runtime-loadable facades; 4,197 original forwards.
+Core contract: 2,418 types / 24,177 methods; CLR rejection for execution verified.
+All 20 original NuGet dependency groups, 337 edges and 44 baseline versions preserved.
+250 original compilation source/project inputs and 8 additional packaging/policy inputs audited.
+123 installed payload files match the package archive; compiler hashes unchanged.
+
+Corrections:
+The first nuspec used an XML prefix unsupported by this NuGet reader. Default namespace fixed.
+The previous bootstrap treated all facades as reference-only. Revision2 restores original runtime-loading and 4.6 file-version policy.
+The final revision2 clean build, checks, install and installed checks all returned zero.
+
+Warnings: 453 nonfatal CS3021 source CLS-annotation warnings; NU1603 preserves original Platforms >=1.1.0 while resolving source1.1.2.
+The makepkg absolute-prefix warning is confined to one documentation file; payload paths audited.
+Older framework dependency runtime closure and the full PowerShell dependency goal remain unverified/incomplete.
+
+Exact final commands (remote commands from the build root; local commands from repository):
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-2-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-netstandard-reference
+RESULT: exit 0
+
+$ /usr/bin/python3 src/netstandard-reference/check.py src/standard-18a36291.tar.gz src/built installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-2-any.pkg.tar.zst evidence/installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c evidence/existing-compilers-before.sha256
+RESULT: exit 0
+
+$ python mingw-w64-dotnet-netstandard-reference/make-source.py
+RESULT: exit 0
+
+$ python -m py_compile mingw-w64-dotnet-netstandard-reference/*.py tests/netstandard20-source/audit-installed-package.py
+RESULT: exit 0
+
+$ bash -n mingw-w64-dotnet-netstandard-reference/PKGBUILD
+RESULT: exit 0
+
+Evidence SHA256: a891e678de9f6c499f5cd1958ba501c09d0618260953ec2e949aca556642e862
+Package SHA256: d7345e375c019c23307b5723b3e3a133bf95f5d7e63611b1503f097c7bb3be40
+NuGet SHA256: 6884f0dbaa6f87ea86a9b39520ff44197d95690d3da29f5494cbb1fb92d4f184
+
+Logs:
+
+--- makepkg.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-netstandard-reference 2.0.3-2 (28 Oct 2026 18:24:12)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found standard-18a36291.tar.gz
+  -> Found netstandard-reference-source-2.tar.gz
+  -> Found buildtools-09e02305.tar.gz
+==> Validating source files with sha256sums...
+    standard-18a36291.tar.gz ... Passed
+    netstandard-reference-source-2.tar.gz ... Passed
+    buildtools-09e02305.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting netstandard-reference-source-2.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netstandard-reference"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netstandard-reference 2.0.3-2 (28 Oct 2026 18:31:01)
+
+
+--- build.log ---
+PASS source reference netstandard
+PASS source reference System.Security.Principal.Windows
+PASS source reference System.Security.AccessControl
+PASS source reference Microsoft.Win32.Registry
+PASS source reference System.CodeDom
+PASS source reference System.ComponentModel.Composition
+PASS source reference System.Core
+PASS source reference System.Data
+PASS source reference System.Drawing
+PASS source reference System.IO.Compression.FileSystem
+PASS source reference System.Net
+PASS source reference System.Numerics
+PASS source reference System.Runtime.Serialization
+PASS source reference System.ServiceModel.Web
+PASS source reference System.Transactions
+PASS source reference System.Web
+PASS source reference System.Windows
+PASS source reference System.Xml.Linq
+PASS source reference System.Xml.Serialization
+PASS source reference System.Xml
+PASS source reference System
+PASS source reference mscorlib
+PASS source reference Microsoft.Win32.Primitives
+PASS source reference System.AppContext
+PASS source reference System.Collections.Concurrent
+PASS source reference System.Collections.NonGeneric
+PASS source reference System.Collections.Specialized
+PASS source reference System.Collections
+PASS source reference System.ComponentModel.EventBasedAsync
+PASS source reference System.ComponentModel.Primitives
+PASS source reference System.ComponentModel.TypeConverter
+PASS source reference System.ComponentModel
+PASS source reference System.Console
+PASS source reference System.Data.Common
+PASS source reference System.Diagnostics.Contracts
+PASS source reference System.Diagnostics.Debug
+PASS source reference System.Diagnostics.FileVersionInfo
+PASS source reference System.Diagnostics.Process
+PASS source reference System.Diagnostics.StackTrace
+PASS source reference System.Diagnostics.TextWriterTraceListener
+PASS source reference System.Diagnostics.Tools
+PASS source reference System.Diagnostics.TraceSource
+PASS source reference System.Diagnostics.Tracing
+PASS source reference System.Drawing.Primitives
+PASS source reference System.Dynamic.Runtime
+PASS source reference System.Globalization.Calendars
+PASS source reference System.Globalization.Extensions
+PASS source reference System.Globalization
+PASS source reference System.IO.Compression.ZipFile
+PASS source reference System.IO.Compression
+PASS source reference System.IO.FileSystem.DriveInfo
+PASS source reference System.IO.FileSystem.Primitives
+PASS source reference System.IO.FileSystem.Watcher
+PASS source reference System.IO.FileSystem
+PASS source reference System.IO.IsolatedStorage
+PASS source reference System.IO.MemoryMappedFiles
+PASS source reference System.IO.Pipes
+PASS source reference System.IO.UnmanagedMemoryStream
+PASS source reference System.IO
+PASS source reference System.Linq.Expressions
+PASS source reference System.Linq.Parallel
+PASS source reference System.Linq.Queryable
+PASS source reference System.Linq
+PASS source reference System.Net.Http
+PASS source reference System.Net.NameResolution
+PASS source reference System.Net.NetworkInformation
+PASS source reference System.Net.Ping
+PASS source reference System.Net.Primitives
+PASS source reference System.Net.Requests
+PASS source reference System.Net.Security
+PASS source reference System.Net.Sockets
+PASS source reference System.Net.WebHeaderCollection
+PASS source reference System.Net.WebSockets.Client
+PASS source reference System.Net.WebSockets
+PASS source reference System.ObjectModel
+PASS source reference System.Reflection.Extensions
+PASS source reference System.Reflection.Primitives
+PASS source reference System.Reflection
+PASS source reference System.Resources.Reader
+PASS source reference System.Resources.ResourceManager
+PASS source reference System.Resources.Writer
+PASS source reference System.Runtime.CompilerServices.VisualC
+PASS source reference System.Runtime.Extensions
+PASS source reference System.Runtime.Handles
+PASS source reference System.Runtime.InteropServices.RuntimeInformation
+PASS source reference System.Runtime.InteropServices
+PASS source reference System.Runtime.Numerics
+PASS source reference System.Runtime.Serialization.Formatters
+PASS source reference System.Runtime.Serialization.Json
+PASS source reference System.Runtime.Serialization.Primitives
+PASS source reference System.Runtime.Serialization.Xml
+PASS source reference System.Runtime
+PASS source reference System.Security.Claims
+PASS source reference System.Security.Cryptography.Algorithms
+PASS source reference System.Security.Cryptography.Csp
+PASS source reference System.Security.Cryptography.Encoding
+PASS source reference System.Security.Cryptography.Primitives
+PASS source reference System.Security.Cryptography.X509Certificates
+PASS source reference System.Security.Principal
+PASS source reference System.Security.SecureString
+PASS source reference System.Text.Encoding.Extensions
+PASS source reference System.Text.Encoding
+PASS source reference System.Text.RegularExpressions
+PASS source reference System.Threading.Overlapped
+PASS source reference System.Threading.Tasks.Parallel
+PASS source reference System.Threading.Tasks
+PASS source reference System.Threading.Thread
+PASS source reference System.Threading.ThreadPool
+PASS source reference System.Threading.Timer
+PASS source reference System.Threading
+PASS source reference System.ValueTuple
+PASS source reference System.Xml.ReaderWriter
+PASS source reference System.Xml.XDocument
+PASS source reference System.Xml.XPath.XDocument
+PASS source reference System.Xml.XPath
+PASS source reference System.Xml.XmlDocument
+PASS source reference System.Xml.XmlSerializer
+PASS 117 original source reference assemblies; 113 package assets
+PASS all 20 original dependency groups/337 edges and 113 source reference assets packaged
+
+
+--- check.log ---
+PASS full original dependency groups, source packaging inputs, package and restored reference bytes
+PASS original source references/forwards, fresh source-only netstandard2.0 SDK consumer, runtime behavior and newer-API negative control
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-netstandard-reference-2.0.3-2
+
+Total Installed Size:   2.56 MiB
+Net Upgrade Size:      -0.11 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-netstandard-reference...
+
+
+--- pacman-Qk.log ---
+mingw-w64-clang-x86_64-dotnet-netstandard-reference: 137 total files, 0 missing files
+
+
+--- installed-check.log ---
+PASS full original dependency groups, source packaging inputs, package and restored reference bytes
+PASS original source references/forwards, fresh source-only netstandard2.0 SDK consumer, runtime behavior and newer-API negative control
+
+
+--- installed-consumer/library-build.log ---
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\Build.csproj : warning NU1603: NETStandard.Library 2.0.3 depends on Microsoft.NETCore.Platforms (>= 1.1.0) but Microsoft.NETCore.Platforms 1.1.0 was not found. An approximate best match of Microsoft.NETCore.Platforms 1.1.2 was resolved.
+  Restored C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\Build.csproj (in 760 ms).
+C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\Build.csproj : warning NU1603: NETStandard.Library 2.0.3 depends on Microsoft.NETCore.Platforms (>= 1.1.0) but Microsoft.NETCore.Platforms 1.1.0 was not found. An approximate best match of Microsoft.NETCore.Platforms 1.1.2 was resolved.
+  Build -> C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\bin\Release\netstandard2.0\StandardConsumer.dll
+
+Build succeeded.
+
+C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\Build.csproj : warning NU1603: NETStandard.Library 2.0.3 depends on Microsoft.NETCore.Platforms (>= 1.1.0) but Microsoft.NETCore.Platforms 1.1.0 was not found. An approximate best match of Microsoft.NETCore.Platforms 1.1.2 was resolved.
+C:\codex-dotnet10\nsref2.FXfNes\installed-consumer\library\Build.csproj : warning NU1603: NETStandard.Library 2.0.3 depends on Microsoft.NETCore.Platforms (>= 1.1.0) but Microsoft.NETCore.Platforms 1.1.0 was not found. An approximate best match of Microsoft.NETCore.Platforms 1.1.2 was resolved.
+    2 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.38
+
+
+--- installed-consumer/run.log ---
+PASS source netstandard2.0 async Unicode/collections/LINQ/tuple consumer: Grüße 世界:10:tuple
+
+
+--- installed-consumer/negative.log ---
+Microsoft (R) Visual C# Compiler version 5.0.0 (m612 bootstrap) ()
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+installed-consumer\RejectNewApi.cs(1,53): error CS0234: The type or namespace name 'Lock' does not exist in the namespace 'System.Threading' (are you missing an assembly reference?)
+
+
+--- installed-package-audit.log ---
+PASS installed package archive bytes, 113 reference DLLs and dedicated paths
+
+
+--- existing-compilers-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+

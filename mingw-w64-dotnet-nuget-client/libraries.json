@@ -1,0 +1,88 @@
+{
+  "NuGet.Frameworks": {
+    "suffix": "dotnet-nuget-frameworks",
+    "projects": [],
+    "packages": {}
+  },
+  "NuGet.Common": {
+    "suffix": "dotnet-nuget-common",
+    "projects": [
+      "NuGet.Frameworks"
+    ],
+    "packages": {}
+  },
+  "NuGet.Versioning": {
+    "suffix": "dotnet-nuget-versioning",
+    "projects": [],
+    "packages": {}
+  },
+  "NuGet.Configuration": {
+    "suffix": "dotnet-nuget-configuration",
+    "projects": [
+      "NuGet.Common"
+    ],
+    "packages": {
+      "System.Security.Cryptography.ProtectedData": "8.0.0"
+    }
+  },
+  "NuGet.Packaging": {
+    "suffix": "dotnet-nuget-packaging",
+    "projects": [
+      "NuGet.Configuration",
+      "NuGet.Versioning"
+    ],
+    "packages": {
+      "Newtonsoft.Json": "13.0.4",
+      "System.Security.Cryptography.Pkcs": "8.0.1"
+    }
+  },
+  "NuGet.LibraryModel": {
+    "suffix": "dotnet-nuget-librarymodel",
+    "projects": [
+      "NuGet.Common",
+      "NuGet.Versioning"
+    ],
+    "packages": {}
+  },
+  "NuGet.DependencyResolver.Core": {
+    "suffix": "dotnet-nuget-dependencyresolver-core",
+    "projects": [
+      "NuGet.Configuration",
+      "NuGet.LibraryModel",
+      "NuGet.Protocol"
+    ],
+    "packages": {}
+  },
+  "NuGet.ProjectModel": {
+    "suffix": "dotnet-nuget-projectmodel",
+    "projects": [
+      "NuGet.DependencyResolver.Core"
+    ],
+    "packages": {}
+  },
+  "NuGet.Protocol": {
+    "suffix": "dotnet-nuget-protocol",
+    "projects": [
+      "NuGet.Packaging"
+    ],
+    "packages": {}
+  },
+  "NuGet.Credentials": {
+    "suffix": "dotnet-nuget-credentials",
+    "projects": [
+      "NuGet.Protocol"
+    ],
+    "packages": {}
+  },
+  "NuGet.Commands": {
+    "suffix": "dotnet-nuget-commands",
+    "projects": [
+      "NuGet.Credentials",
+      "NuGet.ProjectModel"
+    ],
+    "packages": {
+      "Microsoft.Extensions.FileProviders.Abstractions": "6.0.0",
+      "Microsoft.Extensions.FileSystemGlobbing": "6.0.0"
+    }
+  }
+}

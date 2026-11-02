@@ -1,0 +1,77 @@
+Original CoreCLR10 native bootstrap — installed package and native validation passed
+
+Package: mingw-w64-clang-x86_64-dotnet-coreclr10-bootstrap 10.0.5-1
+Windows root: /c/codex-dotnet10/clr10pkg.c2zcRg
+Installed images: /clang64/lib/dotnet-bootstrap10/coreclr/10.0.5
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 4 — All 669 native build steps completed; source audit then rejected its own unsupported >1000 direct-input count assumption.
+
+$ MINGW_ARCH=clang64 makepkg-mingw --verifysource
+RESULT: exit 0
+
+$ MINGW_ARCH=clang64 makepkg-mingw -e -f --noconfirm
+RESULT: exit 0 — Corrected audit derives compile coverage from actual built objects and compile_commands.json; native C++ port inputs unchanged.
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-coreclr10-bootstrap-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-coreclr10-bootstrap
+RESULT: exit 0
+
+$ /clang64/bin/python.exe "$(cygpath -am "$PWD/check-installed-native.py")" "$(cygpath -am "$PWD/src")" "$(cygpath -am "$PWD/src/installed-native-check")" "$(cygpath -am "$PWD/src/native-probe/native-jit-probe.exe")" "$(cygpath -am /clang64/lib/dotnet-bootstrap10/coreclr/10.0.5)"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-coreclr10-bootstrap-10.0.5-1-any.pkg.tar.zst src installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+The initial clean build completed all669 native steps. Its source audit failed only on a guessed >1000 direct-source count (Ninja reported588). The corrected audit checks actual built object outputs against compile_commands.json, proving633 built compile units are covered by588 direct source inputs. A source-verified incremental package rerun completed with exit0;27 assembly/link steps rebuilt through declared dependencies. No native C++/assembly port inputs were changed to fix the audit. The initial aggregate exit is4, not a successful clean-package claim.
+
+Source/provenance audits verify60,754 original runtime archive files,77 exact replayed host/CoreCLR patch paths (64 CoreCLR port files), all generated native versions and actual Ninja source inputs. Original cDAC11 C# inputs plus74 System.CommandLine inputs build with the installed source compiler;76 original command-line VMR inputs match hashes/Git blobs. The original cDAC tool target is NET10; this is its explicit NET8 bootstrap host port.
+
+Actual installed coreclr/clrjit/mscorrc/clretwrc bytes match source outputs and all18 package payload files. The original native JIT startup/host callbacks/interface GUID, four PE versions, Unicode-path loading and populated loaded cDAC descriptor pass. The descriptor bytes exactly match the original tool-generated C literal and generated pointer count. Eleven original EHa fixture outputs and200000 stress round trips pass. This does not establish full foreign/hardware unwinding or complete managed runtime behavior. pacman checks28 entries including directories, none missing; current SDK/compiler/source NET8 coreclr/clrjit hashes are unchanged.
+
+--- installed-check.log ---
+PASS native source10 JIT startup/ABI, four PE versions and loaded original generated cDAC descriptor; managed execution still required
+
+--- installed-package-audit.log ---
+PASS 18 exact installed payload files and all four source CoreCLR10 native images
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-coreclr10-bootstrap: 28 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/coreclr.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/clrjit.dll: OK
+
+--- src/audit-source.log ---
+PASS all original runtime archive input hashes: 60754
+Verified prepared source files 5000
+Verified prepared source files 10000
+Verified prepared source files 15000
+Verified prepared source files 20000
+Verified prepared source files 25000
+Verified prepared source files 30000
+Verified prepared source files 35000
+Verified prepared source files 40000
+Verified prepared source files 45000
+Verified prepared source files 50000
+Verified prepared source files 55000
+Verified prepared source files 60000
+PASS actual built native compile-unit coverage: 633 units; 588 direct source inputs
+PASS original native/archive/patch/Ninja inputs and unchanged source cDAC/System.CommandLine inputs
+
+--- src/eha-check.log ---
+PASS source EHa shim: eleven original cases and200000 stress round trips; printed failures checked
+
+Package SHA256: 931bb3147a47091a0cc844adc37af69af55fe3a38f9cf43dd07cd3ac6c37c702
+Evidence: /tmp/coreclr10-bootstrap-package1/coreclr10-bootstrap-package-evidence1.tar.gz
+Evidence SHA256: e2a2fe7a667aa7c1ae1a119374634e23bfab3d737c14003b4d58362a59d12a99
+All333 evidence files and all26 frozen workflow files, PKGBUILD and .SRCINFO verified.
+
+The package is isolated native bootstrap data, with no registered shared framework. Matching managed CoreLib execution with the formal package, complete framework/native features, original NET10 tool hosts, remaining dependency variants, SDK/desktop10, PowerShell7.6 and earlier compatibility gates remain open.

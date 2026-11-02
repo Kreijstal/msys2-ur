@@ -1,0 +1,110 @@
+{
+  "commands": [
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/templateflow1.JLlN9U/flow3/Flow.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/templateflow1.JLlN9U/flow3/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/templateflow1.JLlN9U/flow3/Flow.proj",
+        "-t:Write",
+        "-v:minimal",
+        "-nologo"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/templateflow1.JLlN9U/flow3/GenerateDefaults.proj",
+        "-t:_GenerateSdkVersionFile",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+        "msbuild",
+        "E:/codex-dotnet10/templateflow1.JLlN9U/flow3/Evaluate.proj",
+        "-t:Evaluate",
+        "-nologo",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "VMR_policy": {
+    "vmr": "05d9490471fb4b10d7ef4faa32c423e1b5adcaee",
+    "files": {
+      "repo-projects/nuget-client.proj": "54c0a640ca4de1ebe851a770520145cc804198be32a46781acba80e4a0a656ca",
+      "repo-projects/Directory.Build.props": "ade49c5423274812ea1c62495ff246788d62d1c7db9b3c6c6e09f6210353c855",
+      "repo-projects/Directory.Build.targets": "c84183c21a9b8e65c639f24feb787e3726b5389683223f3e937cd82062b015c8",
+      "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/WritePackageVersionsProps.cs": "6c479eddd9c5a46988bd33728fef85c324c6383ae9ad42eeaa626c618179c33b",
+      "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/VersionDetailsHelper.cs": "39b2de5ae656c23e784dcb892be152714a2ff691b8883e34c095c3e730f8f856",
+      "eng/VmrLayout.props": "c95fd31558c0f63e18c8d23b88f4754495887f84f9b7510e1f0f8ae5a820b679"
+    }
+  },
+  "original_task_and_Arcade_DefaultVersions_and_central_import_executed": true,
+  "Arcade_defaults_generated_by_original_target": true,
+  "Arcade_helper_PackageVersion": "10.0.0-beta.26113.113",
+  "full_Arcade_package_built": false,
+  "known_source_packages": {
+    "System.CommandLine": "2.0.2",
+    "Microsoft.Extensions.Logging": "10.0.2",
+    "Microsoft.Extensions.Logging.Abstractions": "10.0.2",
+    "Microsoft.Extensions.Logging.Console": "10.0.2",
+    "System.Formats.Asn1": "10.0.2",
+    "NuGet.Configuration": "7.3.0-preview.1.11413",
+    "NuGet.Credentials": "7.3.0-preview.1.11413",
+    "NuGet.Protocol": "7.3.0-preview.1.11413"
+  },
+  "actual_central_package_versions": {
+    "System.CommandLine": "2.0.2",
+    "Microsoft.Build.Framework": "17.11.48",
+    "Microsoft.Build.Utilities.Core": "17.11.48",
+    "NuGet.Configuration": "6.13.2",
+    "NuGet.Credentials": "6.13.2",
+    "NuGet.Protocol": "6.13.2",
+    "Microsoft.CodeAnalysis.PublicApiAnalyzers": "3.3.4",
+    "Microsoft.Extensions.Logging.Abstractions": "10.0.2",
+    "Microsoft.Extensions.Logging.Console": "10.0.2",
+    "Microsoft.Extensions.Logging": "10.0.2",
+    "Microsoft.Bcl.AsyncInterfaces": "10.0.1",
+    "Microsoft.IO.Redist": "6.0.1",
+    "System.Diagnostics.DiagnosticSource": "10.0.1",
+    "System.Formats.Asn1": "10.0.2",
+    "System.IO.Pipelines": "10.0.1",
+    "System.Text.Encodings.Web": "10.0.1",
+    "System.Text.Json": "10.0.1",
+    "FakeItEasy": "8.1.0",
+    "AwesomeAssertions": "8.0.2",
+    "Newtonsoft.Json.Schema": "4.0.1",
+    "Newtonsoft.Json": "13.0.3",
+    "StyleCop.Analyzers": "1.2.0-beta.556",
+    "Verify.DiffPlex": "3.0.0",
+    "Verify.XUnit": "25.0.2",
+    "XUnit": "2.9.3",
+    "xunit.abstractions": "2.0.3",
+    "xunit.extensibility.execution": "2.9.3"
+  },
+  "original_NuGet6132_requirements_preserved": true,
+  "logging_Runtime1002_and_CommandLine202_flow_verified": true,
+  "original_Asn1_1002_flow_verified": true,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}

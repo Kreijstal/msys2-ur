@@ -1,0 +1,20 @@
+pkgbase = mingw-w64-libretro-nestopia
+	pkgdesc = Nintendo Entertainment System libretro core (Nestopia UE) (mingw-w64)
+	pkgver = r175.b0fd87d
+	pkgrel = 1
+	url = https://www.libretro.com/
+	arch = any
+	groups = mingw-w64-ucrt-x86_64-libretro
+	license = spdx:GPL-2.0-or-later
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = git
+	makedepends = make
+	depends = mingw-w64-ucrt-x86_64-cc-libs
+	optdepends = mingw-w64-ucrt-x86_64-retroarch: frontend that loads this core
+	optdepends = mingw-w64-ucrt-x86_64-libretro-core-info: required for the core to show up in the menu
+	source = nestopia::git+https://github.com/libretro/nestopia.git#commit=b0fd87dd07e3c52903435d302b04e5e97796f127
+	source = 0001-libretro-Makefile-drop-Wl-version-script-for-PE-COFF.patch
+	sha256sums = 63f205f46735380fc3093a9e519a82e46d85fad38b18ff99fcab8da6dc93c74e
+	sha256sums = 1a9ac46e87c8fd1f24b4016a1f178bf8721ac409fe7b2526e53700fe0a616743
+
+pkgname = mingw-w64-ucrt-x86_64-libretro-nestopia

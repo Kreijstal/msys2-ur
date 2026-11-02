@@ -1,0 +1,141 @@
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-29T02:04:54.582914+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-csharp-compiler53-bootstrap",
+  "package": "mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap-5.3.0.2.26113.113-2-any.pkg.tar.zst",
+  "package_sha256": "560eed36a56d46dd47d84807d49a0a07029f64e7fab7d536f1ddeda14dc08820",
+  "source_commit": "2333221c0564852ee5ceac9c622a0b14e864d76e",
+  "source_archive_sha256": "e28cee5a55aaceccb555c8e1b583a8877d88002dde2468801b8d3f17463f2efb",
+  "source_version": "5.3.0-2.26113.113",
+  "build_root": "/e/codex-dotnet10/csharp53pkg1.nBgulw",
+  "original_framework": "net10.0",
+  "original_profile": "DotNetBuildSourceOnly=true;DotNetBuildFromVMR=true;NetCurrent=net10.0",
+  "original_project_compile_items": {
+    "Microsoft.CodeAnalysis": 1042,
+    "Microsoft.CodeAnalysis.CSharp": 1151,
+    "csc": 11
+  },
+  "provided_source_compiler_dlls": 3,
+  "source_satellites": 26,
+  "regenerated_original_csharp_files": 5,
+  "original_archive_inputs_verified": 2279,
+  "actual_compile_tool_reference_inputs_hashed": 2575,
+  "net10_reference_and_project_output_hashes_verified": 169,
+  "installed_source_tool_reference_files_verified": 346,
+  "installed_source_package_owners": [
+    "mingw-w64-clang-x86_64-dotnet-runtime10-generators",
+    "mingw-w64-clang-x86_64-dotnet-reference10",
+    "mingw-w64-clang-x86_64-dotnet-targeting8-servicing",
+    "mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap",
+    "mingw-w64-clang-x86_64-dotnet-host",
+    "mingw-w64-clang-x86_64-dotnet-sdk8-servicing",
+    "mingw-w64-clang-x86_64-dotnet-runtime10-bootstrap"
+  ],
+  "original_public_api_declarations": 10560,
+  "original_resource_sets": 28,
+  "original_resource_strings": 39508,
+  "localization_cultures": 13,
+  "production_source_changes": 0,
+  "fresh_clean_release1_exit_code": 0,
+  "release2_narrow_repackage_exit_code": 0,
+  "all_compiler_and_satellite_bytes_unchanged_from_fresh_clean_build": true,
+  "release2_changed_payload_files": [
+    "clang64/bin/csc53-bootstrap",
+    "clang64/share/doc/dotnet-csharp-compiler53-bootstrap/README.md",
+    "clang64/share/doc/dotnet-csharp-compiler53-bootstrap/payload-files.json"
+  ],
+  "actual_archive_audit_exit_code": 0,
+  "tool_owner_integrity_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "formal_pacman_installed": true,
+  "pacman_entries": 106,
+  "pacman_altered_files": 0,
+  "regular_payload_files": 81,
+  "installed_manifested_files": 80,
+  "full_api_resource_analyzer_generator_pdb_suite_passed": true,
+  "source_csharp14_execution_and_negative_error_exit_passed": true,
+  "original_sdk8_csc_task_uses_net10_compiler": true,
+  "shell_slash_and_dash_options_passed": true,
+  "shell_msys_unicode_source_and_response_file_paths_passed": true,
+  "all_actual_archive_hashes_verified_on_windows_and_linux": true,
+  "source_workflow_files": 23,
+  "source_workflow_sha256": "c4874fb335f56b28c11b3492d25650a3c371c07d1d405fe8cc62c2ecfe5d922a",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "scope": "Fresh release1 compilation and full staged checks"
+    },
+    {
+      "command": "makepkg --repackage --force --noconfirm",
+      "exit_code": 0,
+      "scope": "Release2 launcher/README-only hotfix; all compiler and satellite bytes unchanged"
+    },
+    {
+      "command": "/usr/bin/python3 audit-package.py \"$PWD\" 2",
+      "exit_code": 0,
+      "scope": "Independent actual archive audit"
+    },
+    {
+      "command": "/usr/bin/python3 audit-tools.py \"$PWD\"",
+      "exit_code": 0,
+      "scope": "346 source tool/ref files;7 source package owners;0 altered"
+    },
+    {
+      "command": "pacman -U --noconfirm ./*-5.3.0.2.26113.113-2-any.pkg.tar.zst",
+      "exit_code": 0,
+      "scope": "Install final release2"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap",
+      "exit_code": 0,
+      "scope": "106 entries,0 altered"
+    },
+    {
+      "command": "/usr/bin/python3 /clang64/share/doc/dotnet-csharp-compiler53-bootstrap/checks/check-installed.py /clang64 \"$PWD/installed-check\"",
+      "exit_code": 0,
+      "scope": "Release1 full installed byte/API/resource/compiler checks"
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/check-net10-msbuild.py /clang64 \"$PWD/msbuild-check \u03bb\"",
+      "exit_code": 0,
+      "scope": "Release1 unchanged csc53.cmd through original SDK8 Csc task"
+    },
+    {
+      "command": "/usr/bin/python3 /e/codex-dotnet10/check-csharp53-launcher.py /clang64 \"$PWD/launcher-check2 \u03bb\"",
+      "exit_code": 0,
+      "scope": "Release2 slash/dash flags,MSYS Unicode source/response paths,CSharp14 execution"
+    }
+  ],
+  "evidence": {
+    "local_directory": "/tmp/csharp53-bootstrap-package2",
+    "files": 358,
+    "archive_sha256": "0dd8183560e1019de27456d48acf8eab6adbca97521a02093b99b27440279c0a",
+    "all_member_hashes_verified": true,
+    "actual_package_hash_verified": true,
+    "frozen_workflow_and_recipe_and_srcinfo_match": true,
+    "source_workflow_files": 23,
+    "source_workflow_sha256": "c4874fb335f56b28c11b3492d25650a3c371c07d1d405fe8cc62c2ecfe5d922a"
+  },
+  "previous_fresh_release1_evidence": {
+    "local_directory": "/tmp/csharp53-bootstrap-package1",
+    "files": 342,
+    "archive_sha256": "b12bafb0c3cc1c6c054c589824f78aa3e0c5f30933ce60682cc569ac055b2d68",
+    "all_member_hashes_verified": true
+  },
+  "attempt_notes": [
+    "The earlier prototype API fixture substituted runtime Immutable/Metadata implementations into the compiler API model. Their original zero-version runtime references produce19 false signature differences. The NET10 profile now uses all167 original source reference contracts; all10560 API declarations pass without production/API baseline changes.",
+    "The fresh formal release1 clean build, archive/source/tool audits, install and full installed checks pass. A subsequent shell /version check exposed MSYS argument conversion. Release2 narrowly corrects the shell launcher and its README/manifest; every compiler/satellite/other payload byte remains identical. Release2 archive audit, install,pacman integrity and real launcher execution pass.",
+    "Source nullable/compiler warnings and source-directory references in provenance docs remain visible. No zero-warning or full-runtime compatibility claim is made."
+  ],
+  "visualbasic_and_server_provided_by_this_package": false,
+  "full_original_sdk10_toolset_package_built": false,
+  "original_net472_profiles_built": false,
+  "original_sdk10_msbuild_tasks_built": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "original_7_4_dependency_count_increment": 0
+}

@@ -1,0 +1,34 @@
+From 7a14126e6917ee03a0f2ca029cc5e8c2923fa284 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 09:37:16 +0100
+Subject: [PATCH 2/2] Do not pin the hash of dragdropfilesdll.dll
+
+peach refuses to start unless dragdropfilesdll.dll matches the SHA256
+of upstream's own prebuilt binary.  The MSYS2 package rebuilds the DLL
+from the sources in dev/dragdropfilesdll.src, so its hash necessarily
+differs.  Skip the hash check; the DLL is still loaded from the absolute
+path next to peazip.exe.
+---
+ peazip-sources/dev/peach.pas | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/peazip-sources/dev/peach.pas b/peazip-sources/dev/peach.pas
+index 9befd0f..ea84988 100644
+--- a/peazip-sources/dev/peach.pas
++++ b/peazip-sources/dev/peach.pas
+@@ -17674,8 +17674,12 @@ begin
+ {$IFDEF MSWINDOWS}
+ st:=executable_path+'dragdropfilesdll.dll';
+ hs:=getchash(st);
++//MSYS2: dragdropfilesdll.dll is rebuilt from source, so it cannot match the
++//hash of upstream's prebuilt binary; it is still loaded from an absolute path.
++{$IF FALSE}
+ {$IFDEF WIN32}if hs<>HDDDLL_WIN32_X then begin pMessageErrorOK(txt_6_5_error+' / dragdropfilesdll.dll SHA256 hash'); halt; end;{$ENDIF}
+ {$IFDEF WIN64}if hs<>HDDDLL_WIN64_X then begin pMessageErrorOK(txt_6_5_error+' / dragdropfilesdll.dll SHA256 hash'); halt; end;{$ENDIF}
++{$ENDIF}
+ //load library from absolute path, after hash validation
+ libh := SafeLoadLibrary(st);
+ if libh <> NilHandle then
+-- 
+2.55.0
+

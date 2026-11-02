@@ -1,0 +1,58 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# org.sonatype.plexus:plexus-build-api 0.0.7 (used by maven-filtering);
+# the org.codehaus.plexus 1.x line of the same repository is packaged as
+# java-plexus-build-api.
+# Its Plexus component descriptor comes from javadoc @plexus.component tags,
+# read by java-build-helper's processor (plexus-maven-plugin upstream).
+
+_realname=plexus-build-api
+pkgbase=mingw-w64-java-sonatype-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-sonatype-${_realname}"
+pkgver=0.0.7
+pkgrel=1
+pkgdesc="Sonatype Plexus incremental build API 0.0.x for IDE integration, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/codehaus-plexus/plexus-build-api'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-build-api/archive/refs/tags/${_realname}-${pkgver}.tar.gz"
+        '0001-EmptyScanner-implement-Scanner-of-plexus-utils-3.patch')
+sha256sums=('4ef78b6045141242d39ce17de848067cd3ba004437eda119f1bffd7f5b63f84d'
+            'f12ba44c498e0fa61b1a4ba4e88f9458ba2bda49ba4ec3540ebcad1580bc3641')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  # written against plexus-utils 1.5; compile against 3.x
+  patch -p1 -i "${srcdir}/0001-EmptyScanner-implement-Scanner-of-plexus-utils-3.patch"
+  sed -i "s/\${project.version}/${pkgver}/" \
+    src/main/resources/org/sonatype/plexus/build/incremental/version.properties
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # Plexus API (AbstractLogEnabled) from sisu-plexus instead of the old
+  # plexus-container-default upstream compiles against
+  jb_module org.sonatype.plexus:plexus-build-api:${pkgver} src/main/java \
+    -r src/main/resources -u pom.xml -P plexus \
+    -c org.eclipse.sisu:org.eclipse.sisu.plexus -- org.codehaus.plexus:plexus-utils
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # no upstream tests
+  jb_loadcheck --with org.eclipse.sisu:org.eclipse.sisu.plexus org.sonatype.plexus:plexus-build-api
+  unzip -p "$(jb_jarpath org.sonatype.plexus:plexus-build-api)" META-INF/plexus/components.xml \
+    | grep -q 'org.sonatype.plexus.build.incremental.DefaultBuildContext'
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install --jar sonatype-plexus-build-api org.sonatype.plexus:plexus-build-api
+}

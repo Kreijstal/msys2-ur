@@ -1,0 +1,42 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 325f6a8..3eb3976 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -228,13 +228,19 @@ target_link_libraries(TitanEngine PRIVATE
+ 	Psapi.lib
+ )
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 8) # x64
++if(MINGW) # mingw
++	target_link_libraries(TitanEngine PRIVATE
++		ntdll
++	)
++endif()
++
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8) # x64-msvc
+ 	target_link_libraries(TitanEngine PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/TitanEngine/ntdll_x64.lib"
+ 	)
+ endif()
+ 
+-if(CMAKE_SIZEOF_VOID_P EQUAL 4) # x32
++if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4) # x32-msvc
+ 	target_link_libraries(TitanEngine PRIVATE
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/TitanEngine/ntdll_x86.lib"
+ 	)
+diff --git a/TitanEngine/stdafx.h b/TitanEngine/stdafx.h
+index a3b3ee8..b3d8fa7 100644
+--- a/TitanEngine/stdafx.h
++++ b/TitanEngine/stdafx.h
+@@ -201,6 +201,11 @@ typedef struct
+     BYTE RegisterArea[80];
+     x87FPU_t x87fpu;
+     DWORD MxCsr;
++#if defined(__GNUC__) && !defined(_MSC_VER)
++    // MSVC aligns the __declspec(align(16)) XMM registers despite
++    // pack(1); GCC and Clang do not, so pad to the same layout
++    BYTE AlignXmmRegisters[6];
++#endif
+ #ifdef _WIN64
+     XmmRegister_t XmmRegisters[16];
+     YmmRegister_t YmmRegisters[16];

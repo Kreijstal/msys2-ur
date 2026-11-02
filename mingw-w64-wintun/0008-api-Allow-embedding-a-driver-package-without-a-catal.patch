@@ -1,0 +1,65 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 25 Oct 2026 06:10:50 +0100
+Subject: [PATCH 8/8] api: Allow embedding a driver package without a catalog
+
+With WINTUN_NO_CATALOG defined, wintun.dll carries only wintun.sys and
+wintun.inf and installs the driver package without a wintun.cat. This
+is for builds from source, which have no WHQL-signed catalog: such a
+package installs where driver signatures are not enforced (ReactOS, or
+Windows in test-signing mode once the files are signed locally).
+---
+ api/driver.c     | 7 +++++--
+ api/resources.rc | 6 ++++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/api/driver.c b/api/driver.c
+index c14fdda..4eb0d16 100644
+--- a/api/driver.c
++++ b/api/driver.c
+@@ -414,8 +414,11 @@ DriverInstall(HDEVINFO *DevInfoExistingAdaptersForCleanup, SP_DEVINFO_DATA_LIST
+     }
+ 
+     LOG(WINTUN_LOG_INFO, L"Extracting driver");
+-    if (!ResourceCopyToFile(CatPath, CatSource) || !ResourceCopyToFile(SysPath, SysSource) ||
+-        !ResourceCopyToFile(InfPath, InfSource))
++    if (
++#ifndef WINTUN_NO_CATALOG
++        !ResourceCopyToFile(CatPath, CatSource) ||
++#endif
++        !ResourceCopyToFile(SysPath, SysSource) || !ResourceCopyToFile(InfPath, InfSource))
+     {
+         LastError = LOG_LAST_ERROR(L"Failed to extract driver");
+         goto cleanupDelete;
+diff --git a/api/resources.rc b/api/resources.rc
+index 03b473d..3135841 100644
+--- a/api/resources.rc
++++ b/api/resources.rc
+@@ -8,13 +8,17 @@
+ 
+ #pragma code_page(1252)
+ 
++#ifndef WINTUN_NO_CATALOG
+ wintun.cat RCDATA "driver/wintun.cat"
++#endif
+ wintun.inf RCDATA "driver/wintun.inf"
+ wintun.sys RCDATA "driver/wintun.sys"
+ 
+ #if defined(WANT_AMD64_WOW64)
+ #    if defined(BUILT_AMD64_WOW64)
++#        ifndef WINTUN_NO_CATALOG
+ wintun-amd64.cat RCDATA "amd64/driver/wintun.cat"
++#        endif
+ wintun-amd64.inf RCDATA "amd64/driver/wintun.inf"
+ wintun-amd64.sys RCDATA "amd64/driver/wintun.sys"
+ setupapihost-amd64.dll RCDATA "amd64/setupapihost.dll"
+@@ -24,7 +28,9 @@ setupapihost-amd64.dll RCDATA "amd64/setupapihost.dll"
+ #endif
+ #if defined(WANT_ARM64_WOW64)
+ #    if defined(BUILT_ARM64_WOW64)
++#        ifndef WINTUN_NO_CATALOG
+ wintun-arm64.cat RCDATA "arm64/driver/wintun.cat"
++#        endif
+ wintun-arm64.inf RCDATA "arm64/driver/wintun.inf"
+ wintun-arm64.sys RCDATA "arm64/driver/wintun.sys"
+ setupapihost-arm64.dll RCDATA "arm64/setupapihost.dll"

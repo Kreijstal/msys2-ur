@@ -1,0 +1,75 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-framework430-facades
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.3.0
+pkgrel=1
+pkgdesc='Seven original CoreFX4.3.0 reference and Framework facade NuGet source ports'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/source-build-reference-packages'
+license=('spdx:MIT' 'custom:Microsoft.NET.Library')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-runtime430=4.3.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reflection430=4.3.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-library161=1.6.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-framework430-refs=4.3.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netframework46-contracts-bootstrap=20261031"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netframework462-contracts-bootstrap=20261031"
+             "${MINGW_PACKAGE_PREFIX}-llvm-tools"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('sbrp-5aeee273.tar.gz::https://codeload.github.com/dotnet/source-build-reference-packages/tar.gz/5aeee2738338530a92d7f6caa2c7d5f569fed3c4'
+        'corefx11-4d1af962.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/4d1af962ca0fede10beb01d197367c2f90e92c97'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'framework430-facades-source-1.tar.gz')
+noextract=('sbrp-5aeee273.tar.gz' 'corefx11-4d1af962.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('2b3136fab488246d0289e622797094e7c2eb29b35f67a9a5cd1312ef3ddfca79'
+            '1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            '1ae8f7e5d2ba7d3d8cf3c70adc1b3079482df564917879f2a2b703ee39c40e84')
+_env() {
+  export DOTNET_CLI_HOME=$(cygpath -am "$srcdir/cli-home")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+build() {
+  _env
+  local workflow="$srcdir/framework430-facades-workflow"
+  /usr/bin/python3 "$workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/build-all.py")" "$(cygpath -am "$srcdir/sbrp-5aeee273.tar.gz")" "$(cygpath -am "$srcdir/corefx11-4d1af962.tar.gz")" "$(cygpath -am "$srcdir/producer")" "$(cygpath -am "$MINGW_PREFIX")" "$(cygpath -am "$srcdir/compiler44/bin/Release/net8.0")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$workflow/pack.py")" "$(cygpath -am "$srcdir/producer")" "$(cygpath -am "$srcdir/archives")" "$(cygpath -am "$MINGW_PREFIX")" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  _env
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/framework430-facades-workflow/check.py")" "$(cygpath -am "$srcdir/archives/feed")" "$(cygpath -am "$srcdir/producer/references/private-contracts")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$MINGW_PREFIX")" "$(cygpath -am "$srcdir/compiler44/bin/Release/net8.0")" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local workflow="$srcdir/framework430-facades-workflow"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local licenses="$pkgdir$MINGW_PREFIX/share/licenses/$_realname"
+  local name file
+  mkdir -p "$doc" "$licenses"
+  for name in Microsoft.Win32.Primitives System.Console System.Diagnostics.Tracing System.Globalization.Calendars System.IO.FileSystem System.Net.Sockets System.Runtime.Extensions;do
+    install -Dm644 "$srcdir/archives/feed/$name.4.3.0.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${name,,}.4.3.0.nupkg"
+    for file in dotnet_library_license.txt ThirdPartyNotices.txt;do
+      install -m644 "$workflow/inputs/$name/data/$file" "$licenses/$name-$file"
+    done
+  done
+  for file in check.py check-references.py check-facades.py run-facades.py build-inspector.py build-forwarder-inspector.py README.md;do install -m644 "$workflow/$file" "$doc/";done
+  cp -r "$workflow/inputs" "$workflow/metadata-inputs" "$doc/"
+  install -m644 "$srcdir/producer/references/source/sbrp/LICENSE.txt" "$licenses/SBRP-LICENSE.txt"
+  install -m644 "$srcdir/producer/references/source/corefx/LICENSE" "$licenses/CoreFX-LICENSE.txt"
+  install -m644 "$srcdir/producer/references/source/corefx/THIRD-PARTY-NOTICES" "$licenses/CoreFX-THIRD-PARTY-NOTICES.txt"
+  install -m644 "$srcdir/producer/results.json" "$doc/source-build.json"
+  install -m644 "$srcdir/producer/references/results.json" "$doc/source-reference-build.json"
+  install -m644 "$srcdir/producer/framework-seeds/results.json" "$doc/source-Framework-seeds.json"
+  install -m644 "$srcdir/producer/facades/results.json" "$doc/source-facades.json"
+  install -m644 "$srcdir/producer/finished/results.json" "$doc/source-metadata-restoration.json"
+  install -m644 "$srcdir/archives/results.json" "$doc/source-package-build.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+}

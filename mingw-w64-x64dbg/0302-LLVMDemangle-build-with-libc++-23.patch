@@ -1,0 +1,21 @@
+diff --git a/include/llvm/Demangle/ItaniumDemangle.h b/include/llvm/Demangle/ItaniumDemangle.h
+index 7603195..0bb7b07 100644
+--- a/include/llvm/Demangle/ItaniumDemangle.h
++++ b/include/llvm/Demangle/ItaniumDemangle.h
+@@ -20,6 +20,7 @@
+ // file does not yet support:
+ //   - C++ modules TS
+ 
++#include <type_traits>
+ #include "DemangleConfig.h"
+ #include "StringView.h"
+ #include "Utility.h"
+@@ -114,7 +115,7 @@
+ DEMANGLE_NAMESPACE_BEGIN
+ 
+ template <class T, size_t N> class PODSmallVector {
+-  static_assert(std::is_pod<T>::value,
++  static_assert(std::is_trivial<T>::value && std::is_standard_layout<T>::value,
+                 "T is required to be a plain old data type");
+ 
+   T *First = nullptr;

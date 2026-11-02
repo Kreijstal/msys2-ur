@@ -1,0 +1,85 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-mmi
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.0.preview1
+pkgrel=4
+_nugetver=2.0.0-preview.1
+pkgdesc='Experimental source-built MMI CIM bindings with native async and XML serialization ports for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/PowerShell/MMI'
+license=('spdx:MIT')
+_commit=cf32fc695b32c2eae848b693395c09222fe1d2ae
+_tree=MMI-${_commit}
+_id=Microsoft.Management.Infrastructure
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" 'python' 'patch')
+options=('!strip' '!lto')
+source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs README.md)
+sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
+            'd708a410a9c799f1bd5bfb5f93eff7495de1a7ffd1bd08a45f6b028b3ee00dc8'
+            '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
+            '7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6'
+            'eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7'
+            '168583e2346114afad7cbda70ac071cfeec667cc9c07f2da9af1274324d2da14'
+            '6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a'
+            '613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3'
+            '26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93'
+            '9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b'
+            '90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f'
+            '30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42'
+            '9841df264a70e1a8c6da34c2ae157b47ab4227b0bb49d15fc44a58e1b4af13c0'
+            '6b8cdfbaade97c0d950c91ae5ff2c9fe31e21a68b2a6488231cb3f35ef6522e6'
+            '15db2b46ad99adb211565b916fbf37a98ee8d26cca5040ccc6d6518076bfa120'
+            '818c61cd5354a8df48b4f2d7a1b7ce0efd5e4a501eb00c430e04c683bf1f9f1f'
+            '1d5e52f7cc0f9b25a223ea25b98c11d4da0d77557fa0222a0d014ffc4fc96305'
+            'd747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad'
+            'ec718537475c9b099b631fc37333c69c7d060ac6db1d713587e7b3ddb1c4a70f')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/$_tree" "$srcdir/mmi" --patched --public-sign
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/mmi/Mmi.csproj")" -c Release \
+    -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/NuGet.config")" \
+    -p:PackageId="$_id" -p:PackageVersion="$_nugetver" -p:Version="$_nugetver" \
+    -p:RepositoryUrl="$url" -p:RepositoryCommit="$_commit" -p:PackageLicenseExpression=MIT \
+    -p:PackageDescription="$pkgdesc" -p:GeneratePackageOnBuild=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  "$MINGW_PREFIX/bin/clang" -std=c11 -Wall -Wextra -Werror "$srcdir/check-credential-abi.c" -lmi -o "$srcdir/check-credential-abi.exe"
+  "$srcdir/check-credential-abi.exe"
+  "$MINGW_PREFIX/bin/clang" -std=c11 -shared -Wall -Wextra -Werror "$srcdir/check-extended-callbacks.c" -o "$srcdir/check/mmi-callback-driver.dll"
+  "$MINGW_PREFIX/bin/clang" -std=c11 -shared -Wall -Wextra -Werror "$srcdir/check-streamed-results.c" -o "$srcdir/check/mmi-stream-driver.dll"
+  cp "$srcdir/MmiStreamChecks.cs" "$srcdir/MmiExtendedCallbackChecks.cs" "$srcdir/MmiCredentialChecks.cs" "$srcdir/MmiProbe.cs" "$srcdir/MmiPortChecks.cs" "$srcdir/NativeDependencies.cs" "$srcdir/check/"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$_nugetver]" /><None Include="mmi-callback-driver.dll" CopyToOutputDirectory="PreserveNewest" /><None Include="mmi-stream-driver.dll" CopyToOutputDirectory="PreserveNewest" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" build "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false -v:minimal
+  for mode in local port capabilities; do
+    args=()
+    [[ $mode == local ]] || args+=("--${mode}-checks")
+    [[ $mode != capabilities ]] || args=(--capabilities)
+    timeout 90 "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$(cygpath -m "$srcdir/check/bin/Release/net8.0/check.dll")" "${args[@]}"
+  done
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$_nugetver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$_nugetver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+}

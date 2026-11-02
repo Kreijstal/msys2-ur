@@ -1,0 +1,122 @@
+{
+  "finished_at_utc": "2026-10-29T00:50:11.006536+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-runtime9-libraries",
+  "package": "mingw-w64-clang-x86_64-dotnet-runtime9-libraries 9.0.0-3",
+  "build_root": "/e/codex-dotnet10/runtime9pkg3.noxcGZ",
+  "formal_pacman_installed": true,
+  "initial_clean_aggregate_exit_code": 0,
+  "independent_archive_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "standard_implementation_libraries": 11,
+  "independent_net8_mef_libraries": 5,
+  "original_standard21_forwarding_target_retained": true,
+  "source_nuget_packages": 12,
+  "original_api_declarations_verified": 4051,
+  "original_resource_sets": 9,
+  "original_resource_values": 375,
+  "original_source_archive_inputs_verified": 733,
+  "actual_compiler_and_consumer_package_references_verified": 100,
+  "producer_reference_versions_remain_exact": true,
+  "packaged_maintenance_dependencies_are_compatible_minimums": true,
+  "metadata_policy_changed_entries": 10,
+  "all_non_nuspec_payload_bytes_unchanged_by_packaging_adapter": true,
+  "both_original_and_new_maintenance_installed_selections_passed": true,
+  "nuget_constraint_warnings_are_errors": true,
+  "new_maintenance_overrides": {
+    "System.Memory": "4.6.3",
+    "System.Runtime.CompilerServices.Unsafe": "6.1.2",
+    "System.Threading.Tasks.Extensions": "4.6.3"
+  },
+  "complete_codepages_data_and_generated_native_readfile_verified": true,
+  "installed_net8_results": {
+    "original_net8_mef_assets_verified": 5,
+    "source_assembly_sha256": {
+      "System.Composition.AttributedModel": "543366c58af11af840ead0adcb24327f9aad2b08d7ead6603e8d7ef4ede3fd3e",
+      "System.Composition.Runtime": "e5ab9e68770b71eee7db01254574c8de476fb7c14cf7293c7378636471421b80",
+      "System.Composition.Hosting": "d91cfb3e6ab3c2b8cba888cf25548732f8c43f798c3ed31a41230b4e8dc62ca7",
+      "System.Composition.Convention": "8cb7310ab2da2c9dc2e73be9acd2ff1f9bbd0a13ff41b78f0624d1759d4b1f4a",
+      "System.Composition.TypedParts": "59de969c9aaf3c938399122b923eafe87a6febfbc1c945f436cd72a11d7a982b"
+    },
+    "fresh_cache_matches_source_feed": true,
+    "real_net8_composition_execution_passed": true,
+    "original_standard21_forwarder_sha256": "8aceb3dedceceb6d3f486abdcc14d295db5c0b6e8b885c45f0369b026905c58b",
+    "original_standard21_reference_paths": 121,
+    "forwarder_runtime": {
+      "original_forwarding_declarations": 10,
+      "forwarded_types": 11,
+      "actual_target": ".NETStandard,Version=v2.1",
+      "all_runtime_type_identities_shared": true,
+      "owned_forwarder_runtime_load_passed": true,
+      "full_dependency_goal_complete": false
+    },
+    "async_iteration_disposal_cancellation_passed": true,
+    "no_downlevel_tasks_dependency_selected": true,
+    "installed_feed": true,
+    "full_dependency_goal_complete": false
+  },
+  "installed_payload_files_verified": 33,
+  "pacman_entries": 43,
+  "pacman_altered_files": 0,
+  "package_sha256": "ba637e1c26237d7e4c5077d4bd3a8e09e429b429a93b994a0a8e3452bea7b820",
+  "source_workflow_files": 18,
+  "source_workflow_sha256": "a8e78bb441b2cf63e4617b487a5b6668a23b177c1efd95f7cdcb3d84e7f898c1",
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 audit-runtime9-release3.py \"$PWD\"",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -U --noconfirm ./*-9.0.0-3-any.pkg.tar.zst",
+      "exit_code": 0
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-runtime9-libraries",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/runtime9-libraries/check.py \"$PWD/src\" \"$PWD/src/prepared\" \"$PWD/src/installed-consumer\" /clang64/lib/dotnet/library-packs",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/runtime9-libraries/check.py \"$PWD/src\" \"$PWD/src/prepared\" \"$PWD/src/installed-new-maintenance-consumer\" /clang64/lib/dotnet/library-packs --new-maintenance",
+      "exit_code": 0
+    },
+    {
+      "command": "/usr/bin/python3 src/runtime9-libraries/check-net8.py \"$PWD/src/prepared\" \"$PWD/src/installed-net8-consumer\" /clang64/lib/dotnet/library-packs",
+      "exit_code": 0
+    }
+  ],
+  "evidence": {
+    "local_directory": "/tmp/runtime9-libraries-package3",
+    "files": 603,
+    "archive_sha256": "bd24becb6e652e83cff4bd9270d2e7365842f075367afcc9a1337ae141bfa2cc",
+    "every_member_hash_verified": true,
+    "actual_package_hash_verified": true,
+    "recipe_and_srcinfo_match_frozen_evidence": true,
+    "result_files_sha256": {
+      "installed-new-maintenance-results.json": "ede9466b198023aedec0cde30cc9e56b7b7ab2f010f56a50803506a1dba2ed21",
+      "source-package-audit.json": "99d0f9fd7899e9c5d66fe519ce4c5d1419218b3e0a735b2ff656165862a1d078",
+      "artifact-audit.json": "09c99403da6297de56ce727f733e81fee618ab9aebc3a31af3b4a41be870740c",
+      "installed-consumer-results.json": "0d33df2d7a31d9670e7126c687bec605ec960937dbab1c620aca100326d33482",
+      "installed-net8-results.json": "a8c9d8088e312dac7eb55c781e67e1348fb0389865c4dc7e1fe0fa8b0fb86e02",
+      "runtime9-evidence-files.json": "f68446eaf8623f497b28dde910b466f1eee0f21b13b9b75b38ae9215bd168366"
+    }
+  },
+  "reason": "Previous exact maintenance constraints rejected original Roslyn5 source-build overrides. Packaging now records compatible minimums using the exact compiled reference versions as lower bounds; exact producer refs and all source target variants remain.",
+  "attempt_history": [
+    "The first clean release3 makepkg, independent archive audit, installation and all three installed consumer suites passed. No production source changes or warning suppressions were introduced."
+  ],
+  "complete_runtime9_target_variants_built": false,
+  "fresh_roslyn50_package_completed": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_artifact_count_increment": 0,
+  "previous_revision_evidence": "tests/runtime9-netstandard/package2-results-20261028.txt"
+}

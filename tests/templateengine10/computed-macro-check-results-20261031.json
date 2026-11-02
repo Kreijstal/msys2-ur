@@ -1,0 +1,216 @@
+{
+  "recorded_at_utc": "2026-10-31T01:45:45.069434+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/templateexact1.nmfGXG",
+  "check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/bin/Check.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/baselines",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/owned-work",
+          "api"
+        ],
+        "exit_code": 1
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/bin/Check.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/baselines",
+          "E:/codex-dotnet10/templateexact1.nmfGXG/check-macros/owned-work",
+          "runtime-only"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "upstream_API_baseline_sha256": {
+      "src/Microsoft.TemplateEngine.Abstractions/PublicAPI.Shipped.txt": "a01c78aa366add95395d19ceb3df168ca3af0f957e195ede97c22a2abd05eb8e",
+      "src/Microsoft.TemplateEngine.Abstractions/PublicAPI.Unshipped.txt": "cb8cba5e479c7e8a3c081437c5936f4eb9f6d29910cc10139dbfec2218363c07",
+      "src/Microsoft.TemplateEngine.Core.Contracts/PublicAPI.Shipped.txt": "6092f5087cc816ef933003154372d048f93680b7d9cdb2ab532e62bd7eb197c4",
+      "src/Microsoft.TemplateEngine.Core.Contracts/PublicAPI.Unshipped.txt": "30ff56576bcbc28c36f4f0b6f65b4db3b473147469daaa433a3892b1759faf52",
+      "src/Microsoft.TemplateEngine.Utils/PublicAPI.Shipped.txt": "a53d807456ab5900821fe5ca741996fb285ddec2a677f58e283c2cbd97b74097",
+      "src/Microsoft.TemplateEngine.Utils/PublicAPI.Unshipped.txt": "9820bb64627038412525477a69aec8ddd84a0a7ad4c0081aff7604046e658c26",
+      "src/Microsoft.TemplateEngine.Core/PublicAPI.Shipped.txt": "9a8e42a4e0d630193e0507c5789905fcf745d3e9c45335e69884faf68ab2ca91",
+      "src/Microsoft.TemplateEngine.Core/PublicAPI.Unshipped.txt": "d38fd2232755791625a0dd4d857dec73660d2930407602c6e77cbf2875554c01",
+      "src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/PublicAPI.Shipped.txt": "26b29e88a9249ff6505e02d4c345286968b5491e825e28300f17fabdf230c11c",
+      "src/Microsoft.TemplateEngine.Orchestrator.RunnableProjects/PublicAPI.Unshipped.txt": "2d5ec67029c20a065fe1aa051e0ed80cfb9a65462889fcf708aa087c1a81d0b3",
+      "src/Microsoft.TemplateEngine.Edge/PublicAPI.Shipped.txt": "fe30761a55aeba6c4c7cf0fc8410a90280de0e752bcfea793a93c532dd73e1b3",
+      "src/Microsoft.TemplateEngine.Edge/PublicAPI.Unshipped.txt": "6ea4c754f7b82d968c04cf43bfef9b62c77a0864c3e3a9dd048b876758c1f20d",
+      "src/Microsoft.TemplateSearch.Common/PublicAPI.Shipped.txt": "916e80d4f350bb408d1fe236b053a25011a36aee0f7ea146b3856d6c5604c2ee",
+      "src/Microsoft.TemplateSearch.Common/PublicAPI.Unshipped.txt": "bb11577d44d7fff58e3713d2e01098d6e7e8559a99fd8bc3ef947348602a567c"
+    },
+    "runtime_assets": [
+      {
+        "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+        "version": "10.0.2",
+        "archive_sha256": "761335a87433ca4e505390e5de44fc5657b10f08a324d5ffac1d1650a32a89fc",
+        "member": "lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+        "member_sha256": "20621ada0adfe1962616f4ef1378e990a18ab804f6c6f6e0c42349b0ec3dabab"
+      },
+      {
+        "id": "Microsoft.Extensions.Logging.Abstractions",
+        "version": "10.0.2",
+        "archive_sha256": "ce903eb81cc22e4ac28e1d31760496783e845fc643f946ea2612ff4dd9d5d32f",
+        "member": "lib/net10.0/Microsoft.Extensions.Logging.Abstractions.dll",
+        "member_sha256": "b55e6fb090c405a1c107d3cd4fbe62f48467255dda4be8043a692e24c999fc5d"
+      },
+      {
+        "id": "Newtonsoft.Json",
+        "version": "13.0.3",
+        "archive_sha256": "7867e36d86ee670af680e791b6c1a1fca077bd5b2144d9697e9d5d4bf9b16d53",
+        "member": "lib/netstandard2.0/Newtonsoft.Json.dll",
+        "member_sha256": "2c1134de9585b8eb61c20691663d6ce6cfcf5038061ed373a3928a6600ac5bf4"
+      },
+      {
+        "id": "NuGet.Common",
+        "version": "6.13.2",
+        "archive_sha256": "d22c2bc2fcc675a438e7faa2420ae8ca07b203563042ea63e4c9123ee06c6720",
+        "member": "lib/net10.0/NuGet.Common.dll",
+        "member_sha256": "48b4ead53c3ae17a6597edcdecc59525b8526077bdc21925eecc22ba6322f0ae"
+      },
+      {
+        "id": "NuGet.Configuration",
+        "version": "6.13.2",
+        "archive_sha256": "fcd2808fdd65588e29552f24dc488244331fd10e4fc4a4561a207e8a8d0e2263",
+        "member": "lib/net10.0/NuGet.Configuration.dll",
+        "member_sha256": "49159df5d2867bbebb92903238013448c6fd3d870ba54a60f5713555edc10d1e"
+      },
+      {
+        "id": "NuGet.Credentials",
+        "version": "6.13.2",
+        "archive_sha256": "030d075aef5565002e18ad100345977fe4d2cc5e91ecd95aa6de2196d5a84afc",
+        "member": "lib/net10.0/NuGet.Credentials.dll",
+        "member_sha256": "87f075b90e12d90d680068aeadf291c54e683194129be1e699568763330091c6"
+      },
+      {
+        "id": "NuGet.Frameworks",
+        "version": "6.13.2",
+        "archive_sha256": "25bae7482108c20eac33e1b5bdca81d5e31ffc05f1b5069c71a6597e7bfdfad4",
+        "member": "lib/net10.0/NuGet.Frameworks.dll",
+        "member_sha256": "2cb4c37a98de9e45df2e0bdfaf93ad456c61ca7af9e5f1b43f355bcccb32638b"
+      },
+      {
+        "id": "NuGet.Packaging",
+        "version": "6.13.2",
+        "archive_sha256": "a3128d865eef42c1e1edebb1117a665610e8397b2ea16bc183a7b0eeed9f37ee",
+        "member": "lib/net10.0/NuGet.Packaging.dll",
+        "member_sha256": "13db4f2c644da07f33dfd7cb9a5a51dca8c855f53cc91c968c62a51b1eff91cc"
+      },
+      {
+        "id": "NuGet.Protocol",
+        "version": "6.13.2",
+        "archive_sha256": "f4258c6d2b608eb3122ec7278ff64f60aaeeb6db22dc9efc370d29b03ad82e34",
+        "member": "lib/net10.0/NuGet.Protocol.dll",
+        "member_sha256": "0676a67ddcf2943355c2fe8055d3987eda7dd995901b7a3f7ef17f97ff4af761"
+      },
+      {
+        "id": "NuGet.Versioning",
+        "version": "6.13.2",
+        "archive_sha256": "bb80f3aa96ee88896d8eb1ac20a2550ea25deacaac4bfc33c9e3598e5a0881c1",
+        "member": "lib/net10.0/NuGet.Versioning.dll",
+        "member_sha256": "f73d52f2f866482dbb095cf8cec3e4ad42673c2969450855fb63764b163b10eb"
+      },
+      {
+        "id": "System.Collections.Immutable",
+        "version": "8.0.0",
+        "archive_sha256": "7511abc6cbbe4db2180bf6a860f454893741c96429711ad8567ed07ae80b0da6",
+        "member": "lib/net8.0/System.Collections.Immutable.dll",
+        "member_sha256": "f2bcef978bd04febecca5e940587bc5c744eb050facf05a847d68ee7a93768b1"
+      },
+      {
+        "id": "System.Formats.Asn1",
+        "version": "10.0.2",
+        "archive_sha256": "bf80851731827c710623e47d76bb34f2a6a66170afaff4ea209b2933ffde3152",
+        "member": "lib/net10.0/System.Formats.Asn1.dll",
+        "member_sha256": "27f367d488889c55d2177dc3f37aa62fd5717609c0e72034bbd37d9269c51e5e"
+      },
+      {
+        "id": "System.Security.Cryptography.Pkcs",
+        "version": "6.0.4",
+        "archive_sha256": "a2aafa0597f73a37f7dceb14744abc8b1da7717108c2ad9dec99422243647011",
+        "member": "runtimes/win/lib/net6.0/System.Security.Cryptography.Pkcs.dll",
+        "member_sha256": "c9b4db287b56ce1f38cce41a1d356eba2fc666db65008cb59b795ffa579f0253"
+      },
+      {
+        "id": "System.Security.Cryptography.ProtectedData",
+        "version": "4.4.0",
+        "archive_sha256": "629ab7b0be76683561c21675f8dd5acbf8ce0e976b377c10e5da33a1074b4598",
+        "member": "runtimes/win/lib/netstandard2.0/System.Security.Cryptography.ProtectedData.dll",
+        "member_sha256": "03ae7ba5c28ed08a82f9eaf134767e0edd2946e788a87295817340a86b9703ed"
+      }
+    ],
+    "original_identities_verified": true,
+    "strict_API_baseline_exit_code": 1,
+    "strict_API_baseline_passed": false,
+    "API_reports": {
+      "Microsoft.TemplateEngine.Abstractions": {
+        "expected_entries": 543,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateEngine.Core.Contracts": {
+        "expected_entries": 108,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateEngine.Core": {
+        "expected_entries": 566,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateEngine.Edge": {
+        "expected_entries": 279,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateEngine.Orchestrator.RunnableProjects": {
+        "expected_entries": 138,
+        "missing": [
+          "Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroDependency",
+          "Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroDependency.ResolveSymbolDependencies(System.Collections.Generic.IReadOnlyList<Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroConfig!>! macroConfigs, System.Collections.Generic.IReadOnlyList<string!>! symbols, Microsoft.TemplateEngine.Orchestrator.RunnableProjects.Abstractions.IMacroConfig! macroConfig) -> void"
+        ],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateEngine.Utils": {
+        "expected_entries": 300,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      },
+      "Microsoft.TemplateSearch.Common": {
+        "expected_entries": 52,
+        "missing": [],
+        "legacy_oblivious_entries_compared_without_reference_annotations": true,
+        "explicitly_annotated_entries_compared_exactly": true
+      }
+    },
+    "raw_extra_API_and_full_metadata_comparison_performed": false,
+    "owned_TemplateEngine_scan_generation_dryrun_search_json_and_cancellation_passed": true,
+    "strict_CPM_restore_policy_passed": true,
+    "full_original_SDK_pruning_integration_verified": false,
+    "full_upstream_test_suite_run": false,
+    "formal_packages_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "additional_all_seven_API_baseline_exit_code": 1,
+  "original_two_stale_API_entries_retained": true,
+  "full_dependency_goal_complete": false
+}

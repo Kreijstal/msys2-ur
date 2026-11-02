@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/e/codex-dotnet10/netstandard13-contracts.WhSSVW/tests/netstandard13-contracts/check.py", line 26, in <module>
+    run('probe-build',[host,native(compiler/'csc.dll'),'-noconfig','@'+native(out/'probe.rsp')])
+  File "/e/codex-dotnet10/netstandard13-contracts.WhSSVW/tests/netstandard13-contracts/check.py", line 19, in run
+    commands.append(dict(command=cmd,exit_code=r.returncode));assert r.returncode==0,(label,(out/(label+'.log')).read_text()[-7000:])
+                                                                     ^^^^^^^^^^^^^^^
+AssertionError: ('probe-build', "Microsoft (R) Visual C# Compiler version 4.4.0 (1ce8866c)\nCopyright (C) Microsoft Corporation. All rights reserved.\n\ncheck5\\Probe.cs(19,65): error CS0618: 'Marshal.SizeOf(Type)' is obsolete: 'SizeOf(Type) may be unavailable in future releases. Instead, use SizeOf<T>(). For more info, go to http://go.microsoft.com/fwlink/?LinkID=296515'\n")

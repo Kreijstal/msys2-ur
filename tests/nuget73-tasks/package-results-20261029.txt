@@ -1,0 +1,458 @@
+{
+  "finished_at_utc": "2026-10-29T09:25:45.220134+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/nuget73taskspkg1.9VfZJM",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "fe597b0df9d1984b22e741c22e3b77a539a65d2eeda0d5301ef600ceda48f24d"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "fcc89f4543eb52097d80153437c46173c63d1572e44cb1f6ba63c9b88d35b978"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "2df13c4a6a609c33740696fc4b29e367db9f4db7b1f0d4fb285627fafc2e9323"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "427cdfdb44497ab110f7f58f66b8f26cd7fca3aadc65cef4e298c39387cdbaf3"
+    }
+  ],
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check-resources.py",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/plan",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/build",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/localized",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/resources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check.py",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/plan",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/build",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap/bin"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 436,
+    "installed_pack_classic_and_static_restore_and_sdk_resolver_passed": true,
+    "installed_resource_values": 756,
+    "original_satellites": 39,
+    "portable_pdbs": 4,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "runtime_checks": {
+    "commands": [
+      {
+        "label": "compile-payload",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "pack-input-restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Empty.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "pack",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Pack.proj",
+          "-t:Pack",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/classic/Consumer.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "static-graph-restore",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/NuGet.Build.Tasks.Console.dll",
+          "Recursive=true",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/static/Consumer.proj",
+          "RestoreConfigFile=E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/NuGet.config"
+        ],
+        "exit_code": 0
+      },
+      {
+        "label": "restore-negative",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/missing/Consumer.proj",
+          "-t:Restore",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 1
+      },
+      {
+        "label": "sdk-resolver",
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/runtime/MSBuild.dll",
+          "E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Gr\u00fcsse \u4e16\u754c/Sdk.proj",
+          "-t:OwnedSdk",
+          "-nologo",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_pack_task_created_two_packages": true,
+    "classic_restore_three_package_graph": true,
+    "static_graph_console_restore_three_package_graph": true,
+    "original_NET10_assets_and_source_archive_bytes_verified": true,
+    "missing_package_rejected_NU1101": true,
+    "actual_msbuild_NuGetSdkResolver_discovery_and_imports": true,
+    "owned_unicode_sdk_props_targets_passed": true,
+    "process_scoped_environment_and_private_caches": true,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "original_compile_items": 77,
+    "unique_original_compile_inputs": 74,
+    "selected_archive_inputs_verified": 140,
+    "original_xlf_inputs": 39,
+    "source_profile_policy_resource_manifest_reference_output_and_satellite_hashes_verified": true,
+    "original_VMR_version_flow_policy": {
+      "vmr": "05d9490471fb4b10d7ef4faa32c423e1b5adcaee",
+      "files": {
+        "repo-projects/nuget-client.proj": "54c0a640ca4de1ebe851a770520145cc804198be32a46781acba80e4a0a656ca",
+        "repo-projects/Directory.Build.props": "ade49c5423274812ea1c62495ff246788d62d1c7db9b3c6c6e09f6210353c855",
+        "repo-projects/Directory.Build.targets": "c84183c21a9b8e65c639f24feb787e3726b5389683223f3e937cd82062b015c8",
+        "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/WritePackageVersionsProps.cs": "6c479eddd9c5a46988bd33728fef85c324c6383ae9ad42eeaa626c618179c33b",
+        "eng/tools/tasks/Microsoft.DotNet.UnifiedBuild.Tasks/VersionDetailsHelper.cs": "39b2de5ae656c23e784dcb892be152714a2ff691b8883e34c095c3e730f8f856"
+      }
+    },
+    "original_production_source_changes": 0,
+    "formal_package_built": false,
+    "full_nuget73_closure_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "full_nuget73_closure_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}
+
+$ makepkg --cleanbuild --force --noconfirm
+EXIT 0
+==> Making package: mingw-w64-dotnet-nuget73-tasks-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 10:20:07)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found nuget-sdk10-bf048eb7.tar.gz
+  -> Found nuget73-tasks-source-1.tar.gz
+==> Validating source files with sha256sums...
+    nuget-sdk10-bf048eb7.tar.gz ... Passed
+    nuget73-tasks-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting nuget73-tasks-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-nuget73-tasks-bootstrap 7.3.0.preview1.11413-1 (29 Oct 2026 10:23:59)
+
+
+$ pacman -U --noconfirm "$PWD/mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap-7.3.0.preview1.11413-1-any.pkg.tar.zst"
+EXIT 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap-7.3.0.preview1.11413-1
+
+Total Installed Size:  25.60 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap...
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap
+EXIT 0
+mingw-w64-clang-x86_64-dotnet-nuget73-tasks-bootstrap: 489 total files, 0 altered files
+
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-nuget73-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check
+EXIT 0
+PASS 436 installed payload hashes,756 resource values,39 satellites,4 PDBs,pack,classic/static restore,NU1101 negative and actual SDK resolver discovery/imports
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/prepare.log
+PASS 16 original NuGet7.3 VMR NET10 project wrappers prepared;original production source unchanged
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/flow.log
+PASS original VMR WritePackageVersionsProps: MicrosoftBuildVersion18.3.0-release-26113-113 via original DotNetPackageVersionPropsPath
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/evaluate.log
+PASS evaluated16 original NuGet NET10 projects; task MSBuild version 18.3.0-release-26113-113
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/build.log
+PASS NuGet.Build.Tasks.Pack 14 unchanged original source inputs
+PASS NuGet.Build.Tasks 37 unchanged original source inputs
+PASS NuGet.Build.Tasks.Console 17 unchanged original source inputs
+PASS Microsoft.Build.NuGetSdkResolver 9 unchanged original source inputs
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/localize.log
+PASS 39 original NuGet7.3 NET10 closure satellites
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/audit.log
+PASS77 original NuGet task/resolver compiler items,exact source/profile/resource/manifest/XLF inputs and source reference/output hashes
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/resource-check.log
+PASS 42 neutral/localized resource sets, 756 exact values, 39 satellite identities, four NET10 identities and portable PDBs
+
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/runtime-check.log
+PASS original pack and classic/static-graph restore,exact NET10/source assets,NU1101 negative,actual NuGet SDK resolver and Unicode props/targets
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/stage.log
+PASS staged four original NuGet tools,39 satellites,private source MSBuild host and 436 payload files
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/src/staged-check.log
+PASS 436 installed payload hashes,756 resource values,39 satellites,4 PDBs,pack,classic/static restore,NU1101 negative and actual SDK resolver discovery/imports
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/pack-input-restore.log
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\nuget73taskspkg1.9VfZJM\installed-check\runtime\owned Grüsse 世界\Empty.proj (in 261 ms).
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/pack.log
+
+  Successfully created package 'E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Grüsse 世界/feed\Owned.Base.1.0.0.nupkg'.
+  Successfully created package 'E:/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/owned Grüsse 世界/feed\Owned.Top.1.2.3.nupkg'.
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/restore.log
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\nuget73taskspkg1.9VfZJM\installed-check\runtime\owned Grüsse 世界\classic\Consumer.proj (in 777 ms).
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/static-graph-restore.log
+{"Message":"Determining projects to restore...","MessageType":3}
+{"Importance":1,"Message":"Evaluated 1 project(s) in 928ms (1 builds, 0 failures).","MessageType":3}
+{"Importance":1,"Message":"X.509 certificate chain validation will use the default trust store selected by .NET for code signing.","MessageType":3}
+{"Importance":1,"Message":"X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.","MessageType":3}
+{"Importance":1,"Message":"Restoring packages for E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\Consumer.proj...","MessageType":3}
+{"Importance":1,"Message":"Installed System.IO.Hashing 10.0.2 from E:\\msys64\\clang64\\lib\\dotnet\\library-packs to E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\cache\\system.io.hashing\\10.0.2 with content hash f0zzY0/VKZ5sgEFePVtfSLJGZUhYUkygNqaJgGkHcCV/E9ymZoi5kEwqMvglW1Ak8fJx+CSXARZFNzypy5VsnA==.","MessageType":3}
+{"Importance":1,"Message":"Installed Owned.Base 1.0.0 from E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\feed to E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\cache\\owned.base\\1.0.0 with content hash t4afO3eMSRQbpdq9eNA5nkkKhf/pL3SKNTWy+Vq42Vg9dMfa9ufy5UzMk9ALqOtcp6Ib6KO3Nk3UUeORHi9vLQ==.","MessageType":3}
+{"Importance":1,"Message":"Installed Owned.Top 1.2.3 from E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\feed to E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\cache\\owned.top\\1.2.3 with content hash wv/a4BPVIzDWVoyCUVKmgBBVWKy3JV2d/LoKIYUwjhrC23PkWp6QoE8byZUTvr1CE+57uE6hNOdYfFyZed2Jsg==.","MessageType":3}
+{"Importance":1,"Message":"Generating MSBuild file E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\obj\\Consumer.proj.nuget.g.props.","MessageType":3}
+{"Importance":1,"Message":"Generating MSBuild file E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\obj\\Consumer.proj.nuget.g.targets.","MessageType":3}
+{"Importance":1,"Message":"Writing assets file to disk. Path: E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\obj\\project.assets.json","MessageType":3}
+{"Message":"Restored E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\Consumer.proj (in 686 ms).","MessageType":3}
+{"Importance":1,"Message":"","MessageType":3}
+{"Importance":1,"Message":"NuGet Config files used:","MessageType":3}
+{"Importance":1,"Message":"    E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\NuGet.config","MessageType":3}
+{"Importance":1,"Message":"","MessageType":3}
+{"Importance":1,"Message":"Feeds used:","MessageType":3}
+{"Importance":1,"Message":"    E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\feed","MessageType":3}
+{"Importance":1,"Message":"    E:\\msys64\\clang64\\lib\\dotnet\\library-packs","MessageType":3}
+{"Importance":1,"Message":"","MessageType":3}
+{"Importance":1,"Message":"Installed:","MessageType":3}
+{"Importance":1,"Message":"    3 package(s) to E:\\codex-dotnet10\\nuget73taskspkg1.9VfZJM\\installed-check\\runtime\\owned Grüsse 世界\\static\\Consumer.proj","MessageType":3}
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/restore-negative.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\nuget73taskspkg1.9VfZJM\installed-check\runtime\owned Grüsse 世界\missing\Consumer.proj : error NU1101: Unable to find package Owned.Missing. No packages exist with this id in source(s): installed-source, owned
+  Failed to restore E:\codex-dotnet10\nuget73taskspkg1.9VfZJM\installed-check\runtime\owned Grüsse 世界\missing\Consumer.proj (in 536 ms).
+
+
+/e/codex-dotnet10/nuget73taskspkg1.9VfZJM/installed-check/runtime/sdk-resolver.log
+
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/build.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/build.py", line 87, in <module>
+    rsp=folder/'compile.rsp';rsp.write_text('\n'.join(args)+'\n');run(folder,name+'-compile',[host,compiler,'-noconfig','@'+native(rsp)])
+                                                                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/build.py", line 12, in run
+    commands.append(dict(label=label,command=[str(p) for p in command],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                                       ^^^^^^^^^^^^^^^
+AssertionError: ('NuGet.Build.Tasks.Pack-compile', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check.py", line 30, in <module>
+    E.ElementTree(pack).write(fixture/'Pack.proj',encoding='utf-8',xml_declaration=True);run('pack',[host,stage/'MSBuild.dll',fixture/'Pack.proj','-t:Pack','-nologo','-v:minimal'])
+                                                                                         ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check.py", line 20, in run
+    commands.append(dict(label=label,command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==expected,(label,r.returncode)
+                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('pack', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check2.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v2.py", line 30, in <module>
+    E.ElementTree(pack).write(fixture/'Pack.proj',encoding='utf-8',xml_declaration=True);run('pack',[host,stage/'MSBuild.dll',fixture/'Pack.proj','-t:Pack','-nologo','-v:minimal'])
+                                                                                         ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v2.py", line 20, in run
+    commands.append(dict(label=label,command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==expected,(label,r.returncode)
+                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('pack', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check3.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v3.py", line 30, in <module>
+    E.ElementTree(pack).write(fixture/'Pack.proj',encoding='utf-8',xml_declaration=True);run('pack',[host,stage/'MSBuild.dll',fixture/'Pack.proj','-t:Pack','-nologo','-v:minimal'])
+                                                                                         ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v3.py", line 20, in run
+    commands.append(dict(label=label,command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==expected,(label,r.returncode)
+                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('pack', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check4.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v4.py", line 26, in <module>
+    E.SubElement(empty,'Import',Project=native(stage/'NuGet.targets'));E.ElementTree(empty).write(fixture/'Empty.proj',encoding='utf-8',xml_declaration=True);run('pack-input-restore',[host,stage/'MSBuild.dll',fixture/'Empty.proj','-t:Restore','-nologo','-v:minimal'])
+                                                                                                                                                              ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/check-v4.py", line 20, in run
+    commands.append(dict(label=label,command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==expected,(label,r.returncode)
+                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('pack-input-restore', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check5.log
+PASS original pack and classic/static-graph restore,exact NET10/source assets,NU1101 negative,actual NuGet SDK resolver and Unicode props/targets
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/localize.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/nuget73tasks1.FwhTNS/localize.py", line 35, in <module>
+    assert len(satellites)==52
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/localize-finalize.log
+PASS 39 original NuGet7.3 NET10 closure satellites
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/resource-check.log
+PASS 42 neutral/localized resource sets, 756 exact values, 39 satellite identities, four NET10 identities and portable PDBs
+
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/source-audit.log
+PASS77 original NuGet task/resolver compiler items,exact source/profile/resource/manifest/XLF inputs and source reference/output hashes
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check/pack.log
+
+E:\codex-dotnet10\nuget73tasks1.FwhTNS\check\owned Grüsse 世界\Pack.proj(2,181): error : The provided SymbolPackageFormat value  is invalid. Allowed values : 'snupkg', 'symbols.nupkg'.
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check2/pack.log
+
+E:\codex-dotnet10\nuget73tasks1.FwhTNS\check2\owned Grüsse 世界\Pack.proj(2,182): error : Value cannot be null. (Parameter 'path1')
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check3/pack.log
+
+E:\codex-dotnet10\nuget73tasks1.FwhTNS\check3\owned Grüsse 世界\Pack.proj(2,182): error : The assets file produced by restore does not exist. Try restoring the project again. The expected location of the assets file is E:/codex-dotnet10/nuget73tasks1.FwhTNS/check3/owned Grüsse 世界/obj\project.assets.json.
+
+
+PROTOTYPE /e/codex-dotnet10/nuget73tasks1.FwhTNS/check4/pack-input-restore.log
+
+  Determining projects to restore...
+E:\codex-dotnet10\nuget73tasks1.FwhTNS\check4\owned Grüsse 世界\Empty.proj : error NU1105: Invalid target framework 'net10.0'.
+E:\codex-dotnet10\nuget73tasks1.FwhTNS\check4\runtime\NuGet.targets(196,5): error : Invalid restore input. One or more invalid frameworks were detected. Input files: E:\codex-dotnet10\nuget73tasks1.FwhTNS\check4\owned Grüsse 世界\Empty.proj. [E:\codex-dotnet10\nuget73tasks1.FwhTNS\check4\owned Grüsse 世界\Empty.proj]
+

@@ -1,0 +1,28 @@
+pkgbase = mingw-w64-simba
+	pkgdesc = Scriptable color-finding and input automation tool with a Lape (Pascal) IDE (mingw-w64)
+	pkgver = 1400
+	pkgrel = 1
+	url = https://villavu.com/
+	arch = any
+	license = spdx:GPL-3.0-or-later
+	license = spdx:LGPL-3.0-or-later
+	makedepends = mingw-w64-ucrt-x86_64-lazarus
+	makedepends = mingw-w64-ucrt-x86_64-fpc-kgpc>=3.2.2-3
+	depends = mingw-w64-ucrt-x86_64-libffi
+	depends = mingw-w64-ucrt-x86_64-openssl
+	options = !strip
+	options = !debug
+	source = simba-1400.tar.gz::https://github.com/Villavu/Simba/archive/refs/tags/simba1400-release.tar.gz
+	source = lape-44a48180fa17c0ad90c5bab16d2d113ec6163c2b.tar.gz::https://github.com/nielsAD/lape/archive/44a48180fa17c0ad90c5bab16d2d113ec6163c2b.tar.gz
+	source = 0001-Build-with-Lazarus-4.patch
+	source = 0002-Use-MSYS2-s-libffi-DLL-instead-of-the-bundled-static.patch
+	source = 0003-Do-not-embed-and-extract-the-bundled-OpenSSL-DLLs.patch
+	source = 0004-Keep-user-data-in-LOCALAPPDATA-Simba-in-the-MSYS2-la.patch
+	sha256sums = 4920a5d04a5f10b6e786ea10c2a86dc3224d6927518f3c05f0278f226ab4bffb
+	sha256sums = 9a9393eff6f5a705849721e112a36964f77807a8e9427c41f1f5c9ec37142e65
+	sha256sums = a176c3c5502a4d72a385bd9ef40550f6c0aafc951fbccbb1e87f6ea0b74dfb0f
+	sha256sums = 27c7d0334c8b00ae54233c6b14cc457a403757d48ce4e230729ae65250e59663
+	sha256sums = 1fed84bf41b369778b921f99cfad5656b65553dfb6dbbac1e533bb429a947df9
+	sha256sums = 7c6cc1be4b0d2f5445b38c107ab1657b9bc5b2e07fcd3033f1c00b9de23fe10c
+
+pkgname = mingw-w64-ucrt-x86_64-simba

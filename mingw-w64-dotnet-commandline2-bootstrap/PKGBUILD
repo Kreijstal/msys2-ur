@@ -1,0 +1,45 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-commandline2-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.2
+pkgrel=1
+pkgdesc='Exact SDK10 System.CommandLine2 original NET10 and Standard2 source profiles'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/command-line-api'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-deployment-releases-bootstrap=2.0.0.preview1.25612.105"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('commandline2-vmr-44525024.tar.gz'
+        'arcade-9f286dde.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/9f286ddee40065ea225611cb43ab0415e48994c2'
+        'commandline2-source-1.tar.gz')
+noextract=('commandline2-vmr-44525024.tar.gz' 'arcade-9f286dde.tar.gz')
+sha256sums=('ee5149b6dc17074dd8dbc1c61b1a2e6ae22f3491a8f0019f72ec286672645cb1'
+            '5df0a134ed5218656135316ba1a3aed7cfa261241fa0be0bef7560e1c4b0bb83'
+            '7c5293602c5cae2975f3f788868c5ed56ca6e4294511ed40695600fe024fb3fe')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/prepare.py")" "$(cygpath -am "$srcdir/commandline2-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/arcade-9f286dde.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/evaluate.py")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/evaluate.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/localize.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/audit.py")" "$(cygpath -am "$srcdir/commandline2-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/source-audit.json")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/commandline2-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

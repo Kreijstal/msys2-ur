@@ -1,0 +1,28 @@
+mingw-w64-dotnet-runtime10-bootstrap — installed package validation
+mingw-w64-clang-x86_64-dotnet-runtime10-bootstrap-10.0.5-1-any.pkg.tar.zst
+Windows build root: /e/codex-dotnet10/runtime10pkg1.qfZBvw
+Clean makepkg, actual archive audit, install and fresh installed checks: all exit0.
+Fresh complete original 190-project build: 171 shipping implementations + 19 private seeds. Package contains 172 managed assemblies including separately source-built CoreLib and 7 native framework DLLs. No private seeds shipped.
+Source audit:6161 original runtime archive inputs,495 generated inputs,123 reference hashes. Original109 ILLink policy libraries preserve41273 API entries, resources and PDBs.
+Three real CLR10 probes and all three dotnet-hosted probes pass: native compression/globalization, broad managed framework and original Windows JavaScript PNSE behavior.
+Installed 208 manifested files, isolated runtime discovery and launcher checked. Installed directory /clang64/lib/dotnet10.
+Strict 167-contract comparison retains exit 1: 0 missing, 2,096 extra and 248 changed entries. Full runtime compatibility remains unverified. SDK10 and PowerShell7.6 remain unfinished.
+Payload:209 regular files; pacman:227 entries,0 altered.
+
+Exact commands from Windows build root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ /usr/bin/python3 audit-package.py "$PWD"
+RESULT: exit 0
+$ pacman -U --noconfirm ./*-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-runtime10-bootstrap
+RESULT: exit 0
+$ /usr/bin/python3 /clang64/share/doc/dotnet-runtime10-bootstrap/checks/check-installed.py /clang64 "$PWD/installed-check"
+RESULT: exit 0
+
+Package SHA256: 7875ea98fa6b13442e7f372f00f0e83771336d5f8b69aeb760c6cae557e74c79
+Frozen workflow:29 files SHA256 75ad674d3be2cc645c850fb688228a009a90f3dbcdc49d9201ea6ec6726b2c33
+Evidence:3434 files SHA256 460ec0f15fe3f65d282938bc9caa19985dc96b6d707d33c9b375cc22671b013b; every member, actual package and frozen recipe verified.
+Local evidence: /tmp/runtime10-package1
+Full dependency goal remains incomplete.

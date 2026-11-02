@@ -1,0 +1,23 @@
+Runtime10 source package preparation and live clean build
+Observed UTC: 2026-10-29T00:20:33.728287+00:00
+Prototype-only package helper validation:208 manifested files checked; original source dotnet host and all three complete-framework probes pass.
+Frozen source workflow:29 files, SHA256 75ad674d3be2cc645c850fb688228a009a90f3dbcdc49d9201ea6ec6726b2c33
+Exact helper commands (prototype root):
+/usr/bin/python3 package-workflow/stage-package.py package-helper-validation package-helper-prefix -> exit0
+/usr/bin/python3 package-workflow/check-installed.py package-helper-prefix package-helper-installed-check -> exit0
+
+Formal package command: makepkg --cleanbuild --force --noconfirm
+No terminal exit status or completed package is claimed.
+pristine: 59/190 projects; live session58835; root /e/codex-dotnet10/framework10fresh.gOPSWd
+PASS framework assembly: System.Diagnostics.TraceSource
+Building original framework project: System.Net.NetworkInformation
+PASS framework assembly: System.Net.NetworkInformation
+Building original framework project: System.Threading.Channels
+makepkg: 29/190 projects; live session58459; root /e/codex-dotnet10/runtime10pkg1.qfZBvw
+PASS framework assembly: System.Security.Principal.Windows
+Building original framework project: System.Security.AccessControl
+PASS framework assembly: System.Security.AccessControl
+Building original framework project: Microsoft.Win32.Registry
+
+Both exact process handles were polled and confirmed running at this checkpoint. Poll the same handles before continuing; observation timeouts do not imply termination.
+Strict reference parity, SDK10, PowerShell7.6 and all original dependency compatibility gates remain open.

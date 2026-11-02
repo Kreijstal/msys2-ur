@@ -1,0 +1,46 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-archiver
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.6.5
+pkgrel=1
+pkgdesc="Apache Maven Archiver: jar manifests and archives for plugins, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/shared/maven-archiver/'
+msys2_repository_url='https://github.com/apache/maven-archiver'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-archiver"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-interpolation"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-xml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-maven-core")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-archiver/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('84bdc9167b5059f3d48e64839e8338eb14f4361080c566707bd60b2be535e52e')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # test fixtures (src/test/resources/dummy*.jar)
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.maven:maven-archiver:${pkgver} src/main/java -u pom.xml \
+    -- org.apache.maven:maven-core/provided org.codehaus.plexus:plexus-archiver \
+       org.codehaus.plexus:plexus-interpolation org.codehaus.plexus:plexus-xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5, AssertJ, Mockito and the deleted jars
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven:maven-archiver
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven:maven-archiver
+}

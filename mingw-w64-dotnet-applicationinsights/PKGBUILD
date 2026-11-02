@@ -1,0 +1,50 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-applicationinsights
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.23.0
+pkgrel=1
+pkgdesc='Source-built Microsoft.ApplicationInsights core 2.23.0 for .NET 8'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/microsoft/ApplicationInsights-dotnet'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-diagnosticsource=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp=4.9.2" 'python')
+options=('!strip' '!lto')
+_commit=2faa7e8b157a431daa2e71785d68abd5fa817b53
+source=("applicationinsights-$_commit.tar.gz::https://codeload.github.com/microsoft/ApplicationInsights-dotnet/tar.gz/$_commit"
+        prepare.py MicrosoftShared.pubkey.hex Check.cs CheckApi.cs check.sh README.md)
+noextract=("applicationinsights-$_commit.tar.gz")
+sha256sums=('d4db350c94a29d41ac58a62f53d86fc6124a458904ccf6f607c1eca2f8d023a0'
+            'dd80192c1cdd8b171398d794c52a6e1069e27f5c9a3331268d9702e3df1166f1'
+            '8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed'
+            '22e220f9cf6e09dc0ff9fd78d28ad18e728c8b069827a61ffd85077ba9c28b4c'
+            'b0d13b7ad3f1bdb768fc3e48786dc7b557e92180bd36769b44999115ab1115c4'
+            '1853be95131280a3fef8f5aefd35f7395568a54075e5e74486f01e64c744a934'
+            'd5edd7ef8244b96103608b58755df9f4f5c0ecc3ac74a416354768f5ec6ef62e')
+prepare() {
+  tar -xzf "$srcdir/applicationinsights-$_commit.tar.gz" -C "$srcdir"
+  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/ApplicationInsights-dotnet-$_commit" "$srcdir/build"
+}
+
+build() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet") DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home") NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$(cygpath -m "$srcdir/build/Library.csproj")" \
+    -c Release -o "$(cygpath -m "$srcdir/feed")" --configfile "$(cygpath -m "$srcdir/build/NuGet.config")" \
+    -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  bash "$srcdir/check.sh" "$srcdir/consumer" "$srcdir/feed" "$srcdir/build/PublicAPI.txt"
+}
+package() {
+  install -Dm644 "$srcdir/feed/Microsoft.ApplicationInsights.$pkgver.nupkg" \
+    "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/microsoft.applicationinsights.$pkgver.nupkg"
+  install -Dm644 "$srcdir/ApplicationInsights-dotnet-$_commit/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -m644 "$srcdir/build/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+  install -m644 "$srcdir/build/PublicAPI.txt" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/PublicAPI.txt"
+}

@@ -1,0 +1,141 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=powershell-module-test-host
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=7.4.20
+pkgrel=3
+pkgdesc='Source PowerShell engine/cmdlets and Pester Core runtime for module packaging checks'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/PowerShell/PowerShell'
+license=('spdx:MIT' 'spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-json-more"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-jsonpointer"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-jsonschema"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-markdig"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-applicationinsights"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-common"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-mmi3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-powershell-markdownrender"
+         "${MINGW_PACKAGE_PREFIX}-powershell-native"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-security-extensions"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-registry-accesscontrol"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-systemevents"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-newtonsoft-json"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-codedom"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-diagnosticsource"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-drawing-common"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-management"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-security-accesscontrol6"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-encoding-codepages"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-performancecounter"
+)
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-codestyle=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-sdk-netanalyzers"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-stylecop-analyzers"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-analyzers" 'python')
+options=('!strip' '!lto')
+source=(
+  "powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerShell/tar.gz/refs/tags/v7.4.20"
+  "pester-4.10.1.tar.gz::https://codeload.github.com/pester/Pester/tar.gz/add7dc5f435287aa14db39c31f90159572e6a6df"
+  "gherkin-5.1.0.tar.gz::https://codeload.github.com/cucumber/gherkin-dotnet/tar.gz/55ab34d45dcd8249349704335c2aa2f90839fae3"
+  prepare-core.py
+  build-core-tools.sh
+  build-core.sh
+  prepare-host.py
+  build-host.sh
+  build-entry.py
+  ChildProcessSmoke.ps1
+  ModuleHost.cs
+  stage-runtime.py
+  prepare-gherkin.py
+  stage-pester.py
+  audit-source.py
+  audit-payload.py
+  check.sh
+  Smoke.ps1
+  PesterSmoke.ps1
+  powershell-module-test-host
+  powershell-module-test-host.cmd
+  README.md
+)
+sha256sums=(
+  '3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb'
+  'c341649b834e23dbb783afd23a8bd0ee0c9d9c860a3017627605d700d45cdc78'
+  '795afa4ca4cd6b2b2829f4ec396c010ada4b2eea62c37786eb23bfcbcba69bbd'
+  'dece9920eac58b108354b3e270877b4221c1bac93c35b7140acd30cfc4a51a3e'
+  '05b527c46c191746dc1a07570c3663ce530eddd0b0d90c028c591d2e9981f81e'
+  'd6555dfeee8e83583f4ddb192fd7e948caa1a236b5b9a96e65999928cc9e6d37'
+  'bef23ade56563c1672241359adbfab3c1b0df76a1844983c348c8f7ec41c1b56'
+  'c82d451c2629f5760a57fbbeb72de7723da3227ca06f2e57fb048194e37ed9de'
+  'dfc56afddfb55fe67383ad012c0fa5eaf69a0214a6b506fbef1f316f7d1af598'
+  '9267496889760119a104291a15015182db4a49222082500f0c805851c6fcef99'
+  'd10661dba2809a4175995c857b8c2701f98cc10dde918b4ddea9e2fd4aabb110'
+  '252263e9003fa9032d7c84a8e02d3a9e1744b2f0f643542e86b9f2ab891fa838'
+  'db4a841a0f2c7a8a08c69162f954f031efaea7052348b9427f75ce03e842cce6'
+  '18852e193936f50d561190c467765abd5df309177562294a5f8fd2c1859d0f2f'
+  '831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96'
+  'd56029fca7a78144ec18dd7a70fc2ee204389055b9f0a6e039c3a3d07f4e6585'
+  '89d5f91cc709b75a3729fe3c8cd9b7d8932ee114ded3346725c626023a507ed1'
+  '4c20b8a22b893f0504ba00dee1664bc279a78c8f7d5c049620fb414abcb9ae8e'
+  '7befb8a073b364612c8eb5331ee7f41fb4c8f14c6c2a1d5015597e26c67427d3'
+  '09dfbccfaf1f3136afc26f5dfca2f4addbdc2d94ad298f6462b550d392d1eff0'
+  '81d4ed539f6976000ec654428fd5c2fa36918eedd44e06d262a5120fc44da2cb'
+  '49c004e8c919ef97a2994ba2e26a50d60d11fa9747dd924554b50c4f0e56059c'
+)
+prepare() {
+  mkdir "$srcdir/prepared"
+  mv "$srcdir/PowerShell-$pkgver" "$srcdir/prepared/"
+  cp -L "$srcdir/powershell-$pkgver.tar.gz" "$srcdir/prepared/powershell-$pkgver.tar.gz"
+  /usr/bin/python3 "$srcdir/prepare-core.py" "$srcdir/prepared/PowerShell-$pkgver"
+  /usr/bin/python3 "$srcdir/prepare-gherkin.py" "$srcdir/gherkin-dotnet-55ab34d45dcd8249349704335c2aa2f90839fae3" "$srcdir/gherkin"
+}
+build() {
+  bash "$srcdir/build-core-tools.sh" "$srcdir/prepared"
+  bash "$srcdir/build-host.sh" "$srcdir/prepared" "$srcdir/host"
+  export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$srcdir/host/cli-home") NUGET_PACKAGES=$(cygpath -am "$srcdir/prepared/empty-packages")
+  /usr/bin/python3 "$srcdir/build-entry.py" "$srcdir/prepared" "$srcdir/host/bin/Release/net8.0" "$srcdir/entry"
+  /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$srcdir/gherkin/Gherkin.csproj")" -c Release \
+    --configfile "$(cygpath -am "$srcdir/prepared/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+  /usr/bin/python3 "$srcdir/stage-pester.py" "$srcdir/Pester-add7dc5f435287aa14db39c31f90159572e6a6df" \
+    "$srcdir/host/bin/Release/net8.0/Modules/Pester" "$srcdir/gherkin/bin/Release/net8.0/Gherkin.dll"
+  /usr/bin/python3 "$srcdir/audit-source.py" "$srcdir/prepared"
+  /usr/bin/python3 "$srcdir/audit-payload.py" "$srcdir/prepared" "$srcdir/host/bin/Release/net8.0" "$srcdir/gherkin/bin/Release/net8.0/Gherkin.dll"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/host/bin/Release/net8.0"; }
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/tools/$_realname"
+  mkdir -p "$target"
+  cp -R "$srcdir/host/bin/Release/net8.0/." "$target/"
+  find "$target" -name '*.pdb' -delete
+  install -m644 "$srcdir/powershell-module-test-host.cmd" "$target/"
+  install -Dm755 "$srcdir/powershell-module-test-host" "$pkgdir$MINGW_PREFIX/bin/powershell-module-test-host"
+  install -Dm644 "$srcdir/prepared/PowerShell-$pkgver/LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/PowerShell-LICENSE.txt"
+  install -m644 "$srcdir/prepared/PowerShell-$pkgver/ThirdPartyNotices.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/"
+  install -m644 "$srcdir/Pester-add7dc5f435287aa14db39c31f90159572e6a6df/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Pester-LICENSE"
+  install -m644 "$srcdir/gherkin-dotnet-55ab34d45dcd8249349704335c2aa2f90839fae3/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Gherkin-LICENSE"
+  install -m644 "$MINGW_PREFIX/share/licenses/${MINGW_PACKAGE_PREFIX}-dotnet-runtime/runtime.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/Dotnet-AppHost-LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  for file in source-coverage.json source-build-inputs.json module-host-payload.json;do
+    install -m644 "$srcdir/prepared/$file" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+  done
+  install -m644 "$srcdir/gherkin/source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/gherkin-source-inventory.json"
+}

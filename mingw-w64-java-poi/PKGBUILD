@@ -1,0 +1,155 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Build the upstream published Java sources with the source-bootstrapped JDK.
+# Source archives may include generated Java and schema data; all JVM bytecode
+# is compiled here. No dependency binary JARs are downloaded.
+
+pkgbase=mingw-w64-java-poi
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-poi-ooxml-lite"
+         "${MINGW_PACKAGE_PREFIX}-java-poi"
+         "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml")
+pkgver=5.4.0
+pkgrel=1
+pkgdesc="poi Java libraries, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://poi.apache.org/'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-batik-bridge"
+             "${MINGW_PACKAGE_PREFIX}-java-batik-codec"
+             "${MINGW_PACKAGE_PREFIX}-java-batik-svggen"
+             "${MINGW_PACKAGE_PREFIX}-java-batik-svgrasterizer"
+             "${MINGW_PACKAGE_PREFIX}-java-bcpkix-jdk18on"
+             "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-collections4"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-math3"
+             "${MINGW_PACKAGE_PREFIX}-java-curvesapi"
+             "${MINGW_PACKAGE_PREFIX}-java-graphics2d"
+             "${MINGW_PACKAGE_PREFIX}-java-log4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-pdfbox"
+             "${MINGW_PACKAGE_PREFIX}-java-sparsebitset"
+             "${MINGW_PACKAGE_PREFIX}-java-xmlbeans"
+             "${MINGW_PACKAGE_PREFIX}-java-xmlsec")
+source=('https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml-lite/5.4.0/poi-ooxml-lite-5.4.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml-lite/5.4.0/poi-ooxml-lite-5.4.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/poi/poi/5.4.0/poi-5.4.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/poi/poi/5.4.0/poi-5.4.0.pom'
+         'https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/5.4.0/poi-ooxml-5.4.0-sources.jar'
+         'https://repo.maven.apache.org/maven2/org/apache/poi/poi-ooxml/5.4.0/poi-ooxml-5.4.0.pom'
+         '0001-commons-io-outputstream-compat.patch')
+noextract=('poi-ooxml-lite-5.4.0-sources.jar'
+         'poi-ooxml-lite-5.4.0.pom'
+         'poi-5.4.0-sources.jar'
+         'poi-5.4.0.pom'
+         'poi-ooxml-5.4.0-sources.jar'
+         'poi-ooxml-5.4.0.pom')
+sha256sums=('0cbd90a42b3996a5aa12810bb554cddcfa40fa23db5c7d4c070a4c17637f5770'
+         '610a64337972ff197fa336e68c77e63955b11586bc1edb1fc67939e4552f17e2'
+         'c4cc0c1a9821de32ec54eb940fefcf15f0788fc93329db1fc92849eb4c6b5567'
+         'acad15907190a5e67b8597ccfb0131efde596c2fa05d8ad9f4b9c61da31f3645'
+         'd574d4e38f5febfaecab56d27189d5865af268c77da784af0ca8cb02edeeebff'
+         '588f24e9356f28c1d0989c34ab5e626bf348abc0227b8ac8cb4666a4f8080a76'
+         '6f466605618b4695313fccc109b14ed077146d30ec1f2d996217ba9fe63e85e2')
+_artifacts=('org.apache.poi:poi-ooxml-lite:5.4.0'
+         'org.apache.poi:poi:5.4.0'
+         'org.apache.poi:poi-ooxml:5.4.0')
+
+prepare() {
+  local gav g a v
+  for gav in "${_artifacts[@]}"; do
+    IFS=: read -r g a v <<< "$gav"
+    mkdir -p "upstream/$a" "resources/$a"
+    bsdtar -xf "$a-$v-sources.jar" -C "upstream/$a"
+    find "upstream/$a" -type f \( -name '*.class' -o -name '*.jar' -o -name '*.dll' -o -name '*.so' \) -delete
+    rm -rf "upstream/$a/META-INF/versions"
+    cp -r "upstream/$a/." "resources/$a/"
+    find "resources/$a" -type f \( -name '*.java' -o -name '*.SF' -o -name '*.RSA' -o -name '*.DSA' \) -delete
+    rm -f "resources/$a/META-INF/MANIFEST.MF"
+  done
+  patch -Np1 -i "${srcdir}/0001-commons-io-outputstream-compat.patch"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local JB_RELEASE=21
+  jb_module org.apache.poi:poi-ooxml-lite:5.4.0 upstream/poi-ooxml-lite \
+    -r resources/poi-ooxml-lite -u poi-ooxml-lite-5.4.0.pom -- \
+    org.apache.xmlbeans:xmlbeans
+  jb_module org.apache.poi:poi:5.4.0 upstream/poi \
+    -r resources/poi -u poi-5.4.0.pom -- \
+    commons-codec:commons-codec org.apache.commons:commons-collections4 org.apache.commons:commons-math3 commons-io:commons-io com.zaxxer:SparseBitSet org.apache.logging.log4j:log4j-api
+  jb_module org.apache.poi:poi-ooxml:5.4.0 upstream/poi-ooxml \
+    -r resources/poi-ooxml -u poi-ooxml-5.4.0.pom -- \
+    org.apache.poi:poi org.apache.poi:poi-ooxml-lite org.apache.xmlbeans:xmlbeans org.apache.commons:commons-compress commons-io:commons-io com.github.virtuald:curvesapi org.apache.logging.log4j:log4j-api org.apache.commons:commons-collections4 org.apache.santuario:xmlsec? org.bouncycastle:bcpkix-jdk18on? org.bouncycastle:bcutil-jdk18on? org.apache.pdfbox:pdfbox? de.rototor.pdfbox:graphics2d? org.apache.xmlgraphics:batik-svggen? org.apache.xmlgraphics:batik-svgrasterizer? org.apache.xmlgraphics:batik-codec? org.apache.xmlgraphics:batik-bridge?
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck --with org.apache.xmlbeans:xmlbeans org.apache.poi:poi-ooxml-lite
+  jb_loadcheck --with commons-codec:commons-codec --with org.apache.commons:commons-collections4 --with org.apache.commons:commons-math3 --with commons-io:commons-io --with com.zaxxer:SparseBitSet --with org.apache.logging.log4j:log4j-api org.apache.poi:poi
+  jb_loadcheck --with org.apache.poi:poi --with org.apache.poi:poi-ooxml-lite --with org.apache.xmlbeans:xmlbeans --with org.apache.commons:commons-compress --with commons-io:commons-io --with com.github.virtuald:curvesapi --with org.apache.logging.log4j:log4j-api --with org.apache.commons:commons-collections4 --with org.apache.santuario:xmlsec --with org.bouncycastle:bcpkix-jdk18on --with org.bouncycastle:bcutil-jdk18on --with org.apache.pdfbox:pdfbox --with de.rototor.pdfbox:graphics2d --with org.apache.xmlgraphics:batik-svggen --with org.apache.xmlgraphics:batik-svgrasterizer --with org.apache.xmlgraphics:batik-codec --with org.apache.xmlgraphics:batik-bridge org.apache.poi:poi-ooxml
+}
+
+_license() {
+  local a=$1 v=$2 f
+  local copyrights="${srcdir}/$a-SOURCE-COPYRIGHTS.txt"
+  find "upstream/$a" -name '*.java' -exec awk '
+    FNR == 1 { header=""; collecting=1 }
+    /^package[[:space:]]/ {
+      if (header != "" && !seen[header]++) print header
+      collecting=0
+    }
+    collecting { header=header $0 "\n" }
+  ' {} + > "$copyrights"
+  install -Dm644 "$copyrights" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/SOURCE-COPYRIGHTS.txt"
+  install -Dm644 "$a-$v.pom" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/UPSTREAM.pom"
+  while IFS= read -r f; do
+    install -Dm644 "$f" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-$a/${f#upstream/$a/}"
+  done < <(find "upstream/$a" -type f \( -iname '*license*' -o -iname '*notice*' -o -iname '*copying*' \) ! -name '*.java')
+}
+
+package_java-poi-ooxml-lite() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlbeans")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.poi:poi-ooxml-lite
+  _license poi-ooxml-lite 5.4.0
+}
+
+package_java-poi() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-collections4"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-math3"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+           "${MINGW_PACKAGE_PREFIX}-java-sparsebitset"
+           "${MINGW_PACKAGE_PREFIX}-java-log4j-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.poi:poi
+  _license poi 5.4.0
+}
+
+package_java-poi-ooxml() {
+  depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21"
+           "${MINGW_PACKAGE_PREFIX}-java-poi"
+           "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml-lite"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlbeans"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+           "${MINGW_PACKAGE_PREFIX}-java-curvesapi"
+           "${MINGW_PACKAGE_PREFIX}-java-log4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-collections4")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.poi:poi-ooxml
+  _license poi-ooxml 5.4.0
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

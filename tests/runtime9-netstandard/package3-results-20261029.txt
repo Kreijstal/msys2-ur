@@ -1,0 +1,34 @@
+Runtime9 source library release3: dependency metadata fix and installed validation
+mingw-w64-clang-x86_64-dotnet-runtime9-libraries 9.0.0-3
+Windows root: /e/codex-dotnet10/runtime9pkg3.noxcGZ
+Previous exact maintenance constraints rejected original Roslyn5 source-build overrides. Packaging now records compatible minimums using the exact compiled reference versions as lower bounds; exact producer refs and all source target variants remain.
+First complete clean makepkg: exit0. Independent archive audit/install: exit0. All three installed suites: exit0.
+Eleven original Standard2.0 implementations, five independently built NET8 MEF targets, genuine Standard2.1 forwarder and twelve source NuGets retained.
+Original public API declarations: 4051; resource sets/strings:9/375; pinned source inputs:733; actual producer/consumer package references:100.
+Original and new Memory/Unsafe/Tasks selections both pass real isolated API/native/resource checks with NU1608 treated as an error.
+NET8 MEF, complete forwarders, shared framework type unification, async iteration/disposal/cancellation and empty higher-framework dependency groups pass.
+Packaging adapter minimum-version entries changed: 10. Every non-nuspec entry is checked unchanged by that adapter.
+33 regular payload files; pacman43 entries,0 altered.
+
+Exact commands from Windows root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ /usr/bin/python3 audit-runtime9-release3.py "$PWD"
+RESULT: exit 0
+$ pacman -U --noconfirm ./*-9.0.0-3-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-runtime9-libraries
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-new-maintenance-consumer" /clang64/lib/dotnet/library-packs --new-maintenance
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/check-net8.py "$PWD/src/prepared" "$PWD/src/installed-net8-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+Package SHA256: ba637e1c26237d7e4c5077d4bd3a8e09e429b429a93b994a0a8e3452bea7b820
+Frozen source workflow:18 files SHA256 a8e78bb441b2cf63e4617b487a5b6668a23b177c1efd95f7cdcb3d84e7f898c1
+Downloaded evidence:603 files SHA256 bd24becb6e652e83cff4bd9270d2e7365842f075367afcc9a1337ae141bfa2cc; every member verified.
+Local evidence: /tmp/runtime9-libraries-package3
+
+Other original target variants, fresh Roslyn5.0/5.3 tool graphs, SDK10, PowerShell7.6 and all original broad compatibility requirements remain open. Artifact completion counts are unchanged.

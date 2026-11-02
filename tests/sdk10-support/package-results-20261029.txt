@@ -1,0 +1,137 @@
+Exact SDK10 runtime support source package
+
+Root: /e/codex-dotnet10/sdk10supportpkg1.kSV6bk
+
+$ makepkg --force --noconfirm
+RESULT: exit 0; cold source/VMR/resource/version/contract/runtime/staged-consumer validation passed.
+
+$ python tests/sdk10-support/audit-package.py /tmp/sdk10-support-package/mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap-10.0.2.25612.105-1-any.pkg.tar.zst mingw-w64-dotnet-sdk10-support-bootstrap/runtime-sdk10-vmr-44525024.tar.gz /tmp/sdk10-support-package/audit.json
+RESULT: exit 0; actual payload/source bytes,133 original VMR sources,257 contract entries and three original NET10 archives pass.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/sdk10supportpkg1.kSV6bk/mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap-10.0.2.25612.105-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-support-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10supportpkg1.kSV6bk/installed-check
+RESULT: exit 0
+System.IO.Hashing entries 99 differences 0 nullable differences 0
+Microsoft.Extensions.DependencyModel entries 158 differences 0 nullable differences 0
+
+PASS exact SDK10 support: original hash vectors=19,resource values=10,deps Unicode/metadata/runtime graph roundtrip,native Unicode apphost and bundle execution
+
+PASS fallback hashing original vectors=19,resource values=10
+
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap
+mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap: 63 total files, 0 altered files
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-29T08:16:32.352543+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/sdk10supportpkg1.kSV6bk",
+  "recipe": "mingw-w64-dotnet-sdk10-support-bootstrap",
+  "package_version": "10.0.2.25612.105-1",
+  "actual_vmr_commit": "44525024595742ebe09023abe709df51de65009b",
+  "mapped_runtime_commit": "9ffface2f3fa6fbbb427793c3230b1626a1fdd84",
+  "actual_vmr_version_edits_retained": true,
+  "upstream_patch_version": 1,
+  "vmr_patch_version": 2,
+  "verified_vmr_source_files": 2636,
+  "original_compile_inputs": 133,
+  "original_production_source_changes": 0,
+  "original_framework": "net10.0",
+  "source_packages": [
+    {
+      "id": "System.IO.Hashing",
+      "version": "10.0.2",
+      "assembly_version": "10.0.0.0",
+      "file_version": "10.0.225.61305"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyModel",
+      "version": "10.0.2",
+      "assembly_version": "10.0.0.0",
+      "file_version": "10.0.225.61305"
+    },
+    {
+      "id": "Microsoft.NET.HostModel",
+      "version": "10.0.2-servicing.25612.105",
+      "assembly_version": "10.0.2.0",
+      "file_version": "10.0.225.61305"
+    }
+  ],
+  "original_arcade_version_and_resource_tasks_executed": true,
+  "standalone_arcade_helper_host": "net8.0",
+  "full_original_arcade_project_built": false,
+  "original_official_build_id": "20251212.105",
+  "cold_makepkg_exit_code": 0,
+  "archive_audit_exit_code": 0,
+  "install_exit_code": 0,
+  "installed_check_exit_code": 0,
+  "formal_package_built": true,
+  "formal_package_installed": true,
+  "strict_original_reference_contract_entries": 257,
+  "strict_missing_extra_changed_and_nullable_differences": 0,
+  "original_hash_vectors": 19,
+  "software_intrinsic_fallback_checked": true,
+  "original_neutral_resource_values": 10,
+  "original_xlf_inputs": 0,
+  "owned_unicode_deps_metadata_and_runtime_graph_roundtrip": true,
+  "owned_unicode_native_apphost_and_bundle_execution": true,
+  "native_template_source_version": "8.0.31",
+  "generated_managed_application_runtime": "10.0.5",
+  "package_sha256": "7f5b18f6916b84ffeca18fc090ed89d5930de25d7112ec7b6e0839635d199d33",
+  "regular_payload_files": 40,
+  "pacman_integrity": "mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap: 63 total files, 0 altered files",
+  "all_exact_sdk10_support_libraries_built": false,
+  "other_original_framework_profiles_built": false,
+  "full_upstream_test_suite_run": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "Deployment.DotNet.Releases2.0.0-preview.1.25612.105 original NS2 profile and compatible JSON dependency/version flow",
+    "Original additional framework profiles,full upstream tests,full Arcade/analyzer/tool integration and broader HostModel ELF/MachO/COM/resource behavior",
+    "Remaining NuGet7.3 build/pack/restore tasks, SDK resolver, PackageManagement/XDT/MEF and other original tools/frameworks",
+    "Original SDK10 Build.Tasks/APICompat/Extensions closure and full SDK10/WindowsDesktop10/PowerShell7.6",
+    "Existing MMI remote/provider/ownership, SQL/native/Windows.Compatibility,desktop and runtime compatibility gates"
+  ],
+  "evidence": "tests/sdk10-support/package-results-20261029.txt",
+  "json_evidence": "tests/sdk10-support/package-results-20261029.json"
+}
+
+Cold makepkg log:
+==> Making package: mingw-w64-dotnet-sdk10-support-bootstrap 10.0.2.25612.105-1 (29 Oct 2026 09:12:24)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-sdk10-vmr-44525024.tar.gz
+  -> Found sdk10-support-source-1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-sdk10-vmr-44525024.tar.gz ... Passed
+    sdk10-support-source-1.tar.gz ... Passed
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting sdk10-support-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk10-support-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sdk10-support-bootstrap 10.0.2.25612.105-1 (29 Oct 2026 09:14:53)

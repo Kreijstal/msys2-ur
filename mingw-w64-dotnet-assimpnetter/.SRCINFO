@@ -1,0 +1,23 @@
+pkgbase = mingw-w64-dotnet-assimpnetter
+	pkgdesc = Source-built AssimpNetter .NET wrapper for the Open Asset Import Library, using MSYS2 assimp, for the .NET 8 offline feed
+	pkgver = 6.0.5
+	pkgrel = 1
+	url = https://github.com/Saalvage/AssimpNetter
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-assimp
+	options = !strip
+	options = !lto
+	source = assimpnetter-161363c3528c3ba388151e9e796d16ccf9f58913.tar.gz::https://codeload.github.com/Saalvage/AssimpNetter/tar.gz/161363c3528c3ba388151e9e796d16ccf9f58913
+	source = 0001-load-the-MSYS2-assimp-DLL-on-Windows.patch
+	source = prepare.py
+	source = check.cs
+	sha256sums = b6278e6ad21d68a3853f3d25fca6736ca3dc10b906b4436272f533872bd3a217
+	sha256sums = 889775aa807bdb6f7d3199f7da315601bfff93427268a56722a6e5c158d76809
+	sha256sums = 1baf1e37eb666acd04c7826e7a1c637c73f824ac5ba58db5808a61c95cc98cf4
+	sha256sums = 3b8a33906c36b2daa04a87f2c2f519a1987522d48c5be863b377a73c594267a6
+
+pkgname = mingw-w64-clang-x86_64-dotnet-assimpnetter

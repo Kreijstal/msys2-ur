@@ -1,0 +1,38 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-deployment-releases-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.0.preview1.25612.105
+pkgrel=1
+pkgdesc='Original Standard2 Deployment.DotNet.Releases and isolated source-build reference closure'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/deployment-tools'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap=10.0.5"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8=8.0.5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('deployment-releases-vmr-44525024.tar.gz' 'deployment-releases-source-1.tar.gz')
+noextract=('deployment-releases-vmr-44525024.tar.gz')
+sha256sums=('8d2f0663d6e8d7d8bf478d4e14cf767d250851fe656be92ac26002524b11771d' '2347a008a1df2616ae1f15d285afe5d0abcd94bce2af0688a6cfc62fb05ad7c2')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/prepare.py")" "$(cygpath -am "$srcdir/deployment-releases-vmr-44525024.tar.gz")" "$(cygpath -am "$srcdir/source")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/build-references.py")" "$(cygpath -am "$srcdir/source")" "$(cygpath -am "$srcdir/references")" > "$srcdir/references.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/build.py")" "$(cygpath -am "$srcdir/source")" "$(cygpath -am "$srcdir/references")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/localize.py")" "$(cygpath -am "$srcdir")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/audit.py")" "$(cygpath -am "$srcdir")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/deployment-releases-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

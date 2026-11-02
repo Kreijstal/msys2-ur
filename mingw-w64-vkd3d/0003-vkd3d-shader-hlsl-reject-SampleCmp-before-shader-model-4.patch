@@ -1,0 +1,25 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] vkd3d-shader/hlsl: Reject SampleCmp() before shader model 4.
+
+Comparison sampling does not exist in shader model 1-3. fxc fails with
+X4532 "cannot map expression to pixel shader instruction set"; vkd3d hit
+vkd3d_unreachable() in get_vsir_resource_type() and crashed the process.
+---
+--- a/libs/vkd3d-shader/hlsl.y
++++ b/libs/vkd3d-shader/hlsl.y
+@@ -6177,6 +6177,15 @@
+     else
+         load_params.type = HLSL_RESOURCE_SAMPLE_CMP;
+ 
++    /* There is no comparison sampling in shader model 1-3; fxc fails with
++     * "cannot map expression to pixel shader instruction set". */
++    if (hlsl_version_lt(ctx, 4, 0))
++    {
++        hlsl_error(ctx, loc, VKD3D_SHADER_ERROR_HLSL_INCOMPATIBLE_PROFILE,
++                "Method '%s' is not supported in shader model 1-3.", name);
++        return false;
++    }
++
+     if (params->args_count < 3 || params->args_count > 5 + !!offset_dim)
+     {
+         hlsl_error(ctx, loc, VKD3D_SHADER_ERROR_HLSL_WRONG_PARAMETER_COUNT,

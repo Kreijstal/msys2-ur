@@ -1,0 +1,55 @@
+{
+  "preexisting_feed_archives_unchanged": 269,
+  "new_archive": "mono.cecil.0.11.0.nupkg",
+  "fresh_installed_check_exit": 0,
+  "checks": {
+    "commands": [
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/fixture/Fixture.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/consumer/Check.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/consumer/bin/Release/net8.0/Check.dll",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/fixture/bin/Release/net8.0/OwnedFixture.dll",
+          "E:/codex-dotnet10/cecil011pkg1.cMh64o/installed-check/rewritten",
+          "E:/msys64/clang64/share/doc/dotnet-cecil011-bootstrap/inputs/published-ns2-api.json"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_NS2_four_library_identities": true,
+    "actual_IL_and_nullable_metadata_rewriting": true,
+    "portable_and_embedded_PDB_round_trips": true,
+    "exact_cached_archive_and_copied_DLL_bytes": true,
+    "formal_pacman_installed": true,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_check": "mingw-w64-clang-x86_64-dotnet-cecil011-bootstrap: 30 total files, 0 altered files\n",
+  "full_dependency_goal_complete": false
+}

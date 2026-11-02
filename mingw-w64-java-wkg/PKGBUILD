@@ -1,0 +1,67 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_commit=46b107715434ea3260659319e7261cd2f5e51f53
+pkgbase=mingw-w64-java-wkg
+pkgname="${MINGW_PACKAGE_PREFIX}-java-wkg"
+pkgver=0.1.r46b1077
+pkgrel=1
+pkgdesc="Well Known Geometry readers/writers from DBeaver's source fork"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/external-fork-wkg'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21" "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper" "${MINGW_PACKAGE_PREFIX}-java-antlr4")
+source=("wkg-${_commit}.tar.gz::https://github.com/dbeaver/external-fork-wkg/archive/${_commit}.tar.gz")
+sha256sums=('4dc40d827171c137955810cedd804656f749872f192b5bd2ae8d253f27dc9328')
+
+prepare() {
+  find "external-fork-wkg-${_commit}" -type f \( -name '*.jar' -o -name '*.class' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "external-fork-wkg-${_commit}"
+  mkdir -p "${srcdir}/generated"
+  local grammar cp=$(jb_cp org.antlr:antlr4)
+  for grammar in src/main/antlr/org/cugos/wkg/internal/{WKT,JSON}.g4; do
+    java -cp "$cp" org.antlr.v4.Tool -visitor -listener \
+      -package org.cugos.wkg.internal -Xexact-output-dir \
+      -o "$(jb_w "${srcdir}/generated")" "$(jb_w "$grammar")"
+  done
+  JB_RELEASE=11 jb_module org.cugos:wkg:0.1 src/main/java -s "${srcdir}/generated" \
+    -u pom.xml -- org.antlr:antlr4-runtime
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck org.cugos:wkg
+  mkdir -p smoke
+  cat > smoke/WkgRoundTrip.java <<'JAVA'
+import org.cugos.wkg.*;
+public class WkgRoundTrip {
+  public static void main(String[] args) {
+    WKTReader reader = new WKTReader();
+    WKTWriter writer = new WKTWriter();
+    for (String input : new String[]{"POINT (1 2)", "LINESTRING (0 0, 1 1)",
+        "CIRCULARSTRING (0 0, 1 1, 2 0)", "POINT Z (1 2 3)"}) {
+      String result = writer.write(reader.read(input));
+      if (!result.equals(writer.write(reader.read(result)))) throw new AssertionError(result);
+    }
+    boolean rejected = false;
+    try { reader.read("POINT (not_a_number)"); } catch (RuntimeException ex) { rejected = true; }
+    if (!rejected) throw new AssertionError("invalid WKT was accepted");
+    System.out.println("WKG generated parsers and geometry round trips passed");
+  }
+}
+JAVA
+  local cp=$(jb_cp org.cugos:wkg)
+  javac --release 21 -cp "$cp" -d "$(jb_w smoke)" "$(jb_w smoke/WkgRoundTrip.java)"
+  java -cp "$(jb_w smoke);$cp" WkgRoundTrip
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.cugos:wkg
+  install -Dm644 "external-fork-wkg-${_commit}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-wkg/LICENSE"
+}

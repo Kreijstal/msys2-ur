@@ -1,0 +1,76 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=mnxdom
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=3.0.1
+pkgrel=1
+pkgdesc='C++17 document object model for the MNX music notation format (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/rpatters1/mnxdom'
+msys2_repository_url='https://github.com/rpatters1/mnxdom'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-json-schema-validator"
+         "${MINGW_PACKAGE_PREFIX}-nlohmann-json")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-gtest")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/rpatters1/mnxdom/archive/refs/tags/v${pkgver}.tar.gz"
+        "0001-Use-the-GCC-Clang-enum-serializers-on-MinGW.patch"
+        "0002-Set-the-project-version-to-3-0-1.patch"
+        "0003-Install-the-DLL-of-a-shared-Windows-build.patch")
+sha256sums=('1fc1799c76651a58f8bd88b69b098f263ebb9646604a544745b231373508ccb8'
+            '8223a96bd8469a6b69f95a390489040725512264326de0a93ae62562915e2d2c'
+            'a217ed68af29c1e933d7a3a4e36e8c25fbd64ab8043230b63817995145f022fe'
+            'f6b1338f1f9d86d95b6632c155cd7252ce47225ec78977483ef6942e2c6dd092')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  patch -Np1 -i "${srcdir}/0001-Use-the-GCC-Clang-enum-serializers-on-MinGW.patch"
+  patch -Np1 -i "${srcdir}/0002-Set-the-project-version-to-3-0-1.patch"
+  patch -Np1 -i "${srcdir}/0003-Install-the-DLL-of-a-shared-Windows-build.patch"
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  # The test runner (also run at build time to list the tests) must find
+  # libmnxdom.dll, so all executables and DLLs go into one directory.
+  # Shared library: its dependency on json-schema-validator is then
+  # internal to the DLL (mnxdom.pc does not list it). The w3c-mnx schema is
+  # compiled in; nothing is downloaded.
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    "${MINGW_PREFIX}/bin/cmake.exe" \
+      -GNinja \
+      -S "${srcdir}/${_realname}-${pkgver}" \
+      -B "${srcdir}/build-${MSYSTEM}" \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+      -DBUILD_SHARED_LIBS=ON \
+      -DCMAKE_RUNTIME_OUTPUT_DIRECTORY="$(cygpath -m "${srcdir}/build-${MSYSTEM}/bin")" \
+      -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=ON \
+      -DUSE_SYSTEM_NLOHMANN_JSON=ON \
+      -DUSE_SYSTEM_JSON_SCHEMA_VALIDATOR=ON \
+      -DUSE_SYSTEM_GOOGLETEST=ON \
+      -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
+      -Dmnxdom_BUILD_TESTING=ON \
+      "${_extra_config[@]}"
+  "${MINGW_PREFIX}/bin/cmake.exe" --build "${srcdir}/build-${MSYSTEM}"
+}
+
+check() {
+  "${MINGW_PREFIX}/bin/ctest.exe" --test-dir "${srcdir}/build-${MSYSTEM}" --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" "${MINGW_PREFIX}/bin/cmake.exe" --install "${srcdir}/build-${MSYSTEM}"
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

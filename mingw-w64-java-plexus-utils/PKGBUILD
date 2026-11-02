@@ -1,0 +1,44 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=plexus-utils
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=3.6.1
+pkgrel=1
+pkgdesc="Plexus common utilities, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-utils/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-utils'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-utils/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('397bb0b307739fb9311f94e36a82d0f97fc86760517d96f69d7eb8c9a73d3573')
+# the test resources contain symbolic links that bsdtar cannot create here
+noextract=("${_realname}-${pkgver}.tar.gz")
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "${_src}/src/test/resources/symlinks"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.codehaus.plexus:plexus-utils:${pkgver} src/main/java -r src/main/resources \
+    -v 9:src/main/java9 -v 10:src/main/java10 -v 11:src/main/java11 -u pom.xml \
+    -m "Automatic-Module-Name: org.codehaus.plexus.util"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5 (Jupiter) and JMH, which are not packaged
+  jb_loadcheck org.codehaus.plexus:plexus-utils
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-utils
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE.txt"
+}

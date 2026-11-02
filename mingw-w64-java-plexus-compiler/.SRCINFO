@@ -1,0 +1,33 @@
+pkgbase = mingw-w64-java-plexus-compiler
+	pkgdesc = Plexus compiler abstraction (mingw-w64)
+	pkgver = 2.16.2
+	pkgrel = 1
+	url = https://codehaus-plexus.github.io/plexus-compiler/
+	arch = any
+	license = spdx:Apache-2.0
+	checkdepends = mingw-w64-ucrt-x86_64-java-slf4j-simple
+	checkdepends = mingw-w64-ucrt-x86_64-java-guice
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-utils
+	makedepends = mingw-w64-ucrt-x86_64-java-plexus-xml
+	makedepends = mingw-w64-ucrt-x86_64-java-sisu-plexus
+	makedepends = mingw-w64-ucrt-x86_64-java-slf4j-api
+	makedepends = mingw-w64-ucrt-x86_64-java-javax-inject
+	source = plexus-compiler-2.16.2.tar.gz::https://github.com/codehaus-plexus/plexus-compiler/archive/refs/tags/plexus-compiler-2.16.2.tar.gz
+	sha256sums = b73b23d696e00d7c815d2415e116a9e443ed07c6cae0dfde13cf1a59062116f1
+
+pkgname = mingw-w64-ucrt-x86_64-java-plexus-compiler-api
+	pkgdesc = Plexus compiler API (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-plexus-utils
+	depends = mingw-w64-ucrt-x86_64-java-slf4j-api
+
+pkgname = mingw-w64-ucrt-x86_64-java-plexus-compiler-manager
+	pkgdesc = Plexus compiler manager (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-plexus-compiler-api
+	depends = mingw-w64-ucrt-x86_64-java-javax-inject
+	depends = mingw-w64-ucrt-x86_64-java-plexus-xml
+
+pkgname = mingw-w64-ucrt-x86_64-java-plexus-compiler-javac
+	pkgdesc = Plexus compiler backend for javac (mingw-w64)
+	depends = mingw-w64-ucrt-x86_64-java-plexus-compiler-api
+	depends = mingw-w64-ucrt-x86_64-java-javax-inject

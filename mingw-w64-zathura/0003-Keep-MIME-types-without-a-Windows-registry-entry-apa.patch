@@ -1,0 +1,105 @@
+From 464484208edf2d77d063a01b022b75810aa96cc6 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 20:47:32 +0100
+Subject: [PATCH 3/3] Keep MIME types without a Windows registry entry apart
+
+Content types are file extensions on Windows, and GIO converts every MIME
+type it finds no registry entry for, such as application/epub+zip, into the
+catch-all "*". The first such type of a plugin then claimed "*", the
+others failed to register with an error on every start, and files of any
+unrecognized type went to that plugin. Use the MIME type itself as the
+content type in that case, as GIO does on other systems.
+---
+ zathura/content-type.c | 19 +++++++++++--------
+ zathura/content-type.h | 11 +++++++++++
+ zathura/plugin.c       |  8 ++------
+ 3 files changed, 24 insertions(+), 14 deletions(-)
+
+diff --git a/zathura/content-type.c b/zathura/content-type.c
+index 1b477be8..2e0420e9 100644
+--- a/zathura/content-type.c
++++ b/zathura/content-type.c
+@@ -55,6 +55,16 @@ void zathura_content_type_free(zathura_content_type_context_t* context) {
+ /** Read a most GT_MAX_READ bytes before falling back to file. */
+ static const size_t GT_MAX_READ = 1 << 16;
+ 
++char* zathura_content_type_from_mime_type(const char* mime_type) {
++  char* content_type = g_content_type_from_mime_type(mime_type);
++  if (content_type == NULL || g_content_type_is_unknown(content_type)) {
++    g_free(content_type);
++    return g_strdup(mime_type);
++  }
++
++  return content_type;
++}
++
+ static char* guess_type_magic(zathura_content_type_context_t* context, const char* path) {
+   if (context == NULL || context->magic == NULL) {
+     return NULL;
+@@ -70,14 +80,7 @@ static char* guess_type_magic(zathura_content_type_context_t* context, const cha
+   }
+   girara_debug("magic detected filetype: %s", mime_type);
+ 
+-  char* content_type = g_content_type_from_mime_type(mime_type);
+-  if (content_type == NULL) {
+-    girara_warning("failed to convert mime type to content type: %s", mime_type);
+-    /* dup so we own the memory */
+-    return g_strdup(mime_type);
+-  }
+-
+-  return content_type;
++  return zathura_content_type_from_mime_type(mime_type);
+ }
+ 
+ static char* guess_type_glib(const char* path) {
+diff --git a/zathura/content-type.h b/zathura/content-type.h
+index 36ca0622..fc52a05c 100644
+--- a/zathura/content-type.h
++++ b/zathura/content-type.h
+@@ -28,6 +28,17 @@ void zathura_content_type_free(zathura_content_type_context_t* context);
+  * @param path file name
+  * @return content type of path, needs to freeed with g_free.
+  */
++/**
++ * Convert a MIME type to a GIO content type. On Windows, where content types
++ * are file extensions, GIO turns every MIME type without a registry entry into
++ * the catch-all "*"; keep the MIME type itself for those instead, which is
++ * what GIO returns on other systems.
++ *
++ * @param mime_type The MIME type
++ * @return The content type, free it with g_free
++ */
++char* zathura_content_type_from_mime_type(const char* mime_type);
++
+ char* zathura_content_type_guess(zathura_content_type_context_t* context, const char* path,
+                                  const girara_list_t* supported_content_types);
+ 
+diff --git a/zathura/plugin.c b/zathura/plugin.c
+index f8a251f6..6c24aceb 100644
+--- a/zathura/plugin.c
++++ b/zathura/plugin.c
+@@ -10,6 +10,7 @@
+ #include <girara-gtk/session.h>
+ #include <girara-gtk/settings.h>
+ 
++#include "content-type.h"
+ #include "utils.h"
+ 
+ /**
+@@ -136,12 +137,7 @@ static void plugin_add_mimetype(zathura_plugin_t* plugin, const char* mime_type)
+     return;
+   }
+ 
+-  char* content_type = g_content_type_from_mime_type(mime_type);
+-  if (content_type == NULL) {
+-    girara_warning("plugin: unable to convert mime type: %s", mime_type);
+-  } else {
+-    girara_list_append(plugin->content_types, content_type);
+-  }
++  girara_list_append(plugin->content_types, zathura_content_type_from_mime_type(mime_type));
+ }
+ 
+ static bool plugin_mapping_new(zathura_plugin_manager_t* plugin_manager, const gchar* type, zathura_plugin_t* plugin) {
+-- 
+2.55.0
+

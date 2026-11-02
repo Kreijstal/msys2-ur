@@ -1,0 +1,38 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=javax-inject
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=1
+pkgrel=1
+pkgdesc="JSR-330 dependency injection annotations (javax.inject), built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/javax-inject/javax-inject'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/javax-inject/javax-inject/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('aa437908aa6b50f2a6fe30bade6495ab1195c3ec4d7708a66afc97f2edeee766')
+
+prepare() {
+  cd "javax-inject-${pkgver}"
+  # bundled junit
+  find . -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "javax-inject-${pkgver}"
+  jb_module javax.inject:javax.inject:${pkgver} src -u pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # the TCK (tck/) tests injectors, not this API; Guice runs it
+  jb_loadcheck javax.inject:javax.inject
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install javax.inject:javax.inject
+}

@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 04:22:22 +0100
+Subject: [PATCH] tests: include stdlib.h for _set_fmode in ltcdecode
+
+ltcdecode.c calls _set_fmode() on Windows but only includes fcntl.h.
+mingw-w64 declares _set_fmode in stdlib.h, and GCC 14+ treats the
+implicit declaration as an error, so `make check` fails to build.
+ltcencode.c and example_encode.c already get it via stdlib.h.
+---
+ tests/ltcdecode.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/tests/ltcdecode.c b/tests/ltcdecode.c
+index 04e25d3..09b7824 100644
+--- a/tests/ltcdecode.c
++++ b/tests/ltcdecode.c
+@@ -28,6 +28,7 @@
+ 
+ #ifdef _WIN32
+ #include <fcntl.h> // for _fmode
++#include <stdlib.h> // for _set_fmode
+ #endif
+ 
+ #define BUFFER_SIZE (1024)

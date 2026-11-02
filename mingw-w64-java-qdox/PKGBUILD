@@ -1,0 +1,79 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# QDox Java source parser.  Its lexers and parsers are generated at build
+# time by JFlex and BYACC/J (upstream runs prebuilt yacc binaries from
+# bootstrap/, deleted here).  Neither generator is packaged yet, so the five
+# generated classes are taken from upstream's qdox-2.2.0-sources.jar on
+# Maven Central (source code only), as GNU Guix does for all of QDox; the
+# rest is built from the git tag.
+
+_realname=qdox
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=2.2.0
+pkgrel=1
+pkgdesc="QDox Java source code parser, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/paul-hammant/qdox'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/paul-hammant/qdox/archive/refs/tags/${_realname}-${pkgver}.tar.gz"
+        "https://repo1.maven.org/maven2/com/thoughtworks/qdox/qdox/${pkgver}/qdox-${pkgver}-sources.jar")
+noextract=("qdox-${pkgver}-sources.jar")
+sha256sums=('cccdd7bce4c71628384af06ced8a65d7864df1f318871d7974b6a770e7d020f8'
+            '614806dd73810c80a4751daf28bffc5eb641d6026ee58c71f4a28354e06a7dc8')
+
+_src=${_realname}-${_realname}-${pkgver}
+_generated=(JFlexLexer Parser DefaultJavaCommentLexer DefaultJavaCommentParser DefaultJavaCommentParserVal)
+
+prepare() {
+  cd "${_src}"
+  # prebuilt byacc/j executables for six platforms
+  rm -rfv bootstrap
+  local g
+  mkdir -p "${srcdir}/generated"
+  for g in "${_generated[@]}"; do
+    bsdtar -xf "${srcdir}/qdox-${pkgver}-sources.jar" -C "${srcdir}/generated" \
+      "com/thoughtworks/qdox/parser/impl/${g}.java"
+  done
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module com.thoughtworks.qdox:qdox:${pkgver} src/main/java -s "${srcdir}/generated" -u pom.xml
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # upstream tests need JUnit 5, AssertJ and Mockito; parse a source file
+  jb_loadcheck com.thoughtworks.qdox:qdox
+  local t="${srcdir}/smoke" cp
+  mkdir -p "${t}"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import com.thoughtworks.qdox.JavaProjectBuilder;
+import com.thoughtworks.qdox.model.JavaClass;
+import java.io.StringReader;
+public class Smoke {
+  public static void main(String[] a) {
+    JavaProjectBuilder b = new JavaProjectBuilder();
+    b.addSource(new StringReader("package p; /** Doc. */ public class A<T> { /** @param x it */ void m(int x) {} }"));
+    JavaClass c = b.getClassByName("p.A");
+    if (!"Doc.".equals(c.getComment())) throw new AssertionError(c.getComment());
+    if (!"x".equals(c.getMethods().get(0).getParameters().get(0).getName())) throw new AssertionError();
+    System.out.println("qdox smoke test ok: " + c.getFullyQualifiedName());
+  }
+}
+JAVA
+  cp=$(jb_cp com.thoughtworks.qdox:qdox)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")"
+  java -cp "$(jb_w "${t}");${cp}" Smoke
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install com.thoughtworks.qdox:qdox
+  install -Dm644 "${_src}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE.txt"
+}

@@ -1,0 +1,137 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=openvpn
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.7.8
+pkgrel=1
+_tapver=9.27.0
+pkgdesc='Full-featured SSL VPN solution (mingw-w64)'
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://openvpn.net/community/'
+msys2_repository_url='https://github.com/OpenVPN/openvpn'
+msys2_references=('cpe: cpe:/a:openvpn:openvpn')
+license=('spdx:GPL-2.0-only WITH openvpn-openssl-exception')
+depends=("${MINGW_PACKAGE_PREFIX}-lz4"
+         "${MINGW_PACKAGE_PREFIX}-lzo2"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-pkcs11-helper")
+makedepends=("${MINGW_PACKAGE_PREFIX}-autotools"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "binutils"
+             "make")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-cmocka")
+source=("https://swupdate.openvpn.org/community/releases/${_realname}-${pkgver}.tar.gz"
+        "tap-windows-${_tapver}.h::https://raw.githubusercontent.com/OpenVPN/tap-windows6/${_tapver}/src/tap-windows.h"
+        "eventmsg-${pkgver}.mc::https://raw.githubusercontent.com/OpenVPN/openvpn/v${pkgver}/src/openvpnserv/eventmsg.mc"
+        "0001-win32-use-msys2-prefix-for-openssl-and-plugins.patch"
+        "0002-openvpnserv-rename-async-op-enumerators.patch"
+        "0003-tests-fix-win32-link-of-socket-and-push-update-tests.patch"
+        "0004-openvpnserv-message-dll-without-entry-symbol.patch")
+sha256sums=('c070d1d2440b5a6fca6c2c68645c98cd492116ac36ef4f0946177115532c8e36'
+            '0b9ea5e4b4dc2c2764fde3383440af9a11a1ead3f2a4bbec674be40da384d10e'
+            '6a207814bf2a1333a5ac8d2e9e5aca0ce6ae729ce049a03312d22bbb0332e3ac'
+            '4d598bc6a133f6508c50707038b3f7f6a5f5737f4998d5e36eace5bd2624b192'
+            '359dec465e38dda4548bdfafb788e24907606c40b0949234e9ec9f84aac34013'
+            '2dca2c53a0f72799c341633604761dd48e5de1270b5462c4e31fc00bf5c0eddb'
+            'c22326786d24c4da4b80da93487dad7736d0b6ad2e792262f459bf1e8a312058')
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  # 0001: take OPENSSL_CONF/OPENSSL_MODULES/OPENSSL_ENGINES (and an extra
+  #       trusted plugin dir) from the prefix openvpn.exe lives in, instead
+  #       of the official installer's HKLM\SOFTWARE\OpenVPN key or the
+  #       C:\Windows\System32\ssl fallback
+  # 0002: the async_op_t enumerators read/write clash with the read()/write()
+  #       that mingw-w64's <io.h> defines under _FORTIFY_SOURCE
+  # 0003: socket/push_update_msg unit tests miss win32-util.c and the
+  #       openvpn_execve mock when linked for Windows
+  # 0004: link openvpnservmsg.dll with an empty --entry= instead of
+  #       --entry=0, which lld reads as an undefined symbol named "0"
+  patch -p1 -i "${srcdir}/0001-win32-use-msys2-prefix-for-openssl-and-plugins.patch"
+  patch -p1 -i "${srcdir}/0002-openvpnserv-rename-async-op-enumerators.patch"
+  patch -p1 -i "${srcdir}/0003-tests-fix-win32-link-of-socket-and-push-update-tests.patch"
+  patch -p1 -i "${srcdir}/0004-openvpnserv-message-dll-without-entry-symbol.patch"
+  autoreconf -fi
+
+  # TAP driver ioctl interface (MIT/GPL-2.0 header from tap-windows6);
+  # wintun and ovpn-dco-win are driven through headers OpenVPN ships itself
+  install -Dm644 "${srcdir}/tap-windows-${_tapver}.h" \
+    "${srcdir}/tap-include/tap-windows.h"
+  # the event log message table source is missing from the release
+  # tarball although src/openvpnserv/Makefile.am needs it
+  cp "${srcdir}/eventmsg-${pkgver}.mc" src/openvpnserv/eventmsg.mc
+}
+
+build() {
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+  # On Windows ovpn-dco support is always built in; openvpnserv.exe (the
+  # interactive service), tapctl.exe and the MSI custom-action DLL come
+  # from the WIN32 conditionals in src/. windmc only turns eventmsg.mc into
+  # .rc/.h/.bin, so the msys one serves both toolchains (clang64 has none).
+  # tap-windows.h goes in CPPFLAGS, not TAP_CFLAGS: the unit tests compile
+  # tun.h too but only src/ honours TAP_CFLAGS
+  ../"${_realname}-${pkgver}"/configure \
+    --prefix="${MINGW_PREFIX}" \
+    --build="${MINGW_CHOST}" \
+    --host="${MINGW_CHOST}" \
+    --sbindir="${MINGW_PREFIX}/bin" \
+    --enable-pkcs11 \
+    --enable-lzo \
+    --enable-lz4 \
+    --enable-unit-tests \
+    CPPFLAGS="${CPPFLAGS} -I${srcdir}/tap-include" \
+    WINDMC=/usr/bin/windmc
+
+  make
+}
+
+check() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  # libcmocka.dll.a exports cmocka's global variables without DATA, so
+  # plain references bind to import thunks and expect_assert_failure()
+  # setjmp()s into .text; go through the __imp_ pointers instead
+  printf '#define %s (*__imp_%s)\n' \
+    global_expect_assert_env global_expect_assert_env \
+    global_expecting_assert global_expecting_assert \
+    global_last_failed_assert global_last_failed_assert \
+    > "${srcdir}/cmocka-data-import.h"
+  make check CPPFLAGS="${CPPFLAGS} -I${srcdir}/tap-include -include ${srcdir}/cmocka-data-import.h"
+  # same idea as tests/t_lpback.sh, which upstream only wires up for !WIN32
+  # (on Windows option checking wants an --ifconfig for the default tun)
+  local _c
+  for _c in AES-256-GCM AES-128-CBC CHACHA20-POLY1305 none; do
+    ./src/openvpn/openvpn.exe --test-crypto --cipher ${_c} --verb 1 \
+      --dev tun --ifconfig 10.199.0.1 10.199.0.2
+  done
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  make DESTDIR="${pkgdir}" install
+
+  # event log message table for openvpnserv (upstream marks it noinst;
+  # the official installer ships it next to openvpnserv.exe)
+  install -Dm755 src/openvpnserv/openvpnservmsg.dll \
+    "${pkgdir}${MINGW_PREFIX}/bin/openvpnservmsg.dll"
+
+  # MSI custom action for the official installer; useless outside it
+  rm -f "${pkgdir}${MINGW_PREFIX}"/bin/libopenvpnmsica.dll \
+        "${pkgdir}${MINGW_PREFIX}"/lib/libopenvpnmsica.*
+
+  cd "${srcdir}/${_realname}-${pkgver}"
+  install -d "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/examples"
+  cp -r sample/sample-config-files sample/sample-keys sample/sample-scripts \
+    "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}/examples/"
+  install -Dm644 doc/openvpn.8.html doc/openvpn-examples.5.html \
+    doc/interactive-service-notes.rst \
+    doc/tls-crypt-v2.txt -t "${pkgdir}${MINGW_PREFIX}/share/doc/${_realname}"
+  # doc/Makefile.am skips man pages for WIN32; MSYS2 has man(1)
+  install -Dm644 doc/openvpn.8 -t "${pkgdir}${MINGW_PREFIX}/share/man/man8"
+  install -Dm644 doc/openvpn-examples.5 -t "${pkgdir}${MINGW_PREFIX}/share/man/man5"
+  install -Dm644 COPYING COPYRIGHT.GPL \
+    -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+}

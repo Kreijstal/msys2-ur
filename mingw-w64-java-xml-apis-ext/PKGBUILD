@@ -1,0 +1,38 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+pkgbase=mingw-w64-java-xml-apis-ext
+pkgname="${MINGW_PACKAGE_PREFIX}-java-xml-apis-ext"
+pkgver=1.3.04
+pkgrel=1
+pkgdesc="xml-apis-ext Java library, built from source"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https:/'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-openjdk>=21")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=('xml-commons-external-1.4.01-src.tar.gz::https://archive.apache.org/dist/xml/commons/source/xml-commons-external-1.4.01-src.tar.gz')
+sha256sums=('d34bd88dc89c5c1ed2545ec5c61e4606fc28beb200a6fecf8c3ed17694181866')
+
+prepare() {
+  find . -type f \( -name '*.class' -o -name '*.jar' \) -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # Only the SVG, SMIL and SAC APIs absent from the JDK, as in xml-apis-ext.
+  JB_RELEASE=8 jb_module xml-apis:xml-apis-ext:${pkgver} org/w3c/dom/svg \
+    -s org/w3c/dom/smil -s org/w3c/css/sac
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_loadcheck xml-apis:xml-apis-ext
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install xml-apis:xml-apis-ext
+  install -Dm644 "./LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-xml-apis-ext/LICENSE"
+  install -m644 LICENSE.* NOTICE "${pkgdir}${MINGW_PREFIX}/share/licenses/java-xml-apis-ext/"
+}

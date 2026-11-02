@@ -1,0 +1,337 @@
+{
+  "recorded_at_utc": "2026-10-31T12:50:15.307314+00:00",
+  "previous_goal_turn_classification": "progress: NETStandard.Library1.6.1 source metapackage installed",
+  "current_goal_turn_classification": "progress",
+  "recipe": "mingw-w64-dotnet-netcore-targets110",
+  "package_version": "1.1.0-1",
+  "build_root": "/e/codex-dotnet10/targets110pkg1.MlG0sn",
+  "source_commit": "4d1af962ca0fede10beb01d197367c2f90e92c97",
+  "workflow_archive_sha256": "d37e042bdbbbcd983be659183a664e5f35193d1f7e2ec562b115a4fb74e70877",
+  "clean_build_command": "makepkg --cleanbuild --force --noconfirm",
+  "clean_build_exit_code": 0,
+  "artifact_audit_command": "/usr/bin/python3 audit-package.py mingw-w64-clang-x86_64-dotnet-netcore-targets110-1.1.0-1-any.pkg.tar.zst src artifact-audit.json",
+  "artifact_audit_exit_code": 0,
+  "artifact_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-netcore-targets110-1.1.0-1-any.pkg.tar.zst",
+    "artifact_sha256": "c03e511ce58cfb499ae3e1976eac286047401987ee76c97e7db077e5035bed2b",
+    "nupkg_sha256": "4791f4e186e4d350b80a8a4fa6db85e51a0b7e55da2f171e61cfb4ae36f88020",
+    "original_runtime_rows": 22,
+    "original_dependency_edges": 97,
+    "original_support_profiles": 14,
+    "original_single_marker_verified": true,
+    "original_graph_and_license_bytes_verified": true,
+    "exact_checked_source_archive": true,
+    "implementation_binaries": 0,
+    "mapped_runtime_packages_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-netcore-targets110-1.1.0-1-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "pacman_check": "mingw-w64-clang-x86_64-dotnet-netcore-targets110: 25 total files, 0 altered files\n",
+  "source_build": {
+    "source_commit": "4d1af962ca0fede10beb01d197367c2f90e92c97",
+    "source_archive_sha256": "1782b55a84ae89baa4fcb5c8400c3d7042c5c617a4e35ce1b0ad16952d6981b2",
+    "original_source_sha256": {
+      "pkg/Microsoft.NETCore.Targets/Microsoft.NETCore.Targets.pkgproj": "53d8bdc63ae034a3d9377099813512d3cebea1d5d2381d022d4bafd7bda99845",
+      "pkg/Microsoft.NETCore.Targets/runtime.json": "04e6c3faa0bd446b09d809e9f661ef6651b2d7049ef45581505c19cb65d88271",
+      "pkg/NETStandard.Library/NETStandard.Library.packages.targets": "30f3a0662cd9f086f7773f3fc6a066d9c1a13554a88b58489d36e926384cac62",
+      "LICENSE": "18647d26bc4c4d892a5fd29de1264d10906b3124cafa98313300ff300441c7f0",
+      "THIRD-PARTY-NOTICES": "28f39f3ef955042b0908fd762bdfd511ff8c3fc0f4ccb357f6998a5f0ea102af"
+    },
+    "original_graph_data_sha256": "7b5ff94c69d6a914c931c3e035d88d3d9bc8e7ba304a01b701f2b43f376589bc",
+    "source_support_profiles_verified": true,
+    "declared_source_lineup_owners_verified": true,
+    "runtime_rows": 22,
+    "runtime_dependency_edges": 97,
+    "support_profiles": 14,
+    "command": [
+      "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+      "pack",
+      "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/prepared/Package.csproj",
+      "-c",
+      "Release",
+      "--configfile",
+      "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/prepared/NuGet.config",
+      "-p:UseSharedCompilation=false",
+      "-o",
+      "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/prepared/feed",
+      "-v:minimal"
+    ],
+    "exit_code": 0,
+    "original_buildtools_lineup_generation_replayed": false,
+    "implementation_binaries": 0,
+    "full_dependency_goal_complete": false
+  },
+  "producer_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/tool/Check.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/tool/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/tool/bin/Release/net8.0/Check.dll",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/runtime.json",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/platform-runtime.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/netstandard1.0/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/netstandard1.3/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/net8.0/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/src/check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "package_sha256": "4791f4e186e4d350b80a8a4fa6db85e51a0b7e55da2f171e61cfb4ae36f88020",
+    "source_NuGet_tool_references": {
+      "NuGet.Packaging": "16f2143cc0249adf44c36a17a78209e150f95bc5d3322562c1834556e6c4f34c",
+      "NuGet.Frameworks": "fb320f81400755692bdb6c938047212407364193ef7edfd276e164d00c2cf562",
+      "NuGet.Versioning": "a4f1c7361b4063a36ed7b38fdf70246b46bb5b56f4007a29a66841132762a75c",
+      "NuGet.Common": "b2bde31a5092ad04a383f72b8c31cec009e2c0d1e16291ba62b8cae87f36e22d",
+      "Newtonsoft.Json": "c229006d774159bb4f563f43abcf420dcce4646a5469c68650f8c3b0d38bc4d1"
+    },
+    "source_Platforms110_archive_sha256": "79ce6e06ea4f850f29ea51bffb9af506f24e4cfb3b2c1b40a8b56075b3b373fe",
+    "original_runtime_rows": 22,
+    "original_runtime_dependency_edges": 97,
+    "original_support_profiles": 14,
+    "all_NuGet_runtime_dependency_ranges_and_merged_platform_lookups_verified": true,
+    "exact_fresh_archive_cache_verified": true,
+    "fresh_package_restores": [
+      "netstandard1.0",
+      "netstandard1.3",
+      "net8.0"
+    ],
+    "original_single_marker_preserved": true,
+    "implementation_binaries": 0,
+    "runtime_packages_or_historical_runtimes_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_check_command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-netcore-targets110/check.py E:/msys64/clang64/lib/dotnet/library-packs E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check E:/msys64/clang64",
+  "installed_check_exit_code": 0,
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "build",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/tool/Check.csproj",
+          "-c",
+          "Release",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/tool/NuGet.config",
+          "-p:UseSharedCompilation=false",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/tool/bin/Release/net8.0/Check.dll",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/runtime.json",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/platform-runtime.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/netstandard1.0/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/netstandard1.3/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "restore",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/net8.0/Probe.csproj",
+          "--configfile",
+          "E:/codex-dotnet10/targets110pkg1.MlG0sn/installed-check/NuGet.config",
+          "-v:minimal"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "package_sha256": "4791f4e186e4d350b80a8a4fa6db85e51a0b7e55da2f171e61cfb4ae36f88020",
+    "source_NuGet_tool_references": {
+      "NuGet.Packaging": "16f2143cc0249adf44c36a17a78209e150f95bc5d3322562c1834556e6c4f34c",
+      "NuGet.Frameworks": "fb320f81400755692bdb6c938047212407364193ef7edfd276e164d00c2cf562",
+      "NuGet.Versioning": "a4f1c7361b4063a36ed7b38fdf70246b46bb5b56f4007a29a66841132762a75c",
+      "NuGet.Common": "b2bde31a5092ad04a383f72b8c31cec009e2c0d1e16291ba62b8cae87f36e22d",
+      "Newtonsoft.Json": "c229006d774159bb4f563f43abcf420dcce4646a5469c68650f8c3b0d38bc4d1"
+    },
+    "source_Platforms110_archive_sha256": "79ce6e06ea4f850f29ea51bffb9af506f24e4cfb3b2c1b40a8b56075b3b373fe",
+    "original_runtime_rows": 22,
+    "original_runtime_dependency_edges": 97,
+    "original_support_profiles": 14,
+    "all_NuGet_runtime_dependency_ranges_and_merged_platform_lookups_verified": true,
+    "exact_fresh_archive_cache_verified": true,
+    "fresh_package_restores": [
+      "netstandard1.0",
+      "netstandard1.3",
+      "net8.0"
+    ],
+    "original_single_marker_preserved": true,
+    "implementation_binaries": 0,
+    "runtime_packages_or_historical_runtimes_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_feed": {
+    "preexisting_source_archives_unchanged": 287,
+    "current_source_archive_count": 288,
+    "new_archive": "microsoft.netcore.targets.1.1.0.nupkg",
+    "new_archive_sha256": "4791f4e186e4d350b80a8a4fa6db85e51a0b7e55da2f171e61cfb4ae36f88020"
+  },
+  "original_runtime_rows": 22,
+  "original_dependency_edges": 97,
+  "original_support_profiles": 14,
+  "original_runtime_graph_license_and_notice_bytes_preserved": true,
+  "original_single_empty_marker_preserved": true,
+  "original_implementation_binary_payloads": 0,
+  "source_support_profiles_and_lineup_owner_set_verified": true,
+  "all_NuGet_runtime_version_ranges_and_platform_merge_lookups_passed": true,
+  "three_fresh_exact_archive_restores_passed": true,
+  "original_BuildTools_lineup_generator_replayed": false,
+  "mapped_runtime_packages_implemented_or_verified": false,
+  "complete_legacy_framework_graph": false,
+  "historical_runtime_execution_verified": false,
+  "full_dependency_goal_complete": false,
+  "next_original_reference_asset_inventory": "tests/netcore-targets110/next-reference-package-inventory-20261031.json",
+  "evidence_archive": "/tmp/targets110-package-evidence/package-evidence.tar.gz",
+  "evidence_archive_sha256": "5c71ee7c16654906c339d006278f6a35579485068c75aeced871681fe8498845",
+  "json_evidence": "tests/netcore-targets110/package-results-20261031.json",
+  "text_evidence": "tests/netcore-targets110/package-results-20261031.txt"
+}
+
+
+LOG makepkg.log
+==> Making package: mingw-w64-dotnet-netcore-targets110 1.1.0-1 (31 Oct 2026 13:46:25)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found corefx11-4d1af962.tar.gz
+  -> Found targets110-source-1.tar.gz
+==> Validating source files with sha256sums...
+    corefx11-4d1af962.tar.gz ... Passed
+    targets110-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting targets110-source-1.tar.gz with bsdtar
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-netcore-targets110"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-netcore-targets110 1.1.0-1 (31 Oct 2026 13:47:25)
+
+
+LOG artifact-audit.log
+PASS22 runtime rows/97 edges/14 profiles, exact graph/license bytes, original marker and source archive; zero implementation binaries
+
+
+LOG install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-netcore-targets110-1.1.0-1
+
+Total Installed Size:  0.06 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-netcore-targets110...
+
+
+LOG pacman-Qkk.log
+mingw-w64-clang-x86_64-dotnet-netcore-targets110: 25 total files, 0 altered files
+
+
+LOG installed-check.log
+PASS platform/Targets dependency lookup: win7-x64/System.Collections -> runtime.any.System.Collections
+
+PASS platform/Targets dependency lookup: win7-x64/System.Console -> runtime.win.System.Console
+
+PASS platform/Targets dependency lookup: ubuntu.16.04-x64/System.Console -> runtime.unix.System.Console
+
+PASS platform/Targets dependency lookup: osx.10.11-x64/System.Collections -> runtime.any.System.Collections
+
+PASS all22 runtime rows/97 dependency ranges,14 support profiles and source Platforms1.1 merged lookups
+
+
+PASS three fresh exact Targets1.1 restores and archive cache bytes; original single marker; zero implementation payloads
+

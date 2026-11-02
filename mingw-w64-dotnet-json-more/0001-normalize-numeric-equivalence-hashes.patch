@@ -1,0 +1,11 @@
+--- a/src/Json.More/JsonElementExtensions.cs
++++ b/src/Json.More/JsonElementExtensions.cs
+@@ -93,7 +93,7 @@
+ 					break;
+ 
+ 				case JsonValueKind.Number:
+-					Add(ref current, obj.GetRawText());
++					Add(ref current, obj.TryGetDecimal(out var number) ? (object)number : obj.GetRawText());
+ 					break;
+ 
+ 				case JsonValueKind.String:

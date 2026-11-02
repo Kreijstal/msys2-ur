@@ -1,0 +1,37 @@
+Do not fetch the MSVC prebuilt dependencies on MinGW
+
+MuseFetchDependencies.cmake git-clones musescore_prebuild_win_deps (MSVC
+import libraries for zlib etc.) on every Windows build. MinGW builds use
+the toolchain's own packages, so only do it for MSVC. The ASIO SDK's
+/wd4267 warning flag is MSVC syntax too.
+
+diff --git a/src/framework/audio/driver/platform/win/asio/asiosdk/CMakeLists.txt b/src/framework/audio/driver/platform/win/asio/asiosdk/CMakeLists.txt
+index 94eea151..c4483d27 100644
+--- a/src/framework/audio/driver/platform/win/asio/asiosdk/CMakeLists.txt
++++ b/src/framework/audio/driver/platform/win/asio/asiosdk/CMakeLists.txt
+@@ -42,4 +42,6 @@ target_include_directories(asiosdk PUBLIC
+ )
+ 
+ # Silence warnings from SDK
+-target_compile_options(asiosdk PRIVATE /wd4267)
++if (MSVC)
++    target_compile_options(asiosdk PRIVATE /wd4267)
++endif()
+diff --git a/src/framework/cmake/MuseFetchDependencies.cmake b/src/framework/cmake/MuseFetchDependencies.cmake
+index 28522cba..3f6865c1 100644
+--- a/src/framework/cmake/MuseFetchDependencies.cmake
++++ b/src/framework/cmake/MuseFetchDependencies.cmake
+@@ -1,5 +1,6 @@
+ 
+-if (OS_IS_WIN)
++# Prebuilt MSVC libraries; MinGW builds use the toolchain's own packages
++if (OS_IS_WIN AND MSVC)
+     include(FetchContent)
+     FetchContent_Declare(
+       musescore_prebuild_win_deps
+@@ -10,4 +11,4 @@ if (OS_IS_WIN)
+     set(DEPENDENCIES_DIR ${musescore_prebuild_win_deps_SOURCE_DIR})
+     set(DEPENDENCIES_LIB_DIR ${DEPENDENCIES_DIR}/libx64)
+     set(DEPENDENCIES_INC ${DEPENDENCIES_DIR}/include)
+-endif(OS_IS_WIN)
++endif()

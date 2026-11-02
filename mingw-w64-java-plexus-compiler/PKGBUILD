@@ -1,0 +1,123 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# The compiler API, manager and the javac backend (what
+# maven-compiler-plugin uses); the eclipse, aspectj, csharp and errorprone
+# backends are not built.
+
+_realname=plexus-compiler
+pkgbase=mingw-w64-java-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-api"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-manager"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-javac")
+pkgver=2.16.2
+pkgrel=1
+pkgdesc="Plexus compiler abstraction (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-compiler/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-compiler'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-xml"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-inject")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-simple"
+              "${MINGW_PACKAGE_PREFIX}-java-guice")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-compiler/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('b73b23d696e00d7c815d2415e116a9e443ed07c6cae0dfde13cf1a59062116f1')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # integration test fixtures
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local g=org.codehaus.plexus
+  # Sisu index of the @Named components (sisu-maven-plugin of the reactor)
+  jb_module ${g}:plexus-compiler-api:${pkgver} plexus-compiler-api/src/main/java \
+    -u plexus-compiler-api/pom.xml -P sisu \
+    -- ${g}:plexus-utils org.eclipse.sisu:org.eclipse.sisu.plexus/provided org.slf4j:slf4j-api
+  jb_module ${g}:plexus-compiler-manager:${pkgver} plexus-compiler-manager/src/main/java \
+    -u plexus-compiler-manager/pom.xml -P sisu \
+    -- ${g}:plexus-compiler-api javax.inject:javax.inject org.slf4j:slf4j-api ${g}:plexus-xml
+  jb_module ${g}:plexus-compiler-javac:${pkgver} plexus-compilers/plexus-compiler-javac/src/main/java \
+    -u plexus-compilers/plexus-compiler-javac/pom.xml -P sisu \
+    -- ${g}:plexus-utils javax.inject:javax.inject org.slf4j:slf4j-api ${g}:plexus-compiler-api
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local g=org.codehaus.plexus
+  # upstream tests need JUnit 5 and plexus-testing; look the javac backend
+  # up through Sisu's index as Maven does and compile a class with it
+  jb_loadcheck --with org.eclipse.sisu:org.eclipse.sisu.plexus ${g}:plexus-compiler-api \
+    ${g}:plexus-compiler-manager ${g}:plexus-compiler-javac
+  local t="${srcdir}/smoke" cp
+  rm -rf "${t}"
+  mkdir -p "${t}/src/p" "${t}/out"
+  echo 'package p; public class Hello { public static String hi() { return "hi"; } }' > "${t}/src/p/Hello.java"
+  cat > "${t}/Smoke.java" <<'JAVA'
+import java.io.File;
+import org.codehaus.plexus.*;
+import org.codehaus.plexus.compiler.*;
+import org.codehaus.plexus.compiler.manager.CompilerManager;
+public class Smoke {
+  public static void main(String[] a) throws Exception {
+    PlexusContainer p = new DefaultPlexusContainer(new DefaultContainerConfiguration()
+        .setClassPathScanning(PlexusConstants.SCANNING_INDEX).setAutoWiring(true));
+    org.codehaus.plexus.compiler.Compiler javac = p.lookup(CompilerManager.class).getCompiler("javac");
+    CompilerConfiguration c = new CompilerConfiguration();
+    c.addSourceLocation(a[0]);
+    c.setOutputLocation(a[1]);
+    c.setSourceVersion("8");
+    c.setTargetVersion("8");
+    CompilerResult r = javac.performCompile(c);
+    System.out.println("plexus-compiler-javac: success=" + r.isSuccess() + " " + r.getCompilerMessages());
+    if (!r.isSuccess() || !new File(a[1], "p/Hello.class").isFile()) throw new AssertionError();
+  }
+}
+JAVA
+  cp=$(jb_cp ${g}:plexus-compiler-manager ${g}:plexus-compiler-javac org.eclipse.sisu:org.eclipse.sisu.plexus \
+    'com.google.inject:guice#classes' org.slf4j:slf4j-simple)
+  javac -nowarn -d "$(jb_w "${t}")" -cp "${cp}" "$(jb_w "${t}/Smoke.java")" || return 1
+  java -cp "$(jb_w "${t}");${cp}" Smoke "$(jb_w "${t}/src")" "$(jb_w "${t}/out")"
+}
+
+package_java-plexus-compiler-api() {
+  pkgdesc="Plexus compiler API (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-utils" "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-compiler-api
+}
+
+package_java-plexus-compiler-manager() {
+  pkgdesc="Plexus compiler manager (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-api" "${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+           "${MINGW_PACKAGE_PREFIX}-java-plexus-xml")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-compiler-manager
+}
+
+package_java-plexus-compiler-javac() {
+  pkgdesc="Plexus compiler backend for javac (mingw-w64)"
+  depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-compiler-api" "${MINGW_PACKAGE_PREFIX}-java-javax-inject")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-compiler-javac
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

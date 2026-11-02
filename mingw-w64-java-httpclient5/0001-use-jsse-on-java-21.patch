@@ -1,0 +1,39 @@
+--- a/upstream/httpclient5/org/apache/hc/client5/http/impl/nio/PoolingAsyncClientConnectionManagerBuilder.java
++++ b/upstream/httpclient5/org/apache/hc/client5/http/impl/nio/PoolingAsyncClientConnectionManagerBuilder.java
+@@ -29,13 +29,11 @@
+ 
+ import org.apache.hc.client5.http.DnsResolver;
+ import org.apache.hc.client5.http.SchemePortResolver;
+-import org.apache.hc.client5.http.ssl.ConscryptClientTlsStrategy;
+ import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+ import org.apache.hc.core5.http.config.RegistryBuilder;
+ import org.apache.hc.core5.http.nio.ssl.TlsStrategy;
+ import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+ import org.apache.hc.core5.pool.PoolReusePolicy;
+-import org.apache.hc.core5.util.ReflectionUtils;
+ import org.apache.hc.core5.util.TimeValue;
+ 
+ /**
+@@ -178,18 +176,11 @@
+         if (tlsStrategy != null) {
+             tlsStrategyCopy = tlsStrategy;
+         } else {
+-            if (ReflectionUtils.determineJRELevel() <= 8 && ConscryptClientTlsStrategy.isSupported()) {
+-                if (systemProperties) {
+-                    tlsStrategyCopy = ConscryptClientTlsStrategy.getSystemDefault();
+-                } else {
+-                    tlsStrategyCopy = ConscryptClientTlsStrategy.getDefault();
+-                }
++            // Java 21+ uses the upstream JSSE strategy.
++            if (systemProperties) {
++                tlsStrategyCopy = DefaultClientTlsStrategy.getSystemDefault();
+             } else {
+-                if (systemProperties) {
+-                    tlsStrategyCopy = DefaultClientTlsStrategy.getSystemDefault();
+-                } else {
+-                    tlsStrategyCopy = DefaultClientTlsStrategy.getDefault();
+-                }
++                tlsStrategyCopy = DefaultClientTlsStrategy.getDefault();
+             }
+         }
+         final PoolingAsyncClientConnectionManager poolingmgr = new PoolingAsyncClientConnectionManager(

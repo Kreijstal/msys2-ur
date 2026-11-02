@@ -1,0 +1,582 @@
+{
+  "finished_at_utc": "2026-10-31T00:22:39.417237+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/pkcs604pkg1.QwblOI",
+  "recipe": "mingw-w64-dotnet-pkcs604",
+  "package_version": "6.0.4-1",
+  "source_commit": "e37fab9fc9f7bce120a7165491ed392a73f8ab51",
+  "workflow_sha256": "53bc8d56729e9e692d58a41abaf8956a603d4490d44ed28426fa97ceb66fa322",
+  "build_command": "makepkg --cleanbuild --force --noconfirm",
+  "build_exit_code": 0,
+  "archive_audit_command": "python tests/pkcs604/audit-package.py mingw-w64-dotnet-pkcs604/mingw-w64-clang-x86_64-dotnet-pkcs604-6.0.4-1-any.pkg.tar.zst mingw-w64-dotnet-pkcs604/pkcs604-snapshot-e37fab9f.tar.gz tests/pkcs604/package-audit-20261031.json",
+  "archive_audit_exit_code": 0,
+  "archive_audit": {
+    "artifact": "mingw-w64-clang-x86_64-dotnet-pkcs604-6.0.4-1-any.pkg.tar.zst",
+    "artifact_sha256": "0a8ace82dee91a291f998cfba4f012d364761b85eefcb596ce4e9dee2b3ef815",
+    "payload_files": 31,
+    "original_profile_compile_items": 393,
+    "original_source_changes": 0,
+    "nested_NuGet_members": 9,
+    "original_source_output_and_NuGet_payload_hashes_verified": true,
+    "original_Asn1_minimum_600_preserved": true,
+    "other_original_framework_profiles_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-pkcs604-6.0.4-1-any.pkg.tar.zst",
+  "install_exit_code": 0,
+  "installed_check_command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check",
+  "installed_check_exit_code": 0,
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/check-restore.py",
+          "E:/msys64/clang64",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/check.py",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/plan",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime",
+          "--contract",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.security.cryptography.pkcs/6.0.4/ref/net6.0/System.Security.Cryptography.Pkcs.dll",
+          "--asn1",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.formats.asn1/10.0.2/lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/check-api.py",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/plan",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.security.cryptography.pkcs/6.0.4/ref/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 31,
+    "exact_NuGet_archive_and_cached_asset_bytes_verified": true,
+    "strict_NET10_restore_and_Windows_Linux_asset_selection_verified": true,
+    "original_Asn1_minimum_600_preserved_SDK_CPM_1002_selected": true,
+    "consumers_compiled_against_actual_cached_reference": true,
+    "cached_reference_matches_fresh_original_contract_API": true,
+    "both_cached_original_profiles_executed_on_NET8_and_NET10": true,
+    "NET10_cached_source_Asn1_dependency_executed": true,
+    "CLR_and_nullable_API_entries": 1148,
+    "CLR_and_nullable_API_differences": 0,
+    "neutral_resource_values": 162,
+    "portable_PDB_associations": 2,
+    "other_original_framework_profiles_built": false,
+    "full_SDK10_pruning_integration_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_restore": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+      "E:/msys64/clang64/lib/dotnet10/build-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap/bin/MSBuild.dll",
+      "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/Consumer.proj",
+      "-t:Restore",
+      "-nologo",
+      "-v:minimal"
+    ],
+    "exit_code": 0,
+    "source_archive_sha256": "a2aafa0597f73a37f7dceb14744abc8b1da7717108c2ad9dec99422243647011",
+    "selected_assets": {
+      "net10.0": {
+        "compile": [
+          "ref/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "runtime": [
+          "lib/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "asn1_compile": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "asn1_runtime": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ]
+      },
+      "net10.0/linux-x64": {
+        "compile": [
+          "ref/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "runtime": [
+          "lib/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "asn1_compile": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "asn1_runtime": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ]
+      },
+      "net10.0/win-x64": {
+        "compile": [
+          "ref/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "runtime": [
+          "runtimes/win/lib/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "asn1_compile": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "asn1_runtime": [
+          "lib/net10.0/System.Formats.Asn1.dll"
+        ]
+      }
+    },
+    "source_NuGet73_strict_NET10_restore_and_RID_selection_verified": true,
+    "full_SDK10_pruning_integration_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_runtime": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/windows.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/windows-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/windows/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "--fx-version",
+          "10.0.5",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/windows-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/windows/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "--fx-version",
+          "10.0.5",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/windows-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/windows/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.formats.asn1/10.0.2/lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/portable.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet/dotnet.exe",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/portable-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/portable/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "--fx-version",
+          "10.0.5",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/portable-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/portable/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "--fx-version",
+          "10.0.5",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/portable-Check.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/portable/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/runtime/expected-resources.json",
+          "E:/msys64/clang64/share/doc/dotnet-pkcs604/checks/inputs/rsa-pss-document.der",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.formats.asn1/10.0.2/lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "actual_produced_DLLs_executed": true,
+    "both_original_NET6_profiles_tested_on_source_NET8_and_NET10": true,
+    "compilation_uses_only_original_NET6_core_contracts": true,
+    "CMS_RSA_sign_verify_tamper_envelope_decrypt_wrong_key_and_PKCS12_MAC_password_passed": true,
+    "original_upstream_PSS_unsupported_salt_negative_case_passed": true,
+    "neutral_resource_values_per_profile": 81,
+    "portable_PDB_associations": 2,
+    "compilation_uses_actual_cached_NuGet_reference_asset": true,
+    "NET10_executes_actual_cached_source_Asn1_dependency": true,
+    "original_NET6_runtime_host_built": false,
+    "other_original_profiles_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_API": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/tool.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/contract.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/fixture-reference.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/fixture-equivalent-override.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/fixture-new-public-member.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/fixture-changed-nullable-override.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/Api.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/contract/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/windows/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap/build/ref/net6.0",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/windows-comparison.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/Api.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/contract/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/build/portable/bin/System.Security.Cryptography.Pkcs.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap/build/ref/net6.0",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/portable-comparison.json"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/Api.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/contract/System.Security.Cryptography.Pkcs.dll",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/restore/cache/system.security.cryptography.pkcs/6.0.4/ref/net6.0/System.Security.Cryptography.Pkcs.dll",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap/build/ref/net6.0",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/installed-check/api/cached-reference-comparison.json"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_contract_source_sha256": {
+      "src/libraries/System.Security.Cryptography.Pkcs/ref/System.Security.Cryptography.Pkcs.cs": "dc9ff0bad2dc17dde9ce07038fccabc69dee3372084727a590f8b5f0aa543976",
+      "src/libraries/System.Security.Cryptography.Pkcs/ref/System.Security.Cryptography.Pkcs.netcoreapp.cs": "46aa91d4e3e4990a64562312e9185d7dba9ac38d3a74740649e1c5e311a6fc1b"
+    },
+    "reference_contract_sha256": "c922526904fcc2d3ad11b0689844a49eb409ec972e6632b9d178a17bcc920cb8",
+    "inherited_override_checker_positive_and_negative_fixtures": [
+      {
+        "case": "equivalent-override",
+        "exit_code": 0,
+        "expected_exit_code": 0
+      },
+      {
+        "case": "new-public-member",
+        "exit_code": 1,
+        "expected_exit_code": 1
+      },
+      {
+        "case": "changed-nullable-override",
+        "exit_code": 1,
+        "expected_exit_code": 1
+      }
+    ],
+    "projects": {
+      "windows": {
+        "exit_code": 0,
+        "implementation_sha256": "c9b4db287b56ce1f38cce41a1d356eba2fc666db65008cb59b795ffa579f0253",
+        "comparison": {
+          "expected_entries": 383,
+          "original_declared_entries": 382,
+          "inherited_equivalent_overrides": [
+            "M:System.Security.Cryptography.Pkcs.Pkcs9LocalKeyId.CopyFrom(System.Security.Cryptography.AsnEncodedData)"
+          ],
+          "actual_entries": 383,
+          "missing": [],
+          "extra": [],
+          "changed": [],
+          "total_differences": 0,
+          "nullable_annotation_differences": [],
+          "strict_nullable_metadata_equal": true,
+          "full_dependency_goal_complete": false
+        }
+      },
+      "portable": {
+        "exit_code": 0,
+        "implementation_sha256": "4d09dd83c1e2ddc44748bc816c53716dc36b9dbe835e24c1a23f25f056dae9f4",
+        "comparison": {
+          "expected_entries": 383,
+          "original_declared_entries": 382,
+          "inherited_equivalent_overrides": [
+            "M:System.Security.Cryptography.Pkcs.Pkcs9LocalKeyId.CopyFrom(System.Security.Cryptography.AsnEncodedData)"
+          ],
+          "actual_entries": 383,
+          "missing": [],
+          "extra": [],
+          "changed": [],
+          "total_differences": 0,
+          "nullable_annotation_differences": [],
+          "strict_nullable_metadata_equal": true,
+          "full_dependency_goal_complete": false
+        }
+      },
+      "cached-reference": {
+        "exit_code": 0,
+        "implementation_sha256": "c922526904fcc2d3ad11b0689844a49eb409ec972e6632b9d178a17bcc920cb8",
+        "comparison": {
+          "expected_entries": 382,
+          "original_declared_entries": 382,
+          "inherited_equivalent_overrides": [],
+          "actual_entries": 382,
+          "missing": [],
+          "extra": [],
+          "changed": [],
+          "total_differences": 0,
+          "nullable_annotation_differences": [],
+          "strict_nullable_metadata_equal": true,
+          "full_dependency_goal_complete": false
+        }
+      }
+    },
+    "full_custom_attribute_and_constraint_comparison_performed": false,
+    "full_dependency_goal_complete": false
+  },
+  "original_source_audit": {
+    "original_snapshot_files_verified": 3968,
+    "original_profile_compile_items": 393,
+    "original_NET6_Windows_compile_items": 241,
+    "original_NET6_portable_compile_items": 152,
+    "unique_original_AsnXml_inputs_regenerated_per_profile": 59,
+    "original_production_source_changes": 0,
+    "original_source_and_own_NET6_reference_and_output_hashes_verified": true,
+    "original_resource_files": [
+      "src/libraries/System.Security.Cryptography.Pkcs/src/Resources/Strings.resx"
+    ],
+    "original_XLF_files": 0,
+    "localized_satellite_assemblies_required": 0,
+    "formal_package_built": false,
+    "other_original_framework_profiles_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "staged_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/package-prefix/share/doc/dotnet-pkcs604/checks/check-restore.py",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/package-prefix",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/restore"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/package-prefix/share/doc/dotnet-pkcs604/checks/check.py",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/plan",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/build",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/runtime",
+          "--contract",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/restore/cache/system.security.cryptography.pkcs/6.0.4/ref/net6.0/System.Security.Cryptography.Pkcs.dll",
+          "--asn1",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/restore/cache/system.formats.asn1/10.0.2/lib/net10.0/System.Formats.Asn1.dll"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/package-prefix/share/doc/dotnet-pkcs604/checks/check-api.py",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/plan",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/build",
+          "E:/msys64/clang64/lib/dotnet/reference-packs/runtime-6.0.19-core-bootstrap",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/api",
+          "E:/codex-dotnet10/pkcs604pkg1.QwblOI/src/staged-check/restore/cache/system.security.cryptography.pkcs/6.0.4/ref/net6.0/System.Security.Cryptography.Pkcs.dll"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 31,
+    "exact_NuGet_archive_and_cached_asset_bytes_verified": true,
+    "strict_NET10_restore_and_Windows_Linux_asset_selection_verified": true,
+    "original_Asn1_minimum_600_preserved_SDK_CPM_1002_selected": true,
+    "consumers_compiled_against_actual_cached_reference": true,
+    "cached_reference_matches_fresh_original_contract_API": true,
+    "both_cached_original_profiles_executed_on_NET8_and_NET10": true,
+    "NET10_cached_source_Asn1_dependency_executed": true,
+    "CLR_and_nullable_API_entries": 1148,
+    "CLR_and_nullable_API_differences": 0,
+    "neutral_resource_values": 162,
+    "portable_PDB_associations": 2,
+    "other_original_framework_profiles_built": false,
+    "full_SDK10_pruning_integration_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "pacman_check_command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-pkcs604",
+  "pacman_check_exit_code": 0,
+  "pacman_check_output": "mingw-w64-clang-x86_64-dotnet-pkcs604: 54 total files, 0 altered files",
+  "existing_Pkcs8_and_Pkcs9_archives_unchanged": true,
+  "formal_original_NET6_profiles_package_built_and_installed": true,
+  "other_original_framework_profiles_built": false,
+  "NuGet6132_rebuild_against_exact_support_in_progress": true,
+  "full_SDK10_pruning_integration_verified": false,
+  "full_dependency_goal_complete": false
+}
+
+makepkg.log
+==> Making package: mingw-w64-dotnet-pkcs604 6.0.4-1 (31 Oct 2026 01:08:52)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found pkcs604-snapshot-e37fab9f.tar.gz
+  -> Found arcade-runtime6-3d9c9a4d.tar.gz
+  -> Found pkcs604-source-1.tar.gz
+==> Validating source files with sha256sums...
+    pkcs604-snapshot-e37fab9f.tar.gz ... Passed
+    arcade-runtime6-3d9c9a4d.tar.gz ... Passed
+    pkcs604-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting pkcs604-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-pkcs604"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-pkcs604 6.0.4-1 (31 Oct 2026 01:18:20)
+
+install.log
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-pkcs604-6.0.4-1
+
+Total Installed Size:  1.47 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-pkcs604...
+
+pacman-Qkk.log
+mingw-w64-clang-x86_64-dotnet-pkcs604: 54 total files, 0 altered files
+
+installed-check.log
+PASS cached original NET6 reference/Windows/portable assets, strict restore, NET8/NET10 cryptography, source ASN.1 and 1148 strict API entries
+
+old-Pkcs-before.sha256
+ccd263f9019633293927af95a175e90fae48caabf70df01a3c75873c4c8df48e */clang64/lib/dotnet/library-packs/system.security.cryptography.pkcs.8.0.1.nupkg
+06b05895e93c5c16286ef311ae7d8afe03f3b4af19fe637af692e2828af55871 */clang64/lib/dotnet/library-packs/system.security.cryptography.pkcs.9.0.11.nupkg
+
+old-Pkcs-unchanged.log
+/clang64/lib/dotnet/library-packs/system.security.cryptography.pkcs.8.0.1.nupkg: OK
+/clang64/lib/dotnet/library-packs/system.security.cryptography.pkcs.9.0.11.nupkg: OK

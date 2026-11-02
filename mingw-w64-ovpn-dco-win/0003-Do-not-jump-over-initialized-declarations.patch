@@ -1,0 +1,354 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Thu, 22 Oct 2026 11:49:46 +0200
+Subject: [PATCH] Do not jump over initialized declarations
+
+C++ does not allow a goto to skip the initialization of a variable that
+is still in scope at the label. MSVC accepts it, GCC rejects it. Declare
+those variables first and assign them separately; the error paths never
+read them, so the behavior is unchanged.
+---
+ Driver.cpp       | 21 ++++++++++++++-------
+ adapter.cpp      |  9 ++++++---
+ control.cpp      |  3 ++-
+ crypto.cpp       |  9 ++++++---
+ crypto_epoch.cpp | 15 ++++++++++-----
+ peer.cpp         | 27 ++++++++++++++++++---------
+ socket.cpp       | 15 ++++++++++-----
+ trie.cpp         |  6 ++++--
+ 8 files changed, 70 insertions(+), 35 deletions(-)
+
+diff --git a/Driver.cpp b/Driver.cpp
+index 79f78a5..c915434 100644
+--- a/Driver.cpp
++++ b/Driver.cpp
+@@ -126,7 +126,8 @@ DriverEntry(_In_ PDRIVER_OBJECT driverObject, _In_ PUNICODE_STRING registryPath)
+     wskClientNpi.ClientContext = NULL;
+     wskClientNpi.Dispatch = &WskAppDispatch;
+ 
+-    POVPN_DRIVER driverCtx = OvpnGetDriverContext(WdfGetDriver());
++    POVPN_DRIVER driverCtx;
++    driverCtx = OvpnGetDriverContext(WdfGetDriver());
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WskRegister(&wskClientNpi, &driverCtx->WskRegistration));
+ 
+ done:
+@@ -252,7 +253,8 @@ OvpnEvtIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
+     GOTO_IF_NOT_NT_SUCCESS(error, status, WdfRequestRetrieveInputBuffer(request,
+         device->Mode == OVPN_MODE_MP ? sizeof(USHORT) : 0, &buf, &bufLen));
+ 
+-    PSOCKADDR sa = NULL;
++    PSOCKADDR sa;
++    sa = NULL;
+ 
+     // contains peer's remote address
+     SOCKADDR_STORAGE sa_st;
+@@ -310,7 +312,8 @@ OvpnEvtIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
+     }
+ 
+     // copy data from request to tx buffer
+-    PUCHAR data = OvpnBufferPut(txBuf, bufLen);
++    PUCHAR data;
++    data = OvpnBufferPut(txBuf, bufLen);
+     RtlCopyMemory(data, buf, bufLen);
+ 
+     txBuf->ControlChannel = TRUE;
+@@ -329,7 +332,8 @@ OvpnEvtIoWrite(WDFQUEUE queue, WDFREQUEST request, size_t length)
+     // until too many are in flight. Then the request is parked on its own send the way
+     // a TCP write is, which is the only thing that makes a writer wait: without it a
+     // caller outruns the completions and the buffers pile up in the transmit pool.
+-    BOOLEAN const park = InterlockedCompareExchange(&device->TxControlInFlight, 0, 0) >= OVPN_TX_CONTROL_INFLIGHT_MAX;
++    BOOLEAN park;
++    park = InterlockedCompareExchange(&device->TxControlInFlight, 0, 0) >= OVPN_TX_CONTROL_INFLIGHT_MAX;
+     if (park) {
+         if (InterlockedExchange(&device->TxControlWaiting, 1) == 0) {
+             LOG_WARN("Control writes are outrunning their sends, so writers now wait",
+@@ -619,7 +623,8 @@ OvpnMPAddIRoute(POVPN_DEVICE device, WDFREQUEST request) {
+     POVPN_MP_IROUTE iroute = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfRequestRetrieveInputBuffer(request, sizeof(OVPN_MP_IROUTE), (PVOID*)&iroute, NULL));
+ 
+-    auto peer = OvpnFindPeer(device, iroute->PeerId, FALSE);
++    OvpnPeerContext* peer;
++    peer = OvpnFindPeer(device, iroute->PeerId, FALSE);
+     if (peer == nullptr) {
+         LOG_ERROR("Peer not found", TraceLoggingValue(iroute->PeerId, "peer-id"));
+         status = STATUS_INVALID_DEVICE_REQUEST;
+@@ -956,7 +961,8 @@ OvpnEvtDeviceAdd(WDFDRIVER wdfDriver, PWDFDEVICE_INIT deviceInit) {
+     WDFDEVICE wdfDevice;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfDeviceCreate(&deviceInit, &objAttributes, &wdfDevice));
+ 
+-    POVPN_DRIVER driverCtx = OvpnGetDriverContext(WdfGetDriver());
++    POVPN_DRIVER driverCtx;
++    driverCtx = OvpnGetDriverContext(WdfGetDriver());
+     InterlockedIncrement(&driverCtx->DeviceCount);
+ 
+     LOG_INFO("Device count", TraceLoggingValue(driverCtx->DeviceCount, "count"));
+@@ -983,7 +989,8 @@ OvpnEvtDeviceAdd(WDFDRIVER wdfDriver, PWDFDEVICE_INIT deviceInit) {
+     queueConfig.EvtIoDeviceControl = OvpnEvtIoDeviceControl;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfIoQueueCreate(wdfDevice, &queueConfig, WDF_NO_OBJECT_ATTRIBUTES, WDF_NO_HANDLE));
+ 
+-    POVPN_DEVICE device = OvpnGetDeviceContext(wdfDevice);
++    POVPN_DEVICE device;
++    device = OvpnGetDeviceContext(wdfDevice);
+     device->WdfDevice = wdfDevice;
+     KeInitializeEvent(&device->SocketDrained, NotificationEvent, FALSE);
+ 
+diff --git a/adapter.cpp b/adapter.cpp
+index c762601..0161d00 100644
+--- a/adapter.cpp
++++ b/adapter.cpp
+@@ -149,7 +149,8 @@ OvpnEvtAdapterCreateRxQueue(NETADAPTER netAdapter, NETRXQUEUE_INIT* rxQueueInit)
+     NTSTATUS status;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, NetRxQueueCreate(rxQueueInit, &rxAttributes, &rxConfig, &netPacketQueue));
+ 
+-    POVPN_ADAPTER adapterContext = OvpnGetAdapterContext(netAdapter);
++    POVPN_ADAPTER adapterContext;
++    adapterContext = OvpnGetAdapterContext(netAdapter);
+     OvpnRxQueueInitialize(netPacketQueue, adapterContext);
+ 
+ done:
+@@ -181,7 +182,8 @@ OvpnAdapterCreate(OVPN_DEVICE * device) {
+     NETADAPTER netAdapter;
+     GOTO_IF_NOT_NT_SUCCESS(createfailure, status, NetAdapterCreate(adapterInit, &adapterAttributes, &netAdapter));
+ 
+-    POVPN_ADAPTER adapter = OvpnGetAdapterContext(netAdapter);
++    POVPN_ADAPTER adapter;
++    adapter = OvpnGetAdapterContext(netAdapter);
+     adapter->NetAdapter = netAdapter;
+     adapter->WdfDevice = device->WdfDevice;
+ 
+@@ -199,7 +201,8 @@ OvpnAdapterCreate(OVPN_DEVICE * device) {
+ 
+     status = NetAdapterStart(adapter->NetAdapter);
+ 
+-    KIRQL irql = ExAcquireSpinLockExclusive(&device->SpinLock);
++    KIRQL irql;
++    irql = ExAcquireSpinLockExclusive(&device->SpinLock);
+     device->Adapter = netAdapter;
+     ExReleaseSpinLockExclusive(&device->SpinLock, irql);
+ 
+diff --git a/control.cpp b/control.cpp
+index 7a5edf2..e5c350d 100644
+--- a/control.cpp
++++ b/control.cpp
+@@ -100,7 +100,8 @@ OvpnCreateControlDevice(WDFDRIVER wdfDriver)
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfDeviceInitAssignName(deviceInit, &deviceName));
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfDeviceCreate(&deviceInit, &deviceAttributes, &controlDevice));
+ 
+-    POVPN_DRIVER driverCtx = OvpnGetDriverContext(WdfGetDriver());
++    POVPN_DRIVER driverCtx;
++    driverCtx = OvpnGetDriverContext(WdfGetDriver());
+     driverCtx->ControlDevice = controlDevice;
+ 
+     // symlink for control device
+diff --git a/crypto.cpp b/crypto.cpp
+index 5082f0d..f7078c1 100644
+--- a/crypto.cpp
++++ b/crypto.cpp
+@@ -473,12 +473,14 @@ OvpnCryptoEncryptAEAD(OvpnCryptoTxState* tx, UCHAR* buf, SIZE_T len, OvpnCryptoO
+     authInfo.pbAuthData = buf;
+     authInfo.cbAuthData = OVPN_DATA_V2_LEN + pktidLen;
+ 
+-    auto payloadOffset = OVPN_DATA_V2_LEN + pktidLen + (authTagEnd ? 0 : AEAD_AUTH_TAG_LEN);
++    ULONG payloadOffset;
++    payloadOffset = OVPN_DATA_V2_LEN + pktidLen + (authTagEnd ? 0 : AEAD_AUTH_TAG_LEN);
+     buf += payloadOffset;
+ 
+     // Not chained, so the per-call state lives in this thread's own authInfo, which is the
+     // one thing CNG says not to share. That is what lets senders share the key.
+-    ULONG bytesDone = 0;
++    ULONG bytesDone;
++    bytesDone = 0;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, BCryptEncrypt(tx->Key.Key, buf, (ULONG)len, &authInfo, NULL, 0, buf, (ULONG)len, &bytesDone, 0));
+ 
+ done:
+@@ -598,7 +600,8 @@ OvpnCryptoNewKey(OvpnPeerContext* peer, POVPN_CRYPTO_DATA_V2 cryptoDataV2, BCRYP
+ 
+     OvpnCryptoDescribeLayout(aead, options.UseEpoch, &layout);
+ 
+-    OvpnCryptoContext* cryptoContext = &peer->CryptoContext;
++    OvpnCryptoContext* cryptoContext;
++    cryptoContext = &peer->CryptoContext;
+     KIRQL irql;
+ 
+     // install the send side
+diff --git a/crypto_epoch.cpp b/crypto_epoch.cpp
+index f37cf0b..8dcf01e 100644
+--- a/crypto_epoch.cpp
++++ b/crypto_epoch.cpp
+@@ -50,7 +50,8 @@ NTSTATUS OvpnCryptoExpandLabel(
+ 
+     // build info = OvpnLabel(outLen, "data_key"/"data_iv")
+     UCHAR info[2 + 1 + 64 + 1 + 255]; // enough for our labels
+-    ULONG infoLen = 0;
++    ULONG infoLen;
++    infoLen = 0;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, OvpnCryptoMakeLabel(info, (ULONG)sizeof(info), &infoLen, outLen, label));
+ 
+     // prepare KDF params
+@@ -69,7 +70,8 @@ NTSTATUS OvpnCryptoExpandLabel(
+     desc.pBuffers = &infoBuf;
+ 
+     // derive
+-    ULONG got = 0;
++    ULONG got;
++    got = 0;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, BCryptKeyDerivation(hKey, &desc, outBytes, outLen, &got, 0));
+     if (got != outLen) {
+         status = STATUS_INTERNAL_ERROR;
+@@ -106,20 +108,23 @@ NTSTATUS OvpnCryptoMakeLabel(
+     *pcbWritten = 0;
+ 
+     // Total encoded label length = "ovpn " + label
+-    size_t totalLabelLen = prefixLen + labelLen;
++    size_t totalLabelLen;
++    totalLabelLen = prefixLen + labelLen;
+     if (totalLabelLen < 6 || totalLabelLen > 255) {
+         status = STATUS_INVALID_PARAMETER;
+         goto done;
+     }
+ 
+     // total = 2(length) + 1(totalLabelLen) + totalLabelLen + 1(ctxLen=0)
+-    ULONG need = 2 + 1 + (ULONG)totalLabelLen + 1;
++    ULONG need;
++    need = 2 + 1 + (ULONG)totalLabelLen + 1;
+     if (cbOut < need) {
+         status = STATUS_BUFFER_TOO_SMALL;
+         goto done;
+     }
+ 
+-    ULONG p = 0;
++    ULONG p;
++    p = 0;
+     out[p++] = (UCHAR)(L >> 8);
+     out[p++] = (UCHAR)(L & 0xFF);
+     out[p++] = (UCHAR)totalLabelLen;
+diff --git a/peer.cpp b/peer.cpp
+index 98256b0..804ca07 100644
+--- a/peer.cpp
++++ b/peer.cpp
+@@ -536,10 +536,14 @@ OvpnPeerNew(POVPN_DEVICE device, WDFREQUEST request)
+         goto done;
+     }
+ 
+-    POVPN_DRIVER driver = OvpnGetDriverContext(WdfGetDriver());
+-    PWSK_SOCKET socket = NULL;
+-    BOOLEAN proto_tcp = peer->Proto == OVPN_PROTO_TCP;
+-    SIZE_T remoteAddrSize = peer->Remote.Addr4.sin_family == AF_INET ? sizeof(peer->Remote.Addr4) : sizeof(peer->Remote.Addr6);
++    POVPN_DRIVER driver;
++    driver = OvpnGetDriverContext(WdfGetDriver());
++    PWSK_SOCKET socket;
++    socket = NULL;
++    BOOLEAN proto_tcp;
++    proto_tcp = peer->Proto == OVPN_PROTO_TCP;
++    SIZE_T remoteAddrSize;
++    remoteAddrSize = peer->Remote.Addr4.sin_family == AF_INET ? sizeof(peer->Remote.Addr4) : sizeof(peer->Remote.Addr6);
+ 
+     peerCtx = OvpnPeerCtxAlloc(device->WdfDevice);
+     if (peerCtx == NULL) {
+@@ -647,7 +651,8 @@ OvpnMPPeerNew(POVPN_DEVICE device, WDFREQUEST request)
+     }
+ 
+     // assign remote transport address
+-    auto ipv4 = peer->Remote.Addr4.sin_family == AF_INET;
++    bool ipv4;
++    ipv4 = peer->Remote.Addr4.sin_family == AF_INET;
+     if (ipv4) {
+         peerCtx->TransportAddrs.Remote.IPv4 = peer->Remote.Addr4;
+     }
+@@ -749,7 +754,8 @@ NTSTATUS OvpnPeerSet(POVPN_DEVICE device, WDFREQUEST request)
+         goto done;
+     }
+ 
+-    POVPN_SET_PEER set_peer = NULL;
++    POVPN_SET_PEER set_peer;
++    set_peer = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfRequestRetrieveInputBuffer(request, sizeof(OVPN_SET_PEER), (PVOID*)&set_peer, nullptr));
+ 
+     LOG_INFO("Set peer", TraceLoggingValue(set_peer->KeepaliveInterval, "interval"),
+@@ -841,7 +847,8 @@ OvpnPeerGetStatsV2(POVPN_DEVICE device, WDFREQUEST request, ULONG_PTR* bytesRetu
+     POVPN_GET_PEER_STATS getPeerStats = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfRequestRetrieveInputBuffer(request, sizeof(OVPN_GET_PEER_STATS), (PVOID*)&getPeerStats, nullptr));
+ 
+-    POVPN_PEER_STATS outBuf = NULL;
++    POVPN_PEER_STATS outBuf;
++    outBuf = NULL;
+ 
+     // requested stats for all peers?
+     if (getPeerStats->PeerId == -1) {
+@@ -981,7 +988,8 @@ OvpnPeerNewKey(POVPN_DEVICE device, WDFREQUEST request)
+ 
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfRequestRetrieveInputBuffer(request, sizeof(OVPN_CRYPTO_DATA), (PVOID*)&cryptoData, nullptr));
+ 
+-    BCRYPT_ALG_HANDLE algHandle = NULL;
++    BCRYPT_ALG_HANDLE algHandle;
++    algHandle = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, OvpnPeerGetAlgHandle(device, cryptoData->CipherAlg, algHandle));
+ 
+     peer = OvpnFindPeer(device, cryptoData->PeerId, FALSE);
+@@ -1017,7 +1025,8 @@ OvpnPeerNewKeyV2(POVPN_DEVICE device, WDFREQUEST request)
+     POVPN_CRYPTO_DATA_V2 cryptoDataV2 = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, WdfRequestRetrieveInputBuffer(request, sizeof(OVPN_CRYPTO_DATA_V2), (PVOID*)&cryptoDataV2, nullptr));
+ 
+-    BCRYPT_ALG_HANDLE algHandle = NULL;
++    BCRYPT_ALG_HANDLE algHandle;
++    algHandle = NULL;
+     GOTO_IF_NOT_NT_SUCCESS(done, status, OvpnPeerGetAlgHandle(device, cryptoDataV2->V1.CipherAlg, algHandle));
+ 
+     peer = OvpnFindPeer(device, cryptoDataV2->V1.PeerId, FALSE);
+diff --git a/socket.cpp b/socket.cpp
+index e7a3d45..a5193bb 100644
+--- a/socket.cpp
++++ b/socket.cpp
+@@ -701,10 +701,14 @@ OvpnSocketInit(WSK_PROVIDER_NPI* wskProviderNpi, WSK_REGISTRATION* wskRegistrati
+ 
+     // create socket
+ 
+-    USHORT socketType = tcp ? SOCK_STREAM : SOCK_DGRAM;
+-    ULONG proto = tcp ? IPPROTO_TCP : IPPROTO_UDP;
+-    ULONG flags = tcp ? WSK_FLAG_CONNECTION_SOCKET : WSK_FLAG_DATAGRAM_SOCKET;
+-    PVOID dispatch = tcp ? (PVOID)&OvpnSocketTcpDispatch : (PVOID)&OvpnSocketUdpDispatch;
++    USHORT socketType;
++    socketType = tcp ? SOCK_STREAM : SOCK_DGRAM;
++    ULONG proto;
++    proto = tcp ? IPPROTO_TCP : IPPROTO_UDP;
++    ULONG flags;
++    flags = tcp ? WSK_FLAG_CONNECTION_SOCKET : WSK_FLAG_DATAGRAM_SOCKET;
++    PVOID dispatch;
++    dispatch = tcp ? (PVOID)&OvpnSocketTcpDispatch : (PVOID)&OvpnSocketUdpDispatch;
+ 
+     GOTO_IF_NOT_NT_SUCCESS(done, status, OvpnSocketSyncOp("CreateSocket", [&status, wskProviderNpi, addressFamily, socketType, proto, flags, deviceContext, dispatch](PIRP irp) {
+         return wskProviderNpi->Dispatch->WskSocket(wskProviderNpi->Client, addressFamily, socketType, proto, flags, deviceContext,
+@@ -714,7 +718,8 @@ OvpnSocketInit(WSK_PROVIDER_NPI* wskProviderNpi, WSK_REGISTRATION* wskRegistrati
+         }
+     ));
+ 
+-    PWSK_PROVIDER_CONNECTION_DISPATCH connectionDispatch = (PWSK_PROVIDER_CONNECTION_DISPATCH)(*socket)->Dispatch;
++    PWSK_PROVIDER_CONNECTION_DISPATCH connectionDispatch;
++    connectionDispatch = (PWSK_PROVIDER_CONNECTION_DISPATCH)(*socket)->Dispatch;
+ 
+     if (tcp) {
+         // bind
+diff --git a/trie.cpp b/trie.cpp
+index c81b1e4..beb5688 100644
+--- a/trie.cpp
++++ b/trie.cpp
+@@ -127,7 +127,8 @@ IPTrie::Insert(const UCHAR* ip, int prefixLength, OvpnPeerContext* peer) {
+         }
+     }
+ 
+-    TrieNode* current = root;
++    TrieNode* current;
++    current = root;
+     for (int i = 0; i < prefixLength && i < maxBits; ++i) {
+         int bit = (ip[i / 8] >> (7 - (i % 8))) & 1;
+         if (!current->children[bit]) {
+@@ -143,7 +144,8 @@ IPTrie::Insert(const UCHAR* ip, int prefixLength, OvpnPeerContext* peer) {
+ 
+     // update the node with the peer info
+     // keep track of any existing peer so we can release it outside the lock
+-    OvpnPeerContext* oldPeer = current->peer;
++    OvpnPeerContext* oldPeer;
++    oldPeer = current->peer;
+     current->peer = peer;
+     current->isRoute = true;
+ 

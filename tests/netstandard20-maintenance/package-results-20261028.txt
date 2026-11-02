@@ -1,0 +1,192 @@
+Source maintenance primitives — five NuGets packaged, installed and validated
+Package: mingw-w64-clang-x86_64-dotnet-maintenance-netstandard 20261028-2
+Build root: /c/codex-dotnet10/mntpkg2.zLyUO0
+Finished UTC: 2026-10-28T18:20:46Z
+
+Individual NuGets:
+  System.Runtime.CompilerServices.Unsafe 6.1.1
+  System.Buffers 4.6.1
+  System.Numerics.Vectors 4.6.1
+  System.Memory 4.6.2
+  System.Threading.Tasks.Extensions 4.6.2
+
+All four original C# projects evaluated and compiled in Release (133 original C# inputs), plus unchanged original Unsafe IL.
+Original identities/keys/native and managed versions, three resource sets/19 strings,
+1,108 original documented declarations (1,012 public/protected +96 documented implementation details),
+Unsafe/pool/span/sequence/UTF8/endian/vector/ValueTask execution and cancellation passed.
+21 actual producer/consumer package references and every cached DLL match source feeds.
+All15 original profile dependency groups and ten inbox placeholder groups are preserved.
+A fresh NET8 consumer verified package asset selection, all five actual framework references and source-framework type owners.
+15 installed payload files match the package archive; no framework/global implementation DLLs were installed.
+
+Reference prerequisite correction: original Build.Common.targets sets CLSCompliant=true before versioning.targets.
+Reference package2.0.3-3 now validates that marker on all117 assemblies, whose compilations produce zero warnings.
+The maintenance bundle was rebuilt against revision3; all C# compiler warnings disappeared.
+NU1603 remains because the original NETStandard.Library minimum Platforms1.1.0 selects available source1.1.2.
+See tests/netstandard20-source/package3-results-20261028.txt for the corrected prerequisite build/install proof.
+
+Original Framework4.6.2 assets and newer maintenance variants are not claimed complete.
+The full PowerShell dependency goal remains active.
+
+Exact final commands (remote commands from build root; local commands from repository):
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-maintenance-netstandard-20261028-2-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-maintenance-netstandard
+RESULT: exit 0
+
+$ /usr/bin/python3 src/maintenance-netstandard/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 src/maintenance-netstandard/check-inbox.py "$PWD/src/prepared" "$PWD/src/installed-inbox-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-maintenance-netstandard-20261028-2-any.pkg.tar.zst src/prepared evidence/installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c evidence/existing-tools-framework-before.sha256
+RESULT: exit 0
+
+$ python mingw-w64-dotnet-maintenance-netstandard/make-source.py
+RESULT: exit 0
+
+$ python -m py_compile mingw-w64-dotnet-maintenance-netstandard/*.py tests/netstandard20-maintenance/audit-installed-package.py
+RESULT: exit 0
+
+$ bash -n mingw-w64-dotnet-maintenance-netstandard/PKGBUILD
+RESULT: exit 0
+
+Evidence SHA256: 62be345fac91741dabab82778aa7432df80f13af1ab8ec08286437ef96c2d2a4
+Package SHA256: 6fa5fdf6e2e0dfc3f940f5a0b34b9d467dcc7e0f45a8b02f3f796585d088b22c
+
+Logs:
+
+--- makepkg.log ---
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-maintenance-netstandard 20261028-2 (28 Oct 2026 19:17:58)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found maintenance-6b84308c.tar.gz
+  -> Found maintenance-ab95a1f1.tar.gz
+  -> Found maintenance-netstandard-source-1.tar.gz
+==> Validating source files with sha256sums...
+    maintenance-6b84308c.tar.gz ... Passed
+    maintenance-ab95a1f1.tar.gz ... Passed
+    maintenance-netstandard-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting maintenance-netstandard-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-maintenance-netstandard"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-maintenance-netstandard 20261028-2 (28 Oct 2026 19:19:28)
+
+
+--- prepare.log ---
+Prepared exact source maintenance dependencies {'System.Runtime.CompilerServices.Unsafe': 1, 'System.Buffers': 6, 'System.Numerics.Vectors': 18, 'System.Memory': 101, 'System.Threading.Tasks.Extensions': 8}
+
+
+--- build.log ---
+PASS unchanged original IL source package System.Runtime.CompilerServices.Unsafe
+PASS original netstandard2.0 C# package System.Buffers
+PASS original netstandard2.0 C# package System.Numerics.Vectors
+PASS original netstandard2.0 C# package System.Memory
+PASS original netstandard2.0 C# package System.Threading.Tasks.Extensions
+PASS all five original-source maintenance packages
+
+
+--- check.log ---
+PASS five exact-source netstandard2.0 packages, isolated runtime/API/resource checks, pinned archives and actual compiler/consumer dependency bytes
+
+
+--- inbox-check.log ---
+PASS all five original inbox selections, actual framework references and source-framework execution
+
+
+--- production-audit.log ---
+PASS 133 actual original Release CSharp inputs, all 15 original profile groups and ten inbox placeholders
+
+
+--- asset-audit.log ---
+PASS pinned original XML documentation baselines, build/resource policies and all five shipped licenses/readmes/docs
+
+
+--- install.log ---
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-maintenance-netstandard-20261028-2
+
+Total Installed Size:  0.20 MiB
+Net Upgrade Size:      0.00 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-maintenance-netstandard...
+
+
+--- pacman-Qk.log ---
+mingw-w64-clang-x86_64-dotnet-maintenance-netstandard: 24 total files, 0 missing files
+
+
+--- installed-check.log ---
+PASS five exact-source netstandard2.0 packages, isolated runtime/API/resource checks, pinned archives and actual compiler/consumer dependency bytes
+
+
+--- installed-inbox-check.log ---
+PASS all five original inbox selections, actual framework references and source-framework execution
+
+
+--- installed-consumer/run.log ---
+PASS exact source assembly locations, identities, keys, native/managed versions and 3 resource sets/19 strings
+PASS System.Runtime.CompilerServices.Unsafe: all 41 original documented declarations (41 public/protected)
+PASS System.Buffers: all 25 original documented declarations (9 public/protected)
+PASS System.Numerics.Vectors: all 473 original documented declarations (467 public/protected)
+PASS System.Memory: all 432 original documented declarations (398 public/protected)
+PASS System.Threading.Tasks.Extensions: all 137 original documented declarations (97 public/protected)
+PASS exact source Unsafe IL, pool ownership, spans/sequences/UTF8, vectors and ValueTask lifetime/cancellation
+
+
+--- installed-package-audit.log ---
+PASS all 15 installed bundle files, five exact source NuGets and dedicated feed/doc/license paths
+
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/bin/ilasm10.exe: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Buffers.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Numerics.Vectors.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Memory.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Runtime.CompilerServices.Unsafe.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Threading.Tasks.Extensions.dll: OK
+

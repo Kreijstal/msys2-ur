@@ -1,0 +1,127 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=mycli
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.30.1
+pkgrel=1
+pkgdesc="Terminal client for MySQL with auto-completion and syntax highlighting (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.mycli.net/'
+msys2_repository_url='https://github.com/dbcli/mycli'
+msys2_changelog_url='https://github.com/dbcli/mycli/blob/main/changelog.md'
+msys2_references=(
+  'archlinux: mycli'
+  'purl: pkg:pypi/mycli'
+)
+license=('spdx:BSD-3-Clause')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-cli_helpers"
+         "${MINGW_PACKAGE_PREFIX}-python-click"
+         "${MINGW_PACKAGE_PREFIX}-python-clickdc"
+         "${MINGW_PACKAGE_PREFIX}-python-configobj"
+         "${MINGW_PACKAGE_PREFIX}-python-cryptography"
+         "${MINGW_PACKAGE_PREFIX}-python-jinja"
+         "${MINGW_PACKAGE_PREFIX}-python-keyring"
+         "${MINGW_PACKAGE_PREFIX}-python-markupsafe"
+         "${MINGW_PACKAGE_PREFIX}-python-prompt_toolkit"
+         "${MINGW_PACKAGE_PREFIX}-python-pycryptodomex"
+         "${MINGW_PACKAGE_PREFIX}-python-pygments"
+         "${MINGW_PACKAGE_PREFIX}-python-pymysql"
+         "${MINGW_PACKAGE_PREFIX}-python-pyperclip"
+         "${MINGW_PACKAGE_PREFIX}-python-rapidfuzz"
+         "${MINGW_PACKAGE_PREFIX}-python-sqlglot"
+         "${MINGW_PACKAGE_PREFIX}-python-sqlparse"
+         "${MINGW_PACKAGE_PREFIX}-python-wcwidth"
+         "${MINGW_PACKAGE_PREFIX}-python-yaspin")
+# sqlglotc, the compiled sqlglot tokenizer, is an optional speed-up; it is not
+# packaged because it needs mypyc from mypy >= 2.4.
+# The dataframe extra (polars transforms) also needs altair and
+# vl-convert-python, which are not packaged; polars alone is enough for the
+# tests.
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-paramiko: connect through an SSH tunnel")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+             "${MINGW_PACKAGE_PREFIX}-python-setuptools-scm")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-polars"
+              "${MINGW_PACKAGE_PREFIX}-python-pytest")
+options=('!strip')
+source=("https://pypi.org/packages/source/${_realname::1}/${_realname}/${_realname}-${pkgver}.tar.gz")
+sha256sums=('02de99676cc910c905bcfbfabcfadc38125e20baba1f380faeb20360c0613934')
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}" && cd "python-build-${MSYSTEM}"
+  SETUPTOOLS_SCM_PRETEND_VERSION=${pkgver} \
+    ${MINGW_PREFIX}/bin/python -m build --wheel --skip-dependency-check --no-isolation
+}
+
+check() {
+  cd "python-build-${MSYSTEM}"
+  local _deselect=(
+    # prompt_toolkit needs a Windows console, which makepkg does not run in
+    test_main_modes_repl.py::test_empty_command_leaves_one_time_redirect_armed
+    test_main_modes_repl.py::test_one_time_redirect_survives_database_retry
+    test_main_modes_repl.py::test_redirect_finalization_interrupt_is_local
+    test_main_modes_repl.py::test_redirect_hook_has_live_progress
+    test_main_modes_repl.py::test_redirect_output_uses_redirecting_state
+    test_main_modes_repl.py::test_redirect_pipeline_wait_has_live_progress
+    test_main_modes_repl.py::test_transform_redirect_output_failure_does_not_leak_to_next_query
+    test_main_modes_repl.py::test_transform_redirect_survives_database_reconnect
+    # the llm and dataframe (polars/altair) extras are not packaged
+    test_polars_transform.py::test_parse_transform_with_shell_suffix
+    test_polars_transform.py::test_prepare_polars_transform_compiles_expression_and_loads_polars
+    test_special_llm.py::test_cli_commands_is_cached
+    test_special_llm.py::test_handle_llm_registered_aliases_without_args
+    test_special_llm.py::test_handle_llm_wraps_context_errors
+    test_special_llm.py::test_llm_command_known_subcommand
+    test_special_llm.py::test_llm_command_question_verbose
+    test_special_llm.py::test_llm_command_question_with_context
+    test_special_llm.py::test_llm_command_with_c_flag
+    test_special_llm.py::test_llm_command_with_c_flag_and_fenced_sql
+    test_special_llm.py::test_llm_command_with_help_flag
+    test_special_llm.py::test_llm_command_with_help_subcommand
+    test_special_llm.py::test_llm_command_with_install_flag
+    test_special_llm.py::test_llm_command_with_prompt
+    test_special_llm.py::test_llm_command_without_args
+    test_special_llm.py::test_reload_llm_module_handles_cli_import_error
+    # POSIX only: Unix sockets, getpwuid, OpenSSH socket forwards, ~ in a POSIX HOME, shlex quoting
+    test_client_connection.py::test_connect_exits_for_unhandled_socket_connection_error
+    test_client_connection.py::test_connect_falls_back_to_tcp_after_socket_connection_error
+    test_client_connection.py::test_connect_reports_socket_owner
+    test_client_connection.py::test_connect_reports_unknown_socket_owner
+    test_client_connection.py::test_connect_uses_ssh_jump_with_remote_socket
+    test_dsn_aliases.py::test_from_config_expands_user_in_shared_file_path
+    test_favoritequeries.py::test_from_config_expands_user_in_shared_file_path
+    test_hybrid_redirection.py::test_shell_options_and_quoted_comment_markers_survive_file_comment_parsing
+    test_hybrid_redirection.py::test_shell_redirect_preserves_options_and_quoted_comments
+    test_special_io_commands.py::test_parseargfile
+    test_ssh_tunnel.py::test_ssh_tunnel_close_removes_local_socket_path
+    test_ssh_tunnel.py::test_ssh_tunnel_command_appends_cli_options_after_config_options
+    test_ssh_tunnel.py::test_ssh_tunnel_command_forwards_remote_socket
+    test_ssh_tunnel.py::test_ssh_tunnel_command_includes_forward_and_ssh_port
+    test_ssh_tunnel.py::test_ssh_tunnel_is_listening_returns_false
+    test_ssh_tunnel.py::test_ssh_tunnel_is_listening_returns_true
+  )
+  # polars 2.0.0 skips "ctr-static" instead of "crt-static" when it compares
+  # its build feature flags with the CPU, so the CLANG64 build, which has
+  # +crt-static, fails to import.
+  export POLARS_SKIP_CPU_CHECK=1
+  # The tests that need a MySQL server skip themselves when there is none.
+  # addopts asks for pytest-random-order, which is not packaged. Two cases of
+  # test_parse_source_arguments expect POSIX shlex quoting.
+  ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider -o addopts= \
+    "${_deselect[@]/#/--deselect=mycli_test/pytests/}" \
+    -k 'not (test_parse_source_arguments and (expected13 or expected14))' \
+    mycli_test/pytests
+}
+
+package() {
+  cd "python-build-${MSYSTEM}"
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" dist/*.whl
+
+  install -Dm644 LICENSE.txt "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

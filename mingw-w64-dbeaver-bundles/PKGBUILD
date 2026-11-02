@@ -1,0 +1,268 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# Upstream composite manifests plus nested JARs built by our java-* source recipes.
+pkgbase=mingw-w64-dbeaver-bundles
+pkgver=26.2.2
+pkgrel=1
+pkgdesc="Source-built DBeaver composite library bundles"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:MIT' 'spdx:LGPL-3.0-or-later' 'spdx:Apache-2.0' 'spdx:BSD-3-Clause' 'spdx:LGPL-2.1-or-later' 'spdx:EPL-2.0')
+pkgname=("${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-apache-dbcp"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-apache-poi"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-gis"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-graphql"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-jetty-server"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-jetty12-websocket"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-jfreechart"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-logback"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-bundle-sshj")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-bcpkix"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-codec"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-collections4"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-compress"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-io"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-lang3"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-logging"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-text"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jakarta-servlet"
+             "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+             "${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+             "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+             "${MINGW_PACKAGE_PREFIX}-java-asn-one"
+             "${MINGW_PACKAGE_PREFIX}-java-bcprov"
+             "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-dbcp2"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-math3"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-pool2"
+             "${MINGW_PACKAGE_PREFIX}-java-cts"
+             "${MINGW_PACKAGE_PREFIX}-java-curvesapi"
+             "${MINGW_PACKAGE_PREFIX}-java-ejml-core"
+             "${MINGW_PACKAGE_PREFIX}-java-ejml-ddense"
+             "${MINGW_PACKAGE_PREFIX}-java-excel-streaming-reader"
+             "${MINGW_PACKAGE_PREFIX}-java-graphql-java"
+             "${MINGW_PACKAGE_PREFIX}-java-graphql-java-extended-scalars"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-client-api"
+             "${MINGW_PACKAGE_PREFIX}-java-java-dataloader"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-transaction-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-alpn-client"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-client"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-common"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-gzip"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee-webapp"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-annotations"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-plus"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-servlet"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-servlets"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-webapp"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-client"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-common"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-server"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jetty-server"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-servlet"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-http"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-io"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-plus"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-security"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-server"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-session"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-util"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-client"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-common"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-server"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-common"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-server"
+             "${MINGW_PACKAGE_PREFIX}-java-jetty-xml"
+             "${MINGW_PACKAGE_PREFIX}-java-jfreechart"
+             "${MINGW_PACKAGE_PREFIX}-java-json-simple"
+             "${MINGW_PACKAGE_PREFIX}-java-jts-core"
+             "${MINGW_PACKAGE_PREFIX}-java-jts-io-common"
+             "${MINGW_PACKAGE_PREFIX}-java-junit4"
+             "${MINGW_PACKAGE_PREFIX}-java-log4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-logback-classic"
+             "${MINGW_PACKAGE_PREFIX}-java-logback-core"
+             "${MINGW_PACKAGE_PREFIX}-java-poi"
+             "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml"
+             "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml-lite"
+             "${MINGW_PACKAGE_PREFIX}-java-poi-shared-strings"
+             "${MINGW_PACKAGE_PREFIX}-java-reactive-streams"
+             "${MINGW_PACKAGE_PREFIX}-java-sparsebitset"
+             "${MINGW_PACKAGE_PREFIX}-java-sshj"
+             "${MINGW_PACKAGE_PREFIX}-java-wkg"
+             "${MINGW_PACKAGE_PREFIX}-java-xmlbeans"
+             "${MINGW_PACKAGE_PREFIX}-python")
+_source_dir='dbeaver-deps-ce-047e8447ffddb0a8818216a91e5aad28e78c59bf'
+source=('dbeaver-deps-ce-047e8447ffddb0a8818216a91e5aad28e78c59bf.tar.gz::https://github.com/dbeaver/dbeaver-deps-ce/archive/047e8447ffddb0a8818216a91e5aad28e78c59bf.tar.gz'
+        'bundles.json'
+        'pack-composites.py')
+sha256sums=('216b247eb2286e8b8177bbd880cd7bfa589508a54acf142c036412c5891e27a9'
+            'b64f53e9be30856f7a2e2d3d4c8fe8c8ef85dedd80bd1a8590bcf146b4331176'
+            '81d242e2ba080b3224bb2e67f4fa5d0f358e704559fb3e1e834025b3d5744647')
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local name spec key path
+  local -a roots=()
+  while IFS= read -r name; do
+    mapfile -t roots < <(python -c 'import json,sys; sys.stdout.reconfigure(newline="\n"); print("\n".join(json.load(open(sys.argv[1]))[sys.argv[2]]["roots"]))' "$(cygpath -m "$srcdir/bundles.json")" "$name")
+    : > "$name-inputs.tsv"
+    while IFS= read -r spec; do
+      path=$(jb_jarpath "$spec")
+      printf '%s\t%s\n' "$spec" "$(jb_w "$path")" >> "$name-inputs.tsv"
+    done < <(jb_closure "${roots[@]}")
+    python pack-composites.py "$(jb_w bundles.json)" "$name" "$(jb_w "$_source_dir")" "$(jb_w "$name-inputs.tsv")" "$(jb_w "$JB_PSTAGE")"
+  done < <(python -c 'import json,sys; sys.stdout.reconfigure(newline="\n"); print("\n".join(json.load(open(sys.argv[1]))))' "$(cygpath -m "$srcdir/bundles.json")")
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+  install -Dm644 "${srcdir}/$_source_dir/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${pkgname#${MINGW_PACKAGE_PREFIX}-}/LICENSE.composite"
+}
+
+package_dbeaver-bundle-apache-dbcp() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-logging"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-dbcp2"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-pool2"
+           "${MINGW_PACKAGE_PREFIX}-java-javax-transaction-api")
+  _package org.jkiss.bundle.apache.dbcp
+}
+
+package_dbeaver-bundle-apache-poi() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-codec"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-collections4"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-compress"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-io"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-lang3"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-text"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-commons-math3"
+           "${MINGW_PACKAGE_PREFIX}-java-curvesapi"
+           "${MINGW_PACKAGE_PREFIX}-java-excel-streaming-reader"
+           "${MINGW_PACKAGE_PREFIX}-java-log4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-poi"
+           "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml"
+           "${MINGW_PACKAGE_PREFIX}-java-poi-ooxml-lite"
+           "${MINGW_PACKAGE_PREFIX}-java-poi-shared-strings"
+           "${MINGW_PACKAGE_PREFIX}-java-sparsebitset"
+           "${MINGW_PACKAGE_PREFIX}-java-xmlbeans")
+  _package org.jkiss.bundle.apache.poi
+}
+
+package_dbeaver-bundle-gis() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+           "${MINGW_PACKAGE_PREFIX}-java-cts"
+           "${MINGW_PACKAGE_PREFIX}-java-ejml-core"
+           "${MINGW_PACKAGE_PREFIX}-java-ejml-ddense"
+           "${MINGW_PACKAGE_PREFIX}-java-json-simple"
+           "${MINGW_PACKAGE_PREFIX}-java-jts-core"
+           "${MINGW_PACKAGE_PREFIX}-java-jts-io-common"
+           "${MINGW_PACKAGE_PREFIX}-java-junit4"
+           "${MINGW_PACKAGE_PREFIX}-java-wkg")
+  _package org.jkiss.bundle.gis
+}
+
+package_dbeaver-bundle-graphql() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-graphql-java"
+           "${MINGW_PACKAGE_PREFIX}-java-graphql-java-extended-scalars"
+           "${MINGW_PACKAGE_PREFIX}-java-java-dataloader"
+           "${MINGW_PACKAGE_PREFIX}-java-reactive-streams")
+  _package org.jkiss.bundle.graphql
+}
+
+package_dbeaver-bundle-jetty-server() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jakarta-servlet"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-client-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-alpn-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-annotations"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-gzip"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee-webapp"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-annotations"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-plus"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-servlet"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-servlets"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-webapp"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-server"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jetty-server"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-servlet"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-http"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-io"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-plus"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-security"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-server"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-session"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-util"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-server"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-jetty-server"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-xml")
+  _package org.jkiss.bundle.jetty.server
+}
+
+package_dbeaver-bundle-jetty12-websocket() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jakarta-websocket-client-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-alpn-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-compression-gzip"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-ee11-websocket-jakarta-common"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-http"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-io"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-util"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-client"
+           "${MINGW_PACKAGE_PREFIX}-java-jetty-websocket-core-common")
+  _package org.jkiss.bundle.jetty12.websocket
+}
+
+package_dbeaver-bundle-jfreechart() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-jfreechart")
+  _package org.jkiss.bundle.jfreechart
+}
+
+package_dbeaver-bundle-logback() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-logback-classic"
+           "${MINGW_PACKAGE_PREFIX}-java-logback-core")
+  _package org.jkiss.bundle.logback
+}
+
+package_dbeaver-bundle-sshj() {
+  depends=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-bcpkix"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-java-asn-one"
+           "${MINGW_PACKAGE_PREFIX}-java-bcprov"
+           "${MINGW_PACKAGE_PREFIX}-java-bcutil"
+           "${MINGW_PACKAGE_PREFIX}-java-sshj")
+  _package org.jkiss.bundle.sshj
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

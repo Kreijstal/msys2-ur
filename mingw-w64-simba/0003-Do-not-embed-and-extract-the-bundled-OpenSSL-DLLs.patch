@@ -1,0 +1,41 @@
+From 0f6931704b2a981c1af4bf3d75c7d725f8d368fc Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 10:29:45 +0100
+Subject: [PATCH 3/4] Do not embed and extract the bundled OpenSSL DLLs
+
+On Windows simba.openssl links Third-Party/openssl/win64.res, which holds
+gzip-compressed prebuilt libcrypto/libssl DLLs, and ExtractOpenSSL writes
+them next to the executable on every start.  Drop the resources: with
+them gone ExtractOpenSSL is a no-op, and FPC's openssl unit loads the
+system OpenSSL 3 DLLs (libcrypto-3-x64.dll, libssl-3-x64.dll from
+MSYS2's openssl package, found next to simba.exe in <prefix>/bin).
+
+Needs an FPC whose openssl unit knows the OpenSSL 3 DLL names
+(fpc-kgpc 3.2.2-3; plain FPC 3.2.2 only looks for OpenSSL 1.x).
+---
+ Source/simba.openssl.pas | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/Source/simba.openssl.pas b/Source/simba.openssl.pas
+index fbfe8ed..756b08f 100644
+--- a/Source/simba.openssl.pas
++++ b/Source/simba.openssl.pas
+@@ -7,11 +7,10 @@ unit simba.openssl;
+ 
+ {$i simba.inc}
+ 
+-{$IF DEFINED(WINDOWS) AND DEFINED(CPU32)}
+-  {$R ../Third-Party/openssl/win32}
+-{$ELSEIF DEFINED(WINDOWS) AND DEFINED(CPU64)}
+-  {$R ../Third-Party/openssl/win64}
+-{$ENDIF}
++// MSYS2: do not embed upstream's prebuilt OpenSSL DLLs (and extract them
++// next to simba.exe); FPC's openssl unit loads the system OpenSSL 3
++// (libssl-3-x64.dll in <prefix>/bin).  Without the resources
++// ExtractOpenSSL finds nothing to extract.
+ 
+ interface
+ 
+-- 
+2.55.0
+

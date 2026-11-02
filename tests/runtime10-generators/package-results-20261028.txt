@@ -1,0 +1,86 @@
+Original .NET10 shipping generators — clean package and installed validation passed
+
+Package: mingw-w64-clang-x86_64-dotnet-runtime10-generators 10.0.5-1
+Windows build root: /c/codex-dotnet10/gen10pkg.6ia1W5
+Installed analyzers: /clang64/lib/dotnet/generator-packs/runtime-10.0.5/analyzers/dotnet/cs
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-runtime10-generators-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-runtime10-generators
+RESULT: exit 0
+
+$ /usr/bin/python3 src/generators10-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" "$PWD/src/json-runtime" /clang64/lib/dotnet/generator-packs/runtime-10.0.5/analyzers/dotnet/cs
+RESULT: exit 0
+
+$ /usr/bin/python3 src/generators10-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-runtime10-generators-10.0.5-1-any.pkg.tar.zst src installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+All six original generator assemblies and 65 satellites ship in the source analyzer layout. Installed validation loads their actual installed paths and verifies all eight active-source generator entry points, ten analyzer types, seven codefix providers, all 71 resource sets / 12,383 strings and original signing/version/framework identities. Generated LibraryImport/COM/vtable/JavaScript/JSON/Regex code compiles against all 167 installed source NET10 contracts. Native imports, JSON10 serialization/deserialization and Regex execute on the source NET8 host. Real Regex codefix output compiles. Browser/COM runtime integration and full NET10 execution are not established by these gates.
+
+Source audit: all 309 original generator C# inputs are unchanged; 331 archive inputs and 176 actual producer/consumer package references pass. JSON10 NET8 fixtures rebuild 405 original C# inputs, verify 413 archive inputs, use the original Regex10 analyzer and the installed Compiler5 host with its exact source runtime9 dependencies. These fixture libraries are not shipped. Their formal runtime packages and complete original assembly metadata remain open; CS3021 and MSB3243 fixture warnings are retained in evidence. Generator source nullable warnings and NU1603 are retained. Compilation succeeds, and actual source peer references and analyzer-load/execution warnings are audited. Complete attribute-metadata parity is not claimed.
+
+All 86 installed regular payload files match the archive/stage bytes. pacman counts 112 entries including directories, none missing. All 167 NET10 reference input bytes match their installed source build records. Existing SDK/Compiler5/framework hashes remain unchanged. The only makepkg packaging warning is MSYS-root references in provenance records.
+
+--- src/installed-consumer/run.log ---
+PASS all 71 original generator resource sets / 12383 values
+PASS every generator/analyzer/codefix entry point matches original active source declarations
+GENERATOR Microsoft.Interop.LibraryImportGenerator
+GENERATOR Microsoft.Interop.ComClassGenerator
+GENERATOR Microsoft.Interop.ComInterfaceGenerator
+GENERATOR Microsoft.Interop.VtableIndexStubGenerator
+GENERATOR Microsoft.Interop.JavaScript.JSExportGenerator
+GENERATOR Microsoft.Interop.JavaScript.JSImportGenerator
+GENERATOR System.Text.Json.SourceGeneration.JsonSourceGenerator
+GENERATOR System.Text.RegularExpressions.Generator.RegexGenerator
+REFERENCE CONTRACT E:/msys64/clang64/lib/dotnet/reference-packs/runtime-10.0.5/ref/net10.0 assemblies=167
+REFERENCE CONTRACT E:/msys64/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0 assemblies=163
+PASS LibraryImport10: 1 generated trees and emitted assembly
+PASS LibraryImport8: 1 generated trees and emitted assembly
+Com10: owned-π.cs(1,210): info SYSLIB1092: The return value in the managed definition will be converted to an 'out' parameter when calling the unmanaged COM method. If the return value is intended to be the HRESULT code returned by the unmanaged COM method, use '[PreserveSig]' on the method.
+PASS Com10: 2 generated trees and emitted assembly
+PASS Vtable10: 4 generated trees and emitted assembly
+PASS JavaScript10: 2 generated trees and emitted assembly
+PASS Json10: 6 generated trees and emitted assembly
+PASS Json10On8: 6 generated trees and emitted assembly
+PASS Regex10: 1 generated trees and emitted assembly
+PASS Regex8: 1 generated trees and emitted assembly
+PASS RegexCodeFix10: 1 generated trees and emitted assembly
+PASS all eight generators, 10 analyzers, 7 codefix providers, invalid input diagnostics, .NET10 emit and .NET8 generated-code execution
+
+--- installed-source-audit.log ---
+PASS six original generator source/resource/policy graphs and all actual source package inputs
+
+--- installed-package-audit.log ---
+PASS 86 exact installed files: all six generators/65 satellites, manifest, source records and original licenses
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-runtime10-generators: 112 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/vbc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/System.Reflection.Metadata.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+--- src/prepared/json-audit.log ---
+PASS original JSON10/net8 implementation source/dependency/Regex10/unchanged compiler-host audits
+
+Package SHA256: 0043b49742437264570e6f9bc722f3aa555c37f3d145b63df637287fca35fdb9
+Evidence: /tmp/generators10-package1/generators10-package-evidence1.tar.gz
+Evidence SHA256: 5e4d9ea09d988c3a4bcda02cc2cda196e4ec6c9396d3c97a058f824ed23feda8
+1313 evidence files and all 20 frozen workflow files, PKGBUILD and .SRCINFO verified.
+
+Final targeting-pack/SDK integration, all remaining dependency variants, complete managed/native framework10, SDK/desktop10, PowerShell7.6 and original compatibility gates remain open.

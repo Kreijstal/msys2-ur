@@ -1,0 +1,57 @@
+{
+  "commands": [
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/bridge/Bridge.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "build",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/host/Check.csproj",
+        "-c",
+        "Release",
+        "--configfile",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/NuGet.config",
+        "-p:UseSharedCompilation=false",
+        "-v:minimal"
+      ],
+      "exit_code": 0
+    },
+    {
+      "command": [
+        "/clang64/lib/dotnet/dotnet.exe",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/host/bin/Release/net8.0/Check.dll",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/check-installed-deps/owned",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/tests/msbuild16/inputs/utilities16-published-metadata.json",
+        "E:/codex-dotnet10/msbuild16-utilities.NnZ4gg/prepared3/producer-audit.json"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "original_public_API_entries": 487,
+  "original_runtime_dependency_identity_sets_equal": true,
+  "source_resource_strings_verified": 110,
+  "original_NS2_PackageReference_consumer": true,
+  "exact_cached_candidate_NuGet_archive_verified": true,
+  "formal_pacman_installed": false,
+  "isolated_original_implementations_executed": true,
+  "consumer_DLL_sha256": {
+    "Microsoft.Build.Utilities.Core": "ce004dd13ef2b3df99400f2be0b390f7525bc592e0c898c1cf54651247b9363a",
+    "Microsoft.Build.Framework": "1fde0e4723eba89c3740067699b599e1c38b8e408e9a06576ebaa347ff98dbc8",
+    "System.Collections.Immutable": "1a8e73287414dea2531cc2abb623a6ab32a5cefa8d17e43b5c7ed70af81a19e5",
+    "Microsoft.Win32.Registry": "50a50f1a85bd7c1d32d419d44697a2b666013559b3bbb36384d7216485a07fc2",
+    "System.Text.Encoding.CodePages": "66de783e6174254f40ec3135099524395e40a5172ae48f7ada61c7da0a9ae4cb"
+  },
+  "full_dependency_goal_complete": false
+}

@@ -1,0 +1,18 @@
+Install the DLL of a shared Windows build
+
+install(TARGETS) only named LIBRARY and ARCHIVE destinations, so a
+BUILD_SHARED_LIBS build on Windows installed the import library but not
+libmnxdom.dll.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d532f61..bd3fb96 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -128,6 +128,7 @@ endif()
+ 
+ # Install rules
+ install(TARGETS mnxdom
++    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+ )

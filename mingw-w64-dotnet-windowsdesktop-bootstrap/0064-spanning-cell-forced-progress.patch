@@ -1,0 +1,231 @@
+diff --git a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+index 7f2da95..bc10a3f 100644
+--- a/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
++++ b/bootstrap/m612/wpf-native/ParagraphServicesContext.cpp
+@@ -974,8 +974,10 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
+     }
+     bool resumed=incoming&&!incoming->span_cells.empty();
+     if(resumed&&incoming->span_cells.size()!=masters.size())return PTS_tserrInvalidBreakRecord;
++    bool forced_progress=false;
+     auto format_cells=[&](bool finite,int available)->int {
+         std::fill(heights.begin(),heights.end(),0);
++        forced_progress=false;
+         std::unordered_set<size_t> ordinary_rows;for(size_t i=0;i<masters.size();++i)if(masters[i].first==masters[i].last&&!(resumed&&incoming->span_cells[i].done))ordinary_rows.insert(masters[i].first);
+         int row_available=ordinary_rows.empty()?available:available/int(ordinary_rows.size());
+         std::vector<size_t> order;for(size_t i=0;i<masters.size();++i)if(masters[i].first==masters[i].last)order.push_back(i);for(size_t i=0;i<masters.size();++i)if(masters[i].first!=masters[i].last)order.push_back(i);
+@@ -987,6 +989,7 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
+                 if(master.first!=master.last){int64_t outside=0,inside_spacing=0;for(size_t r=0;r<inputs.size();++r){if(r<master.first||r>master.last)outside+=heights[r];if(r>=master.first&&r<master.last)inside_spacing+=int64_t(below[r])+above[r+1];}cell_available=int(std::max<int64_t>(0,int64_t(available)+inside_spacing-outside));}
+                 FSFMTR formatted{};void* record=resumed&&incoming->span_cells[i].record?incoming->span_cells[i].record->handle:nullptr;
+                 status=reinterpret_cast<PtsFormatCellFinite>(cb.pfnFormatCellFinite)(client,para->desc.pfsparaclient,record,master.name,nullptr,0,direction,0,cell_available,&formatted,&cell->handle,&cell->record,&cell->height);
++                forced_progress=forced_progress||formatted.fForcedProgress;
+                 if(!status&&formatted.kstop!=fmtrGoalReached&&!(formatted.kstop==fmtrBrokenOutOfSpace&&cell->record))status=PTS_tserrNotImplemented;
+             }else {FSFMTRBL formatted{};status=reinterpret_cast<PtsFormatCellBottomless>(cb.pfnFormatCellBottomless)(client,para->desc.pfsparaclient,master.name,direction,&formatted,&cell->handle,&cell->height);if(!status&&formatted!=fmtrblGoalReached)status=PTS_tserrNotImplemented;}
+             pending.claimed_pages=cell->handle!=nullptr;pending.claimed_record=cell->record;if(pending.claimed_pages)for(const auto& page:pending.created_pages)page->inherit_updates=true;
+@@ -1011,10 +1014,14 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
+             output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;if(resumed)output->span_cells=incoming->span_cells;
+             if(!data->rows.empty())data->rows.back()->details.fskboundaryBelow=fsktablerowboundaryBreak;return 0;
+         }
+-        if(resumed)return PTS_tserrNotImplemented;
+-        for(auto& master:masters)master.cell.reset();
+-        status=format_cells(true,available);if(status)return status;status=constrain();if(status)return status;total=extent();
+-        if(int64_t(top)+used+total>rect.dv)return PTS_tserrNotImplemented;
++        if(!resumed){
++            for(auto& master:masters)master.cell.reset();
++            status=format_cells(true,available);if(status)return status;status=constrain();if(status)return status;total=extent();
++        }
++        // A cell may force its first oversized line onto an otherwise empty
++        // page. Preserve its real ink height and continuation; the parent
++        // accounts for the available page height, as for ordinary table rows.
++        if(int64_t(top)+used+total>rect.dv&&!forced_progress)return PTS_tserrNotImplemented;
+     }
+     if(int64_t(rect.v)+top+used+total>INT32_MAX)return PTS_tserrInvalidGeometry;
+     bool split=std::any_of(masters.begin(),masters.end(),[](const Master& master){return master.cell&&master.cell->record;});
+@@ -1022,11 +1029,13 @@ int format_span_group(const std::shared_ptr<ParaData>& para,const std::shared_pt
+         int status=reinterpret_cast<PtsSetCellHeight>(cb.pfnSetCellHeight)(master.cell->handle,para->desc.pfsparaclient,resumed&&incoming->span_cells[i].record?incoming->span_cells[i].record->handle:nullptr,master.name,master.cell->record!=nullptr,direction,int(span));if(status)return status;
+     }
+     for(size_t r=0;r<inputs.size();++r){auto row=std::make_shared<TableRowData>(context);auto& input=inputs[r];row->description.fsnmRow=input.name;row->description.pfstablerow=row.get();row->description.fsupdinf.fskupd=fskupdNew;row->description.u.dvrRow=above[r]+heights[r]+below[r];
++        row->details.fForcedRow=forced_progress;
+         row->details.fskboundaryAbove=resumed?fsktablerowboundaryBreak:data->rows.empty()?(first_table?fsktablerowboundaryOuter:fsktablerowboundaryBreak):fsktablerowboundaryInner;
+         row->details.fskboundaryBelow=split?fsktablerowboundaryBreak:r+1==inputs.size()&&!found?fsktablerowboundaryOuter:fsktablerowboundaryInner;row->details.dvrAbove=above[r];row->details.dvrBelow=below[r];row->details.cCells=int(input.names.size());row->merges=input.merges;
+         for(void* name:input.names){auto master=std::find_if(masters.begin(),masters.end(),[&](const Master& value){return value.name==name&&value.first<=r&&value.last>=r;});if(master==masters.end())return PTS_tserrInvalidClientOutput;row->cells.push_back(master->cell);}
+         data->rows.push_back(row);
+     }
++    para->forced_progress=para->forced_progress||forced_progress;
+     used+=int(total);
+     if(split){output=std::make_shared<Continuation>();output->context=context;output->paragraph=para->desc.nmp;output->table_row=inputs.front().name;
+         for(auto& master:masters){PendingTableCell pending{master.name,nullptr,!master.cell||!master.cell->record};if(master.cell&&master.cell->record){auto record=std::make_shared<CellBreakData>(context);record->callbacks=cb;record->handle=master.cell->record;master.cell->record=nullptr;pending.record=record;}output->span_cells.push_back(pending);}
+diff --git a/bootstrap/m612/wpf-native/TableDirection.md b/bootstrap/m612/wpf-native/TableDirection.md
+index a0404bb..35b15c1 100644
+--- a/bootstrap/m612/wpf-native/TableDirection.md
++++ b/bootstrap/m612/wpf-native/TableDirection.md
+@@ -26,3 +26,24 @@ All consumers run as shared-framework and portable self-contained applications.
+ This supports horizontal LTR/RTL tables. Vertical writing directions, floating tables,
+ non-default native table alignment, header/footer rows and other documented advanced
+ table features remain unsupported. It does not establish full native layout parity.
++
++Spanning-cell forced progress
++----------------------------
++
++Finite span groups retain the cell formatter's fForcedProgress flag. On an empty
++page an oversized first line can extend beyond the page, including on resumed
++cell records. The group keeps its actual row/cell geometry and immutable source
++continuations; row queries expose fForcedRow and the parent bounds its consumed
++extent to the available page height. A nonempty page still defers the group.
++Overflow without a forced-progress callback remains unsupported.
++
++The native regression resumes nine oversized source fragments and verifies row
++flags, bounded parent height, terminal continuation state and exact ownership.
++The public SpanForcedProgress consumer checks three-row spans with no neighboring
++cells, short neighbors and independently continuing multiline neighbors at page
++heights 10/40/80 in Ideal/Display mode and opposing page/table directions. Every
++source character belongs to exactly one page with matching GetPageNumber; disposed
++pages regenerate identical rasters after compacting GC. The 40/80-height cases
++also require actual green glyph ink. At height 10 the page clip may hide the glyphs,
++so source coverage, bounded progress and regeneration are the relevant checks.
++All scenarios execute through shared-framework and portable SDK applications.
+diff --git a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+index 023688f..37b8a06 100644
+--- a/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
++++ b/bootstrap/m612/wpf-tests/ParagraphContextNative.cpp
+@@ -930,7 +930,19 @@ int main(int argc,char** argv) {
+             for(int r=0;r<3;++r)require(FsQueryTableObjCellList(context,table_rows[r].pfstablerow,2,cell_updates,cell_handles,cell_merges,&actual_count)==0&&!cell_handles[0]&&cell_handles[1],"completed ordinary cells are omitted while the resumed span stays shared across rows");
+             require(destroy_subtrack(context,subtrack)==0,"terminal span branch release");
+         }
+-        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split span clones/no-progress/failure/final release own every cell, record and original line exactly once");long_span=false;
++        require(destroy_subtrack_record(context,clone)==0&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"split span clones/no-progress/failure/final release own every cell, record and original line exactly once");
++        reset_page_counts();table_cells_created=table_cells_destroyed=table_records_created=table_records_destroyed=0;
++        FSRECT tiny_span_area{10,20,100,5};void* tiny_input=nullptr;
++        for(int chunk=0;chunk<9;++chunk){
++            require(format_subtrack(context,tiny_input,chunk!=0,reinterpret_cast<void*>(77),0,nullptr,nullptr,0,1,0,&tiny_span_area,nullptr,fskclearNone,fsksuppresshardbreakbeforefirstparaNone,&formatted,&subtrack,&subrecord,&used,&bbox,&margin,&clear,&top_space)==0&&formatted.fForcedProgress&&used==5&&bool(subrecord)==(chunk<8),"tiny spanning cell fragments honor forced source progress and retain exact terminal state");
++            if(tiny_input)require(destroy_subtrack_record(context,tiny_input)==0,"tiny span input release after successful resume");
++            require(FsQuerySubtrackParaList(context,subtrack,1,paras,&actual_count)==0&&actual_count==1&&paras[0].dvrUsed==5&&FsQueryTableObjRowList(context,paras[0].pfspara,3,table_rows,&actual_count)==0&&actual_count==3,"tiny span parent bounds consumed height and preserves all original row identities");
++            FSTABLEROWDETAILS tiny_row{};
++            require(FsQueryTableObjRowDetails(context,table_rows[0].pfstablerow,&tiny_row)==0&&tiny_row.fForcedRow,"tiny span row query exposes the callback forced-progress flag");
++            require(destroy_subtrack(context,subtrack)==0,"tiny span content release before continuation");tiny_input=subrecord;
++        }
++        require(!tiny_input&&table_records_created==table_records_destroyed&&table_cells_created==table_cells_destroyed&&clients_created==clients_destroyed&&lines_created==lines_destroyed&&breaks_destroyed==lines_created,"tiny span terminal teardown releases all cells, records, clients and source lines exactly once");long_span=false;
++        std::puts("native forced spans: nine oversized source fragments, bounded parent extent, row flags, exact terminal state and complete ownership PASS");
+         std::puts("native split spans: actual cell records, shared resumed master/omitted completed cells, immutable clones, no-progress/failure preservation and exact teardown PASS");
+         table_fail_cell=-1;malformed_span=table_spans=false;
+         std::puts("native vertical spans: original shared client/merge states, combined row height, intact deferral/resume, partial failures and exact single-owner cleanup PASS");
+diff --git a/bootstrap/m612/wpf-tests/SpanForcedProgress.cs b/bootstrap/m612/wpf-tests/SpanForcedProgress.cs
+new file mode 100644
+index 0000000..8be0a8f
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/SpanForcedProgress.cs
+@@ -0,0 +1,60 @@
++using System;
++using System.Collections;
++using System.Collections.Generic;
++using System.Linq;
++using System.Reflection;
++using System.Windows;
++using System.Windows.Documents;
++using System.Windows.Media;
++using System.Windows.Media.Imaging;
++using System.Windows.Threading;
++class Check {
++    static byte[] Raster(Visual visual) {
++        var bitmap=new RenderTargetBitmap(400,220,96,96,PixelFormats.Pbgra32);
++        bitmap.Render(visual);var pixels=new byte[400*220*4];bitmap.CopyPixels(pixels,1600,0);return pixels;
++    }
++    [STAThread] static void Main(string[] args) {
++        var pageDirection=args.Length==0?FlowDirection.LeftToRight:Enum.Parse<FlowDirection>(args[0]);
++        var tableDirection=args.Length==0?FlowDirection.LeftToRight:Enum.Parse<FlowDirection>(args[1]);
++        var viewType=typeof(FlowDocument).Assembly.GetType("System.Windows.Documents.ITextView",true);
++        foreach(var mode in new[]{TextFormattingMode.Ideal,TextFormattingMode.Display})
++        foreach(int height in new[]{10,40,80})foreach(int scenario in new[]{0,1,2}) {
++            var table=new Table {FlowDirection=tableDirection,CellSpacing=0,Margin=new Thickness(0)};
++            var group=new TableRowGroup();table.RowGroups.Add(group);var runs=new List<Run>();
++            var span=new Run("large zero\nlarge one\nlarge two");runs.Add(span);
++            for(int i=0;i<3;i++) {
++                var row=new TableRow();group.Rows.Add(row);
++                if(i==0)row.Cells.Add(new TableCell(new Paragraph(span){Margin=new Thickness(0),LineHeight=40,LineStackingStrategy=LineStackingStrategy.BlockLineHeight}){RowSpan=3,Padding=new Thickness(0)});
++                if(scenario>0) {
++                    var run=new Run(scenario==1?$"neighbor{i}":$"neighbor{i} zero\nneighbor{i} one\nneighbor{i} two");runs.Add(run);
++                    row.Cells.Add(new TableCell(new Paragraph(run){Margin=new Thickness(0),LineHeight=40,LineStackingStrategy=LineStackingStrategy.BlockLineHeight}){Padding=new Thickness(0)});
++                }
++            }
++            var document=new FlowDocument(table){FlowDirection=pageDirection,FontFamily=new FontFamily("Segoe UI"),FontSize=32,Foreground=Brushes.Lime,PagePadding=new Thickness(0),ColumnWidth=double.PositiveInfinity};
++            TextOptions.SetTextFormattingMode(document,mode);
++            var paginator=(DynamicDocumentPaginator)((IDocumentPaginatorSource)document).DocumentPaginator;paginator.PageSize=new Size(400,height);
++            var ranges=new List<(int Page,TextPointer Start,TextPointer End)>();var rasters=new List<byte[]>();int pages=0;
++            for(;pages<20;pages++) {
++                using var page=paginator.GetPage(pages);if(page==DocumentPage.Missing)break;
++                var pixels=Raster(page.Visual);int green=0;for(int p=0;p<pixels.Length;p+=4)if(pixels[p+3]>150&&pixels[p+1]>180&&pixels[p]<70&&pixels[p+2]<70)green++;
++                if(height>=40&&green<30)throw new Exception($"Span fragment ink: height={height}, scenario={scenario}, page={pages}");rasters.Add(pixels);
++                var view=((IServiceProvider)page).GetService(viewType);
++                foreach(var segment in (IEnumerable)viewType.GetProperty("TextSegments").GetValue(view)) {
++                    var t=segment.GetType();var flags=BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic;
++                    ranges.Add((pages,(TextPointer)t.GetProperty("Start",flags).GetValue(segment),(TextPointer)t.GetProperty("End",flags).GetValue(segment)));
++                }
++                GC.Collect(2,GCCollectionMode.Forced,true,true);
++            }
++            if(pages<2||pages>=20||!paginator.IsPageCountValid)throw new Exception("Oversized span fragments must make bounded progress");
++            if(scenario==0&&pages!=(height==80?2:3))throw new Exception("Three source lines must retain their expected pages");
++            foreach(var run in runs)for(int at=0;at<run.Text.Length;at++) {
++                var position=run.ContentStart.GetPositionAtOffset(at,LogicalDirection.Forward);
++                var owners=ranges.Where(r=>position.CompareTo(r.Start)>=0&&position.CompareTo(r.End)<0).ToArray();
++                if(owners.Length!=1||paginator.GetPageNumber(position)!=owners[0].Page)throw new Exception($"Exact span source ownership: height={height}, scenario={scenario}, offset={at}, owners={owners.Length}");
++            }
++            for(int p=pages-1;p>=0;p--) {using var page=paginator.GetPage(p);if(!Raster(page.Visual).SequenceEqual(rasters[p]))throw new Exception("Disposed span page must regenerate identical glyphs after GC");}
++            Console.WriteLine($"forced span {mode}, page={pageDirection}, table={tableDirection}, height={height}, scenario={scenario}: {pages} pages, {runs.Sum(r=>r.Text.Length)} characters owned once, glyphs/regeneration/GC PASS");
++        }
++        Dispatcher.CurrentDispatcher.InvokeShutdown();Console.WriteLine("original public forced span pagination PASS");
++    }
++}
+diff --git a/bootstrap/m612/wpf-tests/check-span-forced-progress-sdk.sh b/bootstrap/m612/wpf-tests/check-span-forced-progress-sdk.sh
+new file mode 100644
+index 0000000..8df9dbc
+--- /dev/null
++++ b/bootstrap/m612/wpf-tests/check-span-forced-progress-sdk.sh
+@@ -0,0 +1,37 @@
++#!/bin/bash
++set -euo pipefail
++sdk=$1
++work=$2
++here=$(cd "$(dirname "$0")" && pwd)
++mkdir -p "$work"
++cp "$here/SpanForcedProgress.cs" "$work/Program.cs"
++cat > "$work/SpanForcedProgressSdkCheck.csproj" <<'PROJECT'
++<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0-windows</TargetFramework><OutputType>Exe</OutputType><UseWPF>true</UseWPF><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
++PROJECT
++printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$work/NuGet.config"
++export DOTNET_ROOT=$(cygpath -m "$sdk")
++export DOTNET_ROOT_X64=$DOTNET_ROOT
++export DOTNET_CLI_HOME=$(cygpath -m "$work/cli-home")
++export NUGET_PACKAGES=$(cygpath -m "$work/empty-packages")
++"$sdk/dotnet.exe" build "$(cygpath -m "$work/SpanForcedProgressSdkCheck.csproj")" -c Release \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -v:q -p:UseSharedCompilation=false
++# Shared-framework execution must load the installed/overlaid desktop pack.
++test ! -e "$work/bin/Release/net8.0-windows/PresentationCore.dll"
++timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SpanForcedProgressSdkCheck.dll")"
++for directions in 'LeftToRight RightToLeft' 'RightToLeft LeftToRight'; do
++  read -r page_direction table_direction <<< "$directions"
++  timeout 60 "$sdk/dotnet.exe" "$(cygpath -m "$work/bin/Release/net8.0-windows/SpanForcedProgressSdkCheck.dll")" "$page_direction" "$table_direction"
++done
++"$sdk/dotnet.exe" publish "$(cygpath -m "$work/SpanForcedProgressSdkCheck.csproj")" -r win-x64 --self-contained true \
++  --configfile "$(cygpath -m "$work/NuGet.config")" -p:UseAppHost=true -v:q -p:UseSharedCompilation=false
++# Verify the published implementation/resource bytes came from this SDK's pack.
++cmp "$work/bin/Release/net8.0-windows/win-x64/publish/PresentationCore.dll" \
++  "$sdk/shared/Microsoft.WindowsDesktop.App/8.0.0-bootstrap.wpf.8.0.0/PresentationCore.dll"
++env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++  timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SpanForcedProgressSdkCheck.exe"
++for directions in 'LeftToRight RightToLeft' 'RightToLeft LeftToRight'; do
++  read -r page_direction table_direction <<< "$directions"
++  env -u DOTNET_ROOT -u DOTNET_ROOT_X64 PATH=/usr/bin:/c/Windows/System32 \
++    timeout 60 "$work/bin/Release/net8.0-windows/win-x64/publish/SpanForcedProgressSdkCheck.exe" "$page_direction" "$table_direction"
++done
++printf 'PASS normal offline WPF SDK forced span pagination check and self-contained publish with SDK roots removed\n'
+diff --git a/bootstrap/m612/wpf.sh b/bootstrap/m612/wpf.sh
+index 86b3c03..b71694b 100644
+--- a/bootstrap/m612/wpf.sh
++++ b/bootstrap/m612/wpf.sh
+@@ -884,6 +884,7 @@ step_check_sdk() {
+   bash "$here/wpf-tests/check-oversized-floats-sdk.sh" "$root" "$build/oversized-floats-sdk-check"
+   bash "$here/wpf-tests/check-forced-floaters-sdk.sh" "$root" "$build/forced-floaters-sdk-check"
+   bash "$here/wpf-tests/check-tables-sdk.sh" "$root" "$build/tables-sdk-check"
++  bash "$here/wpf-tests/check-span-forced-progress-sdk.sh" "$root" "$build/span-forced-sdk-check"
+   bash "$here/wpf-tests/check-figures-sdk.sh" "$root" "$build/figures-sdk-check"
+   bash "$here/wpf-tests/check-composite-lines-sdk.sh" "$root" "$build/composite-lines-sdk-check"
+   bash "$here/wpf-tests/check-hyphenation-sdk.sh" "$root" "$build/hyphenation-sdk-check"

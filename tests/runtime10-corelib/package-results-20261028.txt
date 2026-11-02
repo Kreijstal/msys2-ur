@@ -1,0 +1,44 @@
+CoreLib10 original-source bootstrap package — clean build and installed checks passed
+Finished UTC: 2026-10-28T22:14:23.453376+00:00
+Windows build root: /c/codex-dotnet10/corelib10pkg.XF6xcA
+
+Installed: mingw-w64-clang-x86_64-dotnet-corelib10-bootstrap 10.0.5-1
+Product: linked System.Private.CoreLib.dll / portable PDB / original corerun.exe
+Native dependency: four unchanged installed CoreCLR10 bootstrap DLLs; exact hashes match the prior formal package audit.
+
+Commands:
+$ makepkg -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-corelib10-bootstrap-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+$ /usr/bin/python3 src/corelib10-workflow/check.py "$PWD/src" "$PWD/installed-check" /clang64/lib/dotnet-bootstrap10/corelib/10.0.5
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-corelib10.py
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-corelib10-bootstrap
+RESULT: exit 0
+
+1932 unchanged original CoreLib C# files; zero framework assembly references.
+9 original CoreLib generator sources, declared Standard2.0 target and source-built Roslyn4.14.
+123 actual generator assembly references match exact installed source NuGet archive members.
+1951 original compile/project/resource/root/ILLink inputs verified against pinned runtime archive.
+363 original runtime-root entries, 8 generated interop/event/product source files.
+Original ILLink library policy; no manual InternalCall RVA helper.
+31189 public/protected API entries unchanged; all four embedded resources byte-identical and portable PDB readable.
+1421 original resource strings preserved, 208 remaining InternalCalls have zero body RVA.
+Original corerun host: 16 native build steps and upstream self-tests passed.
+Installed managed execution in Unicode layout: basic/JIT/generics, compacting GC, exceptions/finally, threading/interlocked/join all exit0.
+549 original CoreLib warnings and 25 generator warnings retained; no source compile errors.
+16 regular payload files match installed/archive bytes; pacman26 entries,0 altered.
+Package SHA256: ad14a0966f39cf67895240ded88114fcb8cdb13b3f50699e14bc6f4169b8846d
+Source workflow SHA256: 3dc6f25b8b8e3662b9bec8783e0f9651066a3c06a72da9bafa75d0d01162ec04
+Evidence SHA256: f9a8db4d9b1ed4f045fbfbbddb545e1f05a0d8e14cad89ec5493c02e42af5d85 (127 files)
+Evidence archive: /tmp/corelib10-bootstrap-package1/evidence.tar.gz
+
+Full dependency goal remains active and incomplete. Remaining:
+- remaining original managed/native .NET10 framework projects and target variants
+- complete runtime and targeting-pack metadata and installed SDK10 registration
+- original NET10 generator/linker/cDAC tool hosts; inherited compiler5 bootstrap remains
+- SDK10.0.201 and WindowsDesktop10
+- PowerShell7.6 complete original graph and installed integration
+- MMI3 remote/provider/ownership, SqlClient native/database, full Windows.Compatibility and earlier desktop/runtime gates

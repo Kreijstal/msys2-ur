@@ -1,0 +1,28 @@
+Original SDK Roslyn5.3 NET10 VB/client/server prototype
+All six original NET10 primary projects compile.
+New work:VB compiler915 original inputs,vbc11 original inputs,compiler server27 original inputs.
+Three original generators compile on the source NET8 bootstrap host (17+1+3 files). All five regenerated VB sources and grammar match the pinned source baseline.
+The VB compiler is bootstrapped with source VBC4.9.2 against NET10 contracts and source Common5.3. The new source NET10 CSharp compiler builds vbc and VBCSCompiler.
+Real vbc executes on source NET10,compiles a Unicode-response-file VB application using LINQ and async/await,and the emitted program executes successfully. Invalid source returns expected exit1 with BC30451.
+Production source changes0.
+
+Exact commands:
+$ /usr/bin/python3 /e/codex-dotnet10/evaluate-net10-toolset.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared /e/codex-dotnet10/roslyn53-net10-evaluation2 /e/codex-dotnet10/roslyn53-net10-toolset-plan2
+RESULT: exit 0
+$ bash /e/codex-dotnet10/vb-bootstrap-inputs/build-generators.sh /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-vb-generators1
+RESULT: exit 0
+$ /usr/bin/python3 /e/codex-dotnet10/build-net10-vb.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-net10-toolset-plan2 /e/codex-dotnet10/roslyn53-net10-build4 /e/codex-dotnet10/roslyn53-vb-generators1 /e/codex-dotnet10/roslyn53-vb-net10-build2
+RESULT: exit 0
+$ /usr/bin/python3 /e/codex-dotnet10/build-net10-clients.py /e/codex-dotnet10/roslyn53pkg1.WzBs8V/src/prepared/roslyn-source /e/codex-dotnet10/roslyn53-net10-toolset-plan2 /e/codex-dotnet10/roslyn53-net10-localized1 /e/codex-dotnet10/roslyn53-vb-net10-build2 /e/codex-dotnet10/roslyn53-net10-clients1
+RESULT: exit 0
+$ /usr/bin/python3 /e/codex-dotnet10/check-net10-vbc.py /e/codex-dotnet10/roslyn53-net10-clients1 "/e/codex-dotnet10/roslyn53-net10-vbc-check2 λ"
+RESULT: exit 0
+
+The first VB compile failed on spaces in an unquoted import alias. The second fresh build normalizes that alias and succeeds.
+The first VB application fixture omitted the original SDK _MYTYPE=Empty setting and requested desktop My helpers. The corrected fixture preserves that original NET10 SDK setting and succeeds.
+
+Evidence:181 files SHA256 e648f5dfb7b0b6331aa867df4f619daceda91a305ccd2af11332d766afd77d5c;all member hashes verified.
+Independent source audit:944 original VB/client source inputs match pinned archive. Five fresh VB generated files and grammar match original baselines.
+Local evidence: /tmp/roslyn53-net10-toolset-prototype1
+
+VB API/resource/localization validation,compiler-server execution,all other framework profiles and a complete formal toolset package remain open. Full SDK10 and PowerShell7.6 remain unfinished.

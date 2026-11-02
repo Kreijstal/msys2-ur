@@ -1,0 +1,41 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netstandard21-reference
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.1.0
+pkgrel=1
+pkgdesc='Original source .NET Standard 2.1 reference contract'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/standard'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=a5b5f2e1e369972c8ff1e2183979fab6099f52ef
+source=("standard-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/standard/tar.gz/$_commit"
+        'netstandard21-reference-source-1.tar.gz'
+        'arcade-standard21-8eb29ba8.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/8eb29ba860a3cfcfe68f9a8256caa7efc1f1aaba')
+noextract=("standard-${_commit:0:8}.tar.gz" 'arcade-standard21-8eb29ba8.tar.gz')
+sha256sums=('e681d3377e3ffa79cb97685e3fa3966a645017fa35ed7f3aef6b3566547fb794'
+            '2eceacf74bd061a443afb1f339e7beedcdb0319da15b24659b31a3b0c9a37d4d'
+            '59225b9ebf9501572e7bed517ffe003f526869e9245c20724040c47e241aaf6e')
+build() {
+  export DOTNET_ROOT=$(cygpath -am "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  /usr/bin/python3 "$srcdir/netstandard21-reference/build.py" "$srcdir/standard-${_commit:0:8}.tar.gz" "$srcdir/arcade-standard21-8eb29ba8.tar.gz" "$srcdir/built" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/netstandard21-reference/check.py" "$srcdir/standard-${_commit:0:8}.tar.gz" "$srcdir/built" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/packs/NETStandard.Library.Ref/$pkgver"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target/ref/netstandard2.1" "$target/data" "$doc"
+  install -m644 "$srcdir/built/pack/ref/netstandard2.1/"*.dll "$target/ref/netstandard2.1/"
+  install -m644 "$srcdir/built/pack/data/"* "$target/data/"
+  install -m644 "$srcdir/built/"{build-results,tool-inputs,removed-binaries}.json "$srcdir/consumer/"{results,metadata-results}.json "$doc/"
+  install -m644 "$srcdir/netstandard21-reference/README.md" "$doc/"
+  install -Dm644 "$srcdir/built/standard-$_commit/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+  install -Dm644 "$srcdir/built/standard-$_commit/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+}

@@ -1,0 +1,110 @@
+Subject: inject: build without the optional guice-servlet and CDI APIs
+
+Both are looked up at run time and are absent from Maven's class path;
+neither is packaged, so the code paths using them are compiled out.
+
+---
+
+--- a/org.eclipse.sisu.inject/src/main/java/org/eclipse/sisu/inject/Implementations.java
++++ b/org.eclipse.sisu.inject/src/main/java/org/eclipse/sisu/inject/Implementations.java
+@@ -36,13 +36,8 @@
+     // ----------------------------------------------------------------------
+ 
+     static {
+-        boolean hasGuiceServlet;
+-        try {
+-            hasGuiceServlet = BindingTargetVisitor.class.isInstance(ServletFinder.THIS);
+-        } catch (final LinkageError e) {
+-            hasGuiceServlet = false;
+-        }
+-        HAS_GUICE_SERVLET = hasGuiceServlet;
++        // built without the optional guice-servlet extension
++        HAS_GUICE_SERVLET = false;
+ 
+         boolean hasJsr250Priority;
+         try {
+@@ -96,7 +91,7 @@
+         final Class<?> annotationSource =
+                 // when looking for @Priority also consider annotations on providers (and servlets/filters if available)
+                 binding.acceptTargetVisitor(
+-                        isPriority ? (HAS_GUICE_SERVLET ? ServletFinder.THIS : ProviderFinder.THIS) : ClassFinder.THIS);
++                        isPriority ? ProviderFinder.THIS : ClassFinder.THIS);
+ 
+         T annotation = null;
+         if (null != annotationSource) {
+@@ -223,43 +218,4 @@
+             return binding.getProviderKey().getTypeLiteral().getRawType();
+         }
+     }
+-
+-    /**
+-     * {@link ProviderFinder} that also returns servlet/filter implementations.
+-     */
+-    static final class ServletFinder extends ProviderFinder
+-            implements com.google.inject.servlet.ServletModuleTargetVisitor<Object, Class<?>> {
+-        // ----------------------------------------------------------------------
+-        // Constants
+-        // ----------------------------------------------------------------------
+-
+-        @SuppressWarnings("hiding")
+-        static final BindingTargetVisitor<Object, Class<?>> THIS = new ServletFinder();
+-
+-        // ----------------------------------------------------------------------
+-        // Public methods
+-        // ----------------------------------------------------------------------
+-
+-        @Override
+-        public Class<?> visit(final com.google.inject.servlet.InstanceFilterBinding binding) {
+-            return binding.getFilterInstance().getClass();
+-        }
+-
+-        @Override
+-        public Class<?> visit(final com.google.inject.servlet.InstanceServletBinding binding) {
+-            return binding.getServletInstance().getClass();
+-        }
+-
+-        @Override
+-        public Class<?> visit(final com.google.inject.servlet.LinkedFilterBinding binding) {
+-            // this assumes only one level of indirection: api-->impl
+-            return binding.getLinkedKey().getTypeLiteral().getRawType();
+-        }
+-
+-        @Override
+-        public Class<?> visit(final com.google.inject.servlet.LinkedServletBinding binding) {
+-            // this assumes only one level of indirection: api-->impl
+-            return binding.getLinkedKey().getTypeLiteral().getRawType();
+-        }
+-    }
+ }
+
+--- a/org.eclipse.sisu.inject/src/main/java/org/eclipse/sisu/space/QualifiedTypeBinder.java
++++ b/org.eclipse.sisu.inject/src/main/java/org/eclipse/sisu/space/QualifiedTypeBinder.java
+@@ -41,13 +41,8 @@
+     // ----------------------------------------------------------------------
+ 
+     static {
+-        boolean hasJsr299Typed;
+-        try {
+-            hasJsr299Typed = javax.enterprise.inject.Typed.class.isAnnotation();
+-        } catch (final LinkageError e) {
+-            hasJsr299Typed = false;
+-        }
+-        HAS_JSR299_TYPED = hasJsr299Typed;
++        // built without the optional JSR-299 (CDI) API
++        HAS_JSR299_TYPED = false;
+     }
+ 
+     // ----------------------------------------------------------------------
+@@ -324,12 +319,6 @@
+ 
+     private static Class<?>[] getBindingTypes(final Class<?> clazz) {
+         for (Class<?> c = clazz; null != c && c != Object.class; c = c.getSuperclass()) {
+-            if (HAS_JSR299_TYPED) {
+-                final javax.enterprise.inject.Typed typed = c.getAnnotation(javax.enterprise.inject.Typed.class);
+-                if (null != typed) {
+-                    return typed.value().length > 0 ? typed.value() : c.getInterfaces();
+-                }
+-            }
+             final org.eclipse.sisu.Typed typed = c.getAnnotation(org.eclipse.sisu.Typed.class);
+             if (null != typed) {
+                 return typed.value().length > 0 ? typed.value() : c.getInterfaces();

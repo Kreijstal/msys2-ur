@@ -1,0 +1,171 @@
+Source original NET10 Roslyn5.3 MSBuild task package
+Date: 2026-10-29T06:54:01.705282+00:00
+Host: win11; /e/codex-dotnet10/roslyn53taskspkg1.PMQAyw
+Installed package: mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap 5.3.0.2.26113.113-1
+Archive SHA256: 5b719be18c2ecb91671f8b410997cd77256b02c3f53bc0764906646e45c18c26
+Previous goal turn: progress. Current goal turn: progress.
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit4 at original compiler-version target invocation;all six MSBuild17 NET8 and NET10 Roslyn task compilations completed successfully.
+The original generation target was corrected to a focused no-SDK wrapper;production source was unchanged.
+
+$ ROSLYN_TASKS_RESUME_COMPILED=1 makepkg --noextract --force --noconfirm
+RESULT: exit0;original source/resource/reference/output hashes revalidated before reusing completed source compilations.
+Original target generation,all13 task satellites,archive audits and fresh candidate checks then passed.
+
+$ python tests/roslyn5/audit-msbuild-task-package.py /tmp/roslyn53-task-package1/mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap-5.3.0.2.26113.113-1-any.pkg.tar.zst /tmp/roslyn53-task-package1/archive-audit.json
+RESULT: exit0;129 payload files,13 task satellites,39 compiler satellites,original target/compiler asset hashes verified.
+
+$ pacman -U --noconfirm /e/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap-5.3.0.2.26113.113-1-any.pkg.tar.zst
+RESULT: exit0.
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-roslyn53-msbuild-tasks-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check
+RESULT: exit0;original CSharp/VisualBasic CoreCompile targets use default installed task registration without RoslynTargetsPath override.
+NET10 CSharp14/VB LINQ execution,Unicode paths/output,portable PDB,generated editorconfig properties,and CS0103/BC30451 propagation pass.
+All434 original neutral/localized task resource values pass.
+Both actual packaged tasks auto-start/share one source NET10 compiler server;two completed requests,no command-line fallback,owned process image and shutdown pass.
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap mingw-w64-clang-x86_64-dotnet-visualbasic53-bootstrap
+mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap: 168 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-msbuild18-bootstrap: 156 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap: 106 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-visualbasic53-bootstrap: 94 total files, 0 altered files
+All94 compiler assets are byte-identical to installed source CSharp/VisualBasic packages.
+
+Original source audit:
+{
+  "msbuild17": {
+    "original_compile_items": 1195,
+    "distinct_archive_inputs": 1052,
+    "all_original_input_output_reference_hashes_match": true
+  },
+  "roslyn_task": {
+    "original_compile_items": 60,
+    "distinct_archive_inputs": 81,
+    "all_original_input_output_reference_hashes_match": true
+  },
+  "collections_source_items": 37
+}
+
+Exact completed compile/generation/installed commands:
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.NET.StringTools/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Framework/Collections.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Framework/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Utilities.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Utilities.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Tasks.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/Microsoft.Build.Tasks.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/MSBuild/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/msbuild17/MSBuild/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/task/Resources.proj -t:Generate -nologo
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/task/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/GenerateVersion.proj -t:GenerateCompilerVersionTargetsFile -nologo -noautoresponse -nr:false
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src/roslyn53-tasks-workflow/localize.py E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap/src
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/CSharp λ/Compile.proj -t:CoreCompile -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/CSharp λ/App.dll
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/CSharp λ/Compile.proj -t:CoreCompile -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 1
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/VisualBasic λ/Compile.proj -t:CoreCompile -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/VisualBasic λ/App.dll
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/VisualBasic λ/Compile.proj -t:CoreCompile -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 1
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Roslyn/bincore/csc.dll -noconfig @E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/resources.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/ResourceCheck.dll E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Roslyn/Microsoft.Build.Tasks.CodeAnalysis.dll E:/msys64/clang64/share/doc/dotnet-roslyn53-msbuild-tasks-bootstrap/checks/ErrorString.resx E:/msys64/clang64/share/doc/dotnet-roslyn53-msbuild-tasks-bootstrap/checks/expected-localization.json E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap
+RESULT: exit 0
+$ E:/msys64/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-roslyn53-msbuild-tasks-bootstrap/checks/check-server.py E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Roslyn/Microsoft.Build.Tasks.CodeAnalysis.dll E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/server --use-existing-layout
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/server/Csc.proj -t:Build -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/MSBuild.dll E:/codex-dotnet10/roslyn53taskspkg1.PMQAyw/installed-check/server/Vbc.proj -t:Build -nr:false -noautoresponse -nologo -v:diag
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet10/build-packs/msbuild-18.3.0-net10-bootstrap/Roslyn/bincore/VBCSCompiler.dll -shutdown -pipename:codex-sdk10-tasks-1e5503a6f2ed4a2aa4bde6293eeed691
+RESULT: exit 0
+
+Initial generation failure
+Build started 29.10.26 07:44:36.
+Project "E:\codex-dotnet10\roslyn53taskspkg1.PMQAyw\mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap\src\task-plan\Microsoft.Build.Tasks.CodeAnalysis.csproj" on node 1 (GenerateCompilerVersionTargetsFile target(s)).
+E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.props(88,3): error MSB4019: The imported project "E:\msys64\clang64\lib\dotnet10\build-packs\msbuild-18.3.0-net10-bootstrap\Current\Microsoft.Common.props" was not found. Confirm that the expression in the Import declaration "$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props", which evaluated to "E:\msys64\clang64\lib\dotnet10\build-packs\msbuild-18.3.0-net10-bootstrap\Current\Microsoft.Common.props", is correct, and that the file exists on disk. [E:\codex-dotnet10\roslyn53taskspkg1.PMQAyw\mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap\src\task-plan\Microsoft.Build.Tasks.CodeAnalysis.csproj]
+Done Building Project "E:\codex-dotnet10\roslyn53taskspkg1.PMQAyw\mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap\src\task-plan\Microsoft.Build.Tasks.CodeAnalysis.csproj" (GenerateCompilerVersionTargetsFile target(s)) -- FAILED.
+
+Build FAILED.
+
+"E:\codex-dotnet10\roslyn53taskspkg1.PMQAyw\mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap\src\task-plan\Microsoft.Build.Tasks.CodeAnalysis.csproj" (GenerateCompilerVersionTargetsFile target) (1) ->
+  E:\msys64\clang64\lib\dotnet\sdk\8.0.131\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.props(88,3): error MSB4019: The imported project "E:\msys64\clang64\lib\dotnet10\build-packs\msbuild-18.3.0-net10-bootstrap\Current\Microsoft.Common.props" was not found. Confirm that the expression in the Import declaration "$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props", which evaluated to "E:\msys64\clang64\lib\dotnet10\build-packs\msbuild-18.3.0-net10-bootstrap\Current\Microsoft.Common.props", is correct, and that the file exists on disk. [E:\codex-dotnet10\roslyn53taskspkg1.PMQAyw\mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap\src\task-plan\Microsoft.Build.Tasks.CodeAnalysis.csproj]
+
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:00.65
+
+
+Focused resume log
+==> Making package: mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap 5.3.0.2.26113.113-1 (29 Oct 2026 07:46:14)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> WARNING: Using existing $srcdir/ tree
+==> Removing existing $pkgdir/ directory...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-roslyn53-msbuild-tasks-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-roslyn53-msbuild-tasks-bootstrap 5.3.0.2.26113.113-1 (29 Oct 2026 07:49:15)
+
+
+Installed checks
+PASS original CSharp/VB core targets,NET10 execution,Unicode/PDB/editorconfig/error codes,434 task values and owned shared server;installed default path: True
+
+
+CSharp NET10 execution
+PASS original CSharp core targets NET10 Grüße 世界
+
+
+VB NET10 execution
+PASS original VisualBasic core targets NET10 Grüße 世界
+
+
+All resources
+PASS original NET10 task identity,five task types and 434 exact neutral/localized resource values
+
+
+Owned server shutdown
+
+
+Remaining:
+formal exact MSBuild17 compile-time dependency packages and original additional framework/version-policy profiles
+original NET472/bridge compiler-task profile and complete original tool metadata/profile gates
+full SDK10 restore/build including remaining SDK tasks and NuGet components
+WindowsDesktop10,PowerShell7.6 and existing runtime/native/SQL/MI/compatibility gates
+
+This is a formal source bootstrap package;original additional framework/profile and full SDK10 requirements remain open.
+Dependency catalog counts are unchanged;full dependency goal remains incomplete.

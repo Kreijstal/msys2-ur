@@ -1,0 +1,1721 @@
+[
+  {
+    "file": "nuget-core-metadata/NuGet.Commands.dll",
+    "sha256": "e18d25d5a7f416a76ee2491f212da2d3c20f84246a454d89a22caa231ef613a6",
+    "name": "NuGet.Commands",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Commands.Strings.resources": {
+        "ArgumentCannotBeNullOrEmpty": "The argument cannot be null or empty.",
+        "CannotBeUsedWithOtherValues": "\u0027{0}\u0027 cannot be used in conjunction with other values.",
+        "ClientCertificatesFileCertFilePath": "{0}File path: {1}",
+        "ClientCertificatesFileCertNoPassword": "{0}Password: -",
+        "ClientCertificatesFileCertWithPassword": "{0}Password: ****",
+        "ClientCertificatesItemCertificateError": "{0}Certificates status: {1}",
+        "ClientCertificatesItemCertificateMessage": "{0}Certificate: {1}",
+        "ClientCertificatesLogTitle": "{0}{1} [{2}]",
+        "ClientCertificatesStoreCertFindBy": "{0}Find by: {1}",
+        "ClientCertificatesStoreCertFindValue": "{0}Find value: {1}",
+        "ClientCertificatesStoreCertStoreLocation": "{0}Store location: {1}",
+        "ClientCertificatesStoreCertStoreName": "{0}Store name: {1}",
+        "ClientCertificateSuccessfullyAdded": "Client certificate configured for the package source \u0027{0}\u0027 was successfully added.",
+        "ClientCertificateSuccessfullyRemoved": "Client certificate configured for the package source \u0027{0}\u0027 was successfully removed.",
+        "ClientCertificateSuccessfullyUpdated": "Client certificate configured for the package source \u0027{0}\u0027 was successfully updated.",
+        "Error_AuthorTrustExpectedAuthorSignature": "Unable to add trusted author. The package is not author signed.",
+        "Error_CannotFindMsbuild": "Cannot find version of msbuild.",
+        "Error_CannotTrustOwnersForAuthor": "Trusted owners are not supported in trusted author items.",
+        "Error_CentralPackageVersions_AutoreferencedReferencesNotAllowed": "The packages {0} are implicitly referenced. You do not typically need to reference them from your project or in your central package versions management file. For more information, see https://aka.ms/sdkimplicitrefs",
+        "Error_CentralPackageVersions_FloatingVersionsAreNotAllowed": "Centrally defined floating package versions are not allowed.",
+        "Error_CentralPackageVersions_MissingPackageVersion": "The PackageReference items {0} do not have corresponding PackageVersion.",
+        "Error_CentralPackageVersions_VersionOverrideDisabled": "The package reference {0} specifies a VersionOverride but the ability to override a centrally defined version is currently disabled.",
+        "Error_CentralPackageVersions_VersionsNotAllowed": "Projects that use central package version management should not define the version on the PackageReference items but on the PackageVersion items: {0}.",
+        "Error_ClientCertificateAlreadyExist": "Client certificate configured for the package source \u0027{0}\u0027 already exists.",
+        "Error_ClientCertificateNotExist": "Client certificate configured for the package source \u0027{0}\u0027 does not exist",
+        "Error_ClientCertificatesNotFound": "Client certificates were not found.",
+        "Error_ClientCertificateTypeMismatch": "Client certificate configured for the package source \u0027{0}\u0027 cannot be modified due to a type mismatch.",
+        "Error_CouldNotAdd": "Could not add the trusted signer: {0}",
+        "Error_CouldNotList": "Could not list the trusted signers: {0}",
+        "Error_CouldNotRemove": "Could not remove the trusted signer: {0}",
+        "Error_CouldNotSync": "Could not sync the trusted repository: {0}",
+        "Error_CouldNotUpdateClientCertificate": "Could not update the client certificate: {0}",
+        "Error_CouldNotUpdateMetadataLastAccessTime": "Updating last access time on file {0} failed with {1}",
+        "Error_EmptyCertificateListInRepository": "The repository with the service index \u0027{0}\u0027 does not list any trusted certificates.",
+        "Error_EmptySourceFilePath": "A source file was added with an empty path.",
+        "Error_EmptySourceFileProjectDirectory": "The project directory for the source file \u0027{0}\u0027 could not be found.",
+        "Error_IncompatiblePackageType": "The package {0} {1} has a package type {2} that is incompatible with this project.",
+        "Error_InputFileNotSpecified": "Specify a nuspec, project.json, or project file to use",
+        "Error_InvalidATF": "PackageTargetFallback and AssetTargetFallback cannot be used together. Remove PackageTargetFallback(deprecated) references from the project environment.",
+        "Error_InvalidCertificateInformationFromServer": "Invalid certificate information from the service index \u0027{0}\u0027.",
+        "Error_InvalidCombinationOfArguments": "Invalid combination of arguments.",
+        "Error_InvalidCommandLineInput": "Invalid input \u0027{0}\u0027. The file type was not recognized.",
+        "Error_InvalidCommandLineInputConfig": "Invalid input \u0027{0}\u0027. Valid file names are \u0027packages.config\u0027 or \u0027packages.*.config\u0027.",
+        "Error_InvalidCommandLineInputJson": "Invalid input \u0027{0}\u0027. Valid file names are \u0027project.json\u0027 or \u0027*.project.json\u0027.",
+        "Error_InvalidDependencyVersionConstraints": "Package version constraints for \u0027{0}\u0027 return a version range that is empty.",
+        "Error_InvalidLockFileInput": "Invalid restore input where RestorePackagesWithLockFile property is set to false but a packages lock file exists at {0}.",
+        "Error_InvalidNuGetAuditLevelValue": "Invalid NuGetAuditLevel value \u0027{0}\u0027. Valid values: {1}",
+        "Error_InvalidNuGetAuditModeValue": "Invalid NuGetAuditMode value \u0027{0}\u0027. Valid values: {1}",
+        "Error_InvalidNuGetAuditValue": "Invalid NuGetAudit value \u0027{0}\u0027. Valid values: {1}",
+        "Error_InvalidProjectPackageCombo": "Invalid project-package combination for {0} {1}. DotnetToolReference project style can only contain references of the DotnetTool type",
+        "Error_InvalidSymbolPackageFormat": "The provided SymbolPackageFormat value {0} is invalid. Allowed values : \u0027snupkg\u0027, \u0027symbols.nupkg\u0027.",
+        "Error_InvalidTargetFramework": "Failed to build package because of an unsupported targetFramework value on \u0027{0}\u0027.",
+        "Error_InvalidWindowsTargetPlatformMinVersion": "Invalid value for WindowsTargetPlatformMinVersion: {0}",
+        "Error_MissingSourceParameter": "Source parameter was not specified.",
+        "Error_MultiplePackagePaths": "{0} contains more than one path",
+        "Error_NoClientAllowList": "signatureValidationMode is set to require, so packages are allowed only if signed by trusted signers; however, no trusted signers were specified.",
+        "Error_NoMatchingCertificate": "The package signature did not match any of the allowed certificate fingerprints.",
+        "Error_NoMatchingClientCertificate": "This package is signed but not by a trusted signer.",
+        "Error_NoPackageVersionsExist": "Unable to find package {0}. No packages exist with this id in source(s): {1}",
+        "Error_NoPackageVersionsExistInRange": "Unable to find package {0} with version {1}",
+        "Error_NoSignatureTrustedForPackage": "No signature to be trusted was specified for the package \u0027{0}\u0027. Specify either Author or Repository.",
+        "Error_NoSourcesInformation": "Unable to get package sources information.",
+        "Error_NoStablePackageVersionsExist": "Unable to find a stable package {0} with version {1}",
+        "Error_NotSupportedHashAlgorithm": "\u0027{0}\u0027 is not a supported hash algorithm.",
+        "Error_PackageCommandNoFilesForLibPackage": "Failed to build package. Ensure \u0027{0}\u0027 includes assembly files. For help on building symbols package, visit {1}.",
+        "Error_PackageCommandNoFilesForSymbolsPackage": "Failed to build package. Ensure \u0027{0}\u0027 includes source and symbol files. For help on building symbols package, visit {1}.",
+        "Error_PackageDownload_NoVersion": "Package \u0027{0}\u0027 does not have an exact version like \u0027[1.0.0]\u0027. Only exact versions are allowed with PackageDownload.",
+        "Error_PackageDownload_OnlyExactVersionsAreAllowed": "Package \u0027{0} {1}\u0027 does not have an exact version like \u0027[1.0.0]\u0027. Only exact versions are allowed with PackageDownload.",
+        "Error_PackageNotSigned": "The package is not signed.",
+        "Error_PackageValidationFailed": "Package content hash validation failed for {0}. The package is different than the last restore.",
+        "Error_PackFailed": "Failed to build package. {0}",
+        "Error_PlatformVersionNotPresent": "Platform version is not present for one or more target frameworks, even though they have specified a platform: {0}",
+        "Error_ProjectDoesNotExist": "Unable to find project \u0027{0}\u0027. Check that the project reference is valid and that the project file exists.",
+        "Error_ProjectRuntimeJsonIsUnreadable": "The runtime.json specified in the project \u0027{0}\u0027 could not be parsed. {1}",
+        "Error_ProjectRuntimeJsonNotFound": "The runtime.json specified in the project \u0027{0}\u0027 could not be found.",
+        "Error_ProjectWithIncorrectDependenciesCount": "Project {0} must have a single package reference(s).",
+        "Error_PropertyCannotBeNullOrEmpty": "Property \u0027{0}\u0027 should not be null or empty.",
+        "Error_RepoTrustExpectedRepoSignature": "Unable to add trusted repository. The package is not repository signed or countersigned.",
+        "Error_RestoreInLockedMode": "The packages lock file is inconsistent with the project dependencies so restore can\u0027t be run in locked mode. Disable the RestoreLockedMode MSBuild property or pass an explicit --force-evaluate option to run restore to update the lock file.",
+        "Error_ServiceIndexShouldBeHttps": "The repository service index \u0027{0}\u0027 is not a valid HTTPS url.",
+        "Error_ToolsPackageWithExtraPackageTypes": "Invalid tools package {0} {1}. Tools packages cannot contain more than one PackageType.",
+        "Error_TrustedAuthorNoOwners": "A trusted author cannot have owners.",
+        "Error_TrustedRepoAlreadyExists": "A trusted repository with the service index \u0027{0}\u0027 already exists.",
+        "Error_TrustedRepositoryDoesNotExist": "A trusted repository \u0027{0}\u0027 does not exist.",
+        "Error_TrustedSignerAlreadyExists": "A trusted signer \u0027{0}\u0027 already exists.",
+        "Error_UnableToFindProjectInfo": "Unable to find project information for \u0027{0}\u0027. If you are using Visual Studio, this may be because the project is unloaded or not part of the current solution so run a restore from the command-line. Otherwise, the project file may be invalid or missing targets required for restore.",
+        "Error_UnableToLocateBuildOutput": "No build found in {0}. Use the -Build option or build the project.",
+        "Error_UnableToLocateRestoreTarget": "The folder \u0027{0}\u0027 does not contain a project to restore.",
+        "Error_UnableToSignPackage": "Unable to sign package.",
+        "Error_UnavailableSource": "Source \u0027{0}\u0027 does not exist or cannot be retrived.",
+        "Error_UnknownBuildAction": "Package \u0027{0}\u0027 specifies an invalid build action \u0027{1}\u0027 for file \u0027{2}\u0027.",
+        "Error_UnknownClientCertificatesFindBy": "The find by search type \u0027{0}\u0027 is not recognized.",
+        "Error_UnknownClientCertificatesStoreLocation": "The store location \u0027{0}\u0027 is not recognized.",
+        "Error_UnknownClientCertificatesStoreName": "The source name \u0027{0}\u0027 is not recognized.",
+        "Error_UnknownClientCertificateStoreType": "Cannot determine client certificate store type",
+        "Error_UnsupportedTrustTarget": "The trust target \u0027{0}\u0027 is unsupported.",
+        "Error_VulnerabilityDataFetch": "Error occurred while getting package vulnerability data: {0}",
+        "Error_WriteResolvedNuSpecOverwriteOriginal": "Unable to output resolved nuspec file because it would overwrite the original at \u0027{0}\u0027",
+        "Error_XPROJNotAllowed": "Invalid input \u0027{0}\u0027. XProj support has been removed. Support for XProj and standalone project.json files has been removed, to continue working with legacy projects use NuGet 3.5.x from https://nuget.org/downloads",
+        "FailedToBuildProject": "Failed to build \u0027{0}\u0027.",
+        "FileNotAddedToPackage": "File \u0027{0}\u0027 is not added because the package already contains file \u0027{1}\u0027",
+        "FoundVersionsInSource": "Found {0} version(s) in {1} [ Nearest version: {2} ]",
+        "FoundVersionsInSourceWithoutMatch": "Found {0} version(s) in {1}",
+        "InvalidRestoreInput": "Invalid restore input. {0}",
+        "InvalidRestoreInputWithFiles": "Invalid restore input. {0} Input files: {1}.",
+        "InvalidSource": "The specified source \u0027{0}\u0027 is invalid. Provide a valid source.",
+        "LocalsCommand_ClearedSuccessful": "Local resources cleared.",
+        "LocalsCommand_ClearFailed": "Clearing local resources failed: Unable to delete one or more files.",
+        "LocalsCommand_ClearingNuGetGlobalPackagesFolder": "Clearing NuGet global packages folder: {0}",
+        "LocalsCommand_ClearingNuGetHttpCache": "Clearing NuGet HTTP cache: {0}",
+        "LocalsCommand_ClearingNuGetPluginsCache": "Clearing NuGet plugins cache: {0}",
+        "LocalsCommand_ClearingNuGetTempCache": "Clearing NuGet Temp cache: {0}",
+        "LocalsCommand_FailedToDeletePath": "Failed to delete \u0027{0}\u0027.",
+        "LocalsCommand_Help": "usage: NuGet locals \u003Call | http-cache | global-packages | temp | plugins-cache\u003E [--clear | -c | --list | -l]\r\nFor more information, visit https://docs.nuget.org/docs/reference/command-line-reference",
+        "LocalsCommand_InvalidLocalResourceName": "An invalid local resource name was provided. Provide one of the following values: http-cache, temp, global-packages, all.",
+        "LocalsCommand_LocalResourcePathNotSet": "The location of local resource \u0027{0}\u0027 is undefined.",
+        "LocalsCommand_LocalsPartiallyCleared": "Local resources partially cleared.",
+        "Log_AllProjectsUpToDate": "All projects are up-to-date for restore.",
+        "Log_AssetsFileNotOnDisk": "The expected assets file for {0} does not exist, no-op is not possible. Continuing restore.",
+        "Log_Committing": "Committing restore...",
+        "Log_ConfigFileSummary": "NuGet Config files used:",
+        "Log_ConvertedPackageToOriginalCase": "The package {0} was converted to original case in the packages directory.",
+        "Log_CPVM_DowngradeError": "Detected package downgrade: {0} from {1} to centrally defined {2}. Update the centrally managed package version to a higher version.",
+        "Log_CycleDetected": "Cycle detected.",
+        "Log_DependencyBumpedUp": "Dependency specified was {0} {1} but ended up with {2} {3}.",
+        "Log_DowngradeWarning": "Detected package downgrade: {0} from {1} to {2}. Reference the package directly from the project to select a different version.",
+        "Log_ErrorSummary": "Errors in {0}",
+        "Log_FeedsUsedSummary": "Feeds used:",
+        "Log_FrameworkDisplay": "{0} ({1})",
+        "Log_FrameworkRIDDisplay": "{0} ({1}) / {2}",
+        "Log_GeneratingMsBuildFile": "Generating MSBuild file {0}.",
+        "Log_ImportsFallbackWarning": "Package \u0027{0}\u0027 was restored using \u0027{1}\u0027 instead of the project target framework \u0027{2}\u0027. This package may not be fully compatible with your project.",
+        "Log_InstalledSummary": "Installed:",
+        "Log_InstalledSummaryCount": "{0} package(s) to {1}",
+        "Log_LockFileNotOnDisk": "The lock file for {0} at location {1} does not exist, no-op is not possible. Continuing restore.",
+        "Log_MergingRuntimes": "Merging in runtimes defined in {0}.",
+        "Log_MissingImplementationFx": "{0} {1} provides a compile-time reference assembly for {2} on {3}, but there is no compatible run-time assembly.",
+        "Log_MissingImplementationFxRuntime": "{0} {1} provides a compile-time reference assembly for {2} on {3}, but there is no run-time assembly compatible with {4}.",
+        "Log_MissingPackagesOnDisk": "Not all packages are on disk for: {0}",
+        "Log_PackageCommandAddedFile": "Added file \u0027{0}\u0027.",
+        "Log_PackageCommandAttemptingToBuildSymbolsPackage": "Attempting to build symbols package for \u0027{0}\u0027.",
+        "Log_PackageCommandInstallPackageToOutputPath": "Install {0} to output path \u0027{1}\u0027",
+        "Log_PackageCommandSuccess": "Successfully created package \u0027{0}\u0027.",
+        "Log_PackageContentHashValidationFailed": "Package content hash validation failed for {0}. Expected: {1} Actual: {2}",
+        "Log_PackageNotCompatibleWithFx": "Package {0} {1} is not compatible with {2}.",
+        "Log_PackageNotCompatibleWithFx_NoSupports": "Package {0} {1} does not support any target frameworks.",
+        "Log_PackageNotCompatibleWithFx_Supports": "Package {0} {1} supports:",
+        "Log_PackagesAndProjectsAreCompatible": "All packages and projects are compatible with {0}.",
+        "Log_ProjectDoesNotSpecifyTargetFrameworks": "The project {0} does not specify any target frameworks in {1}.",
+        "Log_ProjectNotCompatibleWithFx": "Project {0} is not compatible with {1}.",
+        "Log_ProjectNotCompatibleWithFx_NoSupports": "Project {0} does not support any target frameworks.",
+        "Log_ProjectNotCompatibleWithFx_Supports": "Project {0} supports:",
+        "Log_ProjectUpToDateSummary": "{0} of {1} projects are up-to-date for restore.",
+        "Log_PropsFileNotOnDisk": "The props file for {0} at location {1} does not exist, no-op is not possible. Continuing restore.",
+        "Log_ReadingProject": "Reading project file {0}.",
+        "Log_ResolverConflict": "Unable to satisfy conflicting requests for \u0027{0}\u0027: {1} Framework: {2}",
+        "Log_ResolvingConflicts": "Resolving conflicts for {0}...",
+        "Log_RestoreComplete": "Restored {0} (in {1}).",
+        "Log_RestoreCompleteDotnetTool": "Restored {0} (in {1}).",
+        "Log_RestoreFailed": "Failed to restore {0} (in {1}).",
+        "Log_RestoreFailedDotnetTool": "Failed to restore {0} (in {1}).",
+        "Log_RestoreNoOpDGChanged": "The restore inputs for \u0027{0}\u0027 have changed. Continuing restore.",
+        "Log_RestoreNoOpFinish": "The restore inputs for \u0027{0}\u0027 have not changed. No further actions are required to complete the restore.",
+        "Log_RestoringPackages": "Restoring packages for {0}...",
+        "Log_RunningNonParallelRestore": "Running non-parallel restore.",
+        "Log_RunningParallelRestore": "Running restore with {0} concurrent jobs.",
+        "Log_ScanningForRuntimeJson": "Scanning packages for runtime.json files...",
+        "Log_SkippingAssetsFile": "Assets file has not changed. Skipping assets file writing. Path: {0}",
+        "Log_SkippingCacheFile": "No-Op restore. The cache will not be updated. Path: {0}",
+        "Log_SkippingCompatibiilityCheckOnRidlessGraphForDotnetToolReferenceProject": "Skipping compatibility checks of the ridless graph for DotnetToolReference project type. This graph is not used. ",
+        "Log_SkippingPackagesLockFileGeneration": "Skipping the lock file regeneration for \u0027{0}\u0027.",
+        "Log_SourceMappingEnabledNoMatchingPackageSources": "PackageSourceMapping is enabled, the following source(s) were not considered: {0}.",
+        "Log_TargetsFileNotOnDisk": "The targets file for {0} at location {1} does not exist, no-op is not possible. Continuing restore.",
+        "Log_ToolSkippingAssetsFile": "Tool assets file has not changed. Skipping assets file write. Path: {0}",
+        "Log_ToolWritingAssetsFile": "Writing tool assets file to disk. Path: {0}",
+        "Log_ToolWritingCacheFile": "Writing tool cache file to disk. Path: {0}",
+        "Log_UnknownCompatibilityProfile": "Unknown Compatibility Profile: {0}",
+        "Log_UnresolvedDependency": "Unable to resolve \u0027{0}\u0027 for \u0027{1}\u0027.",
+        "Log_VersionConflict": "Version conflict detected for {0}. Install/reference {1} directly to project {2} to resolve this issue.",
+        "Log_WritingAssetsFile": "Writing assets file to disk. Path: {0}",
+        "Log_WritingCacheFile": "Writing cache file to disk. Path: {0}",
+        "Log_WritingPackagesLockFile": "Writing packages lock file at disk. Path: {0}",
+        "MissingRequiredProperty": "Missing required property \u0027{0}\u0027.",
+        "MissingRequiredPropertyForProjectType": "Missing required property \u0027{0}\u0027 for project type \u0027{1}\u0027.",
+        "MSBuildWarning_MultiTarget": "Packages containing MSBuild targets and props files cannot be fully installed in projects targeting multiple frameworks. The MSBuild targets and props files have been ignored.",
+        "Multiple_Nupkgs_Detected": "Multiple nupkg files detected on \u0027{0}\u0027 path to trust, only 1 is allowed.",
+        "NoClientCertificates": "There are no client certificates.",
+        "NoClientCertificatesMatching": "There are no client certificates configured for the package source \u0027{0}\u0027.",
+        "NonMatchingProperties": "Properties \u0027{0}\u0027:\u0027{1}\u0027 and \u0027{2}\u0027:\u0027{3}\u0027 do not match.",
+        "NoTrustedSigners": "There are no trusted signers.",
+        "NoTrustedSignersMatching": "No trusted signers with the name: \u0027{0}\u0027 were found.",
+        "NuGetDocs": "https://docs.nuget.org/",
+        "PropertyNotAllowed": "Invalid input combination. Property \u0027{0}\u0027 is not allowed.",
+        "PropertyNotAllowedForProjectType": "Invalid input combination. Property \u0027{0}\u0027 is not allowed for project type \u0027{1}\u0027.",
+        "RegsiteredClientCertificates": "Registered client certificates:",
+        "RegsiteredTrustedSigners": "Registered trusted signers:",
+        "ReservedPackageNameAll": "All",
+        "ResolverRequest_ToStringFormat": "{0} (via {1})",
+        "SignCommandCertificateFileNotFound": "Certificate file \u0027{0}\u0027 not found. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference",
+        "SignCommandCertificateStoreNotFound": "Certificate store \u0027{0}\u0027 not found. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference",
+        "SignCommandDialogMessage": "Select a valid certificate",
+        "SignCommandDialogTitle": "NuGet Sign Certificate Selection",
+        "SignCommandDisplayCertificate": "Signing package(s) with certificate:",
+        "SignCommandDisplayTimestamper": "Timestamping package(s) with:",
+        "SignCommandInvalidCertException": "Certificate file \u0027{0}\u0027 is invalid. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference",
+        "SignCommandInvalidPasswordException": "Invalid password was provided for the certificate file \u0027{0}\u0027. Provide a valid password using the \u0027-{1}\u0027 option",
+        "SignCommandMultipleCertException": "Multiple certificates were found that meet all the given criteria. Use the \u0027-{0}\u0027 option with the hash of the desired certificate.",
+        "SignCommandNoCertException": "No certificates were found that meet all the given criteria. For a list of accepted ways to provide a certificate, visit https://docs.nuget.org/docs/reference/command-line-reference",
+        "SignCommandOutputPath": "Signed package(s) output path:",
+        "SignCommandSuccess": "Package(s) signed successfully.",
+        "Source_DefaultNamePrefix": "Package source ",
+        "Source_InvalidFormatValue": "invalid value for --format: {0}. Allowed values: \u0027detailed\u0027 or \u0027short\u0027",
+        "SourceNotConsidered": "Versions from {0} were not considered",
+        "SourcesCommandAllNameIsReserved": "Package source name \u0027All\u0027 is a reserved name.",
+        "SourcesCommandClearingExistingAuthTypes": "Clearing existing authentication types settings for package source \u0027{0}\u0027.",
+        "SourcesCommandCredentialsRequired": "Both UserName and Password must be specified.",
+        "SourcesCommandCredentialsRequiredWithAuthTypes": "Both UserName and Password must be specified if ValidAuthenticationTypes is specified.",
+        "SourcesCommandDisabled": "Disabled",
+        "SourcesCommandEnabled": "Enabled",
+        "SourcesCommandInvalidSource": "The source specified is invalid. Provide a valid source.",
+        "SourcesCommandNoMatchingSourcesFound": "Unable to find any package source(s) matching name: {0}.",
+        "SourcesCommandNoSources": "No sources found.",
+        "SourcesCommandRegisteredSources": "Registered Sources:",
+        "SourcesCommandSourceAddedSuccessfully": "Package source with Name: {0} added successfully.",
+        "SourcesCommandSourceDisabledSuccessfully": "Package source with Name: {0} disabled successfully.",
+        "SourcesCommandSourceEnabledSuccessfully": "Package source with Name: {0} enabled successfully.",
+        "SourcesCommandSourceRemovedSuccessfully": "Package source with Name: {0} removed successfully.",
+        "SourcesCommandUniqueName": "The name specified has already been added to the list of available package sources. Provide a unique name.",
+        "SourcesCommandUniqueSource": "The source specified has already been added to the list of available package sources. Provide a unique source.",
+        "SourcesCommandUpdateSuccessful": "Package source \u0022{0}\u0022 was successfully updated.",
+        "SourcesCommandValidProtocolVersion": "The protocol version specified is invalid. Valid protocol versions are from {0} to {1}.",
+        "SpecValidation_OriginalTargetFrameworksMustMatchAliases": "The original target frameworks value must match the aliases. Original target frameworks: {0}, aliases: {1}.",
+        "SpecValidationDuplicateFrameworks": "Duplicate frameworks found: \u0027{0}\u0027.",
+        "SpecValidationInvalidFramework": "Invalid target framework \u0027{0}\u0027.",
+        "SpecValidationMissingProject": "Missing project \u0027{0}\u0027.",
+        "SpecValidationNoFrameworks": "No target frameworks specified.",
+        "SpecValidationUAPSingleFramework": "UAP projects must contain exactly one target framework.",
+        "SpecValidationZeroRestoreRequests": "Restore request does not contain any projects to restore.",
+        "SuccessfullUpdatedTrustedSigner": "Successfully updated the trusted signer \u0027{0}\u0027.",
+        "SuccessfullyAddedTrustedAuthor": "Successfully added a trusted author \u0027{0}\u0027.",
+        "SuccessfullyAddedTrustedRepository": "Successfully added a trusted repository \u0027{0}\u0027.",
+        "SuccessfullyRemovedTrustedSigner": "Successfully removed the trusted signer \u0027{0}\u0027.",
+        "SuccessfullySynchronizedTrustedRepository": "Successfully synchronized the trusted repository \u0027{0}\u0027.",
+        "TrustedSignerLogCertificates": "Certificate fingerprint(s):",
+        "TrustedSignerLogCertificateSummaryAllowUntrustedRoot": "[U] {0} - {1}",
+        "TrustedSignerLogCertificateSummaryUnallowUntrustedRoot": "{0} - {1}",
+        "TrustedSignerLogOwners": "Trusted owners: {0}",
+        "TrustedSignerLogServiceIndex": "Service Index: {0}",
+        "TrustedSignerLogTitle": "{0} [{1}]",
+        "UnsupportedHashAlgorithm": "The hash algorithm is unsupported:  \u0027{0}\u0027.",
+        "UnsupportedProject": "Skipping restore for project \u0027{0}\u0027. The project file may be invalid or missing targets required for restore.",
+        "VerifyCommand_Failed": "Package signature validation failed.",
+        "VerifyCommand_FinishedWithErrors": "Finished with {0} errors and {1} warnings.",
+        "VerifyCommand_NotSupported": "Package signature validation command is not supported on this platform.",
+        "VerifyCommand_PackageIsNotValid": "\u0027{0}\u0027 is not a valid package file.",
+        "VerifyCommand_Success": "Successfully verified package \u0027{0}\u0027.",
+        "VerifyCommand_VerificationTypeNotSupported": "Verification type not supported. Use only one of the following supported types: -All, -Signatures",
+        "VerifyCommand_VerifyingPackage": "Verifying {0}",
+        "Vulnerability_Severity_Critical": "critical",
+        "Vulnerability_Severity_High": "high",
+        "Vulnerability_Severity_Low": "low",
+        "Vulnerability_Severity_Moderate": "moderate",
+        "Vulnerability_Severity_unknown": "unknown",
+        "Warning_CentralPackageVersions_MultipleSourcesWithoutPackageSourceMapping": "There are {0} package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: {1}",
+        "Warning_DuplicatePropertyKey": "\u0027{0}\u0027 key already exists in Properties collection. Overriding value.",
+        "Warning_FileExcludedByDefault": "File \u0027{0}\u0027 was not added to the package. Files and folders starting with \u0027.\u0027 or ending with \u0027.nupkg\u0027 are excluded by default. To include this file, use -NoDefaultExcludes from the commandline",
+        "Warning_HttpServerUsage": "You are running the \u0027{0}\u0027 operation with an \u0027HTTP\u0027 source, \u0027{1}\u0027. Non-HTTPS access will be removed in a future version. Consider migrating to an \u0027HTTPS\u0027 source.",
+        "Warning_HttpServerUsage_MultipleSources": "You are running the \u0027{0}\u0027 operation with \u0027HTTP\u0027 sources: {1}\r\nNon-HTTPS access will be removed in a future version. Consider migrating to \u0027HTTPS\u0027 sources.",
+        "Warning_MinVersionDoesNotExist": "{0} depends on {1} but {2} was not found. An approximate best match of {3} was resolved.",
+        "Warning_MinVersionNonInclusive": "{0} does not provide an inclusive lower bound for dependency {1}. An approximate best match of {2} was resolved.",
+        "Warning_NoVulnerabilityData": "NuGetAudit is enabled, but no package sources contain known vulnerability data.",
+        "Warning_PackageWithKnownVulnerability": "Package \u0027{0}\u0027 {1} has a known {2} severity vulnerability, {3}",
+        "Warning_ProjectDependencyMissingLowerBound": "Project dependency {0} does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+        "Warning_ProjectDependencyMissingVersion": "Project dependency \u0027{0}\u0027 does not specify a version. Include a version for the dependency to ensure consistent restore results.",
+        "Warning_VersionAboveUpperBound": "Detected package version outside of dependency constraint: {0} requires {1} but version {2} was resolved.",
+        "WarningAsError": "Warning As Error: {0}"
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "Microsoft.Extensions.FileProviders.Abstractions",
+        "version": "6.0.0.0",
+        "public_key_or_token": "adb9793829ddae60"
+      },
+      {
+        "name": "Microsoft.Extensions.FileSystemGlobbing",
+        "version": "6.0.0.0",
+        "public_key_or_token": "adb9793829ddae60"
+      },
+      {
+        "name": "Microsoft.Extensions.Primitives",
+        "version": "6.0.0.0",
+        "public_key_or_token": "adb9793829ddae60"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.DependencyResolver.Core",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.LibraryModel",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Packaging",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.ProjectModel",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Protocol",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.NonGeneric",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Console",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Memory",
+        "version": "5.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Pkcs",
+        "version": "6.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.X509Certificates",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading.Tasks.Parallel",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Common.dll",
+    "sha256": "fbe8672967dd722ea9d3d54762f390fc50eaabb376462f2b2194c644c518a583",
+    "name": "NuGet.Common",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Common.Strings.resources": {
+        "Argument_Must_Be_GreaterThanOrEqualTo": "Value must be greater than or equal to {0}",
+        "ArgumentNullOrEmpty": "Argument cannot be null or empty",
+        "MissingRequiredEnvVar": "Required environment variable \u0027{0}\u0027 is not set. Try setting \u0027{0}\u0027 and running the operation again.",
+        "MissingRequiredEnvVarsDotnet": "Required environment variable \u0027{0}\u0027 is not set. Try setting \u0027{1}\u0027 or \u0027{0}\u0027 and running the operation",
+        "TimeUnits_Hour": "{0:0.##} hr",
+        "TimeUnits_Millisecond": "{0:0.##} ms",
+        "TimeUnits_Minute": "{0:0.##} min",
+        "TimeUnits_Second": "{0:0.##} sec",
+        "UnableToDetemineClientVersion": "Unable to determine the current NuGet client version.",
+        "UnableToSetNuGetTempFolderPermission": "User is unable to set permission to 700 while creating {0}, errno={1}.",
+        "UnauthorizedLockFail": "Unable to obtain lock file access on \u0027{0}\u0027 for operations on \u0027{1}\u0027. This may mean that a different user or administrator is holding this lock and that this process does not have permission to access it. If no other process is currently performing an operation on this file it may mean that an earlier NuGet process crashed and left an inaccessible lock file, in this case removing the file \u0027{0}\u0027 will allow NuGet to continue.",
+        "UnsupportedHashAlgorithm": "Hash algorithm \u0027{0}\u0027 is unsupported. Supported algorithms include: SHA512 and SHA256.",
+        "UnsupportedHashAlgorithmName": "Hash algorithm \u0027{0}\u0027 is unsupported.",
+        "UnsupportedSignatureAlgorithmName": "Signature algorithm \u0027{0}\u0027 is unsupported."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "netstandard",
+        "version": "2.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Configuration.dll",
+    "sha256": "8fb321a12f38a626596bf7354b3fffbc6dabbbe32c2e5068a179c3a69be1c56a",
+    "name": "NuGet.Configuration",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Configuration.Resources.resources": {
+        "Argument_Cannot_Be_Null_Empty_Or_WhiteSpaceOnly": "Argument cannot be null, empty, or whitespace only.",
+        "Argument_Cannot_Be_Null_Or_Empty": "Value cannot be null or empty string.",
+        "AttributeNotAllowed": "Attribute \u0027{0}\u0027 is not allowed in element \u0027{1}\u0027.",
+        "AttributeValueNotAllowed": "The attribute \u0027{0}\u0027 has an unallowed value \u0027{1}\u0027 in element \u0027{2}\u0027.",
+        "CannotUpdateDifferentItems": "The item passed to the Update method cannot refer to a different item than the one being updated.",
+        "CannotUpdateMachineWide": "Unable to update setting since it is in a machine-wide NuGet.Config.",
+        "CannotUpdateNode": "Cannot update the node of a setting.",
+        "CannotUpdateReadOnlyConfig": "Unable to update setting since it is in an uneditable config file.",
+        "ClientCertificateDuplicateConfiguration": "There are multiple client certificate configurations associated with the same package source(s): {0}",
+        "CredentialsItemMustHaveUsernamePassword": "Credentials item must have username and password.",
+        "Error_DuplicatePackageSource": "PackageSourceMapping is enabled and there are multiple package sources associated with the same key(s): {0}. Path: {1}",
+        "Error_EncryptionUnsupported": "Encryption is not supported on non-Windows platforms.",
+        "Error_InvalidAttribute": "The attribute {0}-{1} is not valid.",
+        "Error_ItemNeedsAtLeastOnePackagePattern": "Package source \u0027{0}\u0027 must have at least one package pattern.",
+        "Error_ItemNeedsAtLeastOnePackagePatternWithPath": "Package source \u0027{0}\u0027 must have at least one package pattern. Path: \u0027{1}\u0027",
+        "Error_MergeTwoDifferentSections": "Cannot merge two different sections.",
+        "Error_MoreThanOnePassword": "A credentials item must have only one Password or ClearTextPassword entry.",
+        "Error_MoreThanOneUsername": "A credentials item must have only one Username entry.",
+        "Error_MoreThanOneValidAuthenticationTypes": "A credentials item must have only one ValidAuthenticationTypes entry.",
+        "Error_StoreCertCertificateNotFound": "Certificate for the package source \u0027{0}\u0027 was not found in \u0027{1}.{2}\u0027 storage by \u0027{3}\u0027 criteria with \u0027{4}\u0027 value.",
+        "FileCertItemPasswordAndClearTextPasswordAtSameTime": "Password and ClearTextPassword cannot be used at the same time.",
+        "FileCertItemPasswordCannotBeDecrypted": "Client certificate configuration password for the package source \u0027{0}\u0027 cannot be decrypted",
+        "FileCertItemPathFileNotExist": "A fileCert path specified a file that does not exist.",
+        "FileCertItemPathFileNotSet": "A fileCert item path was not set.",
+        "FileDoesNotExist": "File \u0027{0}\u0027 does not exist.",
+        "InvalidNullSettingsOperation": "\u0022{0}\u0022 cannot be called on a NullSettings. This may be caused on account of insufficient permissions to read or write to \u0022%AppData%\\NuGet\\NuGet.config\u0022.",
+        "ItemDoesNotExist": "The item does not exist in the {0} section.",
+        "MissingRequiredAttribute": "Missing required attribute \u0027{0}\u0027 in element \u0027{1}\u0027.",
+        "MustContainAbsolutePath": "\u0027{0}\u0027 must contain an absolute path \u0027{1}\u0027.",
+        "NoAttributesAllowed": "The {0} item should not have any attributes and it was found with {1}.",
+        "NoWritteableConfig": "There is no NuGet.Config that could be used for writing settings. Please create one at the desired location and restart the client.",
+        "OwnersItemMustHaveAtLeastOneOwner": "Owners item must have at least one owner.",
+        "OwnersMustOnlyHaveContent": "Owners item must only have text content and cannot be empty.",
+        "PropertyCannotBeNullOrEmpty": "{0} cannot be null or empty.",
+        "RepositoryMustHaveOneOwners": "The repository item with name \u0027{0}\u0027 and service index \u0027{1}\u0027 has more than one owners item in it.",
+        "SectionDoesNotExist": "The section \u0027{0}\u0027 does not exist in the settings.",
+        "Settings_FileName_Cannot_Be_A_Path": "Parameter \u0027fileName\u0027 to Settings must be just a file name and not a path.",
+        "ShowError_CannotHaveChildren": "Error parsing NuGet.Config. Element \u0027{0}\u0027 cannot have descendant elements. Path: \u0027{1}\u0027.",
+        "ShowError_ConfigDuplicateDisabledSources": "Cannot update package sources, config file contains a duplicated key \u0027{0}\u0027 in the disabled package sources section. Path: \u0027{1}\u0027",
+        "ShowError_ConfigHasInvalidPackageSource": "{0}: NuGet.Config has an invalid package source value \u0027{1}\u0027. Reason: {2}",
+        "ShowError_ConfigInvalidOperation": "NuGet.Config is malformed. Path: \u0027{0}\u0027.",
+        "ShowError_ConfigInvalidXml": "NuGet.Config is not valid XML. Path: \u0027{0}\u0027.",
+        "ShowError_ConfigRootInvalid": "NuGet.Config does not contain the expected root element: \u0027configuration\u0027. Path: \u0027{0}\u0027.",
+        "ShowError_ConfigUnauthorizedAccess": "Failed to read NuGet.Config due to unauthorized access. Path: \u0027{0}\u0027.",
+        "TextShouldNotBeEmpty": "Text elements should not be empty.",
+        "TrustedSignerMustHaveCertificates": "A trusted signer entry must have at least one certificate entry.",
+        "Unknown_Config_Exception": "Unexpected failure reading NuGet.Config. Path: \u0027{0}\u0027.",
+        "UnknownHashAlgorithmNotSupported": "Unknown hash algorithm is not supported.",
+        "UnsupportedDecryptPassword": "Password decryption is not supported on .NET Core for this platform. The following feed uses an encrypted password: \u0027{0}\u0027. You can use a clear text password as a workaround.",
+        "UnsupportedEncryptPassword": "Password encryption is not supported on .NET Core for this platform. The following feed try to use an encrypted password: \u0027{0}\u0027. You can use a clear text password as a workaround.",
+        "UnsupportedHashAlgorithm": "Certificate entry has an unsupported hash algorithm: \u0027{0}\u0027.",
+        "UserSettings_UnableToParseConfigFile": "Unable to parse config file because: {0} Path: \u0027{1}\u0027."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "netstandard",
+        "version": "2.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Security.Cryptography.ProtectedData",
+        "version": "4.0.2.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Credentials.dll",
+    "sha256": "0c579e579118b92957cf9d76d6b19b99441375143763ceb668b93e63d5786c07",
+    "name": "NuGet.Credentials",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Credentials.Resources.resources": {
+        "PluginException_Abort_Format": "Credential plugin {0} handles this request, but is unable to provide credentials. {1}",
+        "PluginException_Exception_Format": "Credential plugin {0} encountered exception {1}.",
+        "PluginException_InvalidResponse_Format": "Credential plugin {0} returned {1}, but the payload was not valid (username = {2}, password = {3}, authTypes = {4}, message = {5}).",
+        "PluginException_NotStarted_Format": "Credential plugin {0} failed to start.",
+        "PluginException_PathNotFound_Format": "Credential plugin {0} not found at any of the following locations {1}.",
+        "PluginException_Timeout_Format": "Credential plugin {0} timed out after {1} seconds.",
+        "PluginException_UnexpectedStatus_Format": "Credential plugin {0} exited with unexpected error {1}.",
+        "PluginException_UnreadableResponse_Format": "Credential plugin {0} returned {1} with an unreadable payload.",
+        "PluginWarning_PluginIsBeingDeprecated": "The credential plugin model used by \u0027{0}\u0027 is deprecated. Please contact the provider of the plugin for an alternative. More information about the recommended plugin model can be found at \u0027{1}\u0027.",
+        "ProviderException_InvalidCredentialResponse": "Could not create credential response object because the response was invalid.",
+        "ProviderException_MalformedResponse": "Credential provider gave an invalid response.",
+        "SecurePluginNotice_UsingPluginAsProvider": "Using {0} as a credential provider plugin.",
+        "SecurePluginWarning_UseInteractiveOption": "The plugin credential provider could not acquire credentials. Authentication may require manual action. Consider re-running the command with --interactive for \u0060dotnet\u0060, /p:NuGetInteractive=\u0022true\u0022 for MSBuild or removing the -NonInteractive switch for \u0060NuGet\u0060"
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "Newtonsoft.Json",
+        "version": "13.0.0.0",
+        "public_key_or_token": "30ad4fe6b2a6aeed"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Protocol",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Diagnostics.Process",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Net.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.DependencyResolver.Core.dll",
+    "sha256": "ca1cbd6f72a63aaa1050432888b6a07a00d875623444ce3d5289dc17c5962722",
+    "name": "NuGet.DependencyResolver.Core",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.DependencyResolver.Strings.resources": {
+        "Error_PackageNotFoundWhenExpected": "The feed \u0027{0}\u0027 lists package \u0027{1}\u0027 but multiple attempts to download the nupkg have failed. The feed is either invalid or required packages were removed while the current operation was in progress. Verify the package exists on the feed and try again.",
+        "Log_MatchingSourceFoundForPackage": "Package source mapping matches found for package ID \u0027{0}\u0027 are: \u0027{1}\u0027.",
+        "Log_NoMatchingSourceFoundForPackage": "Package source mapping match not found for package ID \u0027{0}\u0027."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.LibraryModel",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Packaging",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Protocol",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Frameworks.dll",
+    "sha256": "46b972eac4baa45a0321ddc5f4429e6552ba7e2e0667723f9f783c006fadfc73",
+    "name": "NuGet.Frameworks",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Frameworks.Strings.resources": {
+        "ArgumentCannotBeNullOrEmpty": "The argument cannot be null or empty.",
+        "FrameworkDoesNotSupportProfiles": ".NET 5.0 and above does not support profiles.",
+        "FrameworkMismatch": "Frameworks must have the same identifier, profile, and platform.",
+        "InvalidFrameworkIdentifier": "Invalid framework identifier \u0027{0}\u0027.",
+        "InvalidFrameworkVersion": "Invalid framework version \u0027{0}\u0027.",
+        "InvalidPlatformVersion": "Invalid platform version \u0027{0}\u0027.",
+        "InvalidPortableFrameworksDueToHyphen": "Invalid portable frameworks \u0027{0}\u0027. A hyphen may not be in any of the portable framework names.",
+        "MissingPortableFrameworks": "Invalid portable frameworks for \u0027{0}\u0027. A portable framework must have at least one framework in the profile."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "netstandard",
+        "version": "2.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.LibraryModel.dll",
+    "sha256": "d4d1d1559baf8d5874cef62058e6a57e3312120099393a1ecd577078b91c295f",
+    "name": "NuGet.LibraryModel",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {},
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "netstandard",
+        "version": "2.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Packaging.dll",
+    "sha256": "529941b88af3060053575e0d52973fc093363bb428ddc1f254fd0b4365688a8a",
+    "name": "NuGet.Packaging",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Packaging.PackageCreation.Resources.NuGetResources.resources": {
+        "CannotCreateEmptyPackage": "Cannot create a package that has no dependencies nor content.",
+        "DependencyHasInvalidVersion": "Dependency \u0027{0}\u0027 has an invalid version.",
+        "DuplicateDependenciesDefined": "\u0027{0}\u0027 already has a dependency defined for \u0027{1}\u0027.",
+        "FoundDuplicateFile": "Attempted to pack multiple files into the same location(s). The following destinations were used multiple times: {0}",
+        "IconCannotOpenFile": "Cannot open the icon file \u0027{0}\u0027: {1}.",
+        "IconErrorEmpty": "The icon file is empty.",
+        "IconInvalidExtension": "The \u0027icon\u0027 element \u0027{0}\u0027 has an invalid file extension. Valid options are .png, .jpg or .jpeg.",
+        "IconMaxFileSizeExceeded": "The icon file size must not exceed 1 megabyte.",
+        "IconMissingRequiredValue": "The element \u0027icon\u0027 cannot be empty.",
+        "IconNoFileElement": "The icon file \u0027{0}\u0027 does not exist in the package.",
+        "IconNoFileElementWithHint": "The icon file \u0027{0}\u0027 does not exist in the package. (Did you mean \u0027{1}\u0027?)",
+        "IncompatibleSchema": "The schema version of \u0027{0}\u0027 is incompatible with version {1} of NuGet. Please upgrade NuGet to the latest version from http://go.microsoft.com/fwlink/?LinkId=213942.",
+        "InvalidPackageId": "The package ID \u0027{0}\u0027 contains invalid characters. Examples of valid package IDs include \u0027MyPackage\u0027 and \u0027MyPackage.Sample\u0027.",
+        "Manifest_DependenciesHasMixedElements": "\u003Cdependencies\u003E element must not contain both \u003Cgroup\u003E and \u003Cdependency\u003E child elements.",
+        "Manifest_ExcludeContainsInvalidCharacters": "Exclude path \u0027{0}\u0027 contains invalid characters.",
+        "Manifest_IdMaxLengthExceeded": "Id must not exceed 100 characters.",
+        "Manifest_InvalidMinClientVersion": "The \u0027minClientVersion\u0027 attribute in the package manifest has invalid value. It must be a valid version string.",
+        "Manifest_InvalidReference": "Invalid assembly reference \u0027{0}\u0027. Ensure that a file named \u0027{0}\u0027 exists in the lib directory.",
+        "Manifest_InvalidReferenceFile": "Assembly reference \u0027{0}\u0027 contains invalid characters.",
+        "Manifest_LicenseFileExtensionIsInvalid": "The license file \u0027{0}\u0027 has an invalid extension. Valid options are .txt, .md or none.",
+        "Manifest_LicenseFileIsNotInNupkg": "The license file \u0027{0}\u0027 does not exist in the package.",
+        "Manifest_LicenseFileIsNotInNupkgWithHint": "The license file \u0027{0}\u0027 does not exist in the package. (Did you mean \u0027{1}\u0027?)",
+        "Manifest_LicenseUrlCannotBeUsedWithLicenseMetadata": "The licenseUrl and license elements cannot be used together.",
+        "Manifest_PropertyValueReadFailure": "An error occured while trying to parse the value \u0027{0}\u0027 of property \u0027{1}\u0027 in the manifest file.",
+        "Manifest_ReferencesHasMixedElements": "\u003Creferences\u003E element must not contain both \u003Cgroup\u003E and \u003Creference\u003E child elements.",
+        "Manifest_ReferencesIsEmpty": "The element package\\metadata\\references\\group must contain at least one \u003Creference\u003E child element.",
+        "Manifest_RequiredElementMissing": "The required element \u0027{0}\u0027 is missing from the manifest.",
+        "Manifest_RequiredMetadataMissing": "{0} is required.",
+        "Manifest_RequireLicenseAcceptanceRequiresEmit": "EmitRequireLicenseAcceptance must not be set to false if RequireLicenseAcceptance is set to true.",
+        "Manifest_RequireLicenseAcceptanceRequiresLicenseUrl": "Enabling license acceptance requires a license or a licenseUrl to be specified. The licenseUrl will be deprecated, consider using the license metadata.",
+        "Manifest_SourceContainsInvalidCharacters": "Source path \u0027{0}\u0027 contains invalid characters.",
+        "Manifest_TargetContainsInvalidCharacters": "Target path \u0027{0}\u0027 contains invalid characters.",
+        "Manifest_UriCannotBeEmpty": "{0} cannot be empty.",
+        "PackageAuthoring_FileNotFound": "File not found: \u0027{0}\u0027.",
+        "ReadmeCannotOpenFile": "Cannot open the readme file \u0027{0}\u0027: {1}.",
+        "ReadmeErrorEmpty": "The readme file \u0027{0}\u0027 is empty.",
+        "ReadmeFileExtensionIsInvalid": "The readme file \u0027{0}\u0027 has an invalid extension. It must end in .md.",
+        "ReadmeMissingRequiredValue": "The element \u0027readme\u0027 cannot be empty.",
+        "ReadmeNoFileElement": "The readme file \u0027{0}\u0027 does not exist in the package.",
+        "UnknownSchemaVersion": "Unknown schema version \u0027{0}\u0027."
+      },
+      "NuGet.Packaging.Rules.AnalysisResources.resources": {
+        "AssemblyDirectlyUnderLibWarning": "The assembly \u0027{0}\u0027 is placed directly under \u0027lib\u0027 folder. It is recommended that assemblies be placed inside a framework-specific folder. Move it into a framework-specific folder.",
+        "AssemblyOutsideLibWarning": "The assembly \u0027{0}\u0027 is not inside the \u0027lib\u0027 folder and hence it won\u0027t be added as a reference when the package is installed into a project. Move it into the \u0027lib\u0027 folder if it needs to be referenced.",
+        "BuildConventionIsViolatedWarning": "- At least one {0} file was found in \u0027{1}\u0027, but \u0027{2}\u0027 was not.",
+        "DefaultSpecValueWarning": "The value \u0022{0}\u0022 for {1} is a sample value and should be removed. Replace it with an appropriate value or remove it and rebuild your package.",
+        "DependenciesGroupsForEachTFMBeginningToFiles": "- Add lib or ref assemblies for the",
+        "DependenciesGroupsForEachTFMBeginningToNuspec": "- Add a dependency group for",
+        "DependenciesGroupsForEachTFMEndingToFile": "target framework",
+        "DependenciesGroupsForEachTFMEndingToNuspec": "to the nuspec",
+        "DependenciesGroupsForEachTFMHasCompatMatch": "Some target frameworks declared in the dependencies group of the nuspec and the lib/ref folder have compatible matches, but not exact matches in the other location. Unless intentional, consult the list of actions below:",
+        "DependenciesGroupsForEachTFMHasNoExactMatch": "Some target frameworks declared in the dependencies group of the nuspec and the lib/ref folder do not have exact matches in the other location. Consult the list of actions below:",
+        "FilePathTooLongWarning": "The file \u0027{0}\u0027 path, name, or both are too long. Your package might not work without long file path support. Please shorten the file path or file name.",
+        "IconUrlDeprecationWarning": "The \u0027PackageIconUrl\u0027/\u0027iconUrl\u0027 element is deprecated. Consider using the \u0027PackageIcon\u0027/\u0027icon\u0027 element instead. Learn more at https://aka.ms/deprecateIconUrl",
+        "InvalidFrameworkWarning": "The folder \u0027{0}\u0027 under \u0027lib\u0027 is not recognized as a valid framework name or a supported culture identifier. Rename it to a valid framework name or culture identifier.",
+        "InvalidPlaceholderFileWarning": "The file at \u0027{0}\u0027 uses the symbol for empty directory \u0027_._\u0027, but it is present in a directory that contains other files. Please remove this file from directories that contain other files.",
+        "InvalidPrereleaseDependencyWarning": "A stable release of a package should not have a prerelease dependency. Either modify the version spec of dependency \u0022{0}\u0022 or update the version field in the nuspec.",
+        "InvalidUndottedFrameworkInDependencyGroupsWarning": "The following dependency group(s) require(s) dots in the framework version: {0}",
+        "InvalidUndottedFrameworkInFilesWarning": "The following packaged file folder(s) require(s) dots in the framework version: {0}",
+        "InvalidUndottedFrameworkInFrameworkAssemblyGroupsWarning": "The following framework assembly group(s) require(s) dots in the framework version: {0}",
+        "InvalidUndottedFrameworkInReferenceGroupsWarning": "The following reference group(s) require(s) dots in the framework version: {0}",
+        "InvalidUndottedFrameworkWarning": "One or more target framework specifiers in your package are missing required dots in their framework version numbers. This is required as of .NET5.0. Please rename them to include dots as needed (e.g. \u0027net50\u0027 to \u0027net5.0\u0027).",
+        "LegacyVersionWarning": "The package version \u0027{0}\u0027 uses SemVer 2.0.0 or components of SemVer 1.0.0 that are not supported on legacy clients. Change the package version to a SemVer 1.0.0 string. If the version contains a release label it must start with a letter. This message can be ignored if the package is not intended for older clients.",
+        "LicenseUrlDeprecationWarning": "The \u0027licenseUrl\u0027 element will be deprecated. Consider using the \u0027license\u0027 element instead.",
+        "Migrator_AssemblyDirectlyUnderLibWarning": "The assembly \u0027lib\\{0}\u0027 will be ignored when the package is installed after the migration.",
+        "Migrator_PackageHasContentFolder": "\u0027content\u0027 assets will not be available when the package is installed after the migration.",
+        "Migrator_PackageHasInstallScript": "install.ps1 script will be ignored when the package is installed after the migration.",
+        "Migrator_XdtTransformInPackage": "XDT transform file \u0027{0}\u0027 will not be applied when the package is installed after the migration.",
+        "MisplacedInitScriptWarning": "The file \u0027{0}\u0027 will be ignored by NuGet because it is not directly under \u0027tools\u0027 folder. Place the file directly under \u0027tools\u0027 folder.",
+        "MisplacedTransformFileWarning": "The transform file \u0027{0}\u0027 is outside the \u0027content\u0027 folder and hence will not be transformed during installation of this package. Move it into the \u0027content\u0027 folder.",
+        "MissingReadmeInformation": "The package {0} is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.",
+        "NoRefOrLibFolderInPackage": "This package does not contain a lib/ or ref/ folder, and will therefore be treated as compatible for all frameworks. Since framework specific files were found under the build/ directory for {0}, consider creating the following empty files to correctly narrow the compatibility of the package:\r\n{1}",
+        "PlaceholderFileInPackageWarning": "An empty folder placeholder file \u0027{0}\u0027 is in a non-empty folder and should be removed.",
+        "ReferencesInNuspecAndRefFilesDontMatchWarning": "References were found in the nuspec, but some reference assemblies were not found in both the nuspec and ref folder. Add the following reference assemblies:",
+        "ReferencesInNuspecAndRefFilesDontMatchWarningAddToNuspecListItemFormat": "- Add {0} to the {1} reference group in the nuspec",
+        "ReferencesInNuspecAndRefFilesDontMatchWarningAddToNuspecNoTfmListItemFormat": "- Add {0} to the references element in the nuspec",
+        "ReferencesInNuspecAndRefFilesDontMatchWarningAddToRefListItemFormat": "- Add {0} to the ref/{1}/ directory",
+        "ScriptOutsideToolsWarning": "The script file \u0027{0}\u0027 is outside the \u0027tools\u0027 folder and hence will not be executed during installation of this package. Move it into the \u0027tools\u0027 folder.",
+        "UnrecognizedLicenseIdentifier": "The license identifier \u0027{0}\u0027 is not recognized by the current toolset.",
+        "UnrecognizedScriptWarning": "The script file \u0027{0}\u0027 is not recognized by NuGet and hence will not be executed during installation of this package. Rename it to install.ps1, uninstall.ps1 or init.ps1 and place it directly under \u0027tools\u0027.",
+        "UnspecifiedDependencyVersionWarning": "The version of dependency \u0027{0}\u0027 is not specified. Specify the version of dependency and rebuild your package.",
+        "WinRTObsoleteWarning": "The file at \u0027{0}\u0027 uses the obsolete \u0027WinRT\u0027 as the framework folder. Replace \u0027WinRT\u0027 or \u0027WinRT45\u0027 with \u0027NetCore45\u0027."
+      },
+      "NuGet.Packaging.Signing.DerEncoding.SR.resources": {
+        "Argument_InvalidOidValue": "The OID value was invalid.",
+        "Cryptography_Der_Invalid_Encoding": "ASN1 corrupted data.",
+        "Cryptography_Invalid_IA5String": "The string contains a character not in the 7 bit ASCII character set."
+      },
+      "NuGet.Packaging.Strings.resources": {
+        "AnAbsoluteUriIsRequired": "An absolute URI is required.",
+        "ArgumentCannotBeNullOrEmpty": "The argument cannot be null or empty.",
+        "AuthorPrimarySignatureFriendlyName": "author primary signature",
+        "CertificateChainBuildFailed": "A complete certificate chain could not be built for the signing certificate.",
+        "CertificateChainValidationFailed": "Certificate chain validation failed.",
+        "CertUtilityCertificateHash": "{0} hash: {1}",
+        "CertUtilityCertificateHashSha1": "SHA1 hash: {0}",
+        "CertUtilityCertificateIssuer": "Issued by: {0}",
+        "CertUtilityCertificateSubjectName": "Subject Name: {0}",
+        "CertUtilityCertificateValidity": "Valid from: {0} to {1}",
+        "CertUtilityMultipleCertificatesFooter": "... {0} more.",
+        "CertUtilityMultipleCertificatesHeader": "The following certificates meet all given criteria:",
+        "ChainBuilding_UsingDefaultTrustStoreForCodeSigning": "X.509 certificate chain validation will use the default trust store selected by .NET for code signing.",
+        "ChainBuilding_UsingDefaultTrustStoreForTimestamping": "X.509 certificate chain validation will use the default trust store selected by .NET for timestamping.",
+        "ChainBuilding_UsingFallbackCertificateBundle": "X.509 certificate chain validation will use the fallback certificate bundle at \u0027{0}\u0027.",
+        "ChainBuilding_UsingNoCertificateBundle": "X.509 certificate chain validation will not have any trusted roots. Chain building will fail with an untrusted status.",
+        "ChainBuilding_UsingSystemCertificateBundle": "X.509 certificate chain validation will use the system certificate bundle at \u0027{0}\u0027.",
+        "CommitmentTypeIndicationAttributeInvalid": "The commitment-type-indication attribute is invalid.",
+        "CommitmentTypeIndicationAttributeInvalidCombination": "The commitment-type-indication attribute contains an invalid combination of values.",
+        "ConflictingAllowUntrustedRoot": "There are two certificates with conflicting allowUntrustedRoot attributes in the computed settings. The allowUntrustedRoot attribute is going to be set to false. Certificate: {0}-{1}",
+        "DefaultError_EmptyAllowList": "A list of trusted signers is required but none was found.",
+        "DefaultError_NoMatchInAllowList": "The package signature certificate fingerprint does not match any certificate fingerprint in the allow list.",
+        "Error_InvalidTargetFramework": "Unsupported targetFramework value \u0027{0}\u0027.",
+        "Error_LoadingHashFile": "Error parsing nupkg metadata file {0} : {1}",
+        "Error_MissingNuspecFile": "The package is missing the required nuspec file. ",
+        "Error_NoClientAllowList": "signatureValidationMode is set to require, so packages are allowed only if signed by trusted signers; however, no trusted signers were specified.",
+        "Error_NoMatchingClientCertificate": "This package is signed but not by a trusted signer.",
+        "Error_NoMatchingRepositoryCertificate": "This package was not repository signed with a certificate listed by this repository.",
+        "Error_NoRepoAllowList": "This repository indicated that all its packages are repository signed; however, it listed no signing certificates.",
+        "Error_NotOnePrimarySignature": "The package signature file does not contain exactly one primary signature.",
+        "Error_NotOneRepositoryCounterSignature": "The package signature contains multiple repository countersignatures.",
+        "Error_RepositorySettings_UnsignedPackage": "This repository indicated that all its packages are repository signed; however, this package is unsigned.",
+        "Error_RepositorySignatureMustNotHaveARepositoryCountersignature": "A repository primary signature must not have a repository countersignature.",
+        "Error_RequireMode_UnsignedPackage": "signatureValidationMode is set to require, so packages are allowed only if signed by trusted signers; however, this package is unsigned.",
+        "ErrorAuthorTargetCannotBeACountersignature": "Cannot target author signatures that are countersignatures.",
+        "ErrorByteSignatureNotFound": "Byte signature not found in package archive:  0x{0}",
+        "ErrorDuplicatePackages": "There are duplicate packages: {0}",
+        "ErrorInvalidAllowedVersions": "Invalid allowedVersions for package id \u0027{0}\u0027: \u0027{1}\u0027",
+        "ErrorInvalidCertificateChainUnspecifiedReason": "Certificate chain validation failed for an unspecified reason.",
+        "ErrorInvalidMinClientVersion": "Invalid minClientVersion: \u0027{0}\u0027",
+        "ErrorInvalidPackageArchive": "Invalid package archive.",
+        "ErrorInvalidPackageVersion": "Invalid package version for package id \u0027{0}\u0027: \u0027{1}\u0027",
+        "ErrorInvalidPackageVersionForDependency": "Invalid package version for a dependency with id \u0027{0}\u0027 in package \u0027{1}\u0027: \u0027{2}\u0027",
+        "ErrorManifestFileNotFound": "Manifest file not found at \u0027{0}\u0027",
+        "ErrorMultipleTimestamps": "Multiple timestamps are not accepted.",
+        "ErrorNoTimestamp": "The signature should be timestamped to enable long-term signature validity after the certificate has expired.",
+        "ErrorNullOrEmptyPackageId": "Null or empty package id",
+        "ErrorPackageNotSigned": "The package is not signed.",
+        "ErrorPackageSignatureInvalid": "The package signature is invalid or cannot be verified on this platform.",
+        "ErrorUnableCheckPackageEntries": "An unexpected error occurred while checking package entries.",
+        "ErrorUnableToDeleteFile": "Unable to delete temporary file \u0027{0}\u0027. Error: \u0027{1}\u0027.",
+        "ErrorUnsafePackageEntry": "The package \u0027{0}\u0027 contains an entry \u0027{1}\u0027 which is unsafe for extraction.",
+        "ErrorZip64NotSupported": "Signed Zip64 packages are not supported.",
+        "ExactlyOneAttributeRequired": "Exactly one {0} attribute is required.",
+        "ExactlyOneAttributeValueRequired": "The {0} attribute must have exactly one attribute value.",
+        "ExtractionLog_InformationPrefix": "Package \u0027{0} {1}\u0027 from source \u0027{2}\u0027: {3}",
+        "FailedFileTime": "Failed to update file time for {0}: {1}",
+        "FailToLoadPackagesConfig": "Fail to load packages.config as XML file. Please check it. ",
+        "FailToWritePackagesConfig": "Failed to write packages.config as XML file \u0027{0}\u0027. Error: \u0027{1}\u0027.",
+        "FallbackFolderNotFound": "Unable to find fallback package folder \u0027{0}\u0027.",
+        "HttpOrHttpsIsRequired": "HTTP or HTTPS is required.",
+        "InvalidArgument": "The argument is invalid.",
+        "InvalidArgumentCombination": "Invalid combination of arguments {0} and {1}.",
+        "InvalidAsn1": "The ASN.1 data is invalid.",
+        "InvalidLicenseExppressionVersion_VersionTooHigh": "The version string \u0027{0}\u0027 is not supported by this toolset. The highest supported version is \u0027{1}\u0027. Either use a lower version or upgrade your toolset.",
+        "InvalidNuspecElement": "{0} This validation error occurred in a \u0027{1}\u0027 element.",
+        "InvalidNuspecEntry": "The nuspec contains an invalid entry \u0027{0}\u0027 in package \u0027{1}\u0027 .",
+        "InvalidPackageFrameworkFolderName": "The framework in the folder name of \u0027{0}\u0027 in package \u0027{1}\u0027 could not be parsed.",
+        "InvalidPackageNupkg": "The file is not a valid nupkg. File path: {0}",
+        "InvalidPackageSignatureFile": "The package contains an invalid package signature file.",
+        "InvalidPackageSignatureFileEntry": "The package signature file entry is invalid. {0}",
+        "InvalidPackageSignatureFileEntryCentralDirectoryHeader": "The central directory header field \u0027{0}\u0027 has an invalid value ({1}).",
+        "InvalidPackageSignatureFileEntryLocalFileHeader": "The local file header field \u0027{0}\u0027 has an invalid value ({1}).",
+        "InvalidPackageTypeVersion": "Nuspec file contains a package type with an invalid package version \u0027{0}\u0027.",
+        "InvalidPrimarySignature": "The primary signature is invalid.",
+        "InvalidRepositoryCountersignature": "The repository countersignature is invalid.",
+        "InvalidSignatureContent": "The package signature content is invalid.",
+        "InvalidTimestampSignature": "The timestamp signature is invalid.",
+        "InvalidUrl": "The URL value is invalid.",
+        "InvalidX509StorePurpose": "Invalid X.509 store purpose.",
+        "Log_InstalledPackage": "Installed {0} {1} from {2} to {3} with content hash {4}.",
+        "Message_Path": "Path: {0}",
+        "MinClientVersionAlreadyExist": "MinClientVersion already exists in packages.config",
+        "MissingMetadataNode": "Nuspec file does not contain the \u0027{0}\u0027 node.",
+        "MissingPackageTypeName": "Nuspec file contains a package type that is missing the name attribute.",
+        "MissingTargetPlatformVersionsFromDependencyGroups": "Some dependency group TFMs are missing a platform version: {0}",
+        "MissingTargetPlatformVersionsFromFrameworkAssemblyGroups": "Some reference assembly group TFMs are missing a platform version: {0}",
+        "MissingTargetPlatformVersionsFromFrameworkAssemblyReferences": "Some framework assembly reference TFMs are missing a platform version: {0}",
+        "MissingTargetPlatformVersionsFromIncludedFiles": "Some included files are included under TFMs which are missing a platform version: {0}",
+        "MissingTargetPlatformVersionsFromReferenceGroups": "Some reference group TFMs are missing a platform version: {0}",
+        "MultipleAttributesDisallowed": "Multiple {0} attributes are not allowed.",
+        "MultipleNuspecFiles": "Package contains multiple nuspec files.",
+        "MultiplePackageSignatureFiles": "The package contains multiple package signature files.",
+        "MustContainAbsolutePath": "\u0027{0}\u0027 must contain an absolute path \u0027{1}\u0027.",
+        "NoPackageSignatureFile": "The package does not contain a valid package signature file.",
+        "NoRepositoryCountersignature": "Verification settings require a repository countersignature, but the package does not have a repository countersignature.",
+        "NuGetLicense_InvalidLicenseExpressionVersion": "The license version string \u0027{0}\u0027  is invalid.",
+        "NuGetLicense_InvalidLicenseType": "Unrecognized license type \u0027{0}\u0027",
+        "NuGetLicense_LicenseElementMissingValue": "The license element value is empty. This is likely due to an authoring error. ",
+        "NuGetLicense_LicenseExpressionVersionTooHigh": "The license version string \u0027{0}\u0027 is higher than the one supported by this toolset \u0027{1}\u0027.",
+        "NuGetLicense_MissingRequiredValue": "The element \u0027license\u0027 cannot be empty. ",
+        "NuGetLicenseExpression_DeprecatedIdentifier": "The identifier \u0027{0}\u0027 is deprecated.",
+        "NuGetLicenseExpression_ExceptionIdentifierIsLicense": "The identifier \u0027{0}\u0027 is a license. It cannot be used as an exception.",
+        "NuGetLicenseExpression_IllegalUnlicensedOperator": "The \u0027UNLICENSED\u0027 license identifier cannot be combined with the \u0027\u002B\u0027 operator.",
+        "NuGetLicenseExpression_InvalidCharacters": "The license expression \u0027{0}\u0027 contains invalid characters.",
+        "NuGetLicenseExpression_InvalidExceptionIdentifier": "The identifier \u0027{0}\u0027 is not a standard exception.",
+        "NuGetLicenseExpression_InvalidExpression": "The license expression is invalid.",
+        "NuGetLicenseExpression_InvalidToken": "Invalid element \u0027{0}\u0027.",
+        "NuGetLicenseExpression_LicenseIdentifierIsException": "The identifier \u0027{0}\u0027 is an exception. It cannot be used as a license.",
+        "NuGetLicenseExpression_LicenseInvalidCharacters": "The license identifier \u0027{0}\u0027 contains invalid characters.",
+        "NuGetLicenseExpression_MismatchedParentheses": "Mismatched parentheses in the expression.",
+        "NuGetLicenseExpression_NonStandardIdentifier": "The license identifier(s) \u0027{0}\u0027 is(are) not recognized by the current toolset.",
+        "NuGetLicenseExpression_UnexpectedIdentifier": "Unexpected license identifier \u0027{0}\u0027. The identifier is not allowed in this context.",
+        "NuGetLicenseExpression_UnlicensedPackageWarning": "The owner has marked this package as \u0027UNLICENSED\u0027. This means that there is no license that allows this package to be used outside of the copyright owner.",
+        "NuGetPackageOwners": "Owners: {0}",
+        "NuGetPackageOwnersInvalid": "The nuget-package-owners attribute is invalid.",
+        "NuGetPackageOwnersInvalidValue": "One or more package owner values are invalid.",
+        "NuGetV3ServiceIndexUrl": "Service index: {0}",
+        "NuGetV3ServiceIndexUrlInvalid": "The nuget-v3-service-index-url attribute is invalid.",
+        "NuGetV3ServiceIndexUrlInvalidValue": "The nuget-v3-service-index-url attribute value is invalid.",
+        "PackageEntryAlreadyExist": "Package entry already exists in packages.config. Id: {0}",
+        "PackageEntryNotExist": "Package entry does not exists in packages.config. Id: {0}, Version: {1}",
+        "PackageMinVersionNotSatisfied": "The \u0027{0}\u0027 package requires NuGet client version \u0027{1}\u0027 or above, but the current NuGet version is \u0027{2}\u0027. To upgrade NuGet, please go to https://docs.nuget.org/consume/installing-nuget",
+        "PackageSignatureVerificationLog": "PackageSignatureVerificationLog: PackageIdentity: {0} Source: {1} PackageSignatureValidity: {2}",
+        "PackagesNodeNotExist": "Packages node does not exists in packages.config at {0}.",
+        "PackageStreamShouldBeSeekable": "Package stream should be seekable",
+        "PrimarySignatureFriendlyName": "primary signature",
+        "PrimarySignatureHasNoTimestamp": "The primary signature does not have a timestamp.",
+        "PropertyCannotBeNull": "\u0027{0}\u0027 cannot be null.",
+        "RangeOutOfBoundsForArray": "Arguments {0} and {1} were out of bounds for the array.",
+        "RepositoryCountersignatureFriendlyName": "repository countersignature",
+        "RepositoryCountersignatureHasNoCertificate": "The repository countersignature does not have a signing certificate.",
+        "RepositoryCountersignatureHasNoTimestamp": "The repository countersignature does not have a timestamp.",
+        "RepositoryPrimarySignatureFriendlyName": "repository primary signature",
+        "SignatureContainsInvalidAttribute": "Package signature contains an invalid attribute: {0}",
+        "SignatureDebug_HashOidFound": "Signature hash OID found: {0}",
+        "SignatureFailureInvalidHashAlgorithmOid": "The package hash uses an unsupported hash algorithm.",
+        "SignatureFriendlyName": "signature",
+        "SignatureHashAlgorithm": "Signature Hash Algorithm: {0}",
+        "SignaturePackageIntegrityFailure": "The package integrity check failed. The package has changed since it was signed. Try clearing the local http-cache and run nuget operation again.",
+        "SignatureType": "Signature type: {0}",
+        "SignedPackageAlreadySigned": "The package already contains a signature. Please remove the existing signature before adding a new signature.",
+        "SignedPackageArchiveIOExtraRead": "Package stream read position cannot be longer than the length of the stream.",
+        "SignedPackageArchiveIOInvalidRead": "Package stream read position cannot be before the current position in the stream.",
+        "SignedPackageNotSignedOnRemove": "The package is not signed. Unable to remove signature from an unsigned package.",
+        "SignedPackageNotSignedOnVerify": "The package is not signed. Unable to verify signature from an unsigned package.",
+        "SignedPackagePackageAlreadyCountersigned": "The package already contains a repository countersignature. Please remove the existing signature before adding a new repository countersignature.",
+        "SignedPackageUnableToAccessSignature": "The package was not opened correctly to perform signature operations. Please use a Stream-based constructor to have access to signature attributes of the package.",
+        "SignError_TimestampCertificateFailsPublicKeyLengthRequirement": "The timestamp certificate does not meet a minimum public key length requirement.",
+        "SignError_TimestampGeneralizedTimeInvalid": "The timestamp\u0027s generalized time is outside the timestamping certificate\u0027s validity period.",
+        "SignError_TimestampIntegrityCheckFailed": "The timestamp integrity check failed.",
+        "SignError_TimestampNoCertificate": "The timestamp does not have a signing certificate.",
+        "SignError_TimestampNotYetValid": "The timestamp signing certificate is not yet valid.",
+        "SignError_TimestampSignatureValidationFailed": "The timestamp signature validation failed.",
+        "SignFailureCertificateInvalidProviderType": "The following certificate cannot be used for package signing as the private key provider is unsupported:",
+        "SigningCannotBeDoneInPlace": "{0} and {1} should be different. Package signing cannot be done in place.",
+        "SigningCertificateAttributeMustNotBePresent": "The signing-certificate attribute is not allowed.",
+        "SigningCertificateCertificateNotFound": "A certificate referenced by the signing-certificate attribute could not be found.",
+        "SigningCertificateInvalid": "The signing-certificate attribute is invalid.",
+        "SigningCertificateV1OrV2AttributeMustBePresent": "Either the signing-certificate or signing-certificate-v2 attribute must be present.",
+        "SigningCertificateV2CertificateNotFound": "A certificate referenced by the signing-certificate-v2 attribute could not be found.",
+        "SigningCertificateV2Invalid": "The signing-certificate-v2 attribute is invalid.",
+        "SigningCertificateV2UnsupportedHashAlgorithm": "The signing-certificate-v2 attribute uses an unsupported hash algorithm.",
+        "SigningError_CertificateFailsPublicKeyLengthRequirement": "The signing certificate does not meet a minimum public key length requirement.",
+        "SigningError_CertificateHasLifetimeSigningEKU": "The lifetime signing EKU in the signing certificate is not supported.",
+        "SigningError_CertificateHasUnsupportedSignatureAlgorithm": "The signing certificate has an unsupported signature algorithm.",
+        "SigningError_NotYetValid": "The signing certificate is not yet valid.",
+        "SigningWouldRequireZip64": "The package cannot be signed as it would require the Zip64 format.",
+        "StreamMustBeReadable": "The stream must be readable.",
+        "StreamMustBeSeekable": "The stream must be seekable.",
+        "StringCannotBeNullOrEmpty": "String argument \u0027{0}\u0027 cannot be null or empty",
+        "TimestampCertificateUnsupportedSignatureAlgorithm": "The timestamp certificate has an unsupported signature algorithm ({0}). The following algorithms are supported: {1}.",
+        "TimestampFailureInvalidHttpScheme": "The timestamper URL \u0027{0}\u0027 has an invalid URI scheme. The supported schemes are \u0027{1}\u0027 and \u0027{2}\u0027.",
+        "TimestampFailureNonceMismatch": "The timestamp response is invalid.  Nonces did not match.",
+        "TimestampServiceRespondedError": "The timestamp service responded with HTTP status code \u0027{0}\u0027 (\u0027{1}\u0027).",
+        "TimestampSignatureUnsupportedDigestAlgorithm": "The timestamp signature has an unsupported digest algorithm ({0}). The following algorithms are supported: {1}.",
+        "TimestampValue": "Timestamp: {0}",
+        "UnableToAddEntry": "An error occurred while updating packages.config. The file was closed before the entry could be added.",
+        "UnableToParseClientVersion": "Unable to parse the current NuGet client version.",
+        "UnableToReadPackageHashInformation": "Package hash information could not be read from the package signature.",
+        "UnexpectedPackageSignatureVerificationError": "An unexpected error occurred while verifying a package signature.",
+        "UnrecognizedEnumValue": "The enum value \u0027{0}\u0027 is unrecognized.",
+        "UnrelatedSignatures": "The primary signature and repository countersignature are unrelated.",
+        "UnsupportedAsn1": "The ASN.1 data is unsupported.",
+        "UnsupportedSignatureFormatVersion": "The package signature format version is not supported. Updating your client may solve this problem.",
+        "UntrustedRoot_WithCertificateBundle": "The following X.509 root certificate is untrusted because it is not present in the certificate bundle at {0}.  For more information, see documentation for NU3042.\r\n    Subject:  {1}\r\n    Fingerprint (SHA-256):  {2}\r\n    Certificate (PEM):\r\n{3}",
+        "UntrustedRoot_WithoutCertificateBundle": "The following X.509 root certificate is untrusted because no certificate bundle was found.  For more information, see documentation for NU3042.\r\n    Subject:  {0}\r\n    Fingerprint (SHA-256):  {1}\r\n    Certificate (PEM):\r\n{2}",
+        "VerificationCertDisplay": "Verifying the {0} with certificate: {1}",
+        "VerificationTimestamperCertDisplay": "Verifying {0}\u0027s timestamp with timestamping service certificate: {1}",
+        "Verify_ErrorNoCertificate": "The {0} does not have a signing certificate.",
+        "VerifyCertTrustOfflineWhileRevocationModeOffline": "The revocation function was unable to check revocation because the certificate is not available in the cached certificate revocation list and NUGET_CERT_REVOCATION_MODE environment variable has been set to offline. For more information, visit https://aka.ms/certificateRevocationMode.",
+        "VerifyCertTrustOfflineWhileRevocationModeOnline": "The revocation function was unable to check revocation because the revocation server could not be reached. For more information, visit https://aka.ms/certificateRevocationMode.",
+        "VerifyChainBuildingIssue": "The {0} found a chain building issue: {1}",
+        "VerifyChainBuildingIssue_UntrustedRoot": "The {0}\u0027s signing certificate is not trusted by the trust provider.",
+        "VerifyError_CertificateFailsPublicKeyLengthRequirement": "The {0}\u0027s certificate does not meet a minimum public key length requirement.",
+        "VerifyError_CertificateHasLifetimeSigningEKU": "The lifetime signing EKU in the {0}\u0027s certificate is not supported.",
+        "VerifyError_CertificateHasUnsupportedSignatureAlgorithm": "The {0}\u0027s certificate has an unsupported signature algorithm.",
+        "VerifyError_CertificateNotYetValid": "The {0}\u0027s certificate is not yet valid.",
+        "VerifyError_InvalidCertificateChain": "The {0}\u0027s certificate chain validation failed with error(s): {1}",
+        "VerifyError_SignatureNotTimeValid": "The {0} validity period has expired.",
+        "VerifyError_SignatureVerificationFailed": "The {0} validation failed.",
+        "VerifyError_TimestampCertificateFailsPublicKeyLengthRequirement": "The {0}\u0027s timestamp certificate does not meet a minimum public key length requirement.",
+        "VerifyError_TimestampGeneralizedTimeInvalid": "The {0}\u0027s timestamp\u0027s generalized time is outside the timestamping certificate\u0027s validity period.",
+        "VerifyError_TimestampIntegrityCheckFailed": "The {0}\u0027s timestamp integrity check failed.",
+        "VerifyError_TimestampInvalid": "The {0} contains an invalid timestamp.",
+        "VerifyError_TimestampMessageImprintUnsupportedHashAlgorithm": "The {0} timestamp\u0027s message imprint uses an unsupported hash algorithm.",
+        "VerifyError_TimestampNoCertificate": "The {0}\u0027s timestamp does not have a signing certificate.",
+        "VerifyError_TimestampNotYetValid": "The {0}\u0027s timestamp signing certificate is not yet valid.",
+        "VerifyError_TimestampSignatureUnsupportedDigestAlgorithm": "The {0}\u0027s timestamp signature has an unsupported digest algorithm.",
+        "VerifyError_TimestampSignatureValidationFailed": "The {0}\u0027s timestamp signature validation failed.",
+        "VerifyError_TimestampUnsupportedSignatureAlgorithm": "The {0}\u0027s timestamp certificate has an unsupported signature algorithm.",
+        "VerifyError_TimestampVerifyChainBuildingIssue": "The {0}\u0027s timestamp found a chain building issue: {1}",
+        "VerifyTimestampChainBuildingIssue_UntrustedRoot": "The {0}\u0027s timestamping certificate is not trusted by the trust provider.",
+        "ZipFileLastWriteTimeStampModifiedMessage": "\u0027{0}\u0027 changed from \u0027{1}\u0027 to \u0027{2}\u0027",
+        "ZipFileTimeStampModifiedWarning": "The zip format supports a limited date range. The following files are outside the supported range:"
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "Newtonsoft.Json",
+        "version": "13.0.0.0",
+        "public_key_or_token": "30ad4fe6b2a6aeed"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.NonGeneric",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Diagnostics.Process",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.Compression",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b77a5c561934e089"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.MemoryMappedFiles",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Net.Http",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Net.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.ObjectModel",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime.InteropServices",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime.Numerics",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Algorithms",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Cng",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Encoding",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Pkcs",
+        "version": "6.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.X509Certificates",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Text.Encoding.Extensions",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Text.RegularExpressions",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading.Thread",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.ProjectModel.dll",
+    "sha256": "e9413c20b0809fd29938d1941dc8c44d1de3a5c4e086a38b386986cfa99d520e",
+    "name": "NuGet.ProjectModel",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.ProjectModel.Strings.resources": {
+        "ArgumentNullOrEmpty": "Argument cannot be null or empty.",
+        "InvalidDependencyTarget": "Invalid dependency target value \u0027{0}\u0027.",
+        "InvalidPackageType": "The pack options package type must be a string or array of strings in \u0027{0}\u0027.",
+        "Log_ErrorReadingLockFile": "Error loading lock file \u0027{0}\u0027 : {1}",
+        "Log_ErrorReadingProjectJson": "Error reading \u0027{0}\u0027 : {1}",
+        "Log_ErrorReadingProjectJsonWithLocation": "Error reading \u0027{0}\u0027 at line {1} column {2} : {3}",
+        "Log_InvalidImportFramework": "Imports contains an invalid framework: \u0027{0}\u0027 in \u0027{1}\u0027.",
+        "Log_ProblemReadingCacheFile": "Problem reading the cache file {0} : {1}",
+        "MissingVersionOnDependency": "Package dependencies must specify a version range.",
+        "MissingVersionOnTool": "Tools must specify a version range.",
+        "None": "None",
+        "PackagesLockFile_CentralPackageVersionRemoved": "Central package management file(s) doesn\u0027t contain version range for {0} package which is specified as CentralTransitive dependency in the lock file.",
+        "PackagesLockFile_IncompatibleLockFileVersion": "Version specified in the packages.lock.json file is incompatible. Current tooling supports version {0} and previous formats.",
+        "PackagesLockFile_MismatchedTargetFrameworks": "The project target frameworks are different than the lock file\u0027s target frameworks. Lock file target frameworks: {0}. Project target frameworks {1}.",
+        "PackagesLockFile_NewTargetFramework": "The project target framework {0} was not found in the lock file.",
+        "PackagesLockFile_PackageReferenceAdded": "A new package reference was found {0} for the project target framework {1}.",
+        "PackagesLockFile_PackageReferencesHaveChanged": "The package references have changed for {0}. Lock file\u0027s package references: {1}, project\u0027s package references: {2}.",
+        "PackagesLockFile_PackageReferenceVersionChanged": "The package reference {0} version has changed from {1} to {2}.",
+        "PackagesLockFile_ProjectReferenceAdded": "A new project reference to {0} was found for {1} target framework.",
+        "PackagesLockFile_ProjectReferenceDependenciesHasChanged": "The project references {0} whose dependencies has changed.",
+        "PackagesLockFile_ProjectReferenceHasNoCompatibleTargetFramework": "The project {0} has no compatible target framework. ",
+        "PackagesLockFile_ProjectReferencesHasChange": "The project reference {0} has changed. Current dependencies: {1} lock file\u0027s dependencies: {2}.",
+        "PackagesLockFile_ProjectTransitiveDependencyChanged": "Transitive dependency {0} moved to be centraly managed invalidated the lock file.",
+        "PackagesLockFile_ProjectTransitiveDependencyVersionChanged": "Mistmatch between the requestedVersion of a lock file dependency marked as CentralTransitive and the the version specified in the central package management file. Lock file version {0}, central package management version {1}.",
+        "PackagesLockFile_RestoreMetadataMissingTfms": "Restore metadata is mising the required target frameworks list. Please file a bug with repro steps on NuGet/Home if seen.",
+        "PackagesLockFile_RuntimeIdentifiersChanged": "The project\u0027s runtime identifiers have changed from. Project\u0027s runtime identifiers: {0}, lock file\u0027s runtime identifiers {1}.",
+        "PackagesLockFile_UnableToLoadPackagespec": "Unable to load package spec for {0} project."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "Newtonsoft.Json",
+        "version": "13.0.0.0",
+        "public_key_or_token": "30ad4fe6b2a6aeed"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.DependencyResolver.Core",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.LibraryModel",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Packaging",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Protocol.dll",
+    "sha256": "3c13bd59eec79336b49db6156409240b9d8fd86901f2e57e47ce3787c9f96647",
+    "name": "NuGet.Protocol",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Protocol.Strings.resources": {
+        "AddPackage_ExistingPackageInvalid": "Package \u0027{0}\u0027 already exists at feed \u0027{1}\u0027 and is invalid.",
+        "AddPackage_PackageAlreadyExists": "Package \u0027{0}\u0027 already exists at feed \u0027{1}\u0027.",
+        "AddPackage_SuccessfullyAdded": "Successfully added package \u0027{0}\u0027 to feed \u0027{1}\u0027.",
+        "Argument_Cannot_Be_Null_Or_Empty": "Argument can not be null or empty.",
+        "ArgumentCannotBeNullOrEmpty": "Argument cannot be null or empty.",
+        "DefaultSymbolServer": "the symbol server",
+        "DeleteCommandCanceled": "Delete canceled",
+        "DeleteCommandConfirm": "{0} {1} will be deleted from the {2}. Would you like to continue?",
+        "DeleteCommandDeletedPackage": "{0} {1} was deleted successfully.",
+        "DeleteCommandDeletingPackage": "Deleting {0} {1} from the {2}.",
+        "DeletePackage_NotFound": "Not Found.",
+        "Error_DownloadTimeout": "The download of \u0027{0}\u0027 timed out because no data was received for {1}ms.",
+        "Http_CredentialsForForbidden": "The server responded with HTTP \u0027403 Forbidden\u0027 when accessing the source \u0027{0}\u0027. This suggests that the server has authenticated your identity but has not permitted you to access the requested resource. Provide credentials that have permissions to view this resource.",
+        "Http_CredentialsForProxy": "The server responded with HTTP \u0027407 Proxy Authentication Required\u0027 when accessing the proxy \u0027{0}\u0027. This suggests that the server needs credentials to authenticate your identity to use a proxy. Provide credentials to access this resource.",
+        "Http_CredentialsForUnauthorized": "The server responded with HTTP \u0027401 Unauthorized\u0027 when accessing the source \u0027{0}\u0027. This suggests that the server needs credentials to authenticate your identity. Provide credentials to access this resource.",
+        "Http_RequestLog": "{0} {1}",
+        "Http_ResponseLog": "{0} {1} {2}ms",
+        "Http_ResponseLogWithRetryAfter": "{0} {1} {2}ms (retry after: {3}s)",
+        "Http_Timeout": "The HTTP request to \u0027{0} {1}\u0027 has timed out after {2}ms.",
+        "InvalidVersionFolder": "The folder \u0027{0}\u0027 contains an invalid version.",
+        "LiveFeed": "the NuGet gallery",
+        "LoadFileFromNupkg_FileNotFound": "The file \u0027{0}\u0027 does not exist in the package.",
+        "LoadFileFromNupkg_FileTooLarge": "Cannot load the file \u0027{0}\u0027 because it is larger than {1} MB.",
+        "LoadFileFromNupkg_UnknownProblemLoadingTheFile": "Unknown problem loading the file \u0027{0}\u0027.",
+        "Log_CanceledNupkgDownload": "Downloading a package from \u0027{0}\u0027 was canceled.",
+        "Log_ErrorDownloading": "Error downloading \u0027{0}\u0027 from \u0027{1}\u0027.",
+        "Log_FailedToDownloadPackage": "Failed to download package \u0027{0}\u0027 from \u0027{1}\u0027.",
+        "Log_FailedToFetchV2Feed": "The V2 feed at \u0027{0}\u0027 returned an unexpected status code \u0027{1} {2}\u0027.",
+        "Log_FailedToFetchV2FeedHttp": "Failed to fetch results from V2 feed at \u0027{0}\u0027 with following message : {1}",
+        "Log_FailedToGetNuspecStream": "Unable to load nuspec from package \u0027{0}\u0027.",
+        "Log_FailedToParseRepoSignInfor": "Unable to parse {0} information from {1}. ",
+        "Log_FailedToReadRepositorySignature": "Unable to get repository signature information for source {0}.",
+        "Log_FailedToReadServiceIndex": "Unable to load the service index for source {0}.",
+        "Log_FailedToRetrievePackage": "Failed to retrieve information about \u0027{0}\u0027 from remote source \u0027{1}\u0027.",
+        "Log_FailedToVerifyRootDirectory": "Failed to verify the root directory of local source \u0027{0}\u0027.",
+        "Log_FailedToVerifyValidFile": "Failed to validate the file \u0027{0}\u0027.",
+        "Log_FileIsCorrupt": "The file \u0027{0}\u0027 is corrupt.",
+        "Log_InvalidCacheEntry": "An invalid cache entry was found for URL \u0027{0}\u0027 and will be replaced.",
+        "Log_InvalidNupkgFromUrl": "The nupkg at \u0027{0}\u0027 is not valid.",
+        "Log_LocalSourceNotExist": "The local source \u0027{0}\u0027 doesn\u0027t exist.",
+        "Log_RetryingFindPackagesById": "Retrying \u0027{0}\u0027 for source \u0027{1}\u0027.",
+        "Log_RetryingHttp": "An error was encountered when fetching \u0027{0} {1}\u0027. The request will now be retried.",
+        "Log_RetryingRepositorySignature": "Retrying repository signature request for source \u0027{0}\u0027.",
+        "Log_RetryingServiceIndex": "Retrying service index request for source \u0027{0}\u0027.",
+        "NoApiKeyFound": "No API Key was provided and no API Key could be found for {0}. To save an API Key for a source use the \u0027setApiKey\u0027 command.",
+        "NuGetLicense_LicenseExpressionVersionTooHigh": "The license version string \u0027{0}\u0027 is higher than the one supported by this toolset \u0027{1}\u0027.",
+        "NuGetLicenseExpression_NonStandardIdentifier": "The license identifier(s) {0} is(are) not recognized by the current toolset.",
+        "NupkgPath_Invalid": "\u0027{0}\u0027 is not a valid nupkg file.",
+        "NupkgPath_InvalidEx": "\u0027{0}\u0027 is not a valid nupkg file. Error: \u0027{1}\u0027.",
+        "OneOrMoreUrisMustBeSpecified": "One or more URIs must be specified.",
+        "PackageNotFound": "Unable to find package \u0027{0}\u0027.",
+        "PackageServerEndpoint_NotSupported": "ERROR: This version of nuget.exe does not support updating packages to package source \u0027{0}\u0027.",
+        "Path_Invalid": "\u0027{0}\u0027 is not a valid path.",
+        "Path_Invalid_NotFileNotUnc": "\u0027{0}\u0027 should be a local path or a UNC share path.",
+        "Plugin_ConnectionAlreadyStarted": "A connection has already been started.",
+        "Plugin_ConnectionIsClosed": "The plugin connection is closed.",
+        "Plugin_DownloadNotSupportedSinceUnsignedNotAllowed": "Downloading a package from a plugin is not supported since unsigned packages are not allowed and package download plugins do not support signed package verification.",
+        "Plugin_Exception": "Plugin \u0027{0}\u0027 failed with the exception:  {1}",
+        "Plugin_FailedOnCreation": "Plugin \u0027{0}\u0027 failed within {1:N3} seconds with exit code {2}.",
+        "Plugin_FailedOperationForPackage": "Plugin \u0027{0}\u0027 failed a {1} operation for package {2}.{3}.",
+        "Plugin_FailureQueryingPackageVersions": "A failure occurred while attempting to query package versions for package \u0027{0}\u0027 using the plugin at \u0027{1}\u0027.",
+        "Plugin_Fault": "Terminating plugin \u0027{0}\u0027 due to an unrecoverable fault:  {1}",
+        "Plugin_FileNotFound": "A plugin was not found at path \u0027{0}\u0027.",
+        "Plugin_HandshakeFailed": "The plugin handshake failed.",
+        "Plugin_HandshakeRequestHandlerAlreadyExists": "A handshake request handler already exists.",
+        "Plugin_IdleTimeoutMustBeGreaterThanOrEqualToInfiniteTimeSpan": "The idle timeout must be greater than or equal to System.Threading.Timeout.InfiniteTimeSpan.",
+        "Plugin_InitializationFailed": "Plugin initialization failed.",
+        "Plugin_InvalidEmbeddedSignature": "The plugin at \u0027{0}\u0027 did not have a valid embedded signature.",
+        "Plugin_InvalidMessageType": "The message type \u0027{0}\u0027 is invalid at this time.",
+        "Plugin_InvalidPluginFilePath": "The plugin file path \u0027{0}\u0027 is invalid.",
+        "Plugin_NotConnected": "A plugin is not connected.",
+        "Plugin_PackageDownloadFailed": "Plugin \u0027{0}\u0027 failed to download package \u0027{1}\u0027.",
+        "Plugin_ProblemStartingPlugin": "Problem starting the plugin \u0027{0}\u0027. {1}",
+        "Plugin_ProtocolException": "A plugin protocol exception occurred.",
+        "Plugin_ProtocolVersionNotSupportedOnError": "A protocol version is not supported on error.",
+        "Plugin_ProtocolVersionOutOfRange": "\u0027{0}\u0027 must be greater than or equal to \u0027{1}\u0027.",
+        "Plugin_RequestContextDoesNotExist": "Request context does not exist for request ID \u0027{0}\u0027.",
+        "Plugin_RequestHandlerDoesNotExist": "A request handler does not exist for the message method \u0027{0}\u0027.",
+        "Plugin_TimeoutOutOfRange": "Timeout must be greater than TimeSpan.Zero and less than or equal to TimeSpan.FromMilliseconds(int.MaxValue).",
+        "Plugin_UnrecognizedEnumValue": "The enum value \u0027{0}\u0027 is unrecognized.",
+        "Plugin_UnrecognizedOperationClaims": "The operation claims are unrecognized:  {0}.",
+        "Protocol_BadSource": "Failed to retrieve metadata from source \u0027{0}\u0027.",
+        "Protocol_duplicateUri": "\u0027{0}\u0027 is a duplicate url which has already been downloaded and will lead to a cyclic dependency. Please correct from server.",
+        "Protocol_InvalidJsonObject": "The content at \u0027{0}\u0027 is not a valid JSON object.",
+        "Protocol_InvalidXml": "The content at \u0027{0}\u0027 is not valid XML.",
+        "Protocol_MalformedMetadataError": "Metadata could not be loaded from the source \u0027{0}\u0027.",
+        "Protocol_MissingSearchService": "The source does not have a Search service!",
+        "Protocol_MissingVersion": "The source does not have the \u0027version\u0027 property.",
+        "Protocol_PackageMetadataError": "An error occurred while retrieving package metadata for \u0027{0}\u0027 from source \u0027{1}\u0027.",
+        "Protocol_Search_LocalSourceNotFound": "The path \u0027{0}\u0027 for the selected source could not be resolved.",
+        "Protocol_UnsupportedVersion": "The source version is not supported: \u0027{0}\u0027.",
+        "PushCommandPackagePushed": "Your package was pushed.",
+        "PushCommandPushingPackage": "Pushing {0} to {1}...",
+        "PushCommandSkipDuplicateAdvertiseDotnetExe": "To skip already published packages, use the option --skip-duplicate",
+        "PushCommandSkipDuplicateAdvertiseNuGetExe": "To skip already published packages, use the option -SkipDuplicate",
+        "PushCommandSkipDuplicateNotImplemented": "The option to skip duplicates is not currently supported for this type of push.",
+        "RepositoryContentUrlMustBeHttps": "Repository content URL for repository signatures must be HTTPS.",
+        "RepositorySignaturesResourceMustBeHttps": "Repository Signatures resouce must be served over HTTPS. Source: {0}",
+        "StringCannotBeNullOrEmpty": "String argument \u0027{0}\u0027 cannot be null or empty",
+        "UnableToFindFile": "File does not exist ({0}).",
+        "UnableToParseFolderV3Version": "Unable to parse a valid version from a v3 folder: \u0027{0}\u0027.",
+        "Vulnerability_TooManyPages": "Package source \u0027{0}\u0027 has {1} vulnerability data pages. Using the first {2}.",
+        "VulnerabilityPage_CouldNotLoad": "Package source \u0027{0}\u0027 vulnerability data index \u0027{1}\u0027 could not be loaded. This indicates a problem with the JSON file contents returned from the server.",
+        "VulnerabilityPage_HasNoName": "Vulnerability page index {0} does not contain a name (Source: \u0027{1}\u0027)",
+        "VulnerabilityPage_NameHasInvalidCharacters": "Vulnerability page index {0} contains invalid characters (Source: \u0027{1}\u0027)",
+        "VulnerabilityPage_NameNotUnique": "Vulnerability page name \u0027{0}\u0027 is not unique. Only using the first (Source: \u0027{1}\u0027)",
+        "VulnerabilityPage_NameTooLong": "Vulnerability page index {0} name is longer than {1} characters (Source: \u0027{2}\u0027)",
+        "VulnerabilityPage_NoUrl": "Vulnerability page \u0027{0}\u0027 does not contain a URL (Source: \u0027{1}\u0027)",
+        "VulnerabilityPage_UrlNotHttp": "Vulnerability page \u0027{0}\u0027 contains URL that is not http(s) (Source: \u0027{1}\u0027)",
+        "Warning_HttpServerUsage": "You are running the \u0027{0}\u0027 operation with an \u0027HTTP\u0027 source, \u0027{1}\u0027. Non-HTTPS access will be removed in a future version. Consider migrating to an \u0027HTTPS\u0027 source.",
+        "Warning_SymbolServerNotConfigured": "Found symbols package \u0027{0}\u0027, but no API key was specified for the symbol server. To save an API Key, run \u0027NuGet.exe setApiKey [your API key from http://www.NuGet.org]\u0027."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "Newtonsoft.Json",
+        "version": "13.0.0.0",
+        "public_key_or_token": "30ad4fe6b2a6aeed"
+      },
+      {
+        "name": "NuGet.Common",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Configuration",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Frameworks",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Packaging",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "NuGet.Versioning",
+        "version": "6.9.1.3",
+        "public_key_or_token": "31bf3856ad364e35"
+      },
+      {
+        "name": "System.Collections",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Collections.Concurrent",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.ComponentModel.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Console",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Diagnostics.Process",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.IO.Compression",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b77a5c561934e089"
+      },
+      {
+        "name": "System.IO.FileSystem",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Linq",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Net.Http",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Net.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Runtime.InteropServices",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Algorithms",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.Primitives",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Security.Cryptography.X509Certificates",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Text.Encoding.Extensions",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Text.Json",
+        "version": "5.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      },
+      {
+        "name": "System.Threading",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Threading.ThreadPool",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.ReaderWriter",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      },
+      {
+        "name": "System.Xml.XDocument",
+        "version": "5.0.0.0",
+        "public_key_or_token": "b03f5f7f11d50a3a"
+      }
+    ]
+  },
+  {
+    "file": "nuget-core-metadata/NuGet.Versioning.dll",
+    "sha256": "e0e1177b4f2457fe0d780ad11845041fc937edf87d49ded968ee2559f27f315f",
+    "name": "NuGet.Versioning",
+    "version": "6.9.1.3",
+    "public_key": "0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9",
+    "public_key_token": "31bf3856ad364e35",
+    "attributes": {
+      "AssemblyFileVersionAttribute": "6.9.1.3",
+      "AssemblyInformationalVersionAttribute": "6.9.1\u002B623fde83a3cd73cb479ec7fa03866c6116894dbf.623fde83a3cd73cb479ec7fa03866c6116894dbf"
+    },
+    "resources": {
+      "NuGet.Versioning.Resources.resources": {
+        "Argument_Cannot_Be_Null_Or_Empty": "Value cannot be null or an empty string.",
+        "CannotBeNullWhenParameterIsNotNull": "Parameter \u0027{0}\u0027 cannot be null when parameter \u0027{1}\u0027 is not null.",
+        "InvalidFloatRangeValue": "\u0027{0}\u0027 is not a valid float range string.",
+        "Invalidvalue": "\u0027{0}\u0027 is not a valid version string.",
+        "TypeNotSupported": "Type \u0027{0}\u0027 is not supported."
+      }
+    },
+    "exported_types": 0,
+    "references": [
+      {
+        "name": "netstandard",
+        "version": "2.0.0.0",
+        "public_key_or_token": "cc7b13ffcd2ddd51"
+      }
+    ]
+  }
+]

@@ -1,0 +1,700 @@
+MSBuild18 source NET10 managed build and localization
+Host: win11; /e/codex-dotnet10/msbuild18full1.aNckv0
+All six primary projects compile. Original production source changes: 0.
+Original Arcade/MSBuild file version: 18.3.0.11413.
+CLI help/version/JSON properties/Unicode tasks pass.
+Two parallel process receipts: [['9768', '2', 'child0 Ω'], ['4064', '2', 'child1 Ω']]
+Localization: {'satellites': 53, 'resource_sets': 118, 'resource_values': 23597}
+Original archive audit: 1326 Compile items,104 source-package inputs,85 localization inputs.
+Current output/reference/generated/feed hash audit:308 files; all53 satellite hashes also pass.
+
+Commands (native Windows paths, run through CLANG64 Python):
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.NET.StringTools/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build.Framework/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build.Utilities.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build.Utilities.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build.Tasks.Core/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build3/Microsoft.Build.Tasks.Core/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18full1.aNckv0/build4/MSBuild/Resources.proj -t:Resources -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/build4/MSBuild/compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe build E:/codex-dotnet10/msbuild18full1.aNckv0/version-build/Build.csproj -c Release --configfile E:/codex-dotnet10/msbuild18full1.aNckv0/version-build/NuGet.config -p:UseSharedCompilation=false -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet/dotnet.exe msbuild E:/codex-dotnet10/msbuild18full1.aNckv0/version-build/Calculate.proj -t:Calculate -nologo -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/stage/MSBuild.dll -nologo -version -noautoresponse
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/stage/MSBuild.dll -nologo -help -noautoresponse
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/stage/MSBuild.dll E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/owned-project/Owned.proj -nologo -noautoresponse -nr:false -v:minimal
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/stage/MSBuild.dll E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/owned-project/Owned.proj -nologo -noautoresponse -getProperty:MSBuildVersion,MSBuildAssemblyVersion,MSBuildRuntimeType
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll -noconfig @E:/codex-dotnet10/msbuild18full1.aNckv0/localized/check-compile.rsp
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/localized/bin/Check.dll E:/codex-dotnet10/msbuild18full1.aNckv0/localized/expected.json
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/localized/bin/MSBuild.dll -help -nologo -noautoresponse
+RESULT: exit 0
+$ E:/msys64/clang64/lib/dotnet10/dotnet.exe E:/codex-dotnet10/msbuild18full1.aNckv0/cli-check2/stage/MSBuild.dll E:/codex-dotnet10/msbuild18full1.aNckv0/parallel-check2/Parent.proj -t:Build -m:2 -nr:false -noautoresponse -nologo -v:minimal
+RESULT: exit 0
+
+Initial localization command compiled all53 satellites, then failed the stale52 assertion; final checker reused those terminal-success outputs.
+Final command: python localize.py PLAN BUILD4 CLI_CHECK2/stage LOCALIZED --resume-completed-satellites; exit0.
+Independent audit command:
+python tests/msbuild18/audit-original-inputs.py /tmp/msbuild18-full-evidence /tmp/dotnet10-sources/msbuild-sdk10-228caa11.tar.gz /tmp/dotnet10-sources/arcade-msbuild18-987d1a73.tar.gz /tmp/dotnet10-sources/msbuild-source-packages /tmp/msbuild18-full-evidence/source-audit.json
+RESULT: exit0;1326 original Compile items,104 source-package items,85 localization inputs.
+
+Retained failure/check logs:
+
+build/Microsoft.Build/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(135,38): error CS9248: Partial property 'CanonicalError.OriginCategoryCodeTextExpression' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(138,38): error CS9248: Partial property 'CanonicalError.OriginCategoryCodeTextExpression2' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(141,38): error CS9248: Partial property 'CanonicalError.FilenameLocationFromOrigin' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(144,38): error CS9248: Partial property 'CanonicalError.LineFromLocation' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(147,38): error CS9248: Partial property 'CanonicalError.LineLineFromLocation' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(150,38): error CS9248: Partial property 'CanonicalError.LineColFromLocation' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(153,38): error CS9248: Partial property 'CanonicalError.LineColColFromLocation' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CanonicalError.cs(156,38): error CS9248: Partial property 'CanonicalError.LineColLineColFromLocation' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\ProjectWriter.cs(52,38): error CS9248: Partial property 'ProjectWriter.ItemVectorTransformRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\ProjectWriter.cs(55,38): error CS9248: Partial property 'ProjectWriter.ItemVectorTransformRawRegex' must have an implementation part.
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Configuration.ConfigurationManager' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Reflection.MetadataLoadContext' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Evaluation\IntrinsicFunctions.cs(47,38): error CS9248: Partial property 'IntrinsicFunctions.RegistrySdkRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Evaluation\Expander.cs(3448,43): error CS9248: Partial property 'Expander<P, I>.RegularExpressions.ItemMetadataRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Evaluation\Expander.cs(3483,43): error CS9248: Partial property 'Expander<P, I>.RegularExpressions.NonTransformItemMetadataRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\BuildCheck\Infrastructure\EditorConfig\EditorConfigFile.cs(28,34): error CS9248: Partial property 'EditorConfigFile.SectionMatcherRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\BuildCheck\Infrastructure\EditorConfig\EditorConfigFile.cs(31,34): error CS9248: Partial property 'EditorConfigFile.PropertyMatcherRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Logging\TerminalLogger\TerminalLogger.cs(1763,34): error CS9248: Partial property 'TerminalLogger.TerminalLoggerArgPattern' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Logging\TerminalLogger\TerminalLogger.cs(1765,34): error CS9248: Partial property 'TerminalLogger.VerbosityArgPattern' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Logging\TerminalLogger\TerminalLogger.cs(1767,34): error CS9248: Partial property 'TerminalLogger.TerminalLoggerParametersArgPattern' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Logging\TerminalLogger\TerminalLogger.cs(1769,34): error CS9248: Partial property 'TerminalLogger.ConsoleLoggerParametersArgPattern' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Construction\ProjectRootElement.cs(68,38): error CS9248: Partial property 'ProjectRootElement.XmlDeclarationRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Construction\Solution\SolutionFile.cs(67,38): error CS9248: Partial property 'SolutionFile.CrackProjectLineRegex' must have an implementation part.
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Construction\Solution\SolutionFile.cs(70,38): error CS9248: Partial property 'SolutionFile.CrackPropertyLineRegex' must have an implementation part.
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'Microsoft.VisualStudio.SolutionPersistence' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Build\Utilities\Utilities.cs(303,38): error CS9248: Partial property 'Utilities.XmlnsPattern' must have an implementation part.
+
+
+build2/Microsoft.Build.Tasks.Core/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Security.Cryptography.Xml' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+warning CS1701: Assuming assembly reference 'System.Xml.ReaderWriter, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Security.Cryptography.Xml' matches identity 'System.Xml.ReaderWriter, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Xml.ReaderWriter', you may need to supply runtime policy
+warning CS1701: Assuming assembly reference 'System.ComponentModel.Primitives, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.CodeDom' matches identity 'System.ComponentModel.Primitives, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.ComponentModel.Primitives', you may need to supply runtime policy
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.CodeDom' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\NodePipeServer.cs(210,33): error CS1501: No overload for method 'TryReadIntForHandshake' takes 3 arguments
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\NodePipeServer.cs(233,29): error CS1501: No overload for method 'TryReadEndOfHandshakeSignal' takes 3 arguments
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\NodePipeClient.cs(92,32): error CS1501: No overload for method 'TryReadEndOfHandshakeSignal' takes 3 arguments
+warning CS1701: Assuming assembly reference 'System.Collections.NonGeneric, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.CodeDom' matches identity 'System.Collections.NonGeneric, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Collections.NonGeneric', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(155,21): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(157,21): warning SYSLIB0037: 'AssemblyName.HashAlgorithm' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(158,21): warning SYSLIB0037: 'AssemblyName.VersionCompatibility' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(159,21): warning SYSLIB0044: 'AssemblyName.CodeBase' is obsolete: 'AssemblyName.CodeBase and AssemblyName.EscapedCodeBase are obsolete. Using them for loading an assembly is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0044)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(280,28): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(958,47): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(966,42): warning SYSLIB0037: 'AssemblyName.HashAlgorithm' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(967,44): warning SYSLIB0037: 'AssemblyName.VersionCompatibility' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\AssemblyNameExtension.cs(968,43): warning SYSLIB0044: 'AssemblyName.CodeBase' is obsolete: 'AssemblyName.CodeBase and AssemblyName.EscapedCodeBase are obsolete. Using them for loading an assembly is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0044)
+warning CS1701: Assuming assembly reference 'System.Collections.Specialized, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.CodeDom' matches identity 'System.Collections.Specialized, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Collections.Specialized', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\AssemblyFoldersFromConfig\AssemblyFoldersFromConfigResolver.cs(204,63): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\AssemblyFoldersFromConfig\AssemblyFoldersFromConfigResolver.cs(204,145): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+warning CS1701: Assuming assembly reference 'System.Security.Cryptography, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Security.Cryptography.Xml' matches identity 'System.Security.Cryptography, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Security.Cryptography', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(389,41): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(391,33): warning SYSLIB0037: 'AssemblyName.HashAlgorithm' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(392,40): warning SYSLIB0037: 'AssemblyName.VersionCompatibility' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(393,28): warning SYSLIB0044: 'AssemblyName.CodeBase' is obsolete: 'AssemblyName.CodeBase and AssemblyName.EscapedCodeBase are obsolete. Using them for loading an assembly is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0044)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(418,21): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(420,21): warning SYSLIB0037: 'AssemblyName.HashAlgorithm' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(421,21): warning SYSLIB0037: 'AssemblyName.VersionCompatibility' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TranslatorHelpers.cs(422,21): warning SYSLIB0044: 'AssemblyName.CodeBase' is obsolete: 'AssemblyName.CodeBase and AssemblyName.EscapedCodeBase are obsolete. Using them for loading an assembly is not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0044)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\Resolver.cs(238,31): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\Resolver.cs(239,93): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\Resolver.cs(240,96): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\Resolver.cs(356,47): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+warning CS1701: Assuming assembly reference 'System.Runtime, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' used by 'System.Resources.Extensions' matches identity 'System.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a' of 'System.Runtime', you may need to supply runtime policy
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\ResourceHandling\BinaryFormatterByteArrayResource.cs(38,17): warning SYSLIB0011: 'PreserializedResourceWriter.AddBinaryFormattedResource(string, byte[], string?)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.' (https://aka.ms/dotnet-warnings/SYSLIB0011)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\ManifestUtil\SecurityUtil.cs(613,43): warning SYSLIB0057: 'X509Certificate2.X509Certificate2(string, SecureString?, X509KeyStorageFlags)' is obsolete: 'Loading certificate data through the constructor or Import is obsolete. Use X509CertificateLoader instead to load certificates.' (https://aka.ms/dotnet-warnings/SYSLIB0057)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\GenerateBindingRedirects.cs(292,64): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\AssemblyDependency\ResolveAssemblyReference.cs(1901,33): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Tasks\BootstrapperUtil\BootstrapperBuilder.cs(2166,38): warning SYSLIB0057: 'X509Certificate.X509Certificate(string)' is obsolete: 'Loading certificate data through the constructor or Import is obsolete. Use X509CertificateLoader instead to load certificates.' (https://aka.ms/dotnet-warnings/SYSLIB0057)
+
+
+build3/MSBuild/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\EscapingUtilities.cs(9,17): error CS0234: The type or namespace name 'NET' does not exist in the namespace 'Microsoft' (are you missing an assembly reference?)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\CommunicationsUtilities.cs(26,17): error CS0234: The type or namespace name 'NET' does not exist in the namespace 'Microsoft' (are you missing an assembly reference?)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\InterningBinaryReader.cs(16,17): error CS0234: The type or namespace name 'NET' does not exist in the namespace 'Microsoft' (are you missing an assembly reference?)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Shared\TypeLoader.cs(218,24): error CS0246: The type or namespace name 'MetadataLoadContext' could not be found (are you missing a using directive or an assembly reference?)
+
+
+cli-check/owned-tasks.log
+MSBUILD : warning MSB4196: The "*.overridetasks" files could not be successfully loaded from their expected location "E:\codex-dotnet10\msbuild18full1.aNckv0\cli-check\stage". Default tasks will not be overridden.  [E:\codex-dotnet10\msbuild18full1.aNckv0\cli-check\owned-project\Owned.proj]
+
+
+parallel-check/execute.log
+E:\codex-dotnet10\msbuild18full1.aNckv0\parallel-check\child0.proj(2,617): error MSB4185: The function "ProcessId" on type "System.Environment" is not available for execution as an MSBuild property function.
+E:\codex-dotnet10\msbuild18full1.aNckv0\parallel-check\child1.proj(2,617): error MSB4185: The function "ProcessId" on type "System.Environment" is not available for execution as an MSBuild property function.
+
+
+localized.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/msbuild18full1.aNckv0/localize.py", line 59, in <module>
+    assert len(satellites)==52,(len(satellites),list(groups))
+           ^^^^^^^^^^^^^^^^^^^
+AssertionError: (53, [('Microsoft.Build', 'cs'), ('Microsoft.Build', 'de'), ('Microsoft.Build', 'en'), ('Microsoft.Build', 'es'), ('Microsoft.Build', 'fr'), ('Microsoft.Build', 'it'), ('Microsoft.Build', 'ja'), ('Microsoft.Build', 'ko'), ('Microsoft.Build', 'pl'), ('Microsoft.Build', 'pt-BR'), ('Microsoft.Build', 'ru'), ('Microsoft.Build', 'tr'), ('Microsoft.Build', 'zh-Hans'), ('Microsoft.Build', 'zh-Hant'), ('Microsoft.Build.Utilities.Core', 'cs'), ('Microsoft.Build.Utilities.Core', 'de'), ('Microsoft.Build.Utilities.Core', 'es'), ('Microsoft.Build.Utilities.Core', 'fr'), ('Microsoft.Build.Utilities.Core', 'it'), ('Microsoft.Build.Utilities.Core', 'ja'), ('Microsoft.Build.Utilities.Core', 'ko'), ('Microsoft.Build.Utilities.Core', 'pl'), ('Microsoft.Build.Utilities.Core', 'pt-BR'), ('Microsoft.Build.Utilities.Core', 'ru'), ('Microsoft.Build.Utilities.Core', 'tr'), ('Microsoft.Build.Utilities.Core', 'zh-Hans'), ('Microsoft.Build.Utilities.Core', 'zh-Hant'), ('Microsoft.Build.Tasks.Core', 'cs'), ('Microsoft.Build.Tasks.Core', 'de'), ('Microsoft.Build.Tasks.Core', 'es'), ('Microsoft.Build.Tasks.Core', 'fr'), ('Microsoft.Build.Tasks.Core', 'it'), ('Microsoft.Build.Tasks.Core', 'ja'), ('Microsoft.Build.Tasks.Core', 'ko'), ('Microsoft.Build.Tasks.Core', 'pl'), ('Microsoft.Build.Tasks.Core', 'pt-BR'), ('Microsoft.Build.Tasks.Core', 'ru'), ('Microsoft.Build.Tasks.Core', 'tr'), ('Microsoft.Build.Tasks.Core', 'zh-Hans'), ('Microsoft.Build.Tasks.Core', 'zh-Hant'), ('MSBuild', 'cs'), ('MSBuild', 'de'), ('MSBuild', 'es'), ('MSBuild', 'fr'), ('MSBuild', 'it'), ('MSBuild', 'ja'), ('MSBuild', 'ko'), ('MSBuild', 'pl'), ('MSBuild', 'pt-BR'), ('MSBuild', 'ru'), ('MSBuild', 'tr'), ('MSBuild', 'zh-Hans'), ('MSBuild', 'zh-Hant')])
+
+
+localized-check2-resource-failure.log
+Unhandled exception. System.Exception: Microsoft.Build/cs/FatalErrorWhileLoggingWithInnerException
+   at Check.Main(String[] args)
+
+
+localized-check3-resource-failure.log
+Unhandled exception. System.Exception: Microsoft.Build/cs/FatalErrorWhileLoggingWithInnerException expected="MSB4017: Sestavov\u00E1n\u00ED bylo neo\u010Dek\u00E1van\u011B zastaveno z d\u016Fvodu neo\u010Dek\u00E1van\u00E9 chyby protokolovac\u00EDho n\u00E1stroje.\n    {0}" actual="MSB4017: Sestavov\u00E1n\u00ED bylo neo\u010Dek\u00E1van\u011B zastaveno z d\u016Fvodu neo\u010Dek\u00E1van\u00E9 chyby protokolovac\u00EDho n\u00E1stroje.\r\n    {0}"
+   at Check.Main(String[] args)
+
+
+localized-check4-resource-failure.log
+Unhandled exception. System.Exception: Microsoft.Build/en/ChangeWave_InvalidFormat expected="MSB4271: Environment variable MSBuildDisableFeaturesFromVersion is set to an invalid format. Enabling all change wave versions. Entered value: {0}. Current Change Waves: {1}." actual="MSB4271: Environment variable MSBUILDDISABLEFEATURESFROMVERSION is set to an invalid format. Enabling all change wave versions. Entered value: {0}. Current Change Waves: {1}."
+   at Check.Main(String[] args)
+
+
+localized/check-resources.log
+PASS all original XLF resource values: 23597
+
+
+localized/check-german-help.log
+Syntax:              MSBuild.exe [Optionen] [Projektdatei | Verzeichnis]
+
+Beschreibung:         Erstellt die angegebenen Ziele in der Projektdatei. Wenn
+                     keine Projektdatei angegeben ist, wird das aktuelle Arbeitsverzeichnis
+                     von MSBuild nach einer Datei durchsucht, die eine Dateierweiterung
+                     besitzt, die auf "proj" endet. Diese Datei wird dann verwendet. Wenn
+                     ein Verzeichnis angegeben ist, sucht MSBuild in diesem Verzeichnis
+                     nach einer Projektdatei.
+
+Optionen:            Beachten Sie, dass Sie Optionen über
+                     "-option", "/option" und "--option" angeben können.
+
+  -target:<Ziele>  Erstellt diese Ziele in diesem Projekt. Mehrere Ziele werden durch ein Semikolon
+                     oder Komma voneinander getrennt. Alternativ kann jedes Ziel gesondert
+                     angegeben werden. (Kurzform: -t)
+                     Beispiel:
+                       -target:Resources;Compile
+
+  -property:<n>=<v>  Legt diese Eigenschaften auf Projektebene fest oder überschreibt sie. <n> ist
+                     der Eigenschaftenname, und <v> ist der Eigenschaftswert. Mehrere
+                     Eigenschaften werden durch ein Semikolon oder Komma getrennt.
+                     Alternativ kann jede Eigenschaft gesondert angegeben werden. (Kurzform: -p)
+                     Beispiel:
+                       -property:WarningLevel=2;OutDir=bin\Debug\
+
+  -logger:<Protokollierung>   Mithilfe dieser Protokollierung werden Ereignisse von MSBuild protokolliert. Um mehrere Protokollierungen anzugeben, 
+                     wird jede Protokollierung gesondert angegeben.
+                     Die Syntax für die <Protokollierung> lautet:
+                       [<Klasse>,]<Assembly>[,<Optionen>][;<Parameter>]
+                     Die Syntax für die <Protokollierungsklasse> lautet:
+                        [<Teilweiser oder vollständiger Namespace>.]<Name der Protokollierungsklasse>
+                     Die Syntax für die <Protokollierungsassembly> lautet:
+                       {<Assemblyname>[,<strong name>] | <Assemblydatei>}
+                     Die Protokollierungsoptionen geben an, wie MSBuild die Protokollierung erstellt.
+                     Die <Protokollierungsparameter> sind optional und werden genau 
+                     so an die Protokollierung übergeben, wie sie eingegeben wurden. (Kurzform: -l)
+                     Beispiele:
+                       -logger:XMLLogger,MyLogger,Version=1.0.2,Culture=neutral
+                       -logger:XMLLogger,C:\Loggers\MyLogger.dll;OutputAsHTML
+
+  -distributedlogger:<Zentrale Protokollierung>*<Weiterleitende Protokollierung>
+                     Mithilfe dieser Protokollierung werden Ereignisse von MSBuild protokolliert, wobei an jeden Knoten eine andere 
+                     Protokollierungsinstanz angefügt wird. Um mehrere Protokollierungen anzugeben, wird jede Protokollierung 
+                     gesondert angegeben.
+                     (Kurzform -dl)
+                     Die Syntax für die <Protokollierung> lautet:
+                       [<Klasse>,]<Assembly>[,<Optionen>][;<Parameter>]
+                     Die Syntax für die <Protokollierungsklasse> lautet:
+                        [<Teilweiser oder vollständiger Namespace>.]<Name der Protokollierungsklasse>
+                     Die Syntax für die <Protokollierungsassembly> lautet:
+                       {<Assemblyname>[,<strong name>] | <Assemblydatei>}
+                     Die Protokollierungsoptionen geben an, wie MSBuild die Protokollierung erstellt.
+                     Die <Protokollierungsparameter> sind optional und werden genau 
+                     so an die Protokollierung übergeben, wie sie eingegeben wurden. (Kurzform: -l)
+                     Beispiele:
+                       -dl:XMLLogger,MyLogger,Version=1.0.2,Culture=neutral
+                       -dl:MyLogger,C:\My.dll*ForwardingLogger,C:\Logger.dll
+
+  -verbosity:<level> Zeigt diese Menge von Informationen im Ereignisprotokoll an.
+                     Folgende Ausführlichkeitsstufen sind verfügbar: q[uiet], m[inimal],
+                     n[ormal], d[etailed] und diag[nostic]. (Kurzform: -v)
+                     Beispiel:
+                       -verbosity:quiet
+
+Hinweis: Ausführlichkeit der Dateiprotokollierungen
+                           wird separat festgelegt durch
+                           -fileloggerparameters.
+
+  -consoleLoggerParameters:<Parameter>
+                   Parameter für die Konsolenprotokollierung. (Kurz form: -clp)
+                   Verfügbar sind die Parameter:
+                        PerformanceSummary - In Aufgaben, Zielen und Projekten
+                          aufgewendete Zeit anzeigen.
+                   Summary - Fehler- und Warnungszusammenfassung am Ende anzeigen.
+                    NoSummary - Keine Fehler- und Warnungszusammenfassung am Ende 
+                          anzeigen.
+                   ErrorsOnly - Nur Fehler anzeigen.
+                   WarningsOnly - Nur Warnungen anzeigen.
+                   NoItemAndPropertyList - Keine Liste der Elemente und
+                        Eigenschaften am Anfang jedes Projektbuilds anzeigen.
+                   ShowCommandLine - TaskCommandLineEvent-Meldungen anzeigen
+                   ShowTimestamp - Zeitstempel als Präfix für eine beliebige
+                          Meldung anzeigen.
+                   ShowEventId- eventId für begonnene, abgeschlossene
+                          Ereignisse und Meldungen anzeigen
+                   ForceNoAlign - Text wird nicht an der Größe des
+                         Konsolenpuffers ausgerichtet
+                   DisableConsoleColor - Standardkonsolenfarben für alle
+                          Protokollierungsmeldungen anzeigen.
+                   EnableMPLogging - Multiprozessor-Protokollierungsstil aktivieren,
+                          auch wenn er im Nicht-Multiprozessormodus
+                          ausgeführt wird. Dieser Protokollierungsstil ist standardmäßig aktiviert.
+                   ForceConsoleColor - ANSI-Konsolenfarben auch dann verwenden,
+                          wenn die Konsole sie nicht unterstützt
+                   PreferConsoleColor - ANSI-Konsolenfarben nur anzeigen,
+                          wenn die Zielkonsole sie unterstützt
+                   Verbosity - überschreibt die Ausführlichkeitseinstellung für diese
+                          Protokollierung.
+                   Beispiel:
+                        -consoleLoggerParameters:PerformanceSummary;NoSummary;
+                                                 Verbosity=minimal
+
+  -maxCpuCount:[n]   Gibt die maximale Anzahl gleichzeitiger Prozesse an,
+                     mit denen die Erstellung ausgeführt werden soll. Ohne den
+                     Schalter wird der Standardwert 1 verwendet. Wenn der Schalter ohne einen Wert angegeben wird,
+                     verwendet MSBuild
+                     alle Prozessoren des Computers. (Kurzform: -m[:n])
+      
+  -ignoreprojectextensions:<Erweiterungen>
+                     Liste der zu ignorierenden Erweiterungen, wenn die zu erstellende 
+                     Projektdatei ermittelt wird. Verwenden Sie ein Semikolon oder ein Komma, 
+                     um mehrere Erweiterungen voneinander zu trennen.
+                     (Kurzform: -ignore)
+                     Beispiel:
+                       -ignoreprojectextensions: .sln
+    
+  -toolsversion:<Version>
+                     Die Version des MSBuild-Toolsets (Aufgaben, Ziele usw.),
+                     die während des Erstellens zu verwenden ist. Diese Version überschreibt die 
+                     von einzelnen Projekten angegebenen Versionen. (Kurzform: 
+                     -tv)
+                     Beispiel:
+                       -toolsversion:3.5
+   
+  -fileLoggerParameters[n]:<Parameter>
+                     Gibt zusätzliche Parameter für Dateiprotokollierungen an.
+                     Dieser Schalter bedeutet, dass der entsprechende 
+                     Schalter "-fileLogger[n]" ebenfalls vorhanden ist.
+                     "n" (optional) kann eine Zahl von 1–9 sein.
+                     "-fileLoggerParameters" wird auch von verteilten 
+                     Dateiprotokollierungen verwendet (siehe Beschreibung zu "-distributedFileLogger").
+                     (Kurzform: -flp[n])
+                     Es sind dieselben Parameter wie für die Konsolenprotokollierung
+                     verfügbar. Einige zusätzliche Parameter:
+                        LogFile: Pfad der Protokolldatei, in die das 
+                            Buildprotokoll geschrieben wird.
+                        Append: Gibt an, ob das Buildprotokoll erweitert oder 
+                            oder überschrieben wird. Mit diesem Schalter
+                            wird das Buildprotokoll an die Protokolldatei angefügt;
+                            Ohne diesen Schalter wird der Inhalt 
+                            der vorhandenen Protokolldatei überschrieben. 
+                            Standardmäßig wird die Protokolldatei nicht erweitert.
+                        Encoding: Gibt die Codierung der Datei an, 
+                            z. B. UTF-8, Unicode oder ASCII.
+                     Die Standardeinstellung für "verbosity" ist "Detailed".
+                     Beispiele:
+                       -fileLoggerParameters:LogFile=MyLog.log;Append;
+                                           Verbosity=diagnostic;Encoding=UTF-8
+
+                       -flp:Summary;Verbosity=minimal;LogFile=msbuild.sum 
+                       -flp1:warningsonly;logfile=msbuild.wrn 
+                       -flp2:errorsonly;logfile=msbuild.err
+    
+  -terminalLogger[:auto,on,off]
+                     Aktiviert oder deaktiviert die Terminalprotokollierung. Terminal-Logger
+                     bietet verbesserte Buildausgabe auf der Konsole in Echtzeit,
+                     logisch nach Projekt organisiert und entwickelt, um
+                     verwertbare Informationen hervorzuheben. Geben Sie "auto" an (oder verwenden Sie die Option
+                     ohne Argumente), um den Terminal-Logger nur zu verwenden, wenn die
+                     Standardausgabe nicht umgeleitet wird. Analysieren Sie die Ausgabe nicht
+                     oder vertrauen Sie darauf, dass sie in zukünftigen
+                     Versionen unverändert bleibt. Diese Option ist in MSBuild 17.8 und
+                     später verfügbar.
+                     (Kurzform: -tl)
+    
+  -terminalLoggerParameters: <parameters>
+                     Parameter für Terminal-Logger. (Kurzform: -tlp)
+                     Die verfügbaren Parameter.
+                        default: Gibt das Standardverhalten des Terminal-
+                        Loggers an. Erfordert einen der folgenden Werte:
+                           – "on", "true" erzwingt die Verwendung von TerminalLogger, auch
+                            wenn er deaktiviert werden sollte.
+                           – "off", "true" erzwingt die Nichtverwendung von TerminalLogger, auch
+                            wenn er aktiviert werden sollte.
+                           – "auto" aktiviert TerminalLogger, wenn das Terminal
+                            dies unterstützt, und die Sitzung nicht umgeleitet wurde
+                            stdout/stderr
+                        verbosity: Überschreiben Sie die Einstellung "-verbosity" für diesen
+                        Logger
+                        showCommandLine: TaskCommandLineEvent-Meldungen anzeigen
+
+                      Beispiel: 
+                        -tlp:default=auto;verbosity=diag;shownCommandLine
+    
+  -nodeReuse:<Parameter>
+                     Aktiviert oder deaktiviert die Wiederverwendung von MSBuild-Knoten.
+                     Die Parameter lauten:
+                     True: Knoten bleiben nach dem Abschluss der Erstellung 
+                     erhalten und werden bei folgenden Erstellungen wiederverwendet (Standardeinstellung).
+                     False: Knoten bleiben nach dem Abschluss der Erstellung nicht erhalten.
+                     (Kurzform: -nr)
+                     Beispiel:
+                       -nr:true
+    
+  -preprocess[:file]
+                     Erstellt eine einzelne aggregierte Projektdatei
+                     durch Einbeziehen aller Dateien, die beim Erstellen
+                     importiert werden würden, mit gekennzeichneten Grenzen. Dies kann
+                     sinnvoll sein, um zu ermitteln, welche Dateien
+                     importiert werden und woher sowie worin
+                     ihr Beitrag zum Erstellen besteht. Die Ausgabe wird standardmäßig
+                     im Konsolenfenster angezeigt. Wenn der Pfad zu einer Ausgabedatei
+                     bereitgestellt wird, wird dieser verwendet.
+                     (Kurzform: -pp)
+                     Beispiel:
+                       -pp:out.txt
+    
+  -targets[:file]
+                     Gibt eine Liste der verfügbaren Ziele aus, ohne den
+                     eigentlichen Buildprozess auszuführen. Standardmäßig erfolgt die Ausgabelt im
+                     Konsolenfenster. Bei Angabe eines Pfads zu einer Ausgabedatei
+                     erfolgt die Ausgabe stattdessen in die Ausgabedatei.
+                     (Kurzform: -ts)
+                     Beispiel:
+                       -ts:out.txt
+    
+  -warnAsError[:code[;code2]]
+                     Liste mit als Fehler zu behandelnden Warncodes. Trennen Sie
+                     mehrere Warncodes durch Kommas oder Semikolons. Verwenden Sie den Switch
+                     ohne Daten, damit alle Warnungen als Fehler behandelt werden.
+                     (Kurzform: -err[:c;[c2]])
+
+                     Beispiel:
+                       -warnAsError:MSB4130
+
+                     Wenn eine Warnung als Fehler behandelt wird, wird das Ziel
+                     wie bei einer Warnung weiter ausgeführt, für die
+                     gesamte Erstellung kommt es jedoch zu einem Fehler.
+    
+  -warnNotAsError[:code[;code2]]
+                     Liste der Warnungscodes, die nicht als Fehler behandelt werden.
+                     Semikolon oder Komma zum Trennen 
+                     mehrerer Warnungscodes verwenden. Hat keine Auswirkungen, wenn der Switch -warnaserror
+                     nicht festgelegt ist.
+
+                     Beispiel:
+                       -warnNotAsError:MSB3026
+    
+  -warnAsMessage[:code[;code2]]
+                     Liste von Warncodes, die als Meldungen mit geringer Priorität
+                     zu behandeln sind. Trennen Sie mehrere Warncodes
+                     durch Kommas oder Semikolons.
+                     (Kurzform: -noWarn[:c;[c2]])
+
+                     Beispiel:
+                       -warnAsMessage:MSB3026
+    
+  -binaryLogger[:[LogFile=]output.binlog[;ProjectImports={None,Embed,ZipFile}]]
+                     Serialisiert alle Buildereignisse in eine komprimierte Binärdatei.
+                     Standardmäßig befindet sich die Datei im aktuellen Verzeichnis und hat den Namen
+                     „msbuild.binlog“. Das binäre Protokoll ist eine detaillierte Beschreibung
+                     des Buildprozesses, der später zum Rekonstruieren von
+                     Textprotokollen dient und der von anderen Analysetools verwendet wird. Detaillierte
+                     Textprotokolle auf Diagnoseebene sind in der Regel 10–20-mal so groß wie
+                     binäre Protokolle, letztere enthalten jedoch mehr Informationen.
+                     (Kurzform: -bl)
+
+                     Die optionale LogFile gibt den Pfad an, in dem das
+                     Binärprotokoll gespeichert wird. Um eine eigene Protokolldatei
+                     für jeden Build zu generieren, kann das Token "{}" zum
+                     Pfad hinzugefügt werden, z. B.: LogFile=output-{}-log.binlog. Jedes 
+                     "{}" im Protokollpfad wird durch eine eindeutige Zeichenfolge ersetzt,
+                     indem Zeitstempel, ID des ausgeführten Prozesses und ein zufälliger
+                     Zeichenfolgenstempel verwendet werden.
+
+                     Die binäre Protokollierung erfasst standardmäßig den Quelltext von
+                     Projektdateien, einschließlich aller beim Buildvorgang aufgetretenen
+                     importierten Projekte und Zieldateien. Der optionale Schalter
+                     ProjectImports steuert dieses Verhalten:
+
+                      ProjectImports=None:      – Projektimporte nicht
+                                                erfassen
+                      ProjectImports=Embed:     – Projektimporte in die
+                                                Protokolldatei einbetten
+                      ProjectImports=ZipFile:   – Projektdateien in
+                                                output.projectimports.zip
+                                                speichern, wobei „output“ dem Namen
+                                                der binären Protokolldatei entspricht.
+
+                     Die Standardeinstellung für „ProjectImports“ ist „Embed“.
+                     Hinweis: Die Protokollierung erfasst nur MSBuild-Quelldateien.
+                     Andere Dateien wie etwa CS, CPP usw. werden nicht erfasst.
+
+                     Eine BINLOG-Datei kann „wiedergegeben“ werden, indem sie an
+                     „msbuild.exe“ als Argument und nicht als Projekt/Lösung übergeben wird.
+                     Andere Protokollierungen erhalten die Informationen, die
+                     wie beim ursprünglichen Buildvorgang in der Protokolldatei enthalten sind.
+                     Weitere Informationen zu binären Protokollen und ihrer Verwendung erhalten Sie unter:
+                     https://aka.ms/msbuild/binlog
+
+                     Beispiele:
+                       -bl
+                       -bl:output.binlog
+                       -bl:output.binlog;ProjectImports=None
+                       -bl:output.binlog;ProjectImports=ZipFile
+                       -bl:..\..\custom.binlog
+                       -binaryLogger
+    
+  -check
+                     Aktiviert BuildChecks während des Builds.
+                     BuildCheck ermöglicht die Regelauswertung, um Eigenschaften 
+                     des Builds sicherzustellen. Weitere Informationen finden Sie unter https://aka.ms/buildcheck
+	
+  -restore[:True|False]
+                     Führt vor der Erstellung anderer Ziele ein Ziel namens
+                     "Restore" aus. Dies ist hilfreich, wenn Pakete in Ihrer
+                     Projektstruktur wiederhergestellt
+                     werden müssen, bevor sie
+                     erstellt werden können. Die Angabe von "-restore" ist identisch mit
+                     der Angabe von "-restore:True". Verwenden Sie den Parameter, um
+                     einen Wert außer Kraft zu setzen,override
+                     der aus einer Antwortdatei stammt.
+                     (Kurzform: -r)
+    
+  -profileEvaluation:<Datei>
+                     Erstellt ein Profil für die MSBuild-Bewertung und schreibt das Ergebnis
+                     in die angegebene Datei. Wenn die Erweiterung der angegebenen
+                     Datei ".md" lautet, wird das Ergebnis in Markdownformat
+                     generiert. Andernfalls wird eine durch Tabulatoren getrennte Datei erstellt.
+    
+  -restoreProperty:<n>=<v>
+                     Hiermit werden diese Eigenschaften auf Projektebene nur während der
+                     Wiederherstellung festgelegt oder außer Kraft gesetzt. Die über das -property-Argument
+                     angegebenen Eigenschaften werden nicht verwendet. <n> ist der Eigenschaftenname,
+                     und <v> ist der Eigenschaftswert. Verwenden Sie ein
+                     Semikolon oder ein Komma zum Trennen mehrerer Eigenschaften,
+                     oder geben Sie die einzelnen Eigenschaften gesondert an.
+                     (Kurzform: -rp)
+                     Beispiel:
+                       -restoreProperty:IsRestore=true;MyProperty=value
+    
+  -interactive[:True|False]
+                     Weist darauf hin, dass für Aktionen im Build eine 
+                     Interaktion mit dem Benutzer zugelassen ist. Verwenden Sie dieses Argument
+                     in einem automatisierten Szenario, in dem keine Interaktivität
+                     erwartet wird.
+                     Das Angeben von "-interactive" entspricht der Angabe von
+                     "-interactive:true".  Verwenden Sie den Parameter, um einen Wert zu überschreiben,
+                     der aus einer Antwortdatei stammt.
+    
+  -isolateProjects[:True| MessageUponIsolationViolation| False]
+                     Führt dazu, dass MSBuild jedes Projekt isoliert erstellt.
+
+Bei Festlegung auf "MessageUponIsolationViolation" (oder die zugehörige Kurzform
+                      "Message"), werden die Resultate von Top Level-Zielen
+                     nur serialisiert, wenn der Parameter "-outputResultsCache"
+                     angegeben wurde. Dies dient dazu, die Wahrscheinlichkeit eines
+                     gegen die Isolation verstoßenden Ziels für ein Abhängigkeitsprojekt mithilfe von
+                     Falscher Status aufgrund seiner Abhängigkeit von einem zwischengespeicherten Ziel,
+                     dessen Nebenwirkungen nicht berücksichtigt würden, abzuschwächen.
+                     (Beispiel: Die Definition einer Eigenschaft.)
+
+Dies ist ein restriktiverer Modus von MSBuild, da er erfordert,
+                     dass das Projektdiagramm zum Zeitpunkt der Auswertung statisch auffindbar ist,
+                     jedoch kann die Planung kann verbessert und
+                     der Arbeitsspeicheraufwand reduziert werden, wenn große Gruppen von Projekten erstellt werden.
+                     (Kurzform: -isolate)
+
+                     Dieses Kennzeichen ist experimentell und funktioniert möglicherweise nicht wie vorgesehen.
+    
+  -graphBuild[:True|False]
+                     Führt dazu, dass MSBuild einen Projektgraphen konstruiert und erstellt.
+
+                     Das Konstruieren eines Graphen beinhaltet das Identifizieren von
+                     Projektverweisen, um Abhängigkeiten zu erstellen. Bei der Grapherstellung
+                     wird versucht, Projektverweise vor den Projekten zu erstellen,
+                     die sie referenzieren. Dies ist eine Unterscheidung zur
+                     traditionellen MSBuild-Planung.
+                     (Kurzform: -graph)
+
+                     Dieses Flag ist experimentell und funktioniert möglicherweise nicht wie vorgesehen.
+    
+  -inputResultsCaches:<cacheFile>...
+                     Durch Semikolon getrennte Liste der Eingabecachedateien, aus denen MSBuild
+                     Buildergebnisse liest. Wenn "-isolateProjects"
+                     auf "False" festgelegt ist, wird dieser Wert auf "True" festgelegt. (Kurzform: -irc)
+   
+  -outputResultsCache:[cacheFile]
+                     Ausgabecachedatei, in die MSBuild den Inhalt
+                     des Buildergebniscaches am Ende des Builds schreibt.
+                     Wenn "-isolateProjects" auf "False" festgelegt ist, wird diese Einstellung auf "True" festgelegt.
+                     (Kurzform: -orc)
+   
+  -lowPriority[:True|False]
+                     Führt dazu, dass MSBuild mit niedriger Prozesspriorität ausgeführt wird.
+
+                     Die Angabe von -lowPriority entspricht der Angabe von
+                     -lowPriority:True.
+                     (Kurzform: -low)
+    
+  -question
+                     (Experimentell) Fragen Sie, ob Buildarbeiten vorhanden sind.
+                     MSBuild führt einen Fehler aus, wenn ein Ziel oder eine Aufgabe erkannt wird,
+                     das/die inkrementell sein kann (mit Eingaben und Ausgaben),
+                     aber nicht auf dem neuesten Stand ist.
+                     (Kurzform: -q)
+    
+  -detailedSummary[:True|False]
+                     Zeigt am Ende der Erstellung detaillierte Informationen
+                     zu den erstellten Konfigurationen an und enthält eine Erläuterung, wie sie
+                     in Knoten geplant wurden.
+                     (Kurzform: -ds)
+    
+  -getProperty:propertyName,...
+                     Schreiben Sie den Wert einer oder mehrerer angegebener Eigenschaften
+                     nach der Auswertung aus, ohne den Build auszuführen, oder wenn entweder
+                     die Option "-getTargetResult" oder die Option "-getTargetResult" verwendet
+                     wird, schreiben Sie die Werte nach dem Build aus.
+    
+  -getItem:itemName,...
+                     Schreiben Sie den Wert eines oder mehrerer angegebener Elemente und
+                     die zugehörigen Metadaten nach der Auswertung ohne
+                     Ausführen des Builds aus, oder wenn entweder die Option "-targets"
+                     oder die Option "-getTargetResult" verwendet wird, schreiben Sie
+                     die Werte nach dem Build aus.
+    
+  -getTargetResult:targetName,...
+                     Schreiben Sie den Ausgabewert eines oder mehrerer Ziele aus und
+                     die angegebenen Ziele werden ausgeführt.
+    
+  -getResultOutputFile:file
+                     Leiten Sie die Ausgabe von get* in eine Datei um.
+
+                     Beispiel: 
+                     -getProperty:Bar -getResultOutputFile:Biz.txt
+                     Dadurch wird der Wert der Eigenschaftsleiste in Biz.txt geschrieben.
+    
+  -featureAvailability:featureName,...
+                     Überprüft die Verfügbarkeit von Features. Das Ergebnis ist eine der
+                     Zeichenfolgen "Undefined", "Available", "NotAvailable" und
+                     "Preview".
+                     –Undefinied: Die Verfügbarkeit des Features ist nicht definiert
+                     (der Featurename ist für den Prüfer der Featureverfügbarkeit
+                     unbekannt)
+                     -NotAvailable: Das Feature ist nicht verfügbar (im Gegensatz zu
+                     "Undefined", wo der Featurename für den Prüfer der Featureverfügbarkeit
+                     bekannt ist und er weiß, dass das Feature von der
+                     aktuellen MSBuild-Engine nicht unterstützt wird)
+                     -Available: Das Feature ist verfügbar
+                     -Preview: Das Feature befindet sich in der Vorschau (nicht stabil)
+                     (Kurzform: -fa)
+    
+  -multithreaded
+                     Aktiviert den EXPERIMENTELLEN Multithreadmodus in MSBuild.
+                     Dies bedeutet, dass MSBuild mehrere Threads verwendet,
+                     um Projekte parallel zu erstellen,
+                     anstatt mehrere Prozesse zu nutzen.
+                     Diese Option wird nicht unterstützt.
+                     Die maximale Anzahl der verwendeten Threads wird durch den
+                     -maxCpuCount-Schalter bestimmt.
+                     Wenn der Multithreadmodus aktiviert ist auf
+                     und MSBUILDFORCEALLTASKSOUTOFPROC=1
+                     darf maxCpuCount nicht größer als 256 sein.
+                     (Kurzform: -mt)
+    
+  -help              Zeigt diese Syntaxmeldung an. (Kurzform: -? oder -h)
+
+  -version           Zeigt nur Versionsinformationen an. (Kurzform: -ver)
+
+  -noLogo            Zeigt kein Startbanner und keine Copyrightmeldung an.
+
+  -noAutoResponse    Schließt MSBuild.rsp-Dateien nicht automatisch ein. (Kurzform:
+                     -noAutoRsp)
+
+  -noConsoleLogger   Deaktiviert die Standardkonsolenprotokollierung
+                     und protokolliert keine Ereignisse auf der Konsole. (Kurzform: -noConLog)
+
+  -fileLogger[n]     Protokolliert die Erstellungsausgabe in eine Datei. Standardmäßig
+                     befindet sich diese im aktuellen Verzeichnis,
+                     der Dateiname lautet "msbuild[n].log". Ereignisse aller Knoten
+                     werden in einem einzigen Protokoll zusammengefasst. Der Speicherort der Datei und andere Parameter für fileLogger
+                     können durch das Hinzufügen des Schalters
+                     "-fileLoggerParameters[n]" angegeben werden.
+                     "n" (optional) kann eine Zahl von 1–9 sein, sodass bis zu
+                     10 Dateiprotokollierungen angefügt werden können. (Kurzform: -fl[n])
+    
+  -distributedFileLogger
+                     Protokolliert die Erstellungsausgabe in mehrere Dateien, eine Protokolldatei
+                     pro MSBuild-Knoten. Der anfängliche Speicherort für diese Dateien ist
+                     das aktuelle Verzeichnis. Standardmäßig werden die Dateien 
+                     "MSBuild<Knoten-ID>.log" benannt. Der Speicherort der Datei und
+                     andere Parameter für fileLogger können durch das Hinzufügen 
+                     des Schalters "-fileLoggerParameters" angegeben werden.
+
+                     Wenn mithilfe des fileLoggerParameters-Parameters ein Protokolldateiname festgelegt wurde,
+                     verwendet die verteilte Protokollierung den Dateinamen als 
+                     Vorlage und fügt die Knoten-ID an diesen Dateinamen an, 
+                     um für jeden Knoten eine Protokolldatei zu erstellen.
+    
+  @<Datei>            Fügt Befehlszeileneinstellungen aus einer Textdatei ein. Um mehrere
+                     Antwortdateien anzugeben, geben Sie jede Antwortdatei
+                     gesondert an.
+
+                     Alle Antwortdateien mit dem Name "msbuild.rsp" werden automatisch 
+                     in den folgenden Speicherorten verwendet: 
+                     (1) Verzeichnis von "msbuild.exe"
+                     (2) Verzeichnis des ersten erstellten Projekts oder Projektmappe
+
+Beispiele:
+
+        MSBuild MyApp.sln -t:Rebuild -p:Configuration=Release
+        MSBuild MyApp.csproj -t:Clean
+                             -p:Configuration=Debug;TargetFrameworkVersion=v3.5
+    
+Ausführlichere Informationen finden Sie unter https://aka.ms/msbuild/docs.
+
+
+Remaining requirements:
+formal MSBuild source packages and cold installed-consumer checks
+complete original native resource and tool/content layout
+SDK-style build using source Roslyn MSBuild tasks
+remaining original NETStandard/NETFramework and bootstrap tool profiles
+complete SDK10/WindowsDesktop10/PowerShell7.6 graph
+existing runtime contract, SQL/native, remote MI/provider/ownership and compatibility gates
+
+Formal MSBuild package/full SDK10/full dependency goal remain incomplete.

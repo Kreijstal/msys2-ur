@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:09:25 +0100
+Subject: [PATCH 09/10] pbd: initialize RWLock's shared_mutex eagerly on MinGW
+
+PBD::RWLock wraps std::shared_mutex. With mingw-w64's libstdc++ that is
+a pthread_rwlock_t statically initialized with
+PTHREAD_RWLOCK_INITIALIZER, which winpthreads turns into a real lock
+lazily on the first lock call. That lazy step (rwlock_static_init) is
+not thread-safe: if two threads take a fresh lock concurrently, one of
+them gets EINVAL back, std::shared_mutex only checks for EDEADLK, and
+the thread proceeds as if it held the lock. The result is unsynchronized
+access to whatever the lock protects (RCU managers, route/processor
+lists, ...), i.e. rare, hard to reproduce corruption.
+
+Take and release the write lock once in the RWLock constructor, while
+the object is still private to the constructing thread, so every RWLock
+is fully initialized before it can be shared.
+---
+ libs/pbd/rwlock.cc | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/libs/pbd/rwlock.cc b/libs/pbd/rwlock.cc
+index 2cf14aa..7bcb1c4 100644
+--- a/libs/pbd/rwlock.cc
++++ b/libs/pbd/rwlock.cc
+@@ -22,6 +22,19 @@ using namespace PBD;
+ 
+ RWLock::RWLock ()
+ {
++#ifdef __MINGW32__
++	/* libstdc++ implements std::shared_mutex with a pthread_rwlock_t set to
++	 * PTHREAD_RWLOCK_INITIALIZER. winpthreads initializes such locks lazily
++	 * on first use, and that lazy initialization is not thread-safe: when
++	 * two threads hit a fresh lock at the same time, the loser gets EINVAL,
++	 * which libstdc++ ignores, and continues without holding the lock.
++	 * Take and release the lock once while the object is still private to
++	 * the constructing thread so that it is fully initialized before it can
++	 * be shared.
++	 */
++	_rw_lock.lock ();
++	_rw_lock.unlock ();
++#endif
+ }
+ 
+ RWLock::~RWLock ()

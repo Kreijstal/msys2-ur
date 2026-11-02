@@ -1,0 +1,254 @@
+From e5bd022e058fe3717cacb4b014b88abbc87eb921 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sun, 25 Oct 2026 20:37:36 +0100
+Subject: [PATCH 1/2] Run on Windows
+
+- Wait for the per-file child processes through a GLib child watch; there
+  is no waitpid() or setsid() on Windows.
+- Load plugins with the .dll suffix and split plugin and configuration
+  search paths at G_SEARCHPATH_SEPARATOR instead of ':', which is part of
+  every drive letter path.
+- Plugins cannot leave the plugin API undefined for zathura.exe to provide
+  at load time, so the pkg-config file links them against the import
+  library of the executable.
+- Windows installations can be moved: resolve the plugin, locale and
+  system configuration directories relative to the executable.
+---
+ meson.build              |  4 ++++
+ zathura/config.c         |  6 ++++--
+ zathura/dbus-interface.c |  2 +-
+ zathura/main.c           | 34 +++++++++++++++++++++++++++++++++-
+ zathura/plugin.c         | 11 +++++++++--
+ zathura/utils.c          | 14 ++++++++++++++
+ zathura/utils.h          | 11 +++++++++++
+ 7 files changed, 76 insertions(+), 6 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 27940dbc..f08fdff1 100644
+--- a/meson.build
++++ b/meson.build
+@@ -64,6 +64,7 @@ defines = [
+   '-DLOCALEDIR="@0@"'.format(join_paths(prefix, localedir)),
+   '-DZATHURA_PLUGINDIR="@0@"'.format(join_paths(prefix, plugindir)),
+   '-DSYSCONFDIR="@0@"'.format(sysconfdir),
++  '-DZATHURA_PREFIX="@0@"'.format(prefix),
+   '-D_DEFAULT_SOURCE',
+ ]
+ if get_option('manpages').allowed()
+@@ -234,6 +235,9 @@ pkg.generate(
+   url: 'https://pwmt.org/projects/zathura',
+   version: version,
+   requires: ['girara', 'cairo'],
++  # A PE plugin cannot leave the plugin API undefined for the executable to
++  # provide at load time; it links against the import library of zathura.exe.
++  libraries: host_machine.system() == 'windows' ? ['-L${libdir}', '-lzathura.exe'] : [],
+   variables: [
+     'apiversion=@0@'.format(plugin_api_version),
+     'abiversion=@0@'.format(plugin_abi_version),
+diff --git a/zathura/config.c b/zathura/config.c
+index dd310237..968c5927 100644
+--- a/zathura/config.c
++++ b/zathura/config.c
+@@ -881,7 +881,7 @@ void config_load_files(zathura_t* zathura) {
+   /* load global configuration files */
+   g_autofree char* config_path = girara_get_xdg_path(XDG_CONFIG_DIRS);
+   if (config_path != NULL && config_path[0] != '\0') {
+-    g_auto(GStrv) config_dirs = g_strsplit(config_path, ":", 0);
++    g_auto(GStrv) config_dirs = g_strsplit(config_path, G_SEARCHPATH_SEPARATOR_S, 0);
+     ssize_t size              = g_strv_length(config_dirs) - 1;
+     for (; size >= 0; --size) {
+       const char* dir       = config_dirs[size];
+@@ -890,7 +890,9 @@ void config_load_files(zathura_t* zathura) {
+     }
+   }
+ 
+-  girara_config_parse(zathura->ui.session, SYSCONFDIR "/" ZATHURA_RC);
++  g_autofree char* sysconfdir  = zathura_relocate_path(SYSCONFDIR);
++  g_autofree char* global_file = g_build_filename(sysconfdir, ZATHURA_RC, NULL);
++  girara_config_parse(zathura->ui.session, global_file);
+ 
+   /* load local configuration files */
+   g_autofree char* configuration_file = g_build_filename(zathura->config.config_dir, ZATHURA_RC, NULL);
+diff --git a/zathura/dbus-interface.c b/zathura/dbus-interface.c
+index f3ba9aae..264a7135 100644
+--- a/zathura/dbus-interface.c
++++ b/zathura/dbus-interface.c
+@@ -669,7 +669,7 @@ static int iterate_instances_call_synctex_view(const char* filename, const char*
+   }
+ 
+   if (hint != -1) {
+-    g_autofree char* well_known_name = g_strdup_printf(DBUS_NAME_TEMPLATE, hint);
++    g_autofree char* well_known_name = g_strdup_printf(DBUS_NAME_TEMPLATE, (int)hint);
+     const bool ret = call_synctex_view(connection, filename, well_known_name, input_file, line, column);
+     return ret ? 1 : -1;
+   }
+diff --git a/zathura/main.c b/zathura/main.c
+index cab872d6..8b072328 100644
+--- a/zathura/main.c
++++ b/zathura/main.c
+@@ -11,7 +11,9 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#ifndef _WIN32
+ #include <sys/wait.h>
++#endif
+ 
+ #include "zathura.h"
+ #include "plugin.h"
+@@ -63,7 +65,8 @@ static int run_synctex_forward(const char* synctex_fwd, const char* filename, in
+ 
+ static void init_locale(void) {
+   setlocale(LC_ALL, "");
+-  bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
++  g_autofree char* localedir = zathura_relocate_path(LOCALEDIR);
++  bindtextdomain(GETTEXT_PACKAGE, localedir);
+   bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+   textdomain(GETTEXT_PACKAGE);
+ }
+@@ -223,12 +226,31 @@ static GStrv build_argv_for_child(int idx, char** argv, int argc, char** orig_ar
+   return (GStrv)g_ptr_array_free(arr, FALSE);
+ }
+ 
++#ifdef _WIN32
++typedef struct {
++  GMainLoop* loop;
++  size_t running;
++} child_wait_t;
++
++static void child_exited(GPid pid, gint GIRARA_UNUSED(status), gpointer data) {
++  child_wait_t* wait = data;
++  g_spawn_close_pid(pid);
++  if (--wait->running == 0) {
++    g_main_loop_quit(wait->loop);
++  }
++}
++
++/* There is no setsid() on Windows, and g_spawn_async() runs no child setup
++ * function there: a spawned GUI process is already detached from us. */
++#define start_process_group ((GSpawnChildSetupFunc)NULL)
++#else
+ static void start_process_group(void* GIRARA_UNUSED(data)) {
+   if (setsid() == -1) {
+     girara_error("Could not start new process group: %s", strerror(errno));
+     exit(-1);
+   }
+ }
++#endif
+ 
+ /* main function */
+ GIRARA_VISIBLE int main(int argc, char* argv[]) {
+@@ -367,10 +389,20 @@ GIRARA_VISIBLE int main(int argc, char* argv[]) {
+     }
+ 
+     if (!forkback) {
++#ifdef _WIN32
++      /* No waitpid(); GPid is a process handle that a child watch can wait on. */
++      child_wait_t wait = {g_main_loop_new(NULL, FALSE), girara_list_size(child_pids)};
++      for (size_t idx = 0; idx != girara_list_size(child_pids); ++idx) {
++        g_child_watch_add(girara_list_nth(child_pids, idx), child_exited, &wait);
++      }
++      g_main_loop_run(wait.loop);
++      g_main_loop_unref(wait.loop);
++#else
+       for (size_t idx = 0; idx != girara_list_size(child_pids); ++idx) {
+         const pid_t pid = (pid_t)(intptr_t)girara_list_nth(child_pids, idx);
+         waitpid(pid, NULL, 0);
+       }
++#endif
+     }
+     return 0;
+   }
+diff --git a/zathura/plugin.c b/zathura/plugin.c
+index b95f16a9..f8a251f6 100644
+--- a/zathura/plugin.c
++++ b/zathura/plugin.c
+@@ -10,6 +10,8 @@
+ #include <girara-gtk/session.h>
+ #include <girara-gtk/settings.h>
+ 
++#include "utils.h"
++
+ /**
+  * Document plugin structure
+  */
+@@ -64,7 +66,7 @@ static void set_plugin_dir(zathura_plugin_manager_t* plugin_manager, const char*
+     return;
+   }
+ 
+-  g_auto(GStrv) paths = g_strsplit(dir, ":", 0);
++  g_auto(GStrv) paths = g_strsplit(dir, G_SEARCHPATH_SEPARATOR_S, 0);
+   for (size_t i = 0; paths[i] != NULL; ++i) {
+     girara_list_append(plugin_manager->path, g_strdup(paths[i]));
+   }
+@@ -72,7 +74,8 @@ static void set_plugin_dir(zathura_plugin_manager_t* plugin_manager, const char*
+ 
+ static void set_default_dirs(zathura_plugin_manager_t* plugin_manager) {
+ #ifdef ZATHURA_PLUGINDIR
+-  set_plugin_dir(plugin_manager, ZATHURA_PLUGINDIR);
++  g_autofree char* plugindir = zathura_relocate_path(ZATHURA_PLUGINDIR);
++  set_plugin_dir(plugin_manager, plugindir);
+ #endif
+ 
+   const char* env_paths = g_getenv("ZATHURA_PLUGINS_PATH");
+@@ -115,6 +118,10 @@ static bool check_suffix(const char* path) {
+   if (g_str_has_suffix(path, ".dylib")) {
+     return true;
+   }
++#elif defined(_WIN32)
++  if (g_str_has_suffix(path, ".dll")) {
++    return true;
++  }
+ #else
+   if (g_str_has_suffix(path, ".so")) {
+     return true;
+diff --git a/zathura/utils.c b/zathura/utils.c
+index da761d6e..4bdbb998 100644
+--- a/zathura/utils.c
++++ b/zathura/utils.c
+@@ -44,6 +44,20 @@ double zathura_correct_zoom_value(girara_session_t* session, const double zoom)
+   return CLAMP(zoom, zoom_min, zoom_max);
+ }
+ 
++char* zathura_relocate_path(const char* path) {
++#ifdef _WIN32
++  const size_t len = strlen(ZATHURA_PREFIX);
++  if (strncmp(path, ZATHURA_PREFIX, len) == 0 && (path[len] == '\0' || G_IS_DIR_SEPARATOR(path[len]))) {
++    /* The directory above bin\, where zathura.exe lives. */
++    g_autofree char* root = g_win32_get_package_installation_directory_of_module(NULL);
++    if (root != NULL) {
++      return g_build_filename(root, path + len, NULL);
++    }
++  }
++#endif
++  return g_strdup(path);
++}
++
+ bool file_valid_extension(zathura_t* zathura, const char* path) {
+   if (zathura == NULL || path == NULL || zathura->plugins.manager == NULL) {
+     return false;
+diff --git a/zathura/utils.h b/zathura/utils.h
+index fd4fc29a..9847ca17 100644
+--- a/zathura/utils.h
++++ b/zathura/utils.h
+@@ -25,6 +25,17 @@ typedef struct page_offset_s {
+  */
+ bool file_valid_extension(zathura_t* zathura, const char* path);
+ 
++/**
++ * Map a path below the configured installation prefix onto the prefix the
++ * program actually runs from. Windows installations can be moved, so there the
++ * prefix is derived from the location of the executable; elsewhere the path is
++ * returned unchanged.
++ *
++ * @param path A path below ZATHURA_PREFIX
++ * @return The relocated path, free it with g_free
++ */
++char* zathura_relocate_path(const char* path);
++
+ /**
+  * build a tree of index elements from the document outline
+  *
+-- 
+2.55.0
+

@@ -1,0 +1,28 @@
+pkgbase = mingw-w64-java-janino
+	pkgdesc = janino Java libraries, built from source
+	pkgver = 3.1.12
+	pkgrel = 1
+	url = https://github.com/dbeaver/dbeaver-deps-ce
+	arch = any
+	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-ant
+	noextract = commons-compiler-3.1.12-sources.jar
+	noextract = commons-compiler-3.1.12.pom
+	noextract = janino-3.1.12-sources.jar
+	noextract = janino-3.1.12.pom
+	source = https://repo.maven.apache.org/maven2/org/codehaus/janino/commons-compiler/3.1.12/commons-compiler-3.1.12-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/codehaus/janino/commons-compiler/3.1.12/commons-compiler-3.1.12.pom
+	source = https://repo.maven.apache.org/maven2/org/codehaus/janino/janino/3.1.12/janino-3.1.12-sources.jar
+	source = https://repo.maven.apache.org/maven2/org/codehaus/janino/janino/3.1.12/janino-3.1.12.pom
+	sha256sums = 894638a7d9d056dc07abf1390169fb8f515dbb74fda66447424c4a921d21eb11
+	sha256sums = eb2b5192ee22521179ade955a35984dbdbe020d680628898b3306d4ddb5862de
+	sha256sums = 4f4f79b38f4ebe206ba213ce6a1de248ca6fa9b8abfb0fc79de48ac0e714bf6a
+	sha256sums = 7b10e9034d2391572f48590decbe67719fdaee43e98e00aeff31c8011fb79982
+
+pkgname = mingw-w64-ucrt-x86_64-java-commons-compiler
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+
+pkgname = mingw-w64-ucrt-x86_64-java-janino
+	depends = mingw-w64-ucrt-x86_64-openjdk>=21
+	depends = mingw-w64-ucrt-x86_64-java-commons-compiler

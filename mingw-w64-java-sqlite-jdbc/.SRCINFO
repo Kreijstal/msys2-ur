@@ -1,0 +1,26 @@
+pkgbase = mingw-w64-java-sqlite-jdbc
+	pkgdesc = SQLite JDBC driver (Xerial), built from source with its JNI library
+	pkgver = 3.53.4.0
+	pkgrel = 1
+	url = https://github.com/xerial/sqlite-jdbc
+	arch = any
+	license = spdx:Apache-2.0 AND BSD-2-Clause AND blessing
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = mingw-w64-ucrt-x86_64-java-build-helper
+	makedepends = mingw-w64-ucrt-x86_64-java-slf4j-api
+	makedepends = mingw-w64-ucrt-x86_64-openjdk
+	makedepends = make
+	makedepends = unzip
+	noextract = sqlite-src-3530400.zip
+	source = sqlite-jdbc-3.53.4.0.tar.gz::https://github.com/xerial/sqlite-jdbc/archive/refs/tags/3.53.4.0.tar.gz
+	source = https://www.sqlite.org/2026/sqlite-src-3530400.zip
+	source = sqlite-jdbc.bnd
+	source = SqliteJdbcCheck.java
+	sha256sums = 9dded7305b4f3bab596d6a40eaab0cf0d3afad60006eb80073492103b06b081c
+	sha256sums = d18fa15aec74d8c17e1463f861095adc01b5ad190256acb4f91d22f0368d232b
+	sha256sums = 2fd79684feace8923e46fc3d2dfe943b3010d279d821791329a59be9d9daa612
+	sha256sums = a5fbe0d7e8ea081407a90c019c93f00dbb78e05a3521100f3920a453856c0133
+
+pkgname = mingw-w64-ucrt-x86_64-java-sqlite-jdbc
+	depends = mingw-w64-ucrt-x86_64-openjdk
+	optdepends = mingw-w64-ucrt-x86_64-java-slf4j-api: logging through SLF4J

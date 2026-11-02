@@ -1,0 +1,51 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-compiler5-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.0.0
+pkgrel=1
+pkgdesc='NET8 command-line host for the installed source Compiler5 bootstrap, with source runtime9 dependencies'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/roslyn'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing>=8.0.31-3"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-bootstrap-tools=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler=4.9.2"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-v9.0.0.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v9.0.0'
+        'compiler5-bootstrap-source-1.tar.gz')
+noextract=('runtime-v9.0.0.tar.gz')
+sha256sums=('32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def'
+            'f3e6f4586927d950e8c4cfaf2d55f53ae3f69aba495d71023d9b8f1116ad6718')
+prepare() {
+  /usr/bin/python3 "$srcdir/compiler5-bootstrap/prepare.py" "$srcdir/runtime-v9.0.0.tar.gz" "$srcdir/prepared"
+}
+build() {
+  bash "$srcdir/compiler5-bootstrap/build.sh" "$srcdir/prepared"
+}
+check() {
+  bash "$srcdir/compiler5-bootstrap/check.sh" "$srcdir/prepared" "$srcdir/check"
+  /usr/bin/python3 "$srcdir/compiler5-bootstrap/audit.py" "$srcdir/runtime-v9.0.0.tar.gz" "$srcdir/prepared"
+}
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target" "$doc"
+  cp -R "$srcdir/prepared/compiler/"* "$target/"
+  rm -f "$target/"*.pdb "$target/csc50-build.cmd" "$target/"*.exe.config
+  install -m644 "$srcdir/compiler5-bootstrap/csc50.cmd" "$target/csc50.cmd"
+  install -m644 "$srcdir/prepared/source-inputs.json" "$srcdir/prepared/host-assets.json" "$srcdir/prepared/resources.json" "$srcdir/prepared/source-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler5-bootstrap/README.md" "$doc/"
+  install -Dm644 "$srcdir/prepared/runtime-source/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/runtime9-LICENSE.TXT"
+  install -Dm644 "$srcdir/prepared/runtime-source/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/runtime9-THIRD-PARTY-NOTICES.TXT"
+  local notice
+  for notice in roslyn-5.0.0-license.txt.txt roslyn-5.0.0-third-party-notices.txt.txt \
+                runtime-8.0.0-license.txt.txt runtime-8.0.0-third-party-notices.txt.txt \
+                maintenance-packages-2025.03.19-license.txt; do
+    install -Dm644 "$MINGW_PREFIX/share/licenses/${MINGW_PACKAGE_PREFIX}-dotnet-bootstrap-tools/$notice" \
+      "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$notice"
+  done
+}

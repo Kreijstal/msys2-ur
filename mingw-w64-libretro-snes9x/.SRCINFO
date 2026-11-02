@@ -1,0 +1,20 @@
+pkgbase = mingw-w64-libretro-snes9x
+	pkgdesc = Super Nintendo / Super Famicom libretro core (snes9x) (mingw-w64)
+	pkgver = r2657.185488cd
+	pkgrel = 1
+	url = https://www.libretro.com/
+	arch = any
+	groups = mingw-w64-ucrt-x86_64-libretro
+	license = custom:snes9x
+	makedepends = mingw-w64-ucrt-x86_64-cc
+	makedepends = git
+	makedepends = make
+	depends = mingw-w64-ucrt-x86_64-cc-libs
+	optdepends = mingw-w64-ucrt-x86_64-retroarch: frontend that loads this core
+	optdepends = mingw-w64-ucrt-x86_64-libretro-core-info: required for the core to show up in the menu
+	source = snes9x::git+https://github.com/libretro/snes9x.git#commit=185488cd83aaf274752a742c94d45561cbecb7af
+	source = 0001-libretro-Makefile-drop-Wl-version-script-for-PE-COFF.patch
+	sha256sums = a1360ae3fd1dbe6f4527388b3e3842b532e434a28605f2b3afbf303b9f896528
+	sha256sums = 1ec5bd8a5783068958c308db2661aa78088ef4220fc5a4f32988f60dfbe7e95f
+
+pkgname = mingw-w64-ucrt-x86_64-libretro-snes9x

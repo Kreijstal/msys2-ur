@@ -1,0 +1,15 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)SourceBuild.NetAnalyzers.Default.props" />
+  <!-- The source analyzer assemblies reference Roslyn4.9. Select the separately
+       packaged compiler only when the caller did not choose a compiler. -->
+  <PropertyGroup Condition="'$(NETCoreSdkVersion)' == '8.0.131' and '$(Language)' == 'C#' and '$(CscToolPath)' == '' and '$(CscToolExe)' == ''">
+    <CscToolPath>$(MSBuildThisFileDirectory)../../../../../../compiler-packs/roslyn-4.9.2</CscToolPath>
+    <CscToolExe>csc49.cmd</CscToolExe>
+    <UseSharedCompilation>false</UseSharedCompilation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(NETCoreSdkVersion)' == '8.0.131' and '$(Language)' == 'VB' and '$(VbcToolPath)' == '' and '$(VbcToolExe)' == ''">
+    <VbcToolPath>$(MSBuildThisFileDirectory)../../../../../../compiler-packs/roslyn-vb-4.9.2</VbcToolPath>
+    <VbcToolExe>vbc49.cmd</VbcToolExe>
+    <UseSharedCompilation>false</UseSharedCompilation>
+  </PropertyGroup>
+</Project>

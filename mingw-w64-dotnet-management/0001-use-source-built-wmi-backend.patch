@@ -1,0 +1,185 @@
+--- a/src/libraries/System.Management/src/System/Management/ManagementScope.cs
++++ b/src/libraries/System.Management/src/System/Management/ManagementScope.cs
+@@ -12,69 +12,11 @@
+ 
+ namespace System.Management
+ {
++    // This backend only uses documented COM interfaces and never exposes the
++    // obsolete private IManagementObject QI bridge or disables COM security.
+     internal static class CompatSwitches
+     {
+-        internal const string DotNetVersion = "v4.0.30319";
+-        private const string RegKeyLocation = @"SOFTWARE\Microsoft\.NETFramework\" + DotNetVersion;
+-
+-        private static readonly object s_syncLock = new object();
+-        private static int s_allowManagementObjectQI;
+-
+-        private const string c_WMIDisableCOMSecurity = "WMIDisableCOMSecurity";
+-
+-        public static bool AllowIManagementObjectQI
+-        {
+-            get
+-            {
+-                if (s_allowManagementObjectQI == 0)
+-                {
+-                    lock (s_syncLock)
+-                    {
+-                        if (s_allowManagementObjectQI == 0)
+-                        {
+-                            s_allowManagementObjectQI = GetSwitchValueFromRegistry() ? 1 : -1;
+-                        }
+-                    }
+-                }
+-
+-                return s_allowManagementObjectQI == 1 ? true : false;
+-            }
+-        }
+-
+-        private static bool GetSwitchValueFromRegistry()
+-        {
+-            RegistryKey s_switchesRegKey = null;
+-            try
+-            {
+-                s_switchesRegKey = Registry.LocalMachine.OpenSubKey(RegKeyLocation);
+-
+-                if (s_switchesRegKey == null)
+-                {
+-                    return false;
+-                }
+-
+-                return ((int)s_switchesRegKey.GetValue(c_WMIDisableCOMSecurity, -1 /* default */) == 1);
+-            }
+-
+-            // ignore exceptions so that we don't crash the process if we can't read the switch value
+-            catch (Exception e)
+-            {
+-                if (e is StackOverflowException ||
+-                    e is OutOfMemoryException ||
+-                    e is System.Threading.ThreadAbortException ||
+-                    e is AccessViolationException)
+-                    throw;
+-            }
+-            finally
+-            {
+-                // dispose of the key
+-                s_switchesRegKey?.Dispose();
+-            }
+-
+-            // if for any reason we cannot retrieve the value of the switch from the Registry,
+-            // fallback to 'false' which is the secure behavior
+-            return false;
+-        }
++        public const bool AllowIManagementObjectQI = false;
+     }
+ 
+     internal static class WmiNetUtilsHelper
+@@ -128,7 +70,6 @@
+         internal delegate int QualifierSet_Next(int vFunc, IntPtr pWbemClassObject, [In] int lFlags, [Out][MarshalAs(UnmanagedType.BStr)]  out string pstrName, [Out] out object pVal, [Out] out int plFlavor);
+         internal delegate int QualifierSet_EndEnumeration(int vFunc, IntPtr pWbemClassObject);
+         internal delegate int GetCurrentApartmentType(int vFunc, IntPtr pComThreadingInfo, [Out] out APTTYPE aptType);
+-        internal delegate void VerifyClientKey();
+         internal delegate int GetDemultiplexedStub([In, MarshalAs(UnmanagedType.IUnknown)]object pIUnknown, [In]bool isLocal, [Out, MarshalAs(UnmanagedType.IUnknown)]out object ppIUnknown);
+         internal delegate int CreateInstanceEnumWmi([In][MarshalAs(UnmanagedType.BStr)]  string strFilter,
+                                                                                            [In] int lFlags,
+@@ -221,7 +162,8 @@
+ 
+         internal delegate IntPtr GetErrorInfo();
+ 
+-        internal delegate int Initialize([In]bool AllowIManagementObjectQI);
++        internal delegate int PortAbiVersion();
++        private static PortAbiVersion PortAbiVersion_f;
+ 
+ 
+ 
+@@ -273,7 +215,6 @@
+         internal static QualifierSet_Next QualifierNext_f;
+         internal static QualifierSet_EndEnumeration QualifierEndEnumeration_f;
+         internal static GetCurrentApartmentType GetCurrentApartmentType_f;
+-        internal static VerifyClientKey VerifyClientKey_f;
+         internal static Clone Clone_f12;
+         internal static GetDemultiplexedStub GetDemultiplexedStub_f;
+         internal static CreateInstanceEnumWmi CreateInstanceEnumWmi_f;
+@@ -285,36 +226,13 @@
+         internal static CloneEnumWbemClassObject CloneEnumWbemClassObject_f;
+         internal static ConnectServerWmi ConnectServerWmi_f;
+         internal static GetErrorInfo GetErrorInfo_f;
+-        internal static Initialize Initialize_f;
+ 
+         static WmiNetUtilsHelper()
+         {
+-            RegistryKey netFrameworkSubKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\.NETFramework\");
+-            string netFrameworkInstallRoot = (string)netFrameworkSubKey?.GetValue(RuntimeInformation.ProcessArchitecture == Architecture.Arm64 ?
+-                "InstallRootArm64" :
+-                "InstallRoot");
+-
+-            if (netFrameworkInstallRoot == null)
+-            {
+-                // In some Windows versions, like Nano Server, the .NET Framework is not installed by default.
+-                // It is possible that general failure to access the registry get to this code branch but it is
+-                // very unlikely.
+-                // Load PNSE delegates. This way it will throw PNSE when methods are used not when type is loaded.
+-                LoadPlatformNotSupportedDelegates(SR.PlatformNotSupported_FullFrameworkRequired);
+-                return;
+-            }
+-
+-            string wminet_utilsPath = Path.Combine(
+-                netFrameworkInstallRoot,
+-                CompatSwitches.DotNetVersion, // The same value is hard coded on Environment.Version and quirks for WMI
+-                "wminet_utils.dll");
+-
+-            IntPtr hModule = Interop.Kernel32.LoadLibrary(wminet_utilsPath);
+-            if (hModule == IntPtr.Zero)
+-            {
+-                // This is unlikely, so having the TypeInitializationException wrapping it is fine.
+-                throw new Win32Exception(Marshal.GetLastPInvokeError(), SR.Format(SR.LoadLibraryFailed, wminet_utilsPath));
+-            }
++            IntPtr hModule = NativeLibrary.Load("msys-wmi-native.dll",
++                typeof(WmiNetUtilsHelper).Assembly, DllImportSearchPath.AssemblyDirectory);
++            if (!LoadDelegate(ref PortAbiVersion_f, hModule, "WmiPortAbiVersion") || PortAbiVersion_f() != 1)
++                throw new PlatformNotSupportedException("Incompatible source-built WMI backend");
+ 
+             if (LoadDelegate(ref ResetSecurity_f, hModule, "ResetSecurity") &&
+                 LoadDelegate(ref SetSecurity_f, hModule, "SetSecurity") &&
+@@ -323,7 +241,6 @@
+                 LoadDelegate(ref GetPropertyHandle_f27, hModule, "GetPropertyHandle") &&
+                 LoadDelegate(ref WritePropertyValue_f28, hModule, "WritePropertyValue") &&
+                 LoadDelegate(ref Clone_f12, hModule, "Clone") &&
+-                LoadDelegate(ref VerifyClientKey_f, hModule, "VerifyClientKey") &&
+                 LoadDelegate(ref GetQualifierSet_f, hModule, "GetQualifierSet") &&
+                 LoadDelegate(ref Get_f, hModule, "Get") &&
+                 LoadDelegate(ref Put_f, hModule, "Put") &&
+@@ -365,15 +282,14 @@
+                 LoadDelegate(ref PutClassWmi_f, hModule, "PutClassWmi") &&
+                 LoadDelegate(ref CloneEnumWbemClassObject_f, hModule, "CloneEnumWbemClassObject") &&
+                 LoadDelegate(ref ConnectServerWmi_f, hModule, "ConnectServerWmi") &&
+-                LoadDelegate(ref GetErrorInfo_f, hModule, "GetErrorInfo") &&
+-                LoadDelegate(ref Initialize_f, hModule, "Initialize"))
++                LoadDelegate(ref GetErrorInfo_f, hModule, "WmiGetErrorInfo"))
+             {
+                 // All required delegates were loaded.
+-                Initialize_f(CompatSwitches.AllowIManagementObjectQI);
++                // All entry points belong to the independently built backend.
+             }
+             else
+             {
+-                LoadPlatformNotSupportedDelegates(SR.Format(SR.PlatformNotSupported_FrameworkUpdatedRequired, wminet_utilsPath));
++                LoadPlatformNotSupportedDelegates("Missing source-built WMI backend entry point");
+             }
+         }
+         private static bool LoadDelegate<TDelegate>(ref TDelegate delegate_f, IntPtr hModule, string procName) where TDelegate : class
+@@ -392,7 +308,6 @@
+             GetPropertyHandle_f27 = (int _, IntPtr __, string ___, out int ____, out int _____) => throw new PlatformNotSupportedException(exceptionMessage);
+             WritePropertyValue_f28 = (_, __, ___, ____, _____) => throw new PlatformNotSupportedException(exceptionMessage);
+             Clone_f12 = (int _, IntPtr __, out IntPtr ___) => throw new PlatformNotSupportedException(exceptionMessage);
+-            VerifyClientKey_f = () => throw new PlatformNotSupportedException(exceptionMessage);
+             GetQualifierSet_f = (int _, IntPtr __, out IntPtr ___) => throw new PlatformNotSupportedException(exceptionMessage);
+             Get_f = (int _, IntPtr __, string ___, int ____, ref object _____, ref int ______, ref int _______) => throw new PlatformNotSupportedException(exceptionMessage);
+             Put_f = (int _, IntPtr __, string ___, int ____, ref object _____, int ______) => throw new PlatformNotSupportedException(exceptionMessage);
+@@ -435,7 +350,6 @@
+             CloneEnumWbemClassObject_f = (out IEnumWbemClassObject _, int __, int ____, IEnumWbemClassObject _____, string ______, IntPtr _______, string ________) => throw new PlatformNotSupportedException(exceptionMessage);
+             ConnectServerWmi_f = (string _, string __, IntPtr ___, string ____, int _____, string ______, IWbemContext _______, out IWbemServices ________, int _________, int __________) => throw new PlatformNotSupportedException(exceptionMessage);
+             GetErrorInfo_f = () => throw new PlatformNotSupportedException(exceptionMessage);
+-            Initialize_f = (_) => throw new PlatformNotSupportedException(exceptionMessage);
+         }
+     }
+ 

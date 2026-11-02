@@ -1,0 +1,189 @@
+Formal Roslyn4.14 Common/CSharp original Standard2.0 compiler library package
+Clean packaging, fresh installed Standard2.0/NET8 language/API/resource consumers, original source/cache and installed payload audits passed.
+All selected production C# inputs remain unchanged. The three original generation tools regenerated all five outputs, which match the original baselines after the original console cleanup. No private CoreCLR/cDAC/Roslyn/generated-output directory is needed.
+The package retains nonfatal compiler/NuGet warnings recorded below. The package warning about a reference to the MSYS root comes from source input/provenance records; source compiler selections and framework DLL hashes remain unchanged.
+VB, Workspaces, remaining original compiler target variants and the full dependency objective remain open.
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-28T19:53:31.849375+00:00",
+  "full_dependency_goal_complete": false,
+  "host": "win11",
+  "build_root": "/c/codex-dotnet10/r414pkg.vwPq4J",
+  "recipe": "mingw-w64-dotnet-roslyn414",
+  "package": "mingw-w64-clang-x86_64-dotnet-roslyn414 4.14.0-1",
+  "formal_pacman_installed": true,
+  "clean_package_build_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "source_commit": "8edf7bcd4f1594c3d68a6a567469f41dbd33dd1b",
+  "source_archive_sha256": "8cf2d365d1fad52b480f7c68b5c477cb586a935ada0eb309b0c40dacfec5fe9c",
+  "source_workflow_archive_sha256": "47046a3acfa87c606448ba3dd5172e573d90856032068114c49144f3c860e2b0",
+  "extracted_original_files": 20094,
+  "removed_binary_inputs": 200,
+  "production_source_changes": 0,
+  "original_selected_source_files": {
+    "Microsoft.CodeAnalysis": 1025,
+    "Microsoft.CodeAnalysis.CSharp": 1127
+  },
+  "original_generator_tool_source_files": {
+    "CSharpSyntaxGenerator": 20,
+    "BoundTreeGenerator": 3,
+    "CSharpErrorFactsGenerator": 1
+  },
+  "regenerated_compiler_outputs_matching_upstream": 5,
+  "original_public_api_declarations_verified": {
+    "Microsoft.CodeAnalysis": 4242,
+    "Microsoft.CodeAnalysis.CSharp": 6237
+  },
+  "original_localized_resource_sets": 42,
+  "original_localized_resource_values": 39956,
+  "original_cultures": 13,
+  "original_source_archive_inputs_verified": 2220,
+  "actual_compiler_and_consumer_package_references_verified": 41,
+  "existing_sdk_compiler49_compiler5_and_framework_hashes_unchanged": true,
+  "private_build_roots_required": false,
+  "frozen_workflow_source_files_verified": 12,
+  "frozen_workflow_recipe_and_srcinfo_match": true,
+  "evidence_archive": "/tmp/roslyn414-package1/roslyn414-package-evidence1.tar.gz",
+  "evidence_archive_sha256": "3dd7ef95cadeceb3f11d23b48c328bbdebe185ff3c897f35b7c189636b60ba2f",
+  "evidence_files_verified": 177,
+  "package_archive": "/tmp/roslyn414-package1/mingw-w64-clang-x86_64-dotnet-roslyn414-4.14.0-1-any.pkg.tar.zst",
+  "complete_roslyn414_targets_and_workspaces": false,
+  "remaining": [
+    "Formal original Roslyn4.14 VB/Workspaces/meta packages and original NET8/NET9 compiler target variants.",
+    "Formal Roslyn4.4 and complete runtime10 shipping-generator bundle.",
+    "Remaining required maintenance/runtime target variants.",
+    "Complete runtime/framework10, SDK/desktop10, PowerShell7.6 and remaining MMI/SQL/WindowsCompatibility/runtime gates."
+  ]
+}
+
+Exact commands and results:
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-roslyn414-4.14.0-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-roslyn414
+RESULT: exit 0
+$ /usr/bin/python3 src/roslyn414-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+$ /usr/bin/python3 src/roslyn414-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-roslyn414-4.14.0-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Recorded package.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-roslyn414 4.14.0-1 (28 Oct 2026 20:47:54)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found roslyn-4.14.0-8edf7bcd.tar.gz
+  -> Found roslyn414-source-1.tar.gz
+==> Validating source files with sha256sums...
+    roslyn-4.14.0-8edf7bcd.tar.gz ... Passed
+    roslyn414-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting roslyn414-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-roslyn414"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-roslyn414 4.14.0-1 (28 Oct 2026 20:51:47)
+
+
+Recorded src/prepare.log:
+PASS pinned Roslyn source extraction: 20094 original files; 200 binary inputs removed
+Prepared original Roslyn4.14 source projects: {'Microsoft.CodeAnalysis': 1025, 'Microsoft.CodeAnalysis.CSharp': 1127} localized payloads 42
+
+
+Recorded src/build.log:
+PASS original source Roslyn4.14 package: Microsoft.CodeAnalysis
+PASS original source Roslyn4.14 package: Microsoft.CodeAnalysis.CSharp
+
+
+Recorded src/check.log:
+PASS original netstandard2.0 Roslyn4.14 libraries: fresh C#13/emit/execute/compiler/analyzer/generator/public API/resource consumer
+
+
+Recorded src/audit.log:
+PASS original source/API/resource inputs, five compiler outputs, two netstandard2.0 packages and all actual compiler/consumer cache bytes
+
+
+Recorded install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-roslyn414-4.14.0-1
+
+Total Installed Size:  10.56 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-roslyn414...
+
+
+Recorded qk.log:
+mingw-w64-clang-x86_64-dotnet-roslyn414: 20 total files, 0 missing files
+
+
+Recorded installed-check.log:
+PASS original netstandard2.0 Roslyn4.14 libraries: fresh C#13/emit/execute/compiler/analyzer/generator/public API/resource consumer
+
+
+Recorded installed-source-audit.log:
+PASS original source/API/resource inputs, five compiler outputs, two netstandard2.0 packages and all actual compiler/consumer cache bytes
+
+
+Recorded installed-package-audit.log:
+PASS eleven installed files, two exact source Roslyn4.14 NuGets, 28 managed/satellite assemblies and source licenses
+
+
+Recorded existing-tools-framework-after.log:
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.CSharp.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+
+Recorded src/installed-consumer/run.log:
+Loaded: Microsoft.CodeAnalysis, Version=4.14.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; C:\codex-dotnet10\r414pkg.vwPq4J\src\installed-consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.dll
+Loaded: Microsoft.CodeAnalysis.CSharp, Version=4.14.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; C:\codex-dotnet10\r414pkg.vwPq4J\src\installed-consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+PASS original netstandard2.0 Roslyn syntax/options consumer
+PASS: C#13 params spans, parsing/semantics, deterministic PE/portable PDB emission and execution
+PASS: syntax/type/nullable diagnostics, resource text, compiler options and cancellation
+PASS: analyzer file loading/callbacks and incremental generation with AdditionalText
+PASS: Microsoft.CodeAnalysis preserves all 4242 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp preserves all 6237 upstream public API declarations
+PASS: all 13 cultures, 42 localized resource sets / 39956 strings, and German diagnostics
+PASS: no .NET Framework native helper loaded
+

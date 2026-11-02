@@ -1,0 +1,43 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-polysharp115-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.15.0
+pkgrel=1
+pkgdesc='Source PolySharp1.15 original Standard2.0 generator and MSBuild targets'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/Sergio0694/PolySharp'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn431-bootstrap=4.3.1"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-polysharp-build-tools=20261031"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms110=1.1.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('polysharp-02753db2.tar.gz::https://codeload.github.com/Sergio0694/PolySharp/tar.gz/02753db24d9685e54db06739eb63183d86eb5b62'
+        'polysharp115-source-1.tar.gz')
+noextract=('polysharp-02753db2.tar.gz')
+sha256sums=('e89d37335624a6ca0f04870702d3d42fa3b3079ce9e0d99d79457b26d015d2d8'
+            '778ce398be5793218b9caea7e763cc0fa56602601c4b58e406fbc23590517c94')
+prepare() {
+  /usr/bin/python3 "$srcdir/polysharp115-workflow/prepare.py" "$srcdir/polysharp-02753db2.tar.gz" "$srcdir/prepared" > "$srcdir/prepare.log" 2>&1
+}
+build() { bash "$srcdir/polysharp115-workflow/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1; }
+check() {
+  /usr/bin/python3 "$srcdir/polysharp115-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/polysharp115-workflow/check.py" "$srcdir/prepared" "$srcdir/check" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  install -Dm644 "$srcdir/prepared/feed/PolySharp.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/polysharp.$pkgver.nupkg"
+  mkdir -p "$doc/inputs"
+  local file
+  for file in check.py check-runtime.py check-consumers.py check-guards.py README.md; do
+    install -m644 "$srcdir/polysharp115-workflow/$file" "$doc/$file"
+  done
+  install -m644 "$srcdir/polysharp115-workflow/inputs/Check.cs" "$doc/inputs/Check.cs"
+  for file in source-inputs.json source-ports.json producer-audit.json; do install -m644 "$srcdir/prepared/$file" "$doc/$file"; done
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  install -Dm644 "$srcdir/prepared/source/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+}

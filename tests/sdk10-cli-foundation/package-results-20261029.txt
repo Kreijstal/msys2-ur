@@ -1,0 +1,335 @@
+{
+  "finished_at_utc": "2026-10-29T10:07:40.751749+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "d0ffee1b3214354258fe5937ad89474f463827f57a13294493d1b0c202a26fca"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap-10.0.201-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "be4da7ed0bf843a89edaf619f5fe2996afe41919fb057767e6641c7c5a7db901"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "24e2a272175e79ccff3b14b33ffcd841af6286a0145ee7751448e8c0a288ae3e"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "0765cf119a9ce0f46a237bfca43d93ff032837003df88eb5adc286f16b51d56f"
+    }
+  ],
+  "source_audit": {
+    "original_compile_items": 181,
+    "unique_original_compile_inputs": 181,
+    "archive_selected_inputs_verified": 252,
+    "original_xlf_inputs": 52,
+    "source_reference_output_and_satellite_hashes_verified": true,
+    "original_eight_project_edges_and_exact_package_versions_preserved": true,
+    "original_production_source_changes": 0,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "installed_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check-resources.py",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/plan",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/build",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/localized",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/resources"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/bin/python.exe",
+          "-X",
+          "utf8",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check.py",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/plan",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/build",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime",
+          "E:/msys64/clang64/lib/dotnet10/build-packs/sdk-cli-foundation-10.0.201-net10-bootstrap/bin"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "payload_files_verified": 389,
+    "eight_original_NET10_assembly_and_PDB_identities_verified": true,
+    "exact_resource_values": 966,
+    "satellites": 52,
+    "original_managed_and_native_consumers_passed": true,
+    "MSI_install_write_operations_verified": false,
+    "formal_MSBuild_Runtime_NuGet_archive_provided": false,
+    "other_original_framework_profiles_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "runtime_check": {
+    "commands": [
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll",
+          "-noconfig",
+          "@E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime/compile.rsp"
+        ],
+        "exit_code": 0
+      },
+      {
+        "command": [
+          "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+          "E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime/bin/Check.dll",
+          "E:/msys64/clang64",
+          "E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/validation-source"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "original_eight_NET10_libraries_executed": true,
+    "owned_path_sentinel_cache_retry_passed": true,
+    "original_span_parser_and_MSBuild_forwarding_passed": true,
+    "original_five_shell_generators_executed": true,
+    "unchanged_upstream_manifest_passed": true,
+    "owned_Unicode_invalid_manifest_and_RID_alias_passed": true,
+    "source_hostfxr_SDK_runtime_enumeration_resolution_and_16_GC_callbacks_passed": true,
+    "source_hostfxr_sha256": "7d6113e026756a41c2342c4a5da60b171d376f244f23daf02e63bc23e7b49413",
+    "native_MSI_read_only_error_queries_passed": true,
+    "MSI_install_write_operations_verified": false,
+    "other_original_framework_profiles_built": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "formal_MSBuild_Runtime_NuGet_archive_provided": false,
+  "other_original_framework_profiles_built": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}
+
+$ makepkg --cleanbuild --force --noconfirm
+EXIT 0
+==> Making package: mingw-w64-dotnet-sdk10-cli-foundation-bootstrap 10.0.201-1 (29 Oct 2026 10:59:16)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found sdk-v10.0.201.tar.gz
+  -> Found arcade-runtime10-4bf37ce6.tar.gz
+  -> Found sdk10-cli-foundation-source-1.tar.gz
+==> Validating source files with sha256sums...
+    sdk-v10.0.201.tar.gz ... Passed
+    arcade-runtime10-4bf37ce6.tar.gz ... Passed
+    sdk10-cli-foundation-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting sdk10-cli-foundation-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sdk10-cli-foundation-bootstrap 10.0.201-1 (29 Oct 2026 11:04:31)
+
+
+$ pacman -U --noconfirm "$PWD/mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap-10.0.201-1-any.pkg.tar.zst"
+EXIT 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap-10.0.201-1
+
+Total Installed Size:  16.79 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap...
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap
+EXIT 0
+mingw-w64-clang-x86_64-dotnet-sdk10-cli-foundation-bootstrap: 448 total files, 0 altered files
+
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-sdk10-cli-foundation-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check
+EXIT 0
+PASS 389 installed payload hashes,966 resource values,52 satellites,8 PDBs and original managed/native CLI foundation consumer
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/prepare.log
+PASS prepared eight original SDK10 CLI foundation NET10 project wrappers; project edges and metadata preserved
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/evaluate.log
+PASS eight original SDK10 CLI foundation NET10 profiles;compile items 181
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/build.log
+PASS Microsoft.DotNet.InternalAbstractions 13 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.NativeWrapper 9 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.Win32.Msi 21 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.NET.Sdk.WorkloadManifestReader 36 original source inputs 10.0.200.0 10.2.26.11413
+PASS System.CommandLine.StaticCompletions 9 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Cli.CommandLine 5 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Cli.Utils 67 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Configurer 21 original source inputs 10.0.200.0 10.2.26.11413
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/localize.log
+PASS52 original SDK10 CLI foundation satellites and localized resource sets
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/audit.log
+PASS181 original Compile items, selected source/resource/project/XLF bytes match pinned SDK archive; all reference/output/satellite hashes verified
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/resource-check.log
+PASS 56 neutral/localized resource sets, 966 exact values, 52 satellite identities, eight NET10 identities and portable PDBs
+
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/runtime-check.log
+PASS eight original NET10 CLI foundations:owned file/path/sentinel/cache/retry,span parsing/MSBuild forwarding,five shell scripts,upstream/Unicode/invalid manifests,RID alias,source hostfxr SDK/runtime enumeration and resolution,16 compacting-GC callbacks and read-only native MSI errors
+
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/stage.log
+PASS staged eight original NET10 CLI foundations,52 satellites,source native hostfxr and 389 payload files
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/staged-check.log
+PASS 389 installed payload hashes,966 resource values,52 satellites,8 PDBs and original managed/native CLI foundation consumer
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/build/original-VerifyMSBuildDependency.log
+
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/src/build/original-VerifyMSBuildDependency-missing.log
+
+E:\codex-dotnet10\sdk10clifoundationpkg1.W4DUQ2\src\plan\Microsoft.DotNet.Cli.Utils\upstream.proj(35,5): error : Something moved around in Microsoft.Build.Runtime, adjust code here accordingly. [E:\codex-dotnet10\sdk10clifoundationpkg1.W4DUQ2\src\plan\Microsoft.DotNet.Cli.Utils\Microsoft.DotNet.Cli.Utils.csproj::TargetFramework=net10.0]
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/resources/resources.log
+PASS 56 neutral/localized resource sets, 966 exact values, 52 satellite identities, eight NET10 identities and portable PDBs
+
+
+/e/codex-dotnet10/sdk10clifoundationpkg1.W4DUQ2/installed-check/runtime/execute.log
+PASS eight original NET10 CLI foundations:owned file/path/sentinel/cache/retry,span parsing/MSBuild forwarding,five shell scripts,upstream/Unicode/invalid manifests,RID alias,source hostfxr SDK/runtime enumeration and resolution,16 compacting-GC callbacks and read-only native MSI errors
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/build.log
+PASS Microsoft.DotNet.InternalAbstractions 13 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.NativeWrapper 9 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.Win32.Msi 21 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.NET.Sdk.WorkloadManifestReader 36 original source inputs 10.0.200.0 10.2.26.11413
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/sdk10clifoundation1.I59X56/build.py", line 87, in <module>
+    args+=['/reference:"'+native(p)+'"' for p in refs.values()]+['/reference:'+alias+'="'+native(p)+'"' for alias,p in aliases]+['/resource:"'+native(p)+'",'+logical for p,logical in resources]+['"'+native(p)+'"' for p in files];rsp=folder/'compile.rsp';rsp.write_text('\n'.join(args)+'\n');run(name+'-compile',[host,compiler,'-noconfig','@'+native(rsp)],folder,host.parent)
+                                                                                                                                                                                                                                                                                                   ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/sdk10clifoundation1.I59X56/build.py", line 16, in run
+    commands.append(dict(label=label,command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                                   ^^^^^^^^^^^^^^^
+AssertionError: ('System.CommandLine.StaticCompletions-compile', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/build2.log
+REUSE verified Microsoft.DotNet.InternalAbstractions
+REUSE verified Microsoft.DotNet.NativeWrapper
+REUSE verified Microsoft.Win32.Msi
+REUSE verified Microsoft.NET.Sdk.WorkloadManifestReader
+PASS System.CommandLine.StaticCompletions 9 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Cli.CommandLine 5 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Cli.Utils 67 original source inputs 10.0.200.0 10.2.26.11413
+PASS Microsoft.DotNet.Configurer 21 original source inputs 10.0.200.0 10.2.26.11413
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/sdk10clifoundation1.I59X56/check.py", line 21, in <module>
+    commands.append(dict(command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                       ^^^^^^^^^^^^^^^
+AssertionError: ('compile', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+E:\codex-dotnet10\sdk10clifoundation1.I59X56\Check.cs(28,3): error CS0200: Property or indexer 'Symbol.Name' cannot be assigned to -- it is read only
+E:\codex-dotnet10\sdk10clifoundation1.I59X56\Check.cs(32,192): error CS0122: 'WorkloadManifestFormatException' is inaccessible due to its protection level
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check2.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/sdk10clifoundation1.I59X56/check.py", line 21, in <module>
+    commands.append(dict(command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                       ^^^^^^^^^^^^^^^
+AssertionError: ('compile', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check2/compile.log
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+E:\codex-dotnet10\sdk10clifoundation1.I59X56\Check.cs(28,29): error CS0104: 'Command' is an ambiguous reference between 'System.CommandLine.Command' and 'Microsoft.DotNet.Cli.Utils.Command'
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check3/execute.log
+Unhandled exception. System.Exception: original Unicode path utility
+   at Check.Require(Boolean value, String message)
+   at Check.Main(String[] args)
+   at Check.<Main>(String[] args)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check4/execute.log
+Unhandled exception. System.Exception: original completion script fish
+   at Check.Require(Boolean value, String message)
+   at Check.Main(String[] args)
+   at Check.<Main>(String[] args)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check5/execute.log
+Unhandled exception. System.Exception: invalid workload manifest rejected
+   at Check.Require(Boolean value, String message)
+   at Check.Main(String[] args)
+   at Check.<Main>(String[] args)
+
+
+PROTOTYPE /e/codex-dotnet10/sdk10clifoundation1.I59X56/runtime-check6.log
+PASS eight original NET10 CLI foundations:owned file/path/sentinel/cache/retry,span parsing/MSBuild forwarding,five shell scripts,upstream/Unicode/invalid manifests,RID alias,source hostfxr SDK/runtime enumeration and resolution,16 compacting-GC callbacks and read-only native MSI errors
+
+

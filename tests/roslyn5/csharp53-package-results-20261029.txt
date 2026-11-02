@@ -1,0 +1,43 @@
+Source NET10 Roslyn5.3 CSharp compiler bootstrap — installed release2
+mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap-5.3.0.2.26113.113-2-any.pkg.tar.zst
+Windows root: /e/codex-dotnet10/csharp53pkg1.nBgulw
+
+Fresh release1 clean build and full source/API/resource/compiler/installed checks: exit0.
+Release2 narrowly fixes shell slash-option conversion. Only the launcher, README and manifest changed. All compiler and satellite DLL/PDB/config bytes remain identical to the fresh build.
+Provided: original NET10 Common,CSharp,csc;3 compiler DLLs,26 source-built satellites. Source generator baseline regeneration:5 files.
+Source audit:2279 pinned archive inputs,2575 actual compiler/tool/reference input hashes. Independent ownership/integrity audit:346 source tool/ref files across7 installed source packages,0 altered.
+All10560 upstream API declarations,28 resource sets/39508 strings,13 cultures,German diagnostics,CSharp14,analyzers,incremental generators,portable PDBs and cancellation pass.
+Real original SDK8 MSBuild Csc task launches the new NET10 compiler through csc53.cmd and executes CSharp14 output. Original SDK10 tasks remain open.
+Final installed launcher passes dash/slash options,Unicode MSYS source/response paths and emitted CSharp14 NET10 execution.
+Payload81 regular files,80 manifested files;pacman106 entries,0 altered.
+
+Exact commands and scope:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0 — Fresh release1 compilation and full staged checks
+$ makepkg --repackage --force --noconfirm
+RESULT: exit 0 — Release2 launcher/README-only hotfix; all compiler and satellite bytes unchanged
+$ /usr/bin/python3 audit-package.py "$PWD" 2
+RESULT: exit 0 — Independent actual archive audit
+$ /usr/bin/python3 audit-tools.py "$PWD"
+RESULT: exit 0 — 346 source tool/ref files;7 source package owners;0 altered
+$ pacman -U --noconfirm ./*-5.3.0.2.26113.113-2-any.pkg.tar.zst
+RESULT: exit 0 — Install final release2
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-csharp-compiler53-bootstrap
+RESULT: exit 0 — 106 entries,0 altered
+$ /usr/bin/python3 /clang64/share/doc/dotnet-csharp-compiler53-bootstrap/checks/check-installed.py /clang64 "$PWD/installed-check"
+RESULT: exit 0 — Release1 full installed byte/API/resource/compiler checks
+$ /usr/bin/python3 /e/codex-dotnet10/check-net10-msbuild.py /clang64 "$PWD/msbuild-check λ"
+RESULT: exit 0 — Release1 unchanged csc53.cmd through original SDK8 Csc task
+$ /usr/bin/python3 /e/codex-dotnet10/check-csharp53-launcher.py /clang64 "$PWD/launcher-check2 λ"
+RESULT: exit 0 — Release2 slash/dash flags,MSYS Unicode source/response paths,CSharp14 execution
+
+The earlier prototype API fixture substituted runtime Immutable/Metadata implementations into the compiler API model. Their original zero-version runtime references produce19 false signature differences. The NET10 profile now uses all167 original source reference contracts; all10560 API declarations pass without production/API baseline changes.
+The fresh formal release1 clean build, archive/source/tool audits, install and full installed checks pass. A subsequent shell /version check exposed MSYS argument conversion. Release2 narrowly corrects the shell launcher and its README/manifest; every compiler/satellite/other payload byte remains identical. Release2 archive audit, install,pacman integrity and real launcher execution pass.
+Source nullable/compiler warnings and source-directory references in provenance docs remain visible. No zero-warning or full-runtime compatibility claim is made.
+
+Final package SHA256: 560eed36a56d46dd47d84807d49a0a07029f64e7fab7d536f1ddeda14dc08820
+Frozen workflow:23 files SHA256 c4874fb335f56b28c11b3492d25650a3c371c07d1d405fe8cc62c2ecfe5d922a
+Final evidence:358 files SHA256 0dd8183560e1019de27456d48acf8eab6adbca97521a02093b99b27440279c0a;every member,package,source workflow,recipe and SRCINFO verified.
+Local evidence: /tmp/csharp53-bootstrap-package2
+
+This package supplies the CSharp bootstrap component. VB/server integration and localization,other compiler profiles,full SDK10,WindowsDesktop10,PowerShell7.6 and all remaining dependency/compatibility gates are unfinished.

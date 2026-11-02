@@ -1,0 +1,260 @@
+Formal runtime9 component9.0.0-2 with original Standard2.1 forwarding target
+Installed consumers, full NS20 API/resource gates, source/cache audit and package payload checks all passed.
+Initial clean aggregate exited4 only in the NET8 extern-alias harness. Framework forwarding destinations now share the test alias. All production builds passed; corrected candidate and installed checks returned0. Final source verification and repackage returned0.
+Forwarder builds with zero warnings; the component retains nonfatal nullable/CS8632/interop-bootstrap CS0436/NU1603 warnings. No blanket zero-warning claim.
+Full dependency goal remains incomplete. Other target variants and dependency/integration gates remain required.
+
+{
+  "previous_goal_turn_classification": "progress",
+  "current_goal_turn_classification": "progress",
+  "finished_at_utc": "2026-10-28T19:24:54.001303+00:00",
+  "full_dependency_goal_complete": false,
+  "host": "win11",
+  "build_root": "/c/codex-dotnet10/r9pkg2.gKfRAT",
+  "recipe": "mingw-w64-dotnet-runtime9-libraries",
+  "package": "mingw-w64-clang-x86_64-dotnet-runtime9-libraries 9.0.0-2",
+  "formal_pacman_installed": true,
+  "source_producer_projects": 19,
+  "production_source_changes": 0,
+  "all_production_source_builds_exit_code": 0,
+  "initial_clean_aggregate_exit_code": 4,
+  "corrected_candidate_net8_and_audit_exit_code": 0,
+  "final_source_verification_exit_code": 0,
+  "final_repackage_exit_code": 0,
+  "installed_checks_exit_code": 0,
+  "runtime_source_commit": "9d5a6a9aa463d6d10b0b0ba6d5982cc82f363dc3",
+  "runtime_source_archive_sha256": "32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def",
+  "source_archive_sha256": "bf47b93c0a39c727e9378655f28625d5002fce0d9832bc70f6a926f8c605bd20",
+  "extracted_original_source_files": 5926,
+  "removed_binary_inputs": 22,
+  "standard_implementation_libraries": 11,
+  "independent_net8_mef_libraries": 5,
+  "original_standard21_forwarding_libraries": 1,
+  "source_nuget_packages": 12,
+  "original_api_declarations_verified": 4051,
+  "original_resource_sets": 9,
+  "original_resource_values": 375,
+  "original_source_archive_inputs_verified": 733,
+  "actual_compiler_and_consumer_package_references_verified": 100,
+  "existing_compilers_and_framework_hashes_unchanged": true,
+  "repeat_target_merges_preserve_all_twelve_package_archive_hashes": true,
+  "evidence_files_verified": 293,
+  "frozen_workflow_source_files_verified": 17,
+  "frozen_workflow_recipe_and_srcinfo_match": true,
+  "evidence_archive": "/tmp/runtime9-libraries-package2/runtime9-libraries-package-evidence2.tar.gz",
+  "evidence_sha256": "d15b2578788e7c1ec128359841e0732c7b257308ad303cbe987dd4218b45518c",
+  "package_archive": "/tmp/runtime9-libraries-package2/mingw-w64-clang-x86_64-dotnet-runtime9-libraries-9.0.0-2-any.pkg.tar.zst",
+  "asyncinterfaces21_forwarding_target_built": true,
+  "formal_runtime9_nuget_contains_forwarder": true,
+  "complete_runtime9_target_variants_built": false,
+  "remaining": [
+    "Remaining required runtime9 framework target variants, including NETFramework assets, are not complete.",
+    "Formal Humanizer NS20 and Roslyn4.14/4.4 packages and runtime10 shipping generator bundle.",
+    "Newer maintenance versions required by runtime10 noncore targets.",
+    "Complete runtime/framework10, SDK/desktop10 and PowerShell7.6 integration.",
+    "Full MMI remote/auth/provider/lifetime and remaining SQL/WindowsCompatibility/runtime compatibility gates."
+  ]
+}
+
+Exact commands and results:
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 4 — All production builds and NS20 gates passed; NET8 alias harness lacked forwarding destination aliases. Fixed in check-net8.py.
+$ /usr/bin/python3 src/runtime9-libraries/check-net8.py "$PWD/src/prepared" "$PWD/src/net8-consumer"
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/consumer"
+RESULT: exit 0
+$ MINGW_ARCH=clang64 makepkg-mingw --verifysource
+RESULT: exit 0
+$ MINGW_ARCH=clang64 makepkg-mingw -R -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-runtime9-libraries-9.0.0-2-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-runtime9-libraries
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/check-net8.py "$PWD/src/prepared" "$PWD/src/installed-net8-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+$ /usr/bin/python3 src/runtime9-libraries/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" "$PWD/src/installed-net8-consumer"
+RESULT: exit 0
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-runtime9-libraries-9.0.0-2-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Recorded package.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-runtime9-libraries 9.0.0-2 (28 Oct 2026 20:13:33)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-v9.0.0.tar.gz
+  -> Found runtime9-libraries-source-2.tar.gz
+==> Validating source files with sha256sums...
+    runtime-v9.0.0.tar.gz ... Passed
+    runtime9-libraries-source-2.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting runtime9-libraries-source-2.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> ERROR: A failure occurred in check().
+    Aborting...
+
+
+Recorded src/build.log:
+PASS original generator configuration props and unchanged production source hashes
+PASS complete source9 interop bootstrap: Microsoft.Interop.SourceGeneration
+PASS complete source9 interop bootstrap: Microsoft.Interop.LibraryImportGenerator
+PASS original NET8 MEF implementation and independent API baseline: System.Composition.AttributedModel
+PASS original NET8 MEF implementation and independent API baseline: System.Composition.Runtime
+PASS original NET8 MEF implementation and independent API baseline: System.Composition.Hosting
+PASS original NET8 MEF implementation and independent API baseline: System.Composition.Convention
+PASS original NET8 MEF implementation and independent API baseline: System.Composition.TypedParts
+PASS original Standard2.1 forwarding target: Microsoft.Bcl.AsyncInterfaces
+PASS original netstandard2.0 source9 package: System.Collections.Immutable
+PASS original netstandard2.0 source9 package: System.Reflection.Metadata
+PASS original NET8 and Standard MEF source assets merged before dependent restore: System.Composition.AttributedModel
+PASS original netstandard2.0 source9 package: System.Composition.AttributedModel
+PASS original NET8 and Standard MEF source assets merged before dependent restore: System.Composition.Runtime
+PASS original netstandard2.0 source9 package: System.Composition.Runtime
+PASS original NET8 and Standard MEF source assets merged before dependent restore: System.Composition.Hosting
+PASS original netstandard2.0 source9 package: System.Composition.Hosting
+PASS original NET8 and Standard MEF source assets merged before dependent restore: System.Composition.Convention
+PASS original netstandard2.0 source9 package: System.Composition.Convention
+PASS original NET8 and Standard MEF source assets merged before dependent restore: System.Composition.TypedParts
+PASS original netstandard2.0 source9 package: System.Composition.TypedParts
+PASS original Standard2.1 forwarder and empty dependency group merged: Microsoft.Bcl.AsyncInterfaces
+PASS original netstandard2.0 source9 package: Microsoft.Bcl.AsyncInterfaces
+PASS original netstandard2.0 source9 package: System.IO.Pipelines
+PASS original netstandard2.0 source9 package: System.Threading.Channels
+PASS original netstandard2.0 source9 package: System.Text.Encoding.CodePages
+PASS original composition metapackage graph
+
+
+Recorded src/check.log:
+PASS eleven original netstandard2.0 implementations, exact isolated runtime/native/resource checks and original API gates
+
+
+Recorded src/check-net8.log:
+Traceback (most recent call last):
+  File "/c/codex-dotnet10/r9pkg2.gKfRAT/src/runtime9-libraries/check-net8.py", line 56, in <module>
+    with (out/'build.log').open('w') as log:subprocess.run([dotnet,'build',native(out/'Build.csproj'),'-c','Release','--configfile',native(out/'NuGet.config'),'-p:UseSharedCompilation=false','-v:minimal'],env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/clang64/lib/dotnet/dotnet.exe', 'build', 'C:/codex-dotnet10/r9pkg2.gKfRAT/src/net8-consumer/Build.csproj', '-c', 'Release', '--configfile', 'C:/codex-dotnet10/r9pkg2.gKfRAT/src/net8-consumer/NuGet.config', '-p:UseSharedCompilation=false', '-v:minimal']' returned non-zero exit status 1.
+
+
+Recorded src/check-net8-2.log:
+PASS original NET8 MEF and Standard2.1 forwarder NuGet selection, exact source bytes, complete forwards and runtime type unification
+
+
+Recorded src/audit2.log:
+PASS pinned original source/API inputs, twelve packages, actual compiler/consumer cache bytes and original generator configuration
+
+
+Recorded source-verification.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-runtime9-libraries 9.0.0-2 (28 Oct 2026 20:20:33)
+==> Retrieving sources...
+  -> Found runtime-v9.0.0.tar.gz
+  -> Found runtime9-libraries-source-2.tar.gz
+==> Validating source files with sha256sums...
+    runtime-v9.0.0.tar.gz ... Passed
+    runtime9-libraries-source-2.tar.gz ... Passed
+
+
+Recorded repackage.log:
+[1;1m[1;32m==> [1;0m[1;1m MINGW_ARCH: clang64[1;0m
+[1;1m[1;34m  ->[1;0m[1;1m Building clang64...[1;0m
+==> Making package: mingw-w64-dotnet-runtime9-libraries 9.0.0-2 (28 Oct 2026 20:20:35)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Removing existing $pkgdir/ directory...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-runtime9-libraries"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-runtime9-libraries 9.0.0-2 (28 Oct 2026 20:20:44)
+
+
+Recorded install.log:
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-runtime9-libraries-9.0.0-2
+
+Total Installed Size:  2.96 MiB
+Net Upgrade Size:      0.01 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+upgrading mingw-w64-clang-x86_64-dotnet-runtime9-libraries...
+
+
+Recorded qk.log:
+mingw-w64-clang-x86_64-dotnet-runtime9-libraries: 30 total files, 0 missing files
+
+
+Recorded installed-check.log:
+PASS eleven original netstandard2.0 implementations, exact isolated runtime/native/resource checks and original API gates
+
+
+Recorded installed-check-net8.log:
+PASS original NET8 MEF and Standard2.1 forwarder NuGet selection, exact source bytes, complete forwards and runtime type unification
+
+
+Recorded installed-source-audit.log:
+PASS pinned original source/API inputs, twelve packages, actual compiler/consumer cache bytes and original generator configuration
+
+
+Recorded installed-package-audit.log:
+PASS 21 installed payload files and twelve exact source NuGets in dedicated feed/doc/license paths
+
+
+Recorded existing-tools-framework-after.log:
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Threading.Channels.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Text.Encoding.CodePages.dll: OK
+
+
+Recorded src/installed-net8-consumer/run.log:
+PASS original NET8 MEF composition and Standard2.1 forwarder: shared alias/runtime types, async iteration/disposal/cancellation
+
+
+Recorded src/installed-net8-consumer/metadata-results.json:
+{
+  "original_forwarding_declarations": 10,
+  "forwarded_types": 11,
+  "actual_target": ".NETStandard,Version=v2.1",
+  "all_runtime_type_identities_shared": true,
+  "owned_forwarder_runtime_load_passed": true,
+  "full_dependency_goal_complete": false
+}
+

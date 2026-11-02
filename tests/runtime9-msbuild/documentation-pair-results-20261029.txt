@@ -1,0 +1,58 @@
+Original NET9 documentation pair package update
+Finished: 2026-10-29T04:18:09.020588+00:00
+Host/root: win11 /e/codex-dotnet10/documentation9pair1.Wn4lnz
+Scope:original missing CodeDom9 and MetadataLoadContext9 IntelliSense XML data.
+All DLL/PDB/nuspec/license entry bytes are unchanged;exactly one original XML entry added to each NuGet.
+All3 declared source hashes verified for each recipe.
+The narrow packaging action reuses previously validated clean-build binaries and does not claim a new compiler rebuild.
+
+mingw-w64-dotnet-codedom9 9.0.11-2
+Package SHA256: e3b26ac62ddb3d1267020a2d50bd3934e390899fcc21e9e4ad51cc21867e4f18
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/add-documentation.py src/prepared intellisense9-20241010.1.nupkg
+RESULT: exit0
+PASS pinned original documentation System.CodeDom 94b20c0d491db124ddbcb5ee8cc630e3747d2afab11401abee212784e544d31b
+
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/pack.py src/prepared
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/check.py src/prepared src/prepared/check
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/audit.py runtime-msbuild9-fa7cdded.tar.gz src/prepared
+RESULT: exit0
+$ makepkg --repackage --force --noconfirm
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/codedom9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,955 CLR APIs and real source CodeDom consumer;3 original annotation differences retained
+
+mingw-w64-clang-x86_64-dotnet-codedom9: 19 total files, 0 altered files
+
+Delta: {"baseline_nuget_sha256": "8a4b94f66c577cfad3c62e1c7f07d0cbf8f79ebe0352476726f6522fb1a0cc75", "updated_nuget_sha256": "22470378120027c44d4e34fc16020b5f847b4051c4bd7b5005b834f72590d6c3", "unchanged_entry_sha256": {"System.CodeDom.nuspec": "54e2e52fccf1fb164a164c59b182a6a5641e29b66ef5c2370ab0ccc4aef4a4a0", "lib/net9.0/System.CodeDom.pdb": "849ed6e23fd0ed9602cf8ad2e0e23f28fccc269672b08f8b0e4d4a553c79fae1", "LICENSE.TXT": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310", "lib/net9.0/System.CodeDom.dll": "9dadf1226cde28ae1f8eb27798369a75ade7ffe210692bcd939410af35f04452", "THIRD-PARTY-NOTICES.TXT": "fa3e9d0a2c52476f04fe798d7dc4f6e7edb7b68a3d2f4d5f59a39bce957eedc8"}, "added_entries": ["lib/net9.0/System.CodeDom.xml"], "all_prior_nuget_entry_bytes_unchanged": true, "xml_sha256": "94b20c0d491db124ddbcb5ee8cc630e3747d2afab11401abee212784e544d31b"}
+Documentation: {"package_id": "Microsoft.Private.Intellisense", "version": "9.0.0-preview-20241010.1", "package_sha256": "227bc364165d241eeb122e410216e9cbdb955400402475477c506e7ce8c4117c", "member": "IntellisenseFiles/net/1033/System.CodeDom.xml", "xml_sha256": "94b20c0d491db124ddbcb5ee8cc630e3747d2afab11401abee212784e544d31b", "original_intellisense_policy": true, "no_implementation_binaries": true}
+
+mingw-w64-dotnet-metadataloadcontext9 9.0.11-2
+Package SHA256: 2db9ed26a2e82438954194635f6368c692ab9926cbe757388d8fefeb7b5b66a8
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/add-documentation.py src/prepared intellisense9-20241010.1.nupkg
+RESULT: exit0
+PASS pinned original documentation System.Reflection.MetadataLoadContext 3b361666c5ea88eea54b147d3869a730badfd9ef0b5a40152a241368e4259276
+
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/pack.py src/prepared
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/check.py src/prepared src/prepared/check
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/audit.py runtime-msbuild9-fa7cdded.tar.gz src/prepared
+RESULT: exit0
+$ makepkg --repackage --force --noconfirm
+RESULT: exit0
+$ /clang64/bin/python.exe -X utf8 src/metadataloadcontext9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+mingw-w64-clang-x86_64-dotnet-metadataloadcontext9: 20 total files, 0 altered files
+
+Delta: {"baseline_nuget_sha256": "a6ee3b8d64945cca9f112163cb83983758b10271bd0a4fdbc82454d861dc6d4f", "updated_nuget_sha256": "091b574e4207c48686f7bbf3080eb815b213acbfb71ea5b67db7e5d0635a3f8d", "unchanged_entry_sha256": {"System.Reflection.MetadataLoadContext.nuspec": "67fe3f7da8a9773a849f382ab54551bf9c1c01fbd0921453d6014fbeaef06bc4", "lib/net9.0/System.Reflection.MetadataLoadContext.dll": "1ae8a8e26892ecd7a1ab4b957b8acd65bf9876a8819006f47ad0086b72098285", "LICENSE.TXT": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310", "lib/net9.0/System.Reflection.MetadataLoadContext.pdb": "514875afdf10d28928f0bc8a350853c9752d77188794ab10e8083ba686b7688e", "THIRD-PARTY-NOTICES.TXT": "fa3e9d0a2c52476f04fe798d7dc4f6e7edb7b68a3d2f4d5f59a39bce957eedc8"}, "added_entries": ["lib/net9.0/System.Reflection.MetadataLoadContext.xml"], "all_prior_nuget_entry_bytes_unchanged": true, "xml_sha256": "3b361666c5ea88eea54b147d3869a730badfd9ef0b5a40152a241368e4259276"}
+Documentation: {"package_id": "Microsoft.Private.Intellisense", "version": "9.0.0-preview-20241010.1", "package_sha256": "227bc364165d241eeb122e410216e9cbdb955400402475477c506e7ce8c4117c", "member": "IntellisenseFiles/net/1033/System.Reflection.MetadataLoadContext.xml", "xml_sha256": "3b361666c5ea88eea54b147d3869a730badfd9ef0b5a40152a241368e4259276", "original_intellisense_policy": true, "no_implementation_binaries": true}
+
+Paired normal pacman-U installation:exit0;every installed archive payload byte verified.
+All288 terminal evidence hashes,source recipes/SRCINFO and frozen workflow entries verified.
+CodeDom retains its3 original nullable annotation differences;MetadataLoadContext has0.
+Other original framework profiles,original preview toolchains,remaining9.0.11 dependencies,full MSBuild/SDK10/PowerShell7.6 and all compatibility gates remain unfinished.

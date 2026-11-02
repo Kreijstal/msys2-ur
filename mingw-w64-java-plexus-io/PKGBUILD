@@ -1,0 +1,52 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=plexus-io
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=3.6.0
+pkgrel=1
+pkgdesc="Plexus IO resource and file mapper components, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://codehaus-plexus.github.io/plexus-io/'
+msys2_repository_url='https://github.com/codehaus-plexus/plexus-io'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-io")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jsr305"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-inject")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-io/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('7905ad8dfa443cc92d0526aa6d01735a4e171ea2ced8043ba72fd337131023a2')
+# the test resources contain symbolic links that bsdtar cannot create here
+noextract=("${_realname}-${pkgver}.tar.gz")
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "${_src}/src/test/resources/symlinks"
+  # test fixture
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.codehaus.plexus:plexus-io:${pkgver} src/main/java -u pom.xml -P sisu \
+    -c com.google.code.findbugs:jsr305 \
+    -- javax.inject:javax.inject org.codehaus.plexus:plexus-utils commons-io:commons-io
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream tests need JUnit 5 and plexus-testing
+  jb_loadcheck org.codehaus.plexus:plexus-io
+  unzip -p "$(jb_jarpath org.codehaus.plexus:plexus-io)" META-INF/sisu/javax.inject.Named \
+    | grep -q 'org.codehaus.plexus.components.io'
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-io
+}

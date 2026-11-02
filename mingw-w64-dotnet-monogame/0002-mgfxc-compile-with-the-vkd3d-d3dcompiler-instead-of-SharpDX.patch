@@ -1,0 +1,776 @@
+Subject: mgfxc: compile HLSL with the vkd3d d3dcompiler_47.dll instead of SharpDX
+
+diff --git a/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.sharpdx.cs b/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.sharpdx.cs
+index a8776b6..630064e 100644
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.sharpdx.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ConstantBufferData.sharpdx.cs
+@@ -7,7 +7,7 @@ namespace MonoGame.Effect
+ {
+     internal partial class ConstantBufferData
+     {
+-        public ConstantBufferData(SharpDX.D3DCompiler.ConstantBuffer cb)
++        public ConstantBufferData(D3D.ConstantBuffer cb)
+         {
+             Name = string.Empty;
+             Size = cb.Description.Size;
+@@ -31,7 +31,7 @@ namespace MonoGame.Effect
+                 var data = new byte[size];
+ 
+                 if (vdesc.Description.DefaultValue != IntPtr.Zero)
+-                    Marshal.Copy(vdesc.Description.DefaultValue, data, 0, (int)size);
++                    Marshal.Copy(vdesc.Description.DefaultValue, data, 0, (int)Math.Min(size, (uint)vdesc.Description.Size));
+ 
+                 param.data = data;
+ 
+@@ -47,7 +47,7 @@ namespace MonoGame.Effect
+                 ParameterOffset.Add(param.bufferOffset);
+         }
+ 
+-        private static EffectObject.d3dx_parameter GetParameterFromType(SharpDX.D3DCompiler.ShaderReflectionType type)
++        private static EffectObject.d3dx_parameter GetParameterFromType(D3D.ShaderReflectionType type)
+         {
+             var param = new EffectObject.d3dx_parameter();
+             param.rows = (uint)type.Description.RowCount;
+@@ -58,15 +58,15 @@ namespace MonoGame.Effect
+ 
+             switch (type.Description.Class)
+             {
+-                case SharpDX.D3DCompiler.ShaderVariableClass.Scalar:
++                case D3D.ShaderVariableClass.Scalar:
+                     param.class_ = EffectObject.D3DXPARAMETER_CLASS.SCALAR;
+                     break;
+ 
+-                case SharpDX.D3DCompiler.ShaderVariableClass.Vector:
++                case D3D.ShaderVariableClass.Vector:
+                     param.class_ = EffectObject.D3DXPARAMETER_CLASS.VECTOR;
+                     break;
+ 
+-                case SharpDX.D3DCompiler.ShaderVariableClass.MatrixColumns:
++                case D3D.ShaderVariableClass.MatrixColumns:
+                     param.class_ = EffectObject.D3DXPARAMETER_CLASS.MATRIX_COLUMNS;
+                     break;
+ 
+@@ -76,15 +76,15 @@ namespace MonoGame.Effect
+ 
+             switch (type.Description.Type)
+             {
+-                case SharpDX.D3DCompiler.ShaderVariableType.Bool:
++                case D3D.ShaderVariableType.Bool:
+                     param.type = EffectObject.D3DXPARAMETER_TYPE.BOOL;
+                     break;
+ 
+-                case SharpDX.D3DCompiler.ShaderVariableType.Float:
++                case D3D.ShaderVariableType.Float:
+                     param.type = EffectObject.D3DXPARAMETER_TYPE.FLOAT;
+                     break;
+ 
+-                case SharpDX.D3DCompiler.ShaderVariableType.Int:
++                case D3D.ShaderVariableType.Int:
+                     param.type = EffectObject.D3DXPARAMETER_TYPE.INT;
+                     break;
+ 
+diff --git a/Tools/MonoGame.Effect.Compiler/Effect/D3DCompiler.cs b/Tools/MonoGame.Effect.Compiler/Effect/D3DCompiler.cs
+new file mode 100644
+index 0000000..32ccb4c
+--- /dev/null
++++ b/Tools/MonoGame.Effect.Compiler/Effect/D3DCompiler.cs
+@@ -0,0 +1,429 @@
++// MonoGame - Copyright (C) MonoGame Foundation, Inc
++// This file is subject to the terms and conditions defined in
++// file 'LICENSE.txt', which is part of this source code package.
++
++// Minimal d3dcompiler_47 interop replacing SharpDX.D3DCompiler for mgfxc.
++//
++// Only what the effect compiler uses is bound: D3DCompile, D3DStripShader
++// and D3DReflect with ID3D11ShaderReflection (descriptions, constant
++// buffers, variables, types and resource bindings). The DLL is loaded by
++// full path from the vkd3d-based d3dcompiler_47.dll of the MSYS2
++// vkd3d-d3dcompiler package, never from System32, unless the
++// MGFXC_D3DCOMPILER environment variable names another DLL.
++
++using System;
++using System.Collections.Generic;
++using System.IO;
++using System.Runtime.InteropServices;
++using System.Text;
++
++namespace MonoGame.Effect.D3D
++{
++    [Flags]
++    internal enum ShaderFlags : uint
++    {
++        None = 0,
++        Debug = 1u << 0,
++        SkipValidation = 1u << 1,
++        SkipOptimization = 1u << 2,
++        PackMatrixRowMajor = 1u << 3,
++        PackMatrixColumnMajor = 1u << 4,
++        PartialPrecision = 1u << 5,
++        EnableBackwardsCompatibility = 1u << 12,
++        OptimizationLevel0 = 1u << 14,
++        OptimizationLevel1 = 0,
++        OptimizationLevel2 = (1u << 14) | (1u << 15),
++        OptimizationLevel3 = 1u << 15,
++    }
++
++    [Flags]
++    internal enum StripFlags : uint
++    {
++        CompilerStripReflectionData = 1,
++        CompilerStripDebugInformation = 2,
++        CompilerStripTestBlobs = 4,
++    }
++
++    internal enum ShaderInputType
++    {
++        ConstantBuffer = 0,
++        TextureBuffer = 1,
++        Texture = 2,
++        Sampler = 3,
++    }
++
++    internal enum ShaderResourceViewDimension
++    {
++        Unknown = 0,
++        Buffer = 1,
++        Texture1D = 2,
++        Texture1DArray = 3,
++        Texture2D = 4,
++        Texture2DArray = 5,
++        Texture2DMultisampled = 6,
++        Texture2DMultisampledArray = 7,
++        Texture3D = 8,
++        TextureCube = 9,
++        TextureCubeArray = 10,
++    }
++
++    internal enum ShaderVariableClass
++    {
++        Scalar = 0,
++        Vector = 1,
++        MatrixRows = 2,
++        MatrixColumns = 3,
++        Object = 4,
++        Struct = 5,
++    }
++
++    internal enum ShaderVariableType
++    {
++        Void = 0,
++        Bool = 1,
++        Int = 2,
++        Float = 3,
++    }
++
++    internal sealed class CompilationResult
++    {
++        public byte[]? Bytecode;
++        public string Message = string.Empty;
++    }
++
++    internal static unsafe class D3DCompiler
++    {
++        private static IntPtr _library;
++        private static delegate* unmanaged<void*, nuint, byte*, void*, void*, byte*, byte*, uint, uint, IntPtr*, IntPtr*, int> _compile;
++        private static delegate* unmanaged<void*, nuint, uint, IntPtr*, int> _strip;
++        private static delegate* unmanaged<void*, nuint, Guid*, IntPtr*, int> _reflect;
++
++        public static string LibraryPath { get; private set; } = string.Empty;
++
++        private static void Load()
++        {
++            if (_library != IntPtr.Zero)
++                return;
++
++            var path = Environment.GetEnvironmentVariable("MGFXC_D3DCOMPILER");
++            if (string.IsNullOrEmpty(path))
++            {
++                var prefix = MonoGame.Msys2.Msys2Native.Prefix;
++                if (prefix != null)
++                    path = Path.Combine(prefix, "lib", "vkd3d-d3dcompiler", "d3dcompiler_47.dll");
++            }
++
++            if (string.IsNullOrEmpty(path) || !File.Exists(path))
++                throw new DllNotFoundException(
++                    "d3dcompiler_47.dll from the MSYS2 vkd3d-d3dcompiler package was not found " +
++                    $"(looked for '{path}'). Install mingw-w64-clang-x86_64-vkd3d-d3dcompiler or set " +
++                    "MGFXC_D3DCOMPILER to the full path of a d3dcompiler_47.dll.");
++
++            _library = NativeLibrary.Load(path);
++            LibraryPath = path;
++            _compile = (delegate* unmanaged<void*, nuint, byte*, void*, void*, byte*, byte*, uint, uint, IntPtr*, IntPtr*, int>)NativeLibrary.GetExport(_library, "D3DCompile");
++            _strip = (delegate* unmanaged<void*, nuint, uint, IntPtr*, int>)NativeLibrary.GetExport(_library, "D3DStripShader");
++            _reflect = (delegate* unmanaged<void*, nuint, Guid*, IntPtr*, int>)NativeLibrary.GetExport(_library, "D3DReflect");
++        }
++
++        private static byte[] Utf8Z(string s)
++        {
++            var bytes = new byte[Encoding.UTF8.GetByteCount(s) + 1];
++            Encoding.UTF8.GetBytes(s, 0, s.Length, bytes, 0);
++            return bytes;
++        }
++
++        // ID3DBlob: IUnknown + GetBufferPointer (slot 3) + GetBufferSize (slot 4).
++        internal static byte[] BlobToArray(IntPtr blob)
++        {
++            var vtbl = *(void***)blob;
++            var data = ((delegate* unmanaged<IntPtr, void*>)vtbl[3])(blob);
++            var size = ((delegate* unmanaged<IntPtr, nuint>)vtbl[4])(blob);
++            var result = new byte[(int)size];
++            if (size > 0)
++                Marshal.Copy((IntPtr)data, result, 0, (int)size);
++            return result;
++        }
++
++        internal static void Release(IntPtr unknown)
++        {
++            if (unknown == IntPtr.Zero)
++                return;
++            var vtbl = *(void***)unknown;
++            ((delegate* unmanaged<IntPtr, uint>)vtbl[2])(unknown);
++        }
++
++        /// <summary>
++        /// D3DCompile of already preprocessed source (mgfxc runs its own
++        /// preprocessor, so no defines and no include handler are passed).
++        /// </summary>
++        public static CompilationResult Compile(string source, string entryPoint, string profile, ShaderFlags flags, string sourceName)
++        {
++            Load();
++            var src = Encoding.UTF8.GetBytes(source);
++            var name = Utf8Z(sourceName ?? string.Empty);
++            var entry = Utf8Z(entryPoint);
++            var target = Utf8Z(profile);
++            IntPtr code = IntPtr.Zero, errors = IntPtr.Zero;
++            int hr;
++            fixed (byte* pSrc = src, pName = name, pEntry = entry, pTarget = target)
++                hr = _compile(pSrc, (nuint)src.Length, pName, null, null, pEntry, pTarget, (uint)flags, 0, &code, &errors);
++
++            var result = new CompilationResult();
++            if (errors != IntPtr.Zero)
++            {
++                var text = BlobToArray(errors);
++                result.Message = Encoding.UTF8.GetString(text).TrimEnd('\0');
++                Release(errors);
++            }
++            if (hr >= 0 && code != IntPtr.Zero)
++                result.Bytecode = BlobToArray(code);
++            else if (result.Message.Length == 0)
++                result.Message = $"D3DCompile failed with HRESULT 0x{hr:X8}.";
++            Release(code);
++            return result;
++        }
++
++        /// <summary>D3DStripShader; returns null when stripping is not possible (SM3 and below).</summary>
++        public static byte[]? Strip(byte[] bytecode, StripFlags flags)
++        {
++            Load();
++            IntPtr blob = IntPtr.Zero;
++            int hr;
++            fixed (byte* p = bytecode)
++                hr = _strip(p, (nuint)bytecode.Length, (uint)flags, &blob);
++            if (hr < 0 || blob == IntPtr.Zero)
++                return null;
++            var result = BlobToArray(blob);
++            Release(blob);
++            return result;
++        }
++
++        internal static IntPtr Reflect(byte[] bytecode)
++        {
++            Load();
++            // IID_ID3D11ShaderReflection
++            var iid = new Guid("8d536ca1-0cca-4956-a837-786963755584");
++            IntPtr reflector = IntPtr.Zero;
++            int hr;
++            fixed (byte* p = bytecode)
++                hr = _reflect(p, (nuint)bytecode.Length, &iid, &reflector);
++            if (hr < 0 || reflector == IntPtr.Zero)
++                throw new InvalidOperationException($"D3DReflect failed with HRESULT 0x{hr:X8}.");
++            return reflector;
++        }
++
++        internal static string? PtrToString(IntPtr p) => p == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(p);
++    }
++
++    internal struct ShaderDescription
++    {
++        public int ConstantBuffers;
++        public int BoundResources;
++    }
++
++    internal struct InputBindingDescription
++    {
++        public string Name;
++        public ShaderInputType Type;
++        public int BindPoint;
++        public int BindCount;
++        public ShaderResourceViewDimension Dimension;
++    }
++
++    internal struct ConstantBufferDescription
++    {
++        public string? Name;
++        public int VariableCount;
++        public int Size;
++    }
++
++    internal struct ShaderVariableDescription
++    {
++        public string Name;
++        public int StartOffset;
++        public int Size;
++        public IntPtr DefaultValue;
++    }
++
++    internal struct ShaderTypeDescription
++    {
++        public ShaderVariableClass Class;
++        public ShaderVariableType Type;
++        public int RowCount;
++        public int ColumnCount;
++        public int ElementCount;
++        public int MemberCount;
++        public int Offset;
++        public string? Name;
++    }
++
++    /// <summary>ID3D11ShaderReflection wrapper (IUnknown, released on Dispose).</summary>
++    internal sealed unsafe class ShaderReflection : IDisposable
++    {
++        private IntPtr _ptr;
++
++        public ShaderReflection(byte[] bytecode)
++        {
++            _ptr = D3DCompiler.Reflect(bytecode);
++            // D3D11_SHADER_DESC: UINT Version; LPCSTR Creator; UINT Flags;
++            // UINT ConstantBuffers; UINT BoundResources; ... (zero-padded scratch)
++            var buf = stackalloc byte[512];
++            new Span<byte>(buf, 512).Clear();
++            var vtbl = *(void***)_ptr;
++            var hr = ((delegate* unmanaged<IntPtr, IntPtr, int>)vtbl[3])(_ptr, (IntPtr)buf);
++            if (hr < 0)
++                throw new InvalidOperationException($"ID3D11ShaderReflection::GetDesc failed with HRESULT 0x{hr:X8}.");
++            Description = new ShaderDescription
++            {
++                ConstantBuffers = *(int*)(buf + 20),
++                BoundResources = *(int*)(buf + 24),
++            };
++        }
++
++        public ShaderDescription Description { get; }
++
++        public InputBindingDescription GetResourceBindingDescription(int index)
++        {
++            // D3D11_SHADER_INPUT_BIND_DESC: LPCSTR Name; D3D_SHADER_INPUT_TYPE Type;
++            // UINT BindPoint; UINT BindCount; UINT uFlags; ReturnType; Dimension; NumSamples
++            var buf = stackalloc byte[64];
++            new Span<byte>(buf, 64).Clear();
++            var vtbl = *(void***)_ptr;
++            var hr = ((delegate* unmanaged<IntPtr, uint, IntPtr, int>)vtbl[6])(_ptr, (uint)index, (IntPtr)buf);
++            if (hr < 0)
++                throw new InvalidOperationException($"GetResourceBindingDesc({index}) failed with HRESULT 0x{hr:X8}.");
++            return new InputBindingDescription
++            {
++                Name = D3DCompiler.PtrToString(*(IntPtr*)buf) ?? string.Empty,
++                Type = (ShaderInputType)(*(int*)(buf + 8)),
++                BindPoint = *(int*)(buf + 12),
++                BindCount = *(int*)(buf + 16),
++                Dimension = (ShaderResourceViewDimension)(*(int*)(buf + 28)),
++            };
++        }
++
++        public ConstantBuffer GetConstantBuffer(int index)
++        {
++            var vtbl = *(void***)_ptr;
++            var cb = ((delegate* unmanaged<IntPtr, uint, IntPtr>)vtbl[4])(_ptr, (uint)index);
++            return new ConstantBuffer(cb);
++        }
++
++        public void Dispose()
++        {
++            D3DCompiler.Release(_ptr);
++            _ptr = IntPtr.Zero;
++        }
++    }
++
++    /// <summary>ID3D11ShaderReflectionConstantBuffer (not reference counted).</summary>
++    internal sealed unsafe class ConstantBuffer
++    {
++        private readonly IntPtr _ptr;
++
++        internal ConstantBuffer(IntPtr ptr)
++        {
++            _ptr = ptr;
++            // D3D11_SHADER_BUFFER_DESC: LPCSTR Name; D3D_CBUFFER_TYPE Type; UINT Variables; UINT Size; UINT uFlags
++            var buf = stackalloc byte[32];
++            new Span<byte>(buf, 32).Clear();
++            var vtbl = *(void***)_ptr;
++            var hr = ((delegate* unmanaged<IntPtr, IntPtr, int>)vtbl[0])(_ptr, (IntPtr)buf);
++            if (hr < 0)
++                throw new InvalidOperationException($"ID3D11ShaderReflectionConstantBuffer::GetDesc failed with HRESULT 0x{hr:X8}.");
++            Description = new ConstantBufferDescription
++            {
++                Name = D3DCompiler.PtrToString(*(IntPtr*)buf),
++                VariableCount = *(int*)(buf + 12),
++                Size = *(int*)(buf + 16),
++            };
++        }
++
++        public ConstantBufferDescription Description { get; }
++
++        public ShaderReflectionVariable GetVariable(int index)
++        {
++            var vtbl = *(void***)_ptr;
++            return new ShaderReflectionVariable(((delegate* unmanaged<IntPtr, uint, IntPtr>)vtbl[1])(_ptr, (uint)index));
++        }
++    }
++
++    /// <summary>ID3D11ShaderReflectionVariable (not reference counted).</summary>
++    internal sealed unsafe class ShaderReflectionVariable
++    {
++        private readonly IntPtr _ptr;
++
++        internal ShaderReflectionVariable(IntPtr ptr)
++        {
++            _ptr = ptr;
++            // D3D11_SHADER_VARIABLE_DESC: LPCSTR Name; UINT StartOffset; UINT Size;
++            // UINT uFlags; LPVOID DefaultValue; UINT StartTexture; ...
++            var buf = stackalloc byte[64];
++            new Span<byte>(buf, 64).Clear();
++            var vtbl = *(void***)_ptr;
++            var hr = ((delegate* unmanaged<IntPtr, IntPtr, int>)vtbl[0])(_ptr, (IntPtr)buf);
++            if (hr < 0)
++                throw new InvalidOperationException($"ID3D11ShaderReflectionVariable::GetDesc failed with HRESULT 0x{hr:X8}.");
++            Description = new ShaderVariableDescription
++            {
++                Name = D3DCompiler.PtrToString(*(IntPtr*)buf) ?? string.Empty,
++                StartOffset = *(int*)(buf + 8),
++                Size = *(int*)(buf + 12),
++                DefaultValue = *(IntPtr*)(buf + 24),
++            };
++        }
++
++        public ShaderVariableDescription Description { get; }
++
++        public ShaderReflectionType GetVariableType()
++        {
++            var vtbl = *(void***)_ptr;
++            return new ShaderReflectionType(((delegate* unmanaged<IntPtr, IntPtr>)vtbl[1])(_ptr));
++        }
++    }
++
++    /// <summary>ID3D11ShaderReflectionType (not reference counted).</summary>
++    internal sealed unsafe class ShaderReflectionType
++    {
++        private readonly IntPtr _ptr;
++
++        internal ShaderReflectionType(IntPtr ptr)
++        {
++            _ptr = ptr;
++            // D3D11_SHADER_TYPE_DESC: Class; Type; UINT Rows; Columns; Elements;
++            // Members; Offset; LPCSTR Name
++            var buf = stackalloc byte[48];
++            new Span<byte>(buf, 48).Clear();
++            var vtbl = *(void***)_ptr;
++            var hr = ((delegate* unmanaged<IntPtr, IntPtr, int>)vtbl[0])(_ptr, (IntPtr)buf);
++            if (hr < 0)
++                throw new InvalidOperationException($"ID3D11ShaderReflectionType::GetDesc failed with HRESULT 0x{hr:X8}.");
++            Description = new ShaderTypeDescription
++            {
++                Class = (ShaderVariableClass)(*(int*)buf),
++                Type = (ShaderVariableType)(*(int*)(buf + 4)),
++                RowCount = *(int*)(buf + 8),
++                ColumnCount = *(int*)(buf + 12),
++                ElementCount = *(int*)(buf + 16),
++                MemberCount = *(int*)(buf + 20),
++                Offset = *(int*)(buf + 24),
++                Name = D3DCompiler.PtrToString(*(IntPtr*)(buf + 32)),
++            };
++        }
++
++        public ShaderTypeDescription Description { get; }
++
++        public ShaderReflectionType GetMemberType(int index)
++        {
++            var vtbl = *(void***)_ptr;
++            return new ShaderReflectionType(((delegate* unmanaged<IntPtr, uint, IntPtr>)vtbl[1])(_ptr, (uint)index));
++        }
++
++        public string? GetMemberTypeName(int index)
++        {
++            var vtbl = *(void***)_ptr;
++            return D3DCompiler.PtrToString(((delegate* unmanaged<IntPtr, uint, IntPtr>)vtbl[3])(_ptr, (uint)index));
++        }
++    }
++}
+diff --git a/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.hlsl.cs b/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.hlsl.cs
+index 1ed7e88..829d448 100644
+--- a/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.hlsl.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/EffectObject.hlsl.cs
+@@ -1,7 +1,7 @@
+ ﻿using System;
+ using System.Linq;
+ using MonoGame.Effect.Compiler;
+-using SharpDX.D3DCompiler;
++using MonoGame.Effect.D3D;
+ 
+ namespace MonoGame.Effect
+ {
+@@ -9,7 +9,7 @@ namespace MonoGame.Effect
+     {
+         public static byte[] CompileHLSL(ShaderResult shaderResult, string shaderFunction, string shaderProfile, ref string errorsAndWarnings)
+         {
+-            ShaderBytecode shaderByteCode;
++            byte[] shaderByteCode;
+             try
+             {
+                 ShaderFlags shaderFlags = 0;
+@@ -32,10 +32,9 @@ namespace MonoGame.Effect
+                     shaderFlags |= ShaderFlags.OptimizationLevel3;
+                 }
+ 
+-                // Compile the shader into bytecode.                
+-                var result = (Environment.OSVersion.Platform != PlatformID.Unix) ?
+-                    ShaderBytecode.Compile(shaderResult.FileContent, shaderFunction, shaderProfile, shaderFlags, 0, null, null, shaderResult.FilePath) :
+-                    WineHelper.RunFxc2(shaderResult.FileContent, shaderFunction, shaderProfile, shaderFlags, shaderResult.FilePath);
++                // Compile the shader into bytecode with the vkd3d d3dcompiler_47.dll
++                // (MSYS2 vkd3d-d3dcompiler package) instead of SharpDX/fxc.
++                var result = D3DCompiler.Compile(shaderResult.FileContent, shaderFunction, shaderProfile, shaderFlags, shaderResult.FilePath);
+ 
+                 // Store all the errors and warnings to log out later.
+                 errorsAndWarnings += result.Message;
+@@ -53,7 +52,7 @@ namespace MonoGame.Effect
+             }
+ 
+             // Return a copy of the shader bytecode.
+-            return shaderByteCode.Data.ToArray();
++            return (byte[])shaderByteCode.Clone();
+         }
+     }
+ }
+diff --git a/Tools/MonoGame.Effect.Compiler/Effect/ExternalTools.Msys2.cs b/Tools/MonoGame.Effect.Compiler/Effect/ExternalTools.Msys2.cs
+new file mode 100644
+index 0000000..4e5265f
+--- /dev/null
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ExternalTools.Msys2.cs
+@@ -0,0 +1,121 @@
++// MonoGame - Copyright (C) MonoGame Foundation, Inc
++// This file is subject to the terms and conditions defined in
++// file 'LICENSE.txt', which is part of this source code package.
++
++// MSYS2 packaging: replaces the MonoGame.Tool.* NuGet packages (which carry
++// prebuilt crunch/basisu/ffmpeg/ffprobe/dxc executables) with the same
++// Run() API launching executables from the MSYS2 prefix of the .NET runtime
++// ($MINGW_PREFIX/bin), then PATH. A tool that is not installed fails with a
++// clear message; crunch, basisu and dxc have no MSYS2 package, so the
++// content features that need them (DXT3/ETC texture compression, mobile
++// texture formats, DirectX 12/Vulkan shader profiles) are unavailable.
++
++using System;
++using System.Diagnostics;
++using System.IO;
++using System.Text;
++
++namespace MonoGame.Tool
++{
++    internal static class Msys2Tool
++    {
++        public static string? Find(string exe)
++        {
++            var prefix = MonoGame.Msys2.Msys2Native.Prefix;
++            if (prefix != null)
++            {
++                var candidate = Path.Combine(prefix, "bin", exe + ".exe");
++                if (File.Exists(candidate))
++                    return candidate;
++            }
++
++            var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
++            foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
++            {
++                try
++                {
++                    var candidate = Path.Combine(dir.Trim('"'), exe + ".exe");
++                    if (File.Exists(candidate))
++                        return candidate;
++                }
++                catch (ArgumentException)
++                {
++                }
++            }
++            return null;
++        }
++
++        public static int Run(string exe, string what, string args, out string stdout, out string stderr, string? stdin, string? workingDirectory)
++        {
++            var path = Find(exe);
++            if (path == null)
++            {
++                stdout = string.Empty;
++                stderr = $"{exe}.exe ({what}) was not found in the MSYS2 prefix or on PATH. " +
++                         "This MonoGame build does not ship prebuilt tool binaries; install the tool to use this content feature.";
++                return -1;
++            }
++
++            var info = new ProcessStartInfo(path, args)
++            {
++                UseShellExecute = false,
++                CreateNoWindow = true,
++                RedirectStandardOutput = true,
++                RedirectStandardError = true,
++                RedirectStandardInput = stdin != null,
++                StandardOutputEncoding = Encoding.UTF8,
++                StandardErrorEncoding = Encoding.UTF8,
++            };
++            if (!string.IsNullOrEmpty(workingDirectory))
++                info.WorkingDirectory = workingDirectory;
++
++            var outBuf = new StringBuilder();
++            var errBuf = new StringBuilder();
++            using var process = new Process { StartInfo = info };
++            process.OutputDataReceived += (_, e) => { if (e.Data != null) lock (outBuf) outBuf.AppendLine(e.Data); };
++            process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (errBuf) errBuf.AppendLine(e.Data); };
++            process.Start();
++            process.BeginOutputReadLine();
++            process.BeginErrorReadLine();
++            if (stdin != null)
++            {
++                process.StandardInput.Write(stdin);
++                process.StandardInput.Close();
++            }
++            process.WaitForExit();
++            stdout = outBuf.ToString();
++            stderr = errBuf.ToString();
++            return process.ExitCode;
++        }
++    }
++
++    internal static class FFmpeg
++    {
++        public static int Run(string args, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
++            => Msys2Tool.Run("ffmpeg", "MSYS2 ffmpeg package", args, out stdout, out stderr, stdin, workingDirectory);
++    }
++
++    internal static class FFprobe
++    {
++        public static int Run(string args, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
++            => Msys2Tool.Run("ffprobe", "MSYS2 ffmpeg package", args, out stdout, out stderr, stdin, workingDirectory);
++    }
++
++    internal static class Crunch
++    {
++        public static int Run(string args, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
++            => Msys2Tool.Run("crunch", "texture compressor for DXT3/ETC1/ETC2, not packaged", args, out stdout, out stderr, stdin, workingDirectory);
++    }
++
++    internal static class Basisu
++    {
++        public static int Run(string args, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
++            => Msys2Tool.Run("basisu", "Basis Universal texture compressor for ASTC/PVRTC/ATC/BC7, not packaged", args, out stdout, out stderr, stdin, workingDirectory);
++    }
++
++    internal static class Dxc
++    {
++        public static int Run(string args, out string stdout, out string stderr, string? stdin = null, string? workingDirectory = null)
++            => Msys2Tool.Run("dxc", "DirectX Shader Compiler for the DirectX_12/Vulkan profiles, not packaged", args, out stdout, out stderr, stdin, workingDirectory);
++    }
++}
+diff --git a/Tools/MonoGame.Effect.Compiler/Effect/ShaderData.sharpdx.cs b/Tools/MonoGame.Effect.Compiler/Effect/ShaderData.sharpdx.cs
+index f58f26a..c2250c7 100644
+--- a/Tools/MonoGame.Effect.Compiler/Effect/ShaderData.sharpdx.cs
++++ b/Tools/MonoGame.Effect.Compiler/Effect/ShaderData.sharpdx.cs
+@@ -1,5 +1,5 @@
+ using System.Collections.Generic;
+-using SharpDX.Direct3D;
++using MonoGame.Effect.D3D;
+ using MonoGame.Effect.TPGParser;
+ 
+ namespace MonoGame.Effect
+@@ -12,16 +12,15 @@ namespace MonoGame.Effect
+             dxshader._attributes = new Attribute[0];
+ 
+             // Strip the bytecode we're gonna save!
+-            var stripFlags = SharpDX.D3DCompiler.StripFlags.CompilerStripReflectionData |
+-                             SharpDX.D3DCompiler.StripFlags.CompilerStripTestBlobs;
++            var stripFlags = StripFlags.CompilerStripReflectionData |
++                             StripFlags.CompilerStripTestBlobs;
+ 
+             if (!debug)
+-                stripFlags |= SharpDX.D3DCompiler.StripFlags.CompilerStripDebugInformation;
++                stripFlags |= StripFlags.CompilerStripDebugInformation;
+ 
+-            using (var original = new SharpDX.D3DCompiler.ShaderBytecode(byteCode))
+             {
+                 // Strip the bytecode for saving to disk.
+-                var stripped = original.Strip(stripFlags);
++                var stripped = D3DCompiler.Strip(byteCode, stripFlags);
+                 {
+                     // Only SM4 and above works with strip... so this can return null!
+                     if (stripped != null)
+@@ -43,14 +42,14 @@ namespace MonoGame.Effect
+                 }
+ 
+                 // Use reflection to get details of the shader.
+-                using (var refelect = new SharpDX.D3DCompiler.ShaderReflection(byteCode))
++                using (var refelect = new ShaderReflection(byteCode))
+                 {
+                     // Get the samplers.
+                     var samplers = new List<Sampler>();
+                     for (var i = 0; i < refelect.Description.BoundResources; i++)
+                     {
+                         var rdesc = refelect.GetResourceBindingDescription(i);
+-                        if (rdesc.Type == SharpDX.D3DCompiler.ShaderInputType.Texture)
++                        if (rdesc.Type == ShaderInputType.Texture)
+                         {
+                             var samplerName = rdesc.Name;
+ 
+@@ -85,7 +84,7 @@ namespace MonoGame.Effect
+                             {
+                                 var samplerrdesc = refelect.GetResourceBindingDescription(j);
+ 
+-                                if (samplerrdesc.Type == SharpDX.D3DCompiler.ShaderInputType.Sampler && 
++                                if (samplerrdesc.Type == ShaderInputType.Sampler && 
+                                     samplerrdesc.Name == samplerName)
+                                 {
+                                     sampler.samplerSlot = samplerrdesc.BindPoint;
+diff --git a/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj b/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj
+index 35f38da..6129c39 100644
+--- a/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj
++++ b/Tools/MonoGame.Effect.Compiler/MonoGame.Effect.Compiler.csproj
+@@ -15,6 +15,7 @@
+     <ImplicitUsings>enable</ImplicitUsings>
+     <Nullable>enable</Nullable>
+     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
++    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+   </PropertyGroup>
+ 
+   <PropertyGroup>
+@@ -26,6 +27,9 @@
+ 
+   <ItemGroup>
+     <Compile Include="..\..\MonoGame.Framework.Content.Pipeline\ExternalTool.cs" />
++    <Compile Include="..\..\MonoGame.Framework\Platform\Utilities\Msys2Native.cs" Link="Msys2Native.cs" />
++    <!-- MSYS2: Windows only, shaders are compiled with the vkd3d d3dcompiler_47.dll, no Wine/fxc. -->
++    <Compile Remove="Effect\WineHelper.cs" />
+     <Compile Include="..\..\MonoGame.Framework.Content.Pipeline\LoadedTypeCollection.cs">
+       <Link>LoadedTypeCollection.cs</Link>
+     </Compile>
+@@ -40,12 +44,11 @@
+     </ProjectReference>
+   </ItemGroup>
+ 
+-  <ItemGroup>
+-    <PackageReference Include="MonoGame.Library.MojoShader" Version="1.0.0.7" />
+-    <PackageReference Include="MonoGame.Tool.Dxc" Version="1.9.2607.1" />
+-    <PackageReference Include="SharpDX" Version="4.2.0" />
+-    <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
+-  </ItemGroup>
++  <!--
++    MSYS2: MonoGame.Library.MojoShader -> libmojoshader.dll (monogame-mojoshader package),
++    SharpDX.D3DCompiler -> Effect/D3DCompiler.cs on the vkd3d d3dcompiler_47.dll,
++    MonoGame.Tool.Dxc -> Effect/ExternalTools.Msys2.cs (dxc.exe from PATH if any).
++  -->
+   
+   <Import Project="..\..\external\CppNet\CppNet.targets" />
+ 

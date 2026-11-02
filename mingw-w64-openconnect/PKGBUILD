@@ -1,0 +1,129 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+# Based on https://github.com/msys2/MINGW-packages/pull/20607 by
+# Marios Paouris <mspaourh@gmail.com>
+
+# openconnect needs a TUN driver at run time, which it loads on demand:
+#   - Windows 10/11: the WireGuard-signed wintun.dll (or TAP-Windows6) is
+#     assumed to be present already; it is not bundled here.
+#   - ReactOS (or Windows in test-signing mode): the optional
+#     mingw-w64-wintun package installs a source-built wintun.dll, with the
+#     driver embedded, into ${MINGW_PREFIX}/bin next to openconnect.exe.
+# The upstream build would download the signed wintun.dll from wintun.net and
+# install it as bin/wintun.dll; that is disabled (ac_cv_prog_have_unzip=no),
+# which also keeps the file from clashing with mingw-w64-wintun.
+
+_realname=openconnect
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=9.21
+pkgrel=1
+_vpnc_scripts_commit=6cdb2fe2d75be324564fe27ff85a5e1bb17a66b0
+pkgdesc="Client for Cisco AnyConnect, Juniper/Pulse, GlobalProtect, F5, Fortinet and Array VPNs (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://www.infradead.org/openconnect/'
+msys2_repository_url='https://gitlab.com/openconnect/openconnect'
+msys2_references=('cpe: cpe:/a:infradead:openconnect')
+license=('spdx:LGPL-2.1-only AND GPL-2.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-gettext-runtime"
+         "${MINGW_PACKAGE_PREFIX}-gmp"
+         "${MINGW_PACKAGE_PREFIX}-gnutls"
+         "${MINGW_PACKAGE_PREFIX}-libxml2"
+         "${MINGW_PACKAGE_PREFIX}-lz4"
+         "${MINGW_PACKAGE_PREFIX}-nettle"
+         "${MINGW_PACKAGE_PREFIX}-p11-kit"
+         "${MINGW_PACKAGE_PREFIX}-stoken"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "make")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python: libexec/openconnect/tncc-*.py Juniper/Pulse host checker")
+if [[ ${MINGW_PACKAGE_PREFIX} == *-ucrt-* || ${MINGW_PACKAGE_PREFIX} == *-w64-x86_64 ]]; then
+  # mingw-w64-wintun is built with GCC only (ucrt64/mingw64)
+  optdepends+=("${MINGW_PACKAGE_PREFIX}-wintun: source-built Wintun TUN driver, for ReactOS or test-signed Windows")
+fi
+install=${_realname}.install
+source=("https://www.infradead.org/openconnect/download/${_realname}-${pkgver}.tar.gz"{,.asc}
+        "vpnc-script-win-${_vpnc_scripts_commit}.js::https://gitlab.com/openconnect/vpnc-scripts/-/raw/${_vpnc_scripts_commit}/vpnc-script-win.js"
+        "0001-wintun-also-look-for-wintun.dll-next-to-libopenconne.patch"
+        "0002-compat-only-include-sec_api-stdlib_s.h-when-it-exist.patch")
+sha256sums=('5b32369467db6e5f317aa1ed12cfcbb81ed00bdbc765450b6bfcbdc300944a58'
+            'SKIP'
+            'e196fdf0cc8b325180154535f843034dc0ae9eb43ead9980adfcfc57c58069b2'
+            '213bff4f877b08e603f5e472799544a1bfbe81fa294fd07416b0a18f2f5d5ad4'
+            '5a32fbb24ccc307a9087d0ae6d681d0a2322f3fd2e473c9fa275737c02f36dda')
+validpgpkeys=('BE07D9FD54809AB2C4B0FF5F63762CDA67E2F359') # David Woodhouse <dwmw2@infradead.org>
+
+prepare() {
+  cd "${srcdir}/${_realname}-${pkgver}"
+  # 0001: look for wintun.dll next to openconnect.exe (upstream), then next
+  #       to libopenconnect, then in System32
+  # 0002: current mingw-w64 no longer ships sec_api/stdlib_s.h
+  patch -Np1 -i "${srcdir}/0001-wintun-also-look-for-wintun.dll-next-to-libopenconne.patch"
+  patch -Np1 -i "${srcdir}/0002-compat-only-include-sec_api-stdlib_s.h-when-it-exist.patch"
+}
+
+build() {
+  mkdir -p "${srcdir}/build-${MSYSTEM}" && cd "${srcdir}/build-${MSYSTEM}"
+
+  # Pinned vpnc-script-win.js instead of the Makefile's curl/jq download;
+  # installed as bin/vpnc-script-win.js, the default script path, which
+  # openconnect resolves relative to its own executable.
+  cp "${srcdir}/vpnc-script-win-${_vpnc_scripts_commit}.js" vpnc-script-win.js
+
+  # ac_cv_prog_have_unzip=no: never download/bundle the prebuilt wintun.dll
+  # lt_cv_deplibs_check_method=pass_all: libtool's file-magic test runs
+  #   "file -L", which mingw-w64-file 5.48 rejects when it comes first in
+  #   PATH; libtool then drops the import libraries and silently builds
+  #   libopenconnect static-only
+  ../${_realname}-${pkgver}/configure \
+    --prefix="${MINGW_PREFIX}" \
+    --build="${MINGW_CHOST}" \
+    --host="${MINGW_CHOST}" \
+    --sbindir="${MINGW_PREFIX}/bin" \
+    --disable-dependency-tracking \
+    --disable-static \
+    --disable-nsis-installer \
+    --disable-docs \
+    --with-gnutls \
+    --without-openssl \
+    --without-libproxy \
+    --without-libpskc \
+    --without-gssapi \
+    --with-builtin-json \
+    --with-vpnc-script=vpnc-script-win.js \
+    ac_cv_prog_have_unzip=no \
+    lt_cv_deplibs_check_method=pass_all
+
+  # version.sh appends this instead of "-unknown"
+  RPM_PACKAGE_VERSION=${pkgver} RPM_PACKAGE_RELEASE=${pkgrel} make
+}
+
+check() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  # libopenconnect must come out as a DLL, not static-only
+  objdump -p .libs/openconnect.exe | grep -q 'DLL Name: libopenconnect-5.dll'
+
+  # Runs: symbols, autocompletion and the C tests lzstest, seqtest, buftest
+  # and the read-only Windows list-taps/adapter-fallback.
+  # Auto-skipped by configure: the netns/cwrap/ocserv/Flask/PPP/TPM tests
+  # (need Linux namespaces, socket_wrapper LD_PRELOAD or pppd),
+  # bad_dtls_test (OpenSSL only), and wintun-names, which would create real
+  # Wintun adapters (disabled together with the wintun.dll download).
+  #
+  # autocompletion compares "$(openconnect --autocomplete ...)" with
+  # LF-separated strings; the Windows CRT writes CRLF to stdout, so run it
+  # through a wrapper that drops the CRs.
+  printf '#!/bin/sh\n"%s/openconnect.exe" "$@" | tr -d "\\r"\n' "${PWD}" \
+    > tests/openconnect-nocr
+  chmod +x tests/openconnect-nocr
+  OPENCONNECT="${PWD}/tests/openconnect-nocr" make check
+}
+
+package() {
+  cd "${srcdir}/build-${MSYSTEM}"
+  make DESTDIR="${pkgdir}" install
+
+  install -Dm644 "${srcdir}/${_realname}-${pkgver}/COPYING.LGPL" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING.LGPL"
+}

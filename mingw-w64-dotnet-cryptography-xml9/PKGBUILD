@@ -1,0 +1,49 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-cryptography-xml9
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=9.0.11
+pkgrel=1
+pkgdesc='Source original NET9 CryptographyXml servicing profile for MSBuild18'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime10-bootstrap>=10.0.5-1"
+         "${MINGW_PACKAGE_PREFIX}-dotnet-pkcs9=9.0.11")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference9-servicing=9.0.11"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-openssl"
+             "${MINGW_PACKAGE_PREFIX}-python")
+options=('!strip' '!lto' '!buildflags')
+source=('runtime-msbuild9-fa7cdded.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/fa7cdded37981a97cec9a3e233c4a6af58a91c57'
+        'intellisense9-20241010.1.nupkg::https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9-transport/nuget/v3/flat2/microsoft.private.intellisense/9.0.0-preview-20241010.1/microsoft.private.intellisense.9.0.0-preview-20241010.1.nupkg'
+        'cryptography-xml9-source-1.tar.gz')
+noextract=('runtime-msbuild9-fa7cdded.tar.gz' 'intellisense9-20241010.1.nupkg')
+sha256sums=('63ab12fafdec8559d59d25e21ddaf0edbde90d6c538b44d4cbb6f693a61e90df'
+            '227bc364165d241eeb122e410216e9cbdb955400402475477c506e7ce8c4117c'
+            'b0a3b414c38347d9ffc4ca9e75518efeed4daae4bedbcd002eb3192623e6c914')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/cryptography-xml9-workflow/prepare.py")" "$(cygpath -am "$srcdir/runtime-msbuild9-fa7cdded.tar.gz")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/intellisense9-20241010.1.nupkg")" > "$srcdir/prepare.log" 2>&1
+}
+build() {
+  bash "$srcdir/cryptography-xml9-workflow/build.sh" "$srcdir/prepared" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/cryptography-xml9-workflow/check.py")" "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/prepared/check")" > "$srcdir/check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/cryptography-xml9-workflow/audit.py")" "$(cygpath -am "$srcdir/runtime-msbuild9-fa7cdded.tar.gz")" "$(cygpath -am "$srcdir/prepared")" > "$srcdir/audit.log" 2>&1
+}
+package() {
+  local feed="$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$feed" "$doc"
+  install -m644 "$srcdir/prepared/feed/system.security.cryptography.xml.9.0.11.nupkg" "$feed/"
+  install -m644 "$srcdir/prepared/"{documentation-inputs,extraction,source-audit,version-build-inputs,assembly-version-policy,dependency-inputs}.json "$doc/"
+  install -m644 "$srcdir/prepared/build/results.json" "$doc/build-inputs.json"
+  install -m644 "$srcdir/prepared/check/results.json" "$doc/build-consumer-results.json"
+  install -m644 "$srcdir/cryptography-xml9-workflow/README.md" "$doc/"
+  install -Dm644 "$srcdir/prepared/r/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+  install -Dm644 "$srcdir/prepared/r/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+}

@@ -1,0 +1,36 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-genfacades10-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=10.0.5
+pkgrel=1
+pkgdesc='Original runtime10 Arcade GenFacades tasks, source NET8 bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/arcade'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn414=4.14.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-corelib10-bootstrap=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5" 'python')
+options=('!strip' '!lto' '!buildflags' '!debug')
+source=('arcade-runtime10-4bf37ce6.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/4bf37ce670528cf2aef4d9b1cd892554b1b02d9d'
+        'genfacades10-bootstrap-source-1.tar.gz')
+noextract=('arcade-runtime10-4bf37ce6.tar.gz')
+sha256sums=('82f5f6dd63c0dcf3c0fc49b282207db5d889d9cc0939589d43b16c7fcfdf7d66'
+            '69eb8b259a52b91d9735c331d34cf0b414f9792a97bd69e28c03d51402733a76')
+prepare() { /usr/bin/python3 "$srcdir/genfacades10-workflow/prepare.py" "$srcdir" >"$srcdir/prepare.log" 2>&1; }
+build() { bash "$srcdir/genfacades10-workflow/build.sh" "$srcdir"; }
+check() {
+  /usr/bin/python3 "$srcdir/genfacades10-workflow/check.py" "$srcdir" "$srcdir/check" >"$srcdir/check.log" 2>&1
+  /usr/bin/python3 "$srcdir/genfacades10-workflow/audit.py" "$srcdir" >"$srcdir/audit.log" 2>&1
+}
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/tool-packs/genfacades-10.0.5-bootstrap"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target" "$doc"
+  cp -R "$srcdir/product/build" "$srcdir/product/tools" "$target/"
+  install -m644 "$srcdir/genfacades10-workflow/README.md" "$srcdir/"{source-inputs,source-audit}.json "$srcdir/check/results.json" "$doc/"
+  install -Dm644 "$srcdir/arcade/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+}

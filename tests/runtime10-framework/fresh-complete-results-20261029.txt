@@ -1,0 +1,34 @@
+Pristine-source complete managed framework10 rebuild and validation
+Windows root: /e/codex-dotnet10/framework10fresh.gOPSWd
+All190 projects compile:171 shipping implementations+19 private seeds;172 runtime assemblies with installed CoreLib.
+Original source inputs6161; generated inputs495; original resource/additional/policy inputs165; reference hashes123. All recorded hashes pass.
+All109 original library-policy API/resource/forwarder/PDB audits pass;41273 public API entries retained.
+All three real CLR10 probes and source dotnet host discovery/hosted probes pass.
+Strict167-contract comparison:0 missing,2096 extra,248 changed; exit1 retained and strict parity unverified.
+
+Exact validation commands:
+$ /usr/bin/python3 framework-workflow/build.py "$PWD" "$PWD/build-plan"
+RESULT: exit 0
+$ /usr/bin/python3 framework-workflow/audit-source.py "$PWD" "$PWD/build-plan"
+RESULT: exit 0
+$ /usr/bin/python3 framework-workflow/check-built.py build-plan fresh-linked-check
+RESULT: exit 0
+$ /usr/bin/python3 framework-workflow/check-framework.py build-plan fresh-framework-check
+RESULT: exit 0
+$ /usr/bin/python3 framework-workflow/check-contracts.py build-plan fresh-contract-check
+RESULT: exit 1
+$ /usr/bin/python3 framework-workflow/stage-framework.py build-plan 'fresh dotnet10 λ'
+RESULT: exit 0
+$ /usr/bin/python3 framework-workflow/check-host.py 'fresh dotnet10 λ' fresh-host-check 'fresh-framework-check/complete CLR10 λ/native.dll' 'fresh-framework-check/complete CLR10 λ/framework.dll' 'fresh-framework-check/complete CLR10 λ/javascript.dll'
+RESULT: exit 0
+
+Attempt history:
+Initial standalone source materialization omitted five original ILLink task files and their project inputs. Those ten unchanged archive inputs were added and tool preparation resumed in the same directory.
+All190 managed projects then compiled from pristine sources and the complete archive/ref/output audit passed. No implementation source edits were made.
+Every fresh linked/runtime/host check passes. The strict comparison remains exit1 on2096 extra+248 changed entries, with zero missing declarations.
+
+Downloaded evidence:3080 files SHA256 78ce4f3e1d45f2fe3cb19d399f2fe82ae0eaa598801eebda77f8aec05a261327; every manifest member verified.
+Local evidence: /tmp/runtime10-framework-fresh-complete
+
+Separate formal makepkg build remains live in /e/codex-dotnet10/runtime10pkg1.qfZBvw, session58459; last observed175/190. No terminal package result or installed shared-framework package is claimed.
+Full runtime compatibility, SDK10, WindowsDesktop10, PowerShell7.6 and all original dependency gates remain open.

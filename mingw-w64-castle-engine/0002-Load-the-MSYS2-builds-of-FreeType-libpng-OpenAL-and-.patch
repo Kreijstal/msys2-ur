@@ -1,0 +1,85 @@
+From 1cc692f3d6ac0838671def24a34456955386625f Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 11:22:18 +0100
+Subject: [PATCH 2/3] Load the MSYS2 builds of FreeType, libpng, OpenAL and
+ libvorbisfile
+
+The Windows library names CGE tries are those of the DLLs bundled in
+tools/build-tool/data/external_libraries (freetype.dll, libpng14-14.dll,
+OpenAL32.dll, vorbisfile.dll).  MSYS2 does not ship those prebuilt DLLs
+and its packages name the libraries libfreetype-6.dll, libpng16-16.dll,
+libopenal-1.dll (OpenAL Soft) and libvorbisfile-3.dll.  Try those names
+as a last resort on Windows.  (zlib1.dll is already the MSYS2 name.)
+
+libpng 1.6 is what CGE already loads on Linux (libpng16.so.16); the
+binding passes the library's own version to png_create_read_struct, so
+the newer minor version is accepted.
+---
+ src/audio/ogg_vorbis/castleinternalvorbisfile.pas | 3 +++
+ src/audio/openal/castleinternalopenal.pas         | 6 ++++++
+ src/fonts/castleinternalfreetypeh.pas             | 3 +++
+ src/images/castleinternalpng_dynamic.inc          | 3 +++
+ 4 files changed, 15 insertions(+)
+
+diff --git a/src/audio/ogg_vorbis/castleinternalvorbisfile.pas b/src/audio/ogg_vorbis/castleinternalvorbisfile.pas
+index 6d36f13..c667da3 100644
+--- a/src/audio/ogg_vorbis/castleinternalvorbisfile.pas
++++ b/src/audio/ogg_vorbis/castleinternalvorbisfile.pas
+@@ -235,6 +235,9 @@ begin
+ 
+     {$ifdef MSWINDOWS}
+     TDynLib.Load('vorbisfile.dll', false);
++    // MSYS2 / MinGW name
++    if VorbisFileLibrary = nil then
++      VorbisFileLibrary := TDynLib.Load('libvorbisfile-3.dll', false);
+     {$endif}
+ 
+   if VorbisFileLibrary <> nil then
+diff --git a/src/audio/openal/castleinternalopenal.pas b/src/audio/openal/castleinternalopenal.pas
+index 2eb42c6..8ec49e0 100644
+--- a/src/audio/openal/castleinternalopenal.pas
++++ b/src/audio/openal/castleinternalopenal.pas
+@@ -190,6 +190,12 @@ begin
+     {$ifdef MSWINDOWS} 'OpenAL32.dll' {$endif}
+     , false);
+ 
++  {$ifdef MSWINDOWS}
++  // OpenAL Soft as built by MSYS2 / MinGW
++  if ALLibrary = nil then
++    ALLibrary := TDynLib.Load('libopenal-1.dll', false);
++  {$endif}
++
+   {$ifdef UNIX}
+   if ALLibrary = nil then
+     ALLibrary := TDynLib.Load('libopenal.so.1', false);
+diff --git a/src/fonts/castleinternalfreetypeh.pas b/src/fonts/castleinternalfreetypeh.pas
+index 3bb0e9a..039984b 100644
+--- a/src/fonts/castleinternalfreetypeh.pas
++++ b/src/fonts/castleinternalfreetypeh.pas
+@@ -528,6 +528,9 @@ begin
+     FreeTypeLibrary := TDynLib.Load('freetype.dll', false);
+     if FreeTypeLibrary = nil then
+       FreeTypeLibrary := TDynLib.Load('freetype-6.dll', false);
++    // MSYS2 / MinGW name
++    if FreeTypeLibrary = nil then
++      FreeTypeLibrary := TDynLib.Load('libfreetype-6.dll', false);
+   {$endif}
+ 
+   // macOS
+diff --git a/src/images/castleinternalpng_dynamic.inc b/src/images/castleinternalpng_dynamic.inc
+index bfab482..d617a26 100644
+--- a/src/images/castleinternalpng_dynamic.inc
++++ b/src/images/castleinternalpng_dynamic.inc
+@@ -944,6 +944,9 @@ begin
+     PngLibrary := TDynLib.Load('libpng13.dll', false);
+   if PngLibrary = nil then
+     PngLibrary := TDynLib.Load('libpng12.dll', false);
++  { libpng 1.6 as built by MSYS2 / MinGW (Unix builds already use libpng16) }
++  if PngLibrary = nil then
++    PngLibrary := TDynLib.Load('libpng16-16.dll', false);
+   {$endif}
+ 
+   {$ifdef UNIX}
+-- 
+2.55.0
+

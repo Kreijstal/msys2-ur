@@ -1,0 +1,150 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Maven Artifact Resolver (Aether) modules used by Maven 3.9.  The Redisson
+# and Hazelcast lock factories, the supplier and the demos are not built.
+
+_realname=maven-resolver
+pkgbase=mingw-w64-${_realname}
+_modules=(api spi util named-locks impl connector-basic transport-file transport-http transport-wagon)
+pkgname=("${_modules[@]/#/${MINGW_PACKAGE_PREFIX}-maven-resolver-}")
+pkgver=1.9.27
+pkgrel=1
+pkgdesc="Apache Maven Artifact Resolver (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/resolver/'
+msys2_repository_url='https://github.com/apache/maven-resolver'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-inject"
+             "${MINGW_PACKAGE_PREFIX}-java-guice"
+             "${MINGW_PACKAGE_PREFIX}-java-gson"
+             "${MINGW_PACKAGE_PREFIX}-java-httpclient"
+             "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j"
+             "${MINGW_PACKAGE_PREFIX}-maven-wagon-provider-api"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus"
+             "${MINGW_PACKAGE_PREFIX}-java-junit4")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-hamcrest-library"
+              "${MINGW_PACKAGE_PREFIX}-java-slf4j-simple")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-resolver/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('e48efc50db36ab5d2d41ed8e9f686658a691e55896aba66eaf6f76b25535d159')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  # maven-resolver-demos/.../demo.jar
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+# jb_module for maven-resolver-<m>; the module name follows upstream's bnd
+# rule org.apache.<artifactId with - as .>
+_mod() {
+  local m=$1
+  shift
+  local name=org.apache.maven.resolver${m:+.${m//-/.}}
+  [[ ${m} == api ]] && name=org.apache.maven.resolver
+  jb_module org.apache.maven.resolver:maven-resolver-${m}:${pkgver} maven-resolver-${m}/src/main/java \
+    -u maven-resolver-${m}/pom.xml -m "Automatic-Module-Name: ${name}" "$@"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local r=org.apache.maven.resolver:maven-resolver
+  local -a inject=(-c 'com.google.inject:guice#classes' -c org.eclipse.sisu:org.eclipse.sisu.inject)
+  _mod api
+  _mod spi -- ${r}-api
+  _mod util -- ${r}-api
+  _mod named-locks -P sisu -- org.slf4j:slf4j-api 'javax.inject:javax.inject?'
+  _mod impl -P sisu "${inject[@]}" \
+    -- ${r}-api ${r}-spi ${r}-named-locks ${r}-util \
+       'javax.inject:javax.inject/provided?' org.slf4j:slf4j-api
+  _mod connector-basic -P sisu \
+    -- ${r}-api ${r}-spi ${r}-util 'javax.inject:javax.inject/provided?' org.slf4j:slf4j-api
+  _mod transport-file -P sisu \
+    -- ${r}-api ${r}-spi 'javax.inject:javax.inject/provided?' org.slf4j:slf4j-api
+  # commons-logging is provided by jcl-over-slf4j (runtime, as upstream)
+  _mod transport-http -P sisu \
+    -- ${r}-api ${r}-spi ${r}-util com.google.code.gson:gson \
+       org.apache.httpcomponents:httpclient org.apache.httpcomponents:httpcore \
+       commons-codec:commons-codec 'org.slf4j:jcl-over-slf4j/runtime' \
+       'javax.inject:javax.inject/provided?' org.slf4j:slf4j-api
+  _mod transport-wagon -P sisu \
+    -- ${r}-api ${r}-spi ${r}-util org.apache.maven.wagon:wagon-provider-api \
+       'javax.inject:javax.inject/provided?' 'org.codehaus.plexus:plexus-classworlds?' \
+       'org.codehaus.plexus:plexus-utils?' 'org.eclipse.sisu:org.eclipse.sisu.plexus?' \
+       org.slf4j:slf4j-api
+  # test fixtures for check() only (not packaged)
+  _mod test-util -- ${r}-api ${r}-spi junit:junit
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local r=org.apache.maven.resolver:maven-resolver m
+  local -a with=(--with javax.inject:javax.inject --with 'com.google.inject:guice#classes')
+  for m in api spi util named-locks impl connector-basic transport-file transport-http; do
+    jb_loadcheck "${with[@]}" ${r}-${m}
+  done
+  jb_loadcheck "${with[@]}" --with org.eclipse.sisu:org.eclipse.sisu.plexus ${r}-transport-wagon
+  # upstream JUnit 4 tests, except those needing Mockito, Hamcrest 2 map
+  # matchers or Jetty (transport-http)
+  for m in api spi util named-locks impl connector-basic transport-file transport-wagon; do
+    jb_test ${m} maven-resolver-${m}/src/test/java -r maven-resolver-${m}/src/test/resources \
+      -g 'org\.mockito|aMapWithSize|anEmptyMap' \
+      -- ${r}-${m} ${r}-test-util org.hamcrest:hamcrest-library org.slf4j:slf4j-simple \
+         javax.inject:javax.inject 'com.google.inject:guice#classes' \
+         org.eclipse.sisu:org.eclipse.sisu.plexus ${r}-impl
+  done
+}
+
+_package() {
+  local m=$1
+  shift
+  depends=("$@")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.resolver:maven-resolver-${m}
+}
+
+_r="${MINGW_PACKAGE_PREFIX}-maven-resolver"
+package_maven-resolver-api() { pkgdesc="Maven Artifact Resolver API (mingw-w64)"; _package api; }
+package_maven-resolver-spi() { pkgdesc="Maven Artifact Resolver SPI (mingw-w64)"; _package spi ${_r}-api; }
+package_maven-resolver-util() { pkgdesc="Maven Artifact Resolver utilities (mingw-w64)"; _package util ${_r}-api; }
+package_maven-resolver-named-locks() {
+  pkgdesc="Maven Artifact Resolver named locks (mingw-w64)"
+  _package named-locks "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+}
+package_maven-resolver-impl() {
+  pkgdesc="Maven Artifact Resolver implementation (mingw-w64)"
+  _package impl ${_r}-spi ${_r}-util ${_r}-named-locks
+}
+package_maven-resolver-connector-basic() {
+  pkgdesc="Maven Artifact Resolver basic repository connector (mingw-w64)"
+  _package connector-basic ${_r}-spi ${_r}-util "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+}
+package_maven-resolver-transport-file() {
+  pkgdesc="Maven Artifact Resolver file transport (mingw-w64)"
+  _package transport-file ${_r}-spi "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+}
+package_maven-resolver-transport-http() {
+  pkgdesc="Maven Artifact Resolver HTTP transport (mingw-w64)"
+  _package transport-http ${_r}-spi ${_r}-util "${MINGW_PACKAGE_PREFIX}-java-gson" \
+    "${MINGW_PACKAGE_PREFIX}-java-httpclient" "${MINGW_PACKAGE_PREFIX}-java-jcl-over-slf4j"
+}
+package_maven-resolver-transport-wagon() {
+  pkgdesc="Maven Artifact Resolver Wagon transport (mingw-w64)"
+  _package transport-wagon ${_r}-spi ${_r}-util "${MINGW_PACKAGE_PREFIX}-maven-wagon-provider-api"
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

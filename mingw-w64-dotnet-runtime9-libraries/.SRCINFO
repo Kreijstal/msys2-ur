@@ -1,0 +1,27 @@
+pkgbase = mingw-w64-dotnet-runtime9-libraries
+	pkgdesc = Source runtime9 Standard2.0 libraries, Standard2.1 async forwarder and NET8 MEF targets
+	pkgver = 9.0.0
+	pkgrel = 3
+	url = https://github.com/dotnet/runtime
+	arch = any
+	license = spdx:MIT
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk8-servicing>=8.0.131-5
+	makedepends = mingw-w64-clang-x86_64-dotnet-maintenance-netstandard10>=20261029-1
+	makedepends = mingw-w64-clang-x86_64-dotnet-netstandard21-reference=2.1.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-compiler5-bootstrap=5.0.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	makedepends = mingw-w64-clang-x86_64-python
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-maintenance-netstandard>=20261028-2
+	depends = mingw-w64-clang-x86_64-dotnet-netstandard-reference>=2.0.3-3
+	noextract = runtime-v9.0.0.tar.gz
+	options = !strip
+	options = !lto
+	options = !buildflags
+	source = runtime-v9.0.0.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v9.0.0
+	source = runtime9-libraries-source-3.tar.gz
+	sha256sums = 32755d528ead386762fb9da054249f6151ac78ef6a92f437044838cd0ab00def
+	sha256sums = a8e78bb441b2cf63e4617b487a5b6668a23b177c1efd95f7cdcb3d84e7f898c1
+
+pkgname = mingw-w64-clang-x86_64-dotnet-runtime9-libraries

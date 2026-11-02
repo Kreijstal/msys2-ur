@@ -1,0 +1,36 @@
+Source MSBuild 18.3 NET10 foundation prototype
+Pinned source: 228caa11ad0046ccb599530abd9aba4e1979b5e9
+Local source archive and prototype output hash audit: PASS
+Evaluated 6 original projects: 1326 compile items, 1156 unique original C# files.
+
+Microsoft.NET.StringTools
+Command: ['/clang64/lib/dotnet10/dotnet.exe', 'E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll', '-noconfig', '@E:/codex-dotnet10/msbuild18-stringtools2/compile.rsp']
+Compile exit: 0
+Original source files: 8
+Exact source-package files: 0
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+
+Microsoft.Build.Framework
+Command: ['/clang64/lib/dotnet10/dotnet.exe', 'E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll', '-noconfig', '@E:/codex-dotnet10/msbuild18-framework1/compile.rsp']
+Compile exit: 0
+Original source files: 179
+Exact source-package files: 19
+Microsoft (R) Visual C# Compiler version 5.3.0-2.26113.113 (2333221c0564852ee5ceac9c622a0b14e864d76e)
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Framework\AssemblyUtilities.cs(86,13): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+E:\codex-dotnet10\msbuild18-plan2\source\msbuild-228caa11ad0046ccb599530abd9aba4e1979b5e9\src\Framework\AssemblyUtilities.cs(86,42): warning SYSLIB0037: 'AssemblyName.ProcessorArchitecture' is obsolete: 'AssemblyName members HashAlgorithm, ProcessorArchitecture, and VersionCompatibility are obsolete and not supported.' (https://aka.ms/dotnet-warnings/SYSLIB0037)
+
+
+Command: ['/clang64/lib/dotnet10/dotnet.exe', 'E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-5.3.0-net10-bootstrap/csc.dll', '-noconfig', '@E:/codex-dotnet10/msbuild18-foundation-check1/compile.rsp']
+Exit: 0
+Command: ['/clang64/lib/dotnet10/dotnet.exe', 'E:/codex-dotnet10/msbuild18-foundation-check1/Probe.dll']
+Exit: 0
+PASS source NET10 StringTools:Unicode spans/builders,recycling,interning and 20000 concurrent lookups
+PASS source NET10 MSBuild.Framework:task interfaces,Unicode build events,event contexts and signing/target identities
+
+Bootstrap file version 18.3.0.0 is explicit; original Arcade version calculation remains incomplete.
+This proves two prototype libraries and a focused consumer, not full MSBuild/SDK10 or all framework profiles.

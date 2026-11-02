@@ -1,0 +1,21 @@
+pkgbase = mingw-w64-heidisql
+	pkgdesc = SQL client for MariaDB/MySQL, PostgreSQL, SQLite and MS SQL (Lazarus port) (mingw-w64)
+	pkgver = 12.22
+	pkgrel = 1
+	url = https://www.heidisql.com/
+	arch = any
+	license = spdx:GPL-2.0-or-later
+	checkdepends = mingw-w64-ucrt-x86_64-sqlite3
+	makedepends = mingw-w64-ucrt-x86_64-lazarus
+	depends = mingw-w64-ucrt-x86_64-libmariadbclient
+	depends = mingw-w64-ucrt-x86_64-postgresql
+	depends = mingw-w64-ucrt-x86_64-sqlite3
+	optdepends = mingw-w64-ucrt-x86_64-freetds: MS SQL Server connections (libsybdb)
+	options = !strip
+	options = !debug
+	source = heidisql-12.22.tar.gz::https://github.com/HeidiSQL/HeidiSQL/archive/refs/tags/v12.22.tar.gz
+	source = 0001-Find-resources-and-MariaDB-plugins-in-the-MSYS2-layo.patch
+	sha256sums = aeb335ee7a1090a27b82c4eb94a91c972cd40d1bd5c5be2c23a8736f32277b3d
+	sha256sums = 962864280086537a1652d76bd099a9793b0e02de3549f339c60188d8ab3596f8
+
+pkgname = mingw-w64-ucrt-x86_64-heidisql

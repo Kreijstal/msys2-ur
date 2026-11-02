@@ -1,0 +1,166 @@
+From: Kreijstal <rainb@tfwno.gf>
+Subject: [PATCH] synsock: use the Win64 winsock structure layouts
+
+synsock.pas is an old Synapse copy that only knows the 32-bit winsock
+ABI.  Built for x86_64-win64 several structures passed to ws2_32 have the
+wrong layout:
+
+* TFDSet is a packed {u_int count; u_int sockets[64]}, but the Win64
+  fd_set holds 64-bit SOCKETs starting at offset 8.  select() therefore
+  saw garbage handles and failed with WSAENOTSOCK (10038) on every call,
+  so TCPSocket_CanRead/CanWrite, TBlockSocket.CanRead/CanWrite etc. never
+  reported a socket ready.  The DHT thread polls its UDP socket with
+  TCPSocket_CanRead before recvfrom(), so it never read a single packet
+  (they pile up in the socket's receive queue) and the client could not
+  join the network even when peers answered; TCP connects, transfers and
+  BitTorrent polling are affected the same way.
+* WSADATA has another field order on Win64 and is 408 bytes; the 32-bit
+  record is 402, so WSAStartup wrote past it.
+* hostent.h_addr_list (gethostbyname), servent.s_proto/s_port and
+  netent.n_net are at different offsets on Win64.
+
+Keep TSocket 32-bit (handle values fit and the Ares code stores sockets in
+Integer fields) and give the records the Win64 layout under CPU64; the
+fd_set stores zero-extended handles in pointer-sized slots and FD_ISSET
+scans the set itself instead of calling __WSAFDIsSet with a 32-bit SOCKET.
+
+---
+diff --git a/synsock.pas b/synsock.pas
+index 17e203c..3600f0e 100644
+--- a/synsock.pas
++++ b/synsock.pas
+@@ -289,10 +289,21 @@ const
+   FD_SETSIZE     =   64;
+ type
+   PFDSet = ^TFDSet;
++{$IFDEF CPU64}
++  { Win64 winsock: fd_count is a u_int, but fd_array holds 64-bit SOCKETs
++    and starts at offset 8.  TSocket is kept 32-bit here (handle values fit),
++    so the set stores zero-extended handles in pointer-sized slots. }
++  TFDSet = packed record
++    fd_count: u_int;
++    fd_pad: u_int;
++    fd_array: array [0..FD_SETSIZE-1] of PtrUInt;
++  end;
++{$ELSE}
+   TFDSet = packed record
+     fd_count: u_int;
+     fd_array: array [0..FD_SETSIZE-1] of TSocket;
+   end;
++{$ENDIF}
+ 
+ const
+   IOCPARM_MASK = $7f;
+@@ -451,6 +462,9 @@ type
+     h_aliases: ^PChar;
+     h_addrtype: Smallint;
+     h_length: Smallint;
++{$IFDEF CPU64}
++    h_pad: u_int;              { Win64: h_addr_list is pointer-aligned (offset 24) }
++{$ENDIF}
+     case integer of
+      0: (h_addr_list: ^PChar);
+      1: (h_addr: ^PInAddr);
+@@ -461,6 +475,9 @@ type
+     n_name: PChar;
+     n_aliases: ^PChar;
+     n_addrtype: Smallint;
++{$IFDEF CPU64}
++    n_pad: Smallint;           { Win64: n_net at offset 20 }
++{$ENDIF}
+     n_net: u_long;
+   end;
+ 
+@@ -468,8 +485,13 @@ type
+   TServEnt = packed record
+     s_name: PChar;
+     s_aliases: ^PChar;
++{$IFDEF CPU64}
++    s_proto: PChar;            { Win64 winsock swaps s_proto and s_port }
++    s_port: Smallint;
++{$ELSE}
+     s_port: Smallint;
+     s_proto: PChar;
++{$ENDIF}
+   end;
+ 
+   PProtoEnt = ^TProtoEnt;
+@@ -505,6 +527,20 @@ const
+   WSASYS_STATUS_LEN      =   128;
+ type
+   PWSAData = ^TWSAData;
++{$IFDEF CPU64}
++  { Win64 WSADATA has a different field order and is 408 bytes; the 32-bit
++    layout is 6 bytes too small, so WSAStartup wrote past the record. }
++  TWSAData = packed record
++    wVersion: Word;
++    wHighVersion: Word;
++    iMaxSockets: Word;
++    iMaxUdpDg: Word;
++    lpVendorInfo: PChar;
++    szDescription: array [0..WSADESCRIPTION_LEN] of Char;
++    szSystemStatus: array [0..WSASYS_STATUS_LEN] of Char;
++    wsa_pad: array [0..5] of Byte;
++  end;
++{$ELSE}
+   TWSAData = packed record
+     wVersion: Word;
+     wHighVersion: Word;
+@@ -514,6 +550,7 @@ type
+     iMaxUdpDg: Word;
+     lpVendorInfo: PChar;
+   end;
++{$ENDIF}
+ 
+ {=============================================================================}
+ {$IFDEF LINUX}
+@@ -1246,7 +1283,7 @@ begin
+   I := 0;
+   while I < FDSet.fd_count do
+   begin
+-    if FDSet.fd_array [I] = Socket then
++    if FDSet.fd_array [I] = {$IFDEF CPU64}PtrUInt(Cardinal(Socket)){$ELSE}Socket{$ENDIF} then
+     begin
+       while I < FDSet.fd_count - 1 do
+       begin
+@@ -1261,15 +1298,29 @@ begin
+ end;
+ 
+ function FD_ISSET(Socket: TSocket; var FDSet: TFDSet): Boolean;
++{$IFDEF CPU64}
++var
++  I: Integer;
++begin
++  Result := False;
++  for I := 0 to Integer(FDSet.fd_count) - 1 do
++    if FDSet.fd_array [I] = PtrUInt(Cardinal(Socket)) then
++    begin
++      Result := True;
++      Exit;
++    end;
++end;
++{$ELSE}
+ begin
+   Result := __WSAFDIsSet(Socket, FDSet);
+ end;
++{$ENDIF}
+ 
+ procedure FD_SET(Socket: TSocket; var FDSet: TFDSet);
+ begin
+   if FDSet.fd_count < FD_SETSIZE then
+   begin
+-    FDSet.fd_array [FDSet.fd_count] := Socket;
++    FDSet.fd_array [FDSet.fd_count] := {$IFDEF CPU64}PtrUInt(Cardinal(Socket)){$ELSE}Socket{$ENDIF};
+     Inc(FDSet.fd_count);
+   end;
+ end;
+@@ -1277,6 +1328,9 @@ end;
+ procedure FD_ZERO(var FDSet: TFDSet);
+ begin
+   FDSet.fd_count := 0;
++{$IFDEF CPU64}
++  FDSet.fd_pad := 0;
++{$ENDIF}
+ end;
+ {$ENDIF}
+ 

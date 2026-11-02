@@ -1,0 +1,210 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# Maven Surefire: the test-running plugin, its forked booter and the JUnit 4
+# provider.  surefire-shared-utils is upstream a maven-shade-plugin bundle
+# of maven-shared-utils and Commons IO/Lang3/Compress/Codec moved to
+# org.apache.maven.surefire.shared.*; it is assembled from the packaged jars
+# of those libraries with java-build-helper's ASM-based jb_relocate.
+# Failsafe, the report plugin and the JUnit 5/TestNG/JUnit 4.7 providers
+# are not built.
+
+_realname=maven-surefire
+pkgbase=mingw-w64-${_realname}
+_modules=(surefire-shared-utils surefire-logger-api surefire-api surefire-extensions-api
+          surefire-extensions-spi surefire-booter maven-surefire-common maven-surefire-plugin
+          common-java5 common-junit3 common-junit4 surefire-junit4)
+pkgname=("${MINGW_PACKAGE_PREFIX}-maven-surefire-shared-utils"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-logger-api"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-api"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-extensions-api"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-extensions-spi"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-booter"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-common"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-plugin"
+         "${MINGW_PACKAGE_PREFIX}-maven-surefire-junit4")
+pkgver=3.5.4
+pkgrel=1
+pkgdesc="Apache Maven Surefire test runner (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/surefire/'
+msys2_repository_url='https://github.com/apache/maven-surefire'
+license=('spdx:Apache-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-asm-commons"
+             "${MINGW_PACKAGE_PREFIX}-maven-shared-utils"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-lang3"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+             "${MINGW_PACKAGE_PREFIX}-java-jsr305"
+             "${MINGW_PACKAGE_PREFIX}-java-junit4"
+             "${MINGW_PACKAGE_PREFIX}-java-jansi"
+             "${MINGW_PACKAGE_PREFIX}-maven-core"
+             "${MINGW_PACKAGE_PREFIX}-maven-plugin-annotations"
+             "${MINGW_PACKAGE_PREFIX}-maven-common-artifact-filters"
+             "${MINGW_PACKAGE_PREFIX}-java-plexus-java")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-xz"
+              "${MINGW_PACKAGE_PREFIX}-java-zstd-jni")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-surefire/archive/refs/tags/surefire-${pkgver}.tar.gz")
+sha256sums=('e6db7c800a4fc65f9322c7a210f85400b3b9912c2aa3d46f429958e2952e6c03')
+
+_src=${_realname}-surefire-${pkgver}
+
+prepare() {
+  # integration-test fixture
+  find "${_src}" -name '*.jar' -print -delete
+}
+
+_mod() {
+  local m=$1 dir=$2
+  shift 2
+  local -a res=()
+  [[ -d ${dir}/src/main/resources ]] && res=(-r ${dir}/src/main/resources)
+  jb_module org.apache.maven.surefire:${m}:${pkgver} ${dir}/src/main/java "${res[@]}" \
+    -u ${dir}/pom.xml -c com.google.code.findbugs:jsr305 "$@"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local s=org.apache.maven.surefire p=surefire-providers
+
+  # surefire-shared-utils: the shaded bundle (no dependencies of its own)
+  local sh="${srcdir}/jb-build/surefire-shared-utils"
+  mkdir -p "${sh}"
+  jb_relocate "${sh}/surefire-shared-utils.jar" \
+    -r org.apache.maven.shared.utils=org.apache.maven.surefire.shared.utils \
+    -r org.apache.commons.codec=org.apache.maven.surefire.shared.codec \
+    -r org.apache.commons.io=org.apache.maven.surefire.shared.io \
+    -r org.apache.commons.lang3=org.apache.maven.surefire.shared.lang3 \
+    -r org.apache.commons.compress=org.apache.maven.surefire.shared.compress \
+    -- org.apache.maven.shared:maven-shared-utils commons-codec:commons-codec \
+       commons-io:commons-io org.apache.commons:commons-lang3 org.apache.commons:commons-compress
+  jb_pom "${sh}/surefire-shared-utils.pom" ${s} surefire-shared-utils ${pkgver} -n "Surefire Shared Utils"
+  jb_stage ${s}:surefire-shared-utils:${pkgver} "${sh}/surefire-shared-utils.pom" "${sh}/surefire-shared-utils.jar"
+
+  _mod surefire-logger-api surefire-logger-api
+  _mod surefire-api surefire-api -- ${s}:surefire-logger-api ${s}:surefire-shared-utils
+  _mod surefire-extensions-api surefire-extensions-api \
+    -- ${s}:surefire-api/provided ${s}:surefire-logger-api/provided ${s}:surefire-shared-utils
+  _mod surefire-extensions-spi surefire-extensions-spi -- ${s}:surefire-api
+  _mod surefire-booter surefire-booter \
+    -- ${s}:surefire-api ${s}:surefire-extensions-spi ${s}:surefire-shared-utils ${s}:surefire-logger-api
+  _mod maven-surefire-common maven-surefire-common -P sisu \
+    -- ${s}:surefire-api ${s}:surefire-logger-api ${s}:surefire-extensions-api ${s}:surefire-booter \
+       org.apache.maven:maven-core/provided org.apache.maven:maven-plugin-api/provided \
+       org.apache.maven:maven-artifact/provided org.apache.maven:maven-model/provided \
+       javax.inject:javax.inject/provided org.apache.maven.resolver:maven-resolver-api/provided \
+       org.apache.maven.resolver:maven-resolver-util \
+       org.apache.maven.plugin-tools:maven-plugin-annotations/provided \
+       org.apache.maven.shared:maven-common-artifact-filters org.codehaus.plexus:plexus-java \
+       org.eclipse.sisu:org.eclipse.sisu.plexus/provided org.fusesource.jansi:jansi/provided \
+       ${s}:surefire-shared-utils
+  jb_plugin org.apache.maven.plugins:maven-surefire-plugin:${pkgver} surefire \
+    "Maven Surefire Plugin" 1.8 3.6.3 maven-surefire-plugin/src/main/java \
+    -u maven-surefire-plugin/pom.xml \
+    -- ${s}:surefire-api ${s}:surefire-extensions-api ${s}:maven-surefire-common \
+       org.apache.maven:maven-plugin-api/provided \
+       org.apache.maven.plugin-tools:maven-plugin-annotations/provided \
+       org.apache.maven:maven-core/provided
+  # providers (their parent POM adds surefire-api to each)
+  _mod common-java5 ${p}/common-java5 -- ${s}:surefire-shared-utils ${s}:surefire-api
+  _mod common-junit3 ${p}/common-junit3 -- junit:junit/provided ${s}:surefire-api
+  _mod common-junit4 ${p}/common-junit4 \
+    -- junit:junit/provided ${s}:surefire-logger-api ${s}:surefire-shared-utils \
+       ${s}:common-junit3 ${s}:common-java5 ${s}:surefire-api
+  _mod surefire-junit4 ${p}/surefire-junit4 \
+    -- junit:junit/provided ${s}:common-java5 ${s}:common-junit4 ${s}:surefire-api
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  local s=org.apache.maven.surefire m
+  # upstream tests need Mockito, PowerMock, AssertJ and the JUnit 5 vintage
+  # engine; load the classes instead (the plugin and the JUnit 4 provider
+  # run for real in the maven package's hello-world check)
+  # (the bundled code's optional or provided dependencies added; Brotli is
+  # not packaged)
+  jb_loadcheck --ignore 'compressors\.brotli\.BrotliCompressorInputStream' \
+    --with org.slf4j:slf4j-api --with org.fusesource.jansi:jansi --with org.tukaani:xz \
+    --with com.github.luben:zstd-jni --with org.ow2.asm:asm ${s}:surefire-shared-utils
+  for m in surefire-logger-api surefire-api surefire-extensions-spi surefire-booter; do
+    jb_loadcheck ${s}:${m}
+  done
+  jb_loadcheck --with ${s}:surefire-api ${s}:surefire-extensions-api
+  jb_loadcheck --with org.apache.maven:maven-core --with junit:junit ${s}:maven-surefire-common
+  jb_loadcheck --with org.apache.maven:maven-core org.apache.maven.plugins:maven-surefire-plugin
+  for m in common-java5 common-junit3 common-junit4 surefire-junit4; do
+    jb_loadcheck --with junit:junit ${s}:${m}
+  done
+  # nothing of the original packages is left in the shaded jar
+  if unzip -Z1 "$(jb_jarpath ${s}:surefire-shared-utils)" | grep -E '^org/apache/(commons|maven/shared)/'; then
+    return 1
+  fi
+  unzip -p "$(jb_jarpath org.apache.maven.plugins:maven-surefire-plugin)" META-INF/maven/plugin.xml \
+    | grep -q '<goal>test</goal>'
+}
+
+_package() {
+  local g=$1 m=$2
+  shift 2
+  depends=("$@")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install ${g}:${m}
+}
+
+_p=${MINGW_PACKAGE_PREFIX}-maven-surefire
+package_maven-surefire-shared-utils() {
+  pkgdesc="Surefire's relocated copy of maven-shared-utils and Commons IO/Lang3/Compress/Codec (mingw-w64)"
+  _package org.apache.maven.surefire surefire-shared-utils
+}
+package_maven-surefire-logger-api() {
+  pkgdesc="Surefire logger API (mingw-w64)"
+  _package org.apache.maven.surefire surefire-logger-api
+}
+package_maven-surefire-api() {
+  pkgdesc="Surefire API (mingw-w64)"
+  _package org.apache.maven.surefire surefire-api ${_p}-logger-api ${_p}-shared-utils
+}
+package_maven-surefire-extensions-api() {
+  pkgdesc="Surefire extensions API (mingw-w64)"
+  _package org.apache.maven.surefire surefire-extensions-api ${_p}-shared-utils
+}
+package_maven-surefire-extensions-spi() {
+  pkgdesc="Surefire extensions SPI (mingw-w64)"
+  _package org.apache.maven.surefire surefire-extensions-spi ${_p}-api
+}
+package_maven-surefire-booter() {
+  pkgdesc="Surefire booter for forked test JVMs (mingw-w64)"
+  _package org.apache.maven.surefire surefire-booter ${_p}-api ${_p}-extensions-spi
+}
+package_maven-surefire-common() {
+  pkgdesc="Surefire code shared by the surefire and failsafe plugins (mingw-w64)"
+  _package org.apache.maven.surefire maven-surefire-common ${_p}-booter ${_p}-extensions-api \
+    "${MINGW_PACKAGE_PREFIX}-maven-resolver-util" "${MINGW_PACKAGE_PREFIX}-maven-common-artifact-filters" \
+    "${MINGW_PACKAGE_PREFIX}-java-plexus-java"
+}
+package_maven-surefire-plugin() {
+  pkgdesc="Apache Maven Surefire Plugin (mingw-w64)"
+  _package org.apache.maven.plugins maven-surefire-plugin ${_p}-common
+}
+package_maven-surefire-junit4() {
+  pkgdesc="Surefire JUnit 4 provider (mingw-w64)"
+  depends=(${_p}-api "${MINGW_PACKAGE_PREFIX}-java-junit4")
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.surefire:common-java5 org.apache.maven.surefire:common-junit3 \
+    org.apache.maven.surefire:common-junit4 org.apache.maven.surefire:surefire-junit4
+}
+
+# template start; name=mingw-w64-splitpkg-wrappers; version=1.0;
+# vim: set ft=bash :
+
+# generate wrappers
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done
+# template end;

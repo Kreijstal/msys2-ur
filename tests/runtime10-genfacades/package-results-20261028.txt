@@ -1,0 +1,47 @@
+Original GenFacades runtime10 source bootstrap package — final fresh build and installed checks passed
+Finished UTC: 2026-10-28T22:31:38.968103+00:00
+Windows build root: /c/codex-dotnet10/genfacades10pkg.tRXMuX
+Installed: mingw-w64-clang-x86_64-dotnet-genfacades10-bootstrap 10.0.5-1
+
+Exact commands:
+$ makepkg -C -f --noconfirm
+RESULT: exit 0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-genfacades10-bootstrap-10.0.5-1-any.pkg.tar.zst
+RESULT: exit 0
+$ /usr/bin/python3 src/genfacades10-workflow/check.py "$PWD/src" "$PWD/installed-check" /clang64/lib/dotnet/tool-packs/genfacades-10.0.5-bootstrap
+RESULT: exit 0
+$ /usr/bin/python3 audit-genfacades10-installed.py
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-genfacades10-bootstrap
+RESULT: exit 0
+
+Eight unchanged original production task sources;16 original archive inputs;4 unchanged original MSBuild target files.
+Actual source NuGet assembly references match exact installed archive bytes.
+Source Roslyn localization retained:26 satellite DLLs;6 root task/dependency DLLs.
+0 compile warnings,0 compile errors.
+5 genuine NET10 contracts,30 type forwarders; generated facades load and all forwarded types resolve on installed CLR10.
+Strict missing-seed semantic failure checked through original task error message.
+Original unsupported generator: constructor/generic method/property/event throw exact PNSE; Dispose and API exclusions preserved.
+Original assembly reference version task clears all dependency versions; forwarders unchanged.
+42 installed regular payload files match archive; pacman68 entries,0 altered.
+Declared original profiles NET10/net472, Roslyn4.8.0 and MSBuild17.12.50 remain open.
+Bootstrap profile NET8, source Roslyn4.14.0 and installed SDK MSBuild17.8.49 is explicit.
+No original task C# changes.
+
+Attempt history:
+Attempt 1: exit 4. Dependencies were not copied to task output. Enabled CopyLocalLockFileAssemblies and preserved all original source Roslyn satellites.
+Attempt 2: exit 4. Checker culture-dependent metadata ordering. Corrected to ordinal ordering; production task sources unchanged.
+Attempt 3: exit 4. Checker classified nested exported metadata as forwarders. Corrected to original IsForwarder metadata flag; production task sources unchanged.
+Attempt 4: exit 4. MSYS Python runner used a Windows executable path. Corrected POSIX executable path while preserving native Windows corerun arguments.
+Attempt 5: exit 0. Fresh clean package build passed.
+
+Package SHA256: 22cd4bd19b454dd872e24854be2894c3909c3a3ac891ad67e3e38cd965eeceac
+Workflow SHA256: 69eb8b259a52b91d9735c331d34cf0b414f9792a97bd69e28c03d51402733a76
+Evidence SHA256: 32f8a538dc6779cdfb0df2721faf8186b25c710e610dfc78400371c747f522bc (175 files)
+Evidence archive: /tmp/genfacades10-bootstrap-package1/evidence.tar.gz
+
+Full dependency goal remains active and incomplete. Remaining:
+- original GenFacades NET10/net472 tool hosts and exact declared Roslyn4.8.0/MSBuild17.12.50 dependency versions
+- remaining original runtime10 managed/native projects, target variants, trimming and framework metadata
+- SDK10.0.201, WindowsDesktop10 and PowerShell7.6 complete original graph/integration
+- MMI3 remote/provider/ownership, SqlClient database/native, full Windows.Compatibility and earlier desktop/runtime gates

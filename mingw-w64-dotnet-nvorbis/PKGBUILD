@@ -1,0 +1,61 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-nvorbis
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.10.4
+pkgrel=1
+pkgdesc='Source-built NVorbis managed Ogg Vorbis decoder for the .NET 8 offline feed'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/NVorbis/NVorbis'
+license=('spdx:MIT')
+_commit=871138f37dd72c8d908aa6360a506337a437504d
+_tree=NVorbis-${_commit}
+_project=NVorbis/NVorbis.csproj
+_id=NVorbis
+_framework=net8.0
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+options=('!strip' '!lto')
+source=("nvorbis-871138f37dd72c8d908aa6360a506337a437504d.tar.gz::https://codeload.github.com/NVorbis/NVorbis/tar.gz/871138f37dd72c8d908aa6360a506337a437504d" prepare.py check.cs)
+sha256sums=('d16f95d025a0abe6d0862fb7b6eb241af59c5d65b5625df005f173b41b798768'
+            'd681c16a2aa11b1c5e76b74910c4f2b1ce22b8fcc1ce3ef120209af6c6d95e84'
+            'd28e21bfc31264f65b32eaecb76d84067b793fdf305a0f2051b8cc4156a1da1a')
+
+_env() {
+  export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
+  export DOTNET_ROOT=$(cygpath -m "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT
+  export DOTNET_CLI_HOME=$(cygpath -m "$srcdir/cli-home")
+  export NUGET_PACKAGES=$(cygpath -m "$srcdir/empty-packages")
+  export MSBuildEnableWorkloadResolver=false DOTNET_CLI_TELEMETRY_OPTOUT=1
+}
+prepare() {
+  /usr/bin/python3 "$srcdir/prepare.py" nvorbis "$srcdir/$_tree"
+  printf '<configuration><packageSources><clear /></packageSources></configuration>\n' > "$srcdir/NuGet.config"
+}
+build() {
+  _env
+  cd "$srcdir/$_tree"
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" pack "$_project" -c Release -o "$(cygpath -m "$srcdir/feed")" \
+    --configfile "$(cygpath -m "$srcdir/NuGet.config")" -p:PackageId="$_id" -p:PackageVersion="$pkgver" \
+    -p:Version="$pkgver" -p:GeneratePackageOnBuild=false -p:TargetFrameworks=net8.0 \
+    -p:AssemblyVersion=0.10.4.0 -p:FileVersion=0.10.4.0 -p:InformationalVersion="$pkgver" \
+    -p:RepositoryCommit="$_commit" -p:IncludeSymbols=false -p:RestoreSources="$(cygpath -m "$MINGW_PREFIX/lib/dotnet/library-packs")" \
+    -p:EnablePackageValidation=false -p:WarningsAsErrors= -p:EnableNETAnalyzers=false -p:NuGetAudit=false -p:UseSharedCompilation=false -v:minimal
+}
+check() {
+  _env
+  mkdir -p "$srcdir/check"
+  cp "$srcdir/check.cs" "$srcdir/check/Program.cs"
+  cat > "$srcdir/check/check.csproj" <<PROJECT
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>$_framework</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup><ItemGroup><PackageReference Include="$_id" Version="[$pkgver]" /></ItemGroup></Project>
+PROJECT
+  "$MINGW_PREFIX/lib/dotnet/dotnet.exe" run --project "$(cygpath -m "$srcdir/check/check.csproj")" -c Release \
+    -p:RestoreSources="$(cygpath -m "$srcdir/feed")" -p:UseSharedCompilation=false -- "$(cygpath -m "$srcdir/$_tree/TestFiles")"
+}
+package() {
+  install -Dm644 "$srcdir/feed/$_id.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/${_id,,}.$pkgver.nupkg"
+  install -Dm644 "$srcdir/$_tree/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/$_tree/removed-binaries.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/removed-binaries.json"
+}

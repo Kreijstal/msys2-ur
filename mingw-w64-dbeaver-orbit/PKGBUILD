@@ -1,0 +1,237 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+# Wrap only locally source-built Java libraries with DBeaver-compatible OSGi names.
+pkgbase=mingw-w64-dbeaver-orbit
+pkgver=26.2.2
+pkgrel=1
+pkgdesc="OSGi bundles of source-built DBeaver libraries"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/dbeaver/dbeaver-deps-ce'
+license=('spdx:Apache-2.0' 'spdx:MIT' 'spdx:BSD-3-Clause' 'spdx:EPL-2.0')
+pkgname=("${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-guava-failureaccess"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-log4j-api"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jzlib"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-antlr4-runtime"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jsqlparser"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-logging"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-jexl3"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-lang3"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-text"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-collections4"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-codec"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-compress"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-io"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jsch"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-picocli"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-bcpkix"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jakarta-servlet"
+         "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-guava")
+makedepends=("${MINGW_PACKAGE_PREFIX}-eclipse-osgi"
+             "${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime"
+             "${MINGW_PACKAGE_PREFIX}-java-bcpkix-jdk18on"
+             "${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-codec"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-collections4"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-io"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-jexl3"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-lang3"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-logging"
+             "${MINGW_PACKAGE_PREFIX}-java-commons-text"
+             "${MINGW_PACKAGE_PREFIX}-java-guava"
+             "${MINGW_PACKAGE_PREFIX}-java-guava-failureaccess"
+             "${MINGW_PACKAGE_PREFIX}-java-jakarta-servlet-api"
+             "${MINGW_PACKAGE_PREFIX}-java-jsch"
+             "${MINGW_PACKAGE_PREFIX}-java-jsqlparser"
+             "${MINGW_PACKAGE_PREFIX}-java-jzlib"
+             "${MINGW_PACKAGE_PREFIX}-java-log4j-api"
+             "${MINGW_PACKAGE_PREFIX}-java-picocli"
+             "${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+source=('guava-failureaccess.bnd'
+        'log4j-api.bnd'
+        'jzlib.bnd'
+        'antlr4-runtime.bnd'
+        'jsqlparser.bnd'
+        'commons-logging.bnd'
+        'commons-jexl3.bnd'
+        'commons-lang3.bnd'
+        'commons-text.bnd'
+        'commons-collections4.bnd'
+        'commons-codec.bnd'
+        'commons-compress.bnd'
+        'commons-io.bnd'
+        'slf4j-api.bnd'
+        'jsch.bnd'
+        'picocli.bnd'
+        'bcpkix.bnd'
+        'jakarta-servlet.bnd'
+        'guava.bnd')
+sha256sums=('8354b35cc74e30a2363e37ebacfb62f928bbbc16938461d39fa4151dd31a9ab8'
+            '903837dd684ce549416c41920de8c033612dc3857efc351ff1252dbe4ffb334c'
+            '562f33c10fb8369cc6978c9d1a903a05625c6d5b891737dee59c19dbb37c7487'
+            '5360dac0a609dae6b06bdf32210c3ab8b1a71a466e65ba7a2cc93b7dd6b59072'
+            '7be5ed718adf1f601788a090bc85bc8d7a8e3e3b276877fdd3f92aed898f4991'
+            'cb558dbb6fa3c6e8a0364d5f1e0ef75461dbc095695f25c687fdec73afe97892'
+            'ae732c50532f439ad856e7bb34f3a77f79e02b0703e9ef386e16ce496d8ba769'
+            '2943506beee5acf0492b93419ec9fb9220e2ec3ebaea8a6c0d019dba50fa0c14'
+            '151b40c41a324fa26d694de8e05b64339790371c81eb7c4de63415dfdfd5ad57'
+            '2e9187210b5b7ef4b7c58e000c8b872adb4d7a56786c19dcd9d4ae7067cd448f'
+            '057331b62a71b54f37401481afe8f75f06f27424fac0b6e11840cfff5867494f'
+            '2e8c14f3bbfbadcc892f482c8f56b5fd5ee338aabae4c6a3f7ca61d6d22706d0'
+            '6c8c305103a5f85b40b490962b9e8384c2be7251456fda39846751be985784d6'
+            '98ee861f528fcefe06e8824238304594c34375a5afb052b46db4ade76be0e1cf'
+            '48083872a4cc6b8d7027c56b55a358dcd896bdf8761f18a77f2ee85ef4d47ab9'
+            'b5bb6bc7e1c664f94906419e405933b4111347585007396a9790869f366f9afa'
+            '1d58d00eff564f5aa29a1765b9bcac3a13e8fa2e95ab4a7f058fbb0f5aa040ca'
+            '34b3ca65f157e5d668ca4d865a5bba0be7087dac8dd774ddc2cd3a4aef5c3357'
+            'ada3cc0140cf363e9ebba022e6c9038fa6954a0e0eae0dc53c46452f675a722f')
+_bundles=('guava-failureaccess|com.google.guava:failureaccess|com.google.guava.failureaccess'
+          'log4j-api|org.apache.logging.log4j:log4j-api|org.apache.logging.log4j.api'
+          'jzlib|com.jcraft:jzlib|com.jcraft.jzlib'
+          'antlr4-runtime|org.antlr:antlr4-runtime|org.antlr.antlr4-runtime'
+          'jsqlparser|com.github.jsqlparser:jsqlparser|com.github.jsqlparser'
+          'commons-logging|commons-logging:commons-logging|org.apache.commons.commons-logging'
+          'commons-jexl3|org.apache.commons:commons-jexl3|org.apache.commons.jexl3'
+          'commons-lang3|org.apache.commons:commons-lang3|org.apache.commons.lang3'
+          'commons-text|org.apache.commons:commons-text|org.apache.commons.text'
+          'commons-collections4|org.apache.commons:commons-collections4|org.apache.commons.commons-collections4'
+          'commons-codec|commons-codec:commons-codec|org.apache.commons.commons-codec'
+          'commons-compress|org.apache.commons:commons-compress|org.apache.commons.commons-compress'
+          'commons-io|commons-io:commons-io|org.apache.commons.commons-io'
+          'slf4j-api|org.slf4j:slf4j-api|slf4j.api'
+          'jsch|com.github.mwiede:jsch|com.jcraft.jsch'
+          'picocli|info.picocli:picocli|picocli'
+          'bcpkix|org.bouncycastle:bcpkix-jdk18on|bcpkix'
+          'jakarta-servlet|jakarta.servlet:jakarta.servlet-api|jakarta.servlet-api'
+          'guava|com.google.guava:guava|com.google.guava')
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  local row name gav bsn
+  for row in "${_bundles[@]}"; do
+    IFS='|' read -r name gav bsn <<< "$row"
+    jb_wrap "$gav" "${srcdir}/$name.bnd"
+  done
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_osgi_resolvecheck
+}
+
+_package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_plugins_install "$1"
+}
+
+package_dbeaver-orbit-guava-failureaccess() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-guava-failureaccess")
+  _package com.google.guava.failureaccess
+}
+
+package_dbeaver-orbit-log4j-api() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-log4j-api")
+  _package org.apache.logging.log4j.api
+}
+
+package_dbeaver-orbit-jzlib() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-jzlib")
+  _package com.jcraft.jzlib
+}
+
+package_dbeaver-orbit-antlr4-runtime() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-antlr4-runtime")
+  _package org.antlr.antlr4-runtime
+}
+
+package_dbeaver-orbit-jsqlparser() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-jsqlparser")
+  _package com.github.jsqlparser
+}
+
+package_dbeaver-orbit-commons-logging() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-logging")
+  _package org.apache.commons.commons-logging
+}
+
+package_dbeaver-orbit-commons-jexl3() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-jexl3"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-logging")
+  _package org.apache.commons.jexl3
+}
+
+package_dbeaver-orbit-commons-lang3() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-lang3")
+  _package org.apache.commons.lang3
+}
+
+package_dbeaver-orbit-commons-text() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-text"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-lang3")
+  _package org.apache.commons.text
+}
+
+package_dbeaver-orbit-commons-collections4() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-collections4")
+  _package org.apache.commons.commons-collections4
+}
+
+package_dbeaver-orbit-commons-codec() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-codec")
+  _package org.apache.commons.commons-codec
+}
+
+package_dbeaver-orbit-commons-compress() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-compress"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-codec"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-io"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-commons-lang3"
+           "${MINGW_PACKAGE_PREFIX}-eclipse-orbit-xz")
+  _package org.apache.commons.commons-compress
+}
+
+package_dbeaver-orbit-commons-io() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-commons-io")
+  _package org.apache.commons.commons-io
+}
+
+package_dbeaver-orbit-slf4j-api() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api")
+  _package slf4j.api
+}
+
+package_dbeaver-orbit-jsch() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-jsch"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-slf4j-api"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-log4j-api"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-jzlib")
+  _package com.jcraft.jsch
+}
+
+package_dbeaver-orbit-picocli() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-picocli")
+  _package picocli
+}
+
+package_dbeaver-orbit-bcpkix() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-bcpkix-jdk18on")
+  _package bcpkix
+}
+
+package_dbeaver-orbit-jakarta-servlet() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-jakarta-servlet-api")
+  _package jakarta.servlet-api
+}
+
+package_dbeaver-orbit-guava() {
+  depends=("${MINGW_PACKAGE_PREFIX}-java-guava"
+           "${MINGW_PACKAGE_PREFIX}-dbeaver-orbit-guava-failureaccess")
+  _package com.google.guava
+}
+
+for _name in "${pkgname[@]}"; do
+  _short="package_${_name#${MINGW_PACKAGE_PREFIX}-}"
+  _func="$(declare -f "${_short}")"
+  eval "${_func/#${_short}/package_${_name}}"
+done

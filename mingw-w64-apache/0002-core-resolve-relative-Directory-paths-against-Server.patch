@@ -1,0 +1,37 @@
+From b70a176f0b2a52d09059ffbbf4d2fa20b5ea8418 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 22:39:29 +0200
+Subject: [PATCH 2/6] core: resolve relative <Directory> paths against
+ ServerRoot
+
+DocumentRoot, Alias, ErrorLog, LoadModule and nearly every other path
+directive are relative to ServerRoot, but a relative <Directory> path was
+merged with the process working directory.  That makes it impossible to
+write a configuration that works wherever the server tree is installed,
+because the DocumentRoot and its <Directory> block cannot both be
+relative.  Merge relative <Directory> paths with ServerRoot instead.
+Absolute paths are unaffected.
+---
+ server/core.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/server/core.c b/server/core.c
+index df270b0..8d07274 100644
+--- a/server/core.c
++++ b/server/core.c
+@@ -2499,8 +2499,11 @@ static const char *dirsection(cmd_parms *cmd, void *mconfig, const char *arg)
+ 
+         /*
+          * Ensure that the pathname is canonical, and append the trailing /
++         * A relative path is taken relative to ServerRoot, like
++         * DocumentRoot, instead of the (meaningless) working directory.
+          */
+-        apr_status_t rv = apr_filepath_merge(&newpath, NULL, cmd->path,
++        apr_status_t rv = apr_filepath_merge(&newpath, ap_server_root,
++                                             cmd->path,
+                                              APR_FILEPATH_TRUENAME, cmd->pool);
+         if (rv != APR_SUCCESS && rv != APR_EPATHWILD) {
+             return apr_pstrcat(cmd->pool, "<Directory \"", cmd->path,
+-- 
+2.55.0
+

@@ -1,0 +1,42 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-netstandard-reference
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.3
+pkgrel=3
+pkgdesc='Original source .NET Standard 2.0 reference contract and NETStandard.Library package metadata'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/standard'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms>=1.1.2")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing=8.0.131"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=18a36291e48808fa7ef2d00a764ceb1ec95645a5
+source=("standard-${_commit:0:8}.tar.gz::https://codeload.github.com/dotnet/standard/tar.gz/$_commit"
+        'netstandard-reference-source-3.tar.gz'
+        'buildtools-09e02305.tar.gz::https://codeload.github.com/dotnet/buildtools/tar.gz/09e023059fec39b92fa5c3b5090c59e4402e5840')
+noextract=("standard-${_commit:0:8}.tar.gz" 'buildtools-09e02305.tar.gz')
+sha256sums=('754ee66a33122c6c5c45fe75d060f9131c6b16a23af315c8c063a54fbc911e7c'
+            '8a87b04cdfa86e4f67290d158894d9242617c127af46e85f926ecfaf51a936eb'
+            '6b0d2e8b89d9f3dc8ac0b37d74d3be741219d010710516d5008143acbbfd1f26')
+build() {
+  export DOTNET_ROOT=$(cygpath -am "$MINGW_PREFIX/lib/dotnet")
+  export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+  /usr/bin/python3 "$srcdir/netstandard-reference/build.py" "$srcdir/standard-${_commit:0:8}.tar.gz" "$srcdir/built" "$srcdir/buildtools-09e02305.tar.gz" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/netstandard-reference/check.py" "$srcdir/standard-${_commit:0:8}.tar.gz" "$srcdir/built" "$srcdir/consumer" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local target="$pkgdir$MINGW_PREFIX/lib/dotnet/packs/NETStandard.Library.Ref/$pkgver"
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  mkdir -p "$target/ref/netstandard2.0" "$doc"
+  install -m644 "$srcdir/built/ref/"*.dll "$target/ref/netstandard2.0/"
+  install -Dm644 "$srcdir/built/feed/netstandard.library.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/netstandard.library.$pkgver.nupkg"
+  install -m644 "$srcdir/built/"{build-results,tool-inputs,package-metadata}.json "$srcdir/consumer/"{results,package-audit,metadata-results}.json "$doc/"
+  install -m644 "$srcdir/netstandard-reference/README.md" "$doc/"
+  install -Dm644 "$srcdir/built/standard-$_commit/LICENSE.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE.TXT"
+  install -Dm644 "$srcdir/built/standard-$_commit/THIRD-PARTY-NOTICES.TXT" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/THIRD-PARTY-NOTICES.TXT"
+}

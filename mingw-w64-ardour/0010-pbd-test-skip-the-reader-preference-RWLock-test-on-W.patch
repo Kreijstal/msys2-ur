@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Mon, 26 Oct 2026 05:09:25 +0100
+Subject: [PATCH 10/10] pbd/test: skip the reader-preference RWLock test on
+ Windows
+
+RWLockTest::run_thread_sequence_test checks that a second read-lock can
+be acquired while a writer is blocked waiting for the first reader.
+That holds for glibc's default (reader-preferring) pthread rwlock, but
+std::shared_mutex makes no such promise. On MinGW it is backed by
+winpthreads, whose rwlock blocks new readers as soon as a writer
+waits, so the try-lock fails and CPPUNIT_ASSERT in the worker thread
+terminates the whole test runner.
+
+Only register the test on non-Windows platforms, documenting why.
+---
+ libs/pbd/test/rwlock_test.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/libs/pbd/test/rwlock_test.h b/libs/pbd/test/rwlock_test.h
+index ff2b90a..b319a6e 100644
+--- a/libs/pbd/test/rwlock_test.h
++++ b/libs/pbd/test/rwlock_test.h
+@@ -9,7 +9,13 @@ class RWLockTest : public CppUnit::TestFixture
+ 	CPPUNIT_TEST_SUITE (RWLockTest);
+ 	CPPUNIT_TEST (single_thread_test);
+ 	CPPUNIT_TEST (run_thread_test);
++#ifndef PLATFORM_WINDOWS
++	/* Taking another read-lock while a writer is waiting is not
++	 * possible with winpthreads' (writer-preferring) rwlock, which backs
++	 * std::shared_mutex on MinGW, nor with Windows SRW locks.
++	 */
+ 	CPPUNIT_TEST (run_thread_sequence_test);
++#endif
+ 	CPPUNIT_TEST_SUITE_END ();
+ 
+ public:

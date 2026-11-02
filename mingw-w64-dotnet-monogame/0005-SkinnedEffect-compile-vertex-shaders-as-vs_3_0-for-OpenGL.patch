@@ -1,0 +1,23 @@
+Subject: SkinnedEffect: compile vertex shaders as vs_3_0 for OpenGL
+
+diff --git a/MonoGame.Framework/Platform/Graphics/Effect/Resources/SkinnedEffect.fx b/MonoGame.Framework/Platform/Graphics/Effect/Resources/SkinnedEffect.fx
+index 0df33bf..dc8e72b 100644
+--- a/MonoGame.Framework/Platform/Graphics/Effect/Resources/SkinnedEffect.fx
++++ b/MonoGame.Framework/Platform/Graphics/Effect/Resources/SkinnedEffect.fx
+@@ -7,6 +7,16 @@
+ 
+ #include "Macros.fxh"
+ 
++#if !defined(SM4) && !defined(SM6) && !defined(VULKAN)
++// MSYS2 build (OpenGL/MojoShader path): the vkd3d HLSL compiler needs 13
++// temporaries for several skinned lighting vertex shaders, one more than
++// vs_2_0 allows, so the vertex shaders are compiled as vs_3_0. MojoShader
++// translates vs_3_0 to the same GLSL as vs_2_0; pixel shaders stay ps_2_0.
++#undef TECHNIQUE
++#define TECHNIQUE(name, vsname, psname ) \
++	technique name { pass { VertexShader = compile vs_3_0 vsname (); PixelShader = compile ps_2_0 psname(); } }
++#endif
++
+ #define SKINNED_EFFECT_MAX_BONES   72
+ 
+ 

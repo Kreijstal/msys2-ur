@@ -1,0 +1,58 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=powershell-powershellget
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.2.5
+pkgrel=1
+_commit=22a87ee00bc461fe49068c9e8e1b079bfdc6c3f8
+pkgdesc='Complete source PowerShellGet module, DSC resources and NuGet PSModule package'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/PowerShell/PowerShellGetv2'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-powershell-packagemanagement>=1.4.4")
+makedepends=('python' "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131")
+options=('!strip' '!lto')
+source=("powershellget-$_commit.tar.gz::https://codeload.github.com/PowerShell/PowerShellGetv2/tar.gz/$_commit"
+        prepare.py
+        BuildModule.ps1
+        pack.py
+        check.sh
+        verify-restored.py
+        Smoke.ps1
+        Offline.ps1
+        make-fixtures.py
+        published-provenance.json
+        README.md)
+sha256sums=('05cad5cbc038581655c707178859684e58af1f5b6a3a6a6008dca34ac358e83f'
+            'e44a11ed734aefc94d2e255213ca55ab2cb64e2d9f41ba188cd178456ae9365a'
+            '5357ccca7822ea1e7cef6259885dd800ba8520748a6c07056880f82e9829441e'
+            'b7723f2349a6670754db3ca77ee08a4e018aeaf730f7a1bcb1e219742fb34760'
+            'd2b6682f196b42795dbf74661d68a6c8c218cf3375120c9f289a961f7ca1b5b0'
+            'df6427a38c5fe5b731fdf28f0b13efd17db6ca6a2e395044a2873d7b9681a12d'
+            'c160b45dfd994e8da26d11d305c77a7c3419f1a9ddd4aaa7320116fcc5006098'
+            '9421e6ef87271f8c108e692b48f3b4f52830757a4a0932b7ce632cce36be0ff2'
+            '57b8d1b31359bd2d08dd10e5beed86199288951d7e19ec3326e5d826864401f8'
+            '7173eec941354fa830b05bbc498957de8d284af63ef17bd85e553e51e4bce6bc'
+            '8543a08e5fa18761ff41b8e42c0971a9e54627af982f6d04680de4edf1c8714b')
+prepare() { /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/PowerShellGetv2-$_commit" "$srcdir/prepared"; }
+build() {
+  local owned="$srcdir/build-owned"
+  mkdir "$owned"
+  export ProgramFiles=$(cygpath -am "$owned/ProgramFiles") ProgramData=$(cygpath -am "$owned/ProgramData")
+  export APPDATA=$(cygpath -am "$owned/AppData") LOCALAPPDATA=$(cygpath -am "$owned/LocalAppData")
+  export PSModulePath='E:/msys64/clang64/lib/dotnet/tools/powershell-module-test-host/Modules'
+  /clang64/bin/powershell-module-test-host "$(cygpath -am "$srcdir/BuildModule.ps1")" "$(cygpath -am "$srcdir/prepared/source")" "$(cygpath -am "$owned")"
+  /usr/bin/python3 "$srcdir/pack.py" "$srcdir/prepared" "$srcdir/feed"
+}
+check() { bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"; }
+package() {
+  install -Dm644 "$srcdir/feed/powershellget.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/powershellget.$pkgver.nupkg"
+  local module="$pkgdir$MINGW_PREFIX/lib/powershell/Modules/PowerShellGet/$pkgver"
+  mkdir -p "$module"
+  cp -R "$srcdir/prepared/module/." "$module/"
+  install -Dm644 "$srcdir/prepared/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
+  install -m644 "$srcdir/prepared/source-build.json" "$srcdir/published-provenance.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
+}

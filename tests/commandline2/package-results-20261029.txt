@@ -1,0 +1,265 @@
+{
+  "finished_at_utc": "2026-10-29T09:41:22.491260+00:00",
+  "host": "win11",
+  "build_root": "/e/codex-dotnet10/commandline2pkg1.FaO0xK",
+  "checks": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 0,
+      "log": "makepkg.log",
+      "log_sha256": "0bf875e1284c98b769543e8d6717754f942fc862d68e2f90bc82e14dc9f1c55d"
+    },
+    {
+      "command": "pacman -U --noconfirm \"$PWD/mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap-2.0.2-1-any.pkg.tar.zst\"",
+      "exit_code": 0,
+      "log": "install.log",
+      "log_sha256": "bbe6fa202dfa944045f1f77fdc2e4b0d8faac36383d38cc9bbf8993ace2b961c"
+    },
+    {
+      "command": "pacman -Qkk mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap mingw-w64-clang-x86_64-dotnet-commandline",
+      "exit_code": 0,
+      "log": "pacman-check.log",
+      "log_sha256": "de5e118bf8477bce7e427a29cc61e636dad0ac635b161bf7168667abd9b66029"
+    },
+    {
+      "command": "/clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-commandline2-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check",
+      "exit_code": 0,
+      "log": "installed-check.log",
+      "log_sha256": "500793b0176dda5130e9fddb25b49a1afeebc9c4408275f6678e3887dad1bd91"
+    }
+  ],
+  "installed_check": {
+    "command": [
+      "E:/msys64/clang64/bin/python.exe",
+      "-X",
+      "utf8",
+      "E:/msys64/clang64/share/doc/dotnet-commandline2-bootstrap/checks/check.py",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/plan",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/build",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/localized",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/consumer"
+    ],
+    "exit_code": 0,
+    "payload_files_verified": 18,
+    "both_original_archive_profiles_verified": true,
+    "actual_source_NuGet73_NET10_archive_restore_passed": true,
+    "original_cultures": 14,
+    "archive_satellites": 28,
+    "source_runtime_executions": 3,
+    "unchanged_upstream_tokenization_cases_per_execution": 9,
+    "NS2_reference_only_dependencies_runtime_substituted": false,
+    "original_NS2_memory_package_runtime_closure_verified": false,
+    "full_original_trim_analyzer_integration": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "actual_feed_restore": {
+    "command": [
+      "E:/msys64/clang64/lib/dotnet10/dotnet.exe",
+      "E:/msys64/clang64/lib/dotnet10/build-packs/nuget-7.3.0-preview.1.11413-net10-bootstrap/bin/MSBuild.dll",
+      "E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/feed-restore/Consumer.proj",
+      "-t:Restore",
+      "-nologo",
+      "-v:minimal"
+    ],
+    "exit_code": 0,
+    "actual_source_NuGet73_restore": true,
+    "exact_NET10_compile_runtime_assets_selected": true,
+    "NS2_Memory_dependency_not_substituted_into_NET10": true,
+    "restored_archive_sha256": "fa079a2de8b4f657d416be751e0c4337b09a230f2b83c0164643065bc7e8266c",
+    "original_NS2_memory_package_runtime_closure_verified": false,
+    "full_dependency_goal_complete": false
+  },
+  "source_audit": {
+    "exact_vmr_files_verified": 405,
+    "original_compile_items_per_framework": 74,
+    "original_frameworks": [
+      "net10.0",
+      "netstandard2.0"
+    ],
+    "original_xlf_inputs": 14,
+    "satellites": 28,
+    "all_source_policy_resource_reference_output_hashes_match": true,
+    "original_production_source_changes": 0,
+    "full_original_framework_runtime_dependency_closure": false,
+    "full_sdk10_built": false,
+    "full_dependency_goal_complete": false
+  },
+  "full_original_framework_runtime_dependency_closure": false,
+  "full_sdk10_built": false,
+  "full_dependency_goal_complete": false
+}
+
+$ makepkg --cleanbuild --force --noconfirm
+EXIT 0
+==> Making package: mingw-w64-dotnet-commandline2-bootstrap 2.0.2-1 (29 Oct 2026 10:37:24)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found commandline2-vmr-44525024.tar.gz
+  -> Found arcade-9f286dde.tar.gz
+  -> Found commandline2-source-1.tar.gz
+==> Validating source files with sha256sums...
+    commandline2-vmr-44525024.tar.gz ... Passed
+    arcade-9f286dde.tar.gz ... Passed
+    commandline2-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting commandline2-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-commandline2-bootstrap 2.0.2-1 (29 Oct 2026 10:39:53)
+
+
+$ pacman -U --noconfirm "$PWD/mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap-2.0.2-1-any.pkg.tar.zst"
+EXIT 0
+loading packages...
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (1) mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap-2.0.2-1
+
+Total Installed Size:  0.62 MiB
+
+:: Proceed with installation? [Y/n] 
+checking keyring...
+checking package integrity...
+loading package files...
+checking for file conflicts...
+checking available disk space...
+:: Processing package changes...
+installing mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap...
+
+
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap mingw-w64-clang-x86_64-dotnet-commandline
+EXIT 0
+mingw-w64-clang-x86_64-dotnet-commandline2-bootstrap: 34 total files, 0 altered files
+mingw-w64-clang-x86_64-dotnet-commandline: 12 total files, 0 altered files
+
+
+$ /clang64/bin/python.exe -X utf8 E:/msys64/clang64/share/doc/dotnet-commandline2-bootstrap/checks/check-installed.py E:/msys64/clang64 E:/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check
+EXIT 0
+PASS net10.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 8.0.31: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+
+PASS 18 installed payload hashes and both exact source archive profiles
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/prepare.log
+PASS405 exact VMR files;original CommandLine2 NET10 and NS2 profiles prepared
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/evaluate.log
+PASS evaluated both original CommandLine2 NET10 and NS2 profiles
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/build.log
+PASS original net10.0 2.0.2 2.0.2.0 2.0.225.61305 74 source inputs
+PASS original netstandard2.0 2.0.2 2.0.2.0 2.0.225.61305 74 source inputs
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/localize.log
+PASS28 original NET10/NS2 satellite assemblies;all14 original cultures
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/audit.log
+PASS405 exact VMR files,74 original compile items per profile,28 satellites and all reference/output hashes
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/runtime-check.log
+PASS net10.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 8.0.31: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/stage.log
+PASS staged source CommandLine2 NET10/NS2 NuGet archive,28 satellites and 18 payload files
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/src/staged-check.log
+PASS net10.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 8.0.31: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+
+PASS 18 installed payload hashes and both exact source archive profiles
+
+
+/e/codex-dotnet10/commandline2pkg1.FaO0xK/installed-check/feed-restore/restore.log
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\commandline2pkg1.FaO0xK\installed-check\feed-restore\Consumer.proj (in 677 ms).
+
+
+PROTOTYPE /e/codex-dotnet10/commandline2proto1.qbR51Y/build.log
+Traceback (most recent call last):
+  File "E:/codex-dotnet10/commandline2proto1.qbR51Y/build.py", line 15, in <module>
+    E.ElementTree(p).write(tool/'Tool.csproj',encoding='utf-8',xml_declaration=True);(tool/'NuGet.config').write_text('<configuration><packageSources><clear/></packageSources></configuration>');run('helper',[host8,'build',tool/'Tool.csproj','-c','Release','--configfile',tool/'NuGet.config','-p:UseSharedCompilation=false','-v:minimal'],tool,host8.parent)
+                                                                                                                                                                                                  ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:/codex-dotnet10/commandline2proto1.qbR51Y/build.py", line 9, in run
+    commands.append(dict(command=[str(p) for p in cmd],exit_code=r.returncode));assert r.returncode==0,(label,r.returncode)
+                                                                                       ^^^^^^^^^^^^^^^
+AssertionError: ('helper', 1)
+
+
+PROTOTYPE /e/codex-dotnet10/commandline2proto1.qbR51Y/build/tools/helper.log
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\commandline2proto1.qbR51Y\build\tools\Tool.csproj (in 79 ms).
+E:\codex-dotnet10\commandline2proto1.qbR51Y\plan\arcade\CalculateAssemblyAndFileVersions.cs(7,7): error CS0246: The type or namespace name 'NuGet' could not be found (are you missing a using directive or an assembly reference?) [E:\codex-dotnet10\commandline2proto1.qbR51Y\build\tools\Tool.csproj]
+
+Build FAILED.
+
+E:\codex-dotnet10\commandline2proto1.qbR51Y\plan\arcade\CalculateAssemblyAndFileVersions.cs(7,7): error CS0246: The type or namespace name 'NuGet' could not be found (are you missing a using directive or an assembly reference?) [E:\codex-dotnet10\commandline2proto1.qbR51Y\build\tools\Tool.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:04.11
+
+
+PROTOTYPE /e/codex-dotnet10/commandline2proto1.qbR51Y/build2.log
+PASS original net10.0 2.0.2 2.0.2.0 2.0.225.61305 74 source inputs
+PASS original netstandard2.0 2.0.2 2.0.2.0 2.0.225.61305 74 source inputs
+
+
+PROTOTYPE /e/codex-dotnet10/commandline2proto1.qbR51Y/localize.log
+PASS28 original NET10/NS2 satellite assemblies;all14 original cultures
+
+
+PROTOTYPE /e/codex-dotnet10/commandline2proto1.qbR51Y/check.log
+PASS net10.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 8.0.31: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+PASS netstandard2.0 on 10.0.5: original identity/PDB/CLS, 540 exact resources, 14 satellite identities, 9 unchanged upstream tokenization cases, typed parsing/errors, response files, completions, help, sync/async actions and exit status
+

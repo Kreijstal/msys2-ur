@@ -1,0 +1,177 @@
+{
+  "date_utc": "2026-10-29T00:54:11.425831+00:00",
+  "host": "win11",
+  "recipe": "mingw-w64-dotnet-roslyn50",
+  "source_version": "5.0.0",
+  "source_commit": "6c4a46a31302167b425d5e0a31ea83c9a9aa1d09",
+  "source_archive_sha256": "7b0bfa1c049eeddf3257ad61b28eca11c259296d478edd4cf58767b2ed9184c4",
+  "prototype_root": "/e/codex-dotnet10/roslyn50pkg1.Tt6PWb",
+  "original_production_cs": {
+    "Microsoft.CodeAnalysis": 1042,
+    "Microsoft.CodeAnalysis.CSharp": 1136
+  },
+  "original_generator_cs": {
+    "CSharpSyntaxGenerator": 20,
+    "BoundTreeGenerator": 3,
+    "CSharpErrorFactsGenerator": 1
+  },
+  "regenerated_csharp_files": 5,
+  "original_source_archive_inputs_verified": 2246,
+  "actual_compiler_and_consumer_package_references_verified": 41,
+  "public_api_declarations": {
+    "Microsoft.CodeAnalysis": 4284,
+    "Microsoft.CodeAnalysis.CSharp": 6268
+  },
+  "csharp14_extension_property_parse_emit_execution_passed": true,
+  "compiler_analyzer_incremental_generator_and_csharp13_execution_passed": true,
+  "all_original_resx_xlf_cultures_verified": true,
+  "localized_resource_sets": 28,
+  "localized_resource_strings": 39480,
+  "localization_cultures": 13,
+  "no_framework_native_helper_loaded": true,
+  "source_audit_exit_code": 0,
+  "corrected_consumer_exit_code": 0,
+  "initial_makepkg_exit_code": 4,
+  "package_completed": false,
+  "formal_pacman_installed": false,
+  "source_production_changes": 0,
+  "initial_runtime9_dependency_revision": "9.0.0-2",
+  "initial_producer_constraint_warnings_retained": true,
+  "dependency_policy_prototype": {
+    "command": [
+      "/clang64/lib/dotnet/dotnet.exe",
+      "build",
+      "E:/codex-dotnet10/roslyn50minimum-probe.56NpYW/Build.csproj",
+      "-c",
+      "Release",
+      "--configfile",
+      "E:/codex-dotnet10/roslyn50minimum-probe.56NpYW/NuGet.config",
+      "-p:UseSharedCompilation=false",
+      "-v:minimal"
+    ],
+    "exit_code": 0,
+    "packages": [
+      "Microsoft.CodeAnalysis.Common/5.0.0",
+      "Microsoft.CodeAnalysis.CSharp/5.0.0",
+      "Microsoft.NETCore.Platforms/1.1.2",
+      "NETStandard.Library/2.0.3",
+      "System.Buffers/4.6.1",
+      "System.Collections.Immutable/9.0.0",
+      "System.Memory/4.6.3",
+      "System.Numerics.Vectors/4.6.1",
+      "System.Reflection.Metadata/9.0.0",
+      "System.Runtime.CompilerServices.Unsafe/6.1.2",
+      "System.Text.Encoding.CodePages/9.0.0",
+      "System.Threading.Tasks.Extensions/4.6.3"
+    ],
+    "nuget_dependency_constraint_warnings_are_errors": true,
+    "all_cases_passed": true,
+    "powershell76_immutable9014_verified": false
+  },
+  "runtime9_minimum_dependency_fix_now_installed": "9.0.0-3",
+  "fresh_second_clean_build": {
+    "root": "/e/codex-dotnet10/roslyn50pkg2.NvEGPf",
+    "session_id": 18573,
+    "status": "confirmed live; revalidate same handle",
+    "source_workflow_files": 13,
+    "source_workflow_sha256": "5af950e5505c8498e14571fbd3837e7b387f334a7aa82be780ffc10614b42958",
+    "producer_and_consumer_nu1608_warnings_are_errors": true,
+    "terminal_exit_code": null
+  },
+  "commands": [
+    {
+      "command": "makepkg --cleanbuild --force --noconfirm",
+      "exit_code": 4,
+      "scope": "Initial clean build; both libraries compiled, fixture expected old localization count"
+    },
+    {
+      "command": "/usr/bin/python3 src/roslyn50-workflow/check.py \"$PWD/src\" \"$PWD/src/prepared\" \"$PWD/src/consumer2\"",
+      "exit_code": 0,
+      "scope": "Corrected original RESX/XLF coverage; all compiler/API/resource checks"
+    },
+    {
+      "command": "/usr/bin/python3 src/roslyn50-workflow/audit.py \"$PWD/src\" \"$PWD/src/prepared\" \"$PWD/src/consumer2\"",
+      "exit_code": 0,
+      "scope": "Original source/generator/cache audit before runtime9 upgrade"
+    },
+    {
+      "command": "/usr/bin/python3 normalize-package-minimums.py NEW_SOURCE_ONLY_PROBE Microsoft.CodeAnalysis; /usr/bin/python3 normalize-package-minimums.py NEW_SOURCE_ONLY_PROBE Microsoft.CodeAnalysis.CSharp",
+      "exit_code": 0,
+      "scope": "Separate copied packages, all non-nuspec bytes verified unchanged"
+    },
+    {
+      "command": "dotnet build NEW_SOURCE_ONLY_PROBE/Build.csproj -c Release --configfile NEW_SOURCE_ONLY_PROBE/NuGet.config -p:UseSharedCompilation=false -v:minimal",
+      "exit_code": 0,
+      "scope": "Actual Standard2.0 Roslyn5 API use with source maintenance overrides and NU1608 as error"
+    }
+  ],
+  "attempt_history": [
+    "Initial producers compiled all original sources and regenerated files. Runtime9-2 exact NuGet constraints generated NU1608 with original Roslyn source-build maintenance overrides. Runtime9-3 now corrects those constraints and is separately clean-built/installed/validated.",
+    "Initial Roslyn check passed CSharp14, all10552 original public API declarations and each supplied localized resource, then failed a copied42-set threshold. The5.0 source has28 sets; the checker now derives total sets/values from original RESX/XLF files. Corrected complete fixture and source/cache audit pass.",
+    "Paired CSharp/Common versions remain exact. Runtime dependency metadata now uses the exact producer versions as minimums, permitting declared servicing overrides such as Immutable9.0.14 without modifying DLL bytes. The current separate real NuGet build passes; actual9.0.14 integration remains unverified.",
+    "Fresh source workflow2 is running with NU1608 treated as an error. Its result is not claimed complete."
+  ],
+  "evidence": {
+    "local_directory": "/tmp/roslyn50-prototype1",
+    "files": 221,
+    "archive_sha256": "3d0fdeb72da79cf3e188a6dce1ba3549736b39c9d4c1d0c9361bcd5aa57bbcd8",
+    "all_member_hashes_verified": true,
+    "result_files_sha256": {
+      "original-localization-coverage.json": "d425aa35f8bc5fa70ea51018dd0554e107bbac4e0cd1c2ba785f7780db1b8770",
+      "source-package-audit.json": "fe8cd285b9de6717accbad3faaf28d9983735221d45bb7e99eadf5088b66304a",
+      "consumer-results.json": "18da1afee4cfd4f2dca67011e82069046ad82b86f64d7498aaffd8ec95cf139b",
+      "source-inputs.json": "e0dddb8417411bf270baadbb5ae358588b76c7883eb5e4acd94541169d89a3f7",
+      "current-goal-build-checkpoint.json": "c7f12f44a6b4ebfbab728366ea1c9dd7b9d34b1d270ae3ebfae7c4928fdf05da",
+      "prototype-evidence-files.json": "5b3acd86ff8f0287bb384f17f4c3c6dc79eb2afdb9dbde736c862acecfd52a97",
+      "generated-sources.json": "95a405648159e17a8185daa711be6fac18431c14ffef8ab5041f2a81a478628d"
+    },
+    "minimum_policy_evidence_sha256": "3211ea3f992f84301efe4eac991821559db85a3d600268a31145e14ed62d6561"
+  },
+  "current_live_build_checkpoint": {
+    "observed_at_utc": "2026-10-29T00:51:42.504445+00:00",
+    "builds": {
+      "pristine": {
+        "root": "/e/codex-dotnet10/framework10fresh.gOPSWd",
+        "session_id": 58835,
+        "completed_projects": 156,
+        "planned_projects": 190,
+        "last_log_lines": [
+          "Building original framework project: System.Security",
+          "PASS framework assembly: System.Security",
+          "Building original framework project: System.Security.Cryptography.Algorithms"
+        ]
+      },
+      "runtime10_package": {
+        "root": "/e/codex-dotnet10/runtime10pkg1.qfZBvw",
+        "session_id": 58459,
+        "completed_projects": 110,
+        "planned_projects": 190,
+        "last_log_lines": [
+          "Building original framework project: System.Diagnostics.Tools",
+          "PASS framework assembly: System.Diagnostics.Tools",
+          "Building original framework project: stub:System.Drawing.Common"
+        ]
+      },
+      "roslyn50_second_clean": {
+        "root": "/e/codex-dotnet10/roslyn50pkg2.NvEGPf",
+        "session_id": 18573,
+        "last_log_lines": [
+          "       E:\\msys64\\clang64\\bin\\file.exe [--help]",
+          "  -> Extracting roslyn50-source-2.tar.gz with bsdtar",
+          "==> Starting prepare()...",
+          "==> Starting build()..."
+        ]
+      }
+    }
+  },
+  "powershell76_immutable9014_integration_verified": false,
+  "original_cli_and_other_framework_profiles_complete": false,
+  "sdk53_compiler_graph_built": false,
+  "full_sdk10_built": false,
+  "powershell76_built": false,
+  "full_dependency_goal_complete": false,
+  "dependency_count_increment": 0,
+  "observed_original_csharp_parser_nullable_warning_sites": 4,
+  "other_original_source_warnings_not_quantified_in_prototype": true,
+  "superseded_by": "tests/roslyn5/package50-results-20261029.json"
+}

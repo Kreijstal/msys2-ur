@@ -1,0 +1,35 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=javax-annotation-api
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=1.3.2
+pkgrel=1
+pkgdesc="JSR-250 common annotations (javax.annotation), built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/javaee/javax.annotation'
+license=('spdx:CDDL-1.1 OR GPL-2.0-only WITH Classpath-exception-2.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/javaee/javax.annotation/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('88bc56ca4fe7c1b0b2825ffc3bc449bf97d6193e5d5fe534fbb6c83286d6b2fb')
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "javax.annotation-${pkgver}"
+  jb_module javax.annotation:javax.annotation-api:${pkgver} src/main/java -u pom.xml \
+    -m "Automatic-Module-Name: java.annotation"
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # upstream has no unit tests
+  jb_loadcheck javax.annotation:javax.annotation-api
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install javax.annotation:javax.annotation-api
+  install -Dm644 "javax.annotation-${pkgver}/LICENSE" \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE"
+}

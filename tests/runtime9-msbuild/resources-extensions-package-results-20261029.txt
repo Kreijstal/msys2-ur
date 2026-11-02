@@ -1,0 +1,87 @@
+Original source Resources.Extensions9.0.11 NET9 package validation
+Finished: 2026-10-29T04:11:47.148610+00:00
+Host/root: win11 /e/codex-dotnet10/resources9pkg1.Frx6Ha
+Package: mingw-w64-clang-x86_64-dotnet-resources-extensions9-9.0.11-1-any.pkg.tar.zst
+Package SHA256: b0f3eed7a7f6f5926f9d9f703ef9d8d9ea27b4a1e80cd70d67772e1ac48b9be9
+Workflow SHA256: 35cd7cfdff44111d7a3d92f7865f65515938fd7f539aedddbff6c14494f58d19
+
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit0
+$ pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-resources-extensions9-9.0.11-1-any.pkg.tar.zst
+RESULT: exit0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-resources-extensions9
+mingw-w64-clang-x86_64-dotnet-resources-extensions9: 22 total files, 0 altered files
+
+$ /clang64/bin/python.exe -X utf8 src/resources-extensions9-workflow/check.py src/prepared installed-consumer /clang64/lib/dotnet/library-packs
+RESULT: exit0
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+$ python /tmp/audit-resources9-package.py
+RESULT: exit0;13 payloads;46 original source/project/resource/policy inputs independently match pinned archive.
+All160 terminal evidence hashes,recipe/SRCINFO and17 frozen workflow files verified.
+
+Public/protected CLR API:20 expected,20 actual,0 missing,0 extra,0 changed,0 nullable annotation differences.
+All52 neutral resource values pass;36 original C# sources are unchanged.
+Exact source Formats.Nrbf9.0.11 NuGet/cache/consumed DLL bytes verified.
+Original IntelliSense XML: {"package_id": "Microsoft.Private.Intellisense", "version": "9.0.0-preview-20241010.1", "package_sha256": "227bc364165d241eeb122e410216e9cbdb955400402475477c506e7ce8c4117c", "member": "IntellisenseFiles/net/1033/System.Resources.Extensions.xml", "xml_sha256": "7f4307fedd744fddb065adbe0f519c78fc48aae740b8b319e7cd0dba262127db", "original_intellisense_policy": true, "no_implementation_binaries_in_documentation_package": true}
+Original documentation transport contains no implementation binaries;the exact selected XML and source-build package/cache bytes match.
+
+Installed execution:
+PASS source Resources.Extensions9:all52 resources,primitive/BCL interoperability,Unicode,typed converters,stream activation/ownership,NRBF strings/arrays/classes/cycles/callbacks,files and invalid inputs
+
+Independent source NET8 producer:
+PASS source NET8 generated3 owned resource NRBF payloads
+
+
+Original behavior retained:general streams honor closeAfterWrite;the exact MemoryStream fast path ignores it. Both branches are checked;full stream-ownership correction is not claimed.
+Plain primitive resources interoperate with the BCL reader. Extended resources select the original DeserializingResourceReader. Converter/activator/NRBF class-cycle and callback behavior passes.
+Bootstrap language policy: {"original_sdk": "9.0.111", "original_language_setting": "preview", "bootstrap_compiler": "source Roslyn5.3", "bootstrap_language": "13.0", "original_preview_toolchain_verified": false}
+Source SDK8 only evaluates/builds tasks/restores;explicit source NET9 refs and source compilers drive compilation. Exact upstream preview toolchain remains unverified.
+
+Other framework profiles/NETFramework redirect artifacts,remaining9.0.11 libraries,full MSBuild/SDK10/PowerShell7.6 and remaining compatibility gates stay open.
+Original pinned IntelliSense XML has also been located for earlier CodeDom9 and MetadataLoadContext9 packages;their missing documentation assets are separately tracked.
+
+Full makepkg log:
+==> Making package: mingw-w64-dotnet-resources-extensions9 9.0.11-1 (29 Oct 2026 05:07:11)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found runtime-msbuild9-fa7cdded.tar.gz
+  -> Found intellisense9-20241010.1.nupkg
+  -> Found resources-extensions9-source-1.tar.gz
+==> Validating source files with sha256sums...
+    runtime-msbuild9-fa7cdded.tar.gz ... Passed
+    intellisense9-20241010.1.nupkg ... Passed
+    resources-extensions9-source-1.tar.gz ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting resources-extensions9-source-1.tar.gz with bsdtar
+==> Starting prepare()...
+==> Starting build()...
+==> Starting check()...
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> WARNING: Package contains reference to $(cygpath -m /)
+==> Creating package "mingw-w64-clang-x86_64-dotnet-resources-extensions9"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-resources-extensions9 9.0.11-1 (29 Oct 2026 05:08:40)
+
+Build checks:
+PASS fresh exact NET9 package/cache/asset bytes,original CLR/nullable APIs and real isolated metadata consumer
+
+Original source audit:
+PASS 46 original source/project/resource bytes;all original resource scope accounted for
+

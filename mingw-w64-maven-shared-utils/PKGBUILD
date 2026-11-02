@@ -1,0 +1,61 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+_realname=maven-shared-utils
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=3.4.2
+pkgrel=1
+pkgdesc="Apache Maven shared utilities, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://maven.apache.org/shared/maven-shared-utils/'
+msys2_repository_url='https://github.com/apache/maven-shared-utils'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-commons-io")
+optdepends=("${MINGW_PACKAGE_PREFIX}-java-jansi: coloured message output")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-jansi"
+             "${MINGW_PACKAGE_PREFIX}-java-jsr305")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-java-junit4"
+              "${MINGW_PACKAGE_PREFIX}-java-hamcrest-library"
+              "${MINGW_PACKAGE_PREFIX}-java-plexus-utils")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/apache/maven-shared-utils/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('af5df3e0f9d9cad08331ddd04b4651b1d12417504d517aeaa2089aeda36094c3')
+# the test resources contain symbolic links that bsdtar cannot create here
+noextract=("${_realname}-${pkgver}.tar.gz")
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  bsdtar -xf "${_realname}-${pkgver}.tar.gz" --exclude "${_src}/src/test/resources/symlinks"
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_module org.apache.maven.shared:maven-shared-utils:${pkgver} src/main/java \
+    -r src/main/resources -u pom.xml -c com.google.code.findbugs:jsr305 \
+    -- org.slf4j:slf4j-api 'org.fusesource.jansi:jansi?' commons-io:commons-io
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  jb_loadcheck --with org.fusesource.jansi:jansi org.apache.maven.shared:maven-shared-utils
+  # upstream JUnit 4 tests; CaseTest needs commons-text, FileUtilsTest the
+  # symbolic-link fixtures, both unavailable here (as for checkSymlinkBehaviour).
+  # The command line tests run Unix shells or expect Unix quoting; OsTest
+  # fakes os.name and only works if it is the first to load Os.
+  jb_test maven-shared-utils src/test/java -r src/test/resources \
+    -x '/(CaseTest|FileUtilsTest)\.java$' \
+    -X CommandLineUtilsTest -X BourneShellTest -X OsTest \
+    -X 'DirectoryScannerTest#(testFollowSymlinks|checkSymlinkBehaviour)' \
+    -- org.apache.maven.shared:maven-shared-utils org.hamcrest:hamcrest-library \
+       org.codehaus.plexus:plexus-utils org.fusesource.jansi:jansi
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.apache.maven.shared:maven-shared-utils
+}

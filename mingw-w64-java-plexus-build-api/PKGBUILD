@@ -1,0 +1,55 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+
+# org.codehaus.plexus:plexus-build-api 1.x (used by Modello); the
+# org.sonatype.plexus 0.0.x line is java-sonatype-plexus-build-api.
+
+_realname=plexus-build-api
+pkgbase=mingw-w64-java-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-java-${_realname}"
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="Plexus incremental build API, built from source (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/codehaus-plexus/plexus-build-api'
+license=('spdx:Apache-2.0')
+depends=("${MINGW_PACKAGE_PREFIX}-java-plexus-utils"
+         "${MINGW_PACKAGE_PREFIX}-java-javax-inject"
+         "${MINGW_PACKAGE_PREFIX}-java-slf4j-api"
+         "${MINGW_PACKAGE_PREFIX}-java-sonatype-plexus-build-api")
+makedepends=("${MINGW_PACKAGE_PREFIX}-java-build-helper"
+             "${MINGW_PACKAGE_PREFIX}-java-sisu-plexus")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/codehaus-plexus/plexus-build-api/archive/refs/tags/${_realname}-${pkgver}.tar.gz")
+sha256sums=('47aae8f94b6fffd3ea0816eca79094541a28fbf35a9d0ac1fd6459196b30ee1b')
+
+_src=${_realname}-${_realname}-${pkgver}
+
+prepare() {
+  cd "${_src}"
+  sed -i "s/\${project.version}/${pkgver}/" src/main/resources/org/codehaus/plexus/build/version.properties
+}
+
+build() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  cd "${_src}"
+  # Sisu index of DefaultBuildContext (sisu-maven-plugin upstream)
+  jb_module org.codehaus.plexus:plexus-build-api:${pkgver} src/main/java \
+    -r src/main/resources -u pom.xml -P sisu \
+    -c org.eclipse.sisu:org.eclipse.sisu.plexus \
+    -- org.codehaus.plexus:plexus-utils javax.inject:javax.inject org.slf4j:slf4j-api \
+       org.sonatype.plexus:plexus-build-api
+}
+
+check() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  # no upstream tests
+  jb_loadcheck --with org.eclipse.sisu:org.eclipse.sisu.plexus org.codehaus.plexus:plexus-build-api
+  unzip -p "$(jb_jarpath org.codehaus.plexus:plexus-build-api)" META-INF/sisu/javax.inject.Named \
+    | grep -q org.codehaus.plexus.build.DefaultBuildContext
+}
+
+package() {
+  source "${MINGW_PREFIX}/share/java-build-helper/javabuild.sh"
+  jb_install org.codehaus.plexus:plexus-build-api
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/java-${_realname}/LICENSE"
+}

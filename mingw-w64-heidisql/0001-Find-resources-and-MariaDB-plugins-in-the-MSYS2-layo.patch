@@ -1,0 +1,52 @@
+From 4395655cf4deb6a3bad1ec197bd6edb6929e4f45 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Tue, 27 Oct 2026 09:51:50 +0100
+Subject: [PATCH] Find resources and MariaDB plugins in the MSYS2 layout
+
+MSYS2 installs heidisql.exe in <prefix>/bin, where the client libraries
+it scans for (libmariadb.dll, libpq.dll, libsqlite3-0.dll,
+libsybdb-5.dll) already live, so GetLibDir needs no change.  The other
+two locations are relative to the executable on Windows and need a
+fallback:
+
+* GetResourcesDir: functions-*.ini and locale/*.mo are installed in
+  <prefix>/share/heidisql.  Used when the app directory has no
+  functions-mysql.ini, so portable installs are unaffected.
+* GetPluginDir: libmariadb's client plugins are installed in
+  <prefix>/lib/mariadb/plugin.  Used when <appdir>/plugins is missing.
+---
+ source/apphelpers.pas | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/source/apphelpers.pas b/source/apphelpers.pas
+index 21c41c7..3983b15 100644
+--- a/source/apphelpers.pas
++++ b/source/apphelpers.pas
+@@ -1327,12 +1327,24 @@ begin
+   Result := GetLibDir;
+   {$IFDEF WINDOWS}
+   Result := Result + 'plugins' + PathDelim;
++  // MSYS2: heidisql.exe lives in <prefix>\bin next to libmariadb.dll, whose
++  // client plugins are installed in <prefix>\lib\mariadb\plugin
++  if (not DirectoryExists(Result))
++    and DirectoryExists(GetAppDir + '..\lib\mariadb\plugin') then
++    Result := ExpandFileName(GetAppDir + '..\lib\mariadb\plugin') + PathDelim;
+   {$ENDIF}
+ end;
+ 
+ function GetResourcesDir: String;
+ begin
+   Result := GetAppDir;
++  {$IFDEF WINDOWS}
++  // MSYS2: heidisql.exe lives in <prefix>\bin, the function lists and
++  // translations in <prefix>\share\heidisql
++  if (not FileExists(Result + 'functions-mysql.ini'))
++    and FileExists(GetAppDir + '..\share\heidisql\functions-mysql.ini') then
++    Result := ExpandFileName(GetAppDir + '..\share\heidisql') + PathDelim;
++  {$ENDIF}
+   {$IFDEF DARWIN}
+   Result := GetAppDir + '..' + PathDelim + 'Resources' + PathDelim;
+   {$ENDIF}
+-- 
+2.55.0
+

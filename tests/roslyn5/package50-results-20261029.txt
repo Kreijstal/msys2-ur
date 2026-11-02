@@ -1,0 +1,36 @@
+Roslyn5.0 original Standard2.0 Common/CSharp source package
+mingw-w64-clang-x86_64-dotnet-roslyn50 5.0.0-1
+Windows root: /e/codex-dotnet10/roslyn50pkg2.NvEGPf
+Fully fresh second clean makepkg, independent archive audit, pacman install and fresh installed consumer: all exit0.
+Original source commit: 6c4a46a31302167b425d5e0a31ea83c9a9aa1d09
+Production CSharp inputs: Common1042+CSharp1136; original generator tools20+3+1; all5 regenerated compiler source files match original baselines.
+Pinned source inputs2246, actual compiler/consumer package references41. Source changes0.
+Two source NuGets contain28 primary/satellite DLLs. All10552 original API declarations, CSharp14 extension-property execution, CSharp13, diagnostics/cancellation, analyzer loading and incremental generation pass.
+All13 cultures,28 resource sets/39480 strings and German diagnostics pass. No Framework native helper loads.
+Producer references stay exact; runtime dependency constraints are minimums; paired Common5.0.0 stays exact. Every non-nuspec byte is checked unchanged by that packaging adapter.
+NU1608 is treated as an error throughout producer and consumer projects; no such conflicts remain.
+13 regular payload files; pacman23 entries,0 altered.
+
+Visible warnings:
+Original source nullable/static-analysis warnings remain visible under the bootstrap compiler; production sources were not changed.
+NU1603 remains: NETStandard.Library2.0.3 requests Platforms>=1.1.0 and the source feed supplies1.1.2 as the compatible best match.
+The source NuGet package readme advisory is retained. No NU1608 suppression was added.
+
+Exact commands from Windows root:
+$ makepkg --cleanbuild --force --noconfirm
+RESULT: exit 0
+$ /usr/bin/python3 audit-roslyn50-package.py "$PWD"
+RESULT: exit 0
+$ pacman -U --noconfirm ./*-5.0.0-1-any.pkg.tar.zst
+RESULT: exit 0
+$ pacman -Qkk mingw-w64-clang-x86_64-dotnet-roslyn50
+RESULT: exit 0
+$ /usr/bin/python3 src/roslyn50-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+Package SHA256: 1d45e90e67111446dc5eae13b9657bc94aff17ad7d611361f1b8d5696fc85b7e
+Frozen source workflow:13 files SHA256 5af950e5505c8498e14571fbd3837e7b387f334a7aa82be780ffc10614b42958
+Evidence:228 files SHA256 7c54a2861d798564443257ccdecd9cc272ad27da259d3aa998b5f7a28add4068; every member verified.
+Local evidence: /tmp/roslyn50-package2
+
+Original CLI and all framework variants, SDK compiler5.3, Immutable9.0.14 PowerShell-generator integration, SDK10 and PowerShell7.6 remain open. No full dependency completion or original7.4 counter increment is claimed.

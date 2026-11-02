@@ -1,0 +1,46 @@
+audio: add MUE_COMPILE_USE_SYSTEM_FDKAAC
+
+The AAC encoder (audio export to .aac) always built the bundled
+fdk-aac 2.0.3, while every other codec library has a
+MUE_COMPILE_USE_SYSTEM_* switch for distributions. Add one that finds
+fdk-aac through pkg-config (fdk-aac.pc) and links the shared library.
+fdk-aac.pc's Cflags point at <includedir>, but aacenc_lib.h is installed
+in <includedir>/fdk-aac, so add that directory.
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 627cc05d..03b168ba 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -155,6 +155,7 @@ option(MUSE_COMPILE_USE_SHARED_LIBS_IN_DEBUG "Build shared libs if possible in d
+ # === System libraries ===
+ # Important for the maintainers of Linux distributions
+ option(MUE_COMPILE_USE_SYSTEM_FLAC "Try use system flac" OFF)
++option(MUE_COMPILE_USE_SYSTEM_FDKAAC "Use system fdk-aac" OFF)
+ option(MUE_COMPILE_USE_SYSTEM_FREETYPE "Try use system freetype" OFF)
+ option(MUE_COMPILE_USE_SYSTEM_HARFBUZZ "Try use system harfbuzz" OFF)
+ option(MUE_COMPILE_USE_SYSTEM_OPUS "Try use system opus" OFF)
+diff --git a/src/framework/audio/engine/CMakeLists.txt b/src/framework/audio/engine/CMakeLists.txt
+index 88a09d93..68f9c0f6 100644
+--- a/src/framework/audio/engine/CMakeLists.txt
++++ b/src/framework/audio/engine/CMakeLists.txt
+@@ -230,8 +230,18 @@ if (MUSE_MODULE_AUDIO_EXPORT)
+     include(../cmake/SetupFlac.cmake)
+     target_link_libraries(muse_audio_engine PRIVATE ${FLAC_TARGETS})
+ 
+-    add_subdirectory(../thirdparty/fdk-aac fdk_aac EXCLUDE_FROM_ALL)
+-    target_link_libraries(muse_audio_engine PRIVATE fdk_aac)
++    if (MUE_COMPILE_USE_SYSTEM_FDKAAC)
++        find_package(PkgConfig REQUIRED)
++        pkg_check_modules(fdkaac REQUIRED IMPORTED_TARGET fdk-aac)
++        # fdk-aac.pc points at <includedir>; the headers are in <includedir>/fdk-aac
++        pkg_get_variable(FDKAAC_INCLUDEDIR fdk-aac includedir)
++        target_include_directories(muse_audio_engine PRIVATE "${FDKAAC_INCLUDEDIR}/fdk-aac")
++        target_link_libraries(muse_audio_engine PRIVATE PkgConfig::fdkaac)
++        message(STATUS "Using system fdk-aac ${fdkaac_VERSION}")
++    else()
++        add_subdirectory(../thirdparty/fdk-aac fdk_aac EXCLUDE_FROM_ALL)
++        target_link_libraries(muse_audio_engine PRIVATE fdk_aac)
++    endif()
+ endif() # MUSE_MODULE_AUDIO_EXPORT
+ 
+ target_link_libraries(muse_audio_engine PRIVATE muse_audio_common)

@@ -1,0 +1,46 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-immutable8
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=8.0.0
+pkgrel=1
+pkgdesc='Exact System.Collections.Immutable 8.0.0 original NET8 source bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/runtime'
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime8-servicing=8.0.31")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('immutable8-snapshot-5535e31a.tar.gz'
+        'arcade-immutable8-39042b40.tar.gz::https://codeload.github.com/dotnet/arcade/tar.gz/39042b4048580366d35a7c1c4f4ce8fc0dbea4b4'
+        'immutable8-source-1.tar.gz')
+noextract=('immutable8-snapshot-5535e31a.tar.gz' 'arcade-immutable8-39042b40.tar.gz')
+sha256sums=('1164a4cb8b50d9321b46927d1c29d8622fe491f929e7ba6dd63761c025f32e46'
+            'bf24984501d3647b549b3cd917d92635fc28e2628bc6976e08ed08373c418e29'
+            'bc5272eca7fb20d582fa8f8e570521127d4f239c3d57593864ec67cd82778154')
+prepare() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/prepare.py")" "$(cygpath -am "$srcdir/immutable8-snapshot-5535e31a.tar.gz")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/prepare.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/evaluate.py")" "$(cygpath -am "$srcdir/plan")" > "$srcdir/evaluate.log" 2>&1
+}
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/build.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/arcade-immutable8-39042b40.tar.gz")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/localize.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" > "$srcdir/localize.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/check-api.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/api-check")" > "$srcdir/api-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/audit.py")" "$(cygpath -am "$srcdir/immutable8-snapshot-5535e31a.tar.gz")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/source-audit.json")" > "$srcdir/audit.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/check-resources.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/localized")" "$(cygpath -am "$srcdir/resource-check")" > "$srcdir/resource-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/check.py")" "$(cygpath -am "$srcdir/plan")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/runtime-check")" > "$srcdir/runtime-check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/immutable8-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

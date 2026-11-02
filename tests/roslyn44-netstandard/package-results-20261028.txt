@@ -1,0 +1,73 @@
+Original Roslyn4.4 Standard2.0 compiler and Workspaces — installed validation passed
+
+Package: mingw-w64-clang-x86_64-dotnet-roslyn44 4.4.0-1
+Windows build root: /c/codex-dotnet10/r44pkg.euUbEb
+
+$ MINGW_ARCH=clang64 makepkg-mingw -C -f --noconfirm
+RESULT: exit 0
+
+$ pacman -U --noconfirm ./mingw-w64-clang-x86_64-dotnet-roslyn44-4.4.0-1-any.pkg.tar.zst
+RESULT: exit 0
+
+$ pacman -Qk mingw-w64-clang-x86_64-dotnet-roslyn44
+RESULT: exit 0
+
+$ /usr/bin/python3 src/roslyn44-workflow/check.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer" /clang64/lib/dotnet/library-packs
+RESULT: exit 0
+
+$ /usr/bin/python3 src/roslyn44-workflow/audit.py "$PWD/src" "$PWD/src/prepared" "$PWD/src/installed-consumer"
+RESULT: exit 0
+
+$ /usr/bin/python3 audit-installed-package.py ./mingw-w64-clang-x86_64-dotnet-roslyn44-4.4.0-1-any.pkg.tar.zst src/prepared installed-package-audit.json
+RESULT: exit 0
+
+$ sha256sum -c existing-tools-framework-before.sha256
+RESULT: exit 0
+
+Verified all 11,932 listed original APIs, 140 resource sets / 39,900 strings, all 13 cultures, 3,799 original archive inputs, 106 actual package references and eight regenerated compiler files. The source SDK evaluates the original projects; source compiler5 and installed source dependencies build all shipping libraries in Release. The unchanged IOperation tool uses its upstream Debug behavior because Debug.Assert advances an iterator. Four NuGets contain 56 managed/satellite assemblies. The installed package has 14 regular payload files; pacman counts 23 entries including directories, none missing.
+
+A first preparation attempt exited 4 because it used a newer signing-key property name absent from Roslyn4.4. The key bytes match the original older IntelliCodeCSharpKey declaration. After correcting the wrapper and freezing new inputs, a complete clean makepkg rebuild, installed-only consumer and all audits passed. The first-attempt logs are preserved in the evidence. Production C# sources were not modified.
+
+Original-source nullable/obsolete warnings and NU1603 are retained in producer logs. NU1603 selects installed source Microsoft.NETCore.Platforms1.1.2 for the original NETStandard.Library minimum1.1.0. All selected package bytes are audited. Original netcoreapp3.1 variants, the formal runtime10 generator bundle and the full dependency goal remain open.
+
+--- src/installed-consumer/run.log ---
+Loaded: Microsoft.CodeAnalysis, Version=4.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; C:\codex-dotnet10\r44pkg.euUbEb\src\installed-consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.dll
+Loaded: Microsoft.CodeAnalysis.CSharp, Version=4.4.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35; C:\codex-dotnet10\r44pkg.euUbEb\src\installed-consumer\bin\Release\net8.0\Microsoft.CodeAnalysis.CSharp.dll
+PASS: C#11 required members/raw strings, parsing/semantics, deterministic PE/portable PDB emission and execution
+PASS: syntax/type/nullable diagnostics, resource text, compiler options and cancellation
+PASS: analyzer file loading/callbacks and incremental generation with AdditionalText
+PASS: Microsoft.CodeAnalysis preserves all 4094 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp preserves all 6029 upstream public API declarations
+PASS: all 13 cultures, 42 localized resource sets / 36176 strings, and German diagnostics
+PASS: no .NET Framework native helper loaded
+PASS five support-assembly providers load from the source framework after SDK conflict resolution
+Microsoft.CodeAnalysis.Workspaces friend attributes: actual=96 expected=96
+Microsoft.CodeAnalysis.CSharp.Workspaces friend attributes: actual=28 expected=28
+PASS source identity/location/types and all expanded friend declarations; 140 resource sets/39900 source strings
+PASS: Microsoft.CodeAnalysis.Workspaces preserves all 1753 upstream public API declarations
+PASS: Microsoft.CodeAnalysis.CSharp.Workspaces preserves all 56 upstream public API declarations
+PASS MEF-hosted CSharp workspace, Unicode documents, project references, semantic models, cross-project reference search/rename, formatting, solution changes and PE emit
+PASS CSharp simplification, real analyzer diagnostics, DocumentEditor/code-fix registration, CodeAction/ApplyChanges operation, incremental solution edits and cancellation
+PASS Roslyn4.4 netstandard2.0 compiler/Workspaces closure
+
+--- installed-source-audit.log ---
+PASS original Roslyn4.4 archive inputs, package identities/minimums and actual compiler/consumer bytes
+
+--- installed-package-audit.log ---
+PASS fourteen installed files, four exact source Roslyn4.4 NuGets, 56 managed/satellite assemblies and source licenses
+
+--- qk.log ---
+mingw-w64-clang-x86_64-dotnet-roslyn44: 23 total files, 0 missing files
+
+--- existing-tools-framework-after.log ---
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll: OK
+/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/vbc.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap/CompilerHost.dll: OK
+/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2/Microsoft.CodeAnalysis.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Collections.Immutable.dll: OK
+/clang64/lib/dotnet/shared/Microsoft.NETCore.App/8.0.31/System.Reflection.Metadata.dll: OK
+
+Package SHA256: e065ca80d333014837d64a4360a614e9e4dd30f52f5086b144a72762955d95ee
+Evidence: /tmp/roslyn44-package1/roslyn44-package-evidence1.tar.gz
+Evidence SHA256: 4eacad9916e70c98007dc05b10ca4c3982c9b2835838ae8ec51d106db685e2db
+420 evidence files and all 14 frozen workflow inputs verified.

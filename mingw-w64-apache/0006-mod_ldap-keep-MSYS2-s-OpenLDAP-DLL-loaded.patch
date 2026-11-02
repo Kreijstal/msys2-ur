@@ -1,0 +1,44 @@
+From 67e797efc3919a64a450e11d0f7d5fd1fa89154d Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Tue, 20 Oct 2026 23:22:45 +0200
+Subject: [PATCH 6/6] mod_ldap: keep MSYS2's OpenLDAP DLL loaded
+
+libldap.dll from MSYS2's OpenLDAP calls WSACleanup() when it is
+unloaded, without a matching WSAStartup().  httpd unloads every DSO
+module, and with it libldap.dll, after the preflight configuration pass,
+so loading mod_ldap tore down Winsock for the whole server: the parent
+then fails with "WSADuplicateSocket failed ... (OS 10093) WSAStartup
+not called" and never starts a child.
+
+Pin libldap.dll in util_ldap_register_hooks() so it is never unloaded.
+---
+ modules/ldap/util_ldap.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/modules/ldap/util_ldap.c b/modules/ldap/util_ldap.c
+index 96e7004..cf686dd 100644
+--- a/modules/ldap/util_ldap.c
++++ b/modules/ldap/util_ldap.c
+@@ -3262,6 +3262,19 @@ static const command_rec util_ldap_cmds[] = {
+ 
+ static void util_ldap_register_hooks(apr_pool_t *p)
+ {
++#if defined(__MINGW32__) && APR_HAS_OPENLDAP_LDAPSDK
++    /* MSYS2's OpenLDAP DLL (libldap.dll) calls WSACleanup() when it is
++     * unloaded, without a matching WSAStartup().  httpd unloads all modules
++     * (and with them libldap) after the preflight configuration pass, which
++     * tears down Winsock for the whole process.  Pin it so it stays loaded.
++     */
++    {
++        HMODULE ldapdll;
++        GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_PIN, "libldap.dll",
++                           &ldapdll);
++    }
++#endif
++
+     APR_REGISTER_OPTIONAL_FN(uldap_connection_open);
+     APR_REGISTER_OPTIONAL_FN(uldap_connection_close);
+     APR_REGISTER_OPTIONAL_FN(uldap_connection_unbind);
+-- 
+2.55.0
+

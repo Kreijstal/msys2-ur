@@ -1,0 +1,52 @@
+pkgbase = mingw-w64-dotnet-documentation-analyzers
+	pkgdesc = Source-built DocumentationAnalyzers and code fixes for .NET 8
+	pkgver = 1.0.0.beta59
+	pkgrel = 1
+	url = https://github.com/DotNetAnalyzers/DocumentationAnalyzers
+	arch = any
+	license = spdx:MIT
+	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-commonmark=0.15.1
+	makedepends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-targeting-pack>=8.0.131-2
+	makedepends = python
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	options = !strip
+	options = !lto
+	source = documentation-1.0.0.beta59.tar.gz::https://codeload.github.com/DotNetAnalyzers/DocumentationAnalyzers/tar.gz/489c06575beee224030ffdc9e91ce43569f32a79
+	source = prepare.py
+	source = pack.py
+	source = build.sh
+	source = Check.cs
+	source = check.sh
+	source = ExtractFixtures.cs
+	source = InspectInventory.cs
+	source = ExpectedInventory.json
+	source = UpstreamFixtures.json
+	source = published-metadata-provenance.json
+	source = README.md
+	sha256sums = 28249640f14e82a53702994be7c651eb7ac3559c922452e57770301f7f9b9605
+	sha256sums = 2b6ce39f22ce82532b6519563bd9ab895c045f56d2053d7326a581ba079709db
+	sha256sums = bf036fb544725c25857295a8a811046ff6a4a404a1716d72ab1e7a0525156310
+	sha256sums = 4c6050beb0d08c069fae155031e505dce635ac69a891710f62526d0c04d6efe9
+	sha256sums = 2fe99e2eadf54b1c5ec115f3f3aa9f1d0723f40a5dddb59695cfbb13a7036fd9
+	sha256sums = 893693ca48218f8dcf7ea102c9429844c444e8df7971f003003f412f0aeaed47
+	sha256sums = bfbd554c9b7494e87da54a16a86ce384a59eaf55e5b2c4b9625b19bad6bd7ddc
+	sha256sums = 96187d226e96e7cb99857747f2a83a2b6e44c370c7a32247266993ca8a73935d
+	sha256sums = f84e6aa95c3b765baeadc8d3e436a5b2cdfd82d48f31b4da07ad286a1f9b5d90
+	sha256sums = a5c3b371473e5b916ea0b06c928aa537eb0374e161268d85bea3b4f610e9ea25
+	sha256sums = b7904fc21c541afb581140c4e15261649b9bcd96751e2e90fa104c075aa9d67f
+	sha256sums = a36298df0c668a6e1ad423826006937b006f139767fdef30e854a8d517e3ce08
+
+pkgname = mingw-w64-clang-x86_64-dotnet-documentation-analyzers
+	pkgdesc = Source-built DocumentationAnalyzers beta.59 dependency package
+	depends = mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable=1.0.0.beta59
+
+pkgname = mingw-w64-clang-x86_64-dotnet-documentation-analyzers-unstable
+	pkgdesc = Source-built DocumentationAnalyzers 1.0.0.59 analyzer and code-fix implementation
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-commonmark=0.15.1
+	depends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp-workspaces=4.9.2
+	depends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2

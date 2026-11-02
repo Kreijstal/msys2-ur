@@ -1,0 +1,42 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-wcwidth2-sources
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2.0.0
+pkgrel=1
+pkgdesc='Original Wcwidth.Sources2.0.0 source-only package with all four content frameworks'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/spectreconsole/wcwidth'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-reference10=10.0.5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-nuget73-tasks-bootstrap=7.3.0.preview1.11413"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn53-msbuild-tasks-bootstrap=5.3.0.2.26113.113"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+_commit=0b2780755ebd2273a3089403e892d5d3e404793f
+source=("wcwidth-0b278075.tar.gz::https://codeload.github.com/spectreconsole/wcwidth/tar.gz/$_commit"
+        'wcwidth-source-1.tar.gz')
+noextract=('wcwidth-0b278075.tar.gz')
+sha256sums=('d92427d2dd98b29f6346134f9982c0738e66c046a666d2b0e2fb65e1e3bf6518' 'afb82b5abec0f075a1a3bd2913cc28408b82cec6030c24b1a52b60dbaa9d9616')
+_py() {
+  local script=$1 log=$2
+  shift 2
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/wcwidth-source-workflow/$script")" "$@" > "$srcdir/$log" 2>&1
+}
+prepare() {
+  _py prepare.py prepare.log "$(cygpath -am "$srcdir/wcwidth-0b278075.tar.gz")" "$pkgver" "$(cygpath -am "$srcdir/prepared")"
+}
+build() {
+  _py check.py source-consumer-check.log "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/source-check")"
+}
+check() {
+  _py stage.py stage.log "$(cygpath -am "$srcdir/prepared")" "$(cygpath -am "$srcdir/source-check")" "$(cygpath -am "$srcdir/package-prefix")"
+  _py check-installed.py staged-check.log "$(cygpath -am "$srcdir/package-prefix")" "$pkgver" "$(cygpath -am "$srcdir/staged-check")"
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

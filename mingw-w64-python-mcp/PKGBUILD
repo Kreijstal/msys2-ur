@@ -1,0 +1,89 @@
+_realname=mcp
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=2.3.0
+pkgrel=1
+pkgdesc="Model Context Protocol Python SDK (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/modelcontextprotocol/python-sdk'
+msys2_repository_url='https://github.com/modelcontextprotocol/python-sdk'
+msys2_references=('purl: pkg:pypi/mcp')
+license=('spdx:MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-anyio>=4.10"
+         "${MINGW_PACKAGE_PREFIX}-python-httpx2>=2.10.0"
+         "${MINGW_PACKAGE_PREFIX}-python-jsonschema>=4.20.0"
+         "${MINGW_PACKAGE_PREFIX}-python-mcp-types=${pkgver}"
+         "${MINGW_PACKAGE_PREFIX}-python-opentelemetry-api>=1.28.0"
+         "${MINGW_PACKAGE_PREFIX}-python-pydantic>=2.12.0"
+         "${MINGW_PACKAGE_PREFIX}-python-pyjwt>=2.10.1"
+         "${MINGW_PACKAGE_PREFIX}-python-cryptography"
+         "${MINGW_PACKAGE_PREFIX}-python-python-multipart>=0.0.9"
+         "${MINGW_PACKAGE_PREFIX}-python-pywin32>=310"
+         "${MINGW_PACKAGE_PREFIX}-python-sse-starlette>=3.0.0"
+         "${MINGW_PACKAGE_PREFIX}-python-starlette>=0.48.0"
+         "${MINGW_PACKAGE_PREFIX}-python-typing_extensions>=4.13.0"
+         "${MINGW_PACKAGE_PREFIX}-python-typing-inspection>=0.4.1"
+         "${MINGW_PACKAGE_PREFIX}-uvicorn>=0.31.1")
+optdepends=("${MINGW_PACKAGE_PREFIX}-python-typer>=0.16.0: mcp CLI"
+            "${MINGW_PACKAGE_PREFIX}-python-dotenv>=1.0.0: mcp CLI"
+            "${MINGW_PACKAGE_PREFIX}-python-rich>=13.9.4: rich output")
+makedepends=("${MINGW_PACKAGE_PREFIX}-python-build"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-python-hatchling"
+             "${MINGW_PACKAGE_PREFIX}-python-uv-dynamic-versioning")
+options=('!strip')
+source=("https://pypi.org/packages/source/m/mcp/mcp-${pkgver}.tar.gz"
+        0001-msys2-pywin32-version.patch)
+sha256sums=('8b147a50441cf059dc88c684e0aeed3687f0aa0f39c6cde7b90330effd2b34d8'
+            '6eedb204649e12fa31e4bd071e010592c03e196ddbf3fdfcf7a30be484e23aa8')
+
+prepare() {
+  cd "${_realname}-${pkgver}" || return
+  patch -p1 -i "${srcdir}/0001-msys2-pywin32-version.patch"
+  # Recompute dynamic dependencies instead of reusing the sdist's old metadata.
+  rm PKG-INFO
+}
+
+build() {
+  cp -r "${_realname}-${pkgver}" "python-build-${MSYSTEM}"
+  cd "python-build-${MSYSTEM}" || return
+  export UV_DYNAMIC_VERSIONING_BYPASS="${pkgver}"
+  "${MINGW_PREFIX}/bin/python" -m build --wheel --no-isolation --skip-dependency-check
+}
+
+check() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir=check dist/*.whl
+  cd check"${MINGW_PREFIX}"/lib/python3*/site-packages || return
+  "${MINGW_PREFIX}/bin/python" - <<'PY'
+import importlib.metadata
+import sys
+from mcp.server.mcpserver import MCPServer
+from mcp.server.stdio import stdio_server
+from mcp.os.win32 import utilities
+
+assert importlib.metadata.version('mcp') == '2.3.0'
+assert any(
+    requirement.startswith('pywin32>=310;')
+    for requirement in importlib.metadata.requires('mcp')
+), 'wheel metadata still requires upstream pywin32 311'
+if sys.platform == 'win32':
+    # The SDK uses these long-established APIs, all present in MSYS2 pywin32 310.
+    for name in ('STD_INPUT_HANDLE', 'STD_OUTPUT_HANDLE', 'STD_ERROR_HANDLE', 'SetStdHandle'):
+        assert hasattr(utilities.win32api, name), name
+    job = utilities._create_job_object()
+    assert job is not None, 'cannot create a Windows Job Object'
+    utilities._close_job_handle(job)
+print('mcp imports and Windows API checks passed')
+PY
+}
+
+package() {
+  cd "python-build-${MSYSTEM}" || return
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    "${MINGW_PREFIX}/bin/python" -m installer --prefix="${MINGW_PREFIX}" --destdir="${pkgdir}" dist/*.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

@@ -1,0 +1,61 @@
+pkgbase = mingw-w64-dotnet-msal
+	pkgdesc = Complete original MSAL .NET6 source branch and encrypted cache extension on source .NET8
+	pkgver = 4.61.3
+	pkgrel = 1
+	url = https://github.com/AzureAD/microsoft-authentication-library-for-dotnet
+	arch = any
+	license = spdx:MIT
+	checkdepends = mingw-w64-clang-x86_64-dotnet-codeanalysis-csharp=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131
+	makedepends = mingw-w64-clang-x86_64-dotnet-csharp-compiler=4.9.2
+	makedepends = mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions=6.35.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-system-text-json8=8.0.5
+	makedepends = mingw-w64-clang-x86_64-dotnet-protecteddata=8.0.31
+	makedepends = python
+	noextract = msal-88df64013795d4e3716e1f677600f8164ffdb542.tar.gz
+	options = !strip
+	options = !lto
+	source = msal-88df64013795d4e3716e1f677600f8164ffdb542.tar.gz::https://codeload.github.com/AzureAD/microsoft-authentication-library-for-dotnet/tar.gz/88df64013795d4e3716e1f677600f8164ffdb542
+	source = extract.py
+	source = prepare.py
+	source = verify-build.py
+	source = pack.py
+	source = Check.cs
+	source = check.sh
+	source = check-payload.py
+	source = compare.py
+	source = InspectApi.cs
+	source = InspectAssemblyMetadata.cs
+	source = source-inputs.json
+	source = Microsoft.Identity.Client.api.json
+	source = Microsoft.Identity.Client.metadata.json
+	source = Microsoft.Identity.Client.Extensions.Msal.api.json
+	source = Microsoft.Identity.Client.Extensions.Msal.metadata.json
+	source = README.md
+	sha256sums = a8d47494284ba9d9743be4c071aea1dc5f1a466a4973f43fbb9e0b23a8d131e9
+	sha256sums = 9cf7633ad6e070531ca695ff4b9e42786e0541659552c5eecc02f2934b8f248a
+	sha256sums = d7bce3dc1322bf2b28c6318b4a996344bfe3a70ae65aa61400ded7cd58136403
+	sha256sums = 2daf79445c95626be944211f860c84c9c218e08f452e1d76f7df776e24ebcc8f
+	sha256sums = bcebef684318ecf7feff3e376f7c38d3e5759a8075392184f590e27a8e585b7a
+	sha256sums = 28c4b5a1ea020b12cf1142130307d5367df165c1cc36471ef66d58d042bf3ef1
+	sha256sums = 2db2d748f4db02fb7dd147b4f00080a49813f681aeca4989412d3e5fa1beef64
+	sha256sums = e7902b576521c92cc0cc65d7b541c67947354440c6e20f66cb3a35bd3ea9599f
+	sha256sums = 0e90d7e2168c9b0dde78bcccd4139d1a1f1f21c724373779b14ad8e9c1ed4f1b
+	sha256sums = 040e69f5d8a3f8d7b4ee6eb0b5210742f2f24e1d70ff5210a192b79e843781d1
+	sha256sums = cff877b7ed8de75d17fda388d619af136c440b6a486bcdb6a52ad6983d05dae5
+	sha256sums = 36b2cc3efcc451dd1c46745d8d64612f8ef2594b0b399f823ad1b54d4fe3a17d
+	sha256sums = 3e905d2588fb3216508fb296b2f76dfdb58902df4786a031d5d08507c8f459eb
+	sha256sums = 1430a1f778bd183a359ca82d176c0692055686a7ab33752eb6b63b445b9d5981
+	sha256sums = 81f501592e3d95dab26d2d201777edfd0bef2e6de5a87636b115c3dff0913398
+	sha256sums = c85fbe161d192dc100a1b942abfbdeba8e49734d18df8405cb86ebb1f649253e
+	sha256sums = f1f69853c2071d1413692c9900a1d967b3c8f33c883709b372f9a8e69064fb28
+
+pkgname = mingw-w64-clang-x86_64-dotnet-msal
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-identitymodel-abstractions=6.35.0
+	depends = mingw-w64-clang-x86_64-dotnet-system-text-json8=8.0.5
+
+pkgname = mingw-w64-clang-x86_64-dotnet-msal-extensions
+	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-msal=4.61.3
+	depends = mingw-w64-clang-x86_64-dotnet-protecteddata=8.0.31

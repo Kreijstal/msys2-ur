@@ -1,0 +1,32 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-newtonsoft-json1303-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=13.0.3
+pkgrel=1
+pkgdesc='Original Newtonsoft.Json13.0.3 NETStandard2 source bootstrap profile for NuGet7.3'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/JamesNK/Newtonsoft.Json'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-netstandard-reference>=2.0.3-3"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler53-bootstrap>=5.3.0.2.26113.113-3"
+             "${MINGW_PACKAGE_PREFIX}-python" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('newtonsoft-json-13.0.3.tar.gz::https://codeload.github.com/JamesNK/Newtonsoft.Json/tar.gz/refs/tags/13.0.3'
+        'newtonsoft1303-source-2.tar.gz')
+noextract=('newtonsoft-json-13.0.3.tar.gz')
+sha256sums=('3dc1eeeb8f781122e0713481bad993329c669feb9928cc4ec86e0ab24d9eff9e'
+            '7398ead9fcc594bb3d35cb2f78777e368d90f69292133ffbce34f10c53e2928c')
+build() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/newtonsoft1303-workflow/build.py")" "$(cygpath -am "$srcdir/newtonsoft-json-13.0.3.tar.gz")" "$(cygpath -am "$srcdir/build")" > "$srcdir/build.log" 2>&1
+}
+check() {
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/newtonsoft1303-workflow/check.py")" "$(cygpath -am "$srcdir/build")" "$(cygpath -am "$srcdir/check")" "$(cygpath -am "$srcdir/newtonsoft-json-13.0.3.tar.gz")" > "$srcdir/check.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/newtonsoft1303-workflow/stage.py")" "$(cygpath -am "$srcdir")" "$(cygpath -am "$srcdir/package-prefix")" > "$srcdir/stage.log" 2>&1
+  /clang64/bin/python.exe -X utf8 "$(cygpath -am "$srcdir/package-prefix/share/doc/$_realname/checks/check-installed.py")" "$(cygpath -am "$srcdir/package-prefix")" "$(cygpath -am "$srcdir/staged-check")" > "$srcdir/staged-check.log" 2>&1
+}
+package() {
+  mkdir -p "$pkgdir$MINGW_PREFIX"
+  cp -R "$srcdir/package-prefix/." "$pkgdir$MINGW_PREFIX/"
+}

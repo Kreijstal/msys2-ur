@@ -1,0 +1,47 @@
+# Maintainer: Kreijstal <rainb@tfwno.gf>
+_realname=dotnet-tasksext453-bootstrap
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.5.3
+pkgrel=1
+pkgdesc='Original Tasks.Extensions4.5.3 Standard1.0/2.0 and portable source bootstrap'
+arch=('any')
+mingw_arch=('clang64')
+url='https://github.com/dotnet/corefx'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131-5"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-compiler5-bootstrap=5.0.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-roslyn44=4.4.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-cecil011-bootstrap=0.11.0"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-legacy-ns13-contracts-bootstrap>=20261031-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-unsafe452-bootstrap=4.5.2"
+             "${MINGW_PACKAGE_PREFIX}-llvm" 'python')
+options=('!strip' '!lto' '!buildflags')
+source=('corefx21-tasksext453-637a8d58.tar.gz::https://codeload.github.com/dotnet/corefx/tar.gz/637a8d58f72f2b0f1a71187530c3cf433e95a75a'
+        'roslyn-4.4.0-1ce8866c.tar.gz::https://codeload.github.com/dotnet/roslyn/tar.gz/1ce8866c9de4c2d67351ef6863699dee03b0804a'
+        'tasksext453-source-1.tar.gz')
+noextract=('corefx21-tasksext453-637a8d58.tar.gz' 'roslyn-4.4.0-1ce8866c.tar.gz')
+sha256sums=('a4ac86f506488ca48f5b33c4fd0321bcd7b2de17afe0c516bb3879997bc67bbf'
+            '9edb8c430576c5f5b27032afe8f79c74508b0150e03406a7a4ca6f218e03fd11'
+            'd6c0cc9a086e879202326e9547f42be9da1848d8b837d1ae50bf68369c0d3f3f')
+build() {
+  /usr/bin/python3 "$srcdir/tasksext453-workflow/compiler44.py" "$srcdir/roslyn-4.4.0-1ce8866c.tar.gz" "$srcdir/compiler44" > "$srcdir/compiler44.log" 2>&1
+  /usr/bin/python3 "$srcdir/tasksext453-workflow/build.py" "$srcdir/corefx21-tasksext453-637a8d58.tar.gz" "$srcdir/prepared" "$srcdir/compiler44/bin/Release/net8.0" > "$srcdir/build.log" 2>&1
+  /usr/bin/python3 "$srcdir/tasksext453-workflow/pack.py" "$srcdir/prepared" > "$srcdir/pack.log" 2>&1
+}
+check() {
+  /usr/bin/python3 "$srcdir/tasksext453-workflow/audit.py" "$srcdir/prepared" > "$srcdir/audit.log" 2>&1
+  /usr/bin/python3 "$srcdir/tasksext453-workflow/check.py" "$srcdir/prepared" "$srcdir/check" "$srcdir/compiler44/bin/Release/net8.0" --feed "$srcdir/prepared/feed" > "$srcdir/check.log" 2>&1
+}
+package() {
+  local doc="$pkgdir$MINGW_PREFIX/share/doc/$_realname"
+  local file
+  install -Dm644 "$srcdir/prepared/feed/System.Threading.Tasks.Extensions.4.5.3.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.threading.tasks.extensions.4.5.3.nupkg"
+  mkdir -p "$doc/inputs"
+  for file in README.md check.py; do install -m644 "$srcdir/tasksext453-workflow/$file" "$doc/$file"; done
+  for file in "$srcdir/tasksext453-workflow/inputs/"*; do install -m644 "$file" "$doc/inputs/"; done
+  install -m644 "$srcdir/prepared/results.json" "$srcdir/prepared/producer-audit.json" "$doc/"
+  install -m644 "$srcdir/compiler44/source-inputs.json" "$doc/compiler44-source-inputs.json"
+  install -m644 "$srcdir/check/results.json" "$doc/producer-check-results.json"
+  for file in LICENSE.TXT THIRD-PARTY-NOTICES.TXT; do install -Dm644 "$srcdir/prepared/source/$file" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/$file"; done
+}
