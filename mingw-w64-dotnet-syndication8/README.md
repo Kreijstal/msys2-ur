@@ -24,5 +24,5 @@ case or complete binary compatibility.
 After installation, run in CLANG64 with a new output directory:
 
 ```bash
-bash check.sh /tmp/syndication8-installed /clang64/share/doc/dotnet-syndication8/localization.json
+bash check.sh /tmp/syndication8-installed $MINGW_PREFIX/share/doc/dotnet-syndication8/localization.json
 ```

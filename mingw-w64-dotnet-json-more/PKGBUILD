@@ -6,15 +6,15 @@ pkgver=2.0.2
 pkgrel=1
 pkgdesc='Source-built Json.More.Net JSON extensions for the .NET 8 offline feed'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/gregsdennis/json-everything'
 license=('spdx:MIT' 'spdx:CC-BY-SA-4.0')
 _commit=782198a80220fc2e54dfe3e01c2e4da54ab4cad7
 _tree=json-everything-${_commit}
 _project=src/Json.More/Json.More.csproj
 _id=Json.More.Net
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python' 'patch')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python' 'patch')
 options=('!strip' '!lto')
 source=("json-more-${_commit}.tar.gz::https://codeload.github.com/gregsdennis/json-everything/tar.gz/${_commit}"
         prepare.py check.cs 0001-normalize-numeric-equivalence-hashes.patch NOTICE LICENSE.CC-BY-SA-4.0)

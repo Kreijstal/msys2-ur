@@ -18,7 +18,7 @@ overlay is hashed and shipped separately. The original build retains243
 XML-documentation/nullability/value-comparison warnings.
 
 The native package installs the complete loose module under
-`/clang64/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1` and its
+`$MINGW_PREFIX/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1` and its
 PSModule NuGet archive in the source-built feed. All26 private DLLs match the exact
 installed source-built NuGet runtime assets; their license files and nuspecs are
 included. Windows RID-specific PKCS is selected from the original runtime asset
@@ -50,8 +50,8 @@ Build with `makepkg --cleanbuild --force --noconfirm` in MSYS2 CLANG64. After
 installation, validate a fresh restored, relocated and installed loose module with:
 
 ```bash
-bash check.sh NEW_OUTPUT /clang64/lib/dotnet/library-packs \
-  /clang64/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1
+bash check.sh NEW_OUTPUT $MINGW_PREFIX/lib/dotnet/library-packs \
+  $MINGW_PREFIX/lib/powershell/Modules/Microsoft.PowerShell.PSResourceGet/1.1.1
 ```
 
 The runtime reports.NET8.0.0; runtime servicing, authenticated remote repositories,

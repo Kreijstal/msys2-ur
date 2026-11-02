@@ -1,0 +1,13 @@
+post_install() {
+  cat <<'EOF'
+Webots uses the legacy XInput 1.3 runtime for joystick support.
+Windows may already provide XINPUT1_3.dll through the DirectX End-User Runtime.
+If Webots reports that XINPUT1_3.dll is missing, install the MSYS2 compatibility
+package matching your environment, for example:
+  pacman -S mingw-w64-ucrt-x86_64-xinput1_3
+EOF
+}
+
+post_upgrade() {
+  post_install
+}

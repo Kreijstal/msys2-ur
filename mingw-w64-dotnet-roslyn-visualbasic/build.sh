@@ -2,11 +2,11 @@
 set -euo pipefail
 source=$(cd "${1:?usage: build.sh SOURCE PREPARED}" && pwd)
 out=$(cd "${2:?missing prepared}" && pwd)
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export MSYS2_ARG_CONV_EXCL='*'
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/empty-packages")
-dotnet=/clang64/lib/dotnet/dotnet.exe
+dotnet=${MINGW_PREFIX}/lib/dotnet/dotnet.exe
 for tool in VBSyntaxGenerator VBErrorFactsGenerator BoundTreeGenerator;do
  extension=vbproj;[[ $tool != BoundTreeGenerator ]]||extension=csproj
  "$dotnet" build "$(cygpath -am "$out/$tool/Library.$extension")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal

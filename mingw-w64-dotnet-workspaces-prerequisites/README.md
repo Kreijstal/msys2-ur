@@ -49,7 +49,7 @@ Build in MSYS2 CLANG64:
 After installing all seven packages, use a new output directory/cache and only
 the installed source-built feed:
 
-    bash mingw-w64-dotnet-workspaces-prerequisites/check.sh NEW_CONSUMER /clang64/share/doc/dotnet-composition2/localization.json
+    bash mingw-w64-dotnet-workspaces-prerequisites/check.sh NEW_CONSUMER $MINGW_PREFIX/share/doc/dotnet-composition2/localization.json
     bash mingw-w64-dotnet-workspaces-prerequisites/check-api.sh NEW_CONSUMER NEW_API
 
 These checks establish this dependency layer. Roslyn Workspaces, the analyzers,

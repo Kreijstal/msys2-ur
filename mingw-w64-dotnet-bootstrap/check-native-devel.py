@@ -6,8 +6,8 @@ import shutil
 import subprocess
 import sys
 
-image, compiler = map(Path, sys.argv[1:])
-prefix = image.resolve() / "clang64"
+image, compiler = map(Path, sys.argv[1:3])
+prefix = image.resolve() / (sys.argv[3] if len(sys.argv) > 3 else "clang64")
 work = image.resolve() / "native development check"
 work.mkdir(exist_ok=True)
 
@@ -38,6 +38,9 @@ found = subprocess.check_output([str(host), str(root)], text=True)
 expected = next((root / "host/fxr").glob("*/hostfxr.dll"))
 assert Path(found.strip()).resolve() == expected.resolve(), (found, expected)
 embedding = prefix / "lib/dotnet-mono/embedding"
+if not embedding.is_dir():  # UCRT64 ships no Mono flavor
+    print("PASS native development package: nethost discovery")
+    sys.exit(0)
 mono = build("embedding", r'''
 #include <mono/jit/jit.h>
 #include <mono/utils/mono-publib.h>

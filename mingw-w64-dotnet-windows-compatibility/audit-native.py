@@ -1,6 +1,7 @@
 """Check every native package byte against the audited source metapackage build."""
 from pathlib import Path
-import argparse,hashlib,json,subprocess,tarfile,zipfile
+import argparse,hashlib,json,os,subprocess,tarfile,zipfile
+prefix=os.environ["MINGW_PREFIX"].lstrip("/")
 parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('artifact',type=Path);parser.add_argument('src',type=Path);parser.add_argument('--output',type=Path);args=parser.parse_args()
 src=args.src.resolve();prepared=src/'prepared';sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
 package=prepared/'feed/microsoft.windows.compatibility.8.0.31.nupkg';proof=json.loads((prepared/'package-audit.json').read_text());assert sha(package)==proof['package_sha256']
@@ -9,11 +10,11 @@ with zipfile.ZipFile(package) as z:
  assert {name:hashlib.sha256(z.read(name)).hexdigest() for name in z.namelist()}==proof['nuget_entry_sha256']
 closure=json.loads((src/'consumer/source-closure.json').read_text());assert closure['all_restored_archives_match_source_feed'] and closure['all_consumer_dlls_match_source_packages']
 assert len(closure['metapackage_net8_dependencies'])==35
-doc='clang64/share/doc/dotnet-windows-compatibility/';expected={'clang64/lib/dotnet/library-packs/'+package.name:sha(package)}
+doc=prefix+'/share/doc/dotnet-windows-compatibility/';expected={prefix+'/lib/dotnet/library-packs/'+package.name:sha(package)}
 for name in ['source-inputs','build-audit','package-audit','dependency-groups']:expected[doc+name+'.json']=sha(prepared/(name+'.json'))
 for name in ['README.md','Check.cs','check.sh','verify-consumer.py','check-installed.sh']:expected[doc+name]=sha(src/name)
-expected['clang64/share/licenses/dotnet-windows-compatibility/LICENSE']=sha(prepared/'source/LICENSE')
-expected['clang64/share/licenses/dotnet-windows-compatibility/Arcade-LICENSE.TXT']=sha(prepared/'Arcade-LICENSE.TXT')
+expected[prefix+'/share/licenses/dotnet-windows-compatibility/LICENSE']=sha(prepared/'source/LICENSE')
+expected[prefix+'/share/licenses/dotnet-windows-compatibility/Arcade-LICENSE.TXT']=sha(prepared/'Arcade-LICENSE.TXT')
 actual={};fields={}
 with subprocess.Popen(['zstd','-dc',str(args.artifact)],stdout=subprocess.PIPE) as process:
  with tarfile.open(fileobj=process.stdout,mode='r|') as archive:
@@ -28,7 +29,7 @@ with subprocess.Popen(['zstd','-dc',str(args.artifact)],stdout=subprocess.PIPE) 
    else:actual[member.name]=hashlib.sha256(data).hexdigest()
  while process.stdout.read(1024*1024):pass
  assert process.wait()==0
-assert fields['pkgname']==['mingw-w64-clang-x86_64-dotnet-windows-compatibility'] and fields['pkgver']==['8.0.31-1']
+assert fields['pkgname']==[os.environ['MINGW_PACKAGE_PREFIX']+'-dotnet-windows-compatibility'] and fields['pkgver']==['8.0.31-1']
 declared={line.split(' = ',1)[1].strip() for line in (src.parent/'.SRCINFO').read_text().splitlines() if line.strip().startswith('depends = ')}
 assert set(fields['depend'])==declared and len(declared)==39
 assert actual==expected,(sorted(set(expected)-set(actual)),sorted(set(actual)-set(expected)),[name for name in actual.keys()&expected.keys() if actual[name]!=expected[name]])

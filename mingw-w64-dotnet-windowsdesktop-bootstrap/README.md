@@ -20,10 +20,12 @@ Executable fixtures in the upstream source archives are deleted before building.
 Native libc++/ICU dependencies are bundled for self-contained publish, with their
 MSYS2 package owners, hashes and licenses recorded.
 
-The pinned commit of https://github.com/Kreijstal/dotnet-mingw-bootstrap is
-downloaded from the msys2-ur release (`python make-source.py [checkout]`
-recreates it); WPF and WinForms development continues in
-https://github.com/Kreijstal/wpf-mingw. Build in a CLANG64 shell with
+The recipe downloads two pinned commits: the shared bootstrap driver from
+https://github.com/Kreijstal/dotnet-mingw-bootstrap (96ae31a) and the WPF and
+WinForms port from https://github.com/Kreijstal/wpf-mingw (tag
+`msys2/dotnet-windowsdesktop-bootstrap-8.0.0-64`), which `prepare()` overlays
+on `bootstrap/m612`. The recipe carries no source patches: changes go to
+wpf-mingw and the next release pins the new commit. Build in a CLANG64 shell with
 `makepkg-mingw -s`. An interactive Windows desktop
 is needed by `check()`. It validates the real bridge assemblies, printer
 enumeration, a local XPS document, automation/Ribbon/interop, native graphics,

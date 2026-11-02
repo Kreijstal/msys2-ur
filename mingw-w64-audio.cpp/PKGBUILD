@@ -1,0 +1,125 @@
+# Maintainer (msys2-ur): Kreijstal
+
+_realname=audio.cpp
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.9.3
+pkgrel=1
+pkgdesc="Speech, music and audio model inference on ggml: ASR, TTS, separation, VAD, enhancement (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64')
+url='https://github.com/0xShug0/audio.cpp'
+msys2_repository_url='https://github.com/0xShug0/audio.cpp'
+license=('spdx:Apache-2.0 AND MIT')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-openssl"
+         "${MINGW_PACKAGE_PREFIX}-vulkan-loader")
+optdepends=("${MINGW_PACKAGE_PREFIX}-espeak-ng: phonemizer for Kokoro, Kitten and other eSpeak based TTS models"
+            "${MINGW_PACKAGE_PREFIX}-mecab: Japanese G2P for Kokoro multilingual")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-vulkan-headers"
+             "${MINGW_PACKAGE_PREFIX}-shaderc"
+             "${MINGW_PACKAGE_PREFIX}-glslang"
+             "${MINGW_PACKAGE_PREFIX}-spirv-headers")
+if [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]]; then
+  depends+=("${MINGW_PACKAGE_PREFIX}-llvm-openmp")
+fi
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/0xShug0/audio.cpp/archive/refs/tags/v${pkgver}.tar.gz"
+        "0001-Guard-NOMINMAX-defines.patch"
+        "0002-Include-headers-that-libc-does-not-pull-in.patch"
+        "launcher.c")
+sha256sums=('2a8e0927bf79360b56da84f116bae85bfa0c844da2e16d787f5b1ade0743bce1'
+            '8419957179fc2e97366fa819ec3f6db39de8f9318e0ff570c1389233eef34a26'
+            '938b9633d1163d668b217f6c1a89ee7f955b3f605ada256c066fe02965269e14'
+            'ccad766a40fcd4c701b99aecd4adecd6c30259523f0d3f2f7ecc6496d1e38381')
+
+_tools=(audiocpp_cli audiocpp_server audiocpp_gguf audiocpp_model_manager)
+_targets=("${_tools[@]}" audiocpp audiocpp_c_api_path_test)
+
+prepare() {
+  cd ${_realname}-${pkgver}
+  patch -Np1 -i "${srcdir}/0001-Guard-NOMINMAX-defines.patch"
+  # one of the two files has CRLF line endings
+  patch --binary -Np1 -i "${srcdir}/0002-Include-headers-that-libc-does-not-pull-in.patch"
+}
+
+build() {
+  # Upstream has no install rules; the CPU backend is built once per ISA level
+  # and ggml picks the best one at run time.
+  cmake -Wno-dev \
+    -GNinja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DAUDIOCPP_VERSION=${pkgver} \
+    -DENGINE_ENABLE_NATIVE_CPU=OFF \
+    -DENGINE_ENABLE_CPU_ALL_VARIANTS=ON \
+    -DENGINE_ENABLE_VULKAN=ON \
+    -DAUDIOCPP_BUILD_C_API=ON \
+    -DAUDIOCPP_BUILD_NATIVE_MODEL_MANAGER=ON \
+    -DAUDIOCPP_USE_SYSTEM_OPENSSL=ON \
+    -S ${_realname}-${pkgver} \
+    -B build-${MSYSTEM}
+  cmake --build build-${MSYSTEM} --target "${_targets[@]}" ggml-vulkan
+  "${MINGW_PREFIX}/bin/cc" -O2 -Wall -Wextra -Werror -municode \
+    "${srcdir}/launcher.c" -o "${srcdir}/build-${MSYSTEM}/launcher.exe"
+}
+
+# audio.cpp bundles its own ggml (0.12, the system package is newer) and ggml
+# loads its backends from the directory of the executable, so the tools and
+# their DLLs live in lib/audio.cpp; bin/ has launchers for the tools.
+_install() {
+  local dest=$1 b="${srcdir}/build-${MSYSTEM}/bin" t
+  local priv="${dest}${MINGW_PREFIX}/lib/${_realname}"
+  install -d "${priv}" "${dest}${MINGW_PREFIX}"/{bin,include}
+  install -m755 "${b}"/audiocpp_{cli,server,gguf,model_manager}.exe "${priv}/"
+  install -m755 "${b}"/{libaudiocpp,ggml,ggml-base,ggml-vulkan,ggml-cpu-*}.dll "${priv}/"
+  for t in "${_tools[@]}"; do
+    install -m755 "${srcdir}/build-${MSYSTEM}/launcher.exe" "${dest}${MINGW_PREFIX}/bin/${t}.exe"
+  done
+  # programs using the C API need lib/audio.cpp on PATH
+  install -m644 "${b}"/libaudiocpp.dll.a "${dest}${MINGW_PREFIX}/lib/"
+  install -m644 ${_realname}-${pkgver}/include/audiocpp.h "${dest}${MINGW_PREFIX}/include/"
+
+  # VAD and enhancement weights the CLI resolves as assets/framework/...
+  # relative to the working directory
+  local share="${dest}${MINGW_PREFIX}/share/${_realname}"
+  install -d "${share}/assets"
+  cp -r ${_realname}-${pkgver}/assets/framework "${share}/assets/"
+  cp -r ${_realname}-${pkgver}/assets/pipeline "${share}/assets/"
+}
+
+check() {
+  cd build-${MSYSTEM}
+  ctest --output-on-failure -R audiocpp_c_api_path
+  # the installed layout, run through the bin/ launcher, from the asset root
+  cd "${srcdir}"
+  rm -rf "${srcdir}/chk"
+  _install "${srcdir}/chk"
+  local cli="${srcdir}/chk${MINGW_PREFIX}/bin/audiocpp_cli.exe"
+  "${cli}" --help >/dev/null
+  # loads every ggml backend DLL; lists the CPU and any Vulkan device
+  "${cli}" --list-devices | tee "${srcdir}/devices.txt"
+  grep -q '^CPU:0 ' "${srcdir}/devices.txt"
+  # Silero VAD with the bundled weights on a sample of the source tree
+  cd "${srcdir}/chk${MINGW_PREFIX}/share/${_realname}"
+  "${cli}" --task vad --family silero_vad --model assets/framework/models/silero_vad --backend cpu \
+    --audio "${srcdir}/${_realname}-${pkgver}/assets/resources/sample_16k.wav" | tee "${srcdir}/vad.txt"
+  grep -qF '{"start_sample":94240,"end_sample":156640,"confidence":1}' "${srcdir}/vad.txt"
+  # the launcher passes the exit code through
+  local rc=0
+  "${cli}" --task vad --family silero_vad --model "${srcdir}/no such model" --backend cpu \
+    --audio "${srcdir}/${_realname}-${pkgver}/assets/resources/sample_16k.wav" >/dev/null 2>&1 || rc=$?
+  [[ ${rc} -ne 0 ]]
+}
+
+package() {
+  _install "${pkgdir}"
+  local lic="${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}" l
+  install -Dm644 ${_realname}-${pkgver}/LICENSE "${lic}/LICENSE"
+  # bundled third-party code
+  for l in cJSON/LICENSE cpp-httplib/LICENSE ggml/LICENSE libyaml/License \
+           sentencepiece/LICENSE utf8proc/LICENSE.md; do
+    install -Dm644 ${_realname}-${pkgver}/external/${l} "${lic}/${l}"
+  done
+}

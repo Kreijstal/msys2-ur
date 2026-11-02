@@ -7,11 +7,10 @@ manifests and example tests. It requires **Clang/LLVM 23.1.3** because the
 plugin uses their C++ ABI.
 
 First build and install the source-built
-[.NET packages](../mingw-w64-dotnet-bootstrap/README.md). Export the same
-pinned bootstrap source archive from its checkout, then build in CLANG64:
+[.NET packages](../mingw-w64-dotnet-bootstrap/README.md), then build in
+CLANG64:
 
 ```bash
-python make-source.py
 makepkg-mingw -s
 pacman -U mingw-w64-clang-x86_64-cppcli-*.pkg.tar.zst
 ```
@@ -56,16 +55,17 @@ Windows launcher checks.
 For the source-built WinForms interim framework, install
 `mingw-w64-clang-x86_64-dotnet-winforms-bootstrap` and compile with
 `cli-clang --framework windowsforms hello.cpp -o hello.dll`. The driver selects
-the desktop reference pack and matching runtime configuration. The recipe
-applies the framework-selection change as a pinned source patch on the shared
-bootstrap archive used by the WinForms package.
+the desktop reference pack and matching runtime configuration.
 
 Version 0.3.0 includes the compiler features used to source-build the full WPF
 DirectWriteForwarder and System.Printing assemblies, including nested enums,
 tracked value/pointer storage and Windows x64 native COM argument handling.
 The package installs its vcclr.h intrinsic header and checks focused WPF compiler
 fixtures. This remains a language subset; full WPF native text/layout support is
-separate work. The pinned source is bootstrap commit 96ae31a.
+separate work. The frontend source, the native launcher and the LLVM23 port
+come from [dotnet-mingw-bootstrap](https://github.com/Kreijstal/dotnet-mingw-bootstrap)
+tag `msys2/cppcli-0.3.0-2` (commit f3beebb, which is 96ae31a plus the former
+recipe patches); this recipe carries no source patches of its own.
 
 Release 0.3.0-2 ports the private parser to LLVM23.1.3, including its new
 ParseReflect.cpp unit. The source frontend retains separately locked LLVM22
@@ -74,8 +74,8 @@ clang-version.txt is installed beside the plugin/driver, and the driver rejects
 an incompatible or prefix-matching version before loading the plugin. Generated
 capabilities.json records the actual selected build version.
 
-All parser inputs remain checksum-pinned, and prepare() applies the declared
-port patch and selected parser patch without additional network downloads.
+All parser inputs remain checksum-pinned, and prepare() applies the selected
+parser patch without additional network downloads.
 Package checks temporarily select console code page 65001 for redirected Unicode
 assertions and restore the previous code page on exit. This preserves all runtime
 and rejection assertions. Original WPF DirectWriteForwarder and System.Printing

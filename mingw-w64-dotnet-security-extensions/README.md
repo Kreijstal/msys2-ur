@@ -46,9 +46,6 @@ This is a source replacement for the public contract, not the vendor's private
 implementation. Policy and chain decisions use the host Windows trust providers
 and installed roots. Revocation, explicit distrust, expired chains, multiple
 signatures, enterprise policy and other provider/file-format combinations still
-need wider integration coverage. Packaged PowerShell7.4.20 now passes seven local Get-AuthenticodeSignature
-cases in each of STA and MTA, including the original non-valid-signature
-WinVerifyTrust fallback and exact loaded source-provider bytes.
-[Commands, original-source provenance and results](../tests/powershell-authenticode/results-20261031.txt).
-Broader PowerShell signature-policy/provider integration remains required. An unavailable Windows entry point produces an
+need wider integration coverage. Full PowerShell Get-AuthenticodeSignature
+integration remains required. An unavailable Windows entry point produces an
 explicit failure rather than a synthetic trust decision.

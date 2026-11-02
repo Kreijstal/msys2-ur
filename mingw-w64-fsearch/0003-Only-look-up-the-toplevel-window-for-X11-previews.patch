@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Fri, 30 Oct 2026 18:12:13 +0100
+Subject: [PATCH 3/5] Only look up the toplevel window for X11 previews
+
+---
+ src/fsearch_window_actions.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/fsearch_window_actions.c b/src/fsearch_window_actions.c
+index 4eda8435..78c52916 100644
+--- a/src/fsearch_window_actions.c
++++ b/src/fsearch_window_actions.c
+@@ -840,8 +840,8 @@ fsearch_window_action_preview(GSimpleAction *action, GVariant *variant, gpointer
+         return;
+     }
+ 
+-    GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(self));
+ #ifdef GDK_WINDOWING_X11
++    GtkWidget *toplevel = gtk_widget_get_toplevel(GTK_WIDGET(self));
+     GdkWindow *window = gtk_widget_get_window(toplevel);
+     if (GDK_IS_X11_WINDOW(window)) {
+         xid = gdk_x11_window_get_xid(gtk_widget_get_window(toplevel));

@@ -1,4 +1,5 @@
 """Retain original project/common imports and all source; freeze CI version metadata."""
+import os
 from pathlib import Path
 import hashlib,json,re,shutil,subprocess,sys,xml.etree.ElementTree as E
 
@@ -60,6 +61,6 @@ record=dict(source_commit='c94c7fc235501d478221e979062bd8837a55575b',source_arch
  test_fixture_changes='Replace four Moq constructions/CallBase/Object with concrete owned subclass; six original assertion bodies and derived-type helpers retained')
 (out/'source-inventory.json').write_text(json.dumps(record,indent=2)+'\n')
 shutil.copy2(here/'README.md',out/'README.md')
-feed=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else '/clang64/lib/dotnet/library-packs'
+feed=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="source-only" value="'+feed+'"/></packageSources></configuration>\n')
 print('PASS all nine original C# inputs; only original CI assembly-version attributes changed; six upstream telemetry cases retained')

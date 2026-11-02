@@ -3,6 +3,7 @@
 Run with MSYS Python: SOURCE BUILD_ROOT TDS_CHECK_ROOT SOURCE_ARCHIVE.
 This establishes source coverage/provenance, not untested runtime feature parity.
 """
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -135,7 +136,7 @@ for role, framework in [('implementation','net8.0-windows'),('contract','net8.0'
     result['outputs'][role]={}
     for path in ['bin/Release/'+framework+'/System.Data.SqlClient.dll','obj/Release/'+framework+'/ref/System.Data.SqlClient.dll']:
         result['outputs'][role][path]=sha((build/role/path).read_bytes())
-    framework_root=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
+    framework_root=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31')
     framework_prefix=native(framework_root)+'/'
     references={}
     for value in (build/role/'reference-inputs.txt').read_text(encoding='utf-8-sig').splitlines():

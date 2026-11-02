@@ -16,13 +16,13 @@ E.SubElement(items,'PackageReference',Include='Microsoft.CodeAnalysis.CSharp',Ve
 E.indent(p);E.ElementTree(p).write(sys.argv[2],encoding='utf-8',xml_declaration=True)
 PY
 cat > "$out/NuGet.config" <<CONFIG
-<configuration><packageSources><clear/><add key="installed-source-built" value="$(cygpath -m /clang64/lib/dotnet/library-packs)"/>
+<configuration><packageSources><clear/><add key="installed-source-built" value="$(cygpath -m ${MINGW_PREFIX}/lib/dotnet/library-packs)"/>
 CONFIG
 if [[ $# -ge 3 ]]; then
   printf '<add key="new-source-built" value="%s"/>\n' "$(cygpath -am "$3")" >> "$out/NuGet.config"
 fi
 printf '</packageSources></configuration>\n' >> "$out/NuGet.config"
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -m "$out/cli-home") NUGET_PACKAGES=$(cygpath -m "$out/empty-packages")
-/clang64/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release --configfile "$(cygpath -m "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
-timeout 120 /clang64/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$resources" "$(cygpath -m "$here/libraries.json")"
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -m "$out/check.csproj")" -c Release --configfile "$(cygpath -m "$out/NuGet.config")" -p:UseSharedCompilation=false -v:minimal
+timeout 120 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -m "$out/bin/Release/net8.0/check.dll")" "$resources" "$(cygpath -m "$here/libraries.json")"

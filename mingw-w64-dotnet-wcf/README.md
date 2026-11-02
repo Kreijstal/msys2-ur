@@ -44,7 +44,7 @@ mismatches:
 The source contracts remain intact. The exact allowlist in
 upstream-api-mismatches.json rejects additional missing members and stale
 exceptions. The source implementation retains upstream behavior for these
-three members. The evidence in ../tests/powershell-deps/wcf-published-* was
+three members. The evidence in [workflows/powershell-deps](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps)/wcf-published-* was
 obtained with PEReader/System.Reflection.Metadata, treating downloaded
 published assemblies only as metadata. That audit never loads, executes or
 compiles against the downloaded implementations. legacy-forwards.json records
@@ -83,14 +83,14 @@ files excluded to hide errors.
 Run a clean package build in CLANG64 with the listed source-built dependencies:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 ```
 
 After installing all seven packages, use a fresh output directory:
 
 ```bash
-bash check-installed.sh /tmp/wcf-installed /clang64/share/doc/dotnet-private-servicemodel/localization.json
+bash check-installed.sh /tmp/wcf-installed $MINGW_PREFIX/share/doc/dotnet-private-servicemodel/localization.json
 ```
 
 Validation records and package hashes are maintained under
-../tests/powershell-deps. The PowerShell dependency goal remains incomplete.
+[workflows/powershell-deps](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps) in dotnet-mingw-bootstrap. The PowerShell dependency goal remains incomplete.

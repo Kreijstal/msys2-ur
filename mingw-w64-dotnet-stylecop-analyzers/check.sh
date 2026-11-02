@@ -2,18 +2,18 @@
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 mkdir "${1:?usage: check.sh NEW_OUTPUT [NEW_FEED] [DATA_DIRECTORY]}";out=$(cd "$1" && pwd)
-data=$(cd "${3:-/clang64/share/doc/dotnet-stylecop-analyzers}" && pwd)
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet)
+data=$(cd "${3:-${MINGW_PREFIX}/share/doc/dotnet-stylecop-analyzers}" && pwd)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_HOME=$(cygpath -am "$out/cli-home") NUGET_PACKAGES=$(cygpath -am "$out/empty-packages")
-compiler=$(cygpath -am /clang64/lib/dotnet/compiler-packs/roslyn-4.9.2)
+compiler=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/compiler-packs/roslyn-4.9.2)
 cat > "$out/NuGet.config" <<CONFIG
-<configuration><packageSources><clear/><add key="installed" value="$(cygpath -am /clang64/lib/dotnet/library-packs)"/>
+<configuration><packageSources><clear/><add key="installed" value="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/library-packs)"/>
 CONFIG
 if [[ -n ${2:-} ]];then printf '<add key="new-source" value="%s"/>\n' "$(cygpath -am "$2")" >> "$out/NuGet.config";fi
 printf '</packageSources></configuration>\n' >> "$out/NuGet.config"
 build_tool() {
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$1")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false "-p:CscToolPath=$compiler" -p:CscToolExe=csc49.cmd -v:minimal
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$1")" -c Release --configfile "$(cygpath -am "$out/NuGet.config")" -p:UseSharedCompilation=false "-p:CscToolPath=$compiler" -p:CscToolExe=csc49.cmd -v:minimal
 }
 for tool in inventory fixtures;do mkdir "$out/$tool";done
 cp "$here/CheckPrototype.cs" "$out/Program.cs"
@@ -24,7 +24,7 @@ PROJECT
 build_tool "$out/Check.csproj"
 assets="$out/empty-packages/stylecop.analyzers.unstable/1.2.0.556/analyzers/dotnet/cs"
 cp -r "$assets/." "$out/bin/Release/net8.0/"
-timeout 120 /clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")" "$(cygpath -am "$data/ExpectedInventory.json")" "$(cygpath -am "$data/localization.json")" "$(cygpath -am /clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$(cygpath -am "$data/baseline")" "$(cygpath -am "$data/regenerated")"
+timeout 120 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")" "$(cygpath -am "$data/ExpectedInventory.json")" "$(cygpath -am "$data/localization.json")" "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$(cygpath -am "$data/baseline")" "$(cygpath -am "$data/regenerated")"
 cp "$here/CheckFixtures.cs" "$out/fixtures/Program.cs"
 cp "$here/CheckSpecialFixes.cs" "$out/fixtures/"
 cat > "$out/fixtures/Check.csproj" <<'PROJECT'
@@ -32,14 +32,14 @@ cat > "$out/fixtures/Check.csproj" <<'PROJECT'
 PROJECT
 build_tool "$out/fixtures/Check.csproj"
 cp -r "$assets/." "$out/fixtures/bin/Release/net8.0/"
-timeout 600 /clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/fixtures/bin/Release/net8.0/Check.dll")" "$(cygpath -am "$data/fixtures.json")" "$(cygpath -am /clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$(cygpath -am "$out/fixture-results.json")"
+timeout 600 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/fixtures/bin/Release/net8.0/Check.dll")" "$(cygpath -am "$data/fixtures.json")" "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0)" "$(cygpath -am "$out/fixture-results.json")"
 cp "$here/InspectInventory.cs" "$out/inventory/Program.cs"
 cat > "$out/inventory/Tool.csproj" <<'PROJECT'
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><UseAppHost>false</UseAppHost><EnableNETAnalyzers>false</EnableNETAnalyzers><NuGetAudit>false</NuGetAudit></PropertyGroup></Project>
 PROJECT
 build_tool "$out/inventory/Tool.csproj"
 for name in StyleCop.Analyzers StyleCop.Analyzers.CodeFixes;do
- /clang64/lib/dotnet/dotnet.exe "$(cygpath -am "$out/inventory/bin/Release/net8.0/Tool.dll")" "$(cygpath -am "$out/bin/Release/net8.0/$name.dll")" > "$out/inventory/$name.json"
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe "$(cygpath -am "$out/inventory/bin/Release/net8.0/Tool.dll")" "$(cygpath -am "$out/bin/Release/net8.0/$name.dll")" > "$out/inventory/$name.json"
 done
 /usr/bin/python3 - "$data/ExpectedInventory.json" "$out/inventory" "$data/fixtures.json" "$out/fixture-results.json" <<'PY'
 from pathlib import Path

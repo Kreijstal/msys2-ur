@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -20,7 +21,7 @@ assert not list(module.rglob('*.p7s'))
 assert json.loads((metadata/'api.json').read_text())==golden['published_api']
 identity=json.loads((metadata/'identity.json').read_text())
 assert {k:v for k,v in identity.items() if k!='types'}==golden['published_identity']
-feed=Path('/clang64/lib/dotnet/library-packs/Microsoft.PowerShell.Pager.1.0.0.nupkg')
+feed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/Microsoft.PowerShell.Pager.1.0.0.nupkg')
 if feed.is_file():
     with zipfile.ZipFile(feed) as z:
         dll='lib/net8.0/Microsoft.PowerShell.Pager.dll'

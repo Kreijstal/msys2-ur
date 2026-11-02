@@ -1,4 +1,5 @@
 """One-time published baseline extraction. Target binaries are metadata-only inputs."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,zipfile
 root=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve();out.mkdir(exist_ok=True)
@@ -13,8 +14,8 @@ for language in ['CSharp','VisualBasic']:
    if name.endswith('.dll') and not name.endswith('.resources.dll'):
     target=folder/name;item={}
     for tool,key in [('InspectMetadata','metadata'),('InspectInventory','inventory'),('InspectApi','api')]:
-     args=[native(Path('/clang64/lib/dotnet/dotnet.exe')),native(root/'metadata'/tool/'bin/Release/net8.0/Tool.dll')]
-     if key=='api':args.append(native(Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')))
+     args=[native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/dotnet.exe')),native(root/'metadata'/tool/'bin/Release/net8.0/Tool.dll')]
+     if key=='api':args.append(native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')))
      args.append(native(target));item[key]=json.loads(subprocess.check_output(args,text=True))
     if target.name in result:assert result[target.name]==item,target.name
     result[target.name]=item

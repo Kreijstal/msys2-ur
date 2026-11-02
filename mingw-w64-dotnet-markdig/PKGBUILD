@@ -6,15 +6,15 @@ pkgver=0.33.0
 pkgrel=1
 pkgdesc='Source-built signed Markdig Markdown parser for the .NET 8 offline feed'
 arch=('any')
-mingw_arch=('clang64')
+mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/xoofx/markdig'
 license=('spdx:BSD-2-Clause')
 _commit=7d40bc118bc28095f01699d3d1759ae5a1c18b80
 _tree=markdig-${_commit}
 _project=src/Markdig.Signed/Markdig.Signed.csproj
 _id=Markdig.Signed
-depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime=8.0.131")
-makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk=8.0.131" 'python')
+depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
+makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" 'python')
 options=('!strip' '!lto')
 source=("markdig-${_commit}.tar.gz::https://codeload.github.com/xoofx/markdig/tar.gz/${_commit}"
         prepare.py check.cs)

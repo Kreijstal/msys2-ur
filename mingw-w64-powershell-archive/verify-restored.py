@@ -1,4 +1,5 @@
 """Require the exact restored source assets and dependency-free module identity."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -37,8 +38,8 @@ for name,digest in record['packaged_files'].items():
     assert hashlib.sha256(data).hexdigest()==digest,name
     assert b'# SIG # Begin signature block' not in data,name
 assert not list(module.rglob('*.dll'))
-installed=Path('/clang64/lib/powershell/Modules/Microsoft.PowerShell.Archive/1.2.6')
-feed=Path('/clang64/lib/dotnet/library-packs/microsoft.powershell.archive.1.2.6.nupkg')
+installed=Path(os.environ['MINGW_PREFIX']+'/lib/powershell/Modules/Microsoft.PowerShell.Archive/1.2.6')
+feed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs/microsoft.powershell.archive.1.2.6.nupkg')
 if feed.is_file():
     with zipfile.ZipFile(feed) as z:
         # Build-time checks may restore a newer candidate. Only compare loose

@@ -4,7 +4,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 prefix=$(cd "${1:?usage: check-package.sh PREFIX NEW_OUTPUT FIXTURES}" && pwd)
 mkdir "${2:?missing output}"; out=$(cd "$2" && pwd)
 fixtures=$(cd "${3:?missing fixtures}" && pwd)
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am /clang64/lib/dotnet)
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_ROOT_X64=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)
 export POWERSHELL_TELEMETRY_OPTOUT=1 DOTNET_CLI_TELEMETRY_OPTOUT=1
 /usr/bin/python3 - "$prefix" <<'PY'
 from pathlib import Path
@@ -22,8 +22,11 @@ for relative,digest in license['copied_license_files'].items():
 assert len(license['bundled_source_native_owners'])>=70
 print('PASS complete source distribution file hashes and every declared source/native-owner license')
 PY
-/clang64/bin/python.exe "$(cygpath -am "$here/check-launcher.py")" "$(cygpath -am "$prefix")" "$(cygpath -am "$out/launcher")" --dotnet-root "$(cygpath -am /clang64/lib/dotnet)"
-for name in Smoke CimWmiSmoke ChildSmoke DesktopSmoke; do
+${MINGW_PREFIX}/bin/python.exe "$(cygpath -am "$here/check-launcher.py")" "$(cygpath -am "$prefix")" "$(cygpath -am "$out/launcher")" --dotnet-root "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)"
+smokes=(Smoke CimWmiSmoke ChildSmoke)
+# the desktop smoke ships only with a WindowsDesktop build
+[[ ! -f $fixtures/DesktopSmoke.ps1 ]] || smokes+=(DesktopSmoke)
+for name in "${smokes[@]}"; do
  args=();[[ $name != DesktopSmoke ]]||args=(-STA)
  [[ $name != CimWmiSmoke ]]||args=(-MTA)
  timeout 180 "$prefix/bin/pwsh.exe" -NoLogo -NoProfile -NonInteractive "${args[@]}" -ExecutionPolicy Bypass -File "$(cygpath -am "$fixtures/$name.ps1")"
@@ -34,4 +37,4 @@ timeout 60 "$prefix/bin/pwsh.exe" -NoLogo -NoProfile -NonInteractive -STA -Execu
  -File "$(cygpath -am "$fixtures/WmiStaProbe.ps1")"
 timeout 180 "$prefix/bin/pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass \
  -File "$(cygpath -am "$fixtures/GallerySmoke.ps1")" -Output "$(cygpath -am "$out/gallery")"
-echo 'PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/LocalAccounts/source gallery/native child/source desktop rendering and license closure'
+echo "PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/LocalAccounts/source gallery/native child${smokes[3]:+/source desktop rendering} and license closure"

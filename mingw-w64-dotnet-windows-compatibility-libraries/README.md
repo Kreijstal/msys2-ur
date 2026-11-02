@@ -61,15 +61,15 @@ Roslyn is used by the test gate only and is not a package runtime dependency.
 In CLANG64, with the source-built SDK and declared dependencies installed:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 ```
 
 After installing all nine split packages, use a new output directory:
 
 ```bash
-bash check.sh /tmp/compatibility-installed /clang64/share/doc/dotnet-codedom/localization.json
+bash check.sh /tmp/compatibility-installed $MINGW_PREFIX/share/doc/dotnet-codedom/localization.json
 ```
 
 The dependency graph evidence is in
-../tests/powershell-deps/windows-compatibility-graph-20261026.json.
+[windows-compatibility-graph-20261026.json](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps/windows-compatibility-graph-20261026.json).
 The overall PowerShell dependency and native-port objective remains incomplete.

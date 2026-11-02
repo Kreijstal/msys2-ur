@@ -49,7 +49,7 @@ Framework implementations. These are focused integration gates, not the full
 upstream Roslyn unit-test suite. Full PowerShell integration and the runtime's
 servicing version remain separate requirements.
 
-Build in CLANG64 with the source-built SDK, targeting pack and Common/CSharp
+Build in CLANG64 or UCRT64 with the source-built SDK, targeting pack and Common/CSharp
 4.9.2 packages installed:
 
 ```bash
@@ -59,7 +59,7 @@ makepkg --cleanbuild --force --noconfirm
 After installation, use new output directories and only the installed feed:
 
 ```bash
-bash check.sh NEW_OUTPUT /clang64/share/doc/dotnet-codeanalysis-visualbasic/localization.json
+bash check.sh NEW_OUTPUT $MINGW_PREFIX/share/doc/dotnet-codeanalysis-visualbasic/localization.json
 bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
 ```
 

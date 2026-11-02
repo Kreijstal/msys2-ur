@@ -1,4 +1,5 @@
 """Match every tool DLL to original project output or installed source package bytes."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -15,7 +16,7 @@ names=('System.Management.Automation','Microsoft.PowerShell.CoreCLR.Eventing',
     'Microsoft.WSMan.Management','Microsoft.WSMan.Runtime')
 project={name+'.dll':source/'src'/name/'bin/Release/net8.0'/(name+'.dll') for name in names}
 packages={}
-for path in Path('/clang64/lib/dotnet/library-packs').glob('*.nupkg'):
+for path in Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs').glob('*.nupkg'):
     with zipfile.ZipFile(path) as z:
         for item in z.namelist():
             if item.endswith('.dll'):
@@ -38,7 +39,7 @@ for path in sorted(host.rglob('*.dll')):
     relative=path.relative_to(host).as_posix();digest=sha(path.read_bytes())
     if relative.startswith('ref/'):
         assert references[path.name]==digest,relative
-        assert path.read_bytes()==(Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')/path.name).read_bytes()
+        assert path.read_bytes()==(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')/path.name).read_bytes()
         result[relative]=dict(sha256=digest,source_reference_metadata=True)
     elif path.name=='SourcePowerShell.ModuleHost.dll':
         result[relative]=dict(sha256=digest,owned_host=True)

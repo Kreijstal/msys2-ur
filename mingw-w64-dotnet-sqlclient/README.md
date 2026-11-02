@@ -81,4 +81,4 @@ PowerShell/compatibility integration and actual runtime servicing. The CLR curre
 reports.NET8.0.0. Packaging and passing fixture tests do not close these requirements.
 
 Earlier three-overlay source-port evidence is retained in
-[`sqlclient-source-sni-results-20261027.txt`](../tests/powershell-deps/sqlclient-source-sni-results-20261027.txt).
+[`sqlclient-source-sni-results-20261027.txt`](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps/sqlclient-source-sni-results-20261027.txt).

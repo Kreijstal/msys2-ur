@@ -4,8 +4,8 @@ here=$(cd "$(dirname "$0")" && pwd)
 build=$(cd "${1:?usage: probe.sh WCF_BUILD NEW_OUTPUT}" && pwd)
 mkdir "${2:?usage: probe.sh WCF_BUILD NEW_OUTPUT}"
 output=$(cd "$2" && pwd)
-export PATH=/clang64/bin:/usr/bin:$PATH
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+export PATH=${MINGW_PREFIX}/bin:/usr/bin:$PATH
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -m "$output/cli-home") NUGET_PACKAGES=$(cygpath -m "$output/empty-packages")
 cp "$here/Probe.cs" "$here/CheckAssets.cs" "$here/TransportProbe.cs" "$here/SecurityProbe.cs" "$output/"
 cat > "$output/probe.csproj" <<PROJECT
@@ -17,5 +17,5 @@ cat > "$output/probe.csproj" <<PROJECT
 PROJECT
 cp "$build/NuGet.config" "$output/"
 cd "$output"
-/clang64/lib/dotnet/dotnet.exe build probe.csproj -c Release --configfile NuGet.config -p:UseSharedCompilation=false -v:minimal
-timeout 45 /clang64/lib/dotnet/dotnet.exe bin/Release/net8.0/probe.dll
+${MINGW_PREFIX}/lib/dotnet/dotnet.exe build probe.csproj -c Release --configfile NuGet.config -p:UseSharedCompilation=false -v:minimal
+timeout 45 ${MINGW_PREFIX}/lib/dotnet/dotnet.exe bin/Release/net8.0/probe.dll

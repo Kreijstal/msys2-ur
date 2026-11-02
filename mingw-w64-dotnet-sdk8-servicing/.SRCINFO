@@ -1,5 +1,5 @@
 pkgbase = mingw-w64-dotnet-sdk8-servicing
-	pkgdesc = Audited source SDK8 servicing with original .NET Standard 2.1 framework registration
+	pkgdesc = Audited source SDK8 with source-built8.0.31 apphost and runtime packs (mingw-w64)
 	pkgver = 8.0.131
 	pkgrel = 5
 	url = https://github.com/dotnet/sdk
@@ -7,23 +7,36 @@ pkgbase = mingw-w64-dotnet-sdk8-servicing
 	license = spdx:MIT
 	license = spdx:Apache-2.0
 	license = spdx:BSD-3-Clause
+	makedepends = mingw-w64-clang-x86_64-dotnet-sdk>=8.0.131
+	makedepends = mingw-w64-clang-x86_64-cc
+	makedepends = mingw-w64-clang-x86_64-cmake
+	makedepends = mingw-w64-clang-x86_64-ninja
+	makedepends = mingw-w64-clang-x86_64-llvm
+	makedepends = mingw-w64-ucrt-x86_64-mono>=6.12.0.199
 	makedepends = python
-	depends = mingw-w64-clang-x86_64-dotnet-runtime=8.0.131
-	depends = mingw-w64-clang-x86_64-dotnet-runtime8-servicing=8.0.31-3
+	makedepends = patch
+	makedepends = make
+	depends = mingw-w64-clang-x86_64-dotnet-runtime>=8.0.131
+	depends = mingw-w64-clang-x86_64-dotnet-runtime8-servicing>=8.0.31
 	depends = mingw-w64-clang-x86_64-dotnet-targeting8-servicing>=8.0.31-2
-	depends = mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers=8.0.0.preview26274.2
-	optdepends = mingw-w64-clang-x86_64-dotnet-netstandard21-reference: source reference pack for netstandard2.1
+	depends = mingw-w64-clang-x86_64-dotnet-sdk-netanalyzers>=8.0.0.preview26274.2
 	provides = mingw-w64-clang-x86_64-dotnet-sdk=8.0.131-5
 	conflicts = mingw-w64-clang-x86_64-dotnet-sdk
-	noextract = mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst
+	noextract = mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-4-any.pkg.tar.zst
+	noextract = runtime-v8.0.31.tar.gz
+	noextract = dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
 	options = !strip
 	options = !lto
 	options = !buildflags
-	source = mingw-w64-clang-x86_64-dotnet-sdk8-servicing-8.0.131-4-any.pkg.tar.zst
-	source = dotnet-sdk8-registration-source-1.tar.gz
+	source = mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-4-any.pkg.tar.zst::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/mingw-w64-clang-x86_64-dotnet-sdk-8.0.131-4-any.pkg.tar.zst
+	source = runtime-v8.0.31.tar.gz::https://codeload.github.com/dotnet/runtime/tar.gz/refs/tags/v8.0.31
+	source = dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz::https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731/dotnet-bootstrap-3cbf21078968e2290a54ab093392b4dfeb1c6f1f.tar.gz
+	source = dotnet-mingw-bootstrap-5ab58f8ba94346c59bc68ab052d8f96f124be323.tar.gz::https://codeload.github.com/Kreijstal/dotnet-mingw-bootstrap/tar.gz/5ab58f8ba94346c59bc68ab052d8f96f124be323
 	source = README.md
-	sha256sums = a9a92676702275054ae88d09540071c5e2757055c17f0ac1040e0f22151fb0d0
-	sha256sums = a1f13bf900f3c3486b9bb6ee13cc6a69c00b5204c66e254c09f222122655d6b1
-	sha256sums = ca03b0a3d10d2a798f90f0d03da3a0a74913463a48c8cfdf14b011979af5a32e
+	sha256sums = ff4dcc2e03a30192000fed9aca8aebb2154c1e3a7a16e12ef535b107f047dc26
+	sha256sums = b32a56a29cc0248bed219e1c7ef026bf8f006d997f5d6346382e63a22ecd9070
+	sha256sums = 75bea2026b90c7f4d5f88279c4ff25ca07b4a6eb0e435df90a41c6f485f773c6
+	sha256sums = 24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63
+	sha256sums = d1d249d6b14ec818b268e451fb09e91da1a40a443e4797880e7ea082957e8126
 
 pkgname = mingw-w64-clang-x86_64-dotnet-sdk8-servicing

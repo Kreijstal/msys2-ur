@@ -17,8 +17,9 @@ Mono seed supplies the resource compiler and the small source-built resource
 helper. No Microsoft binary SDK/runtime, NuGet package, WinMD, or compiler download
 is used. WPF source supplies SDK XML only.
 
-Build the source archive using `python make-source.py ../dotnet-bootstrap`, then
-run `MSYSTEM=CLANG64 makepkg-mingw -s`. The source-built bootstrap SDK/runtime/ilasm
+The driver scripts come from commit 3ae98d5 of
+https://github.com/Kreijstal/dotnet-mingw-bootstrap (newer WinForms work lives
+in https://github.com/Kreijstal/wpf-mingw). Run `MSYSTEM=CLANG64 makepkg-mingw -s`. The source-built bootstrap SDK/runtime/ilasm
 packages must be installed first. `check()` builds with an empty NuGet feed and
 opens/closes a real form on an interactive Windows desktop, both as a shared
 framework application and a self-contained publish. It checks controls, events,

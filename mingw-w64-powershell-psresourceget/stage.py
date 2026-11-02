@@ -1,4 +1,5 @@
 """Stage the complete module and private dependency set from verified source outputs."""
+import os
 from pathlib import Path
 import hashlib,json,shutil,subprocess,sys,zipfile
 
@@ -7,7 +8,7 @@ for path,digest in r['original_module_assets'].items():
     data=(source/path).read_bytes();assert sha(data)==digest;target=module/path.removeprefix('src/');target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
 name='Microsoft.PowerShell.PSResourceGet';data=(prepared/'bin/Release/net8.0'/(name+'.dll')).read_bytes();assert sha(data)==r['implementation_sha256'];(module/(name+'.dll')).write_bytes(data)
 private=module/'dependencies';private.mkdir();owned={};targets=json.loads((prepared/'obj/project.assets.json').read_text())['targets']['net8.0']
-feed={p.name.lower():p for p in Path('/clang64/lib/dotnet/library-packs').glob('*.nupkg')}
+feed={p.name.lower():p for p in Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs').glob('*.nupkg')}
 licenses={}
 for library,assets in targets.items():
     package,version=library.rsplit('/',1);lower=package.lower();package_file=cache/lower/version/(lower+'.'+version+'.nupkg')

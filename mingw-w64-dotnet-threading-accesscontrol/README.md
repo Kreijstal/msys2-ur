@@ -24,13 +24,13 @@ contract. Full remote security policy and every ACL combination remain untested.
 In CLANG64:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 ```
 
 After installation, use a new output directory:
 
 ```bash
-bash check.sh /tmp/threading-acl-installed /clang64/share/doc/dotnet-threading-accesscontrol/localization.json
+bash check.sh /tmp/threading-acl-installed $MINGW_PREFIX/share/doc/dotnet-threading-accesscontrol/localization.json
 ```
 
 The core runtime is still source-built from 8.0.0; tooling aliases do not upgrade

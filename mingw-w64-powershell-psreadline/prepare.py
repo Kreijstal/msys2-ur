@@ -1,4 +1,5 @@
 """Build complete PSReadLine production sources against source SMA and Pager."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -20,7 +21,7 @@ for group in list(root.findall('ItemGroup')):
 for name,value in dict(EnableNETAnalyzers='false',NuGetAudit='false',IncludeSourceRevisionInInformationalVersion='false',CopyLocalLockFileAssemblies='true').items():E.SubElement(props,name).text=value
 props.find('InformationalVersion').text=golden['published_identity']['attributes']['AssemblyInformationalVersionAttribute']
 items=E.SubElement(root,'ItemGroup');ref=E.SubElement(items,'Reference',Include='System.Management.Automation')
-E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
+E.SubElement(ref,'HintPath').text=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
 E.SubElement(ref,'Private').text='false'
 E.indent(tree);tree.write(project,encoding='utf-8',xml_declaration=True)
 inventory={p.relative_to(source).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted((source/'PSReadLine').glob('*.cs'))}

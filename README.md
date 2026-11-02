@@ -26,15 +26,31 @@
 
 ## Using the Binary Package Repository
 
-Prebuilt packages and the pacman database are published together in the
-[`x11-shared-20260731`](https://github.com/Kreijstal/msys2-ur/releases/tag/x11-shared-20260731)
-release. Add this repository to `/etc/pacman.conf`:
+Prebuilt packages are published as one pacman repository per environment, each
+in its own release with its database:
+
+| Repository | Environment |
+| --- | --- |
+| [`msys2ur-ucrt64`](https://github.com/Kreijstal/msys2-ur/releases/tag/msys2ur-ucrt64) | UCRT64 |
+| [`msys2ur-clang64`](https://github.com/Kreijstal/msys2-ur/releases/tag/msys2ur-clang64) | CLANG64 |
+| [`msys2ur-mingw64`](https://github.com/Kreijstal/msys2-ur/releases/tag/msys2ur-mingw64) | MINGW64 |
+| [`msys2ur-msys`](https://github.com/Kreijstal/msys2-ur/releases/tag/msys2ur-msys) | MSYS (Cygwin-based X11 stack) |
+
+Add the repositories for the environments you use to `/etc/pacman.conf`, for
+example:
 
 ```ini
-[msys2ur]
+[msys2ur-ucrt64]
 SigLevel = Optional TrustAll
-Server = https://github.com/Kreijstal/msys2-ur/releases/download/x11-shared-20260731
+Server = https://github.com/Kreijstal/msys2-ur/releases/download/$repo
+
+[msys2ur-clang64]
+SigLevel = Optional TrustAll
+Server = https://github.com/Kreijstal/msys2-ur/releases/download/$repo
 ```
+
+The former single `[msys2ur]` repository in the `x11-shared-20260731` release is
+no longer updated; replace it with the sections above.
 
 Refresh the package databases:
 
@@ -71,8 +87,24 @@ reference pack, host/embedding development files and bootstrap tools. The
 subset. [pnet-bootstrap](mingw-w64-pnet-bootstrap/README.md) packages the
 independent C-only Portable.NET root for UCRT64.
 
-These experimental packages are built from source and are not yet part of
-the published binary repository. See each recipe's build instructions.
+[PowerShell 7.4.20](mingw-w64-powershell/README.md) is built from source on
+this stack for CLANG64 and UCRT64 (UCRT64 without the WindowsDesktop
+GraphicalHost) and published together with its runtime dependencies and
+bundled modules. Completed SDK, compiler and other build-only packages are also published as
+experimental bootstrap components. Unfinished historical toolchain work remains
+separately labeled in the validation records. See each recipe's build instructions.
+
+Generated source bundles are distributed as checksummed release assets. For the
+recorded source snapshot, fetch them before running the affected recipes:
+
+```sh
+python3 tools/fetch-release-sources.py tests/publish/source-bundles-20261101.json \
+  --release-base-url https://github.com/Kreijstal/msys2-ur/releases/download/source-inputs-20261102
+```
+
+The manifest records each recipe's expected local filename and SHA256, including
+unique release names for bundles that share a filename. Package publication
+records identify the source commit used to build each binary.
 
 ---
 

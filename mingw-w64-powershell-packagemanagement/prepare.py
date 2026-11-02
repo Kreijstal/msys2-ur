@@ -1,4 +1,5 @@
 """Retarget all six original Core projects, retaining their Core source selections."""
+import os
 from pathlib import Path
 import hashlib
 import json
@@ -32,7 +33,7 @@ resource_namespaces={'Microsoft.PackageManagement':'Microsoft.PackageManagement.
     'Microsoft.PackageManagement.MetaProvider.PowerShell':'Microsoft.PackageManagement.MetaProvider.PowerShell.Internal',
     'Microsoft.PowerShell.PackageManagement':'Microsoft.PowerShell.PackageManagement',
     'Microsoft.PackageManagement.NuGetProvider':'Microsoft.PackageManagement.NuGetProvider'}
-reference=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
+reference=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll'],text=True).strip()
 record={}
 for name in names:
     folder=root/'src'/name

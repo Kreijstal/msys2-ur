@@ -2,7 +2,7 @@
 set -euo pipefail
 consumer=$(cd "${1:?usage: check-msbuild.sh CONSUMER nuget|sdk}" && pwd);mode=${2:?}
 [[ $mode == nuget || $mode == sdk ]]
-export DOTNET_ROOT=$(cygpath -am /clang64/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
+export DOTNET_ROOT=$(cygpath -am ${MINGW_PREFIX}/lib/dotnet) DOTNET_CLI_TELEMETRY_OPTOUT=1 MSBuildEnableWorkloadResolver=false
 export DOTNET_ROOT_X64=$DOTNET_ROOT DOTNET_CLI_HOME=$(cygpath -am "$consumer/cli-home") NUGET_PACKAGES=$(cygpath -am "$consumer/empty-packages")
 for language in CSharp VisualBasic;do
  folder=$consumer/$mode-$language;mkdir "$folder"
@@ -23,15 +23,15 @@ XML
  if [[ $language == CSharp ]];then printf 'public class Probe { public int M()=>42; }\n' > "$folder/Probe.cs";else printf 'Public Class Probe\n Public Function M() As Integer\n Return 42\n End Function\nEnd Class\n' > "$folder/Probe.vb";fi
  args=(-c Release --configfile "$(cygpath -am "$folder/NuGet.config")" -p:UseSharedCompilation=false -v:minimal)
  if [[ $mode == nuget ]];then
-  args+=(-p:CscToolPath="$(cygpath -am /clang64/lib/dotnet/compiler-packs/roslyn-4.9.2)" -p:CscToolExe=csc49.cmd -p:VbcToolPath="$(cygpath -am /clang64/lib/dotnet/compiler-packs/roslyn-vb-4.9.2)" -p:VbcToolExe=vbc49.cmd)
+  args+=(-p:CscToolPath="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/compiler-packs/roslyn-4.9.2)" -p:CscToolExe=csc49.cmd -p:VbcToolPath="$(cygpath -am ${MINGW_PREFIX}/lib/dotnet/compiler-packs/roslyn-vb-4.9.2)" -p:VbcToolExe=vbc49.cmd)
  fi
  set +e
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$folder/Probe.$suffix")" "${args[@]}" > "$folder/negative.log" 2>&1
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$folder/Probe.$suffix")" "${args[@]}" > "$folder/negative.log" 2>&1
  result=$?
  set -e
  [[ $result -ne 0 ]]&&grep -q 'error CA1822' "$folder/negative.log"
  if [[ $language == CSharp ]];then sed -i 's/public int M/public static int M/' "$folder/Probe.cs";else sed -i 's/Public Function M/Public Shared Function M/' "$folder/Probe.vb";fi
- /clang64/lib/dotnet/dotnet.exe build "$(cygpath -am "$folder/Probe.$suffix")" "${args[@]}" > "$folder/corrected.log" 2>&1
+ ${MINGW_PREFIX}/lib/dotnet/dotnet.exe build "$(cygpath -am "$folder/Probe.$suffix")" "${args[@]}" > "$folder/corrected.log" 2>&1
  python3 - "$folder" "$language" "$mode" <<'PY'
 from pathlib import Path
 import sys

@@ -2,13 +2,13 @@
 set -euo pipefail
 source_root=$(cd "${1:?usage: build.sh SOURCE PREPARED_OUTPUT}" && pwd)
 output=$(cd "${2:?usage: build.sh SOURCE PREPARED_OUTPUT}" && pwd)
-export PATH=/clang64/bin:/usr/bin:$PATH
-export DOTNET_ROOT=$(cygpath -m /clang64/lib/dotnet)
+export PATH=${MINGW_PREFIX}/bin:/usr/bin:$PATH
+export DOTNET_ROOT=$(cygpath -m ${MINGW_PREFIX}/lib/dotnet)
 export DOTNET_ROOT_X64=$DOTNET_ROOT MSBuildEnableWorkloadResolver=false
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
 export DOTNET_CLI_HOME=$(cygpath -m "$output/cli-home")
 export NUGET_PACKAGES=$(cygpath -m "$output/empty-packages")
-dotnet=/clang64/lib/dotnet/dotnet.exe
+dotnet=${MINGW_PREFIX}/lib/dotnet/dotnet.exe
 for generator in CSharpSyntaxGenerator BoundTreeGenerator CSharpErrorFactsGenerator; do
   "$dotnet" build "$(cygpath -m "$output/$generator/build.csproj")" -c Release \
     --configfile "$(cygpath -m "$output/NuGet.config")" -p:UseSharedCompilation=false -v:minimal

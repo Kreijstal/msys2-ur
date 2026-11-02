@@ -1,4 +1,5 @@
 """Gate original BinaryData compiler inputs, source JSON reference and produced bytes."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys
 
@@ -23,7 +24,7 @@ for line in (out/'obj/Release/net8.0/reference-inputs.txt').read_text(encoding='
     if line.lower().startswith((native(cache)+'/').lower()):
         relative=line[len(native(cache))+1:];origin='source-cache';path=cache/relative
     else:
-        framework=Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');start=native(framework)+'/'
+        framework=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31');start=native(framework)+'/'
         assert line.lower().startswith(start.lower()),line
         relative=line[len(start):];origin='framework';path=framework/relative
     refs.append(dict(origin=origin,path=relative,sha256=sha(path)))

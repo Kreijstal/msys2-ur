@@ -1,6 +1,6 @@
 """Preserve original JSON .NET8 and three generator Compile/import conditions."""
 from pathlib import Path
-import hashlib,json,os,re,shutil,sys
+import hashlib,json,os,re,shutil,subprocess,sys
 import xml.etree.ElementTree as E
 
 source,out=(Path(p).resolve() for p in sys.argv[1:]);out.mkdir()
@@ -154,6 +154,6 @@ for suffix in ['Lib','Gen3.11','Gen4.0','Gen4.4']:
         production_cs_changes=[])
 (out/'source-inventory.json').write_text(json.dumps(records,indent=2)+'\n')
 (out/'localization.json').write_text(json.dumps(localization,ensure_ascii=False,indent=2)+'\n')
-feed='E:/msys64/clang64/lib/dotnet/library-packs'
+feed=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'],text=True).strip()
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+feed+'"/></packageSources></configuration>\n')
 print('PASS complete original JSON/generator imports and selected compiler items:',{k:len(v['expected_original_compile_items']) for k,v in records.items()})

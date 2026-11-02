@@ -65,5 +65,5 @@ build tree with a new output directory and empty cache:
 bash mingw-w64-dotnet-windows-libraries/check.sh /tmp/windows-libraries-installed
 ```
 
-The default source is `/clang64/lib/dotnet/library-packs`. An optional second
+The default source is `$MINGW_PREFIX/lib/dotnet/library-packs`. An optional second
 argument selects a private feed for package development.

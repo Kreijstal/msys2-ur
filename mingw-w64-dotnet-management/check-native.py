@@ -1,4 +1,5 @@
 """Audit exports and imports of the newly compiled native WMI backend."""
+import os
 from pathlib import Path
 import json
 import re
@@ -6,7 +7,7 @@ import subprocess
 import sys
 
 binary=Path(sys.argv[1])
-result=subprocess.check_output(['/clang64/bin/llvm-readobj','--file-headers','--coff-imports','--coff-exports',str(binary)],text=True)
+result=subprocess.check_output([os.environ['MINGW_PREFIX']+'/bin/llvm-readobj','--file-headers','--coff-imports','--coff-exports',str(binary)],text=True)
 expected=json.loads((Path(__file__).resolve().parent/'native-exports.json').read_text())
 exports=re.findall(r'Export \{.*?Name: ([^\r\n]+)',result,re.S)
 imports=re.findall(r'Import \{.*?Name: ([^\r\n]+)',result,re.S)

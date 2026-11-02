@@ -1,8 +1,9 @@
 """Match the complete restored net8 closure and every consumer DLL to source owners."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,zipfile
 root,out,feed=map(lambda s:Path(s).resolve(),sys.argv[1:]);sha=lambda data:hashlib.sha256(data).hexdigest()
-installed=Path('/clang64/lib/dotnet/library-packs');owners={};by_hash={}
+installed=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs');owners={};by_hash={}
 for archive in sorted((out/'cache').rglob('*.nupkg')):
  candidate=feed/archive.name;source=candidate if candidate.is_file() else installed/archive.name
  assert source.is_file() and source.read_bytes()==archive.read_bytes(),archive

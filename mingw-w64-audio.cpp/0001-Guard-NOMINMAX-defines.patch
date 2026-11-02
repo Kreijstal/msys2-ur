@@ -1,0 +1,38 @@
+Guard NOMINMAX defines
+
+libstdc++ on mingw-w64 defines NOMINMAX to 1 in os_defines.h, which
+every standard header pulls in.  These two files then define it again
+without a guard, and with -pedantic-errors the redefinition is an error:
+
+  latentsync/video.cpp:11:9: error: 'NOMINMAX' redefined
+
+The other files in the tree already use #ifndef NOMINMAX.
+
+diff --git a/src/community_models/latentsync/video.cpp b/src/community_models/latentsync/video.cpp
+index 44b80e5..77b3b83 100644
+--- a/src/community_models/latentsync/video.cpp
++++ b/src/community_models/latentsync/video.cpp
+@@ -8,7 +8,9 @@
+ #include <string>
+ 
+ #ifdef _WIN32
++#ifndef NOMINMAX
+ #define NOMINMAX
++#endif
+ #include <windows.h>
+ #include <fcntl.h>
+ #include <io.h>
+diff --git a/src/models/kokoro_tts/g2p_multilingual.cpp b/src/models/kokoro_tts/g2p_multilingual.cpp
+index 918b4c7..01d982f 100644
+--- a/src/models/kokoro_tts/g2p_multilingual.cpp
++++ b/src/models/kokoro_tts/g2p_multilingual.cpp
+@@ -15,7 +15,9 @@
+ #include <stdexcept>
+ #include <unordered_map>
+ #ifdef _WIN32
++#ifndef NOMINMAX
+ #define NOMINMAX
++#endif
+ #include <windows.h>
+ #else
+ #include <dlfcn.h>

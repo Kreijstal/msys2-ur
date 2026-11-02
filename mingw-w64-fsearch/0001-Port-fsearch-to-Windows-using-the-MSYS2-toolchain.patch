@@ -1,0 +1,1199 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Fri, 30 Oct 2026 17:27:34 +0100
+Subject: [PATCH 1/5] Port fsearch to Windows using the MSYS2 toolchain
+
+Rebase of the win32compat branch (c3b0b25, f8fcac5) onto upstream master.
+
+- win32_compat.[ch] provides the POSIX pieces the core needs on Windows
+  (flock, lstat, fnmatch, strptime, strcasestr, memrchr, dirent) with
+  UTF-16 file APIs, and is built only for Windows hosts.
+- The database scanner stats the full path on Windows, since there are no
+  directory file descriptors there.
+- GDesktopAppInfo and .desktop launchers are freedesktop-only; "Open with"
+  looks the application up among the registered GIO apps instead.
+- Parent folders open in Explorer with the file selected by default.
+- test_query builds path needles with the platform separator, and skips
+  the Turkic case mapping test on Windows, where GLib follows the thread
+  locale instead of setlocale().
+---
+ src/fsearch.c                 |   4 +
+ src/fsearch_config.c          |   5 +
+ src/fsearch_database_entry.h  |   1 +
+ src/fsearch_database_file.c   |   8 +
+ src/fsearch_database_index.c  |   2 +
+ src/fsearch_database_scan.c   |  13 +
+ src/fsearch_file_utils.c      |  13 +-
+ src/fsearch_file_utils.h      |   1 +
+ src/fsearch_query_matchers.c  |   4 +
+ src/fsearch_string_utils.c    |   4 +
+ src/fsearch_time_utils.c      |   4 +
+ src/fsearch_window_actions.c  |  16 +-
+ src/meson.build               |   6 +-
+ src/tests/meson.build         |  11 +
+ src/tests/test_query.c        |  17 +-
+ src/tests/test_win32_compat.c | 124 ++++++++
+ src/win32_compat.c            | 522 ++++++++++++++++++++++++++++++++++
+ src/win32_compat.h            | 138 +++++++++
+ 18 files changed, 887 insertions(+), 6 deletions(-)
+ create mode 100644 src/tests/test_win32_compat.c
+ create mode 100644 src/win32_compat.c
+ create mode 100644 src/win32_compat.h
+
+diff --git a/src/fsearch.c b/src/fsearch.c
+index 15c1ae93..a0dd1c73 100644
+--- a/src/fsearch.c
++++ b/src/fsearch.c
+@@ -43,7 +43,11 @@
+ #include <glib/gi18n.h>
+ #include <gtk/gtk.h>
+ #include <gtk/gtkcssprovider.h>
++#ifdef __linux__
+ #include <linux/limits.h>
++#else
++#include <limits.h>
++#endif
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+diff --git a/src/fsearch_config.c b/src/fsearch_config.c
+index 7ef6ea6b..e322d012 100644
+--- a/src/fsearch_config.c
++++ b/src/fsearch_config.c
+@@ -100,7 +100,12 @@ static const FsearchKeyData WINDOW_SECTION[] = {
+ };
+ 
+ static const FsearchKeyData APPLICATIONS_SECTION[] = {
++#ifdef _WIN32
++    // No file manager on D-Bus: open the parent folder in Explorer with the file selected
++    CONF_STR(folder_open_cmd, "explorer.exe /select,\"{path_full_raw}\""),
++#else
+     CONF_STR(folder_open_cmd, NULL),
++#endif
+ };
+ 
+ static const FsearchKeyData INTERFACE_SECTION[] = {
+diff --git a/src/fsearch_database_entry.h b/src/fsearch_database_entry.h
+index e2661e52..19a48170 100644
+--- a/src/fsearch_database_entry.h
++++ b/src/fsearch_database_entry.h
+@@ -3,6 +3,7 @@
+ #include <glib.h>
+ #include <stdbool.h>
+ #include <stdint.h>
++#include <sys/types.h>
+ 
+ #include "fsearch_array.h"
+ #include "fsearch_database_entry_flags.h"
+diff --git a/src/fsearch_database_file.c b/src/fsearch_database_file.c
+index 2dff5391..923f72c6 100644
+--- a/src/fsearch_database_file.c
++++ b/src/fsearch_database_file.c
+@@ -16,13 +16,21 @@
+ #include <glib.h>
+ #include <glib/gi18n.h>
+ #include <inttypes.h>
++#ifdef __linux__
+ #include <linux/limits.h>
++#else
++#include <limits.h>
++#endif
+ #include <stdbool.h>
+ #include <stdint.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
++#ifdef _WIN32
++#include "win32_compat.h"
++#else
+ #include <sys/file.h>
++#endif
+ #include <sys/types.h>
+ #include <time.h>
+ #include <unistd.h>
+diff --git a/src/fsearch_database_index.c b/src/fsearch_database_index.c
+index f4c543f8..59029485 100644
+--- a/src/fsearch_database_index.c
++++ b/src/fsearch_database_index.c
+@@ -19,7 +19,9 @@
+ #include <config.h>
+ #include <gio/gio.h>
+ #include <glib-object.h>
++#ifndef _WIN32
+ #include <glib-unix.h>
++#endif
+ #include <glib.h>
+ #include <stdbool.h>
+ #include <stddef.h>
+diff --git a/src/fsearch_database_scan.c b/src/fsearch_database_scan.c
+index 2e2d45c7..5edefaa1 100644
+--- a/src/fsearch_database_scan.c
++++ b/src/fsearch_database_scan.c
+@@ -5,11 +5,17 @@
+ #include "fsearch_database_entry.h"
+ 
+ #include <config.h>
++#ifndef _WIN32
+ #include <dirent.h>
++#endif
+ #include <fcntl.h>
+ #include <glib/gi18n.h>
+ #include <sys/stat.h>
+ 
++#ifdef _WIN32
++#include "win32_compat.h"
++#endif
++
+ enum {
+     WALK_OK = 0,
+     WALK_BADIO,
+@@ -182,7 +188,14 @@ db_folder_scan_recursive(DatabaseWalkContext *walk_context, FsearchDatabaseEntry
+ #ifdef AT_NO_AUTOMOUNT
+         stat_flags |= AT_NO_AUTOMOUNT;
+ #endif
++#ifdef _WIN32
++        // Windows has no directory file descriptors, so stat the full path
++        (void)dir_fd;
++        (void)stat_flags;
++        if (lstat(path->str, &st)) {
++#else
+         if (fstatat(dir_fd, dent->d_name, &st, stat_flags)) {
++#endif
+             g_debug("[db_scan] can't stat: %s", path->str);
+             continue;
+         }
+diff --git a/src/fsearch_file_utils.c b/src/fsearch_file_utils.c
+index f32c51f6..9781562b 100644
+--- a/src/fsearch_file_utils.c
++++ b/src/fsearch_file_utils.c
+@@ -21,7 +21,7 @@
+ #include "fsearch_file_utils.h"
+ #include "fsearch_string_utils.h"
+ 
+-#ifndef __MACH__
++#if !defined(__MACH__) && !defined(_WIN32)
+ #include <gio/gdesktopappinfo.h>
+ #endif
+ 
+@@ -35,6 +35,10 @@
+ #include <string.h>
+ #include <sys/stat.h>
+ 
++#ifdef _WIN32
++#include "win32_compat.h"
++#endif
++
+ const char *data_folder_name = "fsearch";
+ 
+ #if !defined(__MACH__)
+@@ -241,6 +245,7 @@ launch_context_free(FsearchFileUtilsLaunchContext *ctx) {
+     g_clear_pointer(&ctx, g_free);
+ }
+ 
++#ifndef _WIN32
+ // Adds a desktop file that should be launched as its associated application (no URIs passed),
+ // rather than opened with a handler derived from its content type.
+ static void
+@@ -261,6 +266,7 @@ add_desktop_launch_for_uri_to_launch_context(FsearchFileUtilsLaunchContext *laun
+     uris_ctx->app_info = app_info;
+     g_queue_push_tail(launch_ctx->launch_uris_ctx_queue, uris_ctx);
+ }
++#endif
+ 
+ static void
+ add_app_info_for_uri_to_launch_context(FsearchFileUtilsLaunchContext *launch_ctx, GAppInfo *app_info, char *uri) {
+@@ -470,10 +476,13 @@ fsearch_file_utils_open_path_list(GList *paths,
+     launch_ctx->pending_resolves = 0;
+     for (GList *p = paths; p != NULL; p = p->next) {
+         const char *path = p->data;
++#ifndef _WIN32
++        // .desktop launchers only exist on freedesktop systems
+         if (launch_desktop_files && fsearch_file_utils_is_desktop_file(path)) {
+             add_desktop_launch_for_uri_to_launch_context(launch_ctx, path);
+             continue;
+         }
++#endif
+         // Let GIO figure out the default handler for a file
+         launch_ctx->pending_resolves++;
+         g_autoptr(GFile) file = g_file_new_for_path(path);
+@@ -599,7 +608,7 @@ fsearch_file_utils_get_file_type(const char *name, gboolean is_dir) {
+ 
+ GIcon *
+ fsearch_file_utils_get_desktop_file_icon(const char *path) {
+-#ifdef __MACH__
++#if defined(__MACH__) || defined(_WIN32)
+     g_autoptr(GAppInfo) info = NULL;
+ #else
+     g_autoptr(GAppInfo) info = (GAppInfo *)g_desktop_app_info_new_from_filename(path);
+diff --git a/src/fsearch_file_utils.h b/src/fsearch_file_utils.h
+index 91397e88..01400155 100644
+--- a/src/fsearch_file_utils.h
++++ b/src/fsearch_file_utils.h
+@@ -20,6 +20,7 @@
+ 
+ #include <gio/gio.h>
+ #include <stdbool.h>
++#include <sys/types.h>
+ 
+ typedef void
+ (*FsearchFileUtilsOpenCallback)(gboolean result, const char *error_message, gpointer user_data);
+diff --git a/src/fsearch_query_matchers.c b/src/fsearch_query_matchers.c
+index 34157861..98e64dfc 100644
+--- a/src/fsearch_query_matchers.c
++++ b/src/fsearch_query_matchers.c
+@@ -3,6 +3,10 @@
+ #include "fsearch_query_node.h"
+ #include <string.h>
+ 
++#ifdef _WIN32
++#include "win32_compat.h"
++#endif
++
+ uint32_t
+ fsearch_query_matcher_false(FsearchQueryNode *node, FsearchQueryMatchData *match_data) {
+     return 0;
+diff --git a/src/fsearch_string_utils.c b/src/fsearch_string_utils.c
+index 649178dd..68e17e7b 100644
+--- a/src/fsearch_string_utils.c
++++ b/src/fsearch_string_utils.c
+@@ -23,6 +23,10 @@
+ #include <glib.h>
+ #include <string.h>
+ 
++#ifdef _WIN32
++#include "win32_compat.h"
++#endif
++
+ bool
+ fsearch_string_is_empty(const char *str) {
+     // query is considered empty if:
+diff --git a/src/fsearch_time_utils.c b/src/fsearch_time_utils.c
+index 7789bffa..b4abfe31 100644
+--- a/src/fsearch_time_utils.c
++++ b/src/fsearch_time_utils.c
+@@ -4,6 +4,10 @@
+ #include <stdint.h>
+ #include <time.h>
+ 
++#ifdef _WIN32
++#include "win32_compat.h"
++#endif
++
+ typedef enum FsearchDateTimeType {
+     FSEARCH_DATE_TIME_TYPE_SECOND,
+     FSEARCH_DATE_TIME_TYPE_MINUTE,
+diff --git a/src/fsearch_window_actions.c b/src/fsearch_window_actions.c
+index f05a7c93..4eda8435 100644
+--- a/src/fsearch_window_actions.c
++++ b/src/fsearch_window_actions.c
+@@ -42,7 +42,7 @@
+ #include <config.h>
+ #endif
+ 
+-#ifndef __MACH__
++#if !defined(__MACH__) && !defined(_WIN32)
+ #include <gio/gdesktopappinfo.h>
+ #endif
+ 
+@@ -612,8 +612,20 @@ fsearch_window_action_open_with(GSimpleAction *action, GVariant *variant, gpoint
+     if (!app_id) {
+         return;
+     }
+-#ifdef __MACH__
++#if defined(__MACH__)
+     g_autoptr(GAppInfo) app_info = NULL;
++#elif defined(_WIN32)
++    // GIO can only look up applications by id on freedesktop systems
++    g_autoptr(GAppInfo) app_info = NULL;
++    GList *apps = g_app_info_get_all();
++    for (GList *a = apps; a != NULL; a = a->next) {
++        const char *id = g_app_info_get_id(a->data);
++        if (!g_strcmp0(id, app_id)) {
++            app_info = g_object_ref(a->data);
++            break;
++        }
++    }
++    g_list_free_full(apps, g_object_unref);
+ #else
+     g_autoptr(GDesktopAppInfo) app_info = g_desktop_app_info_new(app_id);
+ #endif
+diff --git a/src/meson.build b/src/meson.build
+index e3578dc5..7a4e0db0 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -73,13 +73,17 @@ if have_inotify
+     libfsearch_core_sources += 'fsearch_folder_monitor_inotify.c'
+ endif
+ 
++if host_machine.system() == 'windows'
++    libfsearch_core_sources += 'win32_compat.c'
++endif
++
+ if have_fanotify
+     libfsearch_core_sources += 'fsearch_folder_monitor_fanotify.c'
+ endif
+ 
+ fsearch_core_deps = [
+     cc.find_library('m', required: true),
+-    dependency('gio-unix-2.0', version: '>= 2.72'),
++    dependency(host_machine.system() == 'windows' ? 'gio-windows-2.0' : 'gio-unix-2.0', version: '>= 2.72'),
+     dependency('pango', version: '>= 1.0'),
+     dependency('libpcre2-8', version: '>= 10.21'),
+     dependency('icu-uc', version: '>= 4.4'),
+diff --git a/src/tests/meson.build b/src/tests/meson.build
+index b6c5253b..a5f52852 100644
+--- a/src/tests/meson.build
++++ b/src/tests/meson.build
+@@ -96,3 +96,14 @@ test('test_time_utils',
+        'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
+      ],
+ )
++
++if host_machine.system() == 'windows'
++    test_win32_compat = executable('test_win32_compat', 'test_win32_compat.c', dependencies : libfsearch_core_dep)
++    test('test_win32_compat',
++         test_win32_compat,
++         env : [
++             'G_TEST_SRCDIR=@0@'.format(meson.current_source_dir()),
++             'G_TEST_BUILDDIR=@0@'.format(meson.current_build_dir()),
++         ],
++    )
++endif
+diff --git a/src/tests/test_query.c b/src/tests/test_query.c
+index 064195c3..ac4cd793 100644
+--- a/src/tests/test_query.c
++++ b/src/tests/test_query.c
+@@ -19,7 +19,17 @@ static void
+ test_query(QueryTest *t) {
+     FsearchFilterManager *manager = fsearch_filter_manager_new_with_defaults();
+ 
+-    FsearchQuery *q = fsearch_query_new(t->needle, NULL, manager, t->flags, "debug_query");
++    // Entries built from a "/"-separated haystack use the platform's directory separator,
++    // so path needles have to use it as well (a backslash must be escaped in queries).
++    g_autofree char *needle = NULL;
++    if (G_DIR_SEPARATOR != '/' && g_str_has_prefix(t->haystack, "/")) {
++        g_auto(GStrv) parts = g_strsplit(t->needle, "/", -1);
++        needle = g_strjoinv("\\\\", parts);
++    }
++    else {
++        needle = g_strdup(t->needle);
++    }
++    FsearchQuery *q = fsearch_query_new(needle, NULL, manager, t->flags, "debug_query");
+ 
+     FsearchDatabaseIndexPropertyFlags flags = DATABASE_INDEX_PROPERTY_FLAG_SIZE;
+     FsearchDatabaseEntry *entry = NULL;
+@@ -299,6 +309,11 @@ test_main(void) {
+ 
+ static void
+ test_turkic_case_mapping(void) {
++#ifdef G_OS_WIN32
++    // GLib takes the Turkic casing rules from the Windows thread locale, not from setlocale()
++    g_test_skip("Turkic case mapping follows the Windows thread locale");
++    return;
++#endif
+     if (set_locale("tr_TR.UTF-8")) {
+         QueryTest tr_tests[] = {
+             // Mismatches
+diff --git a/src/tests/test_win32_compat.c b/src/tests/test_win32_compat.c
+new file mode 100644
+index 00000000..3afa368b
+--- /dev/null
++++ b/src/tests/test_win32_compat.c
+@@ -0,0 +1,124 @@
++#ifdef _WIN32
++
++#include <assert.h>
++#include <stdio.h>
++#include <string.h>
++#include <time.h>
++#include "../win32_compat.h"
++
++// Test the strptime implementation
++static void test_strptime() {
++    struct tm tm;
++    char *result;
++    
++    // Test ISO date format
++    memset(&tm, 0, sizeof(tm));
++    result = win32_strptime("2023-12-25", "%Y-%m-%d", &tm);
++    assert(result != NULL);
++    assert(tm.tm_year == 123); // 2023 - 1900
++    assert(tm.tm_mon == 11);   // December (0-based)
++    assert(tm.tm_mday == 25);
++    
++    // Test ISO datetime format
++    memset(&tm, 0, sizeof(tm));
++    result = win32_strptime("2023-12-25 14:30:45", "%Y-%m-%d %H:%M:%S", &tm);
++    assert(result != NULL);
++    assert(tm.tm_year == 123);
++    assert(tm.tm_mon == 11);
++    assert(tm.tm_mday == 25);
++    assert(tm.tm_hour == 14);
++    assert(tm.tm_min == 30);
++    assert(tm.tm_sec == 45);
++    
++    // Test unsupported format
++    memset(&tm, 0, sizeof(tm));
++    result = win32_strptime("Dec 25, 2023", "%b %d, %Y", &tm);
++    assert(result == NULL);
++    
++    printf("strptime tests passed\n");
++}
++
++// Test the fnmatch implementation
++static void test_fnmatch() {
++    // Test exact match
++    assert(win32_fnmatch("hello", "hello", 0) == 0);
++    assert(win32_fnmatch("hello", "world", 0) == FNM_NOMATCH);
++    
++    // Test wildcard
++    assert(win32_fnmatch("*.txt", "file.txt", 0) == 0);
++    assert(win32_fnmatch("*.txt", "file.doc", 0) == FNM_NOMATCH);
++    assert(win32_fnmatch("test*", "testing", 0) == 0);
++    assert(win32_fnmatch("test*", "best", 0) == FNM_NOMATCH);
++    
++    // Test question mark
++    assert(win32_fnmatch("test?", "test1", 0) == 0);
++    assert(win32_fnmatch("test?", "test", 0) == FNM_NOMATCH);
++    assert(win32_fnmatch("test?", "test12", 0) == FNM_NOMATCH);
++    
++    // Test case insensitive (Windows default)
++    assert(win32_fnmatch("Hello", "hello", 0) == 0);
++    assert(win32_fnmatch("HELLO", "hello", 0) == 0);
++    
++    // Test path separators with FNM_PATHNAME
++    assert(win32_fnmatch("*/test", "dir/test", FNM_PATHNAME) == 0);
++    assert(win32_fnmatch("*/test", "dir\\test", FNM_PATHNAME) == 0);
++    
++    printf("fnmatch tests passed\n");
++}
++
++// Test the strcasestr implementation
++static void test_strcasestr() {
++    const char *haystack = "Hello World";
++    
++    assert(win32_strcasestr(haystack, "hello") != NULL);
++    assert(win32_strcasestr(haystack, "WORLD") != NULL);
++    assert(win32_strcasestr(haystack, "xyz") == NULL);
++    assert(win32_strcasestr(haystack, "") == haystack);
++    
++    printf("strcasestr tests passed\n");
++}
++
++// Test UTF-8 conversion functions
++static void test_utf8_conversion() {
++    const char *utf8_str = "Hello 世界";
++    
++    // Convert to wide string and back
++    wchar_t *wstr = win32_utf8_to_wchar(utf8_str);
++    assert(wstr != NULL);
++    
++    char *utf8_back = win32_wchar_to_utf8(wstr);
++    assert(utf8_back != NULL);
++    assert(strcmp(utf8_str, utf8_back) == 0);
++    
++    win32_free_wchar(wstr);
++    win32_free_utf8(utf8_back);
++    
++    // Test NULL handling
++    assert(win32_utf8_to_wchar(NULL) == NULL);
++    assert(win32_wchar_to_utf8(NULL) == NULL);
++    
++    printf("UTF-8 conversion tests passed\n");
++}
++
++int main() {
++    printf("Running Win32 compatibility tests...\n");
++    
++    test_strptime();
++    test_fnmatch();
++    test_strcasestr();
++    test_utf8_conversion();
++    
++    printf("All Win32 compatibility tests passed!\n");
++    return 0;
++}
++
++#else
++
++#include <stdio.h>
++
++int main() {
++    printf("Win32 compatibility tests skipped (not on Windows)\n");
++    return 0;
++}
++
++#endif
+\ No newline at end of file
+diff --git a/src/win32_compat.c b/src/win32_compat.c
+new file mode 100644
+index 00000000..1f9924c9
+--- /dev/null
++++ b/src/win32_compat.c
+@@ -0,0 +1,522 @@
++#ifdef _WIN32
++
++#include "win32_compat.h"
++#include <windows.h>
++#include <sys/stat.h>
++#include <string.h>
++#include <ctype.h>
++#include <stdio.h>
++#include <glib.h>
++
++// Windows implementation of flock
++int win32_flock(int fd, int operation) {
++    HANDLE handle = (HANDLE)_get_osfhandle(fd);
++    if (handle == INVALID_HANDLE_VALUE) {
++        return -1;
++    }
++    
++    OVERLAPPED overlapped = {0};
++    DWORD flags = 0;
++    
++    if (operation & LOCK_EX) {
++        flags = LOCKFILE_EXCLUSIVE_LOCK;
++    }
++    if (operation & LOCK_NB) {
++        flags |= LOCKFILE_FAIL_IMMEDIATELY;
++    }
++    
++    if (LockFileEx(handle, flags, 0, MAXDWORD, MAXDWORD, &overlapped)) {
++        return 0;
++    }
++    return -1;
++}
++
++// Windows implementation of strcasestr
++char *win32_strcasestr(const char *haystack, const char *needle) {
++    if (!haystack || !needle) {
++        return NULL;
++    }
++    
++    size_t needle_len = strlen(needle);
++    if (needle_len == 0) {
++        return (char *)haystack;
++    }
++    
++    for (const char *h = haystack; *h; h++) {
++        if (g_ascii_strncasecmp(h, needle, needle_len) == 0) {
++            return (char *)h;
++        }
++    }
++    return NULL;
++}
++
++// Windows implementation of lstat with Unicode support
++int win32_lstat(const char *path, struct stat *buf) {
++    if (!path || !buf) {
++        return -1;
++    }
++    
++    // Try Unicode version first for better international character support
++    wchar_t *wpath = win32_utf8_to_wchar(path);
++    if (wpath) {
++        int result = _wstat64(wpath, (struct _stat64*)buf);
++        win32_free_wchar(wpath);
++        return result;
++    }
++    
++    // Fallback to ANSI version
++    return stat(path, buf);
++}
++
++// Simple fnmatch implementation for Windows
++static int match_pattern(const char *pattern, const char *string, int flags) {
++    const char *p = pattern;
++    const char *s = string;
++    
++    while (*p && *s) {
++        if (*p == '*') {
++            // Handle wildcard
++            p++;
++            if (*p == '\0') {
++                return 0; // Match
++            }
++            
++            while (*s) {
++                if (match_pattern(p, s, flags) == 0) {
++                    return 0;
++                }
++                s++;
++            }
++            return FNM_NOMATCH;
++        } else if (*p == '?') {
++            // Match any single character
++            p++;
++            s++;
++        } else {
++            // Literal character match
++            int match;
++            if (flags & FNM_PATHNAME && (*p == '/' || *p == '\\')) {
++                // Handle path separators
++                match = (*s == '/' || *s == '\\');
++            } else {
++                // Case-insensitive comparison on Windows
++                match = (tolower(*p) == tolower(*s));
++            }
++            
++            if (!match) {
++                return FNM_NOMATCH;
++            }
++            p++;
++            s++;
++        }
++    }
++    
++    // Handle remaining pattern characters
++    while (*p == '*') {
++        p++;
++    }
++    
++    return (*p == '\0' && *s == '\0') ? 0 : FNM_NOMATCH;
++}
++
++int win32_fnmatch(const char *pattern, const char *string, int flags) {
++    if (!pattern || !string) {
++        return FNM_NOMATCH;
++    }
++    
++    return match_pattern(pattern, string, flags);
++}
++
++// Enhanced strptime implementation for Windows
++// Supports:
++// - "%Y" (4-digit year)
++// - "%y" (2-digit year)
++// - "%m" (month)
++// - "%d" (day)
++// - "%H" (hour)
++// - "%M" (minute)
++// - "%S" (second)
++// - Combinations like "%Y-%m-%d", "%y-%m-%d", "%Y-%m-%d %H:%M:%S", etc.
++char *win32_strptime(const char *s, const char *format, struct tm *tm) {
++    if (!s || !format || !tm) {
++        return NULL;
++    }
++    
++    // Clear the tm structure
++    memset(tm, 0, sizeof(struct tm));
++    
++    const char *f = format;
++    const char *p = s;
++    int part_count = 0;
++    
++    while (*f && *p) {
++        if (*f == '%') {
++            f++;
++            int consumed = 0;
++            int n;
++            switch (*f) {
++            case 'Y': // 4-digit year
++                if (sscanf(p, "%4d%n", &n, &consumed) != 1 || consumed != 4) {
++                    return NULL;
++                }
++                tm->tm_year = n - 1900;
++                p += consumed;
++                part_count++;
++                break;
++            case 'y': // 2-digit year
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed != 2) {
++                    return NULL;
++                }
++                tm->tm_year = (n < 69) ? (n + 100) : n;
++                p += consumed;
++                part_count++;
++                break;
++            case 'm': // month
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed == 0) {
++                    return NULL;
++                }
++                tm->tm_mon = n - 1;
++                p += consumed;
++                part_count++;
++                break;
++            case 'd': // day
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed == 0) {
++                    return NULL;
++                }
++                tm->tm_mday = n;
++                p += consumed;
++                part_count++;
++                break;
++            case 'H': // hour (00-23)
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed == 0) {
++                    return NULL;
++                }
++                tm->tm_hour = n;
++                p += consumed;
++                part_count++;
++                break;
++            case 'M': // minute (00-59)
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed == 0) {
++                    return NULL;
++                }
++                tm->tm_min = n;
++                p += consumed;
++                part_count++;
++                break;
++            case 'S': // second (00-59)
++                if (sscanf(p, "%2d%n", &n, &consumed) != 1 || consumed == 0) {
++                    return NULL;
++                }
++                tm->tm_sec = n;
++                p += consumed;
++                part_count++;
++                break;
++            default:
++                // Unsupported format specifier
++                return NULL;
++            }
++            f++;
++        } else {
++            // Match literal characters (like '-', ':', ' ')
++            if (*f != *p) {
++                return NULL;
++            }
++            f++;
++            p++;
++        }
++    }
++    
++    // If we didn't parse any parts or didn't consume entire string, fail
++    if (part_count == 0 || *p != '\0') {
++        return NULL;
++    }
++    
++    return (char *)p;
++}
++
++// Wide string conversion utilities for Unicode support
++wchar_t *win32_utf8_to_wchar(const char *utf8_str) {
++    if (!utf8_str) {
++        return NULL;
++    }
++    
++    // Calculate required buffer size
++    int wchar_len = MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, NULL, 0);
++    if (wchar_len <= 0) {
++        return NULL;
++    }
++    
++    // Allocate buffer and convert
++    wchar_t *wchar_str = malloc(wchar_len * sizeof(wchar_t));
++    if (!wchar_str) {
++        return NULL;
++    }
++    
++    if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, -1, wchar_str, wchar_len) == 0) {
++        free(wchar_str);
++        return NULL;
++    }
++    
++    return wchar_str;
++}
++
++char *win32_wchar_to_utf8(const wchar_t *wchar_str) {
++    if (!wchar_str) {
++        return NULL;
++    }
++    
++    // Calculate required buffer size
++    int utf8_len = WideCharToMultiByte(CP_UTF8, 0, wchar_str, -1, NULL, 0, NULL, NULL);
++    if (utf8_len <= 0) {
++        return NULL;
++    }
++    
++    // Allocate buffer and convert
++    char *utf8_str = malloc(utf8_len);
++    if (!utf8_str) {
++        return NULL;
++    }
++    
++    if (WideCharToMultiByte(CP_UTF8, 0, wchar_str, -1, utf8_str, utf8_len, NULL, NULL) == 0) {
++        free(utf8_str);
++        return NULL;
++    }
++    
++    return utf8_str;
++}
++
++void win32_free_wchar(wchar_t *wchar_str) {
++    if (wchar_str) {
++        free(wchar_str);
++    }
++}
++
++void win32_free_utf8(char *utf8_str) {
++    if (utf8_str) {
++        free(utf8_str);
++    }
++}
++
++// Unicode-aware directory opening
++DIR *win32_opendir_unicode(const char *dirname) {
++    if (!dirname) {
++        return NULL;
++    }
++    
++    // Convert UTF-8 dirname to wide string
++    wchar_t *wdirname = win32_utf8_to_wchar(dirname);
++    if (!wdirname) {
++        // Fallback to ANSI version
++        return win32_opendir(dirname);
++    }
++    
++    // Check if dirname is too long to safely append L"\\*" and null terminator
++    size_t wdirname_len = wcslen(wdirname);
++    if (wdirname_len + 2 >= MAX_PATH) {
++        win32_free_wchar(wdirname);
++        return NULL;
++    }
++    
++    DIR *dirp = malloc(sizeof(DIR));
++    if (!dirp) {
++        win32_free_wchar(wdirname);
++        return NULL;
++    }
++    
++    // Construct search pattern
++    wchar_t wsearch_path[MAX_PATH];
++    swprintf(wsearch_path, MAX_PATH, L"%ls\\*", wdirname);
++    win32_free_wchar(wdirname);
++    
++    // Use Unicode version of FindFirstFile
++    dirp->handle = FindFirstFileW(wsearch_path, &dirp->find_data);
++    if (dirp->handle == INVALID_HANDLE_VALUE) {
++        free(dirp);
++        return NULL;
++    }
++    
++    dirp->first = 1;
++    return dirp;
++}
++
++struct dirent *win32_readdir_unicode(DIR *dirp) {
++    if (!dirp || dirp->handle == INVALID_HANDLE_VALUE) {
++        return NULL;
++    }
++    
++    if (dirp->first) {
++        dirp->first = 0;
++    } else {
++        if (!FindNextFileW(dirp->handle, &dirp->find_data)) {
++            return NULL;
++        }
++    }
++    
++    // Convert wide string filename to UTF-8
++    char *utf8_name = win32_wchar_to_utf8(dirp->find_data.cFileName);
++    if (utf8_name) {
++        strncpy(dirp->entry.d_name, utf8_name, sizeof(dirp->entry.d_name) - 1);
++        dirp->entry.d_name[sizeof(dirp->entry.d_name) - 1] = '\0';
++        win32_free_utf8(utf8_name);
++    } else {
++        // Fallback: truncate wide string to ASCII
++        size_t len = wcstombs(dirp->entry.d_name, dirp->find_data.cFileName, sizeof(dirp->entry.d_name) - 1);
++        if (len == (size_t)-1) {
++            dirp->entry.d_name[0] = '\0';
++        } else {
++            dirp->entry.d_name[len] = '\0';
++        }
++    }
++    
++    return &dirp->entry;
++}
++
++// Windows directory reading implementations (ANSI versions for backward compatibility)
++DIR *win32_opendir(const char *dirname) {
++    if (!dirname) {
++        return NULL;
++    }
++    
++    // Check if dirname is too long to safely append "\\*" and null terminator
++    // We need: strlen(dirname) + strlen("\\*") + 1 (null terminator) <= MAX_PATH
++    if (strlen(dirname) + 3 > MAX_PATH) {
++        // Handle error: dirname too long
++        return NULL;
++    }
++    
++    DIR *dirp = malloc(sizeof(DIR));
++    if (!dirp) {
++        return NULL;
++    }
++    
++    char search_path[MAX_PATH];
++    snprintf(search_path, sizeof(search_path), "%s\\*", dirname);
++    
++    dirp->handle = FindFirstFileA(search_path, (LPWIN32_FIND_DATAA)&dirp->find_data);
++    if (dirp->handle == INVALID_HANDLE_VALUE) {
++        free(dirp);
++        return NULL;
++    }
++    
++    dirp->first = 1;
++    return dirp;
++}
++
++struct dirent *win32_readdir(DIR *dirp) {
++    if (!dirp || dirp->handle == INVALID_HANDLE_VALUE) {
++        return NULL;
++    }
++    
++    if (dirp->first) {
++        dirp->first = 0;
++    } else {
++        if (!FindNextFileA(dirp->handle, (LPWIN32_FIND_DATAA)&dirp->find_data)) {
++            return NULL;
++        }
++    }
++    
++    strncpy(dirp->entry.d_name, ((LPWIN32_FIND_DATAA)&dirp->find_data)->cFileName, sizeof(dirp->entry.d_name) - 1);
++    dirp->entry.d_name[sizeof(dirp->entry.d_name) - 1] = '\0';
++    
++    return &dirp->entry;
++}
++
++int win32_closedir(DIR *dirp) {
++    if (!dirp) {
++        return -1;
++    }
++    
++    if (dirp->handle != INVALID_HANDLE_VALUE) {
++        FindClose(dirp->handle);
++    }
++    free(dirp);
++    return 0;
++}
++
++int win32_dirfd(DIR *dirp) {
++    // Windows doesn't have file descriptors for directories like Unix
++    // Return a dummy value - this might need adjustment based on usage
++    return -1;
++}
++
++int win32_fstatat(int dirfd, const char *pathname, struct stat *buf, int flags) {
++    // Since Windows doesn't have directory file descriptors like Unix,
++    // we need to get the current directory path and construct the full path.
++    // This is a limitation of our Windows compatibility layer.
++    
++    if (!pathname || !buf) {
++        return -1;
++    }
++    
++    // If pathname is already absolute, use Unicode lstat directly
++    if (pathname[0] == '/' || pathname[0] == '\\' ||
++        (pathname[0] && pathname[1] == ':')) {
++        return win32_lstat(pathname, buf);
++    }
++    
++    // For relative paths, we need to get the current working directory
++    // and construct the full path using Unicode functions
++    wchar_t wfull_path[MAX_PATH];
++    if (GetCurrentDirectoryW(MAX_PATH, wfull_path) == 0) {
++        return -1;
++    }
++    
++    // Convert pathname to wide string
++    wchar_t *wpathname = win32_utf8_to_wchar(pathname);
++    if (!wpathname) {
++        // Fallback to ANSI version
++        char full_path[MAX_PATH];
++        if (GetCurrentDirectoryA(sizeof(full_path), full_path) == 0) {
++            return -1;
++        }
++        
++        size_t len = strlen(full_path);
++        if (len > 0 && full_path[len-1] != '\\' && full_path[len-1] != '/') {
++            if (len + 1 >= MAX_PATH) {
++                return -1;
++            }
++            strncat(full_path, "\\", MAX_PATH - len - 1);
++        }
++        
++        if (len + strlen(pathname) >= MAX_PATH) {
++            return -1;
++        }
++        strncat(full_path, pathname, MAX_PATH - len - 1);
++        
++        return stat(full_path, buf);
++    }
++    
++    // Append path separator if needed
++    size_t wlen = wcslen(wfull_path);
++    if (wlen > 0 && wfull_path[wlen-1] != L'\\' && wfull_path[wlen-1] != L'/') {
++        if (wlen + 1 >= MAX_PATH) {
++            win32_free_wchar(wpathname);
++            return -1;
++        }
++        wcscat(wfull_path, L"\\");
++        wlen++;
++    }
++    
++    // Append the filename
++    if (wlen + wcslen(wpathname) >= MAX_PATH) {
++        win32_free_wchar(wpathname);
++        return -1;
++    }
++    wcscat(wfull_path, wpathname);
++    win32_free_wchar(wpathname);
++    
++    // Use Unicode stat
++    return _wstat64(wfull_path, (struct _stat64*)buf);
++}
++
++void *win32_memrchr(const void *s, int c, size_t n) {
++    const unsigned char *p = (const unsigned char *)s + n;
++    while (n-- > 0) {
++        if (*--p == (unsigned char)c) {
++            return (void *)p;
++        }
++    }
++    return NULL;
++}
++
++#endif // _WIN32
+diff --git a/src/win32_compat.h b/src/win32_compat.h
+new file mode 100644
+index 00000000..9ae75781
+--- /dev/null
++++ b/src/win32_compat.h
+@@ -0,0 +1,138 @@
++#pragma once
++
++#ifdef _WIN32
++
++#include <windows.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <io.h>
++#include <direct.h>
++#include <fcntl.h>
++#include <string.h>
++#include <ctype.h>
++#include <time.h>
++#include <stdio.h>
++
++// Define POSIX types that are missing on Windows
++#ifndef off_t
++#ifdef _WIN64
++typedef __int64 off_t;
++#else
++typedef long off_t;
++#endif
++#endif
++
++// Define missing constants
++#ifndef S_ISDIR
++#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
++#endif
++
++#ifndef S_ISREG
++#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
++#endif
++
++// Windows doesn't have these POSIX file locking constants
++#ifndef LOCK_EX
++#define LOCK_EX 2
++#endif
++
++#ifndef LOCK_NB
++#define LOCK_NB 4
++#endif
++
++// Directory separator compatibility
++#ifndef G_DIR_SEPARATOR
++#define G_DIR_SEPARATOR '\\'
++#endif
++
++#ifndef G_DIR_SEPARATOR_S
++#define G_DIR_SEPARATOR_S "\\"
++#endif
++
++// Function declarations for Windows compatibility
++int win32_flock(int fd, int operation);
++char *win32_strcasestr(const char *haystack, const char *needle);
++int win32_lstat(const char *path, struct stat *buf);
++int win32_fnmatch(const char *pattern, const char *string, int flags);
++char *win32_strptime(const char *s, const char *format, struct tm *tm);
++void *win32_memrchr(const void *s, int c, size_t n);
++
++// Map POSIX functions to Windows implementations
++#define flock(fd, op) win32_flock(fd, op)
++#define strcasestr(h, n) win32_strcasestr(h, n)
++#define lstat(p, b) win32_lstat(p, b)
++#define fnmatch(p, s, f) win32_fnmatch(p, s, f)
++#define strptime(s, f, tm) win32_strptime(s, f, tm)
++#define memrchr(s, c, n) win32_memrchr(s, c, n)
++
++// POSIX dirent structure for Windows
++struct dirent {
++    char d_name[260]; // MAX_PATH
++};
++
++typedef struct {
++    HANDLE handle;
++    WIN32_FIND_DATAW find_data;  // Changed to W to support Unicode functions by default
++    struct dirent entry;
++    int first;
++} DIR;
++
++DIR *win32_opendir(const char *dirname);
++struct dirent *win32_readdir(DIR *dirp);
++int win32_closedir(DIR *dirp);
++int win32_dirfd(DIR *dirp);
++
++// Use Unicode-aware versions by default for better international character support
++#define opendir(d) win32_opendir_unicode(d)
++#define readdir(d) win32_readdir_unicode(d)
++#define dirfd(d) win32_dirfd(d)
++
++// For g_clear_pointer compatibility, we need a function that matches the signature
++static inline void win32_closedir_clear(DIR *dirp) {
++    win32_closedir(dirp);
++}
++#define closedir win32_closedir_clear
++
++// File status functions
++#define AT_SYMLINK_NOFOLLOW 0x100
++int win32_fstatat(int dirfd, const char *pathname, struct stat *buf, int flags);
++#define fstatat(d, p, b, f) win32_fstatat(d, p, b, f)
++
++// Wide string conversion utilities for Unicode support
++wchar_t *win32_utf8_to_wchar(const char *utf8_str);
++char *win32_wchar_to_utf8(const wchar_t *wchar_str);
++void win32_free_wchar(wchar_t *wchar_str);
++void win32_free_utf8(char *utf8_str);
++
++// Enhanced DIR structure with Unicode support
++typedef struct {
++    HANDLE handle;
++    WIN32_FIND_DATAW find_data_w;  // Unicode version
++    WIN32_FIND_DATAA find_data_a;  // ANSI version (for backward compatibility)
++    struct dirent entry;
++    int first;
++    int use_unicode;
++} DIR_UNICODE;
++
++// Unicode-aware directory functions
++DIR *win32_opendir_unicode(const char *dirname);
++struct dirent *win32_readdir_unicode(DIR *dirp);
++
++// fnmatch flags
++#ifndef FNM_NOMATCH
++#define FNM_NOMATCH 1
++#endif
++
++#ifndef FNM_PATHNAME
++#define FNM_PATHNAME (1 << 0)
++#endif
++
++#ifndef FNM_NOESCAPE
++#define FNM_NOESCAPE (1 << 1)
++#endif
++
++#ifndef FNM_PERIOD
++#define FNM_PERIOD (1 << 2)
++#endif
++
++#endif // _WIN32

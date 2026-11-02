@@ -1,50 +1,30 @@
-"""Prepare unchanged Humanizer2.14.1 sources for its original netstandard2.0 target."""
-from pathlib import Path
-import hashlib
+"""Remove versioning/source-link build tools from the original Humanizer project."""
 import json
-import shutil
-import subprocess
+from pathlib import Path
 import sys
-import tarfile
-import xml.etree.ElementTree as E
+import xml.etree.ElementTree as ET
 
-root,out=(Path(p).resolve() for p in sys.argv[1:])
-assert not out.exists(),out
-out.mkdir(parents=True)
-sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
-archive=root/'humanizer-3ebc38de.tar.gz'
-assert sha(archive)=='a98e80e9ca23c4ec17699481bd4b145e5477ba6f2ea8082956724428048c38db'
-commit='3ebc38de585fc641a04b0e78ed69468453b0f8a1'
-with tarfile.open(archive) as tar:
-    assert tar.pax_headers['comment']==commit;tar.extractall(out,filter='data')
-source=out/('Humanizer-'+commit);removed=[]
-for p in source.rglob('*'):
-    if p.is_file() and p.suffix.lower() in {'.dll','.exe','.pdb','.nupkg','.obj','.lib','.resources','.winmd'}:
-        removed.append(dict(path=p.relative_to(source).as_posix(),sha256=sha(p)));p.unlink()
-native=lambda p:subprocess.check_output(['cygpath','-am',str(p)],text=True).strip()
-project=source/'src/Humanizer/Humanizer.csproj'
-assert 'netstandard2.0' in E.parse(project).findtext('.//TargetFrameworks').split(';')
-tree=E.Element('configuration');feeds=E.SubElement(tree,'packageSources');E.SubElement(feeds,'clear')
-E.SubElement(feeds,'add',key='installed-source',value=native(Path('/clang64/lib/dotnet/library-packs')))
-E.ElementTree(tree).write(out/'NuGet.config',encoding='utf-8',xml_declaration=True)
-# Import this after the original SDK targets to add only package assets and
-# compiler-input evidence. The original project and production sources stay intact.
-tree=E.Element('Project');items=E.SubElement(tree,'ItemGroup');assets=out/'assets';assets.mkdir()
-for file,target in [(source/'LICENSE','LICENSE'),(source/'src/Humanizer/Bytes/LICENSE','LICENSE.Bytes'),(source/'src/Humanizer/Inflections/LICENSE','LICENSE.Inflections')]:
-    assert file.is_file();shutil.copyfile(file,assets/target)
-    E.SubElement(items,'None',Include=native(assets/target),Pack='true',PackagePath='')
-capture=E.SubElement(tree,'Target',Name='CaptureOriginalHumanizerInputs',BeforeTargets='CoreCompile')
-for kind in ['Compile','ReferencePath','EmbeddedResource']:
-    E.SubElement(capture,'WriteLinesToFile',File='$(IntermediateOutputPath)'+kind+'.txt',Lines='@('+kind+"->'%(FullPath)')",Overwrite='true')
-for name in ['DefineConstants','TargetFramework','Configuration']:
-    E.SubElement(capture,'WriteLinesToFile',File='$(IntermediateOutputPath)'+name+'.txt',Lines='$('+name+')',Overwrite='true')
-attr=E.SubElement(items,'AssemblyAttribute',Include='System.Reflection.AssemblyMetadataAttribute')
-E.SubElement(attr,'_Parameter1').text='CommitHash';E.SubElement(attr,'_Parameter2').text=commit
-E.indent(tree);E.ElementTree(tree).write(out/'PackageAssets.targets',encoding='utf-8',xml_declaration=True)
-inputs={p.relative_to(source).as_posix():sha(p) for p in [project,source/'src/Directory.build.props',*sorted((source/'src/Humanizer').rglob('*.cs')),*sorted((source/'src/Humanizer').rglob('*.resx')),source/'src/Humanizer/Humanizer.snk',source/'LICENSE',source/'src/Humanizer/Bytes/LICENSE',source/'src/Humanizer/Inflections/LICENSE']}
-tools=[Path('/clang64/lib/dotnet/sdk/8.0.131/Roslyn/bincore/csc.dll'),
-       *[Path('/clang64/lib/dotnet/compiler-packs/roslyn-5.0.0-bootstrap')/n for n in ['CompilerHost.dll','Microsoft.CodeAnalysis.dll','Microsoft.CodeAnalysis.CSharp.dll','System.Collections.Immutable.dll','System.Reflection.Metadata.dll']]]
-tool_inputs={str(p):dict(owner=subprocess.check_output(['pacman','-Qo',str(p)],text=True).strip(),sha256=sha(p)) for p in tools}
-(out/'source-inputs.json').write_text(json.dumps(dict(source_commit=commit,archive_sha256=sha(archive),project=project.relative_to(source).as_posix(),original_inputs=inputs,production_cs_changes=0,project_changes=0,removed_binary_inputs=removed,original_declared_frameworks=E.parse(project).findtext('.//TargetFrameworks').split(';'),built_original_frameworks=['netstandard2.0'],retained_port_frameworks=['net8.0'],tool_inputs=tool_inputs,all_original_target_variants_complete=False,full_dependency_goal_complete=False),indent=2)+'\n')
-(out/'feed').mkdir()
-print('Prepared unchanged original Humanizer netstandard2.0 project',len(inputs),'source/project/resource/key/license inputs')
+root = Path(sys.argv[1])
+removed = []
+for path in root.rglob("*"):
+    if path.is_file() and path.suffix.lower() in {
+        ".dll", ".exe", ".winmd", ".nupkg", ".obj", ".lib", ".a", ".pdb",
+        ".resources", ".so", ".dylib",
+    }:
+        removed.append(str(path.relative_to(root)))
+        path.unlink()
+(root / "removed-binaries.json").write_text(json.dumps(sorted(removed), indent=2) + "\n")
+for path in root.rglob("global.json"):
+    path.unlink()
+(root / "global.json").write_text('{"sdk":{"version":"8.0.131","rollForward":"disable"}}\n')
+path = root / "src/Directory.build.props"
+tree = ET.parse(path)
+expected = {"Nerdbank.GitVersioning", "Microsoft.SourceLink.GitHub"}
+found = set()
+for group in tree.iter():
+    for element in list(group):
+        if element.tag == "PackageReference" and element.get("Include") in expected:
+            found.add(element.get("Include"))
+            group.remove(element)
+assert found == expected, (found, expected)
+tree.write(path, encoding="utf-8", xml_declaration=True)

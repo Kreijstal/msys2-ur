@@ -22,7 +22,7 @@ These generator builds target .NET8 and reference source Roslyn4.9.2; they requi
 that source compiler host, rather than claiming old Roslyn/.NETStandard host
 compatibility. Select the already packaged source CSharp compiler explicitly:
 
-  -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -p:UseSharedCompilation=false
+  -p:CscToolPath=$(cygpath -m $MINGW_PREFIX)/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -p:UseSharedCompilation=false
 
 All1784 published API declarations,43 signing/version/resource identities and1460
 strings match the selected published metadata baselines. Published DLLs are

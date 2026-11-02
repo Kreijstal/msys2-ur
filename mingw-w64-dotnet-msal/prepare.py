@@ -1,4 +1,5 @@
 """Keep original MSAL projects/globs/imports and replay the complete net6 branch on net8."""
+import os
 from pathlib import Path
 import hashlib,json,shutil,struct,subprocess,sys,xml.etree.ElementTree as E
 
@@ -71,7 +72,7 @@ E.ElementTree(targets).write(out/'Directory.Build.targets',encoding='utf-8',xml_
 # The published Windows build embeds the same original directives with CRLF.
 directive='src/client/Microsoft.Identity.Client/Properties/Microsoft.Identity.Client.rd.xml'
 data=(source/directive).read_bytes();(out/directive).write_bytes(data.replace(b'\r\n',b'\n').replace(b'\n',b'\r\n'));modified.append(directive)
-feed=subprocess.check_output(['cygpath','-am','/clang64/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else '/clang64/lib/dotnet/library-packs'
+feed=subprocess.check_output(['cygpath','-am',os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'],text=True).strip() if shutil.which('cygpath') else os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs'
 (out/'NuGet.config').write_text('<configuration><packageSources><clear/><add key="installed-source" value="'+feed+'"/></packageSources></configuration>\n')
 metadata=['Directory.Build.props','src/Directory.Build.props','Directory.Packages.props','global.json','build/platform_and_feature_flags.props']+[f'src/client/{n}/{n}.csproj' for n in names]
 record=dict(source_commit='88df64013795d4e3716e1f677600f8164ffdb542',source_archive_sha256=inputs[names[0]]['source_archive_sha256'],

@@ -1,4 +1,5 @@
 """Inspect exact SDK-selected published analyzer metadata; never execute target code."""
+import os
 from pathlib import Path
 import hashlib,json,subprocess,sys,zipfile
 r=Path(sys.argv[1]).resolve();out=Path(sys.argv[2]).resolve();out.mkdir();version='8.0.0-preview.26274.2'
@@ -13,8 +14,8 @@ with zipfile.ZipFile(package) as z:
   if name.endswith('.dll') and not name.endswith('.resources.dll'):
    target=folder/name;entry={}
    for tool,key in [('Api','api'),('Inventory','inventory'),('Metadata','metadata')]:
-    args=[native(Path('/clang64/lib/dotnet/dotnet.exe')),native(r/'metadata'/tool/'bin/Release/net8.0/Tool.dll')]
-    if key=='api':args.append(native(Path('/clang64/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')))
+    args=[native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/dotnet.exe')),native(r/'metadata'/tool/'bin/Release/net8.0/Tool.dll')]
+    if key=='api':args.append(native(Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/packs/Microsoft.NETCore.App.Ref/8.0.31/ref/net8.0')))
     args.append(native(target));entry[key]=json.loads(subprocess.check_output(args,text=True))
    if target.name in assemblies:assert assemblies[target.name]==entry,target.name
    assemblies[target.name]=entry

@@ -1,4 +1,5 @@
 """Require fresh module files and private dependencies to match source-built assets."""
+import os
 from pathlib import Path
 import hashlib,json,sys,zipfile
 
@@ -18,7 +19,7 @@ for path,digest in r['prepared_project_metadata'].items():assert sha((module/'so
 change,=r['production_cs_changes'];assert sha((module/'source-build'/change['overlay']).read_bytes())==change['prepared_sha256']
 private=json.loads((module/'source-dependencies.json').read_text());assert len(private)==26
 assert private['System.Security.Cryptography.Pkcs.dll']['asset']=='runtimes/win/lib/net8.0/System.Security.Cryptography.Pkcs.dll'
-feed={p.name.lower():p for p in Path('/clang64/lib/dotnet/library-packs').glob('*.nupkg')}
+feed={p.name.lower():p for p in Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/library-packs').glob('*.nupkg')}
 for filename,record in private.items():
     package,version=record['package'].rsplit('/',1);package_file=feed[package.lower()+'.'+version+'.nupkg']
     assert sha(package_file.read_bytes())==record['nuget_sha256']
@@ -31,7 +32,7 @@ for filename,record in private.items():
         assert sha((module/legal['target']).read_bytes())==legal['sha256']
     assert record['licenses'] or record['native_license_assets']
 assert {p.name for p in (module/'dependencies').glob('*.dll')}==set(private)
-engine=Path('/clang64/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll')
+engine=Path(os.environ['MINGW_PREFIX']+'/lib/dotnet/tools/powershell-module-test-host/System.Management.Automation.dll')
 assert sha(engine.read_bytes())==r['source_engine_sha256']
 if len(sys.argv)>2:
     other=Path(sys.argv[2]);assert (other/'module-files.json').read_bytes()==(module/'module-files.json').read_bytes()

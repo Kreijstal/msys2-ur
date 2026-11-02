@@ -17,14 +17,15 @@ The isolated source build and execution checks pass. Formal clean package build,
 artifact audit and fresh installed-package/SDK checks remain required. This README
 does not claim those unfinished gates passed.
 
-Generate the local source archives from this checkout and the pinned bootstrap
-repository, then build in MSYS2 CLANG64 with the declared source tools installed:
+Build in MSYS2 CLANG64 with the declared source tools installed:
 
 ```bash
-python3 make-source.py
-python3 ../mingw-w64-dotnet-bootstrap/make-source.py --output .
 makepkg --cleanbuild --force --noconfirm
 ```
+
+makepkg downloads the workflow and bootstrap archives from the msys2-ur release.
+`python3 make-source.py <dotnet-mingw-bootstrap checkout>` recreates the workflow
+archive byte for byte from [workflows/runtime-servicing](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/runtime-servicing).
 
 The sources and outputs stay under the new build root. The recipe does not replace
 installed SDK files while building or testing. The package owns only its versioned

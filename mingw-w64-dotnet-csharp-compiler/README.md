@@ -15,7 +15,7 @@ It does not change the SDK compiler or global compiler selection.
 
 Select it explicitly in SDK builds (using the native Windows path):
 
-    -p:CscToolPath=E:/msys64/clang64/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -p:UseSharedCompilation=false
+    -p:CscToolPath=$(cygpath -m $MINGW_PREFIX)/lib/dotnet/compiler-packs/roslyn-4.9.2 -p:CscToolExe=csc49.cmd -p:UseSharedCompilation=false
 
 csc49.cmd locates dotnet.exe relative to its own installation and forwards all
 arguments and the compiler exit code. Direct csc.dll tool selection uses an

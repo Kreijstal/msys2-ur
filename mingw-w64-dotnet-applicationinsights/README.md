@@ -33,10 +33,10 @@ all metric aggregation and actual PowerShell integration remain unverified.
 In CLANG64:
 
 ```bash
-PATH=/usr/bin:/clang64/bin:$PATH makepkg --cleanbuild --force --noconfirm
+PATH=/usr/bin:$MINGW_PREFIX/bin:$PATH makepkg --cleanbuild --force --noconfirm
 bash check.sh /tmp/applicationinsights-installed
 ```
 
 Roslyn is used only by the validation gate, not as a runtime package dependency.
 Published identity provenance is recorded in
-../tests/powershell-deps/applicationinsights-published-identity-20261026.json.
+[applicationinsights-published-identity-20261026.json](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps/applicationinsights-published-identity-20261026.json).
