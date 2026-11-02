@@ -1,0 +1,344 @@
+# Imported in //v8/BUILD.gn after automatic feature resolution, before sources.
+assert(target_os == "win" && target_cpu == "x64",
+       "This SDK profile currently supports Windows x64 only.")
+assert(host_os == target_os && host_cpu == target_cpu,
+       "System V8 generators require a native host/target match.")
+assert(defined(is_mingw) && is_mingw,
+       "This SDK profile requires a MinGW toolchain.")
+
+_system_expected = {
+  version = "14.0.365.10"
+  revision = "b7ed978e41b4bac7802b206404d0e2f3d09f31ac"
+  runtime = system_v8_runtime
+  perfetto_include =
+      rebase_path("//third_party/perfetto/include", root_build_dir)
+  public_defines = enabled_external_defines
+  disabled_defines = disabled_external_defines
+  private_defines = v8_sdk_internal_features.defines
+  if (is_official_build) {
+    private_defines += [ "OFFICIAL_BUILD" ]
+  }
+  if (!is_debug) {
+    private_defines += [ "NDEBUG" ]
+  }
+  flags = {
+    target_cpu = target_cpu
+    target_os = target_os
+    v8_target_cpu = v8_target_cpu
+    is_debug = is_debug
+    is_official_build = is_official_build
+    is_clang = is_clang
+    use_custom_libcxx = use_custom_libcxx
+    enable_iterator_debugging = enable_iterator_debugging
+    v8_enable_i18n_support = v8_enable_i18n_support
+    icu_use_data_file = icu_use_data_file
+    v8_enable_webassembly = v8_enable_webassembly
+    v8_enable_pointer_compression = v8_enable_pointer_compression
+    v8_enable_pointer_compression_shared_cage =
+        v8_enable_pointer_compression_shared_cage
+    v8_enable_pointer_compression_8gb = v8_enable_pointer_compression_8gb
+    v8_enable_external_code_space = v8_enable_external_code_space
+    v8_enable_sandbox = v8_enable_sandbox
+    v8_enable_sandbox_hardware_support = v8_enable_sandbox_hardware_support
+    v8_enable_31bit_smis_on_64bit_arch = v8_enable_31bit_smis_on_64bit_arch
+    v8_enable_direct_handle = v8_enable_direct_handle
+    v8_enable_map_packing = v8_enable_map_packing
+    v8_enable_v8_checks = v8_enable_v8_checks
+    v8_enable_memory_accounting_checks = v8_enable_memory_accounting_checks
+    v8_enable_verify_heap = v8_enable_verify_heap
+    v8_enable_debugging_features = v8_enable_debugging_features
+    v8_enable_slow_dchecks = v8_enable_slow_dchecks
+    v8_dcheck_always_on = v8_dcheck_always_on
+    v8_enable_short_builtin_calls = v8_enable_short_builtin_calls
+    v8_enable_lite_mode = v8_enable_lite_mode
+    v8_enable_extensible_ro_snapshot = v8_enable_extensible_ro_snapshot
+    v8_enable_javascript_promise_hooks = v8_enable_javascript_promise_hooks
+    v8_use_external_startup_data = v8_use_external_startup_data
+    v8_use_perfetto = v8_use_perfetto
+    v8_enable_partition_alloc = v8_enable_partition_alloc
+    v8_enable_temporal_support = v8_enable_temporal_support
+    v8_array_buffer_internal_field_count = v8_array_buffer_internal_field_count
+    v8_array_buffer_view_internal_field_count =
+        v8_array_buffer_view_internal_field_count
+    v8_promise_internal_field_count = v8_promise_internal_field_count
+    v8_use_default_hasher_secret = v8_use_default_hasher_secret
+    v8_typed_array_max_size_in_heap = v8_typed_array_max_size_in_heap
+    v8_enable_object_print = v8_enable_object_print
+    v8_enable_disassembler = v8_enable_disassembler
+    v8_enable_gdbjit = v8_enable_gdbjit
+    v8_enable_etw_stack_walking = v8_enable_etw_stack_walking
+    v8_enable_system_instrumentation = v8_enable_system_instrumentation
+    cppgc_is_standalone = cppgc_is_standalone
+    cppgc_enable_caged_heap = cppgc_enable_caged_heap
+    cppgc_enable_pointer_compression = cppgc_enable_pointer_compression
+    cppgc_enable_young_generation = cppgc_enable_young_generation
+    cppgc_enable_larger_cage = cppgc_enable_larger_cage
+    cppgc_enable_slim_write_barrier = cppgc_enable_slim_write_barrier
+    cppgc_enable_api_checks = cppgc_enable_api_checks
+    cppgc_enable_slow_api_checks = cppgc_enable_slow_api_checks
+    cppgc_enable_object_names = cppgc_enable_object_names
+    cppgc_enable_verify_heap = cppgc_enable_verify_heap
+    cppgc_allow_allocations_in_prefinalizers =
+        cppgc_allow_allocations_in_prefinalizers
+    v8_advanced_bigint_algorithms = v8_advanced_bigint_algorithms
+    v8_allocation_site_tracking = v8_allocation_site_tracking
+    v8_always_enable_maglev_graph_labeller =
+        v8_always_enable_maglev_graph_labeller
+    v8_code_comments = v8_code_comments
+    v8_control_flow_integrity = v8_control_flow_integrity
+    v8_current_cpu = v8_current_cpu
+    v8_dict_property_const_tracking = v8_dict_property_const_tracking
+    v8_disable_write_barriers = v8_disable_write_barriers
+    v8_drumbrake_bounds_checks = v8_drumbrake_bounds_checks
+    v8_embedder_string = v8_embedder_string
+    v8_enable_allocation_folding = v8_enable_allocation_folding
+    v8_enable_atomic_object_field_writes = v8_enable_atomic_object_field_writes
+    v8_enable_black_allocated_pages = v8_enable_black_allocated_pages
+    v8_enable_builtin_jump_table_switch = v8_enable_builtin_jump_table_switch
+    v8_enable_builtins_gearbox = v8_enable_builtins_gearbox
+    v8_enable_cet_ibt = v8_enable_cet_ibt
+    v8_enable_cet_shadow_stack = v8_enable_cet_shadow_stack
+    v8_enable_continuation_preserved_embedder_data =
+        v8_enable_continuation_preserved_embedder_data
+    v8_enable_debug_code = v8_enable_debug_code
+    v8_enable_drumbrake = v8_enable_drumbrake
+    v8_enable_drumbrake_tracing = v8_enable_drumbrake_tracing
+    v8_enable_experimental_tsa_builtins = v8_enable_experimental_tsa_builtins
+    v8_enable_experimental_undefined_double =
+        v8_enable_experimental_undefined_double
+    v8_enable_future = v8_enable_future
+    v8_enable_fuzztest = v8_enable_fuzztest
+    v8_enable_global_handle_zapping = v8_enable_global_handle_zapping
+    v8_enable_heap_snapshot_verify = v8_enable_heap_snapshot_verify
+    v8_enable_hugepage = v8_enable_hugepage
+    v8_enable_ignition_dispatch_counting = v8_enable_ignition_dispatch_counting
+    v8_enable_lazy_source_positions = v8_enable_lazy_source_positions
+    v8_enable_leaptiering = v8_enable_leaptiering
+    v8_enable_local_handle_zapping = v8_enable_local_handle_zapping
+    v8_enable_local_off_stack_check = v8_enable_local_off_stack_check
+    v8_enable_maglev = v8_enable_maglev
+    v8_enable_maglev_graph_printer = v8_enable_maglev_graph_printer
+    v8_enable_memory_corruption_api = v8_enable_memory_corruption_api
+    v8_enable_memory_sealing = v8_enable_memory_sealing
+    v8_enable_precise_zone_stats = v8_enable_precise_zone_stats
+    v8_enable_private_mapping_fork_optimization =
+        v8_enable_private_mapping_fork_optimization
+    v8_enable_regexp_interpreter_threaded_dispatch =
+        v8_enable_regexp_interpreter_threaded_dispatch
+    v8_enable_single_generation = v8_enable_single_generation
+    v8_enable_slow_tracing = v8_enable_slow_tracing
+    v8_enable_snapshot_compression = v8_enable_snapshot_compression
+    v8_enable_snapshot_native_code_counters =
+        v8_enable_snapshot_native_code_counters
+    v8_enable_sparkplug = v8_enable_sparkplug
+    v8_enable_static_roots = v8_enable_static_roots
+    v8_enable_static_roots_generation = v8_enable_static_roots_generation
+    v8_enable_sticky_mark_bits = v8_enable_sticky_mark_bits
+    v8_enable_swiss_name_dictionary = v8_enable_swiss_name_dictionary
+    v8_enable_test_features = v8_enable_test_features
+    v8_enable_trace_feedback_updates = v8_enable_trace_feedback_updates
+    v8_enable_trace_maps = v8_enable_trace_maps
+    v8_enable_trace_unoptimized = v8_enable_trace_unoptimized
+    v8_enable_turbofan = v8_enable_turbofan
+    v8_enable_verify_predictable = v8_enable_verify_predictable
+    v8_enable_vtunejit = v8_enable_vtunejit
+    v8_enable_vtunetracemark = v8_enable_vtunetracemark
+    v8_enable_wasm_deinterleaved_mem_ops = v8_enable_wasm_deinterleaved_mem_ops
+    v8_enable_wasm_gdb_remote_debugging = v8_enable_wasm_gdb_remote_debugging
+    v8_enable_wasm_simd256_revec = v8_enable_wasm_simd256_revec
+    v8_etw_guid = v8_etw_guid
+    v8_function_arguments_caller_are_own_props =
+        v8_function_arguments_caller_are_own_props
+    v8_fuzzilli = v8_fuzzilli
+    v8_jitless = v8_jitless
+    v8_log_builtins_block_count_input = v8_log_builtins_block_count_input
+    v8_lower_limits_mode = v8_lower_limits_mode
+    v8_scriptormodule_legacy_lifetime = v8_scriptormodule_legacy_lifetime
+    v8_target_is_simulator = v8_target_is_simulator
+    v8_use_libm_trig_functions = v8_use_libm_trig_functions
+    v8_use_siphash = v8_use_siphash
+    v8_use_zlib = v8_use_zlib
+    v8_value_deserializer_hard_fail = v8_value_deserializer_hard_fail
+    v8_wasm_random_fuzzers = v8_wasm_random_fuzzers
+    v8_win64_unwinding_info = v8_win64_unwinding_info
+  }
+}
+_system_gen_dir = get_label_info(":system_v8_runtime", "target_gen_dir")
+_system_expected_path = "$_system_gen_dir/system-v8-expected.json"
+write_file(_system_expected_path, _system_expected, "json")
+_system_verify_args = [
+  "--expected",
+  rebase_path(_system_expected_path, root_build_dir),
+  "--pkg-config",
+  system_v8_pkg_config,
+]
+if (system_v8_manifest != "") {
+  _system_verify_args += [
+    "--manifest",
+    system_v8_manifest,
+  ]
+}
+_system_probe =
+    exec_script("system_v8/verify_sdk.py", _system_verify_args, "json")
+
+# Depend on the manifest as well as the verifier, so package changes rerun GN.
+_system_sdk = exec_script("system_v8/verify_sdk.py",
+                          _system_verify_args,
+                          "json",
+                          _system_probe.inputs)
+
+_sdk_root = _system_sdk.sdk
+_system_libraries = _system_sdk.libraries
+_system_tools = _system_sdk.tools
+
+config("system_v8_private_headers") {
+  defines = _system_sdk.private_defines
+}
+
+config("system_v8_headers") {
+  include_dirs = [
+    _system_sdk.sdk,
+    "${_sdk_root}/v8",
+    "${_sdk_root}/v8/include",
+    "${_sdk_root}/gen",
+    "${_sdk_root}/gen/v8",
+    "${_sdk_root}/gen/v8/include",
+    "${_sdk_root}/v8/third_party/abseil-cpp",
+  ]
+  defines = _system_sdk.defines
+}
+
+# Chromium and the engine must use one tracing muxer. Keeping Chromium's
+# static client beside this DLL would split registration and tracing sessions.
+config("system_v8_perfetto_link") {
+  libs = [ _system_libraries.v8_libperfetto ]
+}
+group("system_v8_perfetto") {
+  public_configs = [ ":system_v8_perfetto_link" ]
+  public_deps = [ ":system_v8_runtime" ]
+}
+
+foreach(_name,
+        [
+          "v8",
+          "v8_libbase",
+          "v8_libplatform",
+        ]) {
+  config("system_${_name}_link") {
+    if (_name == "v8") {
+      libs = [ _system_libraries.v8 ]
+    } else if (_name == "v8_libbase") {
+      libs = [ _system_libraries.v8_libbase ]
+    } else {
+      libs = [ _system_libraries.v8_libplatform ]
+    }
+  }
+}
+
+group("v8") {
+  public_configs = [
+    ":system_v8_headers",
+    ":system_v8_link",
+  ]
+  public_deps = [
+    ":system_v8_runtime",
+    ":v8_libbase",
+    ":v8_libplatform",
+  ]
+}
+group("v8_libbase") {
+  public_configs = [
+    ":system_v8_headers",
+    ":system_v8_libbase_link",
+  ]
+}
+group("v8_libplatform") {
+  public_configs = [
+    ":system_v8_headers",
+    ":system_v8_libplatform_link",
+  ]
+  public_deps = [ ":v8_libbase" ]
+}
+
+# These implementations are exported by the same V8 DLL, including heap-base
+# globals. Do not compile another copy of their source sets in the consumer.
+foreach(_name,
+        [
+          "cppgc",
+          "cppgc_base",
+          "v8_heap_base",
+          "v8_snapshot",
+        ]) {
+  group(_name) {
+    public_deps = [ ":v8" ]
+  }
+}
+foreach(_name,
+        [
+          "v8_headers",
+          "cppgc_headers",
+          "v8_config_headers",
+          "v8_internal_headers",
+          "v8_shared_internal_headers",
+          "v8_heap_base_headers",
+          "v8_version",
+        ]) {
+  group(_name) {
+    public_configs = [
+      ":system_v8_headers",
+      ":system_v8_private_headers",
+    ]
+  }
+}
+
+# Copy real installed generators; consumer-specific snapshots still run in the
+# consumer graph. Generator outputs have the same locations as bundled V8.
+foreach(_name,
+        [
+          "d8",
+          "mksnapshot",
+          "torque",
+          "torque-language-server",
+        ]) {
+  copy(_name) {
+    if (_name == "d8") {
+      sources = [ _system_tools.d8 ]
+    } else if (_name == "mksnapshot") {
+      sources = [ _system_tools.mksnapshot ]
+    } else if (_name == "torque") {
+      sources = [ _system_tools.torque ]
+    } else {
+      sources = [ _system_tools.torque_language_server ]
+    }
+    outputs = [ "$root_out_dir/${_name}.exe" ]
+    deps = [ ":system_v8_runtime" ]
+  }
+}
+copy("system_v8_runtime") {
+  sources = _system_sdk.runtime_dlls
+  outputs = [ "$root_out_dir/{{source_file_part}}" ]
+}
+group("v8_shell") {
+  public_deps = [ ":d8" ]
+}
+group("v8_for_testing") {
+  testonly = true
+  public_deps = [ ":v8" ]
+}
+
+# This profile embeds its default startup snapshot in the DLL. Chromium's gin
+# context snapshot is separate and continues to use its own generator target.
+assert(!v8_use_external_startup_data,
+       "This installed SDK embeds startup data; use a matching SDK profile.")
+copy("run_mksnapshot_default") {
+  sources = [ _system_sdk.startup_blob ]
+  outputs = [ "$root_out_dir/snapshot_blob.bin" ]
+}
+group("gn_all") {
+  testonly = true
+  public_deps = [
+    ":cppgc",
+    ":d8",
+    ":v8",
+  ]
+}
