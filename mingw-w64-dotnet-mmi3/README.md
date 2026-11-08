@@ -132,3 +132,17 @@ independent C/mi.h codec consumer as an oracle for UTF-16/UTF-8 input, primitive
 type boundaries/arrays, schema policies, errors and consumed lengths. Native
 codec rejections (including some numeric empty-array literals) are recorded
 rather than treated as successful parsing. The fixture parses only in memory.
+
+Release 9 reclaims abandoned native classes and their wrapper allocations. Native
+ownership follows the shared MI_Class handle retained by metadata views, so a
+collected CimClass does not invalidate surviving properties, methods, parameters
+or qualifiers. Borrowed native handles retain only their wrapper-cell ownership.
+Explicit Delete/Dispose disarms later cleanup. Native class calls, serialization,
+instance construction and XML cached-schema deserialization root their native
+owners until the unmanaged call returns. The lifetime gate checks native delete
+counts, retained real metadata, reentrant compacting GC and lazy MOF/XML caches:
+
+    bash check-class-lifetime.sh NEW_LIFETIME_OUTPUT
+
+This fixes the reproduced abandoned-class leak; it does not finish the complete
+ownership/provider audit or authenticated remote CIM/WSMan validation.

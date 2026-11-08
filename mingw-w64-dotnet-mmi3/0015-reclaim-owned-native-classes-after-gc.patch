@@ -1,0 +1,204 @@
+--- a/CimClass.cs
++++ b/CimClass.cs
+@@ -43,6 +43,7 @@
+             Debug.Assert(handle != null, "Caller should verify that instanceHandle != null");
+ 
+             this._classHandle = handle;
++            handle?.OwnNativeLifetime();
+         }
+ 
+         #endregion Constructors
+@@ -189,11 +190,7 @@
+             _disposed = true;
+             MI_Class handle = this._classHandle;
+             this._classHandle = null;
+-            if (handle != null)
+-            {
+-                try { if (!handle.IsNull) handle.Delete(); }
+-                finally { handle.Dispose(); }
+-            }
++            handle?.Dispose();
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/Native/MI_Class.cs
++++ b/Native/MI_Class.cs
+@@ -13,6 +13,27 @@
+ {
+     internal class MI_Class : MI_NativeObjectWithFT<MI_Class.MI_ClassFT>
+     {
++        // Metadata views retain MI_Class rather than CimClass. Keep ownership
++        // on this shared handle until the last view releases it. Borrowed
++        // handles still own only their wrapper allocation.
++        private int ownsNative;
++
++        internal void OwnNativeLifetime() { System.Threading.Volatile.Write(ref ownsNative, 1); }
++
++        ~MI_Class()
++        {
++            try { Dispose(); } catch { /* Finalizers cannot report cleanup errors. */ }
++        }
++
++        public override void Dispose()
++        {
++            try
++            {
++                if (System.Threading.Interlocked.Exchange(ref ownsNative, 0) != 0 && !IsNull) Delete();
++            }
++            finally { base.Dispose(); GC.SuppressFinalize(this); }
++        }
++
+         internal MI_Result GetElement(
+             string name,
+             out MI_Value value,
+@@ -41,6 +62,7 @@
+             referenceClass = referenceClassLocal.Value;
+             value = valueLocal;
+             qualifierSet = qualifierSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -74,6 +96,7 @@
+             referenceClass = referenceClassLocal.Value;
+             value = valueLocal;
+             qualifierSet = qualifierSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -86,6 +109,7 @@
+                 qualifierSetLocal);
+ 
+             qualifierSet = qualifierSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -106,6 +130,7 @@
+ 
+             qualifierSet = qualifierSetLocal;
+             parameterSet = parameterSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -129,6 +154,7 @@
+             name = nameLocal.Value;
+             qualifierSet = qualifierSetLocal;
+             parameterSet = parameterSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -187,6 +213,7 @@
+                 classNameLocal);
+ 
+             className = classNameLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -200,6 +227,7 @@
+                 nameSpaceLocal);
+ 
+             nameSpace = nameSpaceLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -213,6 +241,7 @@
+                 serverNameLocal);
+ 
+             serverName = serverNameLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -222,6 +251,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetElementCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -231,6 +261,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetMethodCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -244,6 +275,7 @@
+                 nameLocal);
+ 
+             name = nameLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -257,12 +289,15 @@
+                 parentClassLocal);
+ 
+             parentClass = parentClassLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+         internal MI_Result Delete()
+         {
+-            return this.ft.Delete(this);
++            System.Threading.Interlocked.Exchange(ref ownsNative, 0);
++            try { return this.ft.Delete(this); }
++            finally { GC.KeepAlive(this); }
+         }
+ 
+         internal MI_Result Clone(
+@@ -281,6 +316,7 @@
+                     newClassLocal.Dispose();
+                     newClass = null;
+                 }
++                GC.KeepAlive(this);
+                 return resultLocal;
+             }
+             catch
+--- a/Native/MI_Deserializer.cs
++++ b/Native/MI_Deserializer.cs
+@@ -458,6 +458,7 @@
+ 
+             instanceObject = instanceObjectLocal;
+             cimErrorDetails = cimErrorDetailsLocal;
++            GC.KeepAlive(classObjects);
+             return resultLocal;
+         }
+ 
+--- a/Native/MI_Serializer.cs
++++ b/Native/MI_Serializer.cs
+@@ -79,6 +79,7 @@
+                 clientBuffer,
+                 clientBufferLength,
+                 out clientBufferNeeded);
++            GC.KeepAlive(classObject);
+             return resultLocal;
+         }
+ 
+@@ -114,6 +115,7 @@
+                 }
+             }
+ 
++            GC.KeepAlive(classObject);
+             return resultLocal;
+         }
+ 
+--- a/Native/MI_Application.cs
++++ b/Native/MI_Application.cs
+@@ -270,6 +270,7 @@
+                 instanceLocal);
+ 
+             instance = instanceLocal;
++            GC.KeepAlive(classObject);
+             return resultLocal;
+         }
+ 
