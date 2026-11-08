@@ -126,15 +126,16 @@
       "packaged_version": "3.0.0",
       "assembly_version": "1.0.0.0",
       "public_key_token": "31bf3856ad364e35",
-      "actual_source_version": "2.0.0-preview.1 plus eleven source patches and explicit MMI3 contract corrections",
-      "package_version": "3.0.0-5",
+      "actual_source_version": "2.0.0-preview.1 plus twelve source patches and explicit MMI3 contract corrections",
+      "package_version": "3.0.0-6",
       "delivery_options_evidence": "tests/mmi-cim-wmi/delivery-package-results-20261108.json",
       "property_ownership_evidence": "tests/mmi-cim-wmi/embedded-package-results-20261108.json",
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
       "previous_experimental_recipe": "mingw-w64-dotnet-mmi",
       "public_api_declarations_verified": 512,
       "metadata_ownership_evidence": "tests/mmi-cim-wmi/metadata-package-results-20261108.json",
-      "real_provider_integration_evidence": "tests/mmi-provider/results-20261108.json"
+      "real_provider_integration_evidence": "tests/mmi-provider/results-20261108.json",
+      "class_clone_ownership_evidence": "tests/mmi-cim-wmi/clone-package-results-20261108.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -36842,6 +36843,29 @@
       "authenticated_remote_CIM_WSMan_verified": false,
       "complete": false,
       "binary_published": false
+    },
+    "mmi_class_clone_rollback": {
+      "evidence": "tests/mmi-cim-wmi/clone-package-results-20261108.json",
+      "package_version": "3.0.0-6",
+      "clean_makepkg_build_and_all_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_class_clone_checks_per_environment": 430,
+      "PowerShell_application_rebuild_pending": true,
+      "complete": false,
+      "binary_published": false
+    },
+    "mmi_authenticated_WSMan_harness": {
+      "evidence": "tests/mmi-wsman/build-results-20261108.json",
+      "build_and_offline_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "offline_checks_per_environment": 8,
+      "real_server_execution_passed": false,
+      "WinRM_state_changed": false,
+      "pending": "Authorized endpoint and private credential file path; user question outstanding"
     }
   }
 }

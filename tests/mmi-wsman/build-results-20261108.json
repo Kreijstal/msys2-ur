@@ -1,0 +1,42 @@
+{
+  "recorded_at_utc": "2026-11-08T17:19:37.703968+00:00",
+  "host": "win11",
+  "scope": "Prepared authenticated HTTPS/WSMan consumer; only build/source-selection/offline option and credential tests executed",
+  "mmi_package_version": "3.0.0-6",
+  "SDK_package_version": "8.0.131-5",
+  "runtime_package_version": "8.0.31-4",
+  "environments": {
+    "clang64": {
+      "command": "MSYSTEM=CLANG64 MMI_WSMAN_BUILD_ONLY=1 bash tests/mmi-wsman/check.sh NEW_OUTPUT",
+      "exit_code": 0,
+      "compiler_warnings": 0,
+      "compiler_errors": 0,
+      "offline_checks": 8,
+      "log": "tests/mmi-wsman/build-clang-20261108.txt"
+    },
+    "ucrt64": {
+      "command": "MSYSTEM=UCRT64 MMI_WSMAN_BUILD_ONLY=1 bash tests/mmi-wsman/check.sh NEW_OUTPUT",
+      "exit_code": 0,
+      "compiler_warnings": 0,
+      "compiler_errors": 0,
+      "offline_checks": 8,
+      "log": "tests/mmi-wsman/build-ucrt-20261108.txt"
+    }
+  },
+  "offline_checks": 8,
+  "offline_verified": [
+    "Private JSON settings contract and defaults",
+    "HTTPS destination and independent native option clone",
+    "TLS certificate checks enabled by default and optional bypass confined to test options",
+    "Native credential count and password readback after caller password clearing and original option disposal"
+  ],
+  "real_server_execution_passed": false,
+  "connection_attempted": false,
+  "WinRM_service_or_listener_authentication_state_changed": false,
+  "pending": "Authorized endpoint hostname/HTTPS port and private credential JSON path; async user question outstanding",
+  "inputs_sha256": {
+    "tests/mmi-wsman/AuthenticatedSession.cs": "53c8da8345720662b37a0e85b18669fbd1fcbae9917fcd6c2f00d736ac4daee8",
+    "tests/mmi-wsman/check.sh": "6690f2c413a967a05e5dc241c17c8cfbb0a48f0511d2393c912eeb76c03f1c2a"
+  },
+  "full_dependency_goal_complete": false
+}

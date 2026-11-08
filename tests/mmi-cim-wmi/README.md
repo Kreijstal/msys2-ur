@@ -1,5 +1,27 @@
 # MMI / CIM / WMI source ports and checks
 
+## Class-clone failure ownership (2026-11-08)
+
+MMI3 **3.0.0-6** corrects an error-path ownership bug: partial class-array clone
+failure deleted the caller's original classes and left the newly cloned outputs
+alive. A null source slot also ended rollback before later outputs were cleaned.
+Rollback now deletes/disposes only non-null output clones. Failed native Clone
+calls and interop exceptions release the temporary output pointer cell.
+
+The installed 3.0.0-5 baseline reproduced both destructive rollback paths. The
+candidate, clean CLANG64/UCRT64 package builds and fresh installed consumers
+passed **430 native clone/rollback checks**, including source usability, failures
+at each position, null slots and exactly-once output deletion. Existing native
+gates, **512 API declarations**, **31 MOF**, **222 property**, **138 delivery** and
+**2,071 metadata checks** also passed. This uses a controlled `mi.h` failure
+driver; it does not force an actual Windows provider allocation failure.
+
+Run `bash mingw-w64-dotnet-mmi3/check-class-clone-rollback.sh NEW_OUTPUT`.
+[Baseline, candidate, package/installed logs, input hashes and scope](clone-package-results-20261108.json)
+record the evidence. PowerShell rebuilds are in progress. Authenticated remote
+CIM/WSMan, broader ownership/MOF/provider behavior and the other dependency gates
+remain open; experimental binaries remain unpublished.
+
 ## Actual provider-origin callbacks and method streams (2026-11-08)
 
 The installed MMI3 **3.0.0-5** and PowerShell **7.4.20-7** passed a new compiled

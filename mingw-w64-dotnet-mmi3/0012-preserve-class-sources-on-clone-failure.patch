@@ -1,0 +1,50 @@
+--- a/Internal/ClassHandleExtensionMethods.cs
++++ b/Internal/ClassHandleExtensionMethods.cs
+@@ -49,12 +49,12 @@
+                 // If we encounter an exception halfway through we need to rollback
+                 for (int i = 0; i < arrayToClone.Length; i++)
+                 {
+-                    if (arrayToClone[i] == null)
++                    MI_Class clonedClass = result[i];
++                    if (clonedClass != null)
+                     {
+-                        break;
++                        try { clonedClass.Delete(); }
++                        finally { clonedClass.Dispose(); }
+                     }
+-
+-                    arrayToClone[i].Delete();
+                 }
+ 
+                 throw;
+--- a/Native/MI_Class.cs
++++ b/Native/MI_Class.cs
+@@ -271,11 +271,23 @@
+         {
+             MI_Class newClassLocal = MI_Class.NewIndirectPtr();
+ 
+-            MI_Result resultLocal = this.ft.Clone(this,
+-                newClassLocal);
+-
+-            newClass = newClassLocal;
+-            return resultLocal;
++            try
++            {
++                MI_Result resultLocal = this.ft.Clone(this, newClassLocal);
++                if (resultLocal == MI_Result.MI_RESULT_OK)
++                    newClass = newClassLocal;
++                else
++                {
++                    newClassLocal.Dispose();
++                    newClass = null;
++                }
++                return resultLocal;
++            }
++            catch
++            {
++                newClassLocal.Dispose();
++                throw;
++            }
+         }
+         
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]

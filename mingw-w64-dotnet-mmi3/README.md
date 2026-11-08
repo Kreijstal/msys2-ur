@@ -6,7 +6,7 @@ cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
 MOF callback/offset/ownership patch, a property-value/reference/array ownership
 patch, a subscription-delivery credential/options patch, a native metadata-view cleanup
-patch, and explicit
+patch, a class-clone rollback ownership patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -86,6 +86,14 @@ idempotent disposal, preserved borrowed memory and real Win32_Process metadata
 traversal while another thread repeatedly forces compacting collections. This
 fix covers these metadata wrappers, not the entire native ownership audit.
 
+Class-array cloning now rolls back only newly cloned outputs. A failed clone
+preserves every caller-owned input class, cleans outputs beyond null slots and
+releases the native output pointer cell on failure/exception. The regression
+driver injects native clone failures at each source position and records source
+and clone deletion separately; it also checks source usability, null slots and
+exactly-once output cleanup. This is failure-injection ABI coverage, alongside
+the real MOF and provider integration gates.
+
 This is not full PowerShell integration or complete behavioral parity evidence.
 Authenticated remote CIM/WSMan, provider-origin extended callbacks/streaming,
 broader event-provider coverage and a complete native ownership audit remain
@@ -101,6 +109,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check-embedded-values.sh NEW_PROPERTY_OUTPUT
     bash check-delivery-options.sh NEW_DELIVERY_OUTPUT
     bash check-metadata-ownership.sh NEW_METADATA_OUTPUT
+    bash check-class-clone-rollback.sh NEW_CLONE_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.
