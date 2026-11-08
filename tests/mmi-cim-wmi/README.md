@@ -1,5 +1,29 @@
 # MMI / CIM / WMI source ports and checks
 
+## MOF callback and offset port (2026-11-08)
+
+MMI3 **3.0.0-2** adds a production patch for the previously unimplemented MOF
+include-file callback and nonzero offset paths. It also releases parser arrays,
+include buffers, operation options and deserializer handles, preserves cloned
+result lifetime and corrects the native extended-array delete callback ABI.
+The installed 3.0.0-1 reproduction confirms both original failures.
+
+`makepkg --cleanbuild --force --noconfirm` passed the existing local native suite,
+all **512 public API declarations** and **31 native MOF checks**. After installing
+the resulting package, fresh consumers passed the same **31 MOF checks** and
+**23 real provider event checks**. Exact commands, scope and source hashes are in
+[the evidence record](mof-package-results-20261108.json); full logs cover
+[the baseline](mof-baseline-results-20261108.txt),
+[package build/check](mof-package-results-20261108.txt) and
+[installed consumers](mof-installed-results-20261108.txt).
+
+Run `bash tests/mmi-cim-wmi/check-mof.sh NEW_OUTPUT` for the installed package.
+The signed fixture uses PowerShell's friend identity solely to access the internal
+deserializer. The native parser tests use UTF-16 buffers and do not register WMI
+schemas or instances. Broader MOF semantics, remote/provider coverage, UCRT64 and
+the full ownership audit remain open. The PowerShell application has not yet been
+rebuilt with this dependency, and this experimental binary has not been published.
+
 ## Real provider event delivery (2026-11-08)
 
 `bash tests/mmi-cim-wmi/check-events.sh NEW_OUTPUT` now verifies real local

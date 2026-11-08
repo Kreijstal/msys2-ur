@@ -3,7 +3,8 @@
 This Windows .NET 8 source port targets the MMI 3.0.0 package contract required by
 PowerShell 7.4.20. It builds the archived PowerShell/MMI C# revision
 cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
-2.0.0-preview.1), the seven native/ownership patches from dotnet-mmi, and explicit
+2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
+MOF callback/offset/ownership patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -34,9 +35,21 @@ small friend consumers are test fixtures; they are not PowerShell implementation
 and are never packaged. C/mi.h test drivers generate callback and stream traffic;
 provider-origin extended messages/streams still require coverage.
 
+The MOF gate uses a signed friend fixture to exercise the internal deserializer
+against Windows' native codec. It covers UTF-16 class/instance buffers, Unicode
+include names and payloads, class-needed callbacks, nonzero input offsets,
+malformed input, missing/throwing include callbacks, independent result lifetime,
+compacting GC and the native callback structure layout. Include buffers are
+owned per parser call and freed on native release or call cleanup. Native arrays,
+operation options and the deserializer handle are released after use. These
+checks do not register schemas or instances in the WMI repository.
+
+Real local Win32_ProcessStartTrace event delivery and retained payload lifetime
+also passed using the separate tests/mmi-cim-wmi/check-events.sh harness.
+
 This is not full PowerShell integration or complete behavioral parity evidence.
-Authenticated remote CIM/WSMan, provider-origin callbacks/streaming, MOF/include
-callbacks, event payload delivery and a complete native ownership audit remain
+Authenticated remote CIM/WSMan, provider-origin extended callbacks/streaming,
+broader event-provider coverage and a complete native ownership audit remain
 open. MMI 3.0 stays an incomplete dependency until the required integration and
 port work are verified. The archive's public source has additional unfinished
 paths; the metadata gate alone cannot establish compatibility.
@@ -45,6 +58,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
 
     bash check.sh NEW_OUTPUT
     bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
+    bash check-mof.sh NEW_MOF_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.

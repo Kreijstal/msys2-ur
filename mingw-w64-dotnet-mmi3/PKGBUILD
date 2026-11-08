@@ -3,7 +3,7 @@ _realname=dotnet-mmi3
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=3.0.0
-pkgrel=1
+pkgrel=2
 _nugetver=3.0.0
 pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
 arch=('any')
@@ -17,7 +17,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
-        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
 sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '0d5439f4ae05d7620c975eae6e96eb0840a0c01bfb1159630c048d345f56ad32'
             '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
@@ -27,6 +27,9 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a'
             '613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3'
             '26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93'
+            'f79f676a9cd94a3936f12ca61387a9fc205a1e484780105a8ed4280d067d8e8a'
+            '1b05606a97330b9dff1b19735033aae834774aabe862574953ff8bbd9330abda'
+            'ff1bbce78326cfd7c09f82baf538e545b693e37b30f52e0c12709d31938db882'
             '9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b'
             '90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f'
             '30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42'
@@ -43,7 +46,7 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
             '720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553'
             'ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef'
-            '443342b9670a8f8eb99e63846088a3b42a2c0a751d8992bc499684d945981b31')
+            '8f04127d52736bce4f20b22d0a2384408133da9c705301b5a18dbbc1bfc73dc5')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -69,6 +72,7 @@ check() {
   _env
   bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/feed"
   bash "$srcdir/check-api.sh" "$srcdir/check" "$srcdir/check-api"
+  bash "$srcdir/check-mof.sh" "$srcdir/check-mof" "$srcdir/feed"
 }
 
 package() {
