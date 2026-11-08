@@ -161,3 +161,13 @@ values through property/class-qualifier/parameter-qualifier owner chains:
 The runner sets DOTNET_TieredCompilation=0 so first-run JIT lifetimes cannot hide
 the regression. Finalizer-chain cleanup can require multiple GC cycles. These
 checks do not establish complete native ownership/provider parity.
+
+Release 11 corrects named method-qualifier lookup. The collection now passes the
+requested qualifier name to the native qualifier set rather than the method's
+name. Enumeration and named lookup agree for values, types and flags. The gate
+uses an owned in-memory MOF class and real Win32_Process provider metadata,
+including array-valued qualifiers and missing-name results:
+
+    bash check-qualifier-lookup.sh NEW_QUALIFIER_OUTPUT
+
+No WMI repository schemas or service settings are changed by this metadata test.
