@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using Microsoft.Management.Infrastructure;
@@ -43,12 +44,28 @@ static class EventDelivery
         var bridge = typeof(CimSession).Assembly.GetType("Microsoft.Management.Infrastructure.Native.MI_OperationCallbackBridge", true);
         return (int)bridge.GetField(name, BindingFlags.Static | BindingFlags.NonPublic).GetValue(null);
     }
+    sealed class EventTrigger : IDisposable
+    {
+        readonly string directory = Path.Combine(Path.GetTempPath(), "mmi-event-" + Guid.NewGuid().ToString("N"));
+        internal readonly string Name = "mi" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".exe";
+        internal string FileName => Path.Combine(directory, Name);
+        internal EventTrigger()
+        {
+            Directory.CreateDirectory(directory);
+            try { File.Copy(Environment.GetEnvironmentVariable("ComSpec") ?? Path.Combine(Environment.SystemDirectory, "cmd.exe"), FileName); }
+            catch { Directory.Delete(directory, true); throw; }
+        }
+        public void Dispose() => Directory.Delete(directory, true);
+    }
     static void Exercise(bool explicitDcom)
     {
+        using var trigger = new EventTrigger();
         using var options = new DComSessionOptions();
         using var session = explicitDcom ? CimSession.Create(null, options) : CimSession.Create(null);
         using var observer = new Observer();
-        string query = "SELECT * FROM Win32_ProcessStartTrace WHERE ParentProcessID=" + Environment.ProcessId;
+        // A different executable name per subscription excludes unrelated child
+        // hosts and delayed events from the preceding subscription in this PID.
+        string query = "SELECT * FROM Win32_ProcessStartTrace WHERE ParentProcessID=" + Environment.ProcessId + " AND ProcessName='" + trigger.Name + "'";
         using var subscription = session.SubscribeAsync("root/cimv2", "WQL", query).Subscribe(observer);
         Require(Counter("ActiveCount") > 0, "Native subscription must retain callback roots");
         // A subscription has no public ready notification. Generate only owned,
@@ -57,7 +74,7 @@ static class EventDelivery
         var children = new ConcurrentDictionary<int, bool>();
         while (!observer.Arrived.IsSet && watch.Elapsed < TimeSpan.FromSeconds(20))
         {
-            using var child = Process.Start(new ProcessStartInfo(Environment.GetEnvironmentVariable("ComSpec") ?? "cmd.exe", "/d /c exit 0") { UseShellExecute = false, CreateNoWindow = true });
+            using var child = Process.Start(new ProcessStartInfo(trigger.FileName, "/d /c exit 0") { UseShellExecute = false, CreateNoWindow = true });
             children.TryAdd(child.Id, true);
             Require(child.WaitForExit(5000) && child.ExitCode == 0, "Owned event trigger exited");
             observer.Arrived.Wait(500);
@@ -76,8 +93,8 @@ static class EventDelivery
             var row = result.Instance;
             Require(row.CimSystemProperties.ClassName == "Win32_ProcessStartTrace", "Provider event class survived native cleanup");
             Require(Convert.ToInt32(row.CimInstanceProperties["ParentProcessID"].Value) == Environment.ProcessId, "Event parent belongs to this test");
-            Require(children.ContainsKey(Convert.ToInt32(row.CimInstanceProperties["ProcessID"].Value)), "Event PID belongs to an owned child");
-            Require(string.Equals(Convert.ToString(row.CimInstanceProperties["ProcessName"].Value), "cmd.exe", StringComparison.OrdinalIgnoreCase), "Event process name survived GC and session close");
+            Require(children.ContainsKey(Convert.ToInt32(row.CimInstanceProperties["ProcessID"].Value)), "Event PID belongs to an owned child; observed=" + row.CimInstanceProperties["ProcessID"].Value + "; owned=" + string.Join(",", children.Keys));
+            Require(string.Equals(Convert.ToString(row.CimInstanceProperties["ProcessName"].Value), trigger.Name, StringComparison.OrdinalIgnoreCase), "Unique event process name survived GC and session close");
         }
         Require(observer.TerminalCount == 0, "Unsubscribe must not emit a terminal callback");
         Console.WriteLine("PASS real provider event delivery, retained payload, compacting GC, unsubscribe and native cleanup: " + (explicitDcom ? "explicit DCOM" : "default"));

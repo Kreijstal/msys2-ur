@@ -1,0 +1,104 @@
+{
+  "recorded_at_utc": "2026-11-08T15:52:52.331039+00:00",
+  "host": "win11",
+  "environment": "UCRT64",
+  "package_version": "3.0.0-4",
+  "source_commit": "cf32fc695b32c2eae848b693395c09222fe1d2ae",
+  "build": {
+    "command": "MSYSTEM=UCRT64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+    "exit_code": 0,
+    "log": "tests/mmi-cim-wmi/ucrt-package-results-20261108.txt",
+    "API_declarations": 512,
+    "MOF_checks": 31,
+    "property_checks": 222,
+    "delivery_checks": 138
+  },
+  "installed": {
+    "delivery_checks": 138,
+    "delivery_log": "tests/mmi-cim-wmi/ucrt-installed-initial-20261108.txt",
+    "event_command": "bash tests/mmi-cim-wmi/check-events.sh NEW_OUTPUT",
+    "intrinsic_event_command": "bash tests/mmi-cim-wmi/check-events.sh NEW_OUTPUT --intrinsic",
+    "extrinsic_checks": 23,
+    "intrinsic_checks": 21,
+    "final_event_exit_code": 0,
+    "final_event_log": "tests/mmi-cim-wmi/ucrt-installed-events-20261108.txt",
+    "transports": [
+      "local default",
+      "local explicit DCOM"
+    ]
+  },
+  "event_fixture": {
+    "initial_result": "PID ownership assertion failed in second extrinsic subscription; initial query filtered only on parent process ID",
+    "initial_log": "tests/mmi-cim-wmi/ucrt-installed-initial-20261108.txt",
+    "diagnostic_result": "One fresh diagnostic consumer and five further executions passed; initial cause was not reproduced or established",
+    "diagnostic_logs": [
+      "tests/mmi-cim-wmi/ucrt-event-diagnostic-20261108.txt",
+      "tests/mmi-cim-wmi/ucrt-event-diagnostic-repeat-20261108.txt"
+    ],
+    "correction": "Copy cmd.exe to a unique temporary name per extrinsic subscription, filter on that name and parent PID, preserve exact child PID assertions; delete temporary executable directory after test",
+    "final_clang64_checks": 27,
+    "final_clang64_exit_code": 0,
+    "final_clang64_log": "tests/mmi-cim-wmi/clang-isolated-events-20261108.txt"
+  },
+  "artifacts": {
+    "package_archive": "mingw-w64-ucrt-x86_64-dotnet-mmi3-3.0.0-4-any.pkg.tar.zst",
+    "package_sha256": "bab18b1bd37a8cdb5727621bf8d2a44b40dbbed0efe287d50c57dbdac23c36b9",
+    "package_bytes": 125551,
+    "source_nuget_sha256": "36d86f68c6c2874104c889585a61bd6dfb817e9e6efb8cee39a092c976db0584",
+    "MMI_DLL_sha256": "aa6a0c88163a5e41401bead486d08b8ce467f816d297530cfca236a006f99fe7",
+    "build_exit_code": 0
+  },
+  "not_verified": [
+    "authenticated remote CIM/WSMan",
+    "provider-origin extended callbacks/streamed methods",
+    "complete native ownership/provider parity"
+  ],
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-dotnet-mmi3/.SRCINFO": "c2dd431bbf59700485783c17bf8493a1328bdc3c3b0a6749d3d447312a4ee36f",
+    "mingw-w64-dotnet-mmi3/.gitignore": "3f6fd27338cce0784e9236e1ad6b2e92f2bf967bf661aa33c27072d3324ae83d",
+    "mingw-w64-dotnet-mmi3/0001-validate-native-handles.patch": "438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330",
+    "mingw-w64-dotnet-mmi3/0002-accept-empty-operation-callbacks.patch": "7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6",
+    "mingw-w64-dotnet-mmi3/0003-implement-timeouts-and-xml-serialization.patch": "eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7",
+    "mingw-w64-dotnet-mmi3/0004-native-result-callbacks-and-operation-lifetime.patch": "168583e2346114afad7cbda70ac071cfeec667cc9c07f2da9af1274324d2da14",
+    "mingw-w64-dotnet-mmi3/0005-native-destination-and-proxy-credentials.patch": "6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a",
+    "mingw-w64-dotnet-mmi3/0006-extended-callbacks-and-operation-options-clone.patch": "613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3",
+    "mingw-w64-dotnet-mmi3/0007-streamed-method-results-and-native-wrapper-ownership.patch": "26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93",
+    "mingw-w64-dotnet-mmi3/0008-mof-includes-offsets-and-ownership.patch": "f79f676a9cd94a3936f12ca61387a9fc205a1e484780105a8ed4280d067d8e8a",
+    "mingw-w64-dotnet-mmi3/0009-own-property-values-and-reference-types.patch": "23296471a29a7264c3f4d24e7f46520b285906eda50a57336643e07c0254e78f",
+    "mingw-w64-dotnet-mmi3/0010-subscription-delivery-credentials-and-options.patch": "ddb1f2ae387e23cae64d272bf3c2f7b801a6dd07a621ddcffea160bdc4229f4f",
+    "mingw-w64-dotnet-mmi3/DeliveryOptionChecks.cs": "01a9309cc1221311ace4d901235333b59c166ee89d07ed83829ec5edceb9a1ca",
+    "mingw-w64-dotnet-mmi3/EmbeddedValueChecks.cs": "34f15bf046a989d3aa6e407486f5620432db7d061b81d83fd41b144c8b3b4063",
+    "mingw-w64-dotnet-mmi3/ExpectedApi.json": "cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49",
+    "mingw-w64-dotnet-mmi3/Friend.cs": "d24a547c8ff3405e1d17866e62bfd956842d567a9ee1df8736e0450e1042238c",
+    "mingw-w64-dotnet-mmi3/Identity.cs": "728d7c047167bd152f1c362cb4544e43fe6d87a1f576bd8088c19530d77db00c",
+    "mingw-w64-dotnet-mmi3/InspectApi.cs": "4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e",
+    "mingw-w64-dotnet-mmi3/MicrosoftShared.pubkey.hex": "8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed",
+    "mingw-w64-dotnet-mmi3/MmiCredentialChecks.cs": "6b8cdfbaade97c0d950c91ae5ff2c9fe31e21a68b2a6488231cb3f35ef6522e6",
+    "mingw-w64-dotnet-mmi3/MmiExtendedCallbackChecks.cs": "30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42",
+    "mingw-w64-dotnet-mmi3/MmiPortChecks.cs": "1d5e52f7cc0f9b25a223ea25b98c11d4da0d77557fa0222a0d014ffc4fc96305",
+    "mingw-w64-dotnet-mmi3/MmiProbe.cs": "818c61cd5354a8df48b4f2d7a1b7ce0efd5e4a501eb00c430e04c683bf1f9f1f",
+    "mingw-w64-dotnet-mmi3/MmiStreamChecks.cs": "9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b",
+    "mingw-w64-dotnet-mmi3/MofChecks.cs": "1b05606a97330b9dff1b19735033aae834774aabe862574953ff8bbd9330abda",
+    "mingw-w64-dotnet-mmi3/NativeDependencies.cs": "d747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad",
+    "mingw-w64-dotnet-mmi3/PKGBUILD": "a12defed8b0b0644f28317b7f08cf6bca3d74f8e09a78bed65859217d82dd7ed",
+    "mingw-w64-dotnet-mmi3/README.md": "4af6de07d18031e7665b20724d59391b4e8ecf53405abcd8501a3af906b63680",
+    "mingw-w64-dotnet-mmi3/check-api.sh": "ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef",
+    "mingw-w64-dotnet-mmi3/check-credential-abi.c": "15db2b46ad99adb211565b916fbf37a98ee8d26cca5040ccc6d6518076bfa120",
+    "mingw-w64-dotnet-mmi3/check-delivery-options.sh": "aab20da21eb96366ea27818248a9a88f58c683d3affe32875b52e3f2bc6e6998",
+    "mingw-w64-dotnet-mmi3/check-embedded-values.sh": "1f96269de1810094c1541bf576271461675490d8dc462203192880d1df550251",
+    "mingw-w64-dotnet-mmi3/check-extended-callbacks.c": "9841df264a70e1a8c6da34c2ae157b47ab4227b0bb49d15fc44a58e1b4af13c0",
+    "mingw-w64-dotnet-mmi3/check-mof.sh": "ff1bbce78326cfd7c09f82baf538e545b693e37b30f52e0c12709d31938db882",
+    "mingw-w64-dotnet-mmi3/check-streamed-results.c": "90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f",
+    "mingw-w64-dotnet-mmi3/check.sh": "720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553",
+    "mingw-w64-dotnet-mmi3/prepare.py": "dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c",
+    "tests/mmi-cim-wmi/EventDelivery.cs": "5dbe3d39264e77c4a4d77b50a33769ee6ed8a6e18733e2a29379991bd1d99a51",
+    "tests/mmi-cim-wmi/check-events.sh": "8180b860a5c8c635fa2dea9024bb7da552948d5bcb1546253f896bda4f66aacd"
+  },
+  "cleanup": {
+    "logical_bytes_removed": 47543392,
+    "removed_root": "/e/codex-dotnet10/mmi3-ucrt.q5eQ0p",
+    "installed_package_retained": true
+  }
+}

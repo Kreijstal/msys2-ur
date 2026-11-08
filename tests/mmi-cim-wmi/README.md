@@ -1,5 +1,27 @@
 # MMI / CIM / WMI source ports and checks
 
+## UCRT64 current-revision validation (2026-11-08)
+
+MMI3 **3.0.0-4** also passed a clean UCRT64
+`makepkg --cleanbuild --force --noconfirm`: all native gates, **512 API
+declarations**, **31 MOF**, **222 property** and **138 delivery checks**.
+After installation, a fresh consumer passed the 138 delivery checks, and real
+default/DCOM subscriptions passed **23 extrinsic** and **21 intrinsic event
+checks**, including retained values after native cleanup and compacting GC.
+
+The first extrinsic run failed its child-PID ownership assertion in the second
+subscription. A diagnostic build and five repeated executions did not reproduce
+the failure; its cause remains unestablished. The harness now copies `cmd.exe`
+to a unique temporary name per subscription and filters by that name and parent
+PID. It still requires every received PID to belong to a child launched by that
+subscription. The temporary executable directory is removed after the test.
+This revised fixture passed in UCRT64 and CLANG64 (27 checks in CLANG64).
+
+[Exact commands, input hashes, artifact hashes and scope](ucrt-package-results-20261108.json)
+link the initial failure, diagnostic runs and final logs. Remote authentication,
+provider-origin extended callbacks/streams and complete native ownership parity
+remain open. This experimental binary remains unpublished.
+
 ## Subscription delivery credentials/options port (2026-11-08)
 
 MMI3 **3.0.0-4** fixes the delivery-options constructor and clone structure ABI,
