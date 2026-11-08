@@ -1,0 +1,11 @@
+--- a/workflows/powershell-full-sdk/stage-package.py
++++ b/workflows/powershell-full-sdk/stage-package.py
+@@ -21,7 +21,7 @@
+ for name in ['README.md','launcher.c']:
+     shutil.copy2(package/name,doc/name)
+ checks=doc/'checks';checks.mkdir()
+-for name in ['check-package.sh','check-launcher.py']:
++for name in ['check-package.sh','check-launcher.py','MofSmoke.ps1']:
+     shutil.copy2(package/name,checks/name)
+ for name in ['Smoke.ps1','CimWmiSmoke.ps1','WmiStaProbe.ps1','GallerySmoke.ps1','ChildSmoke.ps1']+['DesktopSmoke.ps1']*desktop:
+     shutil.copy2(here/name,checks/name)

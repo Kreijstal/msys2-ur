@@ -1,0 +1,110 @@
+{
+  "recorded_at_utc": "2026-11-08T14:12:15.363359+00:00",
+  "objective_scope": "Integrate source MMI3 3.0.0-2 into current PowerShell 7.4.20; historical NETStandard reconstruction excluded",
+  "host": "win11",
+  "environment": "CLANG64",
+  "root": "/e/codex-dotnet10/powershell-mmi.mNJre9",
+  "packages": {
+    "mingw-w64-clang-x86_64-powershell": "7.4.20-4",
+    "mingw-w64-clang-x86_64-dotnet-mmi3": "3.0.0-2",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing": "8.0.31-4"
+  },
+  "source_archives": {
+    "PowerShell v7.4.20": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+    "dotnet-mingw-bootstrap 5ab58f8ba94346c59bc68ab052d8f96f124be323": "24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63"
+  },
+  "build": {
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "exit_code": 0,
+    "log": "tests/powershell-mmi/package-results-20261108.txt",
+    "sdk_warnings": {
+      "CA1846": 3
+    },
+    "desktop_console_warnings": {
+      "NETSDK1106": 1
+    },
+    "build_errors": 0,
+    "diagnostic_logs": [
+      "tests/powershell-mmi/sdk-build-20261108.txt",
+      "tests/powershell-mmi/desktop-build-20261108.txt"
+    ]
+  },
+  "package_check_verified": [
+    "complete source distribution file hashes and declared source/native-owner licenses",
+    "original LocalAccounts 459 API entries and source annotations",
+    "launcher Unicode/quoting/empty arguments and source runtime/engine/child status",
+    "full SDK type catalog, module discovery, live CIM/GetOwner/serialization, JSON/Add-Type/Authenticode, LocalAccounts",
+    "source MMI/CIM/WMI in STA and MTA",
+    "original native console child, Unicode CLIXML and live CIM",
+    "13 bundled-source MMI/MOF/include/offset/Unicode/lifetime/live-CIM checks",
+    "original GraphicalHost BAML/Show-Command source WPF rasterization",
+    "six source gallery modules, source NuGet provider, Unicode archive roundtrip and real ThreadJob/CIM execution"
+  ],
+  "installed_validation": {
+    "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-7.4.20-4-any.pkg.tar.zst",
+    "commands": [
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File /clang64/share/doc/powershell/checks/MofSmoke.ps1",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File /clang64/share/doc/powershell/checks/MofSmoke.ps1"
+    ],
+    "exit_code": 0,
+    "MOF_checks_per_mode": 13,
+    "log": "tests/powershell-mmi/installed-results-20261108.txt"
+  },
+  "artifacts": {
+    "package_archive": "mingw-w64-clang-x86_64-powershell-7.4.20-4-any.pkg.tar.zst",
+    "package_sha256": "68403bfc87577ac86b281ea53741b482809159d28e76ad5328bdcb8c2f9d4c3a",
+    "package_bytes": 20123983,
+    "installed_MMI_DLL_sha256": "9ac733d2b5a0b78b738d8b05c98c6e68386bbafc117d1222d958a69d1fe23252",
+    "MMI_payload_origin": {
+      "sha256": "9ac733d2b5a0b78b738d8b05c98c6e68386bbafc117d1222d958a69d1fe23252",
+      "installed_source_archives": [
+        {
+          "archive": "microsoft.management.infrastructure.3.0.0.nupkg",
+          "asset": "lib/net8.0/Microsoft.Management.Infrastructure.dll"
+        }
+      ]
+    },
+    "MMI_source_owner": {
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-mmi3",
+      "sha256": "58461ff13f05c9a8bf872d2b36a620bd365b483bc815d3773de0c6c38cd64b07"
+    },
+    "manifest_file_count": 825,
+    "bundled_application_files": 596,
+    "license_files": 208,
+    "source_package_manifest_sha256": "28520223dbb1f0efb17efff9dafd2f02639da8fba9ad2566030fccb62a00599e",
+    "installed_validation_exit_code": 0,
+    "makepkg_exit_code": 0
+  },
+  "WSMan_environment_inspection": {
+    "service_status": "Stopped",
+    "service_start_type": "Manual",
+    "current_identity_is_administrator": true,
+    "configured_listener_registry_key": "*+HTTP",
+    "configured_listener_port": 5985,
+    "service_or_listener_configuration_changed": false,
+    "remote_authentication_test_passed": false
+  },
+  "not_verified": [
+    "remote CIM/WSMan, provider-origin extended callbacks/streams and broader ownership/behavior parity",
+    "remaining SqlClient and Windows.Compatibility integration gates",
+    "UCRT64 build/execution of this recipe revision"
+  ],
+  "temporary_build_cleanup": {
+    "removed_root": "/e/codex-dotnet10/powershell-mmi.mNJre9",
+    "logical_bytes_removed": 778176628,
+    "installed_PowerShell_retained": true
+  },
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/README.md": "93b1b2d9624a8d826027d93a7fd47892fe295f99fea9f44e39ca85ddb9463acb",
+    "mingw-w64-powershell/check-package.sh": "5ba39628071d08b7acda89c4412d9ddeb65c5fa9f3128f1730c2db3dedee71e5",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/MofSmoke.ps1": "0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b",
+    "mingw-w64-powershell/stage-mof-check.patch": "d0bfc36b0c508d7cb0dd7a7caa2c783aa52ec9f0eb8377ecb2c9ace75261d73f",
+    "mingw-w64-powershell/PKGBUILD": "b30178372907436c7cf37cfd3c657941226e20d6b71b1a9b08e5e31fec85c909"
+  }
+}
