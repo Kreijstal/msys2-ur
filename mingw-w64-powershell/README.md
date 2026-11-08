@@ -45,7 +45,7 @@ MTA modes. The source System.Management8.0.0-2 backend secures each service call
 after CLR marshaling, fixing the STA Access denied failure in release1. A
 standalone STA regression is also included. Direct MMI uses a CLR null
 string for a local session and explicitly disposes its native query enumerator.
-Release 12 requires the source MMI3 package 3.0.0-9 and bundles its MOF, property
+Release 13 requires the source MMI3 package 3.0.0-10 and bundles its MOF, property
 ownership and subscription-delivery option fixes. Additional PowerShell fixtures verify that the
 loaded MMI DLL matches the installed source package, then exercises Unicode MOF
 includes, a nonzero input offset, retained results after disposal/compacting GC,
@@ -103,3 +103,8 @@ released; borrowed handles do not delete their native class. Explicit disposal
 and native class calls share the corrected ownership path. Dedicated application
 checks exercise native deletion counts, metadata-view lifetime, reentrant GC and
 lazy MOF/XML schema caches inside the installed PowerShell bundle.
+
+Release 13 retains native class owners through temporary qualifier, parameter
+and value wrappers. Optimized metadata reads and borrowed Unicode value copies
+remain valid during forced GC. Dedicated installed-application checks disable
+tiered compilation to exercise optimized CLR lifetimes in STA and MTA.
