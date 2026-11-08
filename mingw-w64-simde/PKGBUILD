@@ -1,0 +1,25 @@
+_realname=simde
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.8.2
+pkgrel=1
+pkgdesc="Header-only portable implementations of SIMD intrinsics (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://simd-everywhere.github.io/blog/'
+msys2_repository_url='https://github.com/simd-everywhere/simde'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-meson"
+             "${MINGW_PACKAGE_PREFIX}-cc")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/simd-everywhere/simde/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('ed2a3268658f2f2a9b5367628a85ccd4cf9516460ed8604eed369653d49b25fb')
+
+build() {
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    meson setup --prefix="${MINGW_PREFIX}" -Dtests=false "build-${MSYSTEM}" "${_realname}-${pkgver}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" meson install -C "build-${MSYSTEM}"
+  install -Dm644 "${_realname}-${pkgver}/COPYING" -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+}
