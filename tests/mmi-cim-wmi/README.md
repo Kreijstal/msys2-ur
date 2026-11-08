@@ -1,5 +1,38 @@
 # MMI / CIM / WMI source ports and checks
 
+## Embedded property/reference ownership port (2026-11-08)
+
+MMI3 **3.0.0-3** fixes the CLR embedded-instance getter's
+`NotImplementedException`, mutable cached array aliases, stale property values
+and modification flags, and incorrectly tagged reference values. Getters now
+return independently owned nested values, propagate parent session metadata and
+observe native updates. All 16 array types preserve empty versus NULL values;
+the `SInt16Array` CLR type mapping is corrected. Temporary native strings/arrays
+are released, with managed `Borrow`/`Adopt` copy behavior checked against the
+built-in Windows MMI baseline. The native copy policy is also described by
+[Microsoft's MI_Instance_SetElement documentation](https://learn.microsoft.com/en-us/windows/win32/api/mi/nf-mi-mi_instance_setelement).
+
+`makepkg --cleanbuild --force --noconfirm` passed the existing native suite,
+**512 API declarations**, **31 MOF checks** and **222 property checks**. Installed
+consumers passed the same 222 property checks, **23 extrinsic event checks** and
+**21 intrinsic event checks**. The real `__InstanceCreationEvent` test verifies
+that `TargetInstance` survives outer-event disposal, session close and compacting
+GC over both default and explicit DCOM. Only owned child processes are used and
+cleaned up; no WMI schemas or permanent subscriptions are registered.
+
+Run `bash tests/mmi-cim-wmi/check-embedded-values.sh NEW_OUTPUT` and
+`bash tests/mmi-cim-wmi/check-events.sh NEW_OUTPUT --intrinsic` against the
+installed source package. [Exact evidence and remaining scope](embedded-package-results-20261108.json)
+link the [old-package reproduction](embedded-baseline-results-20261108.txt),
+[native empty-array probe](embedded-native-empty-array-results-20261108.txt),
+[Windows memory-flag baseline](embedded-windows-memory-flags-results-20261108.txt),
+[full package build/check](embedded-package-results-20261108.txt) and
+[installed consumers](embedded-installed-results-20261108.txt).
+
+The package remains experimental and unpublished. PowerShell 7.4.20-4 still
+bundles MMI3 3.0.0-2; it needs a rebuild to pick up this fix. Remote/provider,
+broader MOF/ownership behavior and UCRT64 execution remain open.
+
 ## MOF callback and offset port (2026-11-08)
 
 MMI3 **3.0.0-2** adds a production patch for the previously unimplemented MOF

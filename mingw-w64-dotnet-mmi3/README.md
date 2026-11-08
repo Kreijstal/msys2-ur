@@ -4,7 +4,8 @@ This Windows .NET 8 source port targets the MMI 3.0.0 package contract required 
 PowerShell 7.4.20. It builds the archived PowerShell/MMI C# revision
 cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
-MOF callback/offset/ownership patch, and explicit
+MOF callback/offset/ownership patch, a property-value/reference/array ownership
+patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -47,6 +48,20 @@ checks do not register schemas or instances in the WMI repository.
 Real local Win32_ProcessStartTrace event delivery and retained payload lifetime
 also passed using the separate tests/mmi-cim-wmi/check-events.sh harness.
 
+Property getters now read current native values and return independently owned
+embedded instances/references and array snapshots. They preserve parent session
+metadata, observe updates made through other wrappers and refresh modification
+flags. Native reference type tags and the SInt16Array .NET type mapping are
+corrected. All 16 array types preserve empty versus NULL values, including the
+zero-data-pointer representation required by Windows MI. Temporary string/array
+buffers are released after use. Managed Borrow/Adopt flags do not transfer these
+temporary buffers to native instances; Add stores a native copy, matching the
+built-in Windows MMI behavior observed by the separate baseline probe.
+
+`check-embedded-values.sh` tests these paths through the CLR API directly,
+including Unicode, mutation/disposal isolation, live flags, metadata and repeated
+compacting GC. This avoids PowerShell property adaptation hiding a getter error.
+
 This is not full PowerShell integration or complete behavioral parity evidence.
 Authenticated remote CIM/WSMan, provider-origin extended callbacks/streaming,
 broader event-provider coverage and a complete native ownership audit remain
@@ -59,6 +74,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check.sh NEW_OUTPUT
     bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
     bash check-mof.sh NEW_MOF_OUTPUT
+    bash check-embedded-values.sh NEW_PROPERTY_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.

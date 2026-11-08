@@ -1,0 +1,559 @@
+--- a/CimConverter.cs
++++ b/CimConverter.cs
+@@ -95,7 +95,7 @@
+                     return typeof(UInt16[]);
+ 
+                 case CimType.SInt16Array:
+-                    return typeof(Int64[]);
++                    return typeof(Int16[]);
+ 
+                 case CimType.UInt32Array:
+                     return typeof(UInt32[]);
+--- a/Internal/Data/CimPropertiesCollection.cs
++++ b/Internal/Data/CimPropertiesCollection.cs
+@@ -32,12 +32,21 @@
+                 throw new ArgumentNullException("newProperty");
+             }
+ 
+-            MI_Result result = this._instance.InstanceHandle.AddElement(
+-                newProperty.Name,
+-                ValueHelpers.ConvertToNativeLayer(newProperty.Value, newProperty.CimType),
+-                newProperty.CimType.FromCimType(),
+-                newProperty.Flags.FromCimFlags());
+-            CimException.ThrowIfMiResultFailure(result);
++            object managedValue = newProperty.Value;
++            using var native = ValueHelpers.ConvertToNativeLayer(managedValue, newProperty.CimType);
++            try
++            {
++                MI_Result result = this._instance.InstanceHandle.AddElement(newProperty.Name,
++                    native, newProperty.CimType.FromCimType(),
++                    newProperty.Flags.FromCimFlags() & ~(MI_Flags.MI_FLAG_BORROW | MI_Flags.MI_FLAG_ADOPT));
++                CimException.ThrowIfMiResultFailure(result);
++            }
++            finally
++            {
++                GC.KeepAlive(managedValue);
++                GC.KeepAlive(newProperty);
++                GC.KeepAlive(_instance);
++            }
+         }
+ 
+         public override int Count
+@@ -69,6 +78,7 @@
+                                       out type,
+                                       out flags,
+                                       out index);
++                using (value)
+                 switch (result)
+                 {
+                     case MI_Result.MI_RESULT_NO_SUCH_PROPERTY:
+--- a/Internal/Data/CimPropertyOfInstance.cs
++++ b/Internal/Data/CimPropertyOfInstance.cs
+@@ -20,152 +20,104 @@
+     {
+         private readonly CimInstance _instance;
+         private readonly int _index;
+-        private Lazy<CimPropertyStandalone> _actual;
+ 
+         internal CimPropertyOfInstance(CimInstance instance, int index)
+         {
+-            this._instance = instance;
+-            this._index = index;
+-            this.ResetInnerProperty();
++            _instance = instance;
++            _index = index;
++        }
++
++        // MI owns each returned value's backing storage. Read it afresh instead
++        // of caching borrowed instances/arrays or stale native flags.
++        private MI_Value Read(out string name, out MI_Type type, out MI_Flags flags)
++        {
++            MI_Value value = null;
++            try
++            {
++                MI_Result result = _instance.InstanceHandle.GetElementAt((uint)_index,
++                    out name, out value, out type, out flags);
++                CimException.ThrowIfMiResultFailure(result);
++                return value;
++            }
++            catch { value?.Dispose(); throw; }
+         }
+ 
+         public override string Name
+         {
+-            get
+-            {
+-                return this._actual.Value.Name;
+-            }
++            get { using var value = Read(out string name, out _, out _); return name; }
+         }
+ 
+         public override object Value
+         {
+             get
+             {
+-                // The old implementation went back to the native layer on every single
+-                // query which was not exactly ideal for performance. It did have the
+-                // useful side effect of copying value types, which prevented the
+-                // property value from ever deviating from the underlying native value
+-                // Clone the actual value to copy this behavior
+-                object value = this._actual.Value.Value;
+-                return ValueHelpers.CloneManagedObject(this._actual.Value.Value, this.CimType);
++                using var value = Read(out _, out MI_Type type, out MI_Flags flags);
++                try
++                {
++                    // A caller owns returned nested instances. Their handles
++                    // must outlive this property and its parent independently.
++                    return ValueHelpers.ConvertFromNativeLayer(value, type, flags, _instance, clone: true);
++                }
++                finally { GC.KeepAlive(_instance); }
+             }
+             set
+             {
+-                // We should not defer this call since that would change where exceptions
+-                // bubble up to the caller on bad data
+-                MI_Result result;
+-                if (value == null)
++                MI_Value converted = null;
++                try
+                 {
+-                    result = this._instance.InstanceHandle.ClearElementAt((uint)this._index);
++                    MI_Result result;
++                    if (value == null) result = _instance.InstanceHandle.ClearElementAt((uint)_index);
++                    else
++                    {
++                        try
++                        {
++                            Helpers.ValidateNoNullElements(value as IList);
++                            converted = ValueHelpers.ConvertToNativeLayer(value, CimType);
++                            ValueHelpers.ThrowIfMismatchedType(CimType.FromCimType(), converted);
++                        }
++                        catch (InvalidCastException error) { throw new ArgumentException(error.Message, "value", error); }
++                        catch (FormatException error) { throw new ArgumentException(error.Message, "value", error); }
++                        catch (ArgumentException error) { throw new ArgumentException(error.Message, "value", error); }
++                        result = _instance.InstanceHandle.SetElementAt((uint)_index, converted,
++                            CimType.FromCimType(), MI_Flags.None);
++                    }
++                    CimException.ThrowIfMiResultFailure(result);
+                 }
+-                else
++                finally
+                 {
+-                    MI_Value convertedValue;
+-
+-                    try
+-                    {
+-                        Helpers.ValidateNoNullElements(value as IList);
+-                        convertedValue = ValueHelpers.ConvertToNativeLayer(value, this.CimType);
+-                    }
+-                    catch (InvalidCastException e)
+-                    {
+-                        throw new ArgumentException(e.Message, "value", e);
+-                    }
+-                    catch (FormatException e)
+-                    {
+-                        throw new ArgumentException(e.Message, "value", e);
+-                    }
+-                    catch (ArgumentException e)
+-                    {
+-                        throw new ArgumentException(e.Message, "value", e);
+-                    }
+-
+-                    result = this._instance.InstanceHandle.SetElementAt(
+-                        (uint)this._index,
+-                        convertedValue,
+-                        this.CimType.FromCimType(),
+-                        MI_Flags.None);
++                    converted?.Dispose();
++                    GC.KeepAlive(value);
++                    GC.KeepAlive(_instance);
+                 }
+-
+-                CimException.ThrowIfMiResultFailure(result);
+-
+-                // If the value changed then the flags may have changed, and
+-                // there's (potentially) the possibility for the native conversion
+-                // to have done something or other to the value. Also the
+-                // old implementation was pulling the value fresh on every
+-                // property access, so by pulling the value back out of the
+-                // native layer we keep that behavior
+-                this.ResetInnerProperty();
+             }
+         }
+ 
+         public override CimType CimType
+         {
+-            get
+-            {
+-                return this._actual.Value.CimType;
+-            }
++            get { using var value = Read(out _, out MI_Type type, out _); return type.ToCimType(); }
+         }
+ 
+         public override CimFlags Flags
+         {
+-            get
+-            {
+-                return this._actual.Value.Flags;
+-            }
++            get { using var value = Read(out _, out _, out MI_Flags flags); return flags.ToCimFlags(); }
+         }
+ 
+         public override bool IsValueModified
+         {
+-            get
+-            {
+-                return base.IsValueModified;
+-            }
++            get { return base.IsValueModified; }
+             set
+             {
+-                bool notModifiedFlag = !value;
+-
+-                string name;
+-                MI_Value mi_value;
+-                MI_Type type;
+-                MI_Flags flags;
+-                MI_Result result = this._instance.InstanceHandle.GetElementAt((uint)this._index,
+-                                                out name,
+-                                                out mi_value,
+-                                                out type,
+-                                                out flags);
+-                CimException.ThrowIfMiResultFailure(result);
+-
+-                bool isValueNull = (MI_Flags.MI_FLAG_NULL == (flags & MI_Flags.MI_FLAG_NULL));
+-
+-                result = this._instance.InstanceHandle.SetElementAt((uint)this._index,
+-                                          isValueNull ? null : mi_value,
+-                                          type,
+-                                          (notModifiedFlag ? MI_Flags.MI_FLAG_NOT_MODIFIED : 0) | (isValueNull ? MI_Flags.MI_FLAG_NULL : 0));
+-                CimException.ThrowIfMiResultFailure(result);
++                using var native = Read(out _, out MI_Type type, out MI_Flags flags);
++                flags = (flags & MI_Flags.MI_FLAG_NULL) |
++                    (value ? 0 : MI_Flags.MI_FLAG_NOT_MODIFIED);
++                try
++                {
++                    MI_Result result = _instance.InstanceHandle.SetElementAt((uint)_index,
++                        (flags & MI_Flags.MI_FLAG_NULL) != 0 ? null : native, type, flags);
++                    CimException.ThrowIfMiResultFailure(result);
++                }
++                finally { GC.KeepAlive(_instance); }
+             }
+-        }
+-
+-        private CimPropertyStandalone GetProperty()
+-        {
+-            string name;
+-            MI_Value value;
+-            MI_Type type;
+-            MI_Flags flags;
+-            MI_Result result = this._instance.InstanceHandle.GetElementAt((uint)this._index,
+-                                            out name,
+-                                            out value,
+-                                            out type,
+-                                            out flags);
+-            CimException.ThrowIfMiResultFailure(result);
+-
+-            var convertedValue = ValueHelpers.ConvertFromNativeLayer(value, type, flags);
+-            return new CimPropertyStandalone(name, convertedValue, type.ToCimType(), flags.ToCimFlags());
+-        }
+-
+-        private void ResetInnerProperty()
+-        {
+-            this._actual = new Lazy<CimPropertyStandalone>(this.GetProperty);
+         }
+     }
+ }
+--- a/Internal/Data/CimPropertyStandalone.cs
++++ b/Internal/Data/CimPropertyStandalone.cs
+@@ -53,7 +53,8 @@
+                     try
+                     {
+                         Helpers.ValidateNoNullElements(value as IList);
+-                        ValueHelpers.ThrowIfMismatchedType(this.CimType.FromCimType(), ValueHelpers.ConvertToNativeLayer(value, this.CimType));
++                        using var native = ValueHelpers.ConvertToNativeLayer(value, this.CimType);
++                        ValueHelpers.ThrowIfMismatchedType(this.CimType.FromCimType(), native);
+                     }
+                     catch (InvalidCastException e)
+                     {
+--- a/Internal/ValueHelpers.cs
++++ b/Internal/ValueHelpers.cs
+@@ -11,6 +11,7 @@
+ using System;
+ using Microsoft.Management.Infrastructure.Native;
+ using System.Globalization;
++using System.Runtime.InteropServices;
+ 
+ namespace Microsoft.Management.Infrastructure.Internal
+ {
+@@ -18,31 +19,8 @@
+     {
+         internal static void ThrowIfMismatchedType(MI_Type type, object managedValue)
+         {
+-            // TODO: Implement this
+-            /*
+-              MI_Value throwAway;
+-              memset(&throwAway, 0, sizeof(MI_Value));
+-              IEnumerable<DangerousHandleAccessor^>^ dangerousHandleAccesorsFromConversion = nullptr;
+-              try
+-              {
+-              dangerousHandleAccesorsFromConversion = ConvertToMiValue(type, managedValue, &throwAway);
+-              }
+-              finally
+-              {
+-              ReleaseMiValue(type, &throwAway, dangerousHandleAccesorsFromConversion);
+-              }
+-            */
+-        }
+-
+-        internal static object CloneManagedObject(object managedValue, CimType type)
+-        {
+-            if (managedValue != null &&
+-                (type == CimType.Reference || type == CimType.Instance))
+-            {
+-                throw new NotImplementedException();
+-            }
+-
+-            return managedValue;
++            if (managedValue is MI_Value value && value.Type.HasValue && value.Type.Value != type)
++                throw new InvalidCastException("The value does not match the requested CIM type.");
+         }
+ 
+         internal static MI_Value ConvertToNativeLayer(object value, CimType cimType)
+@@ -51,7 +29,8 @@
+             if (cimInstance != null)
+             {
+                 MI_Value retval = new MI_Value();
+-                retval.Instance = cimInstance.InstanceHandle;
++                if (cimType == CimType.Reference) retval.Reference = cimInstance.InstanceHandle;
++                else retval.Instance = cimInstance.InstanceHandle;
+                 return retval;
+             }
+ 
+@@ -73,7 +52,8 @@
+                 }
+ 
+                 MI_Value retval = new MI_Value();
+-                retval.InstanceA = arrayOfInstanceHandles;
++                if (cimType == CimType.ReferenceArray) retval.ReferenceA = arrayOfInstanceHandles;
++                else retval.InstanceA = arrayOfInstanceHandles;
+                 return retval;
+             }
+ 
+@@ -108,9 +88,35 @@
+                 return null;
+             }
+ 
++            // Windows MI uses { data = NULL, size = 0 } for an empty,
++            // non-NULL array. MI_FLAG_NULL above separately identifies NULL.
++            if ((type & MI_TypeFlags.MI_ARRAY) != 0 &&
++                Marshal.ReadIntPtr(value.Ptr) == IntPtr.Zero && Marshal.ReadInt32(value.Ptr, IntPtr.Size) == 0)
++            {
++                switch (type)
++                {
++                    case MI_Type.MI_BOOLEANA: return Array.Empty<bool>();
++                    case MI_Type.MI_UINT8A: return Array.Empty<byte>();
++                    case MI_Type.MI_SINT8A: return Array.Empty<sbyte>();
++                    case MI_Type.MI_UINT16A: return Array.Empty<ushort>();
++                    case MI_Type.MI_SINT16A: return Array.Empty<short>();
++                    case MI_Type.MI_UINT32A: return Array.Empty<uint>();
++                    case MI_Type.MI_SINT32A: return Array.Empty<int>();
++                    case MI_Type.MI_UINT64A: return Array.Empty<ulong>();
++                    case MI_Type.MI_SINT64A: return Array.Empty<long>();
++                    case MI_Type.MI_REAL32A: return Array.Empty<float>();
++                    case MI_Type.MI_REAL64A: return Array.Empty<double>();
++                    case MI_Type.MI_CHAR16A: return Array.Empty<char>();
++                    case MI_Type.MI_DATETIMEA: return Array.Empty<object>();
++                    case MI_Type.MI_STRINGA: return Array.Empty<string>();
++                    case MI_Type.MI_REFERENCEA: return Array.Empty<CimInstance>();
++                    case MI_Type.MI_INSTANCEA: return Array.Empty<CimInstance>();
++                }
++            }
++
+             if (type == MI_Type.MI_INSTANCE || type == MI_Type.MI_REFERENCE)
+             {
+-                MI_Instance nativeInstance = value.Instance;
++                MI_Instance nativeInstance = type == MI_Type.MI_REFERENCE ? value.Reference : value.Instance;
+                 try
+                 {
+                     if (nativeInstance == null || nativeInstance.IsNull) return null;
+@@ -126,7 +132,7 @@
+             }
+             else if (type == MI_Type.MI_INSTANCEA || type == MI_Type.MI_REFERENCEA)
+             {
+-                MI_Instance[] nativeInstances = value.InstanceA;
++                MI_Instance[] nativeInstances = type == MI_Type.MI_REFERENCEA ? value.ReferenceA : value.InstanceA;
+                 if (nativeInstances == null) return null;
+                 CimInstance[] instances = new CimInstance[nativeInstances.Length];
+                 try
+--- a/Native/Structures/MI_Array.cs
++++ b/Native/Structures/MI_Array.cs
+@@ -62,8 +62,11 @@
+                 // is what we wanted anyway
+                 if (ptrs != null)
+                 {
+-                    arrayPtr->data = Marshal.AllocHGlobal(NativeMethods.IntPtrSize * ptrs.Length);
+-                    Marshal.Copy(ptrs, 0, arrayPtr->data, ptrs.Length);
++                    if (ptrs.Length != 0)
++                    {
++                        arrayPtr->data = Marshal.AllocHGlobal(NativeMethods.IntPtrSize * ptrs.Length);
++                        Marshal.Copy(ptrs, 0, arrayPtr->data, ptrs.Length);
++                    }
+                     arrayPtr->size = (uint)ptrs.Length;
+                 }
+             }
+--- a/Native/Structures/MI_Value.cs
++++ b/Native/Structures/MI_Value.cs
+@@ -295,9 +295,9 @@
+                     }
+ 
+                     MI_Array array = new MI_Array();
+-                    array.data = Marshal.AllocHGlobal(ByteSize * size);
++                    array.data = size == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(ByteSize * size);
+                     array.size = (uint)size;
+-                    Marshal.Copy(bytes, 0, array.data, (int)size);
++                    if (size != 0) Marshal.Copy(bytes, 0, array.data, (int)size);
+                     Marshal.StructureToPtr(array, this.allocatedData, false);
+                 }
+             }
+@@ -380,15 +380,23 @@
+ 
+         private void Free()
+         {
+-            if (this.type.HasValue && (this.type.Value & MI_TypeFlags.MI_ARRAY) != 0)
+-            {
+-                unsafe
+-                {
+-                    Marshal.FreeHGlobal(((MI_Array*)this.allocatedData)->data);
+-                }
+-
+-                this.type = null;
+-            }
++            if (!this.type.HasValue) return;
++            if (this.type.Value == MI_Type.MI_STRING)
++                Marshal.FreeHGlobal(Marshal.ReadIntPtr(this.allocatedData));
++            else if ((this.type.Value & MI_TypeFlags.MI_ARRAY) != 0)
++            {
++                unsafe
++                {
++                    MI_Array* array = (MI_Array*)this.allocatedData;
++                    if (this.type.Value == MI_Type.MI_STRINGA && array->data != IntPtr.Zero)
++                        for (uint i = 0; i < array->size; i++)
++                            Marshal.FreeHGlobal(((IntPtr*)array->data)[i]);
++                    Marshal.FreeHGlobal(array->data);
++                }
++            }
++            // Instance/reference pointers belong to their CimInstance owners;
++            // only this value's temporary array/string storage is ours.
++            this.type = null;
+         }
+ 
+         internal byte Uint8
+@@ -785,7 +793,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(byte) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(byte) * (int)count));
+                         fixed (byte* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(byte), count);
+@@ -840,7 +848,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(sbyte) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(sbyte) * (int)count));
+                         fixed (sbyte* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(sbyte), count);
+@@ -896,7 +904,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(UInt16) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(UInt16) * (int)count));
+                         fixed (UInt16* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(UInt16), count);
+@@ -952,7 +960,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(Int16) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(Int16) * (int)count));
+                         fixed (Int16* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(Int16), count);
+@@ -1007,7 +1015,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(UInt32) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(UInt32) * (int)count));
+                         fixed (UInt32* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(UInt32), count);
+@@ -1062,7 +1070,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(Int32) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(Int32) * (int)count));
+                         fixed (Int32* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(Int32), count);
+@@ -1117,7 +1125,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(UInt64) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(UInt64) * (int)count));
+                         fixed (UInt64* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(UInt64), count);
+@@ -1172,7 +1180,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(Int64) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(Int64) * (int)count));
+                         fixed (Int64* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(Int64), count);
+@@ -1227,7 +1235,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(float) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(float) * (int)count));
+                         fixed (float* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(float), count);
+@@ -1282,7 +1290,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(double) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(double) * (int)count));
+                         fixed (double* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(double), count);
+@@ -1337,7 +1345,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(char) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(char) * (int)count));
+                         fixed (char* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(char), count);
+@@ -1392,7 +1400,7 @@
+                     {
+                         MI_Array* arrayPtr = (MI_Array*)this.allocatedData;
+                         arrayPtr->size = count;
+-                        arrayPtr->data = Marshal.AllocHGlobal(sizeof(MI_Datetime) * (int)count);
++                        arrayPtr->data = (count == 0 ? IntPtr.Zero : Marshal.AllocHGlobal(sizeof(MI_Datetime) * (int)count));
+                         fixed (MI_Datetime* src = value)
+                         {
+                             NativeMethods.memcpy((byte*)(arrayPtr->data), (byte*)src, sizeof(MI_Datetime), count);

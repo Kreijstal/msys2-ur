@@ -26,4 +26,5 @@ with zipfile.ZipFile(archive) as z:
     assert assets and any(dll.read_bytes()==z.read(name) for name in assets)
 print('PASS exact installed source archive and implementation bytes; archive SHA256 '+hashlib.sha256(archive.read_bytes()).hexdigest())
 PY
-timeout -k 10 90 "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")"
+args=();[[ ${2:-} != --intrinsic ]]||args+=(--intrinsic)
+timeout -k 10 90 "$MINGW_PREFIX/lib/dotnet/dotnet.exe" "$(cygpath -am "$out/bin/Release/net8.0/Check.dll")" "${args[@]}"

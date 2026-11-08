@@ -1,0 +1,144 @@
+{
+  "recorded_at_utc": "2026-11-08T14:34:29.106637+00:00",
+  "host": "win11",
+  "environment": "CLANG64",
+  "root": "/e/codex-dotnet10/mmi-embedded.EQ38n3",
+  "scope": "Current PowerShell dependency MMI3 property-value and reference/array ownership port",
+  "packages": {
+    "mingw-w64-clang-x86_64-dotnet-mmi3": "3.0.0-3",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing": "8.0.31-4"
+  },
+  "baseline": {
+    "package_version": "3.0.0-2",
+    "command": "bash tests/mmi-cim-wmi/check-embedded-values.sh baseline /clang64/lib/dotnet/library-packs --baseline",
+    "exit_code": 0,
+    "reproduced": [
+      "embedded scalar getter NotImplementedException",
+      "cached primitive array alias and mutation",
+      "stale IsValueModified flags",
+      "Reference rejected because native value was tagged Instance"
+    ],
+    "compiler_input": "tests/mmi-cim-wmi/embedded-baseline-consumer-20261108.cs",
+    "compiler_input_sha256": "5ca46deb35ce0b5fd498e415a7a96dc6ef2737aacf5ef6b70daa99b4a763a81c",
+    "log": "tests/mmi-cim-wmi/embedded-baseline-results-20261108.txt"
+  },
+  "native_empty_array_probe": {
+    "compile_command": "clang -std=c11 -Wall -Wextra -Werror tests/mmi-cim-wmi/check-empty-arrays.c -lmi -o native-empty-array-verified.exe",
+    "run_command": "./native-empty-array-verified.exe",
+    "exit_code": 0,
+    "observed_MI_results": {
+      "add_nonempty": 0,
+      "set_empty_nonnull_data": 1,
+      "set_empty_null_data": 0,
+      "add_empty_null_data": 0
+    },
+    "log": "tests/mmi-cim-wmi/embedded-native-empty-array-results-20261108.txt"
+  },
+  "Windows_builtin_MMI_baseline": {
+    "command": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File probe-memory-flags.ps1",
+    "exit_code": 0,
+    "observed": "Borrow and Adopt are present on standalone properties; stored instance property flags are None and values are copied",
+    "log": "tests/mmi-cim-wmi/embedded-windows-memory-flags-results-20261108.txt",
+    "not_used_to_build_or_run_source_port": true
+  },
+  "build": {
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "exit_code": 0,
+    "published_API_declarations_verified": 512,
+    "native_MOF_checks": 31,
+    "property_checks": 222,
+    "existing_local_credentials_callbacks_streams_timeouts_XML_async_lifetime_and_capability_gates_passed": true,
+    "log": "tests/mmi-cim-wmi/embedded-package-results-20261108.txt"
+  },
+  "installed_validation": {
+    "commands": [
+      "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-mmi3-3.0.0-3-any.pkg.tar.zst",
+      "bash mingw-w64-dotnet-mmi3/check-embedded-values.sh installed-embedded",
+      "bash tests/mmi-cim-wmi/check-events.sh installed-extrinsic",
+      "bash tests/mmi-cim-wmi/check-events.sh installed-intrinsic --intrinsic"
+    ],
+    "exit_code": 0,
+    "property_checks": 222,
+    "extrinsic_provider_event_checks": 23,
+    "intrinsic_provider_event_checks": 21,
+    "source_archive_and_implementation_byte_comparisons_passed": true,
+    "log": "tests/mmi-cim-wmi/embedded-installed-results-20261108.txt"
+  },
+  "verified": [
+    "independent Instance,Reference,InstanceArray,ReferenceArray reads and native type tags",
+    "mutation/disposal isolation and lifetime after parent/source disposal",
+    "parent session metadata propagation",
+    "fresh native reads observe edits made through other wrappers",
+    "IsValueModified updates preserve key data and refresh flags",
+    "all 16 native array types distinguish empty and NULL and preserve CLR array type",
+    "SInt16Array maps to short[]",
+    "managed temporary string/array buffer cleanup and Borrow/Adopt copy semantics",
+    "CIM type validation in standalone properties and setters",
+    "100 repeated embedded retrieval/disposal iterations with compacting GC",
+    "real Win32_ProcessStartTrace and intrinsic __InstanceCreationEvent/Win32_Process delivery over default and explicit DCOM",
+    "real TargetInstance survives outer-event/session disposal and GC"
+  ],
+  "not_verified": [
+    "PowerShell application rebuild with MMI3 3.0.0-3 (installed PowerShell7.4.20-4 bundles3.0.0-2)",
+    "remote CIM/WSMan and explicit authentication",
+    "provider-origin extended semantic callbacks and streamed methods",
+    "broader MOF/provider behavior and full native ownership audit",
+    "UCRT64 execution of this revision"
+  ],
+  "artifacts": {
+    "package_sha256": "34e221d40de8558ed4eef4e57fb7ee5b548775390a83ec6bb091591405578bef",
+    "package_bytes": 124897,
+    "installed_source_archive_sha256": "7324ebb6ca8317df39033e2c41ad3777ad11340ed3fb4ff1bcc1da528fad490a",
+    "baseline_compiler_input_sha256": "5ca46deb35ce0b5fd498e415a7a96dc6ef2737aacf5ef6b70daa99b4a763a81c",
+    "makepkg_exit_code": 0,
+    "installed_validation_exit_code": 0
+  },
+  "temporary_build_cleanup": {
+    "removed_root": "/e/codex-dotnet10/mmi-embedded.EQ38n3",
+    "logical_bytes_removed": 51052703,
+    "installed_source_package_retained": true
+  },
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-dotnet-mmi3/.SRCINFO": "c2dd431bbf59700485783c17bf8493a1328bdc3c3b0a6749d3d447312a4ee36f",
+    "mingw-w64-dotnet-mmi3/.gitignore": "3f6fd27338cce0784e9236e1ad6b2e92f2bf967bf661aa33c27072d3324ae83d",
+    "mingw-w64-dotnet-mmi3/0001-validate-native-handles.patch": "438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330",
+    "mingw-w64-dotnet-mmi3/0002-accept-empty-operation-callbacks.patch": "7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6",
+    "mingw-w64-dotnet-mmi3/0003-implement-timeouts-and-xml-serialization.patch": "eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7",
+    "mingw-w64-dotnet-mmi3/0004-native-result-callbacks-and-operation-lifetime.patch": "168583e2346114afad7cbda70ac071cfeec667cc9c07f2da9af1274324d2da14",
+    "mingw-w64-dotnet-mmi3/0005-native-destination-and-proxy-credentials.patch": "6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a",
+    "mingw-w64-dotnet-mmi3/0006-extended-callbacks-and-operation-options-clone.patch": "613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3",
+    "mingw-w64-dotnet-mmi3/0007-streamed-method-results-and-native-wrapper-ownership.patch": "26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93",
+    "mingw-w64-dotnet-mmi3/0008-mof-includes-offsets-and-ownership.patch": "f79f676a9cd94a3936f12ca61387a9fc205a1e484780105a8ed4280d067d8e8a",
+    "mingw-w64-dotnet-mmi3/0009-own-property-values-and-reference-types.patch": "23296471a29a7264c3f4d24e7f46520b285906eda50a57336643e07c0254e78f",
+    "mingw-w64-dotnet-mmi3/EmbeddedValueChecks.cs": "34f15bf046a989d3aa6e407486f5620432db7d061b81d83fd41b144c8b3b4063",
+    "mingw-w64-dotnet-mmi3/ExpectedApi.json": "cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49",
+    "mingw-w64-dotnet-mmi3/Friend.cs": "d24a547c8ff3405e1d17866e62bfd956842d567a9ee1df8736e0450e1042238c",
+    "mingw-w64-dotnet-mmi3/Identity.cs": "728d7c047167bd152f1c362cb4544e43fe6d87a1f576bd8088c19530d77db00c",
+    "mingw-w64-dotnet-mmi3/InspectApi.cs": "4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e",
+    "mingw-w64-dotnet-mmi3/MicrosoftShared.pubkey.hex": "8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed",
+    "mingw-w64-dotnet-mmi3/MmiCredentialChecks.cs": "6b8cdfbaade97c0d950c91ae5ff2c9fe31e21a68b2a6488231cb3f35ef6522e6",
+    "mingw-w64-dotnet-mmi3/MmiExtendedCallbackChecks.cs": "30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42",
+    "mingw-w64-dotnet-mmi3/MmiPortChecks.cs": "1d5e52f7cc0f9b25a223ea25b98c11d4da0d77557fa0222a0d014ffc4fc96305",
+    "mingw-w64-dotnet-mmi3/MmiProbe.cs": "818c61cd5354a8df48b4f2d7a1b7ce0efd5e4a501eb00c430e04c683bf1f9f1f",
+    "mingw-w64-dotnet-mmi3/MmiStreamChecks.cs": "9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b",
+    "mingw-w64-dotnet-mmi3/MofChecks.cs": "1b05606a97330b9dff1b19735033aae834774aabe862574953ff8bbd9330abda",
+    "mingw-w64-dotnet-mmi3/NativeDependencies.cs": "d747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad",
+    "mingw-w64-dotnet-mmi3/PKGBUILD": "4696a9b19d4000def906ab240147c16a32fdbf2db8808bd41ab8990fed6ac3e0",
+    "mingw-w64-dotnet-mmi3/README.md": "50bd635af1cd8e1b3c67ac8b41532f4c019ee47b4ff4628f8ac542c622d33e9a",
+    "mingw-w64-dotnet-mmi3/check-api.sh": "ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef",
+    "mingw-w64-dotnet-mmi3/check-credential-abi.c": "15db2b46ad99adb211565b916fbf37a98ee8d26cca5040ccc6d6518076bfa120",
+    "mingw-w64-dotnet-mmi3/check-embedded-values.sh": "1f96269de1810094c1541bf576271461675490d8dc462203192880d1df550251",
+    "mingw-w64-dotnet-mmi3/check-extended-callbacks.c": "9841df264a70e1a8c6da34c2ae157b47ab4227b0bb49d15fc44a58e1b4af13c0",
+    "mingw-w64-dotnet-mmi3/check-mof.sh": "ff1bbce78326cfd7c09f82baf538e545b693e37b30f52e0c12709d31938db882",
+    "mingw-w64-dotnet-mmi3/check-streamed-results.c": "90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f",
+    "mingw-w64-dotnet-mmi3/check.sh": "720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553",
+    "mingw-w64-dotnet-mmi3/prepare.py": "0d5439f4ae05d7620c975eae6e96eb0840a0c01bfb1159630c048d345f56ad32",
+    "tests/mmi-cim-wmi/EventDelivery.cs": "32c08d85ad4a658a5283f2bddeba4c33f78eee3044dd02f7f7d09f7e5413aad3",
+    "tests/mmi-cim-wmi/check-events.sh": "8180b860a5c8c635fa2dea9024bb7da552948d5bcb1546253f896bda4f66aacd",
+    "tests/mmi-cim-wmi/check-empty-arrays.c": "9767f0651cc239a3cfdcee2433bf8ce6db338edb15fe99263aea4f5f56232a15",
+    "tests/mmi-cim-wmi/probe-memory-flags.ps1": "10e7e5d7dff5652f14eccd3a67ae8910ddf71ea1eb20fa46bc579a58e0759f50",
+    "tests/mmi-cim-wmi/embedded-baseline-consumer-20261108.cs": "5ca46deb35ce0b5fd498e415a7a96dc6ef2737aacf5ef6b70daa99b4a763a81c"
+  }
+}
