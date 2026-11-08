@@ -133,7 +133,8 @@
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
       "previous_experimental_recipe": "mingw-w64-dotnet-mmi",
       "public_api_declarations_verified": 512,
-      "metadata_ownership_evidence": "tests/mmi-cim-wmi/metadata-package-results-20261108.json"
+      "metadata_ownership_evidence": "tests/mmi-cim-wmi/metadata-package-results-20261108.json",
+      "real_provider_integration_evidence": "tests/mmi-provider/results-20261108.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -1341,13 +1342,12 @@
         "explicit authentication",
         "remote CIM/WSMan",
         "broader MOF schema/encoding/error semantics",
-        "provider-origin extended semantic callback integration",
-        "provider-origin streamed method parameter integration",
         "remote/provider-specific event behavior beyond local process trace and intrinsic creation events",
         "complete native ownership and internal API/behavior audit",
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "Real compiled MI provider: 116 default/DCOM callback/reply/stream/lifetime/fault/cancellation checks per CLANG64/UCRT64 environment; original Invoke-CimMethod passes24 checks in each STA/MTA mode; provider namespace/COM/host cleanup verified (tests/mmi-provider/results-20261108.json)",
         "PowerShell7.4.20-6 bundles source MMI3 3.0.0-4 and passes13 MOF,34 embedded/event and25 native delivery storage/interval/clone checks in each STA and MTA (tests/powershell-mmi/delivery-integration-results-20261108.json)",
         "138 native subscription delivery constructor/credential/string/number/timestamp/duration/interval/clone/disposal checks; real native credential storage replaces the no-op (tests/mmi-cim-wmi/delivery-package-results-20261108.json)",
         "PowerShell7.4.20-5 bundles source MMI3 3.0.0-3 and passes13 MOF plus34 embedded/reference/array/flags/lifetime/real intrinsic event-cmdlet checks in each STA and MTA (tests/powershell-mmi/embedded-integration-results-20261108.json)",
@@ -1374,7 +1374,8 @@
         "fresh exact-version3.0.0 installed feed and same-process MMI3/WMI integration",
         "original source PowerShell7.4.20/CimCmdlets local queries/classes/GetOwner/errors/CIM serialization and same-runspace WMI/GC"
       ],
-      "actual_powershell_integration_evidence": "tests/powershell-deps/powershell-core-results-20261027.txt"
+      "actual_powershell_integration_evidence": "tests/powershell-mmi/metadata-integration-results-20261108.json",
+      "provider_PowerShell_integration_evidence": "tests/mmi-provider/results-20261108.json"
     },
     {
       "component": "System.Management native helper",
@@ -36813,6 +36814,33 @@
         "MTA"
       ],
       "full_dependency_goal_complete": false,
+      "binary_published": false
+    },
+    "mmi_real_provider_callbacks_streams": {
+      "evidence": "tests/mmi-provider/results-20261108.json",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "mmi_package_version": "3.0.0-5",
+      "powershell_package_version": "7.4.20-7",
+      "native_mi_h_client_passed": true,
+      "managed_checks_per_environment": 116,
+      "original_InvokeCimMethod_checks_per_mode_per_environment": 24,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "local_transports": [
+        "default",
+        "explicit DCOM"
+      ],
+      "temporary_provider_namespace_COM_and_host_removed": true,
+      "autorecover_and_WinRM_unchanged": true,
+      "provider_Context_Canceled_native_result": 7,
+      "provider_stream_abort_after_client_cancellation_verified": true,
+      "authenticated_remote_CIM_WSMan_verified": false,
+      "complete": false,
       "binary_published": false
     }
   }

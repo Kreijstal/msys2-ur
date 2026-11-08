@@ -1,0 +1,41 @@
+#pragma namespace ( "\\\\.\\root\\MSYS2_MmiPort_8377fbdda67e419db1218bbbf47460d9")
+
+
+
+Instance of __Win32Provider as $prov
+
+{
+
+ Name = "MSYS2_MmiProvider_8377fbdda67e419db1218bbbf47460d9";
+
+ ClsId = "{DB424206-1494-4B7C-B126-8F71BD435FAE}";
+
+ ImpersonationLevel = 1;
+
+ HostingModel = "Decoupled:Com:FoldIdentity(True)";
+
+ securityDescriptor="O:BAG:BAD:(A;;0x1;;;BA)";
+
+ version=0x40000001;
+
+};
+
+
+
+Instance of __MethodProviderRegistration
+
+{
+
+ Provider = $prov;
+
+};
+
+
+
+[dynamic: ToInstance, provider("MSYS2_MmiProvider_8377fbdda67e419db1218bbbf47460d9"): ToInstance]
+class MSYS2_MmiPortProbe
+{
+	[implemented, static] uint32 Pump([in] uint32 Mode, [stream: DisableOverride ToSubClass, out] string Text[], [stream: DisableOverride ToSubClass, out] uint32 Numbers[], [out] boolean PromptAccepted);
+};
+
+Successfully registered the provider.

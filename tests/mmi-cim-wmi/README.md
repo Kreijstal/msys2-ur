@@ -1,5 +1,27 @@
 # MMI / CIM / WMI source ports and checks
 
+## Actual provider-origin callbacks and method streams (2026-11-08)
+
+The installed MMI3 **3.0.0-5** and PowerShell **7.4.20-7** passed a new compiled
+MI provider harness in CLANG64 and UCRT64. An independent `mi.h` client and
+**116 managed checks per environment** exercise real default/DCOM provider
+message/progress/prompt/error callbacks, Yes/No replies, string/UInt32 streams,
+final results, retained copies, compacting GC, callback/observer exceptions and
+cancellation cleanup. The original `Invoke-CimMethod` cmdlet passed **24 checks
+in each STA/MTA mode**, including warning/error records and streamed objects.
+
+The provider verifies bounded stream rejection after client cancellation. Its
+native `MI_Context_Canceled` query returns `MI_RESULT_NOT_SUPPORTED (7)` in this
+configuration; cancellation flag delivery is not claimed. An independent audit
+found no leftover fixture namespace, COM CLSID or host process. Autorecovery and
+WinRM remained unchanged.
+
+[Reproduction instructions](../mmi-provider/README.md) and
+[commands, input hashes, initial harness failures, final logs and cleanup](../mmi-provider/results-20261108.json)
+record this local provider coverage. Authenticated remote CIM/WSMan, broader
+providers/transports, MOF behavior and the complete native ownership audit remain
+open. Earlier records below retain their original scope and versions.
+
 ## Native metadata-view allocation cleanup (2026-11-08)
 
 MMI3 **3.0.0-5** adds automatic cleanup for internal qualifier-set and

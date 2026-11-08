@@ -1,5 +1,21 @@
 # PowerShell integration of source MMI3
 
+## Original cmdlet with a real MI provider (2026-11-08)
+
+The installed **7.4.20-7** console now also passes the real provider integration
+gate in both CLANG64 and UCRT64. Original `Invoke-CimMethod` emits the provider's
+Unicode warning/error records, five string/UInt32 streamed objects and one final
+result. **24 checks per STA/MTA mode** verify default and explicit DCOM sessions,
+copied value lifetime and bundled source MMI bytes. A native client and separate
+managed consumer establish provider callbacks/replies, exceptions, cancellation
+and callback-root cleanup (116 managed checks per environment).
+
+[Provider harness instructions](../mmi-provider/README.md) and
+[exact evidence](../mmi-provider/results-20261108.json) include the native
+cancellation-query limitation and verified namespace/COM/host cleanup. Remote
+authentication and the broader compatibility gates remain open; this does not
+mark the full dependency goal complete.
+
 ## Metadata-view cleanup: PowerShell 7.4.20-7 (2026-11-08)
 
 PowerShell **7.4.20-7** bundles **MMI3 3.0.0-5**, including automatic cleanup of

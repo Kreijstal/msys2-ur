@@ -1,0 +1,204 @@
+{
+  "recorded_at_utc": "2026-11-08T16:52:43.910188+00:00",
+  "host": "win11",
+  "scope": "Actual native Windows MI provider traffic through installed source MMI3 3.0.0-5 and original PowerShell 7.4.20-7",
+  "package_versions": {
+    "MMI3": "3.0.0-5",
+    "PowerShell": "7.4.20-7",
+    "SDK": "8.0.131-5",
+    "runtime": "8.0.31-4"
+  },
+  "environments": {
+    "clang64": {
+      "command": "MSYSTEM=CLANG64 bash -lc \"bash tests/mmi-provider/check.sh NEW_OUTPUT\"",
+      "exit_code": 0,
+      "compiler_flags": "clang -std=c11 -Wall -Wextra -Werror",
+      "fresh_installed_feed_consumer_build": true,
+      "native_client_passed": true,
+      "managed_checks": 116,
+      "PowerShell_checks_per_mode": {
+        "STA": 24,
+        "MTA": 24
+      },
+      "log": "tests/mmi-provider/evidence/accepted-clang64.txt",
+      "detail_root": "tests/mmi-provider/evidence/accepted-clang64",
+      "results": {
+        "state": {
+          "namespace": "root/MSYS2_MmiPort_b2daaf37c61a4cf0b05caeb7cf397c07",
+          "provider": "MSYS2_MmiProvider_b2daaf37c61a4cf0b05caeb7cf397c07",
+          "provider_clsid": "{D1F3BD59-D4AA-4935-B427-B8DF4543A933}",
+          "registration_exit": 0,
+          "native_exit": 0,
+          "managed_exit": 0,
+          "powershell_exits": [
+            0,
+            0
+          ],
+          "host_exit": 0,
+          "namespace_removed": true,
+          "com_keys_removed": [
+            "{D1F3BD59-D4AA-4935-B427-B8DF4543A933}"
+          ],
+          "cleanup_errors": [],
+          "autorecover_unchanged": true,
+          "winrm_unchanged": true,
+          "complete": true
+        },
+        "managed_checks": 116,
+        "powershell_checks_per_mode": {
+          "STA": 24,
+          "MTA": 24
+        },
+        "provider_stream_writes_aborted_by_client_cancellation": 2,
+        "provider_Context_Canceled_result": "MI_RESULT_NOT_SUPPORTED (7) for this native decoupled local provider",
+        "MMI_source_archive_sha256": "adb8f1b3bb3981344fd1d98897e57cd0528022d6dba25012793e96547c42362c",
+        "MMI_DLL_sha256": "3591b2643a53c70ea026365848b1b04b98fdc0c2368f1a77421fe5436e08cddc",
+        "fixture_binary_sha256": {
+          "provider.dll": "203b4b7894d432af1d2d9d645941f131edd06e3054ffd63be6b54447e7ae9482",
+          "provider-host.exe": "43b3e26b373298f7355fc231bc4baa20af479a3410f5014d28bb4eebec56227a",
+          "native-client.exe": "13699a4ea72222f74fa86601a93405b7d643a96462583c7be779f9cba6f591bd",
+          "consumer/bin/Release/net8.0/Check.dll": "b38787bbd5b9621c359c38d6e5f2998314e7da59b40570a29a118d1323271271"
+        },
+        "authenticated_remote_CIM_WSMan_verified": false,
+        "full_dependency_goal_complete": false
+      }
+    },
+    "ucrt64": {
+      "command": "MSYSTEM=UCRT64 bash -lc \"bash tests/mmi-provider/check.sh NEW_OUTPUT\"",
+      "exit_code": 0,
+      "compiler_flags": "clang -std=c11 -Wall -Wextra -Werror",
+      "fresh_installed_feed_consumer_build": true,
+      "native_client_passed": true,
+      "managed_checks": 116,
+      "PowerShell_checks_per_mode": {
+        "STA": 24,
+        "MTA": 24
+      },
+      "log": "tests/mmi-provider/evidence/accepted-ucrt64.txt",
+      "detail_root": "tests/mmi-provider/evidence/accepted-ucrt64",
+      "results": {
+        "state": {
+          "namespace": "root/MSYS2_MmiPort_47b8227cab2f4043913ab7964c1cda74",
+          "provider": "MSYS2_MmiProvider_47b8227cab2f4043913ab7964c1cda74",
+          "provider_clsid": "{391E78BE-D902-405D-A07E-E2C77AFABB13}",
+          "registration_exit": 0,
+          "native_exit": 0,
+          "managed_exit": 0,
+          "powershell_exits": [
+            0,
+            0
+          ],
+          "host_exit": 0,
+          "namespace_removed": true,
+          "com_keys_removed": [
+            "{391E78BE-D902-405D-A07E-E2C77AFABB13}"
+          ],
+          "cleanup_errors": [],
+          "autorecover_unchanged": true,
+          "winrm_unchanged": true,
+          "complete": true
+        },
+        "managed_checks": 116,
+        "powershell_checks_per_mode": {
+          "STA": 24,
+          "MTA": 24
+        },
+        "provider_stream_writes_aborted_by_client_cancellation": 2,
+        "provider_Context_Canceled_result": "MI_RESULT_NOT_SUPPORTED (7) for this native decoupled local provider",
+        "MMI_source_archive_sha256": "951e89fe692e4502c5412b1c5cd8954f77b9f230d58020802fbcbf265a117528",
+        "MMI_DLL_sha256": "99f0dab991ddb2db5ae10b18d179575143a79b213ebdbfbc1c85559fca930163",
+        "fixture_binary_sha256": {
+          "provider.dll": "3748b4d1bed2b95bd458487932a8f9c866c038af2812adad7b9db8ead940c70a",
+          "provider-host.exe": "4e03638d775d6d3730274d2946c26379a6f5c79160b4e58c9bae033bc18084f8",
+          "native-client.exe": "6e88b6b2640521d204877aaae23ee20b961614a43f7b06572778d33f3c3aa843",
+          "consumer/bin/Release/net8.0/Check.dll": "6fb564bc816a806acd9d3ab2c9568a648486aa65276e534584b001b8d56ef105"
+        },
+        "authenticated_remote_CIM_WSMan_verified": false,
+        "full_dependency_goal_complete": false
+      }
+    }
+  },
+  "verified": [
+    "Independent compiled mi.h client receives one prompt/warning/progress/error, two streamed array chunks and one final result",
+    "Managed default/DCOM sessions observe Yes/No prompt and error replies, Unicode payloads and five streamed items",
+    "Cloned error and copied stream lifetime after callback/operation/session disposal and compacting GC",
+    "Real provider prompt/error/observer exceptions retain original exception identity and release native callback roots",
+    "CancellationToken produces one OperationCanceledException, no completion and zero native callback-root/cleanup failures",
+    "Provider uses bounded follow-up writes to verify server-side stream rejection after client cancellation",
+    "Original Invoke-CimMethod emits provider warning/error records, five streamed objects and one final object in both STA and MTA",
+    "All fixture namespaces, fresh COM CLSIDs and owned host processes removed; autorecovery and WinRM unchanged"
+  ],
+  "stream_types_with_real_provider": [
+    "StringArray",
+    "UInt32Array"
+  ],
+  "synthetic_all_type_ABI_tests_are_separate": true,
+  "native_limitation": "MI_Context_Canceled returns MI_RESULT_NOT_SUPPORTED (7) for the tested native decoupled local provider. Cancellation flag delivery is not claimed. Client cancellation and rejected provider stream writes are verified.",
+  "initial_harness_corrections": [
+    {
+      "problem": "Registrar required GetProviderClassID/COM adapter exports",
+      "evidence": "tests/mmi-provider/evidence/provider-run.txt"
+    },
+    {
+      "problem": "Native final method property is ReturnValue; source schema names MIReturn. Cache process handles before fast children exit to read exit codes reliably",
+      "evidence": "tests/mmi-provider/evidence/provider-run3.txt"
+    },
+    {
+      "problem": "Strict provider cancellation-flag assertion encountered native MI_RESULT_NOT_SUPPORTED (7)",
+      "evidence": "tests/mmi-provider/evidence/final-ucrt64.txt"
+    },
+    {
+      "problem": "Initial chunk acknowledgement can race with cancellation; bounded subsequent writes prove actual server stream rejection",
+      "evidence": "tests/mmi-provider/evidence/verified-ucrt64.txt"
+    }
+  ],
+  "independent_cleanup_audit": {
+    "remaining_fixture_namespaces": [],
+    "fixture_CLSIDs_checked": [
+      "{DB424206-1494-4B7C-B126-8F71BD435FAE}",
+      "{D1F3BD59-D4AA-4935-B427-B8DF4543A933}",
+      "{391E78BE-D902-405D-A07E-E2C77AFABB13}",
+      "{24B276CC-4A4D-4CF9-94B3-6F8EEE1B8171}",
+      "{34D86CE5-591F-4679-8C98-7DB712F3C058}",
+      "{35C0E926-9AC9-4F9D-BBE6-DB7B0B9CB6C6}",
+      "{F186495A-B38F-4ED2-96E1-4D67E9B21FD4}",
+      "{283E664B-56AD-4CEB-AFF3-7AC19F347489}",
+      "{B07753C7-19C6-4F67-9482-B0D7AD39CEB3}",
+      "{C41B9880-FE1C-4C6A-840D-D53456D17E2B}",
+      "{6A4755FD-3E69-445E-B675-55C2900F08B7}"
+    ],
+    "remaining_fixture_CLSIDs": [],
+    "remaining_owned_host_processes": [],
+    "WinRM_state": "Stopped",
+    "WinRM_start_mode": "Manual"
+  },
+  "cleanup_audit_evidence": "tests/mmi-provider/evidence/cleanup-audit.json",
+  "inputs_sha256": {
+    "tests/mmi-provider/build-consumer.sh": "0b065539339a3fe8724c5480ba0f4ab991f36bb44a513748d2e2f1cdf1163f91",
+    "tests/mmi-provider/check.sh": "08024fdfbad57ad499d0c322da7e190d9d3bb161d587ea354035a81f87e7c599",
+    "tests/mmi-provider/native-client.c": "77ca361335f1d33f22c3ee5ce3f224112ebeab079697fa3ff9d308c282643fd2",
+    "tests/mmi-provider/PowerShellProvider.ps1": "539e76a26d411a776d7e8531d728eb26ab06c4aeaec6cdfa98d3aecfa1d3c787",
+    "tests/mmi-provider/provider.c": "e9a335f6ae141fd27645a5ae9c0d086f68ece1c8fa17c1adbd07cb822733fedc",
+    "tests/mmi-provider/provider.def": "98dbceb8605f3662a39de2d00a19802c34cc57f05463c3e97b9fe0ae37e83af6",
+    "tests/mmi-provider/ProviderChecks.cs": "bfaf1bd9890d0a5750e1a18f7da516d3330e7ff4af83ddd31250dcab78b1a96d",
+    "tests/mmi-provider/RunProvider.ps1": "7ef0d637f289778f055efc7311027c0c2e30d37b67411120503644d06c965f09",
+    "tests/mmi-provider/validate-results.py": "68f8ce9d667d20c31e7bf9beb2488bfa83c700f9c9ce43be9083450406374572"
+  },
+  "not_verified": [
+    "authenticated remote CIM/WSMan and explicit credential execution",
+    "other providers/transports and broader event-provider compatibility",
+    "complete native ownership/internal API/MOF behavior audit",
+    "remaining SqlClient and Windows.Compatibility gates"
+  ],
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "package_version_evidence": "tests/mmi-provider/evidence/package-versions.txt",
+  "final_compiled_C_and_managed_source_copies_verified_exact": true,
+  "temporary_file_cleanup": {
+    "removed_root": "/e/codex-dotnet10/mmi-provider.Q6yelQ",
+    "logical_bytes_removed": 8946711,
+    "installed_packages_retained": true,
+    "source_fixture_and_text_evidence_retained": true,
+    "provider_namespace_COM_host_cleanup_verified_before_file_removal": true
+  }
+}
