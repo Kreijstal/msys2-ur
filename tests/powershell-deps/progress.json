@@ -1338,11 +1338,12 @@
         "MOF and callback deserialization",
         "provider-origin extended semantic callback integration",
         "provider-origin streamed method parameter integration",
-        "event payload delivery",
+        "broader provider event coverage beyond local Win32_ProcessStartTrace",
         "complete native ownership and internal API/behavior audit",
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "real local Win32_ProcessStartTrace provider event delivery through default and explicit DCOM, retained payload after unsubscribe/session close/compacting GC and native callback-root cleanup (tests/mmi-cim-wmi/provider-event-results-20261108.json)",
         "local DCOM/default queries and errors",
         "native operation/session timeout conversion",
         "MI_XML instance/class serialization and deserialization",
@@ -36634,6 +36635,25 @@
     "completed_binary_packages_uploaded": 84,
     "source_bundles_uploaded": 139,
     "historical_toolchain_is_current_PowerShell_publication_blocker": false,
+    "full_dependency_goal_complete": false
+  },
+  "current_dependency_validation_20261108": {
+    "scope": "Current PowerShell 7.4.20 dependency packages; historical NETStandard toolchain reconstruction excluded",
+    "mmi_real_provider_events": {
+      "evidence": "tests/mmi-cim-wmi/provider-event-results-20261108.json",
+      "checks": 27,
+      "passed": true,
+      "provider": "Win32_ProcessStartTrace",
+      "transports": ["local default", "local explicit DCOM"],
+      "remote_WSMan_or_full_provider_compatibility_proven": false
+    },
+    "sqlclient_real_database_harness": {
+      "evidence": "tests/sqlclient-realdb/build-results-20261108.json",
+      "installed_source_package_build_passed": true,
+      "real_SQL_Server_execution_passed": false,
+      "pending": "Test server; user answer about accepting SQL Server Developer EULA",
+      "EULA_accepted_or_engine_started": false
+    },
     "full_dependency_goal_complete": false
   }
 }

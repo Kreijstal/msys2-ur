@@ -1,5 +1,21 @@
 # MMI / CIM / WMI source ports and checks
 
+## Real provider event delivery (2026-11-08)
+
+`bash tests/mmi-cim-wmi/check-events.sh NEW_OUTPUT` now verifies real local
+`Win32_ProcessStartTrace` events from child processes owned by the test. Both
+default and explicit DCOM passed **27 checks** using installed MMI3 3.0.0-1 and
+.NET 8.0.31-4. The harness verifies the restored archive and implementation bytes
+against the installed source package, forces compacting GC in the observer,
+unsubscribes twice, checks native callback-root cleanup, closes the session and
+then reads the retained event payload. See
+[results and scope](provider-event-results-20261108.json) and
+[build/runtime log](provider-event-results-20261108.txt).
+
+This establishes delivery and ownership for that local provider. Remote WSMan,
+other providers, extended semantic callbacks and streamed method results still
+need integration coverage. Older dated reports below retain their original scope.
+
 Latest user-requested installed-package retest (2026-11-01T08:01:09.806333+00:00): **7/7 passed** with fresh consumers on PowerShell 7.4.20-3, MMI3 3.0.0-1, System.Management 8.0.0-2 and .NET 8.0.31-4. All 47 harness files match the repository. [Exact commands, exit codes and logs](installed-retest-results-20261101-080109Z.txt). Remote authentication, provider coverage and complete ownership compatibility remain open.
 
 Latest user-requested installed-package retest (2026-10-31T14:45:40.198965+00:00): **7/7 passed** with fresh consumers on PowerShell 7.4.20-3, MMI3 3.0.0-1, System.Management 8.0.0-2 and .NET 8.0.31-4. All 47 harness files match the repository. [Exact commands, exit codes and logs](installed-retest-results-20261031-144540Z.txt). Remote authentication, provider coverage and complete ownership compatibility remain open.
