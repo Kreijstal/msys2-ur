@@ -1,0 +1,234 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 20:01:06 +0100
+Subject: [PATCH 15/18] MinGW: replace MSVC-only constructs
+
+- std::exception(const char*) is an MSVC extension, use runtime_error
+- std::wstring vs wxString in ?: needs an explicit wxString
+- <Shlobj_core.h> does not exist in mingw-w64, <shlobj.h> does
+- MinGW lacks strptime like MSVC, use the existing fallback
+- avrdude: mingw-w64 has gettimeofday in <sys/time.h>
+- Button: WM_GETDLGCODE needs <windows.h>
+- libstdc++ std::thread handles are winpthreads pthread_t
+- __try/__except is MSVC-only
+---
+ bundled_deps/avrdude/avrdude/avr.c          |  2 +-
+ bundled_deps/avrdude/avrdude/stk500v2.c     |  2 +-
+ src/libslic3r/Thread.cpp                    |  5 +++++
+ src/libslic3r/Time.cpp                      |  6 +++---
+ src/slic3r/GUI/BackgroundSlicingProcess.cpp |  9 +++++++++
+ src/slic3r/GUI/ConfigWizard.cpp             |  2 +-
+ src/slic3r/GUI/UserAccountCommunication.cpp | 10 +++++-----
+ src/slic3r/GUI/Widgets/Button.cpp           |  3 +++
+ src/slic3r/Utils/AppUpdater.cpp             |  2 +-
+ src/slic3r/Utils/OctoPrint.cpp              |  2 +-
+ src/slic3r/Utils/PrusaConnect.cpp           |  2 +-
+ 11 files changed, 31 insertions(+), 14 deletions(-)
+
+diff --git a/bundled_deps/avrdude/avrdude/avr.c b/bundled_deps/avrdude/avrdude/avr.c
+index defae75..72d55cc 100644
+--- a/bundled_deps/avrdude/avrdude/avr.c
++++ b/bundled_deps/avrdude/avrdude/avr.c
+@@ -27,7 +27,7 @@
+ #include <string.h>
+ #include <time.h>
+ 
+-#if !defined(WIN32NATIVE)
++#if !defined(WIN32NATIVE) || defined(__MINGW32__)
+ #  include <sys/time.h>
+ #endif
+ 
+diff --git a/bundled_deps/avrdude/avrdude/stk500v2.c b/bundled_deps/avrdude/avrdude/stk500v2.c
+index 33bdf8e..75a4ede 100644
+--- a/bundled_deps/avrdude/avrdude/stk500v2.c
++++ b/bundled_deps/avrdude/avrdude/stk500v2.c
+@@ -46,7 +46,7 @@
+ #include <unistd.h>
+ #include <time.h>
+ 
+-#if !defined(WIN32NATIVE)
++#if !defined(WIN32NATIVE) || defined(__MINGW32__)
+ #  include <sys/time.h>
+ #endif
+ 
+diff --git a/src/libslic3r/Thread.cpp b/src/libslic3r/Thread.cpp
+index 04a3492..ecbe147 100644
+--- a/src/libslic3r/Thread.cpp
++++ b/src/libslic3r/Thread.cpp
+@@ -112,7 +112,12 @@ static bool WindowsSetThreadName(HANDLE hThread, const char *thread_name)
+ 
+ bool set_thread_name(std::thread &thread, const char *thread_name)
+ {
++#if defined(__MINGW32__) && !defined(_LIBCPP_VERSION)
++    // libstdc++ std::thread is a winpthreads pthread_t
++   	return WindowsSetThreadName(pthread_gethandle(thread.native_handle()), thread_name);
++#else
+    	return WindowsSetThreadName(static_cast<HANDLE>(thread.native_handle()), thread_name);
++#endif
+ }
+ 
+ bool set_thread_name(boost::thread &thread, const char *thread_name)
+diff --git a/src/libslic3r/Time.cpp b/src/libslic3r/Time.cpp
+index e987d8e..b4a3ed1 100644
+--- a/src/libslic3r/Time.cpp
++++ b/src/libslic3r/Time.cpp
+@@ -10,7 +10,7 @@
+ #include <ctime>
+ #include <locale>
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ #include <map>
+ #endif
+ 
+@@ -42,8 +42,8 @@ namespace __get_put_time_emulation {
+ // compile or do not pass the tests on the build server. If we switch to newer
+ // compilers, this namespace can be deleted with all its content.
+ 
+-#ifdef _MSC_VER
+-// VS2019 implementation fails with ISO8601Z_TIME_FMT.
++#ifdef _WIN32
++// MinGW has no strptime either. VS2019 implementation fails with ISO8601Z_TIME_FMT.
+ // VS2019 does not have std::strptime either. See bug:
+ // https://developercommunity.visualstudio.com/content/problem/140618/c-stdget-time-not-parsing-correctly.html
+ 
+diff --git a/src/slic3r/GUI/BackgroundSlicingProcess.cpp b/src/slic3r/GUI/BackgroundSlicingProcess.cpp
+index e8c2bc7..4cdbb98 100644
+--- a/src/slic3r/GUI/BackgroundSlicingProcess.cpp
++++ b/src/slic3r/GUI/BackgroundSlicingProcess.cpp
+@@ -331,11 +331,16 @@ static void rethrow_seh_exception(unsigned long win32_seh_catched)
+ unsigned long BackgroundSlicingProcess::call_process_seh(std::exception_ptr &ex) throw()
+ {
+ 	unsigned long win32_seh_catched = 0;
++#ifdef _MSC_VER
+ 	__try {
+ 		this->call_process(ex);
+ 	} __except (is_win32_seh_harware_exception(GetExceptionCode())) {
+ 		win32_seh_catched = GetExceptionCode();
+ 	}
++#else
++	// no __try/__except in GCC: hardware exceptions crash as on Linux
++	this->call_process(ex);
++#endif
+ 	return win32_seh_catched;
+ }
+ void BackgroundSlicingProcess::call_process_seh_throw(std::exception_ptr &ex) throw()
+@@ -374,11 +379,15 @@ void BackgroundSlicingProcess::call_process(std::exception_ptr &ex) throw()
+ unsigned long BackgroundSlicingProcess::thread_proc_safe_seh() throw()
+ {
+ 	unsigned long win32_seh_catched = 0;
++#ifdef _MSC_VER
+ 	__try {
+ 		this->thread_proc_safe();
+ 	} __except (is_win32_seh_harware_exception(GetExceptionCode())) {
+ 		win32_seh_catched = GetExceptionCode();
+ 	}
++#else
++	this->thread_proc_safe();
++#endif
+ 	return win32_seh_catched;
+ }
+ void BackgroundSlicingProcess::thread_proc_safe_seh_throw() throw()
+diff --git a/src/slic3r/GUI/ConfigWizard.cpp b/src/slic3r/GUI/ConfigWizard.cpp
+index 97fb0ec..02048e7 100644
+--- a/src/slic3r/GUI/ConfigWizard.cpp
++++ b/src/slic3r/GUI/ConfigWizard.cpp
+@@ -42,7 +42,7 @@
+ #ifdef WIN32
+ #include <wx/msw/registry.h>
+ #include <KnownFolders.h>
+-#include <Shlobj_core.h>
++#include <shlobj.h>
+ #endif // WIN32
+ 
+ #ifdef _MSW_DARK_MODE
+diff --git a/src/slic3r/GUI/UserAccountCommunication.cpp b/src/slic3r/GUI/UserAccountCommunication.cpp
+index 6cdc4ea..642f495 100644
+--- a/src/slic3r/GUI/UserAccountCommunication.cpp
++++ b/src/slic3r/GUI/UserAccountCommunication.cpp
+@@ -957,27 +957,27 @@ std::string CodeChalengeGenerator::sha256(const std::string& input)
+     std::string         output;
+ 
+     if (!CryptAcquireContext(&prov_handle, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+-        throw std::exception("CryptAcquireContext failed.");
++        throw std::runtime_error("CryptAcquireContext failed.");
+     }
+     if (!CryptCreateHash(prov_handle, CALG_SHA_256, 0, 0, &hash_handle)) {
+         CryptReleaseContext(prov_handle, 0);
+-        throw std::exception("CryptCreateHash failed.");
++        throw std::runtime_error("CryptCreateHash failed.");
+     }
+     if (!CryptHashData(hash_handle, reinterpret_cast<const BYTE*>(input.c_str()), input.length(), 0)) {
+         CryptDestroyHash(hash_handle);
+         CryptReleaseContext(prov_handle, 0);
+-        throw std::exception("CryptCreateHash failed.");
++        throw std::runtime_error("CryptCreateHash failed.");
+     }
+     if (!CryptGetHashParam(hash_handle, HP_HASHSIZE, reinterpret_cast<BYTE*>(&hash_size), &buffer_size, 0)) {
+         CryptDestroyHash(hash_handle);
+         CryptReleaseContext(prov_handle, 0);
+-        throw std::exception("CryptGetHashParam HP_HASHSIZE failed.");
++        throw std::runtime_error("CryptGetHashParam HP_HASHSIZE failed.");
+     }
+     output.resize(hash_size);
+     if (!CryptGetHashParam(hash_handle, HP_HASHVAL, reinterpret_cast<BYTE*>(&output[0]), &hash_size, 0)) {
+         CryptDestroyHash(hash_handle);
+         CryptReleaseContext(prov_handle, 0);
+-        throw std::exception("CryptGetHashParam HP_HASHVAL failed.");
++        throw std::runtime_error("CryptGetHashParam HP_HASHVAL failed.");
+     }
+     return output;
+ }
+diff --git a/src/slic3r/GUI/Widgets/Button.cpp b/src/slic3r/GUI/Widgets/Button.cpp
+index 10e2819..2be164b 100644
+--- a/src/slic3r/GUI/Widgets/Button.cpp
++++ b/src/slic3r/GUI/Widgets/Button.cpp
+@@ -3,6 +3,9 @@
+ #include <wx/dcgraph.h>
+ #include <wx/dc.h>
+ #include <wx/dcclient.h>
++#ifdef __WIN32__
++#include <wx/msw/wrapwin.h>
++#endif
+ 
+ BEGIN_EVENT_TABLE(Button, StaticBox)
+ 
+diff --git a/src/slic3r/Utils/AppUpdater.cpp b/src/slic3r/Utils/AppUpdater.cpp
+index 4c7976f..a8259a4 100644
+--- a/src/slic3r/Utils/AppUpdater.cpp
++++ b/src/slic3r/Utils/AppUpdater.cpp
+@@ -28,7 +28,7 @@
+ 
+ #ifdef _WIN32
+ #include <shellapi.h>
+-#include <Shlobj_core.h>
++#include <shlobj.h>
+ #include <windows.h>
+ #include <KnownFolders.h>
+ #include <shlobj.h>
+diff --git a/src/slic3r/Utils/OctoPrint.cpp b/src/slic3r/Utils/OctoPrint.cpp
+index 2c84e29..861922d 100644
+--- a/src/slic3r/Utils/OctoPrint.cpp
++++ b/src/slic3r/Utils/OctoPrint.cpp
+@@ -751,7 +751,7 @@ bool PrusaLink::get_storage(wxArrayString& storage_path, wxArrayString& storage_
+                 if (path && (!available || *available)) {
+                     StorageInfo si;
+                     si.path = boost::nowide::widen(*path);
+-                    si.name = name ? boost::nowide::widen(*name) : wxString();
++                    si.name = name ? wxString(boost::nowide::widen(*name)) : wxString();
+                     // If read_only is missing, assume it is NOT read only.
+                     // si.read_only = read_only ? *read_only : false; // version without "ro"
+                     si.read_only = (read_only ? *read_only : (ro ? *ro : false));
+diff --git a/src/slic3r/Utils/PrusaConnect.cpp b/src/slic3r/Utils/PrusaConnect.cpp
+index a916cd0..2c7134e 100644
+--- a/src/slic3r/Utils/PrusaConnect.cpp
++++ b/src/slic3r/Utils/PrusaConnect.cpp
+@@ -257,7 +257,7 @@ bool PrusaConnectNew::get_storage(wxArrayString& storage_path, wxArrayString& st
+                     if (path && (!available || *available)) {
+                         StorageInfo si;
+                         si.path = boost::nowide::widen(*path);
+-                        si.name = name ? boost::nowide::widen(*name) : wxString();
++                        si.name = name ? wxString(boost::nowide::widen(*name)) : wxString();
+                         // If read_only is missing, assume it is NOT read only.
+                         // si.read_only = read_only ? *read_only : false; // version without "ro"
+                         si.read_only = (read_only ? *read_only : (ro ? *ro : false));

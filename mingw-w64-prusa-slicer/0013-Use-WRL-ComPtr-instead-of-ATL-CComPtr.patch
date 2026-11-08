@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 20:01:06 +0100
+Subject: [PATCH 13/18] Use WRL ComPtr instead of ATL CComPtr
+
+ATL is not part of mingw-w64; <wrl/client.h> is, and MSVC has it too.
+---
+ src/slic3r/GUI/RemovableDriveManager.cpp | 15 +++++++--------
+ src/slic3r/GUI/SendSystemInfoDialog.cpp  |  6 +++---
+ 2 files changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/src/slic3r/GUI/RemovableDriveManager.cpp b/src/slic3r/GUI/RemovableDriveManager.cpp
+index 304e9ab..cad4412 100644
+--- a/src/slic3r/GUI/RemovableDriveManager.cpp
++++ b/src/slic3r/GUI/RemovableDriveManager.cpp
+@@ -24,8 +24,7 @@
+ #include <devpkey.h>
+ #include <usbioctl.h>
+ 
+-#include <atlbase.h>
+-#include <atlcom.h>
++#include <wrl/client.h>
+ #include <shldisp.h>
+ #else
+ // unix, linux & OSX includes
+@@ -605,26 +604,26 @@ bool eject_inner(const std::string& path)
+ {
+ 	std::wstring wpath = boost::nowide::widen(path);
+ 	CoInitialize(nullptr);
+-	CComPtr<IShellDispatch> pShellDisp;
+-	HRESULT hr = pShellDisp.CoCreateInstance(CLSID_Shell, nullptr, CLSCTX_INPROC_SERVER);
++	Microsoft::WRL::ComPtr<IShellDispatch> pShellDisp;
++	HRESULT hr = CoCreateInstance(CLSID_Shell, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(pShellDisp.GetAddressOf()));
+ 	if (!SUCCEEDED(hr)) {
+ 		BOOST_LOG_TRIVIAL(error) << GUI::format("Ejecting of %1% has failed: Attempt to get Shell pointer has failed.", path);
+ 		CoUninitialize();
+ 		return false;
+ 	}
+-	CComPtr<Folder> pFolder;
++	Microsoft::WRL::ComPtr<Folder> pFolder;
+ 	VARIANT vtDrives;
+ 	VariantInit(&vtDrives);
+ 	vtDrives.vt = VT_I4;
+ 	vtDrives.lVal = ssfDRIVES;
+-	hr = pShellDisp->NameSpace(vtDrives, &pFolder);
++	hr = pShellDisp->NameSpace(vtDrives, pFolder.GetAddressOf());
+ 	if (!SUCCEEDED(hr)) {
+ 		BOOST_LOG_TRIVIAL(error) << GUI::format("Ejecting of %1% has failed: Attempt to create Namespace has failed.", path);
+ 		CoUninitialize();
+ 		return false;
+ 	}
+-	CComPtr<FolderItem> pItem;
+-	hr = pFolder->ParseName(static_cast<BSTR>(const_cast<wchar_t*>(wpath.c_str())), &pItem);
++	Microsoft::WRL::ComPtr<FolderItem> pItem;
++	hr = pFolder->ParseName(static_cast<BSTR>(const_cast<wchar_t*>(wpath.c_str())), pItem.GetAddressOf());
+ 	if (!SUCCEEDED(hr)) {
+ 		BOOST_LOG_TRIVIAL(error) << GUI::format("Ejecting of %1% has failed: Attempt to Parse name has failed.", path);
+ 		CoUninitialize();
+diff --git a/src/slic3r/GUI/SendSystemInfoDialog.cpp b/src/slic3r/GUI/SendSystemInfoDialog.cpp
+index 0845799..85d53f7 100644
+--- a/src/slic3r/GUI/SendSystemInfoDialog.cpp
++++ b/src/slic3r/GUI/SendSystemInfoDialog.cpp
+@@ -42,7 +42,7 @@
+ #ifdef _WIN32
+     #include <windows.h>
+     #include <netlistmgr.h>
+-    #include <atlbase.h>
++    #include <wrl/client.h>
+     #include <Iphlpapi.h>
+     #pragma comment(lib, "iphlpapi.lib")
+ #elif __APPLE__
+@@ -149,8 +149,8 @@ static bool check_internet_connection_win()
+ 
+     if (SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))) {
+         {
+-            CComPtr<INetworkListManager> pNLM;
+-            if (pNLM.CoCreateInstance(CLSID_NetworkListManager) == S_OK) {
++            Microsoft::WRL::ComPtr<INetworkListManager> pNLM;
++            if (CoCreateInstance(CLSID_NetworkListManager, nullptr, CLSCTX_ALL, IID_PPV_ARGS(pNLM.GetAddressOf())) == S_OK) {
+                 NLM_CONNECTIVITY status;
+                 pNLM->GetConnectivity(&status);
+                 internet = (status & (NLM_CONNECTIVITY_IPV4_INTERNET | NLM_CONNECTIVITY_IPV6_INTERNET));

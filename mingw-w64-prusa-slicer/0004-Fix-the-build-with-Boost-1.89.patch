@@ -1,0 +1,36 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 18:37:14 +0100
+Subject: [PATCH 04/18] Fix the build with Boost 1.89
+
+From Arch Linux prusa-slicer, boost-1.89.patch.
+---
+ CMakeLists.txt               | 2 +-
+ src/slic3r/Utils/Bonjour.cpp | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 57b60ea..b2c1fb0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -370,7 +370,7 @@ endif()
+ # boost::process was introduced first in version 1.64.0,
+ # boost::beast::detail::base64 was introduced first in version 1.66.0
+ set(MINIMUM_BOOST_VERSION "1.83.0")
+-set(_boost_components "system;filesystem;thread;log;locale;regex;chrono;atomic;date_time;iostreams;nowide")
++set(_boost_components "filesystem;thread;log;locale;regex;chrono;atomic;date_time;iostreams;nowide")
+ find_package(Boost ${MINIMUM_BOOST_VERSION} REQUIRED COMPONENTS ${_boost_components})
+ 
+ find_package(Eigen3 3.3.7 REQUIRED)
+diff --git a/src/slic3r/Utils/Bonjour.cpp b/src/slic3r/Utils/Bonjour.cpp
+index b07c855..553eb41 100644
+--- a/src/slic3r/Utils/Bonjour.cpp
++++ b/src/slic3r/Utils/Bonjour.cpp
+@@ -16,6 +16,7 @@
+ #include <boost/format.hpp>
+ #include <boost/log/trivial.hpp>
+ #include <boost/bind/bind.hpp>
++#include <boost/asio/deadline_timer.hpp>
+ 
+ using boost::optional;
+ using boost::system::error_code;

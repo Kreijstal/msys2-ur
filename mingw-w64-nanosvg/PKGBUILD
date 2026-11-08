@@ -1,0 +1,40 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=nanosvg
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+# fltk fork, which adds nsvgRasterizeXY(); the commit PrusaSlicer pins
+_commit=abcd277ea45e9098bed752cf9c6875b533c0892f
+pkgver=0.r166.gabcd277e
+pkgrel=1
+pkgdesc="Simple stupid SVG parser and rasterizer, fltk fork (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64' 'mingw64')
+url='https://github.com/fltk/nanosvg'
+msys2_repository_url='https://github.com/fltk/nanosvg'
+msys2_references=(
+  'archlinux: nanosvg'
+)
+license=('spdx:Zlib')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+options=('staticlibs')
+source=("${_realname}-${_commit}.tar.gz::https://github.com/fltk/nanosvg/archive/${_commit}.tar.gz")
+sha256sums=('700f6c7b246a9d132fdc061f167df20b87312bc6d9bc2fc68034b1ad7cd24307')
+
+build() {
+  # the library has no export annotations; it is built static
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -S "${_realname}-${_commit}" -B "build-${MSYSTEM}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}"
+
+  cmake --build "build-${MSYSTEM}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install "build-${MSYSTEM}"
+
+  install -Dm644 "${_realname}-${_commit}/LICENSE.txt" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.txt"
+}

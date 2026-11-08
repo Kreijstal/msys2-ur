@@ -1,0 +1,164 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 19:58:02 +0100
+Subject: [PATCH 12/18] Add includes that MSVC's precompiled headers provided
+
+GCodeProcessor and utils use std::fstream, BlacklistedLibraryCheck uses
+std::find and boost, Process wxFileName, BitmapCache and wxExtensions
+wxDisplay, Notebook the sizers, WinRegistry std::vector, and wlanapi.h
+needs windows.h first.
+---
+ src/libslic3r/BlacklistedLibraryCheck.cpp | 5 +++++
+ src/libslic3r/GCode/GCodeProcessor.cpp    | 1 +
+ src/libslic3r/Utils/DirectoriesUtils.cpp  | 1 +
+ src/libslic3r/utils.cpp                   | 1 +
+ src/slic3r/GUI/BitmapCache.cpp            | 2 ++
+ src/slic3r/GUI/Notebook.hpp               | 1 +
+ src/slic3r/GUI/RemovableDriveManager.cpp  | 1 +
+ src/slic3r/GUI/wxExtensions.cpp           | 1 +
+ src/slic3r/Utils/Process.cpp              | 1 +
+ src/slic3r/Utils/WifiScanner.hpp          | 1 +
+ src/slic3r/Utils/WinRegistry.cpp          | 5 +++++
+ 11 files changed, 20 insertions(+)
+
+diff --git a/src/libslic3r/BlacklistedLibraryCheck.cpp b/src/libslic3r/BlacklistedLibraryCheck.cpp
+index 1e3a8d5..e9bc658 100644
+--- a/src/libslic3r/BlacklistedLibraryCheck.cpp
++++ b/src/libslic3r/BlacklistedLibraryCheck.cpp
+@@ -5,6 +5,11 @@
+ ///|/
+ #include "BlacklistedLibraryCheck.hpp"
+ 
++#include <algorithm>
++
++#include <boost/filesystem/path.hpp>
++#include <boost/nowide/convert.hpp>
++
+ #ifdef  WIN32
+ #include <psapi.h>
+ # endif //WIN32
+diff --git a/src/libslic3r/GCode/GCodeProcessor.cpp b/src/libslic3r/GCode/GCodeProcessor.cpp
+index 10c6676..775978e 100644
+--- a/src/libslic3r/GCode/GCodeProcessor.cpp
++++ b/src/libslic3r/GCode/GCodeProcessor.cpp
+@@ -24,6 +24,7 @@
+ #include <boost/algorithm/string/trim.hpp>
+ 
+ #include <float.h>
++#include <fstream>
+ #include <assert.h>
+ 
+ #if __has_include(<charconv>)
+diff --git a/src/libslic3r/Utils/DirectoriesUtils.cpp b/src/libslic3r/Utils/DirectoriesUtils.cpp
+index 6842573..4065b3a 100644
+--- a/src/libslic3r/Utils/DirectoriesUtils.cpp
++++ b/src/libslic3r/Utils/DirectoriesUtils.cpp
+@@ -3,6 +3,7 @@
+ 
+ #include <boost/filesystem/path.hpp>
+ #include <boost/log/trivial.hpp>
++#include <boost/nowide/convert.hpp>
+ 
+ #if defined(_WIN32)
+ 
+diff --git a/src/libslic3r/utils.cpp b/src/libslic3r/utils.cpp
+index fac7870..eea6828 100644
+--- a/src/libslic3r/utils.cpp
++++ b/src/libslic3r/utils.cpp
+@@ -8,6 +8,7 @@
+ #include "I18N.hpp"
+ 
+ #include <atomic>
++#include <fstream>
+ #include <locale>
+ #include <ctime>
+ #include <cstdarg>
+diff --git a/src/slic3r/GUI/BitmapCache.cpp b/src/slic3r/GUI/BitmapCache.cpp
+index 4d59473..fbf4b41 100644
+--- a/src/slic3r/GUI/BitmapCache.cpp
++++ b/src/slic3r/GUI/BitmapCache.cpp
+@@ -10,6 +10,8 @@
+ #include "GUI.hpp"
+ #include "GUI_Utils.hpp"
+ 
++#include <wx/display.h>
++
+ #include <boost/filesystem.hpp>
+ #include <boost/nowide/cstdio.hpp>
+ #include <boost/algorithm/string/replace.hpp>
+diff --git a/src/slic3r/GUI/Notebook.hpp b/src/slic3r/GUI/Notebook.hpp
+index 62b722f..648737d 100644
+--- a/src/slic3r/GUI/Notebook.hpp
++++ b/src/slic3r/GUI/Notebook.hpp
+@@ -8,6 +8,7 @@
+ #ifdef _WIN32
+ 
+ #include <wx/bookctrl.h>
++#include <wx/sizer.h>
+ 
+ class ScalableButton;
+ 
+diff --git a/src/slic3r/GUI/RemovableDriveManager.cpp b/src/slic3r/GUI/RemovableDriveManager.cpp
+index 9573d38..304e9ab 100644
+--- a/src/slic3r/GUI/RemovableDriveManager.cpp
++++ b/src/slic3r/GUI/RemovableDriveManager.cpp
+@@ -3,6 +3,7 @@
+ ///|/ PrusaSlicer is released under the terms of the AGPLv3 or higher
+ ///|/
+ #include "RemovableDriveManager.hpp"
++#include "format.hpp"
+ #include "libslic3r/Platform.hpp"
+ #include <libslic3r/libslic3r.h>
+ 
+diff --git a/src/slic3r/GUI/wxExtensions.cpp b/src/slic3r/GUI/wxExtensions.cpp
+index 5e5b277..0ed8c1e 100644
+--- a/src/slic3r/GUI/wxExtensions.cpp
++++ b/src/slic3r/GUI/wxExtensions.cpp
+@@ -10,6 +10,7 @@
+ 
+ #include <wx/sizer.h>
+ #include <wx/accel.h>
++#include <wx/display.h>
+ 
+ #include <boost/algorithm/string/replace.hpp>
+ #include <boost/log/trivial.hpp>
+diff --git a/src/slic3r/Utils/Process.cpp b/src/slic3r/Utils/Process.cpp
+index af4f0d8..b9e2e17 100644
+--- a/src/slic3r/Utils/Process.cpp
++++ b/src/slic3r/Utils/Process.cpp
+@@ -25,6 +25,7 @@
+     #include <boost/process/args.hpp>
+ #endif
+ 
++#include <wx/filename.h>
+ #include <wx/stdpaths.h>
+ 
+ namespace Slic3r {
+diff --git a/src/slic3r/Utils/WifiScanner.hpp b/src/slic3r/Utils/WifiScanner.hpp
+index 0223e2d..ea920fe 100644
+--- a/src/slic3r/Utils/WifiScanner.hpp
++++ b/src/slic3r/Utils/WifiScanner.hpp
+@@ -7,6 +7,7 @@
+ #include <wx/string.h>
+ 
+ #ifdef _WIN32
++#include <windows.h>
+ #include <wlanapi.h>
+ #endif //_WIN32
+ 
+diff --git a/src/slic3r/Utils/WinRegistry.cpp b/src/slic3r/Utils/WinRegistry.cpp
+index 221101a..212e30d 100644
+--- a/src/slic3r/Utils/WinRegistry.cpp
++++ b/src/slic3r/Utils/WinRegistry.cpp
+@@ -4,6 +4,11 @@
+ ///|/
+ #include "WinRegistry.hpp"
+ 
++#include <cassert>
++#include <vector>
++
++#include <boost/algorithm/string/predicate.hpp>
++
+ #ifdef _WIN32
+ #include <shlobj.h>
+ #include <wincrypt.h>

@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 21:49:08 +0100
+Subject: [PATCH 18/18] MinGW: use the system hidapi like Linux does
+
+---
+ bundled_deps/hidapi/CMakeLists.txt | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/bundled_deps/hidapi/CMakeLists.txt b/bundled_deps/hidapi/CMakeLists.txt
+index d6f76bf..6802360 100644
+--- a/bundled_deps/hidapi/CMakeLists.txt
++++ b/bundled_deps/hidapi/CMakeLists.txt
+@@ -1,4 +1,9 @@
+-if (WIN32)
++if (MINGW)
++    find_package(PkgConfig REQUIRED)
++    pkg_check_modules(HIDAPI REQUIRED IMPORTED_TARGET hidapi)
++    add_library(hidapi INTERFACE)
++    target_link_libraries(hidapi INTERFACE PkgConfig::HIDAPI)
++elseif (WIN32)
+     set(HIDAPI_IMPL win/hid.c)
+ 
+     add_library(hidapi STATIC ${HIDAPI_IMPL})

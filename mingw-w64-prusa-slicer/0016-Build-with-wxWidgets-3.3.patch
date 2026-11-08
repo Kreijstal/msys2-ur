@@ -1,0 +1,40 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 20:56:32 +0100
+Subject: [PATCH 16/18] Build with wxWidgets 3.3
+
+wxString no longer converts implicitly from std::wstring, and a braced
+single pointer is ambiguous between StateHandler::attach overloads.
+---
+ src/slic3r/GUI/Search.cpp         | 4 ++--
+ src/slic3r/GUI/Widgets/Button.cpp | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/slic3r/GUI/Search.cpp b/src/slic3r/GUI/Search.cpp
+index 75de52b..41e8e99 100644
+--- a/src/slic3r/GUI/Search.cpp
++++ b/src/slic3r/GUI/Search.cpp
+@@ -251,8 +251,8 @@ bool OptionsSearcher::search(const std::string& search, bool force/* = false*/)
+     auto get_tooltip = [this, &sep](const Option& opt) -> wxString
+     {
+         return  marker_by_type(opt.type, printer_technology) +
+-                opt.category_local + sep +
+-                opt.group_local + sep + opt.label_local;
++                wxString(opt.category_local + sep +
++                         opt.group_local + sep + opt.label_local);
+     };
+ 
+     std::vector<uint16_t> matches, matches2;
+diff --git a/src/slic3r/GUI/Widgets/Button.cpp b/src/slic3r/GUI/Widgets/Button.cpp
+index 2be164b..d7148a9 100644
+--- a/src/slic3r/GUI/Widgets/Button.cpp
++++ b/src/slic3r/GUI/Widgets/Button.cpp
+@@ -49,7 +49,7 @@ Button::Button(wxWindow* parent, wxString text, wxString icon, long style, wxSiz
+ bool Button::Create(wxWindow* parent, wxString text, wxString icon, long style, wxSize iconSize/* = wxSize(16, 16)*/)
+ {
+     StaticBox::Create(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, style);
+-    state_handler.attach({&text_color});
++    state_handler.attach(std::vector<StateColor const *>{&text_color});
+     state_handler.update_binds();
+     wxWindow::SetLabel(text);
+     if (!icon.IsEmpty()) {

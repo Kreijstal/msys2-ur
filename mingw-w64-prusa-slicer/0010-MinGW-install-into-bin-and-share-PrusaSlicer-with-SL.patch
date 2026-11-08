@@ -1,0 +1,97 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 18:51:13 +0100
+Subject: [PATCH 10/18] MinGW: install into bin/ and share/PrusaSlicer with
+ SLIC3R_FHS
+
+Without the MSVC deps tree, gmp, mpfr and WebView2Loader come from the
+system, so do not copy them next to the binaries.
+---
+ CMakeLists.txt                 | 12 +++++++++++-
+ src/CLI/Setup.cpp              |  3 +++
+ src/CMakeLists.txt             |  7 +++++--
+ tests/sla_print/CMakeLists.txt |  2 +-
+ 4 files changed, 20 insertions(+), 4 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 7021f3f..59ac530 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -580,6 +580,10 @@ endif ()
+ 
+ set(TOP_LEVEL_PROJECT_DIR ${PROJECT_SOURCE_DIR})
+ function(prusaslicer_copy_dlls target)
++    if (MINGW)
++        # gmp and mpfr are system DLLs
++        return()
++    endif ()
+     if ("${CMAKE_SIZEOF_VOID_P}" STREQUAL "8")
+         set(_bits 64)
+     elseif ("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
+@@ -626,7 +630,13 @@ if(SLIC3R_BUILD_TESTS)
+ endif()
+ 
+ 
+-if (WIN32)
++if (WIN32 AND SLIC3R_FHS)
++    # resources next to bin/, found relative to the executable
++    install(DIRECTORY ${SLIC3R_RESOURCES_DIR}/ DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/PrusaSlicer
++        PATTERN "*/udev" EXCLUDE
++    )
++    target_compile_definitions(PrusaSlicer PUBLIC SLIC3R_FHS)
++elseif (WIN32)
+     install(DIRECTORY "${SLIC3R_RESOURCES_DIR}/" DESTINATION "${CMAKE_INSTALL_PREFIX}/resources")
+ elseif (SLIC3R_FHS)
+     # CMAKE_INSTALL_FULL_DATAROOTDIR: read-only architecture-independent data root (share)
+diff --git a/src/CLI/Setup.cpp b/src/CLI/Setup.cpp
+index 82e03d4..5a02912 100644
+--- a/src/CLI/Setup.cpp
++++ b/src/CLI/Setup.cpp
+@@ -281,6 +281,9 @@ static bool setup_common()
+     // The application is packed in the .dmg archive as 'Slic3r.app/Contents/MacOS/Slic3r'
+     // The resources are packed to 'Slic3r.app/Contents/Resources'
+     boost::filesystem::path path_resources = boost::filesystem::canonical(path_to_binary).parent_path() / "../Resources";
++#elif defined _WIN32 && defined SLIC3R_FHS
++    // bin/ and share/PrusaSlicer below one prefix
++    boost::filesystem::path path_resources = path_to_binary.parent_path() / "../share/PrusaSlicer";
+ #elif defined _WIN32
+     // The application is packed in the .zip archive in the root,
+     // The resources are packed to 'resources'
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index ae7d061..8a1ad9b 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -245,7 +245,7 @@ if (WIN32)
+             COMMENT "Symlinking the resources directory into the build tree"
+             VERBATIM
+         )
+-        if (SLIC3R_GUI)
++        if (SLIC3R_GUI AND MSVC)
+             add_custom_command(TARGET PrusaSlicer POST_BUILD
+                 COMMAND ${CMAKE_COMMAND} -E copy
+                 "${wxWidgets_ROOT_DIR}/bin/WebView2Loader.dll"
+@@ -287,7 +287,10 @@ else ()
+ endif ()
+ 
+ # Slic3r binary install target
+-if (WIN32)
++if (WIN32 AND SLIC3R_FHS)
++    install(TARGETS PrusaSlicer PrusaSlicer_app_gui PrusaSlicer_app_console PrusaSlicer_app_gcodeviewer
++        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
++elseif (WIN32)
+     install(TARGETS PrusaSlicer RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+     if (MSVC)
+         install(TARGETS PrusaSlicer_app_gui RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}")
+diff --git a/tests/sla_print/CMakeLists.txt b/tests/sla_print/CMakeLists.txt
+index 26151ad..6d47b61 100644
+--- a/tests/sla_print/CMakeLists.txt
++++ b/tests/sla_print/CMakeLists.txt
+@@ -25,7 +25,7 @@ endif()
+ # catch_discover_tests(${_TEST_NAME}_tests TEST_PREFIX "${_TEST_NAME}: ")
+ add_test(${_TEST_NAME}_tests ${_TEST_NAME}_tests ${CATCH_EXTRA_ARGS})
+ 
+-if (WIN32)
++if (MSVC)
+     # Adds a post-build copy of libgmp-10.dll
+     add_custom_command(TARGET ${_TEST_NAME}_tests POST_BUILD
+           COMMAND ${CMAKE_COMMAND} -E copy_if_different

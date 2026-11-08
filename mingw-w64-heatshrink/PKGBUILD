@@ -1,0 +1,43 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=heatshrink
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=0.4.1
+pkgrel=1
+pkgdesc="Data compression library for embedded/real-time systems (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64' 'clang64' 'mingw64')
+url='https://github.com/atomicobject/heatshrink'
+msys2_repository_url='https://github.com/atomicobject/heatshrink'
+license=('spdx:ISC')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+# CMakeLists.txt and Config.cmake.in are PrusaSlicer's deps/+heatshrink build
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/atomicobject/heatshrink/archive/refs/tags/v${pkgver}.tar.gz"
+        "CMakeLists.txt"
+        "Config.cmake.in")
+sha256sums=('7529a1c8ac501191ad470b166773364e66d9926aad632690c72c63a1dea7e9a6'
+            '9f7aaebf9d7773733860ca45dc79165f5474a5319d0712812123a73adaf8e63e'
+            'ff8597c2e97dfc665b70eea84841511d6fc6efe1d875c16bb62025a4190f158f')
+
+prepare() {
+  cp CMakeLists.txt Config.cmake.in "${_realname}-${pkgver}/"
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -S "${_realname}-${pkgver}" -B "build-${MSYSTEM}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+    -DBUILD_SHARED_LIBS=ON
+
+  cmake --build "build-${MSYSTEM}"
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install "build-${MSYSTEM}"
+
+  install -Dm644 "${_realname}-${pkgver}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

@@ -1,0 +1,120 @@
+# Contributor: Kreijstal <elektrischrainbow@gmail.com>
+
+_realname=prusa-slicer
+pkgbase=mingw-w64-${_realname}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+pkgver=2.9.7
+pkgrel=1
+pkgdesc="G-code generator for 3D printers, Prusa fork of Slic3r (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://www.prusa3d.com/prusaslicer/'
+msys2_repository_url='https://github.com/prusa3d/PrusaSlicer'
+msys2_references=(
+  'archlinux: prusa-slicer'
+)
+license=('spdx:AGPL-3.0-only')
+# private wxWidgets headers whose classes the wx DLLs export but MSYS2 does
+# not install; must match the wx version built against
+_wxver=3.3.4
+depends=("${MINGW_PACKAGE_PREFIX}-boost-libs"
+         "${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-expat"
+         "${MINGW_PACKAGE_PREFIX}-glew"
+         "${MINGW_PACKAGE_PREFIX}-gmp"
+         "${MINGW_PACKAGE_PREFIX}-heatshrink"
+         "${MINGW_PACKAGE_PREFIX}-hidapi"
+         "${MINGW_PACKAGE_PREFIX}-imath"
+         "${MINGW_PACKAGE_PREFIX}-libjpeg-turbo"
+         "${MINGW_PACKAGE_PREFIX}-libpng"
+         "${MINGW_PACKAGE_PREFIX}-mpfr"
+         "${MINGW_PACKAGE_PREFIX}-nlopt"
+         "${MINGW_PACKAGE_PREFIX}-opencascade"
+         "${MINGW_PACKAGE_PREFIX}-openvdb"
+         "${MINGW_PACKAGE_PREFIX}-tbb"
+         "${MINGW_PACKAGE_PREFIX}-webview2-loader"
+         "${MINGW_PACKAGE_PREFIX}-wxwidgets3.3-msw-libs"
+         "${MINGW_PACKAGE_PREFIX}-z3"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-catch"
+             "${MINGW_PACKAGE_PREFIX}-cereal"
+             "${MINGW_PACKAGE_PREFIX}-cgal"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-eigen3"
+             "${MINGW_PACKAGE_PREFIX}-libbgcode"
+             "${MINGW_PACKAGE_PREFIX}-nanosvg"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-nlohmann-json"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-qhull"
+             "${MINGW_PACKAGE_PREFIX}-wxwidgets3.3-msw")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/prusa3d/PrusaSlicer/archive/version_${pkgver}.tar.gz"
+        "wx-markuptext.h::https://raw.githubusercontent.com/wxWidgets/wxWidgets/v${_wxver}/include/wx/generic/private/markuptext.h"
+        "wx-markupparser.h::https://raw.githubusercontent.com/wxWidgets/wxWidgets/v${_wxver}/include/wx/private/markupparser.h"
+        "wx-comptr.h::https://raw.githubusercontent.com/wxWidgets/wxWidgets/v${_wxver}/include/wx/msw/private/comptr.h"
+        "wx-wrl-event.h::https://raw.githubusercontent.com/wxWidgets/wxWidgets/v${_wxver}/include/wx/msw/wrl/event.h"
+        "0001-Fix-the-build-with-newer-Boost.patch"
+        "0002-Fix-the-build-with-newer-CGAL.patch"
+        "0003-Fix-the-build-with-Boost-1.88.patch"
+        "0004-Fix-the-build-with-Boost-1.89.patch"
+        "0005-Fix-the-tests-with-Catch2-3.x.patch"
+        "0006-Accept-Eigen-5.patch"
+        "0007-Use-the-system-FindOpenVDB.cmake.patch"
+        "0008-Link-the-OpenCASCADE-7.8-DE-toolkit.patch"
+        "0009-Link-the-NanoSVG-library-instead-of-compiling-it-int.patch"
+        "0010-MinGW-install-into-bin-and-share-PrusaSlicer-with-SL.patch"
+        "0011-libigl-replace-DynamicSparseMatrix-removed-in-Eigen-.patch"
+        "0012-Add-includes-that-MSVC-s-precompiled-headers-provide.patch"
+        "0013-Use-WRL-ComPtr-instead-of-ATL-CComPtr.patch"
+        "0014-WebView2-helpers-build-without-MSVC-s-wrl-event.h.patch"
+        "0015-MinGW-replace-MSVC-only-constructs.patch"
+        "0016-Build-with-wxWidgets-3.3.patch"
+        "0017-MinGW-link-the-libraries-MSVC-pulls-in-with-pragma-c.patch"
+        "0018-MinGW-use-the-system-hidapi-like-Linux-does.patch")
+sha256sums=('SKIP')
+
+prepare() {
+  install -Dm644 wx-markuptext.h wxpriv/wx/generic/private/markuptext.h
+  install -Dm644 wx-markupparser.h wxpriv/wx/private/markupparser.h
+  install -Dm644 wx-comptr.h wxpriv/wx/msw/private/comptr.h
+  install -Dm644 wx-wrl-event.h wxpriv/wx/msw/wrl/event.h
+
+  cd "PrusaSlicer-version_${pkgver}"
+  local _patch
+  for _patch in "${srcdir}"/00*.patch; do
+    patch -Np1 -i "${_patch}"
+  done
+}
+
+build() {
+  # after the installed wx headers, so only the missing private ones come from here
+  CXXFLAGS+=" -idirafter $(cygpath -m "${srcdir}/wxpriv")"
+
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+  cmake -S "PrusaSlicer-version_${pkgver}" -B "build-${MSYSTEM}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}" \
+    -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+    -DCMAKE_MODULE_PATH="$(cygpath -m "${MINGW_PREFIX}")/lib/cmake/OpenVDB" \
+    -DSLIC3R_STATIC=OFF \
+    -DBoost_USE_STATIC_LIBS=OFF \
+    -DSLIC3R_FHS=ON \
+    -DSLIC3R_PCH=OFF \
+    -DSLIC3R_BUILD_TESTS=ON
+
+  cmake --build "build-${MSYSTEM}"
+}
+
+check() {
+  ctest --test-dir "build-${MSYSTEM}" --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install "build-${MSYSTEM}"
+
+  install -Dm644 "PrusaSlicer-version_${pkgver}/LICENSE" "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

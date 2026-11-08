@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 21:49:08 +0100
+Subject: [PATCH 17/18] MinGW: link the libraries MSVC pulls in with #pragma
+ comment
+
+bcrypt, iphlpapi, setupapi, shlwapi for the GUI, imm32 for imgui, and
+Boost.Nowide for admesh (MSVC's Boost autolinking). Link qhullcpp with
+qhullstatic_r on Windows, the qhull_r DLL does not export qset.
+---
+ bundled_deps/admesh/CMakeLists.txt | 2 +-
+ bundled_deps/imgui/CMakeLists.txt  | 4 ++++
+ src/CMakeLists.txt                 | 3 ++-
+ src/libslic3r/CMakeLists.txt       | 4 ++++
+ src/slic3r/CMakeLists.txt          | 2 ++
+ 5 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/bundled_deps/admesh/CMakeLists.txt b/bundled_deps/admesh/CMakeLists.txt
+index cfe5f85..5742a33 100644
+--- a/bundled_deps/admesh/CMakeLists.txt
++++ b/bundled_deps/admesh/CMakeLists.txt
+@@ -12,5 +12,5 @@ add_library(admesh STATIC
+ )
+ 
+ target_include_directories(admesh PUBLIC .)
+-target_link_libraries(admesh PRIVATE boost_headeronly localesutils)
++target_link_libraries(admesh PRIVATE boost_headeronly Boost::nowide localesutils)
+ target_link_libraries(admesh PUBLIC Eigen3::Eigen)
+diff --git a/bundled_deps/imgui/CMakeLists.txt b/bundled_deps/imgui/CMakeLists.txt
+index 32eb464..3f03804 100644
+--- a/bundled_deps/imgui/CMakeLists.txt
++++ b/bundled_deps/imgui/CMakeLists.txt
+@@ -19,3 +19,7 @@ add_library(imgui STATIC
+ )
+ 
+ target_include_directories(imgui PUBLIC .)
++
++if (MINGW)
++    target_link_libraries(imgui PRIVATE imm32)
++endif ()
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 8a1ad9b..dedffce 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -4,7 +4,8 @@ project(PrusaSlicer-native)
+ add_subdirectory(clipper)
+ find_package(Qhull 7.2 REQUIRED)
+ add_library(qhull INTERFACE)
+-if(SLIC3R_STATIC)
++# qhullcpp needs qhullstatic_r: the qhull_r DLL does not export the qset functions
++if(SLIC3R_STATIC OR WIN32)
+     slic3r_remap_configs("Qhull::qhullcpp;Qhull::qhullstatic_r" RelWithDebInfo Release)
+     target_link_libraries(qhull INTERFACE Qhull::qhullcpp Qhull::qhullstatic_r)
+ else()
+diff --git a/src/libslic3r/CMakeLists.txt b/src/libslic3r/CMakeLists.txt
+index 6620dab..70380d0 100644
+--- a/src/libslic3r/CMakeLists.txt
++++ b/src/libslic3r/CMakeLists.txt
+@@ -674,6 +674,10 @@ endif()
+ if(WIN32)
+     target_link_libraries(libslic3r PUBLIC Psapi.lib)
+ endif()
++if(MINGW)
++    # Boost.Asio, autolinked by MSVC
++    target_link_libraries(libslic3r PUBLIC ws2_32 mswsock)
++endif()
+ 
+ if (APPLE)
+     # This flag prevents the need for minimum SDK version 10.14
+diff --git a/src/slic3r/CMakeLists.txt b/src/slic3r/CMakeLists.txt
+index 71efa5d..e27bfa0 100644
+--- a/src/slic3r/CMakeLists.txt
++++ b/src/slic3r/CMakeLists.txt
+@@ -473,6 +473,8 @@ target_link_libraries(
+ 
+ if (MSVC)
+     target_link_libraries(libslic3r_gui PUBLIC Setupapi.lib)
++elseif (MINGW)
++    target_link_libraries(libslic3r_gui PUBLIC bcrypt iphlpapi setupapi shlwapi)
+ elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+     target_link_libraries(libslic3r_gui PUBLIC
+         ${DBus1_LIBRARIES}

@@ -1,0 +1,61 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 19:57:41 +0100
+Subject: [PATCH 11/18] libigl: replace DynamicSparseMatrix, removed in Eigen 5
+
+SparseMatrix has the same coeffRef/reserve interface; current libigl
+did the same.
+---
+ bundled_deps/libigl/igl/diag.cpp       | 4 ++--
+ bundled_deps/libigl/igl/slice.cpp      | 2 +-
+ bundled_deps/libigl/igl/slice_into.cpp | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/bundled_deps/libigl/igl/diag.cpp b/bundled_deps/libigl/igl/diag.cpp
+index d293826..7b71f6d 100644
+--- a/bundled_deps/libigl/igl/diag.cpp
++++ b/bundled_deps/libigl/igl/diag.cpp
+@@ -72,7 +72,7 @@ IGL_INLINE void igl::diag(
+   Eigen::SparseMatrix<T>& X)
+ {
+   // clear and resize output
+-  Eigen::DynamicSparseMatrix<T, Eigen::RowMajor> dyn_X(V.size(),V.size());
++  Eigen::SparseMatrix<T, Eigen::RowMajor> dyn_X(V.size(),V.size());
+   dyn_X.reserve(V.size());
+   // loop over non-zeros
+   for(typename Eigen::SparseVector<T>::InnerIterator it(V); it; ++it)
+@@ -89,7 +89,7 @@ IGL_INLINE void igl::diag(
+ {
+   assert(V.rows() == 1 || V.cols() == 1);
+   // clear and resize output
+-  Eigen::DynamicSparseMatrix<T, Eigen::RowMajor> dyn_X(V.size(),V.size());
++  Eigen::SparseMatrix<T, Eigen::RowMajor> dyn_X(V.size(),V.size());
+   dyn_X.reserve(V.size());
+   // loop over non-zeros
+   for(int i = 0;i<V.size();i++)
+diff --git a/bundled_deps/libigl/igl/slice.cpp b/bundled_deps/libigl/igl/slice.cpp
+index df3a8e9..a258981 100644
+--- a/bundled_deps/libigl/igl/slice.cpp
++++ b/bundled_deps/libigl/igl/slice.cpp
+@@ -51,7 +51,7 @@ IGL_INLINE void igl::slice(
+     CI[C(i)].push_back(i);
+   }
+   // Resize output
+-  Eigen::DynamicSparseMatrix<TY, Eigen::RowMajor> dyn_Y(ym,yn);
++  Eigen::SparseMatrix<TY, Eigen::RowMajor> dyn_Y(ym,yn);
+   // Take a guess at the number of nonzeros (this assumes uniform distribution
+   // not banded or heavily diagonal)
+   dyn_Y.reserve((X.nonZeros()/(X.rows()*X.cols())) * (ym*yn));
+diff --git a/bundled_deps/libigl/igl/slice_into.cpp b/bundled_deps/libigl/igl/slice_into.cpp
+index aa12d93..7bc39a2 100644
+--- a/bundled_deps/libigl/igl/slice_into.cpp
++++ b/bundled_deps/libigl/igl/slice_into.cpp
+@@ -34,7 +34,7 @@ IGL_INLINE void igl::slice_into(
+ #endif
+ 
+   // create temporary dynamic sparse matrix
+-  Eigen::DynamicSparseMatrix<T, Eigen::RowMajor>  dyn_Y(Y);
++  Eigen::SparseMatrix<T, Eigen::RowMajor>  dyn_Y(Y);
+   // Iterate over outside
+   for(int k=0; k<X.outerSize(); ++k)
+   {

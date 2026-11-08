@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Kreijstal <elektrischrainbow@gmail.com>
+Date: Sat, 7 Nov 2026 18:49:02 +0100
+Subject: [PATCH 08/18] Link the OpenCASCADE 7.8+ DE toolkit
+
+---
+ src/occt_wrapper/CMakeLists.txt | 32 +++-----------------------------
+ 1 file changed, 3 insertions(+), 29 deletions(-)
+
+diff --git a/src/occt_wrapper/CMakeLists.txt b/src/occt_wrapper/CMakeLists.txt
+index f6df6e7..b26ecde 100644
+--- a/src/occt_wrapper/CMakeLists.txt
++++ b/src/occt_wrapper/CMakeLists.txt
+@@ -19,35 +19,9 @@ include(GenerateExportHeader)
+ 
+ generate_export_header(OCCTWrapper)
+ 
+-find_package(OpenCASCADE 7.6.1 REQUIRED)
+-
+-set(OCCT_LIBS
+-    TKXDESTEP
+-    TKSTEP
+-    TKSTEP209
+-    TKSTEPAttr
+-    TKSTEPBase
+-    TKXCAF
+-    TKXSBase
+-    TKVCAF
+-    TKCAF
+-    TKLCAF
+-    TKCDF
+-    TKV3d
+-    TKService
+-    TKMesh
+-    TKBO
+-    TKPrim
+-    TKHLR
+-    TKShHealing
+-    TKTopAlgo
+-    TKGeomAlgo
+-    TKBRep
+-    TKGeomBase
+-    TKG3d
+-    TKG2d
+-    TKMath
+-    TKernel
++find_package(OpenCASCADE REQUIRED)
++
++set(OCCT_LIBS TKDESTEP
+ )
+ 
+ slic3r_remap_configs("${OCCT_LIBS}" RelWithDebInfo Release)
