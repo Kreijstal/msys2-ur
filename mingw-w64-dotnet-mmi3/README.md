@@ -6,7 +6,7 @@ cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
 MOF callback/offset/ownership patch, a property-value/reference/array ownership
 patch, a subscription-delivery credential/options patch, a native metadata-view cleanup
-patch, a class-clone rollback ownership patch, and explicit
+patch, class- and instance-clone rollback ownership patches, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -110,6 +110,15 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check-delivery-options.sh NEW_DELIVERY_OUTPUT
     bash check-metadata-ownership.sh NEW_METADATA_OUTPUT
     bash check-class-clone-rollback.sh NEW_CLONE_OUTPUT
+    bash check-instance-clone-rollback.sh NEW_INSTANCE_CLONE_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.
+
+Release 7 also corrects the corresponding instance-array rollback path. Failed
+cloning preserves the caller's original instances and reclaims only completed
+output clones, including clones after null slots. The native MI_Instance.Clone
+wrapper releases its output pointer cell on failure or an interop exception.
+The native failure driver checks source usability, injected failures at each
+position and exactly-once output deletion; it does not simulate provider-wide
+allocation failure or establish complete ownership parity.

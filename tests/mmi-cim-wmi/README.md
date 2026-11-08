@@ -1,5 +1,24 @@
 # MMI / CIM / WMI source ports and checks
 
+## Instance-clone failure ownership (2026-11-08)
+
+MMI3 **3.0.0-7** fixes the analogous instance-array rollback defect: cloning
+failure deleted original caller-owned instances and leaked completed clones.
+Rollback now reclaims only output clones and traverses null slots. Failed native
+instance Clone and interop exceptions release the output wrapper cell.
+
+The installed 3.0.0-6 baseline reproduced both rollback paths. Clean CLANG64 and
+UCRT64 `makepkg --cleanbuild --force --noconfirm` runs passed the **430 instance
+clone checks** and all existing native gates, **512 API declarations, 31 MOF,
+222 property, 138 delivery, 2,071 metadata and 430 class-clone checks**. Fresh
+installed consumers passed the 430 instance checks again in both environments.
+
+Run `bash mingw-w64-dotnet-mmi3/check-instance-clone-rollback.sh NEW_OUTPUT`.
+[Baseline, clean package/installed logs, source and artifact hashes](instance-clone-package-results-20261108.json)
+record the native `mi.h` fault-driver boundary. PowerShell integration builds
+are running. Remote authentication and the broader ownership/provider/MOF audit
+remain open; experimental binaries remain unpublished.
+
 ## Class-clone failure ownership (2026-11-08)
 
 MMI3 **3.0.0-6** corrects an error-path ownership bug: partial class-array clone

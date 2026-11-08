@@ -1,0 +1,50 @@
+--- a/Internal/InstanceHandleExtensionMethods.cs
++++ b/Internal/InstanceHandleExtensionMethods.cs
+@@ -49,12 +49,12 @@
+                 // If we encounter an exception halfway through we need to rollback
+                 for (int i = 0; i < arrayToClone.Length; i++)
+                 {
+-                    if (arrayToClone[i] == null)
++                    MI_Instance clonedInstance = result[i];
++                    if (clonedInstance != null)
+                     {
+-                        break;
++                        try { clonedInstance.Delete(); }
++                        finally { clonedInstance.Dispose(); }
+                     }
+-
+-                    arrayToClone[i].Delete();
+                 }
+ 
+                 throw;
+--- a/Native/MI_Instance.cs
++++ b/Native/MI_Instance.cs
+@@ -113,11 +113,23 @@
+         {
+             MI_Instance newInstanceLocal = MI_Instance.NewIndirectPtr();
+ 
+-            MI_Result resultLocal = this.ft.Clone(this,
+-                newInstanceLocal);
+-
+-            newInstance = newInstanceLocal;
+-            return resultLocal;
++            try
++            {
++                MI_Result resultLocal = this.ft.Clone(this, newInstanceLocal);
++                if (resultLocal == MI_Result.MI_RESULT_OK)
++                    newInstance = newInstanceLocal;
++                else
++                {
++                    newInstanceLocal.Dispose();
++                    newInstance = null;
++                }
++                return resultLocal;
++            }
++            catch
++            {
++                newInstanceLocal.Dispose();
++                throw;
++            }
+         }
+ 
+         internal MI_Result Destruct()

@@ -126,8 +126,8 @@
       "packaged_version": "3.0.0",
       "assembly_version": "1.0.0.0",
       "public_key_token": "31bf3856ad364e35",
-      "actual_source_version": "2.0.0-preview.1 plus twelve source patches and explicit MMI3 contract corrections",
-      "package_version": "3.0.0-6",
+      "actual_source_version": "2.0.0-preview.1 plus thirteen source patches and explicit MMI3 contract corrections",
+      "package_version": "3.0.0-7",
       "delivery_options_evidence": "tests/mmi-cim-wmi/delivery-package-results-20261108.json",
       "property_ownership_evidence": "tests/mmi-cim-wmi/embedded-package-results-20261108.json",
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
@@ -135,7 +135,8 @@
       "public_api_declarations_verified": 512,
       "metadata_ownership_evidence": "tests/mmi-cim-wmi/metadata-package-results-20261108.json",
       "real_provider_integration_evidence": "tests/mmi-provider/results-20261108.json",
-      "class_clone_ownership_evidence": "tests/mmi-cim-wmi/clone-package-results-20261108.json"
+      "class_clone_ownership_evidence": "tests/mmi-cim-wmi/clone-package-results-20261108.json",
+      "instance_clone_ownership_evidence": "tests/mmi-cim-wmi/instance-clone-package-results-20261108.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -36887,12 +36888,18 @@
       "full_dependency_goal_complete": false,
       "binary_published": false
     },
-    "mmi_instance_clone_rollback_followup": {
-      "baseline_package_version": "3.0.0-6",
+    "mmi_instance_clone_rollback": {
+      "evidence": "tests/mmi-cim-wmi/instance-clone-package-results-20261108.json",
+      "package_version": "3.0.0-7",
       "baseline_reproduced": true,
-      "source_fix_validation_complete": false,
-      "issue": "Array rollback deletes original instances, leaks completed output clones and stops at null slots; failed native Clone retains output pointer cell",
-      "complete": false
+      "clean_makepkg_build_and_all_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_instance_clone_checks_per_environment": 430,
+      "PowerShell_application_rebuild_pending": true,
+      "complete": false,
+      "binary_published": false
     }
   }
 }
