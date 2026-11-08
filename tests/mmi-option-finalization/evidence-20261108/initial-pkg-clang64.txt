@@ -1,0 +1,1321 @@
+==> Making package: mingw-w64-dotnet-mmi3 3.0.0-14 (08 Nov 2026 23:33:42)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz
+  -> Found prepare.py
+  -> Found 0001-validate-native-handles.patch
+  -> Found 0002-accept-empty-operation-callbacks.patch
+  -> Found 0003-implement-timeouts-and-xml-serialization.patch
+  -> Found 0004-native-result-callbacks-and-operation-lifetime.patch
+  -> Found 0005-native-destination-and-proxy-credentials.patch
+  -> Found 0006-extended-callbacks-and-operation-options-clone.patch
+  -> Found 0007-streamed-method-results-and-native-wrapper-ownership.patch
+  -> Found 0008-mof-includes-offsets-and-ownership.patch
+  -> Found 0009-own-property-values-and-reference-types.patch
+  -> Found 0010-subscription-delivery-credentials-and-options.patch
+  -> Found 0011-reclaim-native-metadata-wrapper-buffers.patch
+  -> Found 0012-preserve-class-sources-on-clone-failure.patch
+  -> Found 0013-preserve-instance-sources-on-clone-failure.patch
+  -> Found 0014-handle-empty-mof-instance-results.patch
+  -> Found 0015-reclaim-owned-native-classes-after-gc.patch
+  -> Found 0016-retain-owners-of-borrowed-metadata.patch
+  -> Found 0017-use-requested-method-qualifier-name.patch
+  -> Found 0018-retain-instance-during-property-count.patch
+  -> Found 0019-correct-spn-option-and-release-disposed-option-wrappers.patch
+  -> Found 0020-own-native-option-lifetime-and-clone-rollback.patch
+  -> Found OptionFinalizationChecks.cs
+  -> Found check-option-finalization.c
+  -> Found check-option-finalization.sh
+  -> Found SessionOptionChecks.cs
+  -> Found check-session-options-native.c
+  -> Found check-session-options.sh
+  -> Found InstanceCallLifetime.cs
+  -> Found check-instance-call-lifetime.c
+  -> Found check-instance-call-lifetime.sh
+  -> Found QualifierLookupChecks.cs
+  -> Found check-qualifier-lookup.sh
+  -> Found TransientMetadataChecks.cs
+  -> Found check-transient-metadata.c
+  -> Found check-transient-metadata.sh
+  -> Found ClassLifetimeChecks.cs
+  -> Found check-class-lifetime.c
+  -> Found check-class-lifetime.sh
+  -> Found MofSemantics.cs
+  -> Found native-oracle.c
+  -> Found check-mof-semantics.sh
+  -> Found InstanceCloneRollbackChecks.cs
+  -> Found check-instance-clone-rollback.c
+  -> Found check-instance-clone-rollback.sh
+  -> Found ClassCloneRollbackChecks.cs
+  -> Found check-class-clone-rollback.c
+  -> Found check-class-clone-rollback.sh
+  -> Found MetadataOwnershipChecks.cs
+  -> Found check-metadata-ownership.sh
+  -> Found DeliveryOptionChecks.cs
+  -> Found check-delivery-options.sh
+  -> Found EmbeddedValueChecks.cs
+  -> Found check-embedded-values.sh
+  -> Found MofChecks.cs
+  -> Found check-mof.sh
+  -> Found MmiStreamChecks.cs
+  -> Found check-streamed-results.c
+  -> Found MmiExtendedCallbackChecks.cs
+  -> Found check-extended-callbacks.c
+  -> Found MmiCredentialChecks.cs
+  -> Found check-credential-abi.c
+  -> Found MmiProbe.cs
+  -> Found MmiPortChecks.cs
+  -> Found NativeDependencies.cs
+  -> Found Identity.cs
+  -> Found Friend.cs
+  -> Found MicrosoftShared.pubkey.hex
+  -> Found InspectApi.cs
+  -> Found ExpectedApi.json
+  -> Found check.sh
+  -> Found check-api.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz ... Passed
+    prepare.py ... Passed
+    0001-validate-native-handles.patch ... Passed
+    0002-accept-empty-operation-callbacks.patch ... Passed
+    0003-implement-timeouts-and-xml-serialization.patch ... Passed
+    0004-native-result-callbacks-and-operation-lifetime.patch ... Passed
+    0005-native-destination-and-proxy-credentials.patch ... Passed
+    0006-extended-callbacks-and-operation-options-clone.patch ... Passed
+    0007-streamed-method-results-and-native-wrapper-ownership.patch ... Passed
+    0008-mof-includes-offsets-and-ownership.patch ... Passed
+    0009-own-property-values-and-reference-types.patch ... Passed
+    0010-subscription-delivery-credentials-and-options.patch ... Passed
+    0011-reclaim-native-metadata-wrapper-buffers.patch ... Passed
+    0012-preserve-class-sources-on-clone-failure.patch ... Passed
+    0013-preserve-instance-sources-on-clone-failure.patch ... Passed
+    0014-handle-empty-mof-instance-results.patch ... Passed
+    0015-reclaim-owned-native-classes-after-gc.patch ... Passed
+    0016-retain-owners-of-borrowed-metadata.patch ... Passed
+    0017-use-requested-method-qualifier-name.patch ... Passed
+    0018-retain-instance-during-property-count.patch ... Passed
+    0019-correct-spn-option-and-release-disposed-option-wrappers.patch ... Passed
+    0020-own-native-option-lifetime-and-clone-rollback.patch ... Passed
+    OptionFinalizationChecks.cs ... Passed
+    check-option-finalization.c ... Passed
+    check-option-finalization.sh ... Passed
+    SessionOptionChecks.cs ... Passed
+    check-session-options-native.c ... Passed
+    check-session-options.sh ... Passed
+    InstanceCallLifetime.cs ... Passed
+    check-instance-call-lifetime.c ... Passed
+    check-instance-call-lifetime.sh ... Passed
+    QualifierLookupChecks.cs ... Passed
+    check-qualifier-lookup.sh ... Passed
+    TransientMetadataChecks.cs ... Passed
+    check-transient-metadata.c ... Passed
+    check-transient-metadata.sh ... Passed
+    ClassLifetimeChecks.cs ... Passed
+    check-class-lifetime.c ... Passed
+    check-class-lifetime.sh ... Passed
+    MofSemantics.cs ... Passed
+    native-oracle.c ... Passed
+    check-mof-semantics.sh ... Passed
+    InstanceCloneRollbackChecks.cs ... Passed
+    check-instance-clone-rollback.c ... Passed
+    check-instance-clone-rollback.sh ... Passed
+    ClassCloneRollbackChecks.cs ... Passed
+    check-class-clone-rollback.c ... Passed
+    check-class-clone-rollback.sh ... Passed
+    MetadataOwnershipChecks.cs ... Passed
+    check-metadata-ownership.sh ... Passed
+    DeliveryOptionChecks.cs ... Passed
+    check-delivery-options.sh ... Passed
+    EmbeddedValueChecks.cs ... Passed
+    check-embedded-values.sh ... Passed
+    MofChecks.cs ... Passed
+    check-mof.sh ... Passed
+    MmiStreamChecks.cs ... Passed
+    check-streamed-results.c ... Passed
+    MmiExtendedCallbackChecks.cs ... Passed
+    check-extended-callbacks.c ... Passed
+    MmiCredentialChecks.cs ... Passed
+    check-credential-abi.c ... Passed
+    MmiProbe.cs ... Passed
+    MmiPortChecks.cs ... Passed
+    NativeDependencies.cs ... Passed
+    Identity.cs ... Passed
+    Friend.cs ... Passed
+    MicrosoftShared.pubkey.hex ... Passed
+    InspectApi.cs ... Passed
+    ExpectedApi.json ... Passed
+    check.sh ... Passed
+    check-api.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+  -> Extracting mmi-cf32fc695b32c2eae848b693395c09222fe1d2ae.tar.gz with bsdtar
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+Usage: E:\msys64\clang64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\clang64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\clang64\bin\file.exe [--help]
+==> Starting prepare()...
+patching file Native/MI_Session.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_Instance.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Native/MI_Session.cs
+patching file CimException.cs
+patching file Native/MI_Deserializer.cs
+patching file Native/Structures/MI_Interval.cs
+patching file Serialization/CimDeserializer.cs
+patching file Serialization/CimSerializer.cs
+patching file CimClass.cs
+patching file CimInstance.cs
+patching file CimSession.cs
+patching file Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+patching file Internal/Operations/CimAsyncCancellationDisposable.cs
+patching file Internal/Operations/CimAsyncClassObserverProxy.cs
+patching file Internal/Operations/CimAsyncIndicationObserverProxy.cs
+patching file Internal/Operations/CimAsyncInstanceObserverProxy.cs
+patching file Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+patching file Internal/Operations/CimOperation.cs
+patching file Internal/Operations/CimSyncClassEnumerator.cs
+patching file Internal/Operations/CimSyncInstanceEnumerator.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_OperationCallbackBridge.cs
+patching file Native/MI_Session.cs
+patching file Native/Structures/MI_OperationCallbacks.cs
+patching file Options/Internal/CimOperationOptions.cs
+patching file Strings.resx
+patching file Native/MI_DestinationOptions.cs
+patching file Native/NativeCimCredential.cs
+patching file Native/Structures/MI_UserCredentials.cs
+patching file Options/CimCredential.cs
+patching file Options/CimSessionOptions.cs
+patching file Options/WSManSessionOptions.cs
+patching file Native/MI_Operation.cs
+patching file Native/MI_OperationCallbackBridge.cs
+patching file Native/MI_OperationOptions.cs
+patching file Options/Internal/CimOperationOptions.cs
+patching file Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+patching file Internal/Operations/CimAsyncMethodResultObserverProxy.cs
+patching file Internal/Operations/CimAsyncObserverProxyBase.cs
+patching file Internal/ValueHelpers.cs
+patching file Native/MI_NativeObject.cs
+patching file Native/MI_OperationCallbackBridge.cs
+patching file Native/Structures/MI_Value.cs
+patching file Native/MI_Deserializer.cs
+patching file Native/Structures/MI_DeserializerCallbacks.cs
+patching file Native/Structures/MI_ExtendedArray.cs
+patching file Serialization/CimMofDeserializer.cs
+patching file CimConverter.cs
+patching file Internal/Data/CimPropertiesCollection.cs
+patching file Internal/Data/CimPropertyOfInstance.cs
+patching file Internal/Data/CimPropertyStandalone.cs
+patching file Internal/ValueHelpers.cs
+patching file Native/Structures/MI_Array.cs
+patching file Native/Structures/MI_Value.cs
+patching file Native/MI_Application.cs
+patching file Native/MI_SubscriptionDeliveryOptions.cs
+patching file Native/NativeCimCredential.cs
+patching file Options/Internal/CimSubscriptionDeliveryOptions.cs
+patching file Native/MI_QualifierSet.cs
+patching file Native/MI_ParameterSet.cs
+patching file Internal/ClassHandleExtensionMethods.cs
+patching file Native/MI_Class.cs
+patching file Internal/InstanceHandleExtensionMethods.cs
+patching file Native/MI_Instance.cs
+patching file Serialization/CimMofDeserializer.cs
+patching file CimClass.cs
+patching file Native/MI_Class.cs
+patching file Native/MI_Deserializer.cs
+patching file Native/MI_Serializer.cs
+patching file Native/MI_Application.cs
+patching file Native/MI_NativeObject.cs
+patching file Native/MI_Class.cs
+patching file Native/MI_QualifierSet.cs
+patching file Native/MI_ParameterSet.cs
+patching file Internal/ValueHelpers.cs
+patching file Internal/Data/CimMethodQualifierCollection.cs
+patching file Internal/Data/CimPropertiesCollection.cs
+patching file Options/WSManSessionOptions.cs
+patching file Options/CimSessionOptions.cs
+patching file Options/Internal/CimOperationOptions.cs
+patching file Native/MI_OptionResource.cs
+patching file Native/MI_DestinationOptions.cs
+patching file Native/MI_OperationOptions.cs
+patching file Native/MI_Application.cs
+patching file Native/MI_Session.cs
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\mmi\Mmi.csproj (in 88 ms).
+  Mmi -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\mmi\bin\Release\net8.0\Microsoft.Management.Infrastructure.dll
+  The package Microsoft.Management.Infrastructure.3.0.0 is missing a readme. Go to https://aka.ms/nuget/authoring-best-practices/readme to learn why package readmes are important.
+  Successfully created package 'E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\feed\Microsoft.Management.Infrastructure.3.0.0.nupkg'.
+==> Starting check()...
+PASS native mi.h credential size=32 union-offset=8; native round trips; DCOM Default=0 NegoNoCreds=7 empty-Default-query=1
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\friend-sma\Friend.csproj (in 416 ms).
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\friend-cim\Friend.csproj (in 416 ms).
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\Check.csproj (in 416 ms).
+  Friend -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\friend-sma\bin\Release\net8.0\System.Management.Automation.dll
+  Friend -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\friend-cim\bin\Release\net8.0\Microsoft.Management.Infrastructure.CimCmdlets.dll
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:22.31
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+CIM OS: Microsoft Windows 11 Pro for Workstations; version=10.0.26200; build=26200
+CIM process: dotnet.exe; PID matches current source-built runtime
+CIM invalid class: correctly returned InvalidClass
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: source-built MMI local DCOM/default queries, errors, disposal and reopen
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+Streaming mode 0
+Streaming mode 1
+Streaming mode 2
+Streaming mode 3
+Streaming mode 4
+Streaming mode 5
+Streaming mode 6
+PASS native stream ABI for all 32 MI types, scalar/chunk flattening, Unicode/null/empty values, clone lifetimes/session metadata, shortening, errors/ack failures, regular final result and GC/root cleanup
+Native original interval=0 count=2
+Native option result=0 type=12 flags=0
+Native option result=0 type=21 flags=0
+Native interval clone probe (before/after MI_Result): 606
+PASS mi.h native prompt/error/message/progress callback table, Unicode values, cloned error instance, reply values/exactly-once replies, managed/reply exceptions, compacting GC, options clone and root cleanup
+PASS native credential union ABI, all destination/proxy authentication forms, Unicode user/domain/password, independent SecureString copy, native clone after source disposal, validation and native DCOM transport error propagation
+PASS: native operation/session timeouts, microseconds, infinity, negatives and timed query
+PASS: native MI_XML instance/class round-trips, offsets, Unicode, arrays, intervals, capacity, cached classes, errors and disposal
+PASS: native asynchronous instances/classes/methods/errors, observer exceptions, compacting GC, independent result lifetime, unsubscribe, CancellationToken, callback-root cleanup and session close
+Native dependency: C:\WINDOWS\SYSTEM32\mi.dll
+PASS: MMI timeout and serialization port checks
+PASS MMI3 source-port identity/version/location, corrected enum contracts and signed friend access used by PowerShell sources
+Runtime: .NET 8.0.31
+MMI: Microsoft.Management.Infrastructure, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35
+CAPABILITY operation timeout: PASS
+CAPABILITY class metadata: PASS
+CAPABILITY instance serialization: PASS
+CAPABILITY asynchronous query: PASS
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-api\Inspect.csproj (in 519 ms).
+  Inspect -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-api\bin\Release\net8.0\Inspect.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.39
+PASS all 512 published MMI3 public/protected metadata declarations, exact assembly identity and three explicit cleanup finalizers
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-mof\Check.csproj (in 355 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-mof\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.28
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS 33 native MOF checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-mof-semantics\Check.csproj (in 439 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-mof-semantics\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.27
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS typed boolean
+NATIVE_LIMIT empty array uint8 status=1
+PASS typed uint8
+NATIVE_LIMIT empty array sint8 status=1
+PASS typed sint8
+NATIVE_LIMIT empty array uint16 status=1
+PASS typed uint16
+NATIVE_LIMIT empty array sint16 status=1
+PASS typed sint16
+NATIVE_LIMIT empty array uint32 status=1
+PASS typed uint32
+NATIVE_LIMIT empty array sint32 status=1
+PASS typed sint32
+NATIVE_LIMIT empty array uint64 status=1
+PASS typed uint64
+PASS typed sint64
+PASS typed real32
+PASS typed real64
+PASS typed char16
+PASS typed string
+PASS typed datetime
+PARITY schema-only classes=False encoding=utf-16 bom=2 policy=Default native=0 used=70 count=0
+PASS schema-only
+PARITY schema-only classes=False encoding=utf-16 bom=0 policy=Default native=0 used=68 count=0
+PASS schema-only
+PARITY schema-only classes=False encoding=utf-8 bom=3 policy=Default native=0 used=37 count=0
+PASS schema-only
+PARITY schema-only classes=False encoding=utf-8 bom=0 policy=Default native=0 used=34 count=0
+PASS schema-only
+PARITY schema-only classes=True encoding=utf-16 bom=2 policy=Default native=0 used=70 count=1
+PASS schema-only
+PARITY schema-only classes=True encoding=utf-16 bom=0 policy=Default native=0 used=68 count=1
+PASS schema-only
+PARITY schema-only classes=True encoding=utf-8 bom=3 policy=Default native=0 used=37 count=1
+PASS schema-only
+PARITY schema-only classes=True encoding=utf-8 bom=0 policy=Default native=0 used=34 count=1
+PASS schema-only
+PARITY comment-only classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=False encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=False encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=False encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=True encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=True encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=True encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY comment-only classes=True encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS comment-only
+PARITY empty-document classes=False encoding=utf-16 bom=2 policy=Default native=4 used=0 count=0
+PASS empty-document
+PASS empty-document
+PARITY empty-document classes=False encoding=utf-8 bom=3 policy=Default native=4 used=0 count=0
+PASS empty-document
+PASS empty-document
+PARITY empty-document classes=True encoding=utf-16 bom=2 policy=Default native=4 used=0 count=0
+PASS empty-document
+PASS empty-document
+PARITY empty-document classes=True encoding=utf-8 bom=3 policy=Default native=4 used=0 count=0
+PASS empty-document
+PASS empty-document
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=Default native=0 used=232 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=False encoding=utf-16 bom=0 policy=Default native=0 used=230 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=False encoding=utf-8 bom=3 policy=Default native=0 used=118 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=False encoding=utf-8 bom=0 policy=Default native=0 used=115 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=True encoding=utf-16 bom=2 policy=Default native=0 used=232 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=True encoding=utf-16 bom=0 policy=Default native=0 used=230 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=True encoding=utf-8 bom=3 policy=Default native=0 used=118 count=1
+PASS valid-uint32
+PARITY valid-uint32 classes=True encoding=utf-8 bom=0 policy=Default native=0 used=115 count=1
+PASS valid-uint32
+PARITY overflow-uint32 classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=False encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=False encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=False encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=True encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=True encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=True encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY overflow-uint32 classes=True encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS overflow-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=False encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=False encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=False encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=True encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=True encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=True encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY type-mismatch classes=True encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=False encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=False encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=False encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=True encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=True encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=True encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY unknown-property classes=True encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS unknown-property
+PARITY truncated classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=False encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=False encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=False encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=True encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=True encoding=utf-16 bom=0 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=True encoding=utf-8 bom=3 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY truncated classes=True encoding=utf-8 bom=0 policy=Default native=1 used=0 count=0
+PASS truncated
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=Default native=0 used=232 count=1
+PASS policy Default valid-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS policy Default type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=Default native=1 used=0 count=0
+PASS policy Default unknown-property
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=Strict native=0 used=232 count=1
+PASS policy Strict valid-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=Strict native=1 used=0 count=0
+PASS policy Strict type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=Strict native=1 used=0 count=0
+PASS policy Strict unknown-property
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=Loose native=0 used=232 count=1
+PASS policy Loose valid-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=Loose native=1 used=0 count=0
+PASS policy Loose type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=Loose native=0 used=154 count=1
+PASS policy Loose unknown-property
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=IgnorePropertyType native=0 used=232 count=1
+PASS policy IgnorePropertyType valid-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=IgnorePropertyType native=1 used=0 count=0
+PASS policy IgnorePropertyType type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=IgnorePropertyType native=1 used=0 count=0
+PASS policy IgnorePropertyType unknown-property
+PARITY valid-uint32 classes=False encoding=utf-16 bom=2 policy=Ignore native=0 used=232 count=1
+PASS policy Ignore valid-uint32
+PARITY type-mismatch classes=False encoding=utf-16 bom=2 policy=Ignore native=1 used=0 count=0
+PASS policy Ignore type-mismatch
+PARITY unknown-property classes=False encoding=utf-16 bom=2 policy=Ignore native=0 used=154 count=1
+PASS policy Ignore unknown-property
+RESULT checks=525 failures=0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-embedded-values\Check.csproj (in 389 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-embedded-values\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.98
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS owned property values: Instance
+PASS owned property values: Reference
+PASS owned property values: InstanceArray
+PASS owned property values: ReferenceArray
+PASS 222 embedded/reference/array property ownership, mutation, flags, metadata and GC checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-delivery-options\Check.csproj (in 387 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-delivery-options\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.69
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS 138 native delivery option/credential/interval/clone/disposal checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-metadata-ownership\Check.csproj (in 445 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-metadata-ownership\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.79
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+Metadata views: allocated=192 finalized=192 released=192
+PASS 2071 metadata allocation/disposal/borrowed-memory and live qualifier/parameter GC checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-class-clone-rollback\Check.csproj (in 287 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-class-clone-rollback\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.21
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS 430 native class clone/rollback/source-preservation/null-slot/cleanup checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-instance-clone-rollback\Check.csproj (in 343 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-instance-clone-rollback\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.72
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS 430 native instance clone/rollback/source-preservation/null-slot/cleanup checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-class-lifetime\Check.csproj (in 324 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-class-lifetime\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.41
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+ABANDONED ownerAlive=False handleAlive=True nativeDeletes=1
+PASS 22 native class lifetime checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-transient-metadata\Check.csproj (in 474 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-transient-metadata\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.06
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+TRANSIENT kind=0 failed=False count=1 nativeDeletesDuringRead=0
+TRANSIENT kind=1 failed=False count=1 nativeDeletesDuringRead=0
+TRANSIENT kind=2 failed=False count=2 nativeDeletesDuringRead=0
+PASS 24 transient metadata owner checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-qualifier-lookup\Check.csproj (in 667 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-qualifier-lookup\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:15.38
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+LOOKUP method=Echo enumerated=Description value=expected 雪 named=Description
+LIVE_METHOD_QUALIFIERS 24
+PASS 66 method qualifier lookup checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-instance-call-lifetime\Check.csproj (in 456 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-instance-call-lifetime\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.93
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+READ 0 1
+READ 1 OwnedLabel
+READ 2 String
+READ 3 Property
+READ 4 value
+PASS 0 early native instance deletions across five optimized public reads
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-session-options\Check.csproj (in 413 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-session-options\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.64
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS session options checks=1318 SPN-mismatches=0 wrapper-leaks=0 matrix=64
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-option-finalization\Check.csproj (in 759 ms).
+  Check -> E:\codex-dotnet10\mmi-option-finalization.yN4pOk\pkg-clang64\recipe\src\check-option-finalization\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:14.20
+PASS exact source feed archive and implementation bytes; archive SHA256 2b5ae78e427705703bbc1a46bc5de9bfd65104f91a629f79951c65fac9813be5
+PASS option finalization checks=80 abandoned-leaks=0 native-early-deletes=0
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-clang-x86_64-dotnet-mmi3"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-mmi3 3.0.0-14 (08 Nov 2026 23:38:41)

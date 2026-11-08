@@ -126,8 +126,8 @@
       "packaged_version": "3.0.0",
       "assembly_version": "1.0.0.0",
       "public_key_token": "31bf3856ad364e35",
-      "actual_source_version": "2.0.0-preview.1 plus nineteen source patches and explicit MMI3 contract corrections",
-      "package_version": "3.0.0-13",
+      "actual_source_version": "2.0.0-preview.1 plus twenty source patches and explicit MMI3 contract corrections",
+      "package_version": "3.0.0-14",
       "delivery_options_evidence": "tests/mmi-cim-wmi/delivery-package-results-20261108.json",
       "property_ownership_evidence": "tests/mmi-cim-wmi/embedded-package-results-20261108.json",
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
@@ -142,7 +142,8 @@
       "transient_metadata_ownership_evidence": "tests/mmi-transient-metadata/package-results-20261108.json",
       "method_qualifier_lookup_evidence": "tests/mmi-qualifier-lookup/package-results-20261108.json",
       "native_instance_call_lifetime_evidence": "tests/mmi-instance-call-lifetime/package-results-20261108.json",
-      "session_options_and_explicit_disposal_evidence": "tests/mmi-session-options/package-results-20261108.json"
+      "session_options_and_explicit_disposal_evidence": "tests/mmi-session-options/package-results-20261108.json",
+      "native_option_lifetime_evidence": "tests/mmi-option-finalization/package-results-20261108.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -1358,6 +1359,8 @@
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "PowerShell7.4.20-17 bundles MMI3 3.0.0-14;85 native-counted option lifetime/rollback checks and17 real Windows MI GC/immediate-clone-disposal checks pass in each STA/MTA mode in CLANG64/UCRT64; full original package checks pass; CLANG archive metadata regenerated after a transient pacman read race (tests/mmi-option-finalization/powershell-results-20261108.json)",
+        "MMI3 3.0.0-14 native option owner/finalizer, borrowed-value retention, factory/clone rollback, native-call KeepAlive and immediate clone Dispose:85 counted native checks pass in both installed environments. PowerShell16 baseline reproduces14 counted and8 actual Windows MI wrapper leaks plus immediate operation-clone disposal defect (tests/mmi-option-finalization/package-results-20261108.json)",
         "PowerShell7.4.20-16 bundles MMI3 3.0.0-13;1318 native-backed session-option/disposal checks plus four original New-CimSessionOption SPN/revocation combinations pass in each STA/MTA mode in CLANG64/UCRT64; full clean package checks pass (tests/mmi-session-options/powershell-results-20261108.json)",
         "MMI3 3.0.0-13: SPN getter reads independent native SPN key; explicit session/operation Dispose releases wrapper allocations. 1318 checks across64 option combinations plus native clone/readback/disposal controls pass per installed environment; current PowerShell15 reproduces earlier cmdlet mismatch (tests/mmi-session-options/package-results-20261108.json)",
         "PowerShell7.4.20-15 bundles fixed MMI3 3.0.0-12; clean source package builds, original SDK/console/module/native checks and five optimized reentrant-GC reads in each STA/MTA mode pass in CLANG64/UCRT64 (tests/mmi-instance-call-lifetime/powershell-results-20261108.json)",
@@ -37332,6 +37335,56 @@
       "evidence": "tests/mmi-session-options/cleanup-20261108.json",
       "remote_logical_bytes_removed": 1669344224,
       "local_temporary_archive_bytes_removed": 731019,
+      "installed_packages_retained": true,
+      "full_dependency_goal_complete": false
+    },
+    "mmi_option_finalization_and_clone_rollback": {
+      "evidence": "tests/mmi-option-finalization/package-results-20261108.json",
+      "package_version": "3.0.0-14",
+      "counted_checks_per_environment": 85,
+      "baseline_counted_checks": 79,
+      "baseline_abandoned_wrapper_leaks": 14,
+      "baseline_real_native_wrapper_leaks": 8,
+      "immediate_operation_clone_disposal_fixed": true,
+      "native_session_option_call_guards": 12,
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "baseline_PowerShell_version": "7.4.20-16",
+      "baseline_PowerShell_modes": [
+        "STA",
+        "MTA"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "powershell_native_option_finalization_integration": {
+      "evidence": "tests/mmi-option-finalization/powershell-results-20261108.json",
+      "powershell_package_version": "7.4.20-17",
+      "mmi_package_version": "3.0.0-14",
+      "sqlclient_package_version": "4.9.1-2",
+      "counted_checks_per_mode": 85,
+      "real_Windows_MI_gc_checks_per_mode": 17,
+      "immediate_operation_clone_disposal_passed": true,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "package_checks_passed": true,
+      "bundled_MMI_matches_installed_source_archive": true,
+      "WinRM_status": "Stopped",
+      "WinRM_startup": "Manual",
+      "binary_published": false,
+      "full_dependency_goal_complete": false
+    },
+    "native_option_finalization_cleanup": {
+      "evidence": "tests/mmi-option-finalization/cleanup-20261108.json",
+      "remote_logical_bytes_removed": 1778453165,
+      "local_temporary_archive_bytes_removed": 1008069,
       "installed_packages_retained": true,
       "full_dependency_goal_complete": false
     }

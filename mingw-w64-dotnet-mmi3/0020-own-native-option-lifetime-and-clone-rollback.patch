@@ -1,0 +1,573 @@
+--- a/Native/MI_OptionResource.cs
++++ b/Native/MI_OptionResource.cs
+@@ -0,0 +1,48 @@
++// Native option contents belong to successful factory/clone results. Borrowed
++// wrappers own only their HGlobal pointer cell. This managed state is outside
++// every native MI structure layout.
++using System;
++
++namespace Microsoft.Management.Infrastructure.Native
++{
++    internal abstract class MI_OptionResource<T> : MI_NativeObjectWithFT<T> where T : new()
++    {
++        private readonly object cleanupGate = new object();
++        private bool ownsNative;
++        private bool deleted;
++
++        protected MI_OptionResource(bool isDirect) : base(isDirect) { }
++        protected MI_OptionResource(IntPtr existingPtr) : base(existingPtr) { }
++
++        internal void OwnNativeLifetime() { ownsNative = true; }
++        protected abstract void DeleteNative();
++
++        internal void Delete()
++        {
++            lock (cleanupGate)
++            {
++                if (deleted) return;
++                deleted = true;
++                ownsNative = false;
++                try { DeleteNative(); }
++                finally { GC.KeepAlive(this); }
++            }
++        }
++
++        ~MI_OptionResource()
++        {
++            try { Dispose(); } catch { /* Cleanup failures cannot escape a finalizer. */ }
++        }
++
++        public override void Dispose()
++        {
++            // A failed base constructor can leave only a wrapper allocation.
++            if (cleanupGate == null) { base.Dispose(); return; }
++            lock (cleanupGate)
++            {
++                try { if (ownsNative) Delete(); }
++                finally { base.Dispose(); GC.SuppressFinalize(this); }
++            }
++        }
++    }
++}
+--- a/Native/MI_DestinationOptions.cs
++++ b/Native/MI_DestinationOptions.cs
+@@ -11,7 +11,7 @@
+ 
+ namespace Microsoft.Management.Infrastructure.Native
+ {
+-    internal class MI_DestinationOptions : MI_NativeObjectWithFT<MI_DestinationOptions.MI_DestinationOptionsFT>
++    internal class MI_DestinationOptions : MI_OptionResource<MI_DestinationOptions.MI_DestinationOptionsFT>
+     {
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+         private struct MI_DestinationOptionsMembers
+@@ -36,6 +36,7 @@
+                 optionName,
+                 ref value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -54,6 +55,7 @@
+                 out flags);
+ 
+             value = valueLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -82,7 +84,7 @@
+         
+         internal static MI_DestinationOptions Null { get { return null; } }
+ 
+-        internal void Delete()
++        protected override void DeleteNative()
+         {
+             this.ft.Delete(this);
+         }
+@@ -97,6 +99,7 @@
+                 optionName,
+                 value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -110,6 +113,7 @@
+                 optionName,
+                 value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -123,6 +127,7 @@
+                 optionName,
+                 ref credentials,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -142,6 +147,7 @@
+                 out flags);
+ 
+             value = valueLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -157,6 +163,7 @@
+                 out value,
+                 out index,
+                 out flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -166,6 +173,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetOptionCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -179,6 +187,7 @@
+         {
+             MI_String optionNameLocal = MI_String.NewIndirectPtr();
+ 
++            value.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetOptionAt(this,
+                 index,
+                 optionNameLocal,
+@@ -187,6 +196,7 @@
+                 out flags);
+ 
+             optionName = optionNameLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -198,12 +208,14 @@
+             out MI_DestinationOptionsFlags flags
+             )
+         {
++            value.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetOption(this,
+                 optionName,
+                 value,
+                 out type,
+                 out index,
+                 out flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -213,6 +225,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetCredentialsCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -234,6 +247,7 @@
+ 
+             optionName = optionNameLocal.Value;
+             credentials = credentialsLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -257,21 +271,26 @@
+                 out flags);
+ 
+             optionName = optionNameLocal.Value;
+-            return resultLocal;
+-        }
+-
+-        internal MI_Result Clone(
+-            out MI_DestinationOptions newDestinationOptions
+-            )
+-        {
+-            MI_DestinationOptions newDestinationOptionsLocal =
+-                MI_DestinationOptions.NewDirectPtr();
+-
+-            MI_Result resultLocal = this.ft.Clone(this,
+-                newDestinationOptionsLocal);
+-
+-            newDestinationOptions = newDestinationOptionsLocal;
+-            return resultLocal;
++            GC.KeepAlive(this);
++            return resultLocal;
++        }
++
++        internal MI_Result Clone(out MI_DestinationOptions newDestinationOptions)
++        {
++            MI_DestinationOptions copy = MI_DestinationOptions.NewDirectPtr();
++            try
++            {
++                MI_Result result = this.ft.Clone(this, copy);
++                if (result == MI_Result.MI_RESULT_OK)
++                {
++                    copy.OwnNativeLifetime();
++                    newDestinationOptions = copy;
++                }
++                else { copy.Dispose(); newDestinationOptions = null; }
++                return result;
++            }
++            catch { copy.Dispose(); throw; }
++            finally { GC.KeepAlive(this); }
+         }
+ 
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+--- a/Native/MI_OperationOptions.cs
++++ b/Native/MI_OperationOptions.cs
+@@ -11,7 +11,7 @@
+ 
+ namespace Microsoft.Management.Infrastructure.Native
+ {
+-    internal class MI_OperationOptions : MI_NativeObjectWithFT<MI_OperationOptions.MI_OperationOptionsFT>
++    internal class MI_OperationOptions : MI_OptionResource<MI_OperationOptions.MI_OperationOptionsFT>
+     {
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+         private struct MI_OperationOptionsMembers
+@@ -36,6 +36,7 @@
+                 optionName,
+                 ref value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -54,6 +55,7 @@
+                 out flags);
+ 
+             value = valueLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -82,7 +84,7 @@
+         
+         internal static MI_OperationOptions Null { get { return null; } }
+ 
+-        internal void Delete()
++        protected override void DeleteNative()
+         {
+             this.ft.Delete(this);
+         }
+@@ -97,6 +99,7 @@
+                 optionName,
+                 value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -110,6 +113,7 @@
+                 optionName,
+                 value,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -127,6 +131,7 @@
+                 value,
+                 mustComply,
+                 flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -146,6 +151,7 @@
+                 out flags);
+ 
+             value = valueLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -161,6 +167,7 @@
+                 out value,
+                 out index,
+                 out flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -170,6 +177,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetOptionCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -183,6 +191,7 @@
+         {
+             MI_String optionNameLocal = MI_String.NewIndirectPtr();
+ 
++            value.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetOptionAt(this,
+                 index,
+                 optionNameLocal,
+@@ -191,6 +200,7 @@
+                 out flags);
+ 
+             optionName = optionNameLocal.Value;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -202,12 +212,14 @@
+             out MI_OperationOptionsFlags flags
+             )
+         {
++            value.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetOption(this,
+                 optionName,
+                 value,
+                 out type,
+                 out index,
+                 out flags);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -225,35 +237,37 @@
+                 bufferLength,
+                 out channelCount,
+                 out flags);
+-            return resultLocal;
+-        }
+-
+-        internal MI_Result Clone(
+-            out MI_OperationOptions newOperationOptions
+-            )
+-        {
+-            MI_OperationOptions newOperationOptionsLocal =
+-                MI_OperationOptions.NewDirectPtr();
+-
+-            MI_Result resultLocal = this.ft.Clone(this,
+-                newOperationOptionsLocal);
+-
+-            // Windows MI_OperationOptions_Clone omits the configured timeout.
+-            // Preserve it explicitly for the managed deep-copy constructor.
+-            if (resultLocal == MI_Result.MI_RESULT_OK)
++            GC.KeepAlive(this);
++            return resultLocal;
++        }
++
++        internal MI_Result Clone(out MI_OperationOptions newOperationOptions)
++        {
++            MI_OperationOptions copy = MI_OperationOptions.NewDirectPtr();
++            try
+             {
+-                MI_Interval timeout;
+-                UInt32 index;
+-                MI_OperationOptionsFlags flags;
+-                MI_Result timeoutResult = GetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", out timeout, out index, out flags);
+-                if (timeoutResult == MI_Result.MI_RESULT_OK)
+-                    resultLocal = newOperationOptionsLocal.SetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", timeout, flags);
+-                else if (timeoutResult != MI_Result.MI_RESULT_NOT_FOUND) resultLocal = timeoutResult;
++                MI_Result result = this.ft.Clone(this, copy);
++                if (result == MI_Result.MI_RESULT_OK)
++                {
++                    copy.OwnNativeLifetime();
++                    // Windows Clone omits the configured timeout. A subsequent
++                    // copy failure must release the successfully cloned object.
++                    MI_Interval timeout;
++                    UInt32 index;
++                    MI_OperationOptionsFlags flags;
++                    MI_Result timeoutResult = GetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", out timeout, out index, out flags);
++                    if (timeoutResult == MI_Result.MI_RESULT_OK)
++                        result = copy.SetInterval("__MI_OPERATIONOPTIONS_TIMEOUT", timeout, flags);
++                    else if (timeoutResult != MI_Result.MI_RESULT_NOT_FOUND) result = timeoutResult;
++                }
++                if (result == MI_Result.MI_RESULT_OK) newOperationOptions = copy;
++                else { copy.Dispose(); newOperationOptions = null; }
++                return result;
+             }
+-            newOperationOptions = newOperationOptionsLocal;
+-            return resultLocal;
+-        }
+-        
++            catch { copy.Dispose(); throw; }
++            finally { GC.KeepAlive(this); }
++        }
++
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+         internal class MI_OperationOptionsFT
+         {
+--- a/Native/MI_Application.cs
++++ b/Native/MI_Application.cs
+@@ -65,6 +65,7 @@
+ 
+             extendedError = extendedErrorLocal;
+             session = sessionLocal;
++            GC.KeepAlive(options);
+             return resultLocal;
+         }
+         
+@@ -141,11 +142,18 @@
+             )
+         {
+             MI_DestinationOptions optionsLocal = MI_DestinationOptions.NewDirectPtr();
+-            MI_Result resultLocal = this.ft.NewDestinationOptions(this,
+-                optionsLocal);
+-
+-            options = optionsLocal;
+-            return resultLocal;
++            try
++            {
++                MI_Result result = this.ft.NewDestinationOptions(this, optionsLocal);
++                if (result == MI_Result.MI_RESULT_OK)
++                {
++                    optionsLocal.OwnNativeLifetime();
++                    options = optionsLocal;
++                }
++                else { optionsLocal.Dispose(); options = null; }
++                return result;
++            }
++            catch { optionsLocal.Dispose(); throw; }
+         }
+ 
+         internal MI_Result NewOperationOptions(
+@@ -154,13 +162,18 @@
+             )
+         {
+             MI_OperationOptions operationOptionsLocal = MI_OperationOptions.NewDirectPtr();
+-
+-            MI_Result resultLocal = this.ft.NewOperationOptions(this,
+-                customOptionsMustUnderstand,
+-                operationOptionsLocal);
+-
+-            operationOptions = operationOptionsLocal;
+-            return resultLocal;
++            try
++            {
++                MI_Result result = this.ft.NewOperationOptions(this, customOptionsMustUnderstand, operationOptionsLocal);
++                if (result == MI_Result.MI_RESULT_OK)
++                {
++                    operationOptionsLocal.OwnNativeLifetime();
++                    operationOptions = operationOptionsLocal;
++                }
++                else { operationOptionsLocal.Dispose(); operationOptions = null; }
++                return result;
++            }
++            catch { operationOptionsLocal.Dispose(); throw; }
+         }
+ 
+         internal MI_Result NewSubscriptionDeliveryOptions(
+--- a/Native/MI_Session.cs
++++ b/Native/MI_Session.cs
+@@ -47,6 +47,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void ModifyInstance(
+@@ -70,6 +71,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void CreateInstance(
+@@ -93,6 +95,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void DeleteInstance(
+@@ -116,6 +119,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void Invoke(
+@@ -145,6 +149,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void EnumerateInstances(
+@@ -170,6 +175,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void QueryInstances(
+@@ -195,6 +201,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void AssociatorInstances(
+@@ -228,6 +235,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void ReferenceInstances(
+@@ -257,6 +265,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void Subscribe(
+@@ -284,6 +293,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void GetClass(
+@@ -307,6 +317,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void EnumerateClasses(
+@@ -332,6 +343,7 @@
+                 operationLocal);
+ 
+             operation = operationLocal;
++            GC.KeepAlive(options);
+         }
+ 
+         internal void TestConnection(
+--- a/Options/Internal/CimOperationOptions.cs
++++ b/Options/Internal/CimOperationOptions.cs
+@@ -126,6 +126,8 @@
+             MI_Result result = optionsToClone.OperationOptionsHandleOnDemand.Clone(out cloned);
+             CimException.ThrowIfMiResultFailure(result);
+             this._operationOptionsHandle = new Lazy<MI_OperationOptions>(() => cloned);
++            // The clone already exists; expose it to explicit disposal now.
++            _ = this._operationOptionsHandle.Value;
+         }
+ 
+         /// <summary>
