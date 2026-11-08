@@ -377,7 +377,8 @@
       "resource_strings": 407,
       "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt",
       "production_patches": 8,
-      "localdb_startup_evidence": "tests/sqlclient-localdb/package-results-20261108.json"
+      "localdb_startup_evidence": "tests/sqlclient-localdb/package-results-20261108.json",
+      "MARS_cancel_error_TLS_evidence": "tests/sqlclient-mars-cancel/results-20261108.json"
     },
     {
       "id": "System.Diagnostics.DiagnosticSource",
@@ -1472,18 +1473,19 @@
         "SQL Server shared-memory lpc protocol and full native transport feature parity",
         "real transactional SqlFileStream/FILESTREAM and SQL Server/database interoperability",
         "broader TLS trust/host and remote/domain/Kerberos authentication policies",
-        "MARS error/cancellation/combined-encryption/full SMP conformance",
+        "Broader MARS cancellation/error/race/pooling coverage and full SMP conformance; eight plaintext/TLS loopback scenarios verified",
         "complete shipping PowerShell/Windows compatibility integration and actual runtime servicing"
       ],
       "verified": [
         "explicit Release managed-SNI selection without a Debug environment switch",
         "TCP, long/short custom named-pipe paths with SQL login, requested/required TLS, untrusted-certificate rejection and native SSPI current-user authentication",
         "public MARS simultaneous readers, interleaved GC-retained results, independent DONE and reuse over two query sessions",
-        "all 1020 original contract declarations; complete 242/3 original compiler-input sets with four source overlays; audited tested DLL bytes",
+        "all 1020 original contract declarations; complete 242/3 original compiler-input sets with seven source overlays/eight production patches in 4.9.1-2; audited tested DLL bytes",
         "no proprietary SNI or Framework implementation module loaded",
         "MC-SMP inclusive send-window defect reproduced before repair;25 DATA frames/six verified stalls-resumes/10 response frames/two receive-window ACK grants after repair",
         "source-only native/NuGet package, exact reference/generic/Windows asset selection, all407 resource strings/metadata XML and independent full source/artifact audit",
-        "actual source PowerShell exact installed Windows DLL scalar/reader/schema/DONE against an owned original TDS peer"
+        "actual source PowerShell exact installed Windows DLL scalar/reader/schema/DONE against an owned original TDS peer",
+        "Eight owned MARS command/token/timeout/error scenarios over plaintext and TLS1.2:448 assertions per standalone CLANG64/UCRT64 run and each installed PowerShell7.4.20-14 STA/MTA run; native ATTENTION/DONE_ATTN routing, independent readers, GC and recovery verified (tests/sqlclient-mars-cancel/results-20261108.json)"
       ],
       "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt"
     },
@@ -4286,7 +4288,7 @@
       "SQL Server shared-memory lpc protocol and full native transport feature parity",
       "real transactional SqlFileStream/FILESTREAM and SQL Server/database interoperability",
       "broader TLS trust/host and remote/domain/Kerberos authentication policies",
-      "MARS error/cancellation/combined-encryption/full SMP conformance",
+      "Broader MARS cancellation/error/race/pooling coverage and full SMP conformance; eight plaintext/TLS loopback scenarios verified",
       "complete shipping PowerShell/Windows compatibility integration and actual runtime servicing"
     ]
   },
@@ -37204,6 +37206,34 @@
       "local_logical_bytes_removed": 16025132,
       "installed_packages_retained": true,
       "source_recipes_patches_and_evidence_retained": true
+    },
+    "sqlclient_MARS_cancel_error_TLS": {
+      "evidence": "tests/sqlclient-mars-cancel/results-20261108.json",
+      "sqlclient_package_version": "4.9.1-2",
+      "powershell_package_version": "7.4.20-14",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "scenarios_per_run": 8,
+      "assertions_per_run": 448,
+      "standalone_runs": 2,
+      "PowerShell_runs": 4,
+      "PowerShell_apartments": [
+        "STA",
+        "MTA"
+      ],
+      "production_code_changed": false,
+      "real_database_execution_verified": false,
+      "complete": false,
+      "binary_published": false
+    },
+    "sqlclient_MARS_cancel_error_TLS_cleanup": {
+      "evidence": "tests/sqlclient-mars-cancel/cleanup-20261108.json",
+      "remote_logical_bytes_removed": 34218566,
+      "local_temporary_archive_bytes_removed": 8731,
+      "installed_packages_retained": true,
+      "full_dependency_goal_complete": false
     }
   }
 }

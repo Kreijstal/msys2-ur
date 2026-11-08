@@ -1,0 +1,86 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-mars-cancel.qN8DLG\clang-tls\Check.csproj (in 556 ms).
+  Check -> E:\codex-dotnet10\sqlclient-mars-cancel.qN8DLG\clang-tls\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.52
+PASS exact source feed archive and implementation bytes; archive SHA256 6241c935f778c99f3015610ab463b15abb7ae3d48b8a75f3b5fd99eac71fd345
+PEER attention SID=1 DONE_ATTN acknowledged
+CLIENT mode=command SqlException number=0
+PASS peer session isolation mode=command batches=3 ATTENTION=1 FINs=3
+PASS MARS independent-reader/recovery mode=command TLS=False
+PEER attention SID=1 DONE_ATTN acknowledged
+CLIENT mode=token SqlException number=0
+PASS peer session isolation mode=token batches=3 ATTENTION=1 FINs=3
+PASS MARS independent-reader/recovery mode=token TLS=False
+PEER attention SID=1 DONE_ATTN acknowledged
+CLIENT mode=timeout SqlException number=-2
+PASS peer session isolation mode=timeout batches=3 ATTENTION=1 FINs=3
+PASS MARS independent-reader/recovery mode=timeout TLS=False
+PEER error 50001 isolated to SID=1
+CLIENT mode=error SqlException number=50001
+PASS peer session isolation mode=error batches=3 ATTENTION=0 FINs=3
+PASS MARS independent-reader/recovery mode=error TLS=False
+System.AggregateException: One or more errors occurred. (Authentication failed because the platform does not support ephemeral keys.)
+ ---> System.Security.Authentication.AuthenticationException: Authentication failed because the platform does not support ephemeral keys.
+ ---> System.ComponentModel.Win32Exception (0x8009030E): No credentials are available in the security package
+   at System.Net.SSPIWrapper.AcquireCredentialsHandle(ISSPIInterface secModule, String package, CredentialUse intent, SCH_CREDENTIALS* scc)
+   at System.Net.Security.SslStreamPal.AcquireCredentialsHandle(CredentialUse credUsage, SCH_CREDENTIALS* secureCredential)
+   at System.Net.Security.SslStreamPal.AcquireCredentialsHandleSchCredentials(SslAuthenticationOptions authOptions)
+   at System.Net.Security.SslStreamPal.AcquireCredentialsHandle(SslAuthenticationOptions sslAuthenticationOptions, Boolean newCredentialsRequested)
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStreamPal.AcquireCredentialsHandle(SslAuthenticationOptions sslAuthenticationOptions, Boolean newCredentialsRequested)
+   at System.Net.Security.SslStream.AcquireCredentialsHandle(SslAuthenticationOptions sslAuthenticationOptions, Boolean newCredentialsRequested)
+   at System.Net.Security.SslStream.AcquireServerCredentials(Byte[]& thumbPrint)
+   at System.Net.Security.SslStream.GenerateToken(ReadOnlySpan`1 inputBuffer, Byte[]& output)
+   at System.Net.Security.SslStream.NextMessage(ReadOnlySpan`1 incomingBuffer, ProtocolToken& token)
+   at System.Net.Security.SslStream.ProcessTlsFrame(Int32 frameSize, ProtocolToken& message)
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at MarsCancelChecks.Peer(TcpListener listener, Task applicationClosing, String mode, X509Certificate2 certificate) in E:\codex-dotnet10\sqlclient-mars-cancel.qN8DLG\clang-tls\Program.cs:line 139
+   --- End of inner exception stack trace ---
+System.Data.SqlClient.SqlException (0x80131904): A connection was successfully established with the server, but then an error occurred during the pre-login handshake. (provider: SSL Provider, error: 31 - Encryption(ssl/tls) handshake failed)
+ ---> System.IO.EndOfStreamException: End of stream reached
+   at System.Data.SqlClient.SNI.SslOverTdsStream.ReadInternal(Byte[] buffer, Int32 offset, Int32 count, CancellationToken token, Boolean async)
+   at System.Data.SqlClient.SNI.SslOverTdsStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   at System.IO.Stream.Read(Span`1 buffer)
+   at System.Net.Security.SyncReadWriteAdapter.ReadAsync(Stream stream, Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReceiveHandshakeFrameAsync[TIOAdapter](CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.ForceAuthenticationAsync[TIOAdapter](Boolean receiveFirst, Byte[] reAuthenticationData, CancellationToken cancellationToken)
+   at System.Net.Security.SslStream.AuthenticateAsClient(SslClientAuthenticationOptions sslClientAuthenticationOptions)
+   at System.Net.Security.SslStream.AuthenticateAsClient(String targetHost, X509CertificateCollection clientCertificates, SslProtocols enabledSslProtocols, Boolean checkCertificateRevocation)
+   at System.Net.Security.SslStream.AuthenticateAsClient(String targetHost)
+   at System.Data.SqlClient.SNI.SNITCPHandle.EnableSsl(UInt32 options)
+   at System.Data.SqlClient.SNI.SNIProxy.EnableSsl(SNIHandle handle, UInt32 options)
+   at System.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken)
+   at System.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionFactory.CreateNonPooledConnection(DbConnection owningConnection, DbConnectionPoolGroup poolGroup, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionFactory.<>c__DisplayClass40_0.<TryGetConnection>b__1(Task`1 _)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.Tasks.Task.<>c.<.cctor>b__281_0(Object obj)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at MarsCancelChecks.Run(String mode, X509Certificate2 certificate) in E:\codex-dotnet10\sqlclient-mars-cancel.qN8DLG\clang-tls\Program.cs:line 193
+   at MarsCancelChecks.Main() in E:\codex-dotnet10\sqlclient-mars-cancel.qN8DLG\clang-tls\Program.cs:line 224
+ClientConnectionId:fe198b38-56ab-4193-97e2-6d9db36d577d

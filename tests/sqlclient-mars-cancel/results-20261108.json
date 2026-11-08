@@ -1,0 +1,85 @@
+{
+  "recorded_at_utc": "2026-11-08T21:22:25.780644+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/sqlclient-mars-cancel.qN8DLG",
+  "environments": {
+    "clang64": {
+      "source_archive_sha256": "6241c935f778c99f3015610ab463b15abb7ae3d48b8a75f3b5fd99eac71fd345",
+      "implementation_sha256": "5a9c71cb6d57bc2b4404bbc091e1f3a0b9c134b375f54591004823074092c666",
+      "standalone_exit_code": 0,
+      "PowerShell_exit_code": 0,
+      "standalone_command": "MINGW_PREFIX=/clang64 bash tests/sqlclient-mars-cancel/check.sh final-clang64",
+      "PowerShell_command": "MINGW_PREFIX=/clang64 bash tests/sqlclient-mars-cancel/check-powershell.sh powershell-clang64",
+      "orchestration_MSYSTEM": "CLANG64",
+      "standalone_log": "tests/sqlclient-mars-cancel/evidence-20261108/final-clang64.txt",
+      "PowerShell_log": "tests/sqlclient-mars-cancel/evidence-20261108/powershell-clang64.txt"
+    },
+    "ucrt64": {
+      "source_archive_sha256": "7363cba9daf35caab060e6eb2c968d97e2b8085f7fd233ee84bcebf40a5393f9",
+      "implementation_sha256": "215838a376508e961ba054c67a8a1c04a4a0cfd422d8b8ee10c1099ccb37cce4",
+      "standalone_exit_code": 0,
+      "PowerShell_exit_code": 0,
+      "standalone_command": "MINGW_PREFIX=/ucrt64 bash tests/sqlclient-mars-cancel/check.sh final-ucrt64",
+      "PowerShell_command": "MINGW_PREFIX=/ucrt64 bash tests/sqlclient-mars-cancel/check-powershell.sh powershell-ucrt64",
+      "orchestration_MSYSTEM": "CLANG64",
+      "standalone_log": "tests/sqlclient-mars-cancel/evidence-20261108/final-ucrt64.txt",
+      "PowerShell_log": "tests/sqlclient-mars-cancel/evidence-20261108/powershell-ucrt64.txt"
+    }
+  },
+  "scope": "Installed source SqlClient MARS command/token/timeout/error isolation, recovery and combined TLS",
+  "sqlclient_package_version": "4.9.1-2",
+  "powershell_package_version": "7.4.20-14",
+  "runtime_version": "8.0.31",
+  "scenarios_per_run": 8,
+  "assertions_per_run": 448,
+  "standalone_runs": 2,
+  "PowerShell_runs": 4,
+  "transports": [
+    "loopback TCP plaintext",
+    "loopback TCP TLS 1.2"
+  ],
+  "modes": [
+    "SqlCommand.Cancel",
+    "CancellationToken on pending ReadAsync",
+    "CommandTimeout",
+    "owned server ERROR token 50001"
+  ],
+  "PowerShell_apartments": [
+    "STA",
+    "MTA"
+  ],
+  "production_code_changed": false,
+  "package_recipes_changed": false,
+  "real_SQL_Server_engine_started": false,
+  "trust_store_changed": false,
+  "WinRM_status": "Stopped",
+  "WinRM_startup": "Manual",
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "initial_fixture_failure": {
+    "log": "tests/sqlclient-mars-cancel/evidence-20261108/clang-tls.txt",
+    "reason": "Schannel server credentials rejected the CertificateRequest-generated ephemeral key. The fixture now exports/imports its own certificate using DefaultKeySet without PersistKeySet or trust-store installation; the owned temporary key is disposed at the end."
+  },
+  "protocol_references": [
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/dc28579f-49b1-4a78-9c5f-63fbda002d2e",
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/f8aa004e-bf76-4f94-bd5b-39597a888146",
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/cc823ca8-4867-4387-819d-cc5c19da5732",
+    "https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-tds/d62e225b-d865-4ccc-8f73-de1ef49e30d4"
+  ],
+  "remaining": [
+    "Real SQL Server transactional/database interoperability and FILESTREAM",
+    "Actual LocalDB discovery/named/shared instances and connections",
+    "LPC/shared memory and full native SNI parity",
+    "Remote/domain authentication and broader TLS certificate/host policy",
+    "Broader MARS cancellation/error/race/pooling coverage and full SMP conformance",
+    "Remaining Windows.Compatibility integration"
+  ],
+  "input_sha256": {
+    "tests/sqlclient-mars-cancel/MarsCancelChecks.cs": "55353a2dc2e3153c1962f6b851288d00b46223efd0d91a641180ad665973f98d",
+    "tests/sqlclient-mars-cancel/PowerShellMarsCancel.ps1": "4ed55eb0cce7c7487f110f604e2154a4d31df776ef84a7c0c57c7d2792839dc0",
+    "tests/sqlclient-mars-cancel/build-powershell-fixture.sh": "1da7b14b7bd36a711bca2fe8d8b69eacb203d4ab82fe6295eae1c388c5ab20dc",
+    "tests/sqlclient-mars-cancel/check-powershell.sh": "b749be426db57515297463ec03bc7063f2db2fe4a90fdcd8f7cf14ffac469c22",
+    "tests/sqlclient-mars-cancel/check.sh": "0fb08f82c5a3734486a545e88c3ea7e62c3da60128768e517a90720de338900d"
+  },
+  "cleanup_evidence": "tests/sqlclient-mars-cancel/cleanup-20261108.json"
+}
