@@ -1,5 +1,20 @@
 # PowerShell integration of source MMI3
 
+## Class-clone rollback integration: PowerShell 7.4.20-8 (2026-11-08)
+
+Clean CLANG64 and UCRT64 builds of **7.4.20-8**, bundling **MMI3 3.0.0-6**,
+passed the original source builds and all package checks. The CLANG64 desktop
+build and rendering checks also passed. After installation, each environment
+passed **13 MOF, 34 embedded/event, 25 delivery and 943 metadata checks** in
+each STA/MTA mode, including bundled MMI/source-archive byte comparisons.
+
+[Commands, build/installed logs, input hashes and artifact hashes](clone-integration-results-20261108.json)
+record this revision. The underlying class rollback fix passed 430 native
+failure-injection checks. A separate instance-array rollback bug has now been
+reproduced; its source fix is being validated. Authenticated remote CIM/WSMan,
+the broader ownership/provider audit and remaining dependency gates stay open.
+Experimental binaries remain unpublished. Earlier records retain their scope.
+
 ## Original cmdlet with a real MI provider (2026-11-08)
 
 The installed **7.4.20-7** console now also passes the real provider integration

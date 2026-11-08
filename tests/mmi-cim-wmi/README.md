@@ -18,7 +18,9 @@ driver; it does not force an actual Windows provider allocation failure.
 
 Run `bash mingw-w64-dotnet-mmi3/check-class-clone-rollback.sh NEW_OUTPUT`.
 [Baseline, candidate, package/installed logs, input hashes and scope](clone-package-results-20261108.json)
-record the evidence. PowerShell rebuilds are in progress. Authenticated remote
+record the evidence. Both PowerShell 7.4.20-8 builds and installed checks
+[passed](../powershell-mmi/clone-integration-results-20261108.json). A separate
+instance-array rollback issue is reproduced and being corrected. Authenticated remote
 CIM/WSMan, broader ownership/MOF/provider behavior and the other dependency gates
 remain open; experimental binaries remain unpublished.
 

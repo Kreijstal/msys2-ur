@@ -36852,9 +36852,10 @@
         "UCRT64"
       ],
       "installed_class_clone_checks_per_environment": 430,
-      "PowerShell_application_rebuild_pending": true,
+      "PowerShell_application_rebuild_pending": false,
       "complete": false,
-      "binary_published": false
+      "binary_published": false,
+      "PowerShell_integration_evidence": "tests/powershell-mmi/clone-integration-results-20261108.json"
     },
     "mmi_authenticated_WSMan_harness": {
       "evidence": "tests/mmi-wsman/build-results-20261108.json",
@@ -36866,6 +36867,32 @@
       "real_server_execution_passed": false,
       "WinRM_state_changed": false,
       "pending": "Authorized endpoint and private credential file path; user question outstanding"
+    },
+    "powershell_class_clone_integration": {
+      "evidence": "tests/powershell-mmi/clone-integration-results-20261108.json",
+      "powershell_package_version": "7.4.20-8",
+      "bundled_mmi_package_version": "3.0.0-6",
+      "clean_makepkg_build_and_all_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_metadata_checks_per_mode_and_environment": 943,
+      "installed_MOF_checks_per_mode_and_environment": 13,
+      "installed_embedded_event_checks_per_mode_and_environment": 34,
+      "installed_delivery_checks_per_mode_and_environment": 25,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "full_dependency_goal_complete": false,
+      "binary_published": false
+    },
+    "mmi_instance_clone_rollback_followup": {
+      "baseline_package_version": "3.0.0-6",
+      "baseline_reproduced": true,
+      "source_fix_validation_complete": false,
+      "issue": "Array rollback deletes original instances, leaks completed output clones and stops at null slots; failed native Clone retains output pointer cell",
+      "complete": false
     }
   }
 }
