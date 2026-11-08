@@ -1,0 +1,80 @@
+{
+  "recorded_at_utc": "2026-11-08T19:03:30.467006+00:00",
+  "scope": "Installed MMI3 3.0.0-8 MOF embedded/reference/inheritance native parity and ownership",
+  "package_changed": false,
+  "environments": {
+    "clang64": {
+      "command": "MINGW_PREFIX=/clang64 bash tests/mmi-mof-objects/check.sh NEW_OUTPUT",
+      "exit_code": 0,
+      "checks": 96,
+      "log": "tests/mmi-mof-objects/evidence/clang64-results-20261108.txt",
+      "encodings": [
+        "UTF-16LE BOM",
+        "UTF-8 BOM"
+      ],
+      "verified": [
+        "native instance/reference type tags",
+        "embedded scalar/array alias values and retained copies after parser/parent disposal and GC",
+        "reference key lifetime and independent getters",
+        "native/managed parent/member counts and key flags",
+        "inherited qualifier/method/parameter metadata",
+        "parent-class lifetime after original class disposal"
+      ]
+    },
+    "ucrt64": {
+      "command": "MINGW_PREFIX=/ucrt64 bash tests/mmi-mof-objects/check.sh NEW_OUTPUT",
+      "exit_code": 0,
+      "checks": 96,
+      "log": "tests/mmi-mof-objects/evidence/ucrt64-results-20261108.txt",
+      "encodings": [
+        "UTF-16LE BOM",
+        "UTF-8 BOM"
+      ],
+      "verified": [
+        "native instance/reference type tags",
+        "embedded scalar/array alias values and retained copies after parser/parent disposal and GC",
+        "reference key lifetime and independent getters",
+        "native/managed parent/member counts and key flags",
+        "inherited qualifier/method/parameter metadata",
+        "parent-class lifetime after original class disposal"
+      ]
+    }
+  },
+  "native_limits": [
+    "MI_MOF_CIMV2_EXTV1 rejects string-encoded embedded instances; its alias form succeeds",
+    "Native codec rejects reference-array schema syntax",
+    "Native UTF-8 embedded strings interpret non-ASCII bytes as individual characters; managed values match native UTF-16 hashes exactly. UTF-16 embedded strings retain full supplementary Unicode."
+  ],
+  "remaining": [
+    "additional schema-cache/callback ownership and resource cases",
+    "authenticated remote CIM/WSMan and broader provider/native parity",
+    "SqlClient/Windows.Compatibility gates"
+  ],
+  "full_dependency_goal_complete": false,
+  "artifacts": {
+    "clang64": {
+      "MMI_source_archive_sha256": "5a35ed1765b5d8f1f7be65ec64275aeb8e866378ea67f7e62ce50ce5e9cac0e1",
+      "MMI_DLL_sha256": "5268299a74304c267447e4ff831c65e55b5f1aeab7eba324389b9394d568cd13"
+    },
+    "ucrt64": {
+      "MMI_source_archive_sha256": "db08de62dcd665dba0662f194734ae6e182e2bc6529e39d440b1f948c44c545b",
+      "MMI_DLL_sha256": "d2b90bac272bddffab25a1fdf3f500d7cf1c559ca724e603640e08623e4163bd"
+    }
+  },
+  "inputs_sha256": {
+    "tests/mmi-mof-objects/native-oracle.c": "edd8ffb22cf917f4b410099de660586de2f17762b9f6ebf3afd7252ce7cdc7ea",
+    "tests/mmi-mof-objects/MofObjects.cs": "132aead05bdf69834324dd6fa6f49a6a995944455fa705226b1abd6e4e96b3f9",
+    "tests/mmi-mof-objects/check.sh": "8ce8bb279db33d660ad2ddca44a6cf13d86a1d438485f3b3fb918d0d5bbe462d"
+  },
+  "initial_fixture_adjustments": [
+    {
+      "log": "tests/mmi-mof-objects/evidence/initial-clang-first-20261108.txt",
+      "cause": "Corrected private codec consumer to the SDK MI_Class_GetElement signature"
+    },
+    {
+      "log": "tests/mmi-mof-objects/evidence/initial-clang-alias-20261108.txt",
+      "cause": "Literal Unicode assertion exposed native UTF8 byte conversion; added independently computed native UTF16 value hash to distinguish native behavior from wrapper defects"
+    }
+  ],
+  "cleanup_evidence": "tests/mmi-mof-objects/evidence/cleanup-20261108.json"
+}
