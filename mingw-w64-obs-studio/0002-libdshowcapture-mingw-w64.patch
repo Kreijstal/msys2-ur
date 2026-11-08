@@ -1,0 +1,43 @@
+diff --git a/source/device-vendor.cpp b/source/device-vendor.cpp
+index a842c4f..1c348ef 100644
+--- a/source/device-vendor.cpp
++++ b/source/device-vendor.cpp
+@@ -26,6 +26,11 @@
+ 
+ #include <vidcap.h>
+ 
++#ifdef __MINGW32__
++/* mingw-w64's ks.h has IKsControl without a UUID declaration */
++__CRT_UUID_DECL(IKsControl, 0x28f54685, 0x06fd, 0x11d2, 0xb2, 0x7a, 0x00, 0xa0, 0xc9, 0x22, 0x31, 0x96)
++#endif
++
+ namespace DShow {
+ 
+ bool IsVendorVideoHDR(IKsPropertySet *propertySet)
+diff --git a/source/dshow-formats.cpp b/source/dshow-formats.cpp
+index 4baf381..5121f07 100644
+--- a/source/dshow-formats.cpp
++++ b/source/dshow-formats.cpp
+@@ -20,6 +20,10 @@
+ #include "dshow-formats.hpp"
+ #include "dshow-media-type.hpp"
+ 
++#ifdef __MINGW32__
++static const GUID MEDIASUBTYPE_P010 = {0x30313050, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71}};
++#endif
++
+ #ifndef __MINGW32__
+ 
+ const GUID MEDIASUBTYPE_RAW_AAC1 = {0x000000FF,
+diff --git a/source/output-filter.cpp b/source/output-filter.cpp
+index fe91463..ed8697b 100644
+--- a/source/output-filter.cpp
++++ b/source/output-filter.cpp
+@@ -22,6 +22,7 @@
+ #include "log.hpp"
+ 
+ #include <strsafe.h>
++#include <cstdint>
+ 
+ namespace DShow {
+ 

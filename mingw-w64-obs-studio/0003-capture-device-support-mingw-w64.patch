@@ -1,0 +1,85 @@
+diff --git a/Library/EGAVResult.h b/Library/EGAVResult.h
+index 5017976..56826ba 100644
+--- a/Library/EGAVResult.h
++++ b/Library/EGAVResult.h
+@@ -37,6 +37,7 @@ SOFTWARE.
+ // Includes
+ //------------------------------------------------------------------------------
+ 
++#include <cstdint>
+ #include <string>
+ #if _UP_WINDOWS 
+ 	// FMB NOTE: For some strange reason <WinSock2.h> must be before <Windows.h>. 
+diff --git a/Library/ElgatoUVCDevice.h b/Library/ElgatoUVCDevice.h
+index a91afbe..392dddb 100644
+--- a/Library/ElgatoUVCDevice.h
++++ b/Library/ElgatoUVCDevice.h
+@@ -31,7 +31,7 @@ SOFTWARE.
+ #include "EGAVDevice.h"
+ #include "HDMIInfoFramesAPI.h"
+ 
+-#ifdef _MSC_VER
++#ifdef _WIN32
+ #include "win/EGAVHIDImplementation.h"
+ #else
+ #include "mac/EGAVHIDImplementation.h"
+diff --git a/Library/HDMIInfoFramesAPI.h b/Library/HDMIInfoFramesAPI.h
+index 21c6ec7..d15f836 100644
+--- a/Library/HDMIInfoFramesAPI.h
++++ b/Library/HDMIInfoFramesAPI.h
+@@ -24,6 +24,7 @@ SOFTWARE.
+ 
+ #pragma once
+ 
++#include <cstdint>
+ #include <string>
+ 
+ #pragma pack(push, 1)
+diff --git a/Library/win/EGAVHIDImplementation.cpp b/Library/win/EGAVHIDImplementation.cpp
+index cdc5d17..771afda 100644
+--- a/Library/win/EGAVHIDImplementation.cpp
++++ b/Library/win/EGAVHIDImplementation.cpp
+@@ -40,7 +40,9 @@ SOFTWARE.
+ #include <hidsdi.h>
+ #pragma comment(lib,"hid.lib")
+ #include <SetupAPI.h>
++#ifdef _MSC_VER
+ #include <atlstr.h>
++#endif
+ 
+ #pragma comment(lib, "setupapi.lib")
+ 
+@@ -83,7 +85,16 @@ std::string GetHIDDevicePath(int inIndex)
+ 		pDeviceDetail->cbSize = sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
+ 
+ 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfo, &DeviceInterface, pDeviceDetail, size, &size, NULL))
++#ifdef _MSC_VER
+ 			devicePath = CT2A(pDeviceDetail->DevicePath);
++#else
++		{
++			const int n = WideCharToMultiByte(CP_ACP, 0, pDeviceDetail->DevicePath, -1, nullptr, 0, nullptr, nullptr);
++			devicePath.assign(n > 1 ? n - 1 : 0, '\0');
++			if (n > 1)
++				WideCharToMultiByte(CP_ACP, 0, pDeviceDetail->DevicePath, -1, &devicePath[0], n, nullptr, nullptr);
++		}
++#endif
+ 		free(pDeviceDetail);
+ 	}
+ 
+diff --git a/SampleCode/DriverInterface.h b/SampleCode/DriverInterface.h
+index 4a24a97..3935bd3 100644
+--- a/SampleCode/DriverInterface.h
++++ b/SampleCode/DriverInterface.h
+@@ -32,7 +32,12 @@ SOFTWARE.
+ //==============================================================================
+ 
+ 
++#ifdef _MSC_VER
+ #include <atlcomcli.h>
++#else
++#include <wrl/client.h>
++template<class T> using CComPtr = Microsoft::WRL::ComPtr<T>;
++#endif
+ #include <strmif.h>
+ 
+ #include "HDMIInfoFramesAPI.h"

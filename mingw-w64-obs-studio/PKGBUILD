@@ -1,0 +1,111 @@
+_realname=obs-studio
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=33.0.1
+pkgrel=1
+_dshow_commit=8878638324393815512f802640b0d5ce940161f1
+_cds_commit=fe9630974d47f51bf54826e72fb8b654e620aa93
+_browser_commit=d4db73e7e5d5b51d853177c8cddc796715a8ac84
+_websocket_commit=e28f84975984340e84fc4879cfc05741cc0afde1
+pkgdesc="Software for video recording and live streaming (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://obsproject.com/'
+msys2_repository_url='https://github.com/obsproject/obs-studio'
+license=('spdx:GPL-2.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-curl"
+         "${MINGW_PACKAGE_PREFIX}-ffmpeg"
+         "${MINGW_PACKAGE_PREFIX}-freetype"
+         "${MINGW_PACKAGE_PREFIX}-jansson"
+         "${MINGW_PACKAGE_PREFIX}-librist"
+         "${MINGW_PACKAGE_PREFIX}-libx264"
+         "${MINGW_PACKAGE_PREFIX}-luajit"
+         "${MINGW_PACKAGE_PREFIX}-mbedtls"
+         "${MINGW_PACKAGE_PREFIX}-qt6-base"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg"
+         "${MINGW_PACKAGE_PREFIX}-rnnoise"
+         "${MINGW_PACKAGE_PREFIX}-speexdsp"
+         "${MINGW_PACKAGE_PREFIX}-srt"
+         "${MINGW_PACKAGE_PREFIX}-zlib")
+makedepends=("${MINGW_PACKAGE_PREFIX}-amf-headers"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-cppwinrt"
+             "${MINGW_PACKAGE_PREFIX}-ffnvcodec-headers"
+             "${MINGW_PACKAGE_PREFIX}-MinHook"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-nlohmann-json"
+             "${MINGW_PACKAGE_PREFIX}-simde"
+             "${MINGW_PACKAGE_PREFIX}-swig"
+             "${MINGW_PACKAGE_PREFIX}-uthash"
+             "${MINGW_PACKAGE_PREFIX}-vulkan-headers")
+optdepends=("${MINGW_PACKAGE_PREFIX}-vlc: VLC video source")
+source=("${_realname}-${pkgver}.tar.gz::${msys2_repository_url}/archive/refs/tags/${pkgver}.tar.gz"
+        "libdshowcapture-${_dshow_commit}.tar.gz::https://github.com/obsproject/libdshowcapture/archive/${_dshow_commit}.tar.gz"
+        "capture-device-support-${_cds_commit}.tar.gz::https://github.com/elgatosf/capture-device-support/archive/${_cds_commit}.tar.gz"
+        "obs-browser-${_browser_commit}.tar.gz::https://github.com/obsproject/obs-browser/archive/${_browser_commit}.tar.gz"
+        "obs-websocket-${_websocket_commit}.tar.gz::https://github.com/obsproject/obs-websocket/archive/${_websocket_commit}.tar.gz"
+        0001-build-with-mingw-w64.patch
+        0002-libdshowcapture-mingw-w64.patch
+        0003-capture-device-support-mingw-w64.patch)
+sha256sums=('9174ee0e3677c92d0d060bdce4c5d44dfee9fd3afddfb6333f098fd029b8de2b'
+            'f473bd8040fd772bb590ad03952031a056dbaab9d9310b10d9ebd8bee3da2407'
+            'bdf253133a61fdf2498628c5a8ec2a52a17e63b0d36abb546009eeaef80bfeb7'
+            'e68174d5460aaa400208f0e769a786f88e9b66e809ed6b893bda2e9e5b7a3b5f'
+            '2e200547fd453b8fecb70f3b1d17f3adf447dd26aa5278dcf2dfb989c51ba6a2'
+            '04f5e4c319f5a8ad0df4a138920b0d275dbb7acc56d01f671c89bcbe39f26f0f'
+            '7954e394f540191199d86916ce56cb70ce80fc0edb266f69aa02a30246385d03'
+            '6e6b6b8b5df9384342041c9dc63d1fcd670384cf913fa6a0d37a5d83940578a0')
+
+prepare() {
+  cd ${_realname}-${pkgver}
+  rmdir deps/libdshowcapture/src
+  mv ../libdshowcapture-${_dshow_commit} deps/libdshowcapture/src
+  rmdir deps/libdshowcapture/src/external/capture-device-support
+  mv ../capture-device-support-${_cds_commit} deps/libdshowcapture/src/external/capture-device-support
+  # submodules the build requires even when these plugins are off
+  rmdir plugins/obs-browser plugins/obs-websocket
+  mv ../obs-browser-${_browser_commit} plugins/obs-browser
+  mv ../obs-websocket-${_websocket_commit} plugins/obs-websocket
+  patch -Np1 -i ../0001-build-with-mingw-w64.patch
+  patch -d deps/libdshowcapture/src -Np1 -i "${srcdir}"/0002-libdshowcapture-mingw-w64.patch
+  patch -d deps/libdshowcapture/src/external/capture-device-support -Np1 -i "${srcdir}"/0003-capture-device-support-mingw-w64.patch
+}
+
+build() {
+  # upstream's Windows tree (bin/64bit, core, data) resolves everything relative to obs64.exe
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -G Ninja -S ${_realname}-${pkgver} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX="${MINGW_PREFIX}/lib/${_realname}" \
+      -DOBS_VERSION_OVERRIDE=${pkgver} \
+      -DCMAKE_COMPILE_WARNING_AS_ERROR=OFF \
+      -DHAS_INTERPROCEDURAL_OPTIMIZATION=OFF \
+      -DENABLE_BROWSER=OFF \
+      -DENABLE_WEBRTC=OFF \
+      -DENABLE_WEBSOCKET=OFF \
+      -DENABLE_AJA=OFF \
+      -DENABLE_DECKLINK=OFF \
+      -DENABLE_QSV11=OFF \
+      -DENABLE_NVENC=OFF \
+      -DENABLE_NVAFX=OFF \
+      -DENABLE_NVVFX=OFF \
+      -DENABLE_COREAUDIO_ENCODER=OFF \
+      -DENABLE_VIRTUALCAM=OFF \
+      -DENABLE_SCRIPTING_PYTHON=OFF \
+      -DENABLE_WHATSNEW=OFF \
+      -DENABLE_SERVICE_UPDATES=OFF \
+      -DENABLE_COMPAT_UPDATES=OFF \
+      -DENABLE_LIBFDK=OFF
+  cmake --build build-${MSYSTEM}
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  # obs64.exe needs the prefix DLLs on PATH and its own directory as cwd
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/bin"
+  printf '@set "PATH=%%~dp0;%%PATH%%"\r\n@set "OBSDIR=%%~dp0..\\lib\\%s\\bin\\64bit"\r\n@start "" /D "%%OBSDIR%%" "%%OBSDIR%%\\obs64.exe" %%*\r\n' \
+    ${_realname} > "${pkgdir}${MINGW_PREFIX}/bin/obs64.cmd"
+  install -Dm644 ${_realname}-${pkgver}/COPYING "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/COPYING"
+}

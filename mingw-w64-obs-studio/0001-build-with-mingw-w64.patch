@@ -1,0 +1,1302 @@
+diff --git a/cmake/finders/FindDetours.cmake b/cmake/finders/FindDetours.cmake
+index 8a7070b..31eaf1a 100644
+--- a/cmake/finders/FindDetours.cmake
++++ b/cmake/finders/FindDetours.cmake
+@@ -38,6 +38,22 @@ The following cache variables may also be set:
+ 
+ include(FindPackageHandleStandardArgs)
+ 
++if(MINGW)
++  # Detours is MSVC-only; deps/detours-minhook maps the calls OBS makes onto static MinHook
++  find_library(Detours_MinHook NAMES libMinHook.a MinHook REQUIRED)
++  if(NOT TARGET Detours::Detours)
++    add_library(Detours::Detours INTERFACE IMPORTED)
++    set_target_properties(
++      Detours::Detours
++      PROPERTIES
++        INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_SOURCE_DIR}/deps/detours-minhook"
++        INTERFACE_LINK_LIBRARIES "${Detours_MinHook}"
++    )
++  endif()
++  set(Detours_FOUND TRUE)
++  return()
++endif()
++
+ find_package(PkgConfig QUIET)
+ if(PKG_CONFIG_FOUND)
+   pkg_check_modules(PC_Detours QUIET detours)
+diff --git a/cmake/finders/FindLibAJANTV2.cmake b/cmake/finders/FindLibAJANTV2.cmake
+index 460d91c..1429784 100644
+--- a/cmake/finders/FindLibAJANTV2.cmake
++++ b/cmake/finders/FindLibAJANTV2.cmake
+@@ -168,7 +168,7 @@ if(LibAJANTV2_FOUND)
+     endif()
+ 
+     set_target_properties(AJA::LibAJANTV2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${LibAJANTV2_INCLUDE_DIRS}")
+-    set_target_properties(AJA::LibAJANTV2 PROPERTIES INTERFACE_LINK_OPTIONS $<$<PLATFORM_ID:Windows>:/IGNORE:4099>)
++    set_target_properties(AJA::LibAJANTV2 PROPERTIES INTERFACE_LINK_OPTIONS $<$<C_COMPILER_ID:MSVC>:/IGNORE:4099>)
+     set_property(
+       TARGET AJA::LibAJANTV2
+       APPEND
+diff --git a/cmake/windows/architecture.cmake b/cmake/windows/architecture.cmake
+index 1dc2fbd..d342c59 100644
+--- a/cmake/windows/architecture.cmake
++++ b/cmake/windows/architecture.cmake
+@@ -4,7 +4,11 @@ include_guard(GLOBAL)
+ 
+ include(compilerconfig)
+ 
+-if(NOT DEFINED OBS_PARENT_ARCHITECTURE)
++if(MINGW)
++  # no VS generator; a single 64-bit build
++  set(CMAKE_VS_PLATFORM_NAME x64)
++  set(OBS_PARENT_ARCHITECTURE x64)
++elseif(NOT DEFINED OBS_PARENT_ARCHITECTURE)
+   if(CMAKE_VS_PLATFORM_NAME MATCHES "(Win32|x64|ARM64)")
+     set(OBS_PARENT_ARCHITECTURE ${CMAKE_VS_PLATFORM_NAME})
+   else()
+@@ -12,7 +16,8 @@ if(NOT DEFINED OBS_PARENT_ARCHITECTURE)
+   endif()
+ endif()
+ 
+-if(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
++if(MINGW)
++elseif(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
+   if(OBS_PARENT_ARCHITECTURE STREQUAL ARM64)
+     execute_process(
+       COMMAND
+diff --git a/cmake/windows/buildspec.cmake b/cmake/windows/buildspec.cmake
+index f2a5849..7f79fe4 100644
+--- a/cmake/windows/buildspec.cmake
++++ b/cmake/windows/buildspec.cmake
+@@ -106,4 +106,6 @@ function(_check_dependencies_windows)
+   endif()
+ endfunction()
+ 
+-_check_dependencies_windows()
++if(NOT MINGW)
++  _check_dependencies_windows()
++endif()
+diff --git a/cmake/windows/compilerconfig.cmake b/cmake/windows/compilerconfig.cmake
+index ea0c6a6..c31a7e4 100644
+--- a/cmake/windows/compilerconfig.cmake
++++ b/cmake/windows/compilerconfig.cmake
+@@ -48,6 +48,7 @@ if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION_MAXIMUM)
+   message(DEBUG "Maximum Windows API version: ${CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION_MAXIMUM}")
+ endif()
+ 
++if(NOT MINGW)
+ if(CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION VERSION_LESS 10.0.20348)
+   message(
+     FATAL_ERROR
+@@ -76,8 +77,11 @@ add_compile_options(
+   $<$<NOT:$<CONFIG:Debug>>:/Oi>
+ )
+ 
++endif()
++
+ add_compile_definitions(
+-  NOMINMAX
++  # MinGW's stdlib.h drops the C min/max macros under NOMINMAX; MSVC's keeps them
++  $<$<OR:$<NOT:$<BOOL:${MINGW}>>,$<COMPILE_LANGUAGE:CXX>>:NOMINMAX>
+   UNICODE
+   _UNICODE
+   _CRT_SECURE_NO_WARNINGS
+@@ -86,6 +90,12 @@ add_compile_definitions(
+   $<$<CONFIG:DEBUG>:_DEBUG>
+ )
+ 
++if(MINGW)
++  # MSVC only warns about these C pointer mismatches (COM out-params and the like)
++  add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wno-error=incompatible-pointer-types>)
++  return()
++endif()
++
+ # Visual Studio sets "/LTCG:INCREMENTAL" when "Whole Program Optimization" is enabled for a x86 or x64 target. To
+ # ensure "proper" link-time optimization, the LTCG flag has to be explicitly added here.
+ add_link_options(
+diff --git a/cmake/windows/defaults.cmake b/cmake/windows/defaults.cmake
+index e212ac6..6436c7e 100644
+--- a/cmake/windows/defaults.cmake
++++ b/cmake/windows/defaults.cmake
+@@ -21,5 +21,14 @@ set(OBS_DATA_PATH "../../${OBS_DATA_DESTINATION}")
+ # Enable find_package targets to become globally available targets
+ set(CMAKE_FIND_PACKAGE_TARGETS_GLOBAL TRUE)
+ 
++if(MINGW)
++  # libobs and win-capture load DLLs by their MSVC names
++  set(CMAKE_SHARED_LIBRARY_PREFIX "")
++  set(CMAKE_SHARED_MODULE_PREFIX "")
++
++  # Qt's EntryPointMinGW32 target is guarded per directory; subdirectories inherit this find
++  find_package(Qt6 QUIET COMPONENTS Core)
++endif()
++
+ include(buildspec)
+ include(cpackconfig)
+diff --git a/cmake/windows/helpers.cmake b/cmake/windows/helpers.cmake
+index 5e59766..414d3eb 100644
+--- a/cmake/windows/helpers.cmake
++++ b/cmake/windows/helpers.cmake
+@@ -39,7 +39,9 @@ function(set_target_properties_obs target)
+       get_property(obs_executables GLOBAL PROPERTY _OBS_EXECUTABLES)
+       get_property(obs_modules GLOBAL PROPERTY OBS_MODULES_ENABLED)
+       add_dependencies(${target} ${obs_executables} ${obs_modules})
+-      _bundle_dependencies(${target})
++      if(NOT MINGW)
++        _bundle_dependencies(${target})
++      endif()
+       target_add_resource(${target} "${CMAKE_CURRENT_SOURCE_DIR}/../AUTHORS"
+                           "${OBS_DATA_DESTINATION}/obs-studio/authors"
+       )
+@@ -159,7 +161,9 @@ function(set_target_properties_obs target)
+     endif()
+   endif()
+ 
+-  target_link_options(${target} PRIVATE "/PDBALTPATH:$<TARGET_PDB_FILE_NAME:${target}>")
++  if(NOT MINGW)
++    target_link_options(${target} PRIVATE "/PDBALTPATH:$<TARGET_PDB_FILE_NAME:${target}>")
++  endif()
+   target_install_resources(${target})
+ 
+   get_target_property(target_sources ${target} SOURCES)
+@@ -185,6 +189,11 @@ function(_target_install_obs target)
+   set(multiValueArgs "")
+   cmake_parse_arguments(PARSE_ARGV 0 _TIO "${options}" "${oneValueArgs}" "${multiValueArgs}")
+ 
++  # MinGW has no sibling-architecture builds to copy from
++  if(MINGW AND (_TIO_x86 OR _TIO_x64))
++    return()
++  endif()
++
+   if(_TIO_x86)
+     get_target_property(target_type ${target} TYPE)
+     if(target_type STREQUAL EXECUTABLE)
+@@ -229,7 +238,12 @@ function(_target_install_obs target)
+     )
+   else()
+     set(target_file "$<TARGET_FILE:${target}>")
+-    set(target_pdb_file "$<TARGET_PDB_FILE:${target}>")
++    if(MINGW)
++      # GNU ld writes no PDB
++      set(target_pdb_file "")
++    else()
++      set(target_pdb_file "$<TARGET_PDB_FILE:${target}>")
++    endif()
+     set(comment "Copy ${target} to destination")
+ 
+     get_target_property(target_type ${target} TYPE)
+@@ -263,19 +277,22 @@ function(_target_install_obs target)
+     COMMAND "${CMAKE_COMMAND}" -E make_directory "${OBS_OUTPUT_DIR}/$<CONFIG>/${_TIO_DESTINATION}"
+     COMMAND "${CMAKE_COMMAND}" -E copy ${target_file} "${OBS_OUTPUT_DIR}/$<CONFIG>/${_TIO_DESTINATION}"
+     COMMAND
+-      "${CMAKE_COMMAND}" -E $<IF:$<CONFIG:Debug,RelWithDebInfo,Release>,copy,true> ${target_pdb_file}
++      "${CMAKE_COMMAND}" -E $<IF:$<AND:$<CONFIG:Debug,RelWithDebInfo,Release>,$<BOOL:${target_pdb_file}>>,copy,true>
++      ${target_pdb_file}
+       "${OBS_OUTPUT_DIR}/$<CONFIG>/${_TIO_DESTINATION}"
+     COMMENT ""
+     VERBATIM
+   )
+ 
+-  install(
+-    FILES ${target_pdb_file}
+-    CONFIGURATIONS RelWithDebInfo Debug Release
+-    DESTINATION "${_TIO_DESTINATION}"
+-    COMPONENT Runtime
+-    OPTIONAL
+-  )
++  if(target_pdb_file)
++    install(
++      FILES ${target_pdb_file}
++      CONFIGURATIONS RelWithDebInfo Debug Release
++      DESTINATION "${_TIO_DESTINATION}"
++      COMPONENT Runtime
++      OPTIONAL
++    )
++  endif()
+ endfunction()
+ 
+ # target_export: Helper function to export target as CMake package
+@@ -285,7 +302,7 @@ function(target_export target)
+   _target_export(${target})
+ 
+   get_target_property(target_type ${target} TYPE)
+-  if(NOT target_type STREQUAL INTERFACE_LIBRARY)
++  if(NOT target_type STREQUAL INTERFACE_LIBRARY AND NOT MINGW)
+     install(
+       FILES "$<TARGET_PDB_FILE:${target}>"
+       CONFIGURATIONS RelWithDebInfo Debug Release
+diff --git a/deps/detours-minhook/detours.h b/deps/detours-minhook/detours.h
+new file mode 100644
+index 0000000..b95bcfd
+--- /dev/null
++++ b/deps/detours-minhook/detours.h
+@@ -0,0 +1,51 @@
++/* The Detours calls OBS uses, implemented with MinHook for MinGW builds */
++#pragma once
++
++#include <windows.h>
++#include <MinHook.h>
++
++static PVOID detour_shim_targets[32];
++static int detour_shim_count;
++
++static inline LONG DetourTransactionBegin(void)
++{
++	MH_STATUS s = MH_Initialize();
++	detour_shim_count = 0;
++	return s == MH_OK || s == MH_ERROR_ALREADY_INITIALIZED ? NO_ERROR : ERROR_INVALID_OPERATION;
++}
++
++/* *ppPointer becomes the trampoline right away; it runs the original code */
++static inline LONG DetourAttach(PVOID *ppPointer, PVOID pDetour)
++{
++	PVOID target = *ppPointer, tramp;
++	if (detour_shim_count == 32 || MH_CreateHook(target, pDetour, &tramp) != MH_OK)
++		return ERROR_INVALID_PARAMETER;
++	if (MH_QueueEnableHook(target) != MH_OK) {
++		MH_RemoveHook(target);
++		return ERROR_INVALID_PARAMETER;
++	}
++	detour_shim_targets[detour_shim_count++] = target;
++	*ppPointer = tramp;
++	return NO_ERROR;
++}
++
++#ifdef __cplusplus
++/* MSVC converts function pointers to PVOID implicitly; GCC needs the cast */
++template<typename T> static inline LONG DetourAttach(PVOID *ppPointer, T *pDetour)
++{
++	return DetourAttach(ppPointer, reinterpret_cast<PVOID>(pDetour));
++}
++#endif
++
++static inline LONG DetourTransactionCommit(void)
++{
++	return MH_ApplyQueued() == MH_OK ? NO_ERROR : ERROR_INVALID_OPERATION;
++}
++
++static inline LONG DetourTransactionAbort(void)
++{
++	for (int i = 0; i < detour_shim_count; i++)
++		MH_RemoveHook(detour_shim_targets[i]);
++	detour_shim_count = 0;
++	return NO_ERROR;
++}
+diff --git a/deps/glad/src/glad.c b/deps/glad/src/glad.c
+index 8fc9f8f..2cf4666 100644
+--- a/deps/glad/src/glad.c
++++ b/deps/glad/src/glad.c
+@@ -8,7 +8,7 @@ static void* get_proc(const char *namez);
+ static HMODULE libGL;
+ 
+ typedef void* (APIENTRYP PFNWGLGETPROCADDRESSPROC_PRIVATE)(const char*);
+-PFNWGLGETPROCADDRESSPROC_PRIVATE gladGetProcAddressPtr;
++static PFNWGLGETPROCADDRESSPROC_PRIVATE gladGetProcAddressPtr;
+ 
+ static
+ int open_gl(void) {
+diff --git a/deps/glad/src/glad_wgl.c b/deps/glad/src/glad_wgl.c
+index b76bbdb..c3813d7 100644
+--- a/deps/glad/src/glad_wgl.c
++++ b/deps/glad/src/glad_wgl.c
+@@ -8,7 +8,7 @@ static void* get_proc(const char *namez);
+ static HMODULE libGL;
+ 
+ typedef void* (APIENTRYP PFNWGLGETPROCADDRESSPROC_PRIVATE)(const char*);
+-PFNWGLGETPROCADDRESSPROC_PRIVATE gladGetProcAddressPtr;
++static PFNWGLGETPROCADDRESSPROC_PRIVATE gladGetProcAddressPtr;
+ 
+ static
+ int open_gl(void) {
+diff --git a/deps/libdshowcapture/CMakeLists.txt b/deps/libdshowcapture/CMakeLists.txt
+index 2e04053..6ab04e6 100644
+--- a/deps/libdshowcapture/CMakeLists.txt
++++ b/deps/libdshowcapture/CMakeLists.txt
+@@ -40,4 +40,8 @@ target_include_directories(
+                             "${CMAKE_CURRENT_SOURCE_DIR}/src/external/capture-device-support/Library")
+ 
+ target_compile_definitions(libdshowcapture INTERFACE _UP_WINDOWS=1)
+-target_compile_options(libdshowcapture INTERFACE /wd4005 /wd4018)
++# MSVC gets these from #pragma comment(lib) and the SDK's default GUID libraries
++if(MINGW)
++  target_link_libraries(libdshowcapture INTERFACE hid setupapi cfgmgr32 ksguid wmcodecdspuuid)
++endif()
++target_compile_options(libdshowcapture INTERFACE "$<$<CXX_COMPILER_ID:MSVC>:/wd4005;/wd4018>")
+diff --git a/deps/w32-pthreads/CMakeLists.txt b/deps/w32-pthreads/CMakeLists.txt
+index 257e752..4bc80d3 100644
+--- a/deps/w32-pthreads/CMakeLists.txt
++++ b/deps/w32-pthreads/CMakeLists.txt
+@@ -1,5 +1,14 @@
+ cmake_minimum_required(VERSION 3.28...3.30)
+ 
++if(MINGW)
++  # the toolchain's winpthreads; a second pthread.h would break libstdc++'s <thread>
++  find_package(Threads REQUIRED)
++  add_library(w32-pthreads INTERFACE)
++  add_library(OBS::w32-pthreads ALIAS w32-pthreads)
++  target_link_libraries(w32-pthreads INTERFACE Threads::Threads)
++  return()
++endif()
++
+ add_library(w32-pthreads SHARED EXCLUDE_FROM_ALL)
+ add_library(OBS::w32-pthreads ALIAS w32-pthreads)
+ 
+diff --git a/frontend/cmake/os-windows.cmake b/frontend/cmake/os-windows.cmake
+index e9777cf..7bf15e0 100644
+--- a/frontend/cmake/os-windows.cmake
++++ b/frontend/cmake/os-windows.cmake
+@@ -58,7 +58,7 @@ target_link_libraries(
+ 
+ target_compile_definitions(obs-studio PRIVATE PSAPI_VERSION=2)
+ 
+-target_link_options(obs-studio PRIVATE /IGNORE:4099 $<$<CONFIG:DEBUG>:/NODEFAULTLIB:MSVCRT>)
++target_link_options(obs-studio PRIVATE "$<$<C_COMPILER_ID:MSVC>:/IGNORE:4099;$<$<CONFIG:DEBUG>:/NODEFAULTLIB:MSVCRT>>")
+ 
+ # Set commit for untagged version comparisons in the Windows updater
+ if(OBS_VERSION MATCHES ".+g[a-f0-9]+.*")
+@@ -69,11 +69,18 @@ endif()
+ 
+ set_source_files_properties(utility/AutoUpdateThread.cpp PROPERTIES COMPILE_DEFINITIONS OBS_COMMIT="${OBS_COMMIT}")
+ 
+-add_subdirectory(updater)
++if(NOT MINGW)
++  add_subdirectory(updater)
++endif()
+ 
+ set_property(TARGET obs-studio APPEND PROPERTY AUTORCC_OPTIONS --format-version 1)
+ 
+ set_property(DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT obs-studio)
++# Qt's MinGW entry point defines main as qMain, which also renames OBS's members called main
++if(MINGW)
++  set_property(TARGET obs-studio PROPERTY QT_NO_ENTRYPOINT TRUE)
++endif()
++
+ set_target_properties(
+   obs-studio
+   PROPERTIES
+diff --git a/frontend/obs-main.cpp b/frontend/obs-main.cpp
+index 9fa5d19..1e0e037 100644
+--- a/frontend/obs-main.cpp
++++ b/frontend/obs-main.cpp
+@@ -825,6 +825,10 @@ static constexpr char vcRunInstallerUrl[] = "https://obsproject.com/visual-studi
+ 
+ static bool vc_runtime_outdated()
+ {
++#ifndef _MSC_VER
++	/* GCC builds do not use the MSVC runtime */
++	return false;
++#endif
+ 	win_version_info ver;
+ 	if (!get_dll_ver(L"msvcp140.dll", &ver)) {
+ 		return true;
+@@ -930,6 +934,18 @@ int main(int argc, char *argv[])
+ 	SetErrorMode(SEM_FAILCRITICALERRORS);
+ 	SetSearchPathMode(BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE | BASE_SEARCH_PATH_PERMANENT);
+ 	SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
++#ifdef __MINGW32__
++	/* plugin dependencies live in the MinGW prefix, next to the already loaded winpthread */
++	if (HMODULE pthr = GetModuleHandleW(L"libwinpthread-1.dll")) {
++		wchar_t dir[MAX_PATH];
++		DWORD n = GetModuleFileNameW(pthr, dir, MAX_PATH);
++		if (n && n < MAX_PATH) {
++			if (wchar_t *slash = wcsrchr(dir, L'\\'))
++				*slash = 0;
++			AddDllDirectory(dir);
++		}
++	}
++#endif
+ 	SetDllDirectoryW(L"");
+ 	load_debug_privilege();
+ 	base_set_crash_handler(main_crash_handler, nullptr);
+diff --git a/frontend/utility/win-dll-blocklist.c b/frontend/utility/win-dll-blocklist.c
+index 1d969b9..5e109a9 100644
+--- a/frontend/utility/win-dll-blocklist.c
++++ b/frontend/utility/win-dll-blocklist.c
+@@ -295,6 +295,23 @@ static NTSTATUS NtMapViewOfSection_hook(HANDLE SectionHandle, HANDLE ProcessHand
+ 	// Examine the PE header. Perhaps the map is small
+ 	// so wrap it in an exception handler in case we
+ 	// read past the end of the buffer.
++#ifndef _MSC_VER
++	// no SEH in GCC: bound the reads by the mapped size instead
++	{
++		BYTE *p = (BYTE *)*BaseAddress;
++		SIZE_T size = ViewSize ? *ViewSize : 0;
++		IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)p;
++		if (size < sizeof(*dos) || dos->e_magic != IMAGE_DOS_SIGNATURE || dos->e_lfanew < 0 ||
++		    (SIZE_T)dos->e_lfanew + sizeof(IMAGE_NT_HEADERS) > size)
++			return ret;
++
++		IMAGE_NT_HEADERS *nt = (IMAGE_NT_HEADERS *)(p + dos->e_lfanew);
++		if (nt->Signature != IMAGE_NT_SIGNATURE)
++			return ret;
++
++		timestamp = nt->FileHeader.TimeDateStamp;
++	}
++#else
+ 	__try {
+ 		BYTE *p = (BYTE *)*BaseAddress;
+ 		IMAGE_DOS_HEADER *dos = (IMAGE_DOS_HEADER *)p;
+@@ -310,6 +327,7 @@ static NTSTATUS NtMapViewOfSection_hook(HANDLE SectionHandle, HANDLE ProcessHand
+ 	} __except (EXCEPTION_EXECUTE_HANDLER) {
+ 		return ret;
+ 	}
++#endif
+ 
+ 	// Get the actual filename if possible
+ 	if (K32GetMappedFileNameW(ProcessHandle, *BaseAddress, fileName, _countof(fileName)) == 0)
+diff --git a/libobs-d3d11/CMakeLists.txt b/libobs-d3d11/CMakeLists.txt
+index 5889e85..9f06fa3 100644
+--- a/libobs-d3d11/CMakeLists.txt
++++ b/libobs-d3d11/CMakeLists.txt
+@@ -34,7 +34,7 @@ target_compile_definitions(
+ 
+ target_link_libraries(
+   libobs-d3d11
+-  PRIVATE OBS::libobs d3d9 d3d11 d3dcompiler dxgi shcore
++  PRIVATE OBS::libobs d3d9 d3d11 d3dcompiler dxgi shcore $<$<BOOL:${MINGW}>:gdi32>
+ )
+ 
+ target_enable_feature(libobs "Direct3D 11 renderer")
+diff --git a/libobs-d3d11/d3d11-subsystem.cpp b/libobs-d3d11/d3d11-subsystem.cpp
+index c44761c..eb2bb85 100644
+--- a/libobs-d3d11/d3d11-subsystem.cpp
++++ b/libobs-d3d11/d3d11-subsystem.cpp
+@@ -28,7 +28,11 @@
+ #include <d3d9.h>
+ #include "d3d11-subsystem.hpp"
+ #include <shellscalingapi.h>
++#ifdef _MSC_VER
+ #include <d3dkmthk.h>
++#else
++#include "d3dkmthk-mingw.h"
++#endif
+ 
+ struct UnsupportedHWError : HRError {
+ 	inline UnsupportedHWError(const char *str, HRESULT hr) : HRError(str, hr) {}
+diff --git a/libobs-d3d11/d3dkmthk-mingw.h b/libobs-d3d11/d3dkmthk-mingw.h
+new file mode 100644
+index 0000000..66f4172
+--- /dev/null
++++ b/libobs-d3d11/d3dkmthk-mingw.h
+@@ -0,0 +1,78 @@
++/* The D3DKMT subset OBS uses; mingw-w64 ships no d3dkmthk.h. Values from the WDK. */
++#pragma once
++
++#include <windows.h>
++#include <winternl.h>
++
++typedef UINT D3DKMT_HANDLE;
++
++typedef enum _D3DKMT_SCHEDULINGPRIORITYCLASS {
++	D3DKMT_SCHEDULINGPRIORITYCLASS_IDLE = 0,
++	D3DKMT_SCHEDULINGPRIORITYCLASS_BELOW_NORMAL = 1,
++	D3DKMT_SCHEDULINGPRIORITYCLASS_NORMAL = 2,
++	D3DKMT_SCHEDULINGPRIORITYCLASS_ABOVE_NORMAL = 3,
++	D3DKMT_SCHEDULINGPRIORITYCLASS_HIGH = 4,
++	D3DKMT_SCHEDULINGPRIORITYCLASS_REALTIME = 5,
++} D3DKMT_SCHEDULINGPRIORITYCLASS;
++
++typedef enum _KMTQUERYADAPTERINFOTYPE {
++	KMTQAITYPE_WDDM_2_7_CAPS = 70,
++	KMTQAITYPE_WDDM_2_9_CAPS = 74,
++} KMTQUERYADAPTERINFOTYPE;
++
++#define DXGK_FEATURE_SUPPORT_ALWAYS_OFF ((UINT)0)
++#define DXGK_FEATURE_SUPPORT_EXPERIMENTAL ((UINT)1)
++#define DXGK_FEATURE_SUPPORT_STABLE ((UINT)2)
++#define DXGK_FEATURE_SUPPORT_ALWAYS_ON ((UINT)3)
++
++typedef struct _D3DKMT_OPENADAPTERFROMLUID {
++	LUID AdapterLuid;
++	D3DKMT_HANDLE hAdapter;
++} D3DKMT_OPENADAPTERFROMLUID;
++
++typedef struct _D3DKMT_CLOSEADAPTER {
++	D3DKMT_HANDLE hAdapter;
++} D3DKMT_CLOSEADAPTER;
++
++typedef struct _D3DKMT_QUERYADAPTERINFO {
++	D3DKMT_HANDLE hAdapter;
++	KMTQUERYADAPTERINFOTYPE Type;
++	VOID *pPrivateDriverData;
++	UINT PrivateDriverDataSize;
++} D3DKMT_QUERYADAPTERINFO;
++
++typedef struct _D3DKMT_WDDM_2_7_CAPS {
++	union {
++		struct {
++			UINT HwSchSupported : 1;
++			UINT HwSchEnabled : 1;
++			UINT HwSchEnabledByDefault : 1;
++			UINT IndependentVidPnVSyncControl : 1;
++			UINT Reserved : 28;
++		};
++		UINT Value;
++	};
++} D3DKMT_WDDM_2_7_CAPS;
++
++typedef struct _D3DKMT_WDDM_2_9_CAPS {
++	union {
++		struct {
++			UINT HwSchSupportState : 2;
++			UINT HwSchEnabled : 1;
++			UINT SelfRefreshMemorySupported : 1;
++			UINT Reserved : 28;
++		};
++		UINT Value;
++	};
++} D3DKMT_WDDM_2_9_CAPS;
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++NTSTATUS WINAPI D3DKMTOpenAdapterFromLuid(D3DKMT_OPENADAPTERFROMLUID *desc);
++NTSTATUS WINAPI D3DKMTCloseAdapter(const D3DKMT_CLOSEADAPTER *desc);
++NTSTATUS WINAPI D3DKMTQueryAdapterInfo(const D3DKMT_QUERYADAPTERINFO *desc);
++NTSTATUS WINAPI D3DKMTSetProcessSchedulingPriorityClass(HANDLE process, D3DKMT_SCHEDULINGPRIORITYCLASS priority);
++#ifdef __cplusplus
++}
++#endif
+diff --git a/libobs/audio-monitoring/win32/wasapi-enum-devices.c b/libobs/audio-monitoring/win32/wasapi-enum-devices.c
+index f5c47ec..0b74b62 100644
+--- a/libobs/audio-monitoring/win32/wasapi-enum-devices.c
++++ b/libobs/audio-monitoring/win32/wasapi-enum-devices.c
+@@ -4,35 +4,8 @@
+ 
+ #include <propsys.h>
+ 
+-#ifdef __MINGW32__
+-
+-#ifdef DEFINE_PROPERTYKEY
+-#undef DEFINE_PROPERTYKEY
+-#endif
+-#define DEFINE_PROPERTYKEY(id, a, b, c, d, e, f, g, h, i, j, k, l) \
+-	const PROPERTYKEY id = {{a,                                \
+-				 b,                                \
+-				 c,                                \
+-				 {                                 \
+-					 d,                        \
+-					 e,                        \
+-					 f,                        \
+-					 g,                        \
+-					 h,                        \
+-					 i,                        \
+-					 j,                        \
+-					 k,                        \
+-				 }},                               \
+-				l};
+-DEFINE_PROPERTYKEY(PKEY_Device_FriendlyName, 0xa45c254e, 0xdf1c, 0x4efd, 0x80, 0x20, 0x67, 0xd1, 0x46, 0xa8, 0x50, 0xe0,
+-		   14);
+-
+-#else
+-
+ #include <functiondiscoverykeys_devpkey.h>
+ 
+-#endif
+-
+ static bool get_device_info(obs_enum_audio_device_cb cb, void *data, IMMDeviceCollection *collection, UINT idx)
+ {
+ 	IPropertyStore *store = NULL;
+diff --git a/libobs/cmake/os-windows.cmake b/libobs/cmake/os-windows.cmake
+index 2c093cd..b3cbe1e 100644
+--- a/libobs/cmake/os-windows.cmake
++++ b/libobs/cmake/os-windows.cmake
+@@ -60,7 +60,7 @@ target_sources(
+     util/windows/window-helpers.h
+ )
+ 
+-target_compile_options(libobs PRIVATE $<$<COMPILE_LANGUAGE:C,CXX>:/EHc->)
++target_compile_options(libobs PRIVATE $<$<COMPILE_LANG_AND_ID:C,MSVC>:/EHc-> $<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/EHc->)
+ 
+ set_source_files_properties(
+   obs-win-crash-handler.c
+@@ -72,15 +72,18 @@ set_source_files_properties(
+   graphics/libnsgif/lzw.c
+   graphics/libnsgif/lzw.h
+   graphics/libnsgif/nsgif.h
+-  PROPERTIES COMPILE_OPTIONS "/wd4244;/wd4267"
++  PROPERTIES COMPILE_OPTIONS "$<$<C_COMPILER_ID:MSVC>:/wd4244;/wd4267>"
+ )
+ 
+ target_link_libraries(
+   libobs
+   PRIVATE Avrt Dwmapi Dxgi winmm Rpcrt4 OBS::obfuscate OBS::winhandle OBS::COMutils
+-  PUBLIC OBS::w32-pthreads
+ )
++# MinGW uses winpthreads through Threads::Threads
++if(NOT MINGW)
++  target_link_libraries(libobs PUBLIC OBS::w32-pthreads)
++endif()
+ 
+-target_link_options(libobs PRIVATE /IGNORE:4098 /SAFESEH:NO)
++target_link_options(libobs PRIVATE "$<$<C_COMPILER_ID:MSVC>:/IGNORE:4098;/SAFESEH:NO>")
+ 
+ set_target_properties(libobs PROPERTIES PREFIX "" OUTPUT_NAME "obs")
+diff --git a/libobs/util/buffered-file-serializer.c b/libobs/util/buffered-file-serializer.c
+index a2cf551..2a4c040 100644
+--- a/libobs/util/buffered-file-serializer.c
++++ b/libobs/util/buffered-file-serializer.c
+@@ -23,6 +23,12 @@
+ #include "deque.h"
+ #include "dstr.h"
+ 
++#ifndef min
++/* MSVC's stdlib.h provides these in C */
++#define min(a, b) (((a) < (b)) ? (a) : (b))
++#define max(a, b) (((a) > (b)) ? (a) : (b))
++#endif
++
+ static const size_t DEFAULT_BUF_SIZE = 256ULL * 1048576ULL; // 256 MiB
+ static const size_t DEFAULT_CHUNK_SIZE = 1048576;           // 1 MiB
+ 
+diff --git a/libobs/util/platform-windows.c b/libobs/util/platform-windows.c
+index df4efb7..db88e30 100644
+--- a/libobs/util/platform-windows.c
++++ b/libobs/util/platform-windows.c
+@@ -31,7 +31,11 @@
+ #include "windows/win-registry.h"
+ #include "windows/win-version.h"
+ 
++#ifdef _MSC_VER
+ #include "../../deps/w32-pthreads/pthread.h"
++#else
++#include <pthread.h>
++#endif
+ 
+ #define MAX_SZ_LEN 256
+ 
+@@ -135,6 +139,34 @@ void os_dlclose(void *module)
+ 	FreeLibrary(module);
+ }
+ 
++#ifndef _MSC_VER
++/* no SEH in GCC: let the loader parse the image; it runs no DllMain and resolves no imports */
++void get_plugin_info(const char *path, bool *is_obs_plugin)
++{
++	struct dstr dll_name;
++	wchar_t *wpath;
++	HMODULE mod;
++
++	*is_obs_plugin = false;
++
++	if (!path)
++		return;
++
++	dstr_init_copy(&dll_name, path);
++	dstr_replace(&dll_name, "\\", "/");
++	if (!dstr_find(&dll_name, ".dll"))
++		dstr_cat(&dll_name, ".dll");
++	os_utf8_to_wcs_ptr(dll_name.array, 0, &wpath);
++	dstr_free(&dll_name);
++
++	mod = LoadLibraryExW(wpath, NULL, DONT_RESOLVE_DLL_REFERENCES);
++	bfree(wpath);
++	if (mod) {
++		*is_obs_plugin = GetProcAddress(mod, "obs_module_load") != NULL;
++		FreeLibrary(mod);
++	}
++}
++#else
+ static bool has_obs_export(VOID *base, PIMAGE_NT_HEADERS nt_headers)
+ {
+ 	__try {
+@@ -272,6 +304,7 @@ cleanup:
+ 	if (hFile != INVALID_HANDLE_VALUE)
+ 		CloseHandle(hFile);
+ }
++#endif
+ 
+ bool os_is_obs_plugin(const char *path)
+ {
+diff --git a/libobs/util/threading.h b/libobs/util/threading.h
+index 8ee35bc..1c75dd9 100644
+--- a/libobs/util/threading.h
++++ b/libobs/util/threading.h
+@@ -35,7 +35,7 @@
+ extern "C" {
+ #endif
+ 
+-#ifdef _WIN32
++#ifdef _MSC_VER
+ #include "threading-windows.h"
+ #else
+ #include "threading-posix.h"
+diff --git a/plugins/aja-output-ui/CMakeLists.txt b/plugins/aja-output-ui/CMakeLists.txt
+index 56dedbd..5744eb6 100644
+--- a/plugins/aja-output-ui/CMakeLists.txt
++++ b/plugins/aja-output-ui/CMakeLists.txt
+@@ -46,7 +46,7 @@ target_link_libraries(
+     $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD>:X11::X11>
+ )
+ 
+-target_link_options(aja-output-ui PRIVATE $<$<PLATFORM_ID:Windows>:/IGNORE:4099>)
++target_link_options(aja-output-ui PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4099>)
+ 
+ if(OS_WINDOWS)
+   configure_file(cmake/windows/obs-module.rc.in aja-output-ui.rc)
+diff --git a/plugins/frontend-tools/CMakeLists.txt b/plugins/frontend-tools/CMakeLists.txt
+index c3927af..3608374 100644
+--- a/plugins/frontend-tools/CMakeLists.txt
++++ b/plugins/frontend-tools/CMakeLists.txt
+@@ -27,14 +27,14 @@ target_sources(
+     $<$<PLATFORM_ID:Darwin>:auto-scene-switcher-osx.mm>
+     $<$<PLATFORM_ID:Linux,FreeBSD,OpenBSD>:auto-scene-switcher-nix.cpp>
+     $<$<PLATFORM_ID:Windows>:auto-scene-switcher-win.cpp>
+-    $<$<PLATFORM_ID:Windows>:captions-handler.cpp>
+-    $<$<PLATFORM_ID:Windows>:captions-handler.hpp>
+-    $<$<PLATFORM_ID:Windows>:captions-mssapi-stream.cpp>
+-    $<$<PLATFORM_ID:Windows>:captions-mssapi-stream.hpp>
+-    $<$<PLATFORM_ID:Windows>:captions-mssapi.cpp>
+-    $<$<PLATFORM_ID:Windows>:captions-mssapi.hpp>
+-    $<$<PLATFORM_ID:Windows>:captions.cpp>
+-    $<$<PLATFORM_ID:Windows>:captions.hpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-handler.cpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-handler.hpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-mssapi-stream.cpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-mssapi-stream.hpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-mssapi.cpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions-mssapi.hpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions.cpp>
++    $<$<AND:$<PLATFORM_ID:Windows>,$<NOT:$<BOOL:${MINGW}>>>:captions.hpp>
+     auto-scene-switcher.cpp
+     auto-scene-switcher.hpp
+     frontend-tools.c
+diff --git a/plugins/frontend-tools/frontend-tools.c b/plugins/frontend-tools/frontend-tools.c
+index 8fe6373..4e5d196 100644
+--- a/plugins/frontend-tools/frontend-tools.c
++++ b/plugins/frontend-tools/frontend-tools.c
+@@ -7,7 +7,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE("frontend-tools", "en-US")
+ void InitSceneSwitcher();
+ void FreeSceneSwitcher();
+ 
+-#if defined(_WIN32)
++#if defined(_WIN32) && !defined(__MINGW32__) /* captions need ATL sphelper.h */
+ void InitCaptions();
+ void FreeCaptions();
+ #endif
+@@ -22,7 +22,7 @@ void FreeScripts();
+ 
+ bool obs_module_load(void)
+ {
+-#if defined(_WIN32)
++#if defined(_WIN32) && !defined(__MINGW32__) /* captions need ATL sphelper.h */
+ 	InitCaptions();
+ #endif
+ 	InitSceneSwitcher();
+@@ -39,7 +39,7 @@ bool obs_module_load(void)
+ 
+ void obs_module_unload(void)
+ {
+-#if defined(_WIN32)
++#if defined(_WIN32) && !defined(__MINGW32__) /* captions need ATL sphelper.h */
+ 	FreeCaptions();
+ #endif
+ 	FreeSceneSwitcher();
+diff --git a/plugins/obs-ffmpeg/ffmpeg-mux/CMakeLists.txt b/plugins/obs-ffmpeg/ffmpeg-mux/CMakeLists.txt
+index a5d6429..cec9aef 100644
+--- a/plugins/obs-ffmpeg/ffmpeg-mux/CMakeLists.txt
++++ b/plugins/obs-ffmpeg/ffmpeg-mux/CMakeLists.txt
+@@ -14,6 +14,9 @@ target_link_libraries(
+   PRIVATE OBS::libobs FFmpeg::avcodec FFmpeg::avutil FFmpeg::avformat $<$<PLATFORM_ID:Windows>:OBS::w32-pthreads>
+ )
+ 
++# entry point is wmain
++target_link_options(obs-ffmpeg-mux PRIVATE $<$<BOOL:${MINGW}>:-municode>)
++
+ target_compile_definitions(obs-ffmpeg-mux PRIVATE $<$<BOOL:${ENABLE_FFMPEG_MUX_DEBUG}>:ENABLE_FFMPEG_MUX_DEBUG>)
+ 
+ set_target_properties_obs(obs-ffmpeg-mux PROPERTIES FOLDER plugins/obs-ffmpeg)
+diff --git a/plugins/obs-filters/cmake/speexdsp.cmake b/plugins/obs-filters/cmake/speexdsp.cmake
+index eec6d2b..b3d1e76 100644
+--- a/plugins/obs-filters/cmake/speexdsp.cmake
++++ b/plugins/obs-filters/cmake/speexdsp.cmake
+@@ -6,7 +6,7 @@ if(ENABLE_SPEEXDSP)
+   target_sources(obs-filters PRIVATE noise-suppress-filter.c)
+   target_link_libraries(obs-filters PRIVATE SpeexDSP::Libspeexdsp)
+   target_compile_definitions(obs-filters PRIVATE LIBSPEEXDSP_ENABLED)
+-  target_link_options(obs-filters PRIVATE $<$<AND:$<PLATFORM_ID:Windows>,$<CONFIG:Debug>>:/NODEFAULTLIB:MSVCRT>)
++  target_link_options(obs-filters PRIVATE $<$<AND:$<C_COMPILER_ID:MSVC>,$<CONFIG:Debug>>:/NODEFAULTLIB:MSVCRT>)
+ 
+   target_enable_feature(obs-filters "SpeexDSP noise suppression" HAS_NOISEREDUCTION)
+ else()
+diff --git a/plugins/obs-outputs/CMakeLists.txt b/plugins/obs-outputs/CMakeLists.txt
+index be8a75f..cec00dc 100644
+--- a/plugins/obs-outputs/CMakeLists.txt
++++ b/plugins/obs-outputs/CMakeLists.txt
+@@ -92,7 +92,7 @@ target_link_libraries(
+ # Remove once jansson has been fixed on obs-deps
+ target_link_options(
+   obs-outputs
+-  PRIVATE $<$<PLATFORM_ID:Windows>:/IGNORE:4098> $<$<AND:$<PLATFORM_ID:Windows>,$<CONFIG:DEBUG>>:/NODEFAULTLIB:MSVCRT>
++  PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4098> $<$<AND:$<C_COMPILER_ID:MSVC>,$<CONFIG:DEBUG>>:/NODEFAULTLIB:MSVCRT>
+ )
+ 
+ if(OS_WINDOWS)
+diff --git a/plugins/obs-outputs/mp4-mux.c b/plugins/obs-outputs/mp4-mux.c
+index 6b7987b..2fc1bd5 100644
+--- a/plugins/obs-outputs/mp4-mux.c
++++ b/plugins/obs-outputs/mp4-mux.c
+@@ -29,6 +29,12 @@
+ 
+ #include <time.h>
+ 
++#ifndef min
++/* MSVC's stdlib.h provides these in C */
++#define min(a, b) (((a) < (b)) ? (a) : (b))
++#define max(a, b) (((a) > (b)) ? (a) : (b))
++#endif
++
+ /*
+  * (Mostly) compliant MP4 muxer for fun and profit.
+  * Based on ISO/IEC 14496-12 and FFmpeg's libavformat/movenc.c ([L]GPL)
+diff --git a/plugins/obs-qsv11/CMakeLists.txt b/plugins/obs-qsv11/CMakeLists.txt
+index 9d06d43..65c52f5 100644
+--- a/plugins/obs-qsv11/CMakeLists.txt
++++ b/plugins/obs-qsv11/CMakeLists.txt
+@@ -51,7 +51,7 @@ target_link_libraries(
+     $<$<PLATFORM_ID:Windows>:dxguid>
+ )
+ 
+-target_link_options(obs-qsv11 PRIVATE $<$<PLATFORM_ID:Windows>:/IGNORE:4099>)
++target_link_options(obs-qsv11 PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4099>)
+ 
+ if(OS_WINDOWS)
+   add_subdirectory(obs-qsv-test)
+diff --git a/plugins/obs-qsv11/obs-qsv-test/CMakeLists.txt b/plugins/obs-qsv11/obs-qsv-test/CMakeLists.txt
+index c488585..def65f8 100644
+--- a/plugins/obs-qsv11/obs-qsv-test/CMakeLists.txt
++++ b/plugins/obs-qsv11/obs-qsv-test/CMakeLists.txt
+@@ -17,6 +17,6 @@ target_link_libraries(
+   OBS::COMutils
+ )
+ 
+-target_link_options(obs-qsv-test PRIVATE /IGNORE:4099)
++target_link_options(obs-qsv-test PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4099>)
+ 
+ set_target_properties_obs(obs-qsv-test PROPERTIES FOLDER plugins/obs-qsv11 PREFIX "")
+diff --git a/plugins/obs-text/gdiplus/obs-text.cpp b/plugins/obs-text/gdiplus/obs-text.cpp
+index 8a8862e..f876b81 100644
+--- a/plugins/obs-text/gdiplus/obs-text.cpp
++++ b/plugins/obs-text/gdiplus/obs-text.cpp
+@@ -8,6 +8,7 @@
+ #include <algorithm>
+ #include <string>
+ #include <memory>
++#include <stdexcept>
+ #include <locale>
+ 
+ using namespace std;
+@@ -685,7 +686,13 @@ void TextSource::LoadFileText()
+ 
+ void TextSource::TransformText()
+ {
+-	const locale loc = locale(obs_get_locale());
++	locale loc;
++	try {
++		loc = locale(obs_get_locale());
++	} catch (const runtime_error &) {
++		/* libstdc++ on Windows only knows "C"; its ctype still maps non-ASCII */
++		loc = locale::classic();
++	}
+ 	const ctype<wchar_t> &f = use_facet<ctype<wchar_t>>(loc);
+ 	if (text_transform == S_TRANSFORM_UPPERCASE) {
+ 		f.toupper(&text[0], &text[0] + text.size());
+diff --git a/plugins/rtmp-services/CMakeLists.txt b/plugins/rtmp-services/CMakeLists.txt
+index be0364c..3bba032 100644
+--- a/plugins/rtmp-services/CMakeLists.txt
++++ b/plugins/rtmp-services/CMakeLists.txt
+@@ -49,7 +49,7 @@ target_compile_definitions(
+ target_link_libraries(rtmp-services PRIVATE OBS::libobs OBS::file-updater jansson::jansson)
+ 
+ # Remove once jansson has been fixed on obs-deps
+-target_link_options(rtmp-services PRIVATE $<$<PLATFORM_ID:Windows>:/IGNORE:4098>)
++target_link_options(rtmp-services PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4098>)
+ 
+ if(OS_WINDOWS)
+   configure_file(cmake/windows/obs-module.rc.in rtmp-services.rc)
+diff --git a/plugins/text-freetype2/CMakeLists.txt b/plugins/text-freetype2/CMakeLists.txt
+index 955cb73..80cebca 100644
+--- a/plugins/text-freetype2/CMakeLists.txt
++++ b/plugins/text-freetype2/CMakeLists.txt
+@@ -44,7 +44,7 @@ target_link_libraries(
+ )
+ 
+ # FreeType is hard-coded with /DEFAULTLIB:MSVCRT
+-target_link_options(text-freetype2 PRIVATE $<$<PLATFORM_ID:Windows>:/IGNORE:4098>)
++target_link_options(text-freetype2 PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4098>)
+ 
+ if(OS_WINDOWS)
+   configure_file(cmake/windows/obs-module.rc.in text-freetype2.rc)
+diff --git a/plugins/win-capture/CMakeLists.txt b/plugins/win-capture/CMakeLists.txt
+index 2214917..4a359d6 100644
+--- a/plugins/win-capture/CMakeLists.txt
++++ b/plugins/win-capture/CMakeLists.txt
+@@ -74,7 +74,7 @@ target_link_libraries(
+ )
+ 
+ # Remove once jansson has been fixed on obs-deps
+-target_link_options(win-capture PRIVATE /IGNORE:4098)
++target_link_options(win-capture PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4098>)
+ 
+ configure_file(cmake/windows/obs-module.rc.in win-capture.rc)
+ target_sources(win-capture PRIVATE win-capture.rc)
+diff --git a/plugins/win-capture/get-graphics-offsets/CMakeLists.txt b/plugins/win-capture/get-graphics-offsets/CMakeLists.txt
+index d51b2a1..c539926 100644
+--- a/plugins/win-capture/get-graphics-offsets/CMakeLists.txt
++++ b/plugins/win-capture/get-graphics-offsets/CMakeLists.txt
+@@ -29,7 +29,7 @@ if(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
+     )
+   endif()
+ 
+-  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)")
++  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)" AND NOT MINGW)
+     add_custom_command(
+       TARGET get-graphics-offsets
+       POST_BUILD
+diff --git a/plugins/win-capture/graphics-hook/CMakeLists.txt b/plugins/win-capture/graphics-hook/CMakeLists.txt
+index 2893620..89b6212 100644
+--- a/plugins/win-capture/graphics-hook/CMakeLists.txt
++++ b/plugins/win-capture/graphics-hook/CMakeLists.txt
+@@ -46,7 +46,9 @@ target_link_libraries(
+   PRIVATE OBS::d3d8-api OBS::hook-config OBS::ipc-util OBS::obfuscate Detours::Detours dxguid
+ )
+ 
+-target_link_options(graphics-hook PRIVATE /IGNORE:4099)
++target_link_options(graphics-hook PRIVATE $<$<C_COMPILER_ID:MSVC>:/IGNORE:4099>)
++# injected into games, which cannot resolve DLLs from the MinGW prefix
++target_link_options(graphics-hook PRIVATE $<$<BOOL:${MINGW}>:-static>)
+ 
+ if(TARGET Vulkan::Vulkan)
+   target_sources(graphics-hook PRIVATE vulkan-capture.c vulkan-capture.h)
+@@ -64,7 +66,7 @@ if(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
+     )
+   endif()
+ 
+-  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)")
++  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)" AND NOT MINGW)
+     add_custom_command(
+       TARGET graphics-hook
+       POST_BUILD
+diff --git a/plugins/win-capture/graphics-hook/d3d8-capture.cpp b/plugins/win-capture/graphics-hook/d3d8-capture.cpp
+index b9ac491..659f9d2 100644
+--- a/plugins/win-capture/graphics-hook/d3d8-capture.cpp
++++ b/plugins/win-capture/graphics-hook/d3d8-capture.cpp
+@@ -12,8 +12,8 @@
+ typedef HRESULT(STDMETHODCALLTYPE *reset_t)(IDirect3DDevice8 *, D3DPRESENT_PARAMETERS *);
+ typedef HRESULT(STDMETHODCALLTYPE *present_t)(IDirect3DDevice8 *, CONST RECT *, CONST RECT *, HWND, CONST RGNDATA *);
+ 
+-reset_t RealReset = NULL;
+-present_t RealPresent = NULL;
++static reset_t RealReset = NULL;
++static present_t RealPresent = NULL;
+ 
+ struct d3d8_data {
+ 	HMODULE d3d8;
+diff --git a/plugins/win-capture/graphics-hook/d3d9-capture.cpp b/plugins/win-capture/graphics-hook/d3d9-capture.cpp
+index b9b72b8..636dbc2 100644
+--- a/plugins/win-capture/graphics-hook/d3d9-capture.cpp
++++ b/plugins/win-capture/graphics-hook/d3d9-capture.cpp
+@@ -17,11 +17,11 @@ typedef HRESULT(STDMETHODCALLTYPE *reset_ex_t)(IDirect3DDevice9 *, D3DPRESENT_PA
+ 
+ typedef HRESULT(WINAPI *createfactory1_t)(REFIID, void **);
+ 
+-present_t RealPresent = NULL;
+-present_ex_t RealPresentEx = NULL;
+-present_swap_t RealPresentSwap = NULL;
+-reset_t RealReset = NULL;
+-reset_ex_t RealResetEx = NULL;
++static present_t RealPresent = NULL;
++static present_ex_t RealPresentEx = NULL;
++static present_swap_t RealPresentSwap = NULL;
++static reset_t RealReset = NULL;
++static reset_ex_t RealResetEx = NULL;
+ 
+ struct d3d9_data {
+ 	HMODULE d3d9;
+diff --git a/plugins/win-capture/graphics-hook/dxgi-capture.cpp b/plugins/win-capture/graphics-hook/dxgi-capture.cpp
+index 28208eb..f5641bf 100644
+--- a/plugins/win-capture/graphics-hook/dxgi-capture.cpp
++++ b/plugins/win-capture/graphics-hook/dxgi-capture.cpp
+@@ -16,9 +16,9 @@ typedef HRESULT(STDMETHODCALLTYPE *resize_buffers_t)(IDXGISwapChain *, UINT, UIN
+ typedef HRESULT(STDMETHODCALLTYPE *present_t)(IDXGISwapChain *, UINT, UINT);
+ typedef HRESULT(STDMETHODCALLTYPE *present1_t)(IDXGISwapChain1 *, UINT, UINT, const DXGI_PRESENT_PARAMETERS *);
+ 
+-resize_buffers_t RealResizeBuffers = nullptr;
+-present_t RealPresent = nullptr;
+-present1_t RealPresent1 = nullptr;
++static resize_buffers_t RealResizeBuffers = nullptr;
++static present_t RealPresent = nullptr;
++static present1_t RealPresent1 = nullptr;
+ 
+ thread_local int dxgi_presenting = 0;
+ struct ID3D12CommandQueue *dxgi_possible_swap_queues[8]{};
+diff --git a/plugins/win-capture/graphics-hook/gl-capture.c b/plugins/win-capture/graphics-hook/gl-capture.c
+index 61d4efa..24d3b9c 100644
+--- a/plugins/win-capture/graphics-hook/gl-capture.c
++++ b/plugins/win-capture/graphics-hook/gl-capture.c
+@@ -77,7 +77,7 @@ struct gl_data {
+ static HMODULE gl = NULL;
+ static bool nv_capture_available = false;
+ static struct gl_data data = {0};
+-__declspec(thread) static int swap_recurse;
++static THREAD_LOCAL_HOOK int swap_recurse;
+ 
+ static inline bool gl_error(const char *func, const char *str)
+ {
+diff --git a/plugins/win-capture/graphics-hook/graphics-hook.h b/plugins/win-capture/graphics-hook/graphics-hook.h
+index 1958ae3..a390554 100644
+--- a/plugins/win-capture/graphics-hook/graphics-hook.h
++++ b/plugins/win-capture/graphics-hook/graphics-hook.h
+@@ -38,7 +38,26 @@ static inline HMODULE load_system_library(const char *module);
+ extern uint64_t os_gettime_ns(void);
+ 
+ #define flog(format, ...) hlog("%s: " format, __FUNCTION__, ##__VA_ARGS__)
++#ifdef _MSC_VER
++#define THREAD_LOCAL_HOOK __declspec(thread)
++#else
++/* GCC ignores __declspec(thread) */
++#define THREAD_LOCAL_HOOK __thread
++#endif
++
++#ifdef _MSC_VER
+ #define flog_hr(text, hr) hlog_hr(__FUNCTION__ ": " text, hr)
++#else
++/* GCC's __FUNCTION__ is not a string literal */
++#include <stdio.h>
++#define flog_hr(text, hr)                                                      \
++	do {                                                                   \
++		char flog_text_[256];                                          \
++		snprintf(flog_text_, sizeof(flog_text_), "%s: %s",            \
++			 __FUNCTION__, text);                                  \
++		hlog_hr(flog_text_, hr);                                       \
++	} while (false)
++#endif
+ 
+ static inline bool capture_active(void);
+ static inline bool capture_ready(void);
+@@ -246,7 +265,7 @@ static inline bool capture_should_init(void)
+ }
+ 
+ #if COMPILE_VULKAN_HOOK
+-extern __declspec(thread) int vk_presenting;
++extern THREAD_LOCAL_HOOK int vk_presenting;
+ #endif
+ 
+ static inline bool should_passthrough()
+diff --git a/plugins/win-capture/graphics-hook/vulkan-capture.c b/plugins/win-capture/graphics-hook/vulkan-capture.c
+index e1eded5..f0ebfff 100644
+--- a/plugins/win-capture/graphics-hook/vulkan-capture.c
++++ b/plugins/win-capture/graphics-hook/vulkan-capture.c
+@@ -129,7 +129,7 @@ struct vk_data {
+ 	ID3D11DeviceContext *d3d11_context;
+ };
+ 
+-__declspec(thread) int vk_presenting = 0;
++THREAD_LOCAL_HOOK int vk_presenting = 0;
+ 
+ /* ------------------------------------------------------------------------- */
+ 
+diff --git a/plugins/win-capture/inject-helper/CMakeLists.txt b/plugins/win-capture/inject-helper/CMakeLists.txt
+index 1c67473..16aa902 100644
+--- a/plugins/win-capture/inject-helper/CMakeLists.txt
++++ b/plugins/win-capture/inject-helper/CMakeLists.txt
+@@ -24,7 +24,7 @@ if(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
+     )
+   endif()
+ 
+-  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)")
++  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)" AND NOT MINGW)
+     add_custom_command(
+       TARGET inject-helper
+       POST_BUILD
+diff --git a/plugins/win-dshow/virtualcam-module/CMakeLists.txt b/plugins/win-dshow/virtualcam-module/CMakeLists.txt
+index 87cda18..91a6f10 100644
+--- a/plugins/win-dshow/virtualcam-module/CMakeLists.txt
++++ b/plugins/win-dshow/virtualcam-module/CMakeLists.txt
+@@ -114,7 +114,7 @@ if(OBS_PARENT_ARCHITECTURE STREQUAL CMAKE_VS_PLATFORM_NAME)
+     )
+   endif()
+ 
+-  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)")
++  if(CMAKE_VS_PLATFORM_NAME MATCHES "(ARM64|x64)" AND NOT MINGW)
+     add_custom_command(
+       TARGET obs-virtualcam-module
+       POST_BUILD
+diff --git a/plugins/win-wasapi/CMakeLists.txt b/plugins/win-wasapi/CMakeLists.txt
+index 4d3da03..94fb467 100644
+--- a/plugins/win-wasapi/CMakeLists.txt
++++ b/plugins/win-wasapi/CMakeLists.txt
+@@ -11,6 +11,6 @@ target_sources(
+ configure_file(cmake/windows/obs-module.rc.in win-wasapi.rc)
+ target_sources(win-wasapi PRIVATE win-wasapi.rc)
+ 
+-target_link_libraries(win-wasapi PRIVATE OBS::libobs Avrt)
++target_link_libraries(win-wasapi PRIVATE OBS::libobs Avrt $<$<BOOL:${MINGW}>:ksguid>)
+ 
+ set_target_properties_obs(win-wasapi PROPERTIES FOLDER plugins PREFIX "")
+diff --git a/plugins/win-wasapi/audioclientactivationparams-mingw.h b/plugins/win-wasapi/audioclientactivationparams-mingw.h
+new file mode 100644
+index 0000000..f90dd05
+--- /dev/null
++++ b/plugins/win-wasapi/audioclientactivationparams-mingw.h
+@@ -0,0 +1,28 @@
++/* Process-loopback activation types from the Windows SDK; mingw-w64 lacks the header */
++#pragma once
++
++#include <windows.h>
++
++typedef enum AUDIOCLIENT_ACTIVATION_TYPE {
++	AUDIOCLIENT_ACTIVATION_TYPE_DEFAULT = 0,
++	AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK = 1,
++} AUDIOCLIENT_ACTIVATION_TYPE;
++
++typedef enum PROCESS_LOOPBACK_MODE {
++	PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE = 0,
++	PROCESS_LOOPBACK_MODE_EXCLUDE_TARGET_PROCESS_TREE = 1,
++} PROCESS_LOOPBACK_MODE;
++
++typedef struct AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS {
++	DWORD TargetProcessId;
++	PROCESS_LOOPBACK_MODE ProcessLoopbackMode;
++} AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS;
++
++typedef struct AUDIOCLIENT_ACTIVATION_PARAMS {
++	AUDIOCLIENT_ACTIVATION_TYPE ActivationType;
++	union {
++		AUDIOCLIENT_PROCESS_LOOPBACK_PARAMS ProcessLoopbackParams;
++	};
++} AUDIOCLIENT_ACTIVATION_PARAMS;
++
++#define VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK L"VAD\\Process_Loopback"
+diff --git a/plugins/win-wasapi/win-wasapi.cpp b/plugins/win-wasapi/win-wasapi.cpp
+index bcd6094..79d095d 100644
+--- a/plugins/win-wasapi/win-wasapi.cpp
++++ b/plugins/win-wasapi/win-wasapi.cpp
+@@ -17,10 +17,18 @@
+ #include <atomic>
+ #include <cinttypes>
+ 
++#ifdef _MSC_VER
+ #include <audioclientactivationparams.h>
++#else
++#include "audioclientactivationparams-mingw.h"
++#endif
+ #include <avrt.h>
+ #include <RTWorkQ.h>
++#ifdef _MSC_VER
+ #include <wrl/implements.h>
++#else
++#include <wrl/client.h>
++#endif
+ 
+ using namespace std;
+ 
+@@ -32,6 +40,10 @@ using namespace std;
+ WASAPINotify *GetNotify();
+ static void GetWASAPIDefaults(obs_data_t *settings);
+ 
++#ifndef KSAUDIO_SPEAKER_2POINT1
++#define KSAUDIO_SPEAKER_2POINT1 (KSAUDIO_SPEAKER_STEREO | SPEAKER_LOW_FREQUENCY)
++#endif
++
+ #define OBS_KSAUDIO_SPEAKER_4POINT1 (KSAUDIO_SPEAKER_SURROUND | SPEAKER_LOW_FREQUENCY)
+ 
+ typedef HRESULT(STDAPICALLTYPE *PFN_ActivateAudioInterfaceAsync)(LPCWSTR, REFIID, PROPVARIANT *,
+@@ -46,9 +58,45 @@ typedef HRESULT(STDAPICALLTYPE *PFN_RtwqCreateAsyncResult)(IUnknown *, IRtwqAsyn
+ typedef HRESULT(STDAPICALLTYPE *PFN_RtwqPutWorkItem)(DWORD, LONG, IRtwqAsyncResult *);
+ typedef HRESULT(STDAPICALLTYPE *PFN_RtwqPutWaitingWorkItem)(HANDLE, LONG, IRtwqAsyncResult *, RTWQWORKITEM_KEY *);
+ 
+-class WASAPIActivateAudioInterfaceCompletionHandler
+-	: public Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>,
+-					      Microsoft::WRL::FtmBase, IActivateAudioInterfaceCompletionHandler> {
++#ifdef _MSC_VER
++using ActivateCompletionHandlerBase =
++	Microsoft::WRL::RuntimeClass<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, Microsoft::WRL::FtmBase,
++				     IActivateAudioInterfaceCompletionHandler>;
++#else
++/* WRL's RuntimeClass is MSVC-only; ActivateAudioInterfaceAsync needs an agile handler */
++class ActivateCompletionHandlerBase : public IActivateAudioInterfaceCompletionHandler, public IAgileObject {
++	std::atomic<ULONG> refs{1};
++
++public:
++	virtual ~ActivateCompletionHandlerBase() = default;
++
++	STDMETHOD_(ULONG, AddRef)() override { return ++refs; }
++
++	STDMETHOD_(ULONG, Release)() override
++	{
++		const ULONG r = --refs;
++		if (!r)
++			delete this;
++		return r;
++	}
++
++	STDMETHOD(QueryInterface)(REFIID riid, void **ppv) override
++	{
++		if (riid == __uuidof(IUnknown) || riid == __uuidof(IActivateAudioInterfaceCompletionHandler))
++			*ppv = static_cast<IActivateAudioInterfaceCompletionHandler *>(this);
++		else if (riid == __uuidof(IAgileObject))
++			*ppv = static_cast<IAgileObject *>(this);
++		else {
++			*ppv = nullptr;
++			return E_NOINTERFACE;
++		}
++		AddRef();
++		return S_OK;
++	}
++};
++#endif
++
++class WASAPIActivateAudioInterfaceCompletionHandler : public ActivateCompletionHandlerBase {
+ 	IUnknown *unknown;
+ 	HRESULT activationResult;
+ 	WinHandle activationSignal;
+@@ -703,8 +751,13 @@ ComPtr<IAudioClient> WASAPISource::InitClient(IMMDevice *device, SourceType type
+ 		activateParams.blob.pBlobData = reinterpret_cast<BYTE *>(&audioclientActivationParams);
+ 
+ 		{
++#ifdef _MSC_VER
+ 			Microsoft::WRL::ComPtr<WASAPIActivateAudioInterfaceCompletionHandler> handler =
+ 				Microsoft::WRL::Make<WASAPIActivateAudioInterfaceCompletionHandler>();
++#else
++			Microsoft::WRL::ComPtr<WASAPIActivateAudioInterfaceCompletionHandler> handler;
++			handler.Attach(new WASAPIActivateAudioInterfaceCompletionHandler());
++#endif
+ 			ComPtr<IActivateAudioInterfaceAsyncOperation> asyncOp;
+ 			res = activate_audio_interface_async(VIRTUAL_AUDIO_DEVICE_PROCESS_LOOPBACK,
+ 							     __uuidof(IAudioClient), &activateParams, handler.Get(),
+diff --git a/shared/obs-scripting/obslua/CMakeLists.txt b/shared/obs-scripting/obslua/CMakeLists.txt
+index 1f06a90..6856366 100644
+--- a/shared/obs-scripting/obslua/CMakeLists.txt
++++ b/shared/obs-scripting/obslua/CMakeLists.txt
+@@ -22,10 +22,10 @@ add_library(OBS::lua ALIAS obslua)
+ target_compile_options(
+   obslua
+   PRIVATE
+-    $<$<PLATFORM_ID:Windows>:/wd4054>
+-    $<$<PLATFORM_ID:Windows>:/wd4197>
+-    $<$<PLATFORM_ID:Windows>:/wd4244>
+-    $<$<PLATFORM_ID:Windows>:/wd4267>
++    $<$<C_COMPILER_ID:MSVC>:/wd4054>
++    $<$<C_COMPILER_ID:MSVC>:/wd4197>
++    $<$<C_COMPILER_ID:MSVC>:/wd4244>
++    $<$<C_COMPILER_ID:MSVC>:/wd4267>
+     $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang>:-Wno-shorten-64-to-32>
+     $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang>:-Wno-unreachable-code>
+     $<$<COMPILE_LANG_AND_ID:C,GNU>:-Wno-maybe-uninitialized>
+diff --git a/shared/obs-scripting/obspython/CMakeLists.txt b/shared/obs-scripting/obspython/CMakeLists.txt
+index ad63966..ff577c1 100644
+--- a/shared/obs-scripting/obspython/CMakeLists.txt
++++ b/shared/obs-scripting/obspython/CMakeLists.txt
+@@ -45,8 +45,8 @@ target_include_directories(
+ target_compile_options(
+   obspython
+   PRIVATE
+-    $<$<PLATFORM_ID:Windows>:/wd4100>
+-    $<$<PLATFORM_ID:Windows>:/wd4197>
++    $<$<C_COMPILER_ID:MSVC>:/wd4100>
++    $<$<C_COMPILER_ID:MSVC>:/wd4197>
+     $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang,GNU>:-Wno-unused-parameter>
+     $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang>:-Wno-macro-redefined>
+     $<$<COMPILE_LANG_AND_ID:C,AppleClang,Clang>:-Wno-unreachable-code>
