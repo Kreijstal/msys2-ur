@@ -30,6 +30,10 @@ static class MofChecks
         }
         finally { foreach (var value in classes) value.Dispose(); }
         offset = 0;
+        var noRows = reader.DeserializeInstances(Bytes(Schema), ref offset).ToArray();
+        Require(noRows.Length == 0, "Schema-only MOF produces an empty instance result");
+        Require(offset == Bytes(Schema).Length, "Schema-only result advances by the native consumed length");
+        offset = 0;
         var rows = reader.DeserializeInstances(Bytes(Schema + Instance), ref offset).ToArray();
         try { Require(rows.Length == 1 && Convert.ToUInt32(rows[0].CimInstanceProperties["Id"].Value) == 42, "MOF instance"); }
         finally { foreach (var row in rows) row.Dispose(); }

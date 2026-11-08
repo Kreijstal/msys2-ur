@@ -1,0 +1,11 @@
+--- a/Serialization/CimMofDeserializer.cs
++++ b/Serialization/CimMofDeserializer.cs
+@@ -340,7 +340,7 @@
+                 if (used == 0 || used > data.Length - offset)
+                     throw new InvalidOperationException("The native MOF deserializer returned an invalid input length.");
+                 T[] borrowed = array != null && !array.IsNull
+-                    ? array.ReadAsManagedPointerArray(wrap) : Array.Empty<T>();
++                    ? (array.ReadAsManagedPointerArray(wrap) ?? Array.Empty<T>()) : Array.Empty<T>();
+                 result = new T[borrowed.Length];
+                 try
+                 {

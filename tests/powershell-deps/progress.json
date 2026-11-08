@@ -126,8 +126,8 @@
       "packaged_version": "3.0.0",
       "assembly_version": "1.0.0.0",
       "public_key_token": "31bf3856ad364e35",
-      "actual_source_version": "2.0.0-preview.1 plus thirteen source patches and explicit MMI3 contract corrections",
-      "package_version": "3.0.0-7",
+      "actual_source_version": "2.0.0-preview.1 plus fourteen source patches and explicit MMI3 contract corrections",
+      "package_version": "3.0.0-8",
       "delivery_options_evidence": "tests/mmi-cim-wmi/delivery-package-results-20261108.json",
       "property_ownership_evidence": "tests/mmi-cim-wmi/embedded-package-results-20261108.json",
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
@@ -136,7 +136,8 @@
       "metadata_ownership_evidence": "tests/mmi-cim-wmi/metadata-package-results-20261108.json",
       "real_provider_integration_evidence": "tests/mmi-provider/results-20261108.json",
       "class_clone_ownership_evidence": "tests/mmi-cim-wmi/clone-package-results-20261108.json",
-      "instance_clone_ownership_evidence": "tests/mmi-cim-wmi/instance-clone-package-results-20261108.json"
+      "instance_clone_ownership_evidence": "tests/mmi-cim-wmi/instance-clone-package-results-20261108.json",
+      "mof_semantics_evidence": "tests/mmi-mof-semantics/package-results-20261108.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -1349,6 +1350,7 @@
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "MMI3 3.0.0-8: class-only MOF empty instance-result regression corrected;525 native-codec/managed type,encoding,schema-policy/error/offset/lifetime checks and33 MOF checks per CLANG64/UCRT64 environment, with independent native-only controls (tests/mmi-mof-semantics/package-results-20261108.json)",
         "MMI3 3.0.0-7 class/instance clone rollback preserves source handles and cleans partial output clones;430 failure-injection checks per family; PowerShell7.4.20-9 passes installed MOF/property/delivery/metadata and14 original CIM repository-write checks in each STA/MTA mode in CLANG64/UCRT64;116 real provider and24 original Invoke-CimMethod checks per mode also pass (tests/powershell-mmi/instance-clone-integration-results-20261108.json)",
         "Real compiled MI provider: 116 default/DCOM callback/reply/stream/lifetime/fault/cancellation checks per CLANG64/UCRT64 environment; original Invoke-CimMethod passes24 checks in each STA/MTA mode; provider namespace/COM/host cleanup verified (tests/mmi-provider/results-20261108.json)",
         "PowerShell7.4.20-6 bundles source MMI3 3.0.0-4 and passes13 MOF,34 embedded/event and25 native delivery storage/interval/clone checks in each STA and MTA (tests/powershell-mmi/delivery-integration-results-20261108.json)",
@@ -36963,6 +36965,21 @@
       "logical_bytes_removed": 3315255453,
       "installed_packages_retained": true,
       "source_recipes_and_evidence_retained": true
+    },
+    "mmi_empty_MOF_result_and_semantics": {
+      "evidence": "tests/mmi-mof-semantics/package-results-20261108.json",
+      "package_version": "3.0.0-8",
+      "clean_build_and_installed_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "semantic_checks_per_environment": 525,
+      "MOF_checks_per_environment": 33,
+      "baseline_native_success_vs_managed_NullReferenceException_reproduced": true,
+      "native_only_encoding_controls": 4,
+      "PowerShell_application_rebuild_pending": true,
+      "complete": false,
+      "binary_published": false
     }
   }
 }

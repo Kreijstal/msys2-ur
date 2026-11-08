@@ -1,5 +1,23 @@
 # MMI / CIM / WMI source ports and checks
 
+## Empty MOF result and native semantic matrix (2026-11-08)
+
+MMI3 **3.0.0-8** fixes schema-only documents: the native codec successfully
+returns zero instances, but the old wrapper dereferenced a null managed pointer
+array. The new path returns an empty result and advances the input offset.
+Independent C codec controls reproduced native success in UTF-16LE and UTF-8,
+each with and without BOM; installed 3.0.0-7 failed all four managed cases.
+
+Both clean builds and fresh installed consumers passed **525 semantic checks**
+and **33 MOF checks**, plus every existing package gate. Fourteen primitive
+types, exact scalar/array values, NULL/empty arrays, schema policies, consumed
+lengths, errors and retained results are compared with the actual Windows codec.
+Native rejections of seven numeric empty-array literals are preserved and
+recorded. [Commands, baseline/control/package/installed evidence and hashes](../mmi-mof-semantics/package-results-20261108.json)
+record the scope. PowerShell 7.4.20-10 integration builds are running. Broader
+MOF/provider/ownership behavior, remote authentication and the other dependency
+gates remain open; experimental binaries remain unpublished.
+
 ## Instance-clone failure ownership (2026-11-08)
 
 MMI3 **3.0.0-7** fixes the analogous instance-array rollback defect: cloning

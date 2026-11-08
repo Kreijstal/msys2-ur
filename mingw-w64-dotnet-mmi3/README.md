@@ -6,7 +6,8 @@ cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
 MOF callback/offset/ownership patch, a property-value/reference/array ownership
 patch, a subscription-delivery credential/options patch, a native metadata-view cleanup
-patch, class- and instance-clone rollback ownership patches, and explicit
+patch, class- and instance-clone rollback ownership patches, an empty MOF-result
+patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -106,6 +107,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check.sh NEW_OUTPUT
     bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
     bash check-mof.sh NEW_MOF_OUTPUT
+    bash check-mof-semantics.sh NEW_MOF_SEMANTICS_OUTPUT
     bash check-embedded-values.sh NEW_PROPERTY_OUTPUT
     bash check-delivery-options.sh NEW_DELIVERY_OUTPUT
     bash check-metadata-ownership.sh NEW_METADATA_OUTPUT
@@ -122,3 +124,11 @@ wrapper releases its output pointer cell on failure or an interop exception.
 The native failure driver checks source usability, injected failures at each
 position and exactly-once output deletion; it does not simulate provider-wide
 allocation failure or establish complete ownership parity.
+
+Release 8 normalizes an empty native MOF instance-result array to an empty
+managed result. Schema-only documents now succeed and consume the native input
+length instead of throwing NullReferenceException. The semantic fixture uses an
+independent C/mi.h codec consumer as an oracle for UTF-16/UTF-8 input, primitive
+type boundaries/arrays, schema policies, errors and consumed lengths. Native
+codec rejections (including some numeric empty-array literals) are recorded
+rather than treated as successful parsing. The fixture parses only in memory.
