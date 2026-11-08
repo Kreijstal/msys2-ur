@@ -1,0 +1,23 @@
+--- a/Internal/Data/CimPropertiesCollection.cs
++++ b/Internal/Data/CimPropertiesCollection.cs
+@@ -53,10 +53,16 @@
+         {
+             get
+             {
+-                uint count;
+-                MI_Result result = this._instance.InstanceHandle.GetElementCount(out count);
+-                CimException.ThrowIfMiResultFailure(result);
+-                return (int)count;
++                // The native function receives only a raw pointer. An optimized
++                // caller may otherwise finalize a transient instance mid-call.
++                try
++                {
++                    uint count;
++                    MI_Result result = this._instance.InstanceHandle.GetElementCount(out count);
++                    CimException.ThrowIfMiResultFailure(result);
++                    return (int)count;
++                }
++                finally { GC.KeepAlive(this._instance); }
+             }
+         }
+ 
