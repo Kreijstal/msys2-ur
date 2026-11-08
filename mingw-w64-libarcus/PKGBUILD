@@ -1,0 +1,42 @@
+_realname=libarcus
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.11.1
+_commit=339c85a1abc7554e6c19bd36bbbc4c2d6f9f40b6
+pkgrel=1
+pkgdesc="Communication library between Cura components (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/libArcus'
+msys2_repository_url='https://github.com/Ultimaker/libArcus'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-protobuf")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings")
+source=("libArcus-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-install-cmake-package.patch)
+sha256sums=('556b4ef12c401963553b804092035103070a1cb1428c705ce50de6ac1cdf23d9'
+            'dc594a5321373e52e644fb3141e841cb5898f5862c13656812407e122fb30c54')
+
+prepare() {
+  cd libArcus-${_commit}
+  patch -Np1 -i ../0001-install-cmake-package.patch
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S libArcus-${_commit} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DBUILD_SHARED_LIBS=ON
+  cmake --build build-${MSYSTEM}
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 libArcus-${_commit}/LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

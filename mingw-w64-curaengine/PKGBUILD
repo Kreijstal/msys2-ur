@@ -1,0 +1,72 @@
+_realname=curaengine
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.14.0
+pkgrel=1
+pkgdesc="Slicing engine of Ultimaker Cura (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/CuraEngine'
+msys2_repository_url='https://github.com/Ultimaker/CuraEngine'
+license=('spdx:AGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-cura-formulae-engine"
+         "${MINGW_PACKAGE_PREFIX}-fmt"
+         "${MINGW_PACKAGE_PREFIX}-libarcus"
+         "${MINGW_PACKAGE_PREFIX}-libpng"
+         "${MINGW_PACKAGE_PREFIX}-polyclipping"
+         "${MINGW_PACKAGE_PREFIX}-protobuf"
+         "${MINGW_PACKAGE_PREFIX}-spdlog"
+         "${MINGW_PACKAGE_PREFIX}-tbb")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-gtest"
+             "${MINGW_PACKAGE_PREFIX}-lexy"
+             "${MINGW_PACKAGE_PREFIX}-mapbox-wagyu"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-range-v3"
+             "${MINGW_PACKAGE_PREFIX}-rapidjson"
+             "${MINGW_PACKAGE_PREFIX}-scripta"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings"
+             "${MINGW_PACKAGE_PREFIX}-stb"
+             "${MINGW_PACKAGE_PREFIX}-zeus-expected")
+source=("CuraEngine-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz"
+        0001-use-system-libraries.patch
+        0002-protobuf-config-mode.patch
+        0003-outer-wall-filter-lambda.patch
+        0004-include-iomanip.patch)
+sha256sums=('07167e3a237733711148dfd8af402cf207a1b12eb84c51d9216bb3a14f59ee0a'
+            '5fbec54a2f8df5e1051e4794bf35ae5d0068e695134cdd7ae481ee330efd8e50'
+            '37d1744e90391becc17246d88e68ce891f8acac4847118565377f91dc3530f13'
+            '51d5c5b9f7763c6eb6eea74984edb0518cc6358b9e1eef6d50c354d1e99e82d5'
+            '7b7b397ce8140994fe3e0106c7978550ffa9e11bb2753a13ef065da2f7be998c')
+
+prepare() {
+  cd CuraEngine-${pkgver}
+  patch -Np1 -i ../0001-use-system-libraries.patch
+  patch -Np1 -i ../0002-protobuf-config-mode.patch
+  patch -Np1 -i ../0003-outer-wall-filter-lambda.patch
+  patch -Np1 -i ../0004-include-iomanip.patch
+}
+
+build() {
+  # plugins need grpc/asio-grpc and a Cura plugin host
+  cmake -GNinja -S CuraEngine-${pkgver} -B build-${MSYSTEM} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCURA_ENGINE_VERSION=${pkgver} \
+    -DENABLE_PLUGINS=OFF \
+    -Dprotobuf_MODULE_COMPATIBLE=ON \
+    -DENABLE_TESTING=ON
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  PATH="${srcdir}/build-${MSYSTEM}:${PATH}" ctest --test-dir build-${MSYSTEM} --output-on-failure
+}
+
+package() {
+  install -Dm755 build-${MSYSTEM}/CuraEngine.exe -t "${pkgdir}${MINGW_PREFIX}/bin"
+  install -Dm644 CuraEngine-${pkgver}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

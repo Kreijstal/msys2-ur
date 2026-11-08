@@ -1,0 +1,38 @@
+_realname=scripta
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.1.0alpha0
+_commit=b96045cd9b531d97f42dec8c9a0ef52f773f6b90
+pkgrel=1
+pkgdesc="CuraEngine's debug visualization hooks, public no-op headers (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/Scripta_public'
+msys2_repository_url='https://github.com/Ultimaker/Scripta_public'
+license=('spdx:AGPL-3.0-or-later')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings")
+source=("Scripta_public-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-zc-cplusplus-msvc-only.patch
+        0002-install-cmake-package.patch)
+sha256sums=('0b6737514ba08f68750263c5198ee0e36597ffbbe241ced89c9dd90bd99b05d3'
+            '3c0a261123b5ff1d5a5ba4d4559d4cc4acaddd776b5acce6ec28545ab432a92b'
+            'ae495a5cca6e7f126001e23306373086c619a8455bb93e988519b9e9fbc01133')
+
+prepare() {
+  cd Scripta_public-${_commit}
+  patch -Np1 -i ../0001-zc-cplusplus-msvc-only.patch
+  patch -Np1 -i ../0002-install-cmake-package.patch
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S Scripta_public-${_commit} -B build-${MSYSTEM} \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX}
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 Scripta_public-${_commit}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

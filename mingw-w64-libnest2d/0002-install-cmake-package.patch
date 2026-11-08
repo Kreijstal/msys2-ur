@@ -1,0 +1,41 @@
+From 85b07ee61e05ebb41eced0f1df47bc85222b8d5a Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:20:54 +0100
+Subject: [PATCH 2/2] Install the library with a CMake package config
+
+---
+ CMakeLists.txt | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fb7a9b9..172804b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -132,3 +132,24 @@ if(ENABLE_TESTING)
+     enable_testing()
+     add_subdirectory(tests)
+ endif()
++
++install(TARGETS nest2d project_options EXPORT nest2d-targets
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++install(DIRECTORY include/libnest2d DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++install(EXPORT nest2d-targets NAMESPACE nest2d:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/nest2d)
++file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/nest2dConfig.cmake [=[
++include(CMakeFindDependencyMacro)
++find_dependency(PkgConfig)
++pkg_check_modules(polyclipping REQUIRED IMPORTED_TARGET GLOBAL polyclipping)
++if(NOT TARGET clipper::clipper)
++  add_library(clipper::clipper ALIAS PkgConfig::polyclipping)
++endif()
++find_dependency(Boost)
++find_dependency(NLopt)
++find_dependency(spdlog)
++find_dependency(Threads)
++include(${CMAKE_CURRENT_LIST_DIR}/nest2d-targets.cmake)
++]=])
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/nest2dConfig.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/nest2d)
+-- 
+2.55.0
+

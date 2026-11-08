@@ -1,0 +1,59 @@
+_realname=libnest2d
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.11.0alpha0
+_commit=1c9dc3c05005cadcbc2b49062c3d37b60e962c7f
+pkgrel=1
+pkgdesc="2D irregular bin packaging and nesting library used by Cura (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/libnest2d'
+msys2_repository_url='https://github.com/Ultimaker/libnest2d'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-nlopt"
+         "${MINGW_PACKAGE_PREFIX}-polyclipping")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-catch"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-spdlog"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings")
+source=("libnest2d-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-use-system-polyclipping-boost.patch
+        0002-install-cmake-package.patch
+        0003-cxx20-radians-comparison.patch)
+sha256sums=('d4fc2f5cb353e0f5d81394ad516929546a8823d8aa6d47c8ac5a702f49d96abc'
+            '2813a4a719f93be6bc43e33313955d49c2bfc533f8e74edbc34b3f32814293a3'
+            '7e27ab9f153ebd9372b8f3483d5107aab0f3310db95d4c749a26dea159f31179'
+            '4a656ab1a6ff096a185a392dd8e674b3b66e02824a417dbd666ff51398904424')
+
+prepare() {
+  cd libnest2d-${_commit}
+  patch -Np1 -i ../0001-use-system-polyclipping-boost.patch
+  patch -Np1 -i ../0002-install-cmake-package.patch
+  patch -Np1 -i ../0003-cxx20-radians-comparison.patch
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S libnest2d-${_commit} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DBUILD_SHARED_LIBS=ON \
+      -DHEADER_ONLY=OFF \
+      -DENABLE_TESTING=ON
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  PATH="${srcdir}/build-${MSYSTEM}:${PATH}" ctest --test-dir build-${MSYSTEM} --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 libnest2d-${_commit}/LICENSE.txt \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

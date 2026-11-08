@@ -1,0 +1,63 @@
+_realname=pysavitar
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.12.0
+_commit=74cbe2bd365c6f3397b385e879139b012059c487
+pkgrel=1
+pkgdesc="Python bindings for libSavitar (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/pySavitar'
+msys2_repository_url='https://github.com/Ultimaker/pySavitar'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-libsavitar")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-sip")
+source=("pySavitar-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        pyproject.toml)
+sha256sums=('784aabbd0b4388603eab7bbf8363be8ea83eaec967ee52ef26952a9c19bf47b8'
+            '3bec98a59897492c7c97f5ae5baefa26d608d278e9581276da2c2f9d3926f7ca')
+
+prepare() {
+  cp pyproject.toml pySavitar-${_commit}/
+}
+
+build() {
+  cd pySavitar-${_commit}
+  # with MSYSTEM set, MSYS2's sip cygpaths the wheel dir and stages outside it;
+  # the MSYS runtime re-adds MSYSTEM to native children, so drop it in Python
+  ${MINGW_PREFIX}/bin/python -c 'import os, sys; del os.environ["MSYSTEM"]; from sipbuild.tools.wheel import main; sys.argv[0] = "sip-wheel"; main()' \
+    --build-dir build-${MSYSTEM}
+}
+
+check() {
+  cd pySavitar-${_commit}
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk *.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import pySavitar
+xml = """<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+ <resources><object id="1" type="model"><mesh>
+  <vertices><vertex x="0" y="0" z="0"/><vertex x="10" y="0" z="0"/><vertex x="0" y="10" z="0"/></vertices>
+  <triangles><triangle v1="0" v2="1" v3="2"/></triangles>
+ </mesh></object></resources>
+ <build><item objectid="1"/></build>
+</model>"""
+nodes = pySavitar.ThreeMFParser().parse(xml).getSceneNodes()
+assert len(nodes) == 1, nodes
+assert len(nodes[0].getMeshData().getFlatVerticesAsBytes()) == 3 * 3 * 4
+print("pySavitar ok")
+PY
+}
+
+package() {
+  cd pySavitar-${_commit}
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" *.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

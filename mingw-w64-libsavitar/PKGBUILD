@@ -1,0 +1,48 @@
+_realname=libsavitar
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.12.0
+_commit=c513049b0866d6903826c9be46dd84deb12ffcba
+pkgrel=1
+pkgdesc="3MF file parsing library used by Cura (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/libSavitar'
+msys2_repository_url='https://github.com/Ultimaker/libSavitar'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-pugixml")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-gtest"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings")
+source=("libSavitar-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-install-cmake-package.patch)
+sha256sums=('b70d11807dbd5a078d27f104b87bf8cd80af3c42467b41c66349e1910cdb4f1c'
+            '61aa8dba36611cc6d54e112fe2339c07e7afd69c2efafcbceccd862fefafd3b0')
+
+prepare() {
+  cd libSavitar-${_commit}
+  patch -Np1 -i ../0001-install-cmake-package.patch
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S libSavitar-${_commit} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DBUILD_SHARED_LIBS=ON \
+      -DENABLE_TESTING=ON
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  PATH="${srcdir}/build-${MSYSTEM}:${PATH}" ctest --test-dir build-${MSYSTEM} --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 libSavitar-${_commit}/LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

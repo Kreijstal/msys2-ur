@@ -1,0 +1,20 @@
+# What Conan's PyProjectToolchain generates for pyArcus
+[build-system]
+requires = ["sip >=6.8"]
+build-backend = "sipbuild.api"
+
+[project]
+name = "pyArcus"
+version = "5.12.0"
+
+[tool.sip.project]
+sip-files-dir = "python"
+
+[tool.sip.bindings.pyArcus]
+exceptions = true
+release-gil = true
+include-dirs = ["include"]
+headers = ["include/pyArcus/PythonMessage.h"]
+sources = ["src/PythonMessage.cpp"]
+libraries = ["Arcus"]
+# prepare() appends the protobuf link line

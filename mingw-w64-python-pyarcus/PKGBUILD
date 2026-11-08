@@ -1,0 +1,55 @@
+_realname=pyarcus
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.12.0
+_commit=72d052a24b9ecaba8821182cd6e84c04d9b3f3fe
+pkgrel=1
+pkgdesc="Python bindings for libArcus (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/pyArcus'
+msys2_repository_url='https://github.com/Ultimaker/pyArcus'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-libarcus"
+         "${MINGW_PACKAGE_PREFIX}-protobuf")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-sip")
+source=("pyArcus-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        pyproject.toml)
+sha256sums=('7abf29418a5827863ec781e7239cf77a7d635a5c83d830d6cc5c7ec640c7ebd9'
+            '896a9b4cc6e15be226fc28b5bea976144d8a3a842cc2f29eecfc6f19f9008a2b')
+
+prepare() {
+  cp pyproject.toml pyArcus-${_commit}/
+  # protobuf pulls in abseil
+  echo "extra-link-args = $(pkg-config --libs protobuf | ${MINGW_PREFIX}/bin/python -c 'import json, sys; print(json.dumps(sys.stdin.read().split()))')" \
+    >> pyArcus-${_commit}/pyproject.toml
+}
+
+build() {
+  cd pyArcus-${_commit}
+  # with MSYSTEM set, MSYS2's sip cygpaths the wheel dir and stages outside it;
+  # the MSYS runtime re-adds MSYSTEM to native children, so drop it in Python
+  ${MINGW_PREFIX}/bin/python -c 'import os, sys; del os.environ["MSYSTEM"]; from sipbuild.tools.wheel import main; sys.argv[0] = "sip-wheel"; main()' \
+    --build-dir build-${MSYSTEM}
+}
+
+check() {
+  cd pyArcus-${_commit}
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk *.whl
+  cp test_package/test.py test_package/test.proto chk${MINGW_PREFIX}/lib/python3*/site-packages/
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  [ "$(${MINGW_PREFIX}/bin/python test.py 2>/dev/null | tail -1)" = True ]
+}
+
+package() {
+  cd pyArcus-${_commit}
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" *.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

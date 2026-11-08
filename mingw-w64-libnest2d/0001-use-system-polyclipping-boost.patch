@@ -1,0 +1,38 @@
+From 0067944c6ba63e005d05afdb966952b3770948fa Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:20:54 +0100
+Subject: [PATCH 1/2] Use the system polyclipping and Boost targets
+
+---
+ CMakeLists.txt | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1ccf762..fb7a9b9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -39,16 +39,18 @@ set(nest2d_HDRS
+         )
+ 
+ if("${GEOMETRIES}" STREQUAL "clipper")
+-    find_package(clipper REQUIRED)
++    find_package(PkgConfig REQUIRED)
++    pkg_check_modules(polyclipping REQUIRED IMPORTED_TARGET GLOBAL polyclipping)
++    add_library(clipper::clipper ALIAS PkgConfig::polyclipping)
+     find_package(Boost REQUIRED)
+-    target_link_libraries(project_options INTERFACE clipper::clipper boost::boost)
++    target_link_libraries(project_options INTERFACE clipper::clipper Boost::headers)
+     list(APPEND nest2d_HDRS
+             include/libnest2d/clipper/clipper_polygon.hpp
+             include/libnest2d/clipper/geometries.hpp
+             )
+ elseif("${GEOMETRIES}" STREQUAL "boost")
+     find_package(Boost REQUIRED)
+-    target_link_libraries(project_options INTERFACE boost::boost)
++    target_link_libraries(project_options INTERFACE Boost::headers)
+ else()
+     message(FATAL_ERROR "Unknown GEOMETRIES: ${GEOMETRIES} specified; use one of the following: 'clipper' (default), 'boost'")
+ endif()
+-- 
+2.55.0
+

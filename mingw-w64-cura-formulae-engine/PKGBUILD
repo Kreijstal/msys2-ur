@@ -1,0 +1,65 @@
+_realname=cura-formulae-engine
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.2.1
+_commit=c1257dd638dc7dc86377bb5aadd27803de008a59
+pkgrel=1
+pkgdesc="Evaluator for Cura's setting formulae (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/CuraFormulaeEngine'
+msys2_repository_url='https://github.com/Ultimaker/CuraFormulaeEngine'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
+         "${MINGW_PACKAGE_PREFIX}-fmt"
+         "${MINGW_PACKAGE_PREFIX}-spdlog")
+makedepends=("${MINGW_PACKAGE_PREFIX}-catch"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-lexy"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-range-v3"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings"
+             "${MINGW_PACKAGE_PREFIX}-zeus-expected")
+source=("CuraFormulaeEngine-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-install-cmake-package.patch
+        0002-std-env-dllexport.patch
+        0003-mingw-export-vtables.patch
+        0004-builtins-before-std-env.patch)
+# .opencode/ holds a symlink bsdtar can't create here
+noextract=("CuraFormulaeEngine-${_commit}.tar.gz")
+sha256sums=('2582d0c38bd5099e81fb0f9c3ab85ba0a4e53e731b9d65a2f8baf006cba569ec'
+            'c07dacc6616ee4b8ea436093c284e35446d77b0255308b7b57e18325e04ae045'
+            'fbac3df28105a869f114db37820208332726181fa023c815acad781cb86cf8c5'
+            '33f86bca0c4cce8f42b882d6063a91b920203e12e015254a4d9f43303bf15933'
+            '68567e524a3381892ac9dffef541c9b0fafd9e1a8d8216b8700508471305f4f2')
+
+prepare() {
+  bsdtar -xf CuraFormulaeEngine-${_commit}.tar.gz --exclude '*/.opencode'
+  cd CuraFormulaeEngine-${_commit}
+  patch -Np1 -i ../0001-install-cmake-package.patch
+  patch -Np1 -i ../0002-std-env-dllexport.patch
+  patch -Np1 -i ../0003-mingw-export-vtables.patch
+  patch -Np1 -i ../0004-builtins-before-std-env.patch
+}
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S CuraFormulaeEngine-${_commit} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DCURA_FORMULA_VERSION_VERSION=${pkgver} \
+      -DENABLE_APPS=OFF \
+      -DCMAKE_CATCH_DISCOVER_TESTS_DISCOVERY_MODE=PRE_TEST
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  PATH="${srcdir}/build-${MSYSTEM}:${PATH}" ctest --test-dir build-${MSYSTEM} --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 CuraFormulaeEngine-${_commit}/LICENSE \
+    "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

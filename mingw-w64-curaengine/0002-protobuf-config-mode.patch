@@ -1,0 +1,25 @@
+From 6115213217545c5d6536c98e8eb9ccaebfdd155f Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:04:53 +0100
+Subject: [PATCH] Find protobuf in config mode
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1fb71a66d..2c5377319 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -21,7 +21,7 @@ option(ENABLE_THREADING "Enable threading support" ON)
+ option(ENABLE_CURAVIZ "Build with CuraViz toolbox" OFF)
+ 
+ if (${ENABLE_ARCUS} OR ${ENABLE_PLUGINS} OR ${ENABLE_CURAVIZ})
+-    find_package(protobuf REQUIRED)
++    find_package(protobuf CONFIG REQUIRED)
+ endif ()
+ 
+ MESSAGE(STATUS "Building with plugins support: ${ENABLE_PLUGINS}")
+-- 
+2.55.0
+

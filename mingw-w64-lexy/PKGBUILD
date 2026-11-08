@@ -1,0 +1,34 @@
+_realname=lexy
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=2025.05.0
+pkgrel=1
+pkgdesc="C++ parsing DSL (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://lexy.foonathan.net'
+msys2_repository_url='https://github.com/foonathan/lexy'
+license=('spdx:BSL-1.0')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+# lexy_file is static only
+options=('staticlibs')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/foonathan/lexy/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('ae867846b890b7564d633cf28d39dfc4938fe7c54515126f720c1762de5eab30')
+
+build() {
+  # the tests download doctest and link a target MSYS2's doctest doesn't define
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S lexy-${pkgver} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DLEXY_BUILD_TESTS=OFF \
+      -DLEXY_BUILD_EXAMPLES=OFF
+  cmake --build build-${MSYSTEM}
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 lexy-${pkgver}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

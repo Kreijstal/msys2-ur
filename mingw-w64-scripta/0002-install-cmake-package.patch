@@ -1,0 +1,27 @@
+From 81e90ef537e60b31576d9f1a8d4e2920f97f2746 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:01:03 +0100
+Subject: [PATCH 2/2] Install the headers with a CMake package config
+
+---
+ CMakeLists.txt | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index fb0b42a..5a06fec 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -21,4 +21,8 @@ target_include_directories(scripta
+ 
+ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ 
+-option(ENABLE_TESTS "Build with unit test" ON)
+\ No newline at end of file
++option(ENABLE_TESTS "Build with unit test" ON)
++install(TARGETS scripta EXPORT scripta-targets)
++install(DIRECTORY include/scripta DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++install(EXPORT scripta-targets NAMESPACE scripta:: FILE scriptaConfig.cmake
++        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/scripta)
+-- 
+2.55.0
+

@@ -1,0 +1,27 @@
+From 82e139230a707c15c6393043cb3ac93f5ea7c81f Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:54:48 +0100
+Subject: [PATCH] MinGW: export the vtables too
+
+---
+ CMakeLists.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ebbaf0a..4770f61 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -120,6 +120,10 @@ endif ()
+ if(WIN32)
+     set_target_properties(cura-formulae-engine PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
+ endif()
++if(MINGW)
++    # the export-all .def skips data such as vtables
++    target_link_options(cura-formulae-engine PRIVATE -Wl,--export-all-symbols)
++endif()
+ 
+ install(TARGETS cura-formulae-engine EXPORT cura-formulae-engine-targets
+         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+-- 
+2.55.0
+

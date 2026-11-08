@@ -1,0 +1,21 @@
+_realname=mapbox-wagyu
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Header-only polygon clipping library (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/mapbox/wagyu'
+msys2_repository_url='https://github.com/mapbox/wagyu'
+license=('spdx:ISC AND BSL-1.0')
+depends=("${MINGW_PACKAGE_PREFIX}-mapbox-geometry")
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/mapbox/wagyu/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('88c41eaba03107ebe79052fdbd66e419e903d331a2616a51849018e13648ab83')
+
+package() {
+  cd wagyu-${pkgver}
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/include"
+  cp -r include/mapbox "${pkgdir}${MINGW_PREFIX}/include/"
+  install -Dm644 LICENSE* -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+}

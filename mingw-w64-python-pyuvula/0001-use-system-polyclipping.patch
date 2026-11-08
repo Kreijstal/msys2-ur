@@ -1,0 +1,27 @@
+From 0246b261ba483ba5fb762f02ed22bfb3ca00ddaa Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:34:42 +0100
+Subject: [PATCH] Use the system polyclipping
+
+---
+ CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 17fac97..9060082 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -4,7 +4,9 @@ project(uvula)
+ find_package(standardprojectsettings REQUIRED)
+ find_package(spdlog REQUIRED)
+ find_package(range-v3 REQUIRED)
+-find_package(clipper REQUIRED)
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(polyclipping REQUIRED IMPORTED_TARGET GLOBAL polyclipping)
++add_library(clipper::clipper ALIAS PkgConfig::polyclipping)
+ 
+ option(EXTENSIVE_WARNINGS "Build with all warnings" ON)
+ 
+-- 
+2.55.0
+

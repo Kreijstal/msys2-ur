@@ -1,0 +1,64 @@
+_realname=uranium
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.14.0
+pkgrel=1
+pkgdesc="Python framework for building 3D printing related applications, used by Cura (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/Uranium'
+msys2_repository_url='https://github.com/Ultimaker/Uranium'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-python-cryptography"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy"
+         "${MINGW_PACKAGE_PREFIX}-python-numpy-stl"
+         "${MINGW_PACKAGE_PREFIX}-python-pyarcus"
+         "${MINGW_PACKAGE_PREFIX}-python-pyclipper"
+         "${MINGW_PACKAGE_PREFIX}-python-pyqt6"
+         "${MINGW_PACKAGE_PREFIX}-python-pyuvula"
+         "${MINGW_PACKAGE_PREFIX}-python-scipy"
+         "${MINGW_PACKAGE_PREFIX}-qt6-declarative")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gettext-tools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytest"
+              "${MINGW_PACKAGE_PREFIX}-python-twisted")
+source=("Uranium-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz"
+        0001-python314-ast.patch)
+sha256sums=('1e6e6cdc895324439c92dec787bea729cdd26b0cc1d47c944ceb4107625242bf'
+            '67e311173eecad5e2b338eb5f9e693972618d8cf2c619d954f46015162521e7b')
+
+prepare() {
+  cd Uranium-${pkgver}
+  patch -Np1 -i ../0001-python314-ast.patch
+}
+
+build() {
+  cd Uranium-${pkgver}
+  # what Conan's build does: compile the catalogs next to the .po files
+  for po in resources/i18n/*/uranium.po; do
+    mkdir -p "${po%/*}/LC_MESSAGES"
+    msgfmt -f "${po}" -o "${po%/*}/LC_MESSAGES/uranium.mo"
+  done
+}
+
+check() {
+  cd Uranium-${pkgver}
+  # expects "PNG" in Qt's comment, which this MIME database spells out
+  QT_QPA_PLATFORM=offscreen ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider tests \
+    -k "not test_getMimeType or test_getMimeTypeForFile or test_getMimeTypeForContainer"
+}
+
+package() {
+  cd Uranium-${pkgver}
+  local _pyver=$(${MINGW_PREFIX}/bin/python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+  local _site="${pkgdir}${MINGW_PREFIX}/lib/python${_pyver}/site-packages"
+  mkdir -p "${_site}" "${pkgdir}${MINGW_PREFIX}/share/uranium" "${pkgdir}${MINGW_PREFIX}/lib/uranium"
+  # the layout UM/Application.py searches relative to the install prefix
+  cp -r UM "${_site}/"
+  cp -r resources "${pkgdir}${MINGW_PREFIX}/share/uranium/"
+  find "${pkgdir}${MINGW_PREFIX}/share/uranium/resources/i18n" -name '*.po' -delete
+  cp -r plugins "${pkgdir}${MINGW_PREFIX}/lib/uranium/"
+  MSYS2_ARG_CONV_EXCL="-p" ${MINGW_PREFIX}/bin/python -m compileall -o 0 -o 1 -q \
+    -s"${pkgdir}" -p"/" "${_site}/UM" "${pkgdir}${MINGW_PREFIX}/lib/uranium"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

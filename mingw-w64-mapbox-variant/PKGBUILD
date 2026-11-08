@@ -1,0 +1,20 @@
+_realname=mapbox-variant
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.2.0
+pkgrel=1
+pkgdesc="Header-only C++11/14 variant type (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/mapbox/variant'
+msys2_repository_url='https://github.com/mapbox/variant'
+license=('spdx:BSD-3-Clause AND BSL-1.0')
+source=("${_realname}-${pkgver}.tar.gz::https://github.com/mapbox/variant/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('7059f4420d504c4bc96f8a462a0f6d029c5be914ba55cc030a0a773366dd7bc8')
+
+package() {
+  cd variant-${pkgver}
+  mkdir -p "${pkgdir}${MINGW_PREFIX}/include"
+  cp -r include/mapbox "${pkgdir}${MINGW_PREFIX}/include/"
+  install -Dm644 LICENSE* -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}"
+}

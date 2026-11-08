@@ -1,0 +1,37 @@
+From 9ba3f1b5b542b35a74bfec518705abad9dc9d397 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:14:02 +0100
+Subject: [PATCH] Include <iomanip> for std::setprecision
+
+---
+ src/utils/OBJ.cpp          | 1 +
+ tests/utils/StringTest.cpp | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/utils/OBJ.cpp b/src/utils/OBJ.cpp
+index 336b0c6f3..fd3430824 100644
+--- a/src/utils/OBJ.cpp
++++ b/src/utils/OBJ.cpp
+@@ -4,6 +4,7 @@
+ #include "utils/OBJ.h"
+ 
+ #include <fstream>
++#include <iomanip>
+ #include <unordered_set>
+ 
+ #include <range/v3/algorithm/find.hpp>
+diff --git a/tests/utils/StringTest.cpp b/tests/utils/StringTest.cpp
+index a0c172fbc..43d39f23c 100644
+--- a/tests/utils/StringTest.cpp
++++ b/tests/utils/StringTest.cpp
+@@ -4,6 +4,7 @@
+ #include "utils/string.h" // The file under test.
+ #include "geometry/Point2LL.h"
+ #include <gtest/gtest.h>
++#include <iomanip>
+ 
+ // NOLINTBEGIN(*-magic-numbers)
+ namespace cura
+-- 
+2.55.0
+

@@ -1,0 +1,348 @@
+From 69988e075227a2d6384a410b28aee6dce3f37cca Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:59:02 +0100
+Subject: [PATCH] Build the builtin functions before std_env copies them
+
+---
+ include/cura-formulae-engine/config.h | 8 ++++++++
+ include/cura-formulae-engine/eval.h   | 1 +
+ src/env/abs.cpp                       | 2 +-
+ src/env/all.cpp                       | 2 +-
+ src/env/any.cpp                       | 2 +-
+ src/env/float_fn.cpp                  | 2 +-
+ src/env/int_fn.cpp                    | 2 +-
+ src/env/len.cpp                       | 2 +-
+ src/env/map.cpp                       | 2 +-
+ src/env/math_atan.cpp                 | 2 +-
+ src/env/math_ceil.cpp                 | 2 +-
+ src/env/math_cos.cpp                  | 2 +-
+ src/env/math_degrees.cpp              | 2 +-
+ src/env/math_floor.cpp                | 2 +-
+ src/env/math_log.cpp                  | 2 +-
+ src/env/math_radians.cpp              | 2 +-
+ src/env/math_sin.cpp                  | 2 +-
+ src/env/math_sqrt.cpp                 | 2 +-
+ src/env/math_tan.cpp                  | 2 +-
+ src/env/max.cpp                       | 2 +-
+ src/env/min.cpp                       | 2 +-
+ src/env/round.cpp                     | 2 +-
+ src/env/str.cpp                       | 2 +-
+ src/env/sum.cpp                       | 2 +-
+ 24 files changed, 31 insertions(+), 22 deletions(-)
+
+diff --git a/include/cura-formulae-engine/config.h b/include/cura-formulae-engine/config.h
+index 8651a25..f69289e 100644
+--- a/include/cura-formulae-engine/config.h
++++ b/include/cura-formulae-engine/config.h
+@@ -9,3 +9,11 @@
+ #else
+ #    define CURA_FORMULAE_ENGINE_API
+ #endif
++
++// std_env copies the builtin functions while it is initialized; PE targets run
++// GCC's constructors in reverse link order, so they have to be built first
++#if defined(__GNUC__)
++#    define CURA_FORMULAE_ENGINE_EARLY_INIT __attribute__((init_priority(1000)))
++#else
++#    define CURA_FORMULAE_ENGINE_EARLY_INIT
++#endif
+diff --git a/include/cura-formulae-engine/eval.h b/include/cura-formulae-engine/eval.h
+index 2b2adc6..92f51a9 100644
+--- a/include/cura-formulae-engine/eval.h
++++ b/include/cura-formulae-engine/eval.h
+@@ -1,5 +1,6 @@
+ #pragma once
+ 
++#include "cura-formulae-engine/config.h"
+ #include <cstdint>
+ #include <functional>
+ 
+diff --git a/src/env/abs.cpp b/src/env/abs.cpp
+index 00499ae..0fe738e 100644
+--- a/src/env/abs.cpp
++++ b/src/env/abs.cpp
+@@ -8,7 +8,7 @@
+ 
+ namespace CuraFormulaeEngine::env {
+ 
+-const eval::Value::fn_t abs = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t abs = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/all.cpp b/src/env/all.cpp
+index 61c1e3d..a02afde 100644
+--- a/src/env/all.cpp
++++ b/src/env/all.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t all = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t all = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/any.cpp b/src/env/any.cpp
+index 44c06d4..e9530c1 100644
+--- a/src/env/any.cpp
++++ b/src/env/any.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t any = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t any = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/float_fn.cpp b/src/env/float_fn.cpp
+index 5a6f0ea..19ce0b7 100644
+--- a/src/env/float_fn.cpp
++++ b/src/env/float_fn.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t float_fn = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t float_fn = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/int_fn.cpp b/src/env/int_fn.cpp
+index 668c95f..5d0c9c4 100644
+--- a/src/env/int_fn.cpp
++++ b/src/env/int_fn.cpp
+@@ -58,7 +58,7 @@ namespace CuraFormulaeEngine::env
+ }
+ 
+ const IntFunction int_function{};
+-const eval::Value::fn_t int_fn = [](const std::vector<eval::Value>& args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t int_fn = [](const std::vector<eval::Value>& args) -> eval::Result
+ {
+     return int_function(args);
+ };
+diff --git a/src/env/len.cpp b/src/env/len.cpp
+index 7160fd9..3b82c82 100644
+--- a/src/env/len.cpp
++++ b/src/env/len.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t len = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t len = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/map.cpp b/src/env/map.cpp
+index cc73ea2..10f14f1 100644
+--- a/src/env/map.cpp
++++ b/src/env/map.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t map = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t map = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 2)
+     {
+diff --git a/src/env/math_atan.cpp b/src/env/math_atan.cpp
+index 567481a..7881ada 100644
+--- a/src/env/math_atan.cpp
++++ b/src/env/math_atan.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_atan = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_atan = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_ceil.cpp b/src/env/math_ceil.cpp
+index a021e50..50760ab 100644
+--- a/src/env/math_ceil.cpp
++++ b/src/env/math_ceil.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_ceil = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_ceil = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_cos.cpp b/src/env/math_cos.cpp
+index d360d70..095c4cc 100644
+--- a/src/env/math_cos.cpp
++++ b/src/env/math_cos.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_cos = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_cos = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_degrees.cpp b/src/env/math_degrees.cpp
+index 6191b50..1eedb8f 100644
+--- a/src/env/math_degrees.cpp
++++ b/src/env/math_degrees.cpp
+@@ -7,7 +7,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_degrees = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_degrees = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_floor.cpp b/src/env/math_floor.cpp
+index 665cafe..63e6311 100644
+--- a/src/env/math_floor.cpp
++++ b/src/env/math_floor.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_floor = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_floor = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_log.cpp b/src/env/math_log.cpp
+index 80da9ca..fce63a0 100644
+--- a/src/env/math_log.cpp
++++ b/src/env/math_log.cpp
+@@ -66,7 +66,7 @@ namespace CuraFormulaeEngine::env
+ }
+ 
+ const MathLogFunction math_log_function{};
+-const eval::Value::fn_t math_log = [](const std::vector<eval::Value>& args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_log = [](const std::vector<eval::Value>& args) -> eval::Result
+ {
+     return math_log_function(args);
+ };
+diff --git a/src/env/math_radians.cpp b/src/env/math_radians.cpp
+index e63a73a..583d74e 100644
+--- a/src/env/math_radians.cpp
++++ b/src/env/math_radians.cpp
+@@ -7,7 +7,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_radians = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_radians = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_sin.cpp b/src/env/math_sin.cpp
+index cc585f2..b916aaa 100644
+--- a/src/env/math_sin.cpp
++++ b/src/env/math_sin.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_sin = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_sin = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_sqrt.cpp b/src/env/math_sqrt.cpp
+index 13918da..d8240c4 100644
+--- a/src/env/math_sqrt.cpp
++++ b/src/env/math_sqrt.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_sqrt = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_sqrt = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/math_tan.cpp b/src/env/math_tan.cpp
+index 819679c..4334cc0 100644
+--- a/src/env/math_tan.cpp
++++ b/src/env/math_tan.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t math_tan = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t math_tan = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/max.cpp b/src/env/max.cpp
+index 2ca6f47..5acd900 100644
+--- a/src/env/max.cpp
++++ b/src/env/max.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t max = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t max = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.empty())
+     {
+diff --git a/src/env/min.cpp b/src/env/min.cpp
+index 94bf9dc..9aa965b 100644
+--- a/src/env/min.cpp
++++ b/src/env/min.cpp
+@@ -120,7 +120,7 @@ namespace CuraFormulaeEngine::env
+ }
+ 
+ const MinFunction min_function{};
+-const eval::Value::fn_t min = [](const std::vector<eval::Value>& args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t min = [](const std::vector<eval::Value>& args) -> eval::Result
+ {
+     return min_function(args);
+ };
+diff --git a/src/env/round.cpp b/src/env/round.cpp
+index 86fe965..9bbe440 100644
+--- a/src/env/round.cpp
++++ b/src/env/round.cpp
+@@ -62,7 +62,7 @@ namespace CuraFormulaeEngine::env
+ }
+ 
+ const RoundFunction round_function{};
+-const eval::Value::fn_t round = [](const std::vector<eval::Value>& args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t round = [](const std::vector<eval::Value>& args) -> eval::Result
+ {
+     return round_function(args);
+ };
+diff --git a/src/env/str.cpp b/src/env/str.cpp
+index a060ced..ca382bd 100644
+--- a/src/env/str.cpp
++++ b/src/env/str.cpp
+@@ -9,7 +9,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t str = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t str = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+diff --git a/src/env/sum.cpp b/src/env/sum.cpp
+index 8b9f097..5e8f5fd 100644
+--- a/src/env/sum.cpp
++++ b/src/env/sum.cpp
+@@ -8,7 +8,7 @@
+ namespace CuraFormulaeEngine::env
+ {
+ 
+-const eval::Value::fn_t sum = [](const std::vector<eval::Value> &args) -> eval::Result
++CURA_FORMULAE_ENGINE_EARLY_INIT const eval::Value::fn_t sum = [](const std::vector<eval::Value> &args) -> eval::Result
+ {
+     if (args.size() != 1)
+     {
+-- 
+2.55.0
+

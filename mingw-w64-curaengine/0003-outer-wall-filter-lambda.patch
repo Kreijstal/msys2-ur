@@ -1,0 +1,28 @@
+From 7ec4c7922221e63f7ff45d9d14daa29fbda23db5 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:07:30 +0100
+Subject: [PATCH] Filter the outer walls with a lambda
+
+---
+ src/InsetOrderOptimizer.cpp | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/src/InsetOrderOptimizer.cpp b/src/InsetOrderOptimizer.cpp
+index bdfaa36fb..ca2517eb5 100644
+--- a/src/InsetOrderOptimizer.cpp
++++ b/src/InsetOrderOptimizer.cpp
+@@ -409,7 +409,10 @@ InsetOrderOptimizer::value_type InsetOrderOptimizer::getRegionOrder(const std::v
+         invariant_outer_parents.emplace(extrusion_line);
+     }
+ 
+-    const std::vector<const ExtrusionLine*> outer_walls = extrusion_lines | ranges::views::filter(&ExtrusionLine::is_outer_wall) | ranges::views::addressof | ranges::to_vector;
++    const std::vector<const ExtrusionLine*> outer_walls = extrusion_lines
++                                                                // MinGW GCC 16.2 fails the predicate concept for the member pointer
++                                                              | ranges::views::filter([](const ExtrusionLine& line) { return line.is_outer_wall(); })
++                                                              | ranges::views::addressof | ranges::to_vector;
+ 
+     // find for each line the closest outer line, and store this in closest_outer_wall_line
+     std::unordered_map<const ExtrusionLine*, const ExtrusionLine*> closest_outer_wall_line;
+-- 
+2.55.0
+

@@ -1,0 +1,33 @@
+_realname=zeus-expected
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=1.4.0
+pkgrel=1
+pkgdesc="Backport of std::expected to C++17 (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/zeus-cpp/expected'
+msys2_repository_url='https://github.com/zeus-cpp/expected'
+license=('spdx:MIT')
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja")
+source=("${_realname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('70f7118651be51f5c02c0aa10bfb903f5a6c0bcd13ae726dfe34bf8836aaece0')
+
+build() {
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake -GNinja -S expected-${pkgver} -B build-${MSYSTEM} \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX}
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  ctest --test-dir build-${MSYSTEM} --output-on-failure
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}
+  install -Dm644 expected-${pkgver}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

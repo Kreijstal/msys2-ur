@@ -1,0 +1,58 @@
+From adb625ed36fa7e1c5cd2969eb8136e9b52e17b9f Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:02:14 +0100
+Subject: [PATCH] Use the system polyclipping, stb, Boost and TBB
+
+---
+ CMakeLists.txt | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4a3622cde..1fb71a66d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -263,10 +263,11 @@ if (ENABLE_ARCUS)
+     target_link_libraries(_CuraEngine PUBLIC arcus::arcus)
+ endif ()
+ 
+-find_package(mapbox-wagyu REQUIRED)
+-find_package(clipper REQUIRED)
+-find_package(RapidJSON REQUIRED)
+-find_package(stb REQUIRED)
++# header-only: mapbox-wagyu and RapidJSON need no target
++find_package(PkgConfig REQUIRED)
++pkg_check_modules(polyclipping REQUIRED IMPORTED_TARGET GLOBAL polyclipping)
++add_library(clipper::clipper ALIAS PkgConfig::polyclipping)
++pkg_check_modules(stb REQUIRED IMPORTED_TARGET stb)
+ find_package(Boost REQUIRED)
+ find_package(spdlog REQUIRED)
+ find_package(fmt REQUIRED)
+@@ -293,14 +294,12 @@ target_link_libraries(_CuraEngine
+         range-v3::range-v3
+         fmt::fmt
+         clipper::clipper
+-        mapbox-wagyu::mapbox-wagyu
+-        rapidjson
+-        stb::stb
+-        boost::boost
++        PkgConfig::stb
++        Boost::headers
+         scripta::scripta
+         PNG::PNG
+         cura-formulae-engine::cura-formulae-engine
+-        $<$<NOT:$<BOOL:${EMSCRIPTEN}>>:onetbb::onetbb>
++        $<$<NOT:$<BOOL:${EMSCRIPTEN}>>:TBB::tbb>
+         $<$<TARGET_EXISTS:semver::semver>:semver::semver>
+         $<$<TARGET_EXISTS:curaengine_grpc_definitions::curaengine_grpc_definitions>:curaengine_grpc_definitions::curaengine_grpc_definitions>
+         $<$<TARGET_EXISTS:curaviz_grpc_definitions::curaviz_grpc_definitions>:curaviz_grpc_definitions::curaviz_grpc_definitions>
+@@ -393,7 +392,6 @@ if (ENABLE_TESTING OR ENABLE_BENCHMARKS)
+             GTest::gtest
+             GTest::gmock
+             clipper::clipper
+-            mapbox-wagyu::mapbox-wagyu
+             $<$<TARGET_EXISTS:curaengine_grpc_definitions::curaengine_grpc_definitions>:curaengine_grpc_definitions::curaengine_grpc_definitions>
+             $<$<TARGET_EXISTS:asio-grpc::asio-grpc>:asio-grpc::asio-grpc>
+             $<$<TARGET_EXISTS:grpc::grpc>:grpc::grpc>
+-- 
+2.55.0
+

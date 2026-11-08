@@ -1,0 +1,37 @@
+From cd566147d9088919b38e7158e30357ae6b5c1997 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:20:08 +0100
+Subject: [PATCH] SettingFunction: drop ast.Str and Constant.s, removed in
+ Python 3.14
+
+---
+ UM/Settings/SettingFunction.py | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/UM/Settings/SettingFunction.py b/UM/Settings/SettingFunction.py
+index 194087a00..c7bae97fb 100644
+--- a/UM/Settings/SettingFunction.py
++++ b/UM/Settings/SettingFunction.py
+@@ -257,8 +257,6 @@ class _SettingExpressionVisitor(ast.NodeVisitor):
+             self.keys.add(node.s)  # type: ignore
+ 
+     def visit_Subscript(self, node: ast.Subscript):
+-        if type(node.value) == ast.Str:
+-            raise IllegalMethodError("Indexing on strings is not allowed")
+         if type(node.value) == getattr(ast, "Constant", None) and isinstance(getattr(node.value, "value", None), str):
+             raise IllegalMethodError("Indexing on strings is not allowed")
+         for child_node in ast.iter_child_nodes(node):
+@@ -274,8 +272,8 @@ class _SettingExpressionVisitor(ast.NodeVisitor):
+ 
+         if node.value in self._blacklist:
+             raise IllegalMethodError(node.value)
+-        if node.s.startswith("_"):
+-            raise IllegalMethodError(node.s)
++        if node.value.startswith("_"):
++            raise IllegalMethodError(node.value)
+         if node.value not in self._knownNames and node.value not in dir(builtins):  # type: ignore #AST uses getattr stuff, so ignore type of node.value.
+             self.keys.add(node.value)  # type: ignore
+ 
+-- 
+2.55.0
+

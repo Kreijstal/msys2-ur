@@ -1,0 +1,25 @@
+From 4a5d3aa0687ca58a83db8aa5e811c7f8933a6885 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:01:03 +0100
+Subject: [PATCH 1/2] Pass /Zc:__cplusplus only to MSVC
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c85711e..fb0b42a 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,7 +12,7 @@ find_package(standardprojectsettings REQUIRED)
+ set_project_warnings(scripta)
+ enable_sanitizers(scripta)
+ target_compile_features(scripta INTERFACE cxx_std_20)
+-target_compile_options(scripta INTERFACE $<$<BOOL:${WIN32}>:/Zc:__cplusplus>)
++target_compile_options(scripta INTERFACE $<$<CXX_COMPILER_ID:MSVC>:/Zc:__cplusplus>)
+ 
+ target_include_directories(scripta
+         INTERFACE
+-- 
+2.55.0
+

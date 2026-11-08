@@ -1,0 +1,63 @@
+_realname=pyuvula
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=1.1.0
+_commit=d15219eb49b7eedb7c2a03ab627e1415c04f79f6
+pkgrel=1
+pkgdesc="UV unwrapping and mesh helpers used by Uranium/Cura, Python module (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/libUvula'
+msys2_repository_url='https://github.com/Ultimaker/libUvula'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-polyclipping"
+         "${MINGW_PACKAGE_PREFIX}-spdlog")
+makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-cmake"
+             "${MINGW_PACKAGE_PREFIX}-ninja"
+             "${MINGW_PACKAGE_PREFIX}-pkgconf"
+             "${MINGW_PACKAGE_PREFIX}-pybind11"
+             "${MINGW_PACKAGE_PREFIX}-python-numpy"
+             "${MINGW_PACKAGE_PREFIX}-range-v3"
+             "${MINGW_PACKAGE_PREFIX}-standardprojectsettings")
+source=("libUvula-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        0001-use-system-polyclipping.patch)
+sha256sums=('0571101f3fe3bd4fe452101a7b8547ac1071b490c121ee6fe7ea2be5ce243cce'
+            '4f28b0254d32abaa105f8210429962b6505a48ec916caf1ffc10f9e4da8d9281')
+
+prepare() {
+  cd libUvula-${_commit}
+  patch -Np1 -i ../0001-use-system-polyclipping.patch
+}
+
+build() {
+  cmake -GNinja -S libUvula-${_commit} -B build-${MSYSTEM} \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DUVULA_VERSION=${pkgver} \
+    -DPYUVULA_VERSION=${pkgver} \
+    -DPython_EXECUTABLE=${MINGW_PREFIX}/bin/python.exe
+  cmake --build build-${MSYSTEM}
+}
+
+check() {
+  cd build-${MSYSTEM}/pyUvula
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import numpy, pyUvula
+# a 10 mm cube, 3 vertices per face, as Uranium's MeshData passes it
+c = [(x, y, z) for x in (0, 10) for y in (0, 10) for z in (0, 10)]
+q = [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)]
+v = numpy.array([c[k] for a, b, c_, d in q for t in ((a, b, c_), (a, c_, d)) for k in t], dtype=numpy.float32)
+i = numpy.arange(len(v), dtype=numpy.int32).reshape(-1, 3)
+assert len(pyUvula.connectFaces(v, i)) == 12
+uvs, w, h = pyUvula.unwrap(v, i)
+assert len(uvs) == len(v) and w > 0 and h > 0, (len(uvs), w, h)
+print("pyUvula ok")
+PY
+}
+
+package() {
+  local _pyver=$(${MINGW_PREFIX}/bin/python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+  install -Dm755 build-${MSYSTEM}/pyUvula/pyUvula*.pyd -t "${pkgdir}${MINGW_PREFIX}/lib/python${_pyver}/site-packages"
+  install -Dm644 libUvula-${_commit}/LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

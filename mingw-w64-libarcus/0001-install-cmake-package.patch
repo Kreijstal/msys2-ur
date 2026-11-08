@@ -1,0 +1,31 @@
+From 6ce31f6fbc79bd55a5cbdbc609212ab70b9ccc25 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 08:50:38 +0100
+Subject: [PATCH] Install the library with a CMake package config
+
+---
+ CMakeLists.txt | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f8cf636..b4af9d6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -43,3 +43,14 @@ if(WIN32)
+         set_target_properties(Arcus PROPERTIES LINK_FLAGS "/DEBUG:FULL")
+     endif ()
+ endif()
++
++set_target_properties(Arcus PROPERTIES EXPORT_NAME arcus)
++install(TARGETS Arcus EXPORT arcus-targets
++        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
++        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
++        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
++install(DIRECTORY include/Arcus DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
++install(EXPORT arcus-targets NAMESPACE arcus:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/arcus)
++file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/arcusConfig.cmake
++     "include(CMakeFindDependencyMacro)\nfind_dependency(protobuf CONFIG)\ninclude(\${CMAKE_CURRENT_LIST_DIR}/arcus-targets.cmake)\n")
++install(FILES ${CMAKE_CURRENT_BINARY_DIR}/arcusConfig.cmake DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/arcus)
+-- 
+2.55.0
+

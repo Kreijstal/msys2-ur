@@ -1,0 +1,18 @@
+# What Conan's PyProjectToolchain generates for pynest2d
+[build-system]
+requires = ["sip >=6.8"]
+build-backend = "sipbuild.api"
+
+[project]
+name = "pynest2d"
+version = "5.11.0a0"
+
+[tool.sip.project]
+sip-files-dir = "python"
+
+[tool.sip.bindings.pynest2d]
+exceptions = true
+release-gil = true
+# nest2d's interface compile definitions
+define-macros = ["LIBNEST2D_GEOMETRIES_clipper", "LIBNEST2D_OPTIMIZER_nlopt", "LIBNEST2D_THREADING_std"]
+libraries = ["nest2d", "polyclipping", "nlopt"]

@@ -1,0 +1,31 @@
+From 5bef5e1456c905f3db5f0a50db31dd12456cace0 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 10:26:24 +0100
+Subject: [PATCH] 3MFReader: numpy.frombuffer instead of the removed binary
+ fromstring
+
+---
+ plugins/3MFReader/ThreeMFReader.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/plugins/3MFReader/ThreeMFReader.py b/plugins/3MFReader/ThreeMFReader.py
+index ec0ae5c8de..888bed82dc 100755
+--- a/plugins/3MFReader/ThreeMFReader.py
++++ b/plugins/3MFReader/ThreeMFReader.py
+@@ -138,11 +138,11 @@ class ThreeMFReader(MeshReader):
+ 
+         mesh_data = savitar_node.getMeshData()
+ 
+-        vertices_data = numpy.fromstring(mesh_data.getFlatVerticesAsBytes(), dtype=numpy.float32)
++        vertices_data = numpy.frombuffer(mesh_data.getFlatVerticesAsBytes(), dtype=numpy.float32)
+         vertices = numpy.resize(vertices_data, (int(vertices_data.size / 3), 3))
+ 
+         texture_path = mesh_data.getTexturePath(scene)
+-        uv_data = numpy.fromstring(mesh_data.getUVCoordinatesPerVertexAsBytes(scene), dtype=numpy.float32)
++        uv_data = numpy.frombuffer(mesh_data.getUVCoordinatesPerVertexAsBytes(scene), dtype=numpy.float32)
+         uv_coordinates = numpy.resize(uv_data, (int(uv_data.size / 2), 2))
+ 
+         mesh_builder.setVertices(vertices)
+-- 
+2.55.0
+

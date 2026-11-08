@@ -1,0 +1,25 @@
+From 638d0d5037492d01e7b71d44dadcea1100f2ff21 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:25:46 +0100
+Subject: [PATCH] Fix an ambiguous Radians comparison in C++20
+
+---
+ include/libnest2d/nester.hpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/libnest2d/nester.hpp b/include/libnest2d/nester.hpp
+index 54761a6..fdd61a7 100644
+--- a/include/libnest2d/nester.hpp
++++ b/include/libnest2d/nester.hpp
+@@ -334,7 +334,7 @@ public:
+ 
+     inline void rotation(Radians rot) BP2D_NOEXCEPT
+     {
+-        if(rotation_ != rot) {
++        if(double(rotation_) != double(rot)) {
+             rotation_ = rot; has_rotation_ = true; tr_cache_valid_ = false;
+             rmt_valid_ = false; lmb_valid_ = false;
+             bb_cache_.valid = false;
+-- 
+2.55.0
+

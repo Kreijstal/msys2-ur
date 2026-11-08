@@ -1,0 +1,82 @@
+_realname=cura
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.14.0
+pkgrel=1
+pkgdesc="3D printer slicing application (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://ultimaker.com/software/ultimaker-cura'
+msys2_repository_url='https://github.com/Ultimaker/Cura'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-cura-fdm-materials"
+         "${MINGW_PACKAGE_PREFIX}-curaengine"
+         "${MINGW_PACKAGE_PREFIX}-python-certifi"
+         "${MINGW_PACKAGE_PREFIX}-python-keyring"
+         "${MINGW_PACKAGE_PREFIX}-python-pynest2d"
+         "${MINGW_PACKAGE_PREFIX}-python-pyserial"
+         "${MINGW_PACKAGE_PREFIX}-python-pysavitar"
+         "${MINGW_PACKAGE_PREFIX}-python-requests"
+         "${MINGW_PACKAGE_PREFIX}-python-trimesh"
+         "${MINGW_PACKAGE_PREFIX}-python-twisted"
+         "${MINGW_PACKAGE_PREFIX}-python-uranium"
+         "${MINGW_PACKAGE_PREFIX}-python-zeroconf"
+         "${MINGW_PACKAGE_PREFIX}-qt6-imageformats"
+         "${MINGW_PACKAGE_PREFIX}-qt6-svg")
+makedepends=("${MINGW_PACKAGE_PREFIX}-gettext-tools")
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python-pytest")
+source=("Cura-${pkgver}.tar.gz::${msys2_repository_url}/archive/refs/tags/${pkgver}.tar.gz"
+        0001-3mf-numpy-frombuffer.patch)
+sha256sums=('0d43ea69f831e36fe63a97c381709d8c0fdb5d39d2bf65374335dfc3ae168dda'
+            'a74e620349ca14082cec717077eafcdce26d58e713b94be611a46713ab69b5dd')
+
+prepare() {
+  cd Cura-${pkgver}
+  patch -Np1 -i ../0001-3mf-numpy-frombuffer.patch
+  # what Conan's _generate_cura_version renders, with the default URLs
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+import re
+v = {"cura_app_name": "cura", "cura_app_display_name": "UltiMaker Cura",
+     "cura_version": "5.14.0", "cura_version_full": "5.14.0", "cura_build_type": "",
+     "cura_debug_mode": "False", "cura_cloud_api_root": "https://api.ultimaker.com",
+     "cura_cloud_api_version": "1", "cura_cloud_account_api_root": "https://account.ultimaker.com",
+     "cura_marketplace_root": "https://marketplace.ultimaker.com",
+     "cura_digital_factory_url": "https://digitalfactory.ultimaker.com",
+     "cura_latest_url": "https://software.ultimaker.com/latest.json",
+     "conan_installs": "{}", "python_installs": "{}", "dependencies_description": "{}"}
+t = open("CuraVersion.py.jinja").read()
+open("cura/CuraVersion.py", "w").write(re.sub(r"{{ *(\w+) *}}", lambda m: v[m.group(1)], t))
+PY
+}
+
+build() {
+  cd Cura-${pkgver}
+  for po in resources/i18n/*/*.po; do
+    mkdir -p "${po%/*}/LC_MESSAGES"
+    msgfmt -f "${po}" -o "${po%/*}/LC_MESSAGES/$(basename "${po}" .po).mo"
+  done
+}
+
+check() {
+  cd Cura-${pkgver}
+  QT_QPA_PLATFORM=offscreen ${MINGW_PREFIX}/bin/python -m pytest -q -p no:cacheprovider tests
+}
+
+package() {
+  cd Cura-${pkgver}
+  local _pyver=$(${MINGW_PREFIX}/bin/python -c 'import sys; print("%d.%d" % sys.version_info[:2])')
+  local _site="${pkgdir}${MINGW_PREFIX}/lib/python${_pyver}/site-packages"
+  mkdir -p "${_site}" "${pkgdir}${MINGW_PREFIX}/share/cura" "${pkgdir}${MINGW_PREFIX}/lib/cura"
+  cp -r cura "${_site}/"
+  cp -r resources "${pkgdir}${MINGW_PREFIX}/share/cura/"
+  find "${pkgdir}${MINGW_PREFIX}/share/cura/resources/i18n" -name '*.po' -o -name '*.pot' | xargs rm -f
+  cp -r plugins "${pkgdir}${MINGW_PREFIX}/lib/cura/"
+  # need libCharon, pyDulcificum or the closed pynavlib
+  rm -r "${pkgdir}${MINGW_PREFIX}"/lib/cura/plugins/{UFPReader,UFPWriter,MakerbotWriter,3DConnexion}
+  MSYS2_ARG_CONV_EXCL="-p" ${MINGW_PREFIX}/bin/python -m compileall -o 0 -o 1 -q \
+    -s"${pkgdir}" -p"/" "${_site}/cura" "${pkgdir}${MINGW_PREFIX}/lib/cura"
+  # Uranium derives the install prefix from the script's directory
+  install -Dm644 cura_app.py "${pkgdir}${MINGW_PREFIX}/bin/cura_app.py"
+  printf '@start "" "%%~dp0pythonw.exe" "%%~dp0cura_app.py" %%*\r\n' > "${pkgdir}${MINGW_PREFIX}/bin/cura.cmd"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

@@ -1,0 +1,64 @@
+_realname=pynest2d
+pkgbase=mingw-w64-python-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-python-${_realname}")
+pkgver=5.11.0alpha0
+_commit=73235af569bd36bb8c60e659f75057bd559426d8
+pkgrel=1
+pkgdesc="Python bindings for libnest2d (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/pynest2d'
+msys2_repository_url='https://github.com/Ultimaker/pynest2d'
+license=('spdx:LGPL-3.0-or-later')
+depends=("${MINGW_PACKAGE_PREFIX}-python"
+         "${MINGW_PACKAGE_PREFIX}-libnest2d")
+makedepends=("${MINGW_PACKAGE_PREFIX}-boost"
+             "${MINGW_PACKAGE_PREFIX}-cc"
+             "${MINGW_PACKAGE_PREFIX}-python-installer"
+             "${MINGW_PACKAGE_PREFIX}-sip"
+             "${MINGW_PACKAGE_PREFIX}-spdlog")
+source=("pynest2d-${_commit}.tar.gz::${url}/archive/${_commit}.tar.gz"
+        pyproject.toml)
+sha256sums=('5d25619521dcf799c3e6ada19e290f1b0256f85b4e639768f58fbf22db760e24'
+            '131f6ef6f9ef92e28d8646c9af7b91a06a2d8546748d1c3e5b6a10b9e7fadafc')
+
+prepare() {
+  cp pyproject.toml pynest2d-${_commit}/
+}
+
+build() {
+  cd pynest2d-${_commit}
+  # with MSYSTEM set, MSYS2's sip cygpaths the wheel dir and stages outside it;
+  # the MSYS runtime re-adds MSYSTEM to native children, so drop it in Python
+  ${MINGW_PREFIX}/bin/python -c 'import os, sys; del os.environ["MSYSTEM"]; from sipbuild.tools.wheel import main; sys.argv[0] = "sip-wheel"; main()' \
+    --build-dir build-${MSYSTEM}
+}
+
+check() {
+  cd pynest2d-${_commit}
+  rm -rf chk && MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} --destdir=chk *.whl
+  cd chk${MINGW_PREFIX}/lib/python3*/site-packages
+  # the call Cura's Nest2DArrange makes
+  ${MINGW_PREFIX}/bin/python - <<'PY'
+from pynest2d import Point, Box, Item, NfpConfig, nest
+square = lambda: Item([Point(0, 0), Point(0, 100), Point(100, 100), Point(100, 0)])
+items = [square() for _ in range(4)]
+config = NfpConfig()
+config.accuracy = 1.0
+config.alignment = NfpConfig.Alignment.DONT_ALIGN
+config.starting_point = NfpConfig.Alignment.CENTER
+config.rotations = [0.0]
+assert nest(items, Box(1000, 1000), 10, config) == 1
+assert all(i.binId() == 0 for i in items)
+print("pynest2d ok")
+PY
+}
+
+package() {
+  cd pynest2d-${_commit}
+  MSYS2_ARG_CONV_EXCL="--prefix=" \
+    ${MINGW_PREFIX}/bin/python -m installer --prefix=${MINGW_PREFIX} \
+    --destdir="${pkgdir}" *.whl
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/python-${_realname}/LICENSE"
+}

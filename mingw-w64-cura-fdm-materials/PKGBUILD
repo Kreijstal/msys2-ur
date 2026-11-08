@@ -1,0 +1,26 @@
+_realname=cura-fdm-materials
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=5.14.0
+pkgrel=1
+pkgdesc="FDM material profiles for Cura (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/fdm_materials'
+msys2_repository_url='https://github.com/Ultimaker/fdm_materials'
+license=('spdx:CC0-1.0')
+checkdepends=("${MINGW_PACKAGE_PREFIX}-python")
+source=("fdm_materials-${pkgver}.tar.gz::${url}/archive/refs/tags/${pkgver}.tar.gz")
+sha256sums=('34a6c251e1bf51d99a4b717747ffb99c18c7d21b9ee85f1e76839fa4970f6c63')
+
+check() {
+  cd fdm_materials-${pkgver}
+  ${MINGW_PREFIX}/bin/python -c 'import glob, xml.etree.ElementTree as E; f = glob.glob("*.fdm_material"); [E.parse(x) for x in f]; print(len(f), "profiles parse")'
+}
+
+package() {
+  cd fdm_materials-${pkgver}
+  # where its CMakeLists installs them
+  install -Dm644 *.fdm_material -t "${pkgdir}${MINGW_PREFIX}/share/cura/resources/materials"
+  install -Dm644 LICENSE "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE"
+}

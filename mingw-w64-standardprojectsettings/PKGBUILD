@@ -1,0 +1,17 @@
+_realname=standardprojectsettings
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="CMake helpers that Ultimaker's Cura components find_package (mingw-w64)"
+arch=('any')
+mingw_arch=('ucrt64')
+url='https://github.com/Ultimaker/conan-ultimaker-index/tree/main/recipes/standardprojectsettings'
+license=('spdx:0BSD')
+source=("${_realname}Config.cmake")
+sha256sums=('3f151e9890262ae6f90cc04f0f9533e943f72fb0f7f5815f27b07a285ffd1d02')
+
+package() {
+  install -Dm644 ${_realname}Config.cmake \
+    "${pkgdir}${MINGW_PREFIX}/lib/cmake/${_realname}/${_realname}Config.cmake"
+}

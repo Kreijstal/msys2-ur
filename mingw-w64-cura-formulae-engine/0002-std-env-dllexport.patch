@@ -1,0 +1,26 @@
+From a46bdf5529f88c942b5c50680af6c2d0f7a3ae42 Mon Sep 17 00:00:00 2001
+From: Kreijstal <rainb@tfwno.gf>
+Date: Sun, 8 Nov 2026 09:53:04 +0100
+Subject: [PATCH] Let std_env's definition inherit dllexport from its
+ declaration
+
+---
+ src/env/env.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/env/env.cpp b/src/env/env.cpp
+index 08644e7..07e266c 100644
+--- a/src/env/env.cpp
++++ b/src/env/env.cpp
+@@ -35,7 +35,7 @@ namespace CuraFormulaeEngine::env
+ /**
+  * @brief The standard environment.
+  */
+-CURA_FORMULAE_ENGINE_API const EnvironmentMap std_env = []()
++const EnvironmentMap std_env = []()
+ {
+     EnvironmentMap env;
+ 
+-- 
+2.55.0
+
