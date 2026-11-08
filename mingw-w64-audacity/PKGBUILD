@@ -4,7 +4,7 @@ _realname=audacity
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=4.0.1
-pkgrel=1
+pkgrel=2
 # submodule commits of the Audacity-${pkgver} tag
 _muse=3ba3cd6886433b41759d2d7adef8aef9bbbd546b
 _muse_deps=a9db17d2f0478859711873f2db156eedfc082040
@@ -34,6 +34,8 @@ depends=("${MINGW_PACKAGE_PREFIX}-cc-libs"
          "${MINGW_PACKAGE_PREFIX}-qt6-base"
          "${MINGW_PACKAGE_PREFIX}-qt6-declarative"
          "${MINGW_PACKAGE_PREFIX}-qt6-networkauth"
+         # Qt5Compat's GraphicalEffects plugin links it
+         "${MINGW_PACKAGE_PREFIX}-qt6-shadertools"
          "${MINGW_PACKAGE_PREFIX}-qt6-svg"
          "${MINGW_PACKAGE_PREFIX}-soundtouch"
          "${MINGW_PACKAGE_PREFIX}-sqlite3"
@@ -46,7 +48,6 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc"
              "${MINGW_PACKAGE_PREFIX}-cppwinrt"
              "${MINGW_PACKAGE_PREFIX}-ninja"
              "${MINGW_PACKAGE_PREFIX}-pkgconf"
-             "${MINGW_PACKAGE_PREFIX}-qt6-shadertools"
              "${MINGW_PACKAGE_PREFIX}-qt6-tools"
              "${MINGW_PACKAGE_PREFIX}-rapidjson"
              "${MINGW_PACKAGE_PREFIX}-utf8cpp"
