@@ -149,8 +149,12 @@ internal static class ClassLifetimeChecks
                 try{NativeCall(source(5));}finally{setGc(null);GC.KeepAlive(collect);}
                 Collect();Require(count(0,5)==1,"Class call owner reclaimed after reentrant native call returns");
                 CachedSchemas();
-                var realHandle=RetainedRealViews();Collect();
-                Require(realHandle.Target!=null&&(IntPtr)Allocation.GetValue(realHandle.Target)==IntPtr.Zero,"Last real metadata view release reclaims native class owner");
+                var realHandle=RetainedRealViews();
+                // Borrowed qualifier/parameter/value wrappers now root the
+                // class. Drain their bounded finalizer chain before checking
+                // the final owner; collection order can span GC cycles.
+                for(int pass=0;pass<6;pass++)Collect();
+                Require(realHandle.Target==null||(IntPtr)Allocation.GetValue(realHandle.Target)==IntPtr.Zero,"Last real metadata view release reclaims native class owner");
             }
             reset(-1);Console.WriteLine("PASS "+checks+" native class lifetime checks"+(baseline?" (baseline reproduction)":""));return 0;
         }

@@ -3,7 +3,7 @@ _realname=dotnet-mmi3
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=3.0.0
-pkgrel=9
+pkgrel=10
 _nugetver=3.0.0
 pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
 arch=('any')
@@ -17,7 +17,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
-        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch 0016-retain-owners-of-borrowed-metadata.patch TransientMetadataChecks.cs check-transient-metadata.c check-transient-metadata.sh ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
 sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c'
             '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
@@ -35,7 +35,11 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '12dc03687c9e3ae5a6cdae12d7049c1adc58595aa38aeed691630140ce035179'
             '373a26294da4316b38a0781cf5f332c92364f5570abf005ee7f816dc48bdf4c6'
             '42e43fb6aaeecf421e1d672db136d68a94e328602fa1e6d5fb01bcaef90ba35a'
-            '3599ea7b498a3fb2bcb162d2fa8ccb4eafe3bf4f5cf56a537e874455ea2cf97f'
+            '3e091f5578f7c00cc3eae7c7b587167f012a99f9ee5710b734cc3343616877ae'
+            '17e3ee38f6f59f24762fb5ebcdf93c9b8809a35bee678345317b340e88a7b69b'
+            '7c7ec735a3c795837cc24ae256d238eead14d7ab28b603dbb7b3a1aa7b75b519'
+            '69c42e19dcbe221fe9bb375d539f61cd946e7cf99e2c878c36e19d4e8efc68cf'
+            '88758ba8a09ae80a0a85e148f4ed48fbbe7e367aa2d814ffb2c5e7f156a8fbb6'
             '87cd2d0c11d93dc901abbad0bef7108f16358ad0343a9bafb8fda545c9df49ca'
             '3d9f4c74e3bcf2e20bd74cf1f73f3fd11cb0995cf2eb589e0f24b1490331708a'
             '704e3a6df84f24a43749206a2ab7de549effd0c607a621b1d83be0d816caa10b'
@@ -71,7 +75,7 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
             '720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553'
             'ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef'
-            '56ec3548715ca1a8b07e4837ed979abd9cc3901ecba716e8e3d9ef047f761599')
+            '0242e6a7a64ed64bccd4abf53c7f3600c15f19e016f527be2a50cd3037e7ccc3')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -105,6 +109,7 @@ check() {
   bash "$srcdir/check-class-clone-rollback.sh" "$srcdir/check-class-clone-rollback" "$srcdir/feed"
   bash "$srcdir/check-instance-clone-rollback.sh" "$srcdir/check-instance-clone-rollback" "$srcdir/feed"
   bash "$srcdir/check-class-lifetime.sh" "$srcdir/check-class-lifetime" "$srcdir/feed"
+  bash "$srcdir/check-transient-metadata.sh" "$srcdir/check-transient-metadata" "$srcdir/feed"
 }
 
 package() {

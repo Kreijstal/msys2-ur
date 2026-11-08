@@ -1,0 +1,311 @@
+--- a/Native/MI_NativeObject.cs
++++ b/Native/MI_NativeObject.cs
+@@ -65,6 +65,10 @@
+             internal IntPtr[] Ptrs;
+         }
+ 
++        // Borrowed metadata/value wrappers retain the managed native owner.
++        // This reference is not part of any native structure or pointer layout.
++        internal object LifetimeOwner { get; set; }
++
+         protected IntPtr allocatedData;
+         protected bool isDirect;
+ 
+@@ -76,6 +80,7 @@
+             // repeated Dispose to free the same allocation twice.
+             IntPtr memory = System.Threading.Interlocked.Exchange(ref allocatedData, IntPtr.Zero);
+             if (memory != IntPtr.Zero) Marshal.FreeHGlobal(memory);
++            LifetimeOwner = null;
+         }
+ 
+         protected MI_NativeObject(bool isDirect)
+--- a/Native/MI_Class.cs
++++ b/Native/MI_Class.cs
+@@ -47,7 +47,9 @@
+         {
+             MI_String referenceClassLocal = MI_String.NewIndirectPtr();
+             MI_Value valueLocal = new MI_Value();
++            valueLocal.LifetimeOwner = this;
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+ 
+             MI_Result resultLocal = this.ft.GetElement(this,
+                 name,
+@@ -80,7 +82,9 @@
+             MI_String nameLocal = MI_String.NewIndirectPtr();
+             MI_String referenceClassLocal = MI_String.NewIndirectPtr();
+             MI_Value valueLocal = new MI_Value();
++            valueLocal.LifetimeOwner = this;
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+ 
+             MI_Result resultLocal = this.ft.GetElementAt(this,
+                 index,
+@@ -105,6 +109,7 @@
+             )
+         {
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetClassQualifierSet(this,
+                 qualifierSetLocal);
+ 
+@@ -121,7 +126,9 @@
+             )
+         {
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+             MI_ParameterSet parameterSetLocal = MI_ParameterSet.NewDirectPtr();
++            parameterSetLocal.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetMethod(this,
+                 name,
+                 qualifierSetLocal,
+@@ -143,7 +150,9 @@
+         {
+             MI_String nameLocal = MI_String.NewIndirectPtr();
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+             MI_ParameterSet parameterSetLocal = MI_ParameterSet.NewDirectPtr();
++            parameterSetLocal.LifetimeOwner = this;
+ 
+             MI_Result resultLocal = this.ft.GetMethodAt(this,
+                 index,
+--- a/Native/MI_QualifierSet.cs
++++ b/Native/MI_QualifierSet.cs
+@@ -48,6 +48,7 @@
+             )
+         {
+             MI_Value qualifierValueLocal = new MI_Value();
++            qualifierValueLocal.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetQualifier(this,
+                 name,
+                 out qualifierType,
+@@ -70,6 +71,7 @@
+         {
+             MI_String nameLocal = MI_String.NewIndirectPtr();
+             MI_Value qualifierValueLocal = new MI_Value();
++            qualifierValueLocal.LifetimeOwner = this;
+ 
+             MI_Result resultLocal = this.ft.GetQualifierAt(this,
+                 index,
+--- a/Native/MI_ParameterSet.cs
++++ b/Native/MI_ParameterSet.cs
+@@ -51,6 +51,7 @@
+             MI_String nameLocal = MI_String.NewIndirectPtr();
+             MI_String referenceClassLocal = MI_String.NewIndirectPtr();
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetParameterAt(this,
+                 index,
+                 nameLocal,
+@@ -75,6 +76,7 @@
+         {
+             MI_String referenceClassLocal = MI_String.NewIndirectPtr();
+             MI_QualifierSet qualifierSetLocal = MI_QualifierSet.NewDirectPtr();
++            qualifierSetLocal.LifetimeOwner = this;
+ 
+             MI_Result resultLocal = this.ft.GetParameter(this,
+                 name,
+@@ -119,6 +121,7 @@
+             MI_QualifierSet qualifierSet
+             )
+         {
++            if (qualifierSet != null) qualifierSet.LifetimeOwner = this;
+             MI_Result resultLocal = this.ft.GetMethodReturnType(this,
+                 out returnType,
+                 qualifierSet);
+--- a/Internal/ValueHelpers.cs
++++ b/Internal/ValueHelpers.cs
+@@ -83,100 +83,104 @@
+             CimInstance parent = null,
+             bool clone = false)
+         {
+-            if ((flags & MI_Flags.MI_FLAG_NULL) == MI_Flags.MI_FLAG_NULL)
++            try
+             {
+-                return null;
+-            }
++                if ((flags & MI_Flags.MI_FLAG_NULL) == MI_Flags.MI_FLAG_NULL)
++                {
++                    return null;
++                }
+ 
+-            // Windows MI uses { data = NULL, size = 0 } for an empty,
+-            // non-NULL array. MI_FLAG_NULL above separately identifies NULL.
+-            if ((type & MI_TypeFlags.MI_ARRAY) != 0 &&
+-                Marshal.ReadIntPtr(value.Ptr) == IntPtr.Zero && Marshal.ReadInt32(value.Ptr, IntPtr.Size) == 0)
+-            {
+-                switch (type)
++                // Windows MI uses { data = NULL, size = 0 } for an empty,
++                // non-NULL array. MI_FLAG_NULL above separately identifies NULL.
++                if ((type & MI_TypeFlags.MI_ARRAY) != 0 &&
++                    Marshal.ReadIntPtr(value.Ptr) == IntPtr.Zero && Marshal.ReadInt32(value.Ptr, IntPtr.Size) == 0)
+                 {
+-                    case MI_Type.MI_BOOLEANA: return Array.Empty<bool>();
+-                    case MI_Type.MI_UINT8A: return Array.Empty<byte>();
+-                    case MI_Type.MI_SINT8A: return Array.Empty<sbyte>();
+-                    case MI_Type.MI_UINT16A: return Array.Empty<ushort>();
+-                    case MI_Type.MI_SINT16A: return Array.Empty<short>();
+-                    case MI_Type.MI_UINT32A: return Array.Empty<uint>();
+-                    case MI_Type.MI_SINT32A: return Array.Empty<int>();
+-                    case MI_Type.MI_UINT64A: return Array.Empty<ulong>();
+-                    case MI_Type.MI_SINT64A: return Array.Empty<long>();
+-                    case MI_Type.MI_REAL32A: return Array.Empty<float>();
+-                    case MI_Type.MI_REAL64A: return Array.Empty<double>();
+-                    case MI_Type.MI_CHAR16A: return Array.Empty<char>();
+-                    case MI_Type.MI_DATETIMEA: return Array.Empty<object>();
+-                    case MI_Type.MI_STRINGA: return Array.Empty<string>();
+-                    case MI_Type.MI_REFERENCEA: return Array.Empty<CimInstance>();
+-                    case MI_Type.MI_INSTANCEA: return Array.Empty<CimInstance>();
++                    switch (type)
++                    {
++                        case MI_Type.MI_BOOLEANA: return Array.Empty<bool>();
++                        case MI_Type.MI_UINT8A: return Array.Empty<byte>();
++                        case MI_Type.MI_SINT8A: return Array.Empty<sbyte>();
++                        case MI_Type.MI_UINT16A: return Array.Empty<ushort>();
++                        case MI_Type.MI_SINT16A: return Array.Empty<short>();
++                        case MI_Type.MI_UINT32A: return Array.Empty<uint>();
++                        case MI_Type.MI_SINT32A: return Array.Empty<int>();
++                        case MI_Type.MI_UINT64A: return Array.Empty<ulong>();
++                        case MI_Type.MI_SINT64A: return Array.Empty<long>();
++                        case MI_Type.MI_REAL32A: return Array.Empty<float>();
++                        case MI_Type.MI_REAL64A: return Array.Empty<double>();
++                        case MI_Type.MI_CHAR16A: return Array.Empty<char>();
++                        case MI_Type.MI_DATETIMEA: return Array.Empty<object>();
++                        case MI_Type.MI_STRINGA: return Array.Empty<string>();
++                        case MI_Type.MI_REFERENCEA: return Array.Empty<CimInstance>();
++                        case MI_Type.MI_INSTANCEA: return Array.Empty<CimInstance>();
++                    }
++                }
++
++                if (type == MI_Type.MI_INSTANCE || type == MI_Type.MI_REFERENCE)
++                {
++                    MI_Instance nativeInstance = type == MI_Type.MI_REFERENCE ? value.Reference : value.Instance;
++                    try
++                    {
++                        if (nativeInstance == null || nativeInstance.IsNull) return null;
++                        CimInstance instance = new CimInstance(clone ? nativeInstance.Clone() : nativeInstance);
++                        if (parent != null)
++                        {
++                            instance.SetCimSessionComputerName(parent.GetCimSessionComputerName());
++                            instance.SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
++                        }
++                        return instance;
++                    }
++                    finally { if (clone) nativeInstance?.Dispose(); }
++                }
++                else if (type == MI_Type.MI_INSTANCEA || type == MI_Type.MI_REFERENCEA)
++                {
++                    MI_Instance[] nativeInstances = type == MI_Type.MI_REFERENCEA ? value.ReferenceA : value.InstanceA;
++                    if (nativeInstances == null) return null;
++                    CimInstance[] instances = new CimInstance[nativeInstances.Length];
++                    try
++                    {
++                        for (int i = 0; i < nativeInstances.Length; i++)
++                        {
++                            MI_Instance handle = nativeInstances[i];
++                            if (handle == null || handle.IsNull) continue;
++                            instances[i] = new CimInstance(clone ? handle.Clone() : handle);
++                            if (parent != null)
++                            {
++                                instances[i].SetCimSessionComputerName(parent.GetCimSessionComputerName());
++                                instances[i].SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
++                            }
++                        }
++                        return instances;
++                    }
++                    catch
++                    {
++                        if (clone) foreach (CimInstance instance in instances) instance?.Dispose();
++                        throw;
++                    }
++                    finally { if (clone) foreach (MI_Instance handle in nativeInstances) handle?.Dispose(); }
++                }
++                else if (type == MI_Type.MI_DATETIME)
++                {
++                    return value.Datetime.ConvertFromNativeLayer();
++                }
++                else if (type == MI_Type.MI_DATETIMEA)
++                {
++                    MI_Datetime[] nativeDatetimes = value.DatetimeA;
++                    if (nativeDatetimes == null) return null;
++                    int length = nativeDatetimes.Length;
++                    object[] arrayOfDatetimes = new object[length];
++                    for (int i = 0; i < length; i++)
++                    {
++                        arrayOfDatetimes[i] = nativeDatetimes[i].ConvertFromNativeLayer();
++                    }
++                    return arrayOfDatetimes;
++                }
++                else
++                {
++                    return value.GetValue(type);
+                 }
+             }
+-
+-            if (type == MI_Type.MI_INSTANCE || type == MI_Type.MI_REFERENCE)
+-            {
+-                MI_Instance nativeInstance = type == MI_Type.MI_REFERENCE ? value.Reference : value.Instance;
+-                try
+-                {
+-                    if (nativeInstance == null || nativeInstance.IsNull) return null;
+-                    CimInstance instance = new CimInstance(clone ? nativeInstance.Clone() : nativeInstance);
+-                    if (parent != null)
+-                    {
+-                        instance.SetCimSessionComputerName(parent.GetCimSessionComputerName());
+-                        instance.SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
+-                    }
+-                    return instance;
+-                }
+-                finally { if (clone) nativeInstance?.Dispose(); }
+-            }
+-            else if (type == MI_Type.MI_INSTANCEA || type == MI_Type.MI_REFERENCEA)
+-            {
+-                MI_Instance[] nativeInstances = type == MI_Type.MI_REFERENCEA ? value.ReferenceA : value.InstanceA;
+-                if (nativeInstances == null) return null;
+-                CimInstance[] instances = new CimInstance[nativeInstances.Length];
+-                try
+-                {
+-                    for (int i = 0; i < nativeInstances.Length; i++)
+-                    {
+-                        MI_Instance handle = nativeInstances[i];
+-                        if (handle == null || handle.IsNull) continue;
+-                        instances[i] = new CimInstance(clone ? handle.Clone() : handle);
+-                        if (parent != null)
+-                        {
+-                            instances[i].SetCimSessionComputerName(parent.GetCimSessionComputerName());
+-                            instances[i].SetCimSessionInstanceId(parent.GetCimSessionInstanceId());
+-                        }
+-                    }
+-                    return instances;
+-                }
+-                catch
+-                {
+-                    if (clone) foreach (CimInstance instance in instances) instance?.Dispose();
+-                    throw;
+-                }
+-                finally { if (clone) foreach (MI_Instance handle in nativeInstances) handle?.Dispose(); }
+-            }
+-            else if (type == MI_Type.MI_DATETIME)
+-            {
+-                return value.Datetime.ConvertFromNativeLayer();
+-            }
+-            else if (type == MI_Type.MI_DATETIMEA)
+-            {
+-                MI_Datetime[] nativeDatetimes = value.DatetimeA;
+-                if (nativeDatetimes == null) return null;
+-                int length = nativeDatetimes.Length;
+-                object[] arrayOfDatetimes = new object[length];
+-                for (int i = 0; i < length; i++)
+-                {
+-                    arrayOfDatetimes[i] = nativeDatetimes[i].ConvertFromNativeLayer();
+-                }
+-                return arrayOfDatetimes;
+-            }
+-            else
+-            {
+-                return value.GetValue(type);
+-            }
++            finally { GC.KeepAlive(value); }
+         }
+     }
+ }

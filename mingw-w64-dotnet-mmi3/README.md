@@ -146,3 +146,18 @@ counts, retained real metadata, reentrant compacting GC and lazy MOF/XML caches:
 
 This fixes the reproduced abandoned-class leak; it does not finish the complete
 ownership/provider audit or authenticated remote CIM/WSMan validation.
+
+Release 10 retains native class ownership through borrowed qualifier, parameter
+and value wrappers. With tiered compilation disabled, optimized transient
+metadata reads previously allowed a finalizer to delete the class during the
+native read. The wrappers now keep their owner, and managed value conversion
+roots the value until all borrowed content is copied. Disposal releases these
+managed owner references without changing the native ABI. The regression uses
+an independent native deletion counter, forced GC from native reads and Unicode
+values through property/class-qualifier/parameter-qualifier owner chains:
+
+    bash check-transient-metadata.sh NEW_TRANSIENT_OUTPUT
+
+The runner sets DOTNET_TieredCompilation=0 so first-run JIT lifetimes cannot hide
+the regression. Finalizer-chain cleanup can require multiple GC cycles. These
+checks do not establish complete native ownership/provider parity.
