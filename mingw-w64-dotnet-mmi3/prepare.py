@@ -34,7 +34,7 @@ shutil.copytree(source, output, ignore=shutil.ignore_patterns("bin", "obj", "*.c
 ''', encoding="utf-8")
 shutil.copyfile(args.source / "LICENSE", output / "LICENSE")
 if args.patched:
-    for patch in sorted(Path(__file__).resolve().parent.glob("000*.patch")):
+    for patch in sorted(Path(__file__).resolve().parent.glob("[0-9][0-9][0-9][0-9]-*.patch")):
         subprocess.run(["patch", "--batch", "-p1", "-i", str(patch)], cwd=output, check=True)
 if args.public_sign:
     key = (args.source / "signing" / "visualstudiopublic.snk").read_bytes()

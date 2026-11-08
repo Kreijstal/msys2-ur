@@ -5,7 +5,7 @@ PowerShell 7.4.20. It builds the archived PowerShell/MMI C# revision
 cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
 MOF callback/offset/ownership patch, a property-value/reference/array ownership
-patch, and explicit
+patch, a subscription-delivery credential/options patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -62,6 +62,17 @@ built-in Windows MMI behavior observed by the separate baseline probe.
 including Unicode, mutation/disposal isolation, live flags, metadata and repeated
 compacting GC. This avoids PowerShell property adaptation hiding a getter error.
 
+Subscription delivery options now construct and clone using the native structure
+ABI. AddCredentials stores real native credentials using the same temporary
+Unicode/SecureString marshalling and cleanup as destination credentials. The
+native credential readback and password-buffer signatures are corrected, interval
+values are preserved, and explicit Dispose releases both the native options and
+the wrapper allocation. Null credential validation names `optionValue` correctly.
+Native readback is checked by option name, without an insertion-order assumption.
+`check-delivery-options.sh` exercises native string/number/timestamp/duration,
+password/impersonated/certificate credentials, clone lifetime, validation and
+idempotent disposal. These storage tests do not establish remote authentication.
+
 This is not full PowerShell integration or complete behavioral parity evidence.
 Authenticated remote CIM/WSMan, provider-origin extended callbacks/streaming,
 broader event-provider coverage and a complete native ownership audit remain
@@ -75,6 +86,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check-api.sh NEW_OUTPUT NEW_API_OUTPUT
     bash check-mof.sh NEW_MOF_OUTPUT
     bash check-embedded-values.sh NEW_PROPERTY_OUTPUT
+    bash check-delivery-options.sh NEW_DELIVERY_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.

@@ -1,5 +1,36 @@
 # MMI / CIM / WMI source ports and checks
 
+## Subscription delivery credentials/options port (2026-11-08)
+
+MMI3 **3.0.0-4** fixes the delivery-options constructor and clone structure ABI,
+implements `AddCredentials`, preserves `SetInterval` values and releases the
+native options plus wrapper allocation on explicit disposal. Credential
+readback uses the correct out-structure and password-buffer signatures; native
+calls share the existing temporary Unicode/SecureString marshalling/cleanup.
+Patch discovery now includes numbered patches beyond `0009`.
+
+The installed 3.0.0-3 baseline reproduced constructor/clone
+`InvalidCastException`, a no-op credential addition and a zeroed interval. A
+separate C/`mi.h` probe confirms that real Windows MI supports these operations.
+Its credential enumeration differs from insertion order, so the final test
+locates entries by name rather than requiring a particular order.
+
+`makepkg --cleanbuild --force --noconfirm` passed all existing native gates,
+**512 API declarations**, **31 MOF checks**, **222 property checks** and
+**138 delivery-option checks**. The installed package passed the 138 checks again
+with a fresh source-only cache and archive/DLL byte comparisons. Run
+`bash tests/mmi-cim-wmi/check-delivery-options.sh NEW_OUTPUT`.
+[Exact evidence, source hashes and scope](delivery-package-results-20261108.json)
+link the [old-package baseline](delivery-baseline-results-20261108.txt),
+[native probe](delivery-native-results-20261108.txt),
+[package build/check](delivery-package-results-20261108.txt) and
+[installed consumer](delivery-installed-results-20261108.txt).
+
+These tests establish native credential storage and clone lifetime, including
+password, impersonated and certificate forms. Remote authentication and the wider
+provider/lifetime audit remain open. PowerShell 7.4.20-5 still bundles MMI3
+3.0.0-3 and needs a rebuild; this experimental binary remains unpublished.
+
 ## Embedded property/reference ownership port (2026-11-08)
 
 MMI3 **3.0.0-3** fixes the CLR embedded-instance getter's
@@ -32,7 +63,7 @@ link the [old-package reproduction](embedded-baseline-results-20261108.txt),
 The package remains experimental and unpublished. PowerShell 7.4.20-5 now
 bundles MMI3 3.0.0-3 and passes 13 MOF plus 34 embedded/event-cmdlet checks in
 each of STA and MTA; see [application integration](../powershell-mmi/embedded-integration-results-20261108.json).
-Subscription-delivery credentials, remote/provider, broader MOF/ownership
+Remote credential authentication, remote/provider, broader MOF/ownership
 behavior and UCRT64 execution remain open.
 
 ## MOF callback and offset port (2026-11-08)

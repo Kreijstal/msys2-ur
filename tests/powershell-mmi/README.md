@@ -28,11 +28,13 @@ link the [final package check](embedded-package-check-20261108.txt),
 `-ExecutionPolicy Bypass` only for that test process. They need the installed MMI
 source archive for the byte comparison.
 
-This binary remains unpublished. A source audit confirms that public
-`CimSubscriptionDeliveryOptions.AddCredentials` is still a no-op after validation;
-its native call is commented out. Remote/provider, broader ownership, SqlClient,
-Windows.Compatibility and UCRT64 gates also remain open. The earlier release-4
-record below retains its original scope and hashes.
+This binary remains unpublished. The recorded source audit found a no-op in
+`CimSubscriptionDeliveryOptions.AddCredentials`; MMI3 3.0.0-4 now fixes that and
+the delivery constructor/interval/clone paths, with [138 native checks](../mmi-cim-wmi/delivery-package-results-20261108.json).
+PowerShell 7.4.20-5 still bundles MMI3 3.0.0-3 and needs another rebuild for those
+changes. Remote/provider, broader ownership, SqlClient, Windows.Compatibility
+and UCRT64 gates also remain open. The earlier release-4 record below retains its
+original scope and hashes.
 
 PowerShell 7.4.20-4 was rebuilt and installed on `win11` in CLANG64. Its bundled
 MMI implementation matches the source archive from MMI3 3.0.0-2, including the

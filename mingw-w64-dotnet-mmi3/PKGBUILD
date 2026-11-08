@@ -3,7 +3,7 @@ _realname=dotnet-mmi3
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=3.0.0
-pkgrel=3
+pkgrel=4
 _nugetver=3.0.0
 pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
 arch=('any')
@@ -17,9 +17,9 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
-        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
 sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
-            '0d5439f4ae05d7620c975eae6e96eb0840a0c01bfb1159630c048d345f56ad32'
+            'dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c'
             '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
             '7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6'
             'eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7'
@@ -29,6 +29,9 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93'
             'f79f676a9cd94a3936f12ca61387a9fc205a1e484780105a8ed4280d067d8e8a'
             '23296471a29a7264c3f4d24e7f46520b285906eda50a57336643e07c0254e78f'
+            'ddb1f2ae387e23cae64d272bf3c2f7b801a6dd07a621ddcffea160bdc4229f4f'
+            '01a9309cc1221311ace4d901235333b59c166ee89d07ed83829ec5edceb9a1ca'
+            'aab20da21eb96366ea27818248a9a88f58c683d3affe32875b52e3f2bc6e6998'
             '34f15bf046a989d3aa6e407486f5620432db7d061b81d83fd41b144c8b3b4063'
             '1f96269de1810094c1541bf576271461675490d8dc462203192880d1df550251'
             '1b05606a97330b9dff1b19735033aae834774aabe862574953ff8bbd9330abda'
@@ -49,7 +52,7 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
             '720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553'
             'ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef'
-            '50bd635af1cd8e1b3c67ac8b41532f4c019ee47b4ff4628f8ac542c622d33e9a')
+            '4af6de07d18031e7665b20724d59391b4e8ecf53405abcd8501a3af906b63680')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -77,6 +80,7 @@ check() {
   bash "$srcdir/check-api.sh" "$srcdir/check" "$srcdir/check-api"
   bash "$srcdir/check-mof.sh" "$srcdir/check-mof" "$srcdir/feed"
   bash "$srcdir/check-embedded-values.sh" "$srcdir/check-embedded-values" "$srcdir/feed"
+  bash "$srcdir/check-delivery-options.sh" "$srcdir/check-delivery-options" "$srcdir/feed"
 }
 
 package() {
