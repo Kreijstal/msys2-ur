@@ -1437,9 +1437,12 @@
     },
     {
       "component": ".NET runtime and satellite library servicing",
-      "status": "installed-source-runtime8.0.31-2-forwarder-defect-confirmed-corrective-port-under-test",
-      "note": "Earlier framework/runtime/PowerShell/JSON gates passed, but an additional System.Data-to-source-SqlClient reflection regression fails: stub public key and zero-version policy need repair. Runtime release readiness remains false.",
-      "evidence": "tests/runtime-servicing/package-results-20261027.txt"
+      "status": "source-runtime-forwarder-defect-resolved-broader-runtime-parity-open",
+      "note": "The earlier System.Data-to-source-SqlClient stub key/version defect was repaired in runtime8.0.31-3. Fresh current8.0.31-4 installed consumers pass all six forwarding regressions in CLANG64/UCRT64 with exact source-archive and loaded-facade byte checks. Broader native/runtime/dependency compatibility remains open.",
+      "evidence": "tests/runtime-servicing/package3-results-20261027.json",
+      "current_integration_evidence": "tests/mmi-provider/instance-results-20261108.json",
+      "full_dependency_goal_complete": false,
+      "current_forwarder_evidence": "tests/runtime-servicing/current-forwarder-results-20261108.json"
     },
     {
       "component": "PowerShell 7.6 support",
@@ -36980,6 +36983,17 @@
       "PowerShell_application_rebuild_pending": true,
       "complete": false,
       "binary_published": false
+    },
+    "runtime_current_forwarders": {
+      "evidence": "tests/runtime-servicing/current-forwarder-results-20261108.json",
+      "runtime_package_version": "8.0.31-4",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "forwarding_checks_per_environment": 6,
+      "fresh_source_archive_identity_verified": true,
+      "full_dependency_goal_complete": false
     }
   }
 }
