@@ -28,3 +28,18 @@ consumer and does not change the build target or package dependencies.
 This gate covers local static repository classes. Remote/domain credentials,
 delegation, other providers, complete native ownership and callback race
 coverage remain open. The complete PowerShell dependency goal stays incomplete.
+
+The original PowerShell integration fixture runs from the installed console:
+
+```sh
+pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1
+pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1
+```
+
+PowerShell 7.4.20-9 in both environments passed **14 checks per mode**, using
+original New/Set/Get/Remove-CimInstance cmdlets with local default and explicit
+DCOM sessions, and source System.Management reads of the same repository data.
+The bundled managed implementations must match their installed source archives.
+Each run deletes its own namespace.
+[Application build, installed logs and hashes](../powershell-mmi/instance-clone-integration-results-20261108.json)
+record the exact application revision.

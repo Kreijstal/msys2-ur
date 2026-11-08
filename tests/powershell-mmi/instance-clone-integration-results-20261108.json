@@ -1,0 +1,176 @@
+{
+  "recorded_at_utc": "2026-11-08T18:03:22.753702+00:00",
+  "host": "win11",
+  "scope": "PowerShell 7.4.20-9 integration of MMI3 3.0.0-7 instance-clone rollback ownership fix, plus original CIM repository writes/source WMI interoperability",
+  "source_archives": {
+    "PowerShell v7.4.20": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+    "dotnet-mingw-bootstrap 5ab58f8ba94346c59bc68ab052d8f96f124be323": "24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63"
+  },
+  "environments": {
+    "clang64": {
+      "powershell_package_version": "7.4.20-9",
+      "mmi_package_version": "3.0.0-7",
+      "build_command": "MSYSTEM=CLANG64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+      "build_exit_code": 0,
+      "build_log": "tests/powershell-mmi/instance-clone-clang-package-20261108.txt",
+      "compiler_logs": [
+        "tests/powershell-mmi/instance-clone-clang-sdk-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-clang-console-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-clang-localaccounts-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-clang-graphicalhost-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-clang-desktop-console-build-20261108.txt"
+      ],
+      "LocalAccounts_API_declarations": 459,
+      "SDK_CA1846_warnings": 3,
+      "compiler_errors": 0,
+      "desktop_included": true,
+      "package_checks": "All source/package/license, launcher, SDK/catalog, CIM/WMI STA/MTA, MOF, embedded/event, delivery, metadata, native child, six gallery module and conditional desktop rendering checks passed",
+      "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-7.4.20-9-any.pkg.tar.zst",
+      "installed_commands": [
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MetadataSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MetadataSmoke.ps1)\"",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1",
+        "timeout -k 10 180 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1"
+      ],
+      "installed_exit_code": 0,
+      "installed_log": "tests/powershell-mmi/instance-clone-clang-installed-20261108.txt",
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "MOF_checks_per_mode": 13,
+      "embedded_event_checks_per_mode": 34,
+      "delivery_checks_per_mode": 25,
+      "metadata_checks_per_mode": 943,
+      "compiler_warning_counts": {
+        "sdk": 3,
+        "console": 3,
+        "localaccounts": 3,
+        "graphicalhost": 0,
+        "desktop-console": 1
+      },
+      "original_CIM_repository_write_checks_per_mode": 14
+    },
+    "ucrt64": {
+      "powershell_package_version": "7.4.20-9",
+      "mmi_package_version": "3.0.0-7",
+      "build_command": "MSYSTEM=UCRT64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+      "build_exit_code": 0,
+      "build_log": "tests/powershell-mmi/instance-clone-ucrt-package-20261108.txt",
+      "compiler_logs": [
+        "tests/powershell-mmi/instance-clone-ucrt-sdk-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-ucrt-console-build-20261108.txt",
+        "tests/powershell-mmi/instance-clone-ucrt-localaccounts-build-20261108.txt"
+      ],
+      "LocalAccounts_API_declarations": 459,
+      "SDK_CA1846_warnings": 3,
+      "compiler_errors": 0,
+      "desktop_included": false,
+      "package_checks": "All source/package/license, launcher, SDK/catalog, CIM/WMI STA/MTA, MOF, embedded/event, delivery, metadata, native child, six gallery module and conditional desktop rendering checks passed",
+      "install_command": "pacman -U --noconfirm mingw-w64-ucrt-x86_64-powershell-7.4.20-9-any.pkg.tar.zst",
+      "installed_commands": [
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MetadataSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MetadataSmoke.ps1)\"",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1",
+        "timeout -k 10 180 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File tests/wmi-persistence/PowerShellPersistence.ps1"
+      ],
+      "installed_exit_code": 0,
+      "installed_log": "tests/powershell-mmi/instance-clone-ucrt-installed-20261108.txt",
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "MOF_checks_per_mode": 13,
+      "embedded_event_checks_per_mode": 34,
+      "delivery_checks_per_mode": 25,
+      "metadata_checks_per_mode": 943,
+      "compiler_warning_counts": {
+        "sdk": 3,
+        "console": 3,
+        "localaccounts": 3
+      },
+      "original_CIM_repository_write_checks_per_mode": 14
+    }
+  },
+  "artifacts": {
+    "clang64": {
+      "package_archive": "mingw-w64-clang-x86_64-powershell-7.4.20-9-any.pkg.tar.zst",
+      "package_sha256": "eb96b7edeb9f0398d8a47f579cf0db2aa185f9a402eeb844b24778eff25fd5f9",
+      "package_bytes": 20118273,
+      "MMI_DLL_sha256": "19e5493d28f86da4b08caa13790694e2d218a5e94b496634c930612f05da8138",
+      "MMI_source_archive_sha256": "5f4de28abbc29fa6c77dffa8ffc09f630c0798c20c55d79ad7f447d0a3e1192f",
+      "source_package_manifest_sha256": "dd54f735ae28e91da269ab7cdcc7595aa58324711ac09a6a5fe1bb55091c6cb5",
+      "manifest_file_count": 828,
+      "bundled_application_files": 596,
+      "license_files": 208,
+      "desktop": true,
+      "build_exit_code": 0,
+      "compiler_warning_counts": {
+        "sdk": 3,
+        "console": 3,
+        "localaccounts": 3,
+        "graphicalhost": 0,
+        "desktop-console": 1
+      }
+    },
+    "ucrt64": {
+      "package_archive": "mingw-w64-ucrt-x86_64-powershell-7.4.20-9-any.pkg.tar.zst",
+      "package_sha256": "b5582bd4b502b610a07ec53fcbafeddd257c8c744fbece00b5aad3fb1c02a489",
+      "package_bytes": 20909911,
+      "MMI_DLL_sha256": "6c89deaac59210dbc51a28ab7228700e7959b54d8703d500f9437ac68264907f",
+      "MMI_source_archive_sha256": "cd4d296db983f62c26719658aa25cb3b2657d81c80a6a3f2aafb995a7e7dd021",
+      "source_package_manifest_sha256": "49e1958f18c3021a5388cc062b6a4d399f0f58ab2146e52979dd6614108ebbb9",
+      "manifest_file_count": 800,
+      "bundled_application_files": 601,
+      "license_files": 177,
+      "desktop": false,
+      "build_exit_code": 0,
+      "compiler_warning_counts": {
+        "sdk": 3,
+        "console": 3,
+        "localaccounts": 3
+      }
+    }
+  },
+  "not_verified": [
+    "authenticated remote CIM/WSMan",
+    "broader MOF/provider/internal/native ownership parity",
+    "remaining SqlClient and Windows.Compatibility gates"
+  ],
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-powershell/PKGBUILD": "1f167759cefb27452c7f979949157ab142ace62075f0745715fef4afbed8e0dc",
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/README.md": "75bb13647eef6603fdbc5d31e5b3c5f1698fa9ed3a853fce08321a2a4e7f0865",
+    "mingw-w64-powershell/check-package.sh": "d0f21d4a51f8e2a27c631b929458baaa0331328f9b4ea9124e504396bba1d67b",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/MofSmoke.ps1": "0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b",
+    "mingw-w64-powershell/EmbeddedSmoke.ps1": "133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319",
+    "mingw-w64-powershell/DeliverySmoke.ps1": "eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9",
+    "mingw-w64-powershell/MetadataSmoke.ps1": "67feeb92fd08dfc170e0170e67127afde7f4f7be1f6dbb6ec4e1d4ba86cf28ca",
+    "mingw-w64-powershell/stage-mof-check.patch": "6cbaf865e68fa8ed2ceeb10ec81cbeddc8fb291e88d7000b022e29c286073aff",
+    "tests/wmi-persistence/PowerShellPersistence.ps1": "3c6abf49a98b706e038b9b4974832dc9b3d2168e2c19db2a14d53696a49c95bf"
+  },
+  "compiler_warning_notes": [
+    "CA1846 in the original PSVersionInfoGenerator (3 warnings in each SDK, console and LocalAccounts invocation)",
+    "CLANG64 desktop-console NETSDK1106 in the original WindowsDesktop console project (1 warning); GraphicalHost has 0 warnings"
+  ],
+  "real_provider_integration_evidence": "tests/mmi-provider/instance-results-20261108.json",
+  "cleanup_evidence": "tests/mmi-provider/evidence/cleanup-audit-20261108.txt",
+  "shared_task_cleanup_evidence": "tests/powershell-mmi/instance-clone-cleanup-20261108.json"
+}

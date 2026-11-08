@@ -1349,6 +1349,7 @@
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "MMI3 3.0.0-7 class/instance clone rollback preserves source handles and cleans partial output clones;430 failure-injection checks per family; PowerShell7.4.20-9 passes installed MOF/property/delivery/metadata and14 original CIM repository-write checks in each STA/MTA mode in CLANG64/UCRT64;116 real provider and24 original Invoke-CimMethod checks per mode also pass (tests/powershell-mmi/instance-clone-integration-results-20261108.json)",
         "Real compiled MI provider: 116 default/DCOM callback/reply/stream/lifetime/fault/cancellation checks per CLANG64/UCRT64 environment; original Invoke-CimMethod passes24 checks in each STA/MTA mode; provider namespace/COM/host cleanup verified (tests/mmi-provider/results-20261108.json)",
         "PowerShell7.4.20-6 bundles source MMI3 3.0.0-4 and passes13 MOF,34 embedded/event and25 native delivery storage/interval/clone checks in each STA and MTA (tests/powershell-mmi/delivery-integration-results-20261108.json)",
         "138 native subscription delivery constructor/credential/string/number/timestamp/duration/interval/clone/disposal checks; real native credential storage replaces the no-op (tests/mmi-cim-wmi/delivery-package-results-20261108.json)",
@@ -1376,8 +1377,8 @@
         "fresh exact-version3.0.0 installed feed and same-process MMI3/WMI integration",
         "original source PowerShell7.4.20/CimCmdlets local queries/classes/GetOwner/errors/CIM serialization and same-runspace WMI/GC"
       ],
-      "actual_powershell_integration_evidence": "tests/powershell-mmi/metadata-integration-results-20261108.json",
-      "provider_PowerShell_integration_evidence": "tests/mmi-provider/results-20261108.json"
+      "actual_powershell_integration_evidence": "tests/powershell-mmi/instance-clone-integration-results-20261108.json",
+      "provider_PowerShell_integration_evidence": "tests/mmi-provider/instance-results-20261108.json"
     },
     {
       "component": "System.Management native helper",
@@ -1400,7 +1401,8 @@
         "native bounds/error-info ownership",
         "plain net8.0 NuGet managed/native asset selection",
         "source WMI query inside original source-built PowerShell7.4.20 runspace agrees with native CimCmdlets query",
-        "CLANG64/UCRT64 installed System.Management8.0.0-2:36 persistent repository class/instance/Unicode/UInt32 writes, semisynchronous call results, async Put completion, update/query/delete and unique namespace cleanup checks in STA/MTA; source helper only (tests/wmi-persistence/results-20261108.json)"
+        "CLANG64/UCRT64 installed System.Management8.0.0-2:36 persistent repository class/instance/Unicode/UInt32 writes, semisynchronous call results, async Put completion, update/query/delete and unique namespace cleanup checks in STA/MTA; source helper only (tests/wmi-persistence/results-20261108.json)",
+        "PowerShell7.4.20-9 in CLANG64/UCRT64 passes14 original CIM create/update/query/delete and source-WMI cross-read checks in each STA/MTA mode (tests/powershell-mmi/instance-clone-integration-results-20261108.json)"
       ],
       "persistent_write_evidence": "tests/wmi-persistence/results-20261108.json"
     },
@@ -36898,9 +36900,10 @@
         "UCRT64"
       ],
       "installed_instance_clone_checks_per_environment": 430,
-      "PowerShell_application_rebuild_pending": true,
+      "PowerShell_application_rebuild_pending": false,
       "complete": false,
-      "binary_published": false
+      "binary_published": false,
+      "PowerShell_integration_evidence": "tests/powershell-mmi/instance-clone-integration-results-20261108.json"
     },
     "wmi_persistent_writes": {
       "evidence": "tests/wmi-persistence/results-20261108.json",
@@ -36916,6 +36919,50 @@
       ],
       "namespace_cleanup_independently_verified": true,
       "full_dependency_goal_complete": false
+    },
+    "powershell_instance_clone_integration": {
+      "evidence": "tests/powershell-mmi/instance-clone-integration-results-20261108.json",
+      "powershell_package_version": "7.4.20-9",
+      "bundled_mmi_package_version": "3.0.0-7",
+      "clean_makepkg_build_and_all_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_metadata_checks_per_mode_and_environment": 943,
+      "installed_MOF_checks_per_mode_and_environment": 13,
+      "installed_embedded_event_checks_per_mode_and_environment": 34,
+      "installed_delivery_checks_per_mode_and_environment": 25,
+      "installed_original_CIM_repository_write_checks_per_mode_and_environment": 14,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "full_dependency_goal_complete": false,
+      "binary_published": false
+    },
+    "mmi_real_provider_after_clone_fixes": {
+      "evidence": "tests/mmi-provider/instance-results-20261108.json",
+      "mmi_package_version": "3.0.0-7",
+      "powershell_package_version": "7.4.20-9",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "managed_checks_per_environment": 116,
+      "original_InvokeCimMethod_checks_per_mode_per_environment": 24,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "independent_namespace_COM_host_cleanup_verified": true,
+      "authenticated_remote_CIM_WSMan_verified": false,
+      "full_dependency_goal_complete": false
+    },
+    "instance_clone_integration_cleanup": {
+      "evidence": "tests/powershell-mmi/instance-clone-cleanup-20261108.json",
+      "logical_bytes_removed": 3315255453,
+      "installed_packages_retained": true,
+      "source_recipes_and_evidence_retained": true
     }
   }
 }

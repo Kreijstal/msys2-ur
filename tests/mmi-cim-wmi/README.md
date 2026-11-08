@@ -15,8 +15,9 @@ installed consumers passed the 430 instance checks again in both environments.
 
 Run `bash mingw-w64-dotnet-mmi3/check-instance-clone-rollback.sh NEW_OUTPUT`.
 [Baseline, clean package/installed logs, source and artifact hashes](instance-clone-package-results-20261108.json)
-record the native `mi.h` fault-driver boundary. PowerShell integration builds
-are running. Remote authentication and the broader ownership/provider/MOF audit
+record the native `mi.h` fault-driver boundary. Both PowerShell 7.4.20-9
+[builds and installed checks](../powershell-mmi/instance-clone-integration-results-20261108.json),
+plus the real provider regression, passed. Remote authentication and the broader ownership/provider/MOF audit
 remain open; experimental binaries remain unpublished.
 
 ## Class-clone failure ownership (2026-11-08)
@@ -39,7 +40,7 @@ Run `bash mingw-w64-dotnet-mmi3/check-class-clone-rollback.sh NEW_OUTPUT`.
 [Baseline, candidate, package/installed logs, input hashes and scope](clone-package-results-20261108.json)
 record the evidence. Both PowerShell 7.4.20-8 builds and installed checks
 [passed](../powershell-mmi/clone-integration-results-20261108.json). A separate
-instance-array rollback issue is reproduced and being corrected. Authenticated remote
+instance-array rollback issue is fixed and verified in 3.0.0-7 above. Authenticated remote
 CIM/WSMan, broader ownership/MOF/provider behavior and the other dependency gates
 remain open; experimental binaries remain unpublished.
 

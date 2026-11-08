@@ -1,5 +1,29 @@
 # PowerShell integration of source MMI3
 
+## Instance-clone rollback integration: PowerShell 7.4.20-9 (2026-11-08)
+
+**7.4.20-9** bundles **MMI3 3.0.0-7**, including both clone rollback fixes.
+Clean CLANG64/UCRT64 `makepkg --cleanbuild --force --noconfirm` builds passed
+all source, API, license and behavior gates, including CLANG64 desktop rendering.
+All compiler invocations have zero errors; exact nonfatal CA1846/NETSDK1106
+warning counts are preserved in the compiler logs and result record.
+
+Installed consumers passed **13 MOF, 34 embedded/event, 25 delivery and 943
+metadata checks** in each STA/MTA mode, in both environments. A new original
+New/Set/Get/Remove-CimInstance fixture passed **14 checks per mode**, with
+default/DCOM sessions and source System.Management cross-reads of persistent
+Unicode repository data. It removes its unique temporary namespace.
+
+[Commands, input/artifact hashes and build/installed logs](instance-clone-integration-results-20261108.json)
+record this revision. The underlying MMI gate passed 430 class and 430 instance
+clone checks. [Real provider regressions](../mmi-provider/instance-results-20261108.json)
+also passed 116 managed checks and 24 original Invoke-CimMethod checks per mode
+in each environment; independent namespace/COM/host cleanup passed.
+
+Authenticated remote CIM/WSMan, broader ownership/provider/MOF behavior,
+SqlClient and Windows.Compatibility remain open. Experimental binaries are
+unpublished. Earlier sections retain their original revision and scope.
+
 ## Class-clone rollback integration: PowerShell 7.4.20-8 (2026-11-08)
 
 Clean CLANG64 and UCRT64 builds of **7.4.20-8**, bundling **MMI3 3.0.0-6**,

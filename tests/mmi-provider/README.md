@@ -51,3 +51,10 @@ interfaces described in [Microsoft's hosted-provider API documentation](https://
 and [Microsoft's native provider sample](https://github.com/microsoft/Windows-classic-samples/tree/434f6002bdf9cf9829406c3ff2b33387982d6168/Samples/ManagementInfrastructure/cpp).
 The fixture contains its own schema and test behavior; it does not package the
 sample or a vendor managed implementation.
+
+The **MMI3 3.0.0-7 / PowerShell 7.4.20-9** installed regression passed the same
+116 managed/native provider checks and 24 original cmdlet checks per STA/MTA
+mode in both environments after the clone rollback fixes.
+[Current revision evidence](instance-results-20261108.json) includes fresh
+source archive/DLL hashes and an independent namespace/COM/provider-host audit.
+The native cancellation-query limitation remains unchanged.
