@@ -1,5 +1,31 @@
 # PowerShell integration of source MMI3
 
+## Native delivery storage: PowerShell 7.4.20-6
+
+The current package bundles **MMI3 3.0.0-4**. A clean
+`makepkg --cleanbuild --force --noconfirm` passed the original source builds,
+source/package/license audits, LocalAccounts API gate and all package checks.
+The new `DeliverySmoke.ps1` exercises public construction, credential addition,
+intervals, cloning and disposal inside the actual console. It reads native
+storage through reflection to verify Unicode domain/user fields, mechanism,
+password copying and clone lifetime after original disposal/compacting GC.
+Credentials are dummy test data; no remote authentication is performed.
+
+After installation, **13 MOF**, **34 embedded/event** and **25 delivery checks**
+passed in each of STA and MTA, including byte comparisons between the bundled
+MMI DLL and the installed source archive. The existing original-CIM event
+cmdlets, STA WMI, source desktop rendering and six gallery-module checks passed.
+[Exact commands, scope and hashes](delivery-integration-results-20261108.json)
+link the [clean build/check log](delivery-package-results-20261108.txt) and
+[installed STA/MTA log](delivery-installed-20261108.txt).
+
+Run the installed `MofSmoke.ps1`, `EmbeddedSmoke.ps1` and `DeliverySmoke.ps1`
+fixtures with `-STA` or `-MTA` and process-local `-ExecutionPolicy Bypass`.
+The source archive is needed for the DLL byte comparison. Remote/provider,
+broader ownership, SqlClient, Windows.Compatibility and UCRT64 gates remain open;
+this binary is unpublished. Earlier dated records below retain their original
+scope, package versions and hashes.
+
 ## Embedded values and real event cmdlets: PowerShell 7.4.20-5
 
 The current package bundles **MMI3 3.0.0-3**. Its original SDK, console,

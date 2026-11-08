@@ -28,8 +28,10 @@ link the [old-package baseline](delivery-baseline-results-20261108.txt),
 
 These tests establish native credential storage and clone lifetime, including
 password, impersonated and certificate forms. Remote authentication and the wider
-provider/lifetime audit remain open. PowerShell 7.4.20-5 still bundles MMI3
-3.0.0-3 and needs a rebuild; this experimental binary remains unpublished.
+provider/lifetime audit remain open. PowerShell 7.4.20-6 now bundles MMI3
+3.0.0-4 and passes 25 delivery checks in each STA and MTA; see
+[application integration](../powershell-mmi/delivery-integration-results-20261108.json).
+This experimental binary remains unpublished.
 
 ## Embedded property/reference ownership port (2026-11-08)
 

@@ -1,0 +1,124 @@
+{
+  "recorded_at_utc": "2026-11-08T15:41:33.666549+00:00",
+  "host": "win11",
+  "environment": "CLANG64",
+  "root": "/e/codex-dotnet10/powershell-delivery.geAoy0",
+  "scope": "Current PowerShell7.4.20 application integration of source MMI3 3.0.0-4 subscription delivery option fixes",
+  "packages": {
+    "mingw-w64-clang-x86_64-powershell": "7.4.20-6",
+    "mingw-w64-clang-x86_64-dotnet-mmi3": "3.0.0-4",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing": "8.0.31-4"
+  },
+  "source_archives": {
+    "PowerShell v7.4.20": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+    "dotnet-mingw-bootstrap 5ab58f8ba94346c59bc68ab052d8f96f124be323": "24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63"
+  },
+  "build": {
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "exit_code": 0,
+    "LocalAccounts_API_entries_verified": 459,
+    "log": "tests/powershell-mmi/delivery-package-results-20261108.txt",
+    "SDK_CA1846_warnings": 3,
+    "desktop_console_NETSDK1106_warnings": 1,
+    "compiler_errors": 0,
+    "diagnostic_logs": [
+      "tests/powershell-mmi/delivery-sdk-build-20261108.txt",
+      "tests/powershell-mmi/delivery-desktop-build-20261108.txt"
+    ]
+  },
+  "package_checks_verified": [
+    "complete source distribution file hashes and native/source-owner licenses",
+    "native launcher arguments, child status and source engine/runtime/root",
+    "full SDK type catalog/module discovery/CIM/GetOwner/serialization/JSON/Add-Type/Authenticode/LocalAccounts",
+    "source MMI+CIM+WMI in STA and MTA",
+    "original native child console with Unicode CLIXML and live CIM",
+    "13 in-process MOF/include/offset/lifetime checks",
+    "34 embedded/reference/array/flags/lifetime and real original CIM event-cmdlet checks",
+    "25 in-process native delivery credential/interval/clone/lifetime checks",
+    "source GraphicalHost BAML/Show-Command rasterization",
+    "six source gallery modules, source NuGet provider, PSReadLine, Unicode archives and ThreadJob/CIM execution"
+  ],
+  "delivery_fixture_verified": [
+    "bundled MMI bytes match installed source archive",
+    "public delivery-options constructor creates native storage",
+    "public AddCredentials stores password and impersonated credentials",
+    "native Unicode domain/user fields and mechanism/flags readback",
+    "public SetInterval preserves microsecond duration",
+    "public clone retains credentials/interval after original disposal and compacting GC",
+    "native password survives caller SecureString clearing/disposal and original options disposal",
+    "idempotent disposal and rejection of updates after disposal"
+  ],
+  "installed_validation": {
+    "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-7.4.20-6-any.pkg.tar.zst",
+    "commands": [
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/DeliverySmoke.ps1)\""
+    ],
+    "exit_code": 0,
+    "modes": [
+      "STA",
+      "MTA"
+    ],
+    "MOF_checks_per_mode": 13,
+    "embedded_and_event_checks_per_mode": 34,
+    "delivery_checks_per_mode": 25,
+    "log": "tests/powershell-mmi/delivery-installed-20261108.txt"
+  },
+  "not_verified": [
+    "remote authentication with delivery credentials",
+    "provider-origin extended semantic callbacks and streamed methods",
+    "broader native ownership/MOF/provider audit",
+    "remaining SqlClient and Windows.Compatibility gates",
+    "UCRT64 build/execution of this revision"
+  ],
+  "artifacts": {
+    "package_archive": "mingw-w64-clang-x86_64-powershell-7.4.20-6-any.pkg.tar.zst",
+    "package_sha256": "ca67bf17c009108362bc04627db33d5661b2623f378dcb75b2a425b578ccd6bd",
+    "package_bytes": 20112955,
+    "installed_MMI_DLL_sha256": "eddea12ce384d7d27843eec10dbeda4b1cb1b71e9ea2a63424157ffee876f475",
+    "MMI_payload_origin": {
+      "sha256": "eddea12ce384d7d27843eec10dbeda4b1cb1b71e9ea2a63424157ffee876f475",
+      "installed_source_archives": [
+        {
+          "archive": "microsoft.management.infrastructure.3.0.0.nupkg",
+          "asset": "lib/net8.0/Microsoft.Management.Infrastructure.dll"
+        }
+      ]
+    },
+    "MMI_source_owner": {
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-mmi3",
+      "sha256": "7ebdbbcc551f6a55f53bf32569f9b3ececefbafdfc1bbd69a1a03de44dbfa0de"
+    },
+    "manifest_file_count": 827,
+    "bundled_application_files": 596,
+    "license_files": 208,
+    "source_package_manifest_sha256": "a4d15d1c5086d0621a34d139b089ff44125d2af950019227ceab4827d5fe64d7",
+    "makepkg_exit_code": 0,
+    "installed_validation_exit_code": 0
+  },
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/README.md": "086a58f9c198c45071c92e8efc7232505afeeb54cba2ded4d0b40cab861eea3b",
+    "mingw-w64-powershell/check-package.sh": "b25fe3aaccc8d8e8bf31ddab3c3e27f4c959ed3ae6a9418883ad4417f667a3e7",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/MofSmoke.ps1": "0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b",
+    "mingw-w64-powershell/EmbeddedSmoke.ps1": "133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319",
+    "mingw-w64-powershell/DeliverySmoke.ps1": "eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9",
+    "mingw-w64-powershell/stage-mof-check.patch": "db88b4e544161d1cf326fd34e301fb9ef7ab81ad67d9a84cb344adf7fb62b3dc",
+    "mingw-w64-powershell/PKGBUILD": "17f5a335562fb6396b05d90f2cb3d02d9f5a77309afa53b489254fa159787a48"
+  },
+  "cleanup": {
+    "removed_root": "E:/codex-dotnet10/powershell-delivery.geAoy0",
+    "logical_bytes_removed": 778274017,
+    "installed_packages_retained": true,
+    "recipes_and_evidence_retained": true
+  }
+}
