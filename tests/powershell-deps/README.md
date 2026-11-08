@@ -1,5 +1,11 @@
 # PowerShell dependency packaging
 
+The active target is PowerShell 7.4.20 with .NET 8.0.31. The catalog has
+50/53 validated direct dependency IDs. MMI3, System.Data.SqlClient and
+Microsoft.Windows.Compatibility have source artifacts but still require broader
+compatibility verification. The historical NETStandard1.x restore reports below
+are separate archival work and do not count as missing current PowerShell dependencies.
+
 System.ObjectModel4.3.0 is source-packaged and installed with all five original
 DLL paths, exact original APIs/metadata/dependency scopes and both runtime profiles.
 Each actual candidate passes73 behavioral checks. Clean makepkg, archive audit,

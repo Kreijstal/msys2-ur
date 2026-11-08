@@ -1,0 +1,102 @@
+--- a/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
++++ b/Internal/Operations/CimAsyncCallbacksReceiverBase.cs
+@@ -127,18 +127,16 @@
+         private readonly object _suppressFurtherUserCallbacksLock = new object();
+         private bool _suppressFurtherUserCallbacks;
+ 
+-#if(!_CORECLR)
+         private readonly ExecutionContext _threadExecutionContext = ExecutionContext.Capture();
+-#endif
+ 
+         internal void CallUnderOriginalExecutionContext(Action action)
+         {
+             Debug.Assert(action != null, "Caller should make sure that action != null");
+-#if(!_CORECLR)
+-            ExecutionContext.Run(this._threadExecutionContext.CreateCopy(), _ => action(), null);
+-#else
+-            action();
+-#endif
++            // Capture may be null when the subscriber deliberately suppressed
++            // flow. Otherwise restore ambient state and Windows impersonation
++            // for this invocation, then restore the native worker on return.
++            if (this._threadExecutionContext == null) action();
++            else ExecutionContext.Run(this._threadExecutionContext.CreateCopy(), _ => action(), null);
+         }
+ 
+         internal void CallIntoUserCallback(
+@@ -169,8 +167,8 @@
+                 //  fullfills IObservable/IObserver serialization/seqeuntialization contract wrt OnNext/OnError/OnCompleted, this at the same time
+                 //  would unnecessarily weaken the serialization/sequeintializtaion contract for extended semantics callbacks)
+                 callbackProcessingContext.InUserCode = true;
+-                this.CallUnderOriginalExecutionContext(userCallback);
+-                callbackProcessingContext.InUserCode = false;
++                try { this.CallUnderOriginalExecutionContext(userCallback); }
++                finally { callbackProcessingContext.InUserCode = false; }
+             }
+         }
+ 
+--- a/Internal/Operations/CimAsyncCancellationDisposable.cs
++++ b/Internal/Operations/CimAsyncCancellationDisposable.cs
+@@ -11,21 +11,19 @@
+ using System;
+ using System.Diagnostics;
+ using System.Security;
++using System.Threading;
+ 
+ namespace Microsoft.Management.Infrastructure.Internal.Operations
+ {
+     internal sealed class CimAsyncCancellationDisposable : IDisposable
+     {
+-        private readonly CimOperation _operation;
++        private CimOperation _operation;
+         private bool _disposed;
+         private readonly object _disposeThreadSafetyLock = new object();
+ #if(!_CORECLR)
+         private readonly SecurityContext _securityContext = SecurityContext.Capture();
+ #else
+-        //
+-        // TODO: WE NEED TO USE WINDOWS IDENTITY
+-        //
+-        //private readonly WindowsIdentity _windowsIdentiy = new WindowsIdentity( LogonUser() );
++        private ExecutionContext _executionContext = ExecutionContext.Capture();
+ 
+ #endif
+ 
+@@ -39,6 +37,10 @@
+ 
+         public void Dispose()
+         {
++            CimOperation operation;
++#if(_CORECLR)
++            ExecutionContext context;
++#endif
+             lock (this._disposeThreadSafetyLock)
+             {
+                 if (_disposed)
+@@ -46,16 +48,24 @@
+                     return;
+                 }
+                 _disposed = true;
++                operation = this._operation;
++                this._operation = null;
++#if(_CORECLR)
++                context = this._executionContext;
++                this._executionContext = null;
++#endif
+             }
+ 
+ #if(!_CORECLR)
+             SecurityContext.Run(
+                 this._securityContext,
+-                callback: _ => this._operation.Cancel(CancellationMode.SilentlyStopProducingResults),
++                callback: _ => operation.Cancel(CancellationMode.SilentlyStopProducingResults),
+                 state: null);
+             this._securityContext.Dispose();
+ #else
+-            this._operation.Cancel(CancellationMode.SilentlyStopProducingResults);
++            if (context == null) operation.Cancel(CancellationMode.SilentlyStopProducingResults);
++            else ExecutionContext.Run(context.CreateCopy(),
++                _ => operation.Cancel(CancellationMode.SilentlyStopProducingResults), null);
+ #endif
+         }
+ 
