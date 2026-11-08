@@ -1,0 +1,122 @@
+# Maintainer: Some One <some.one@some.email.com>
+
+_realname=z3
+pkgbase=mingw-w64-${_realname}
+pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
+pkgver=4.16.0
+pkgrel=2
+pkgdesc="Z3 is a high-performance theorem prover being developed at Microsoft Research (mingw-w64)"
+arch=('any')
+mingw_arch=('mingw64' 'ucrt64' 'clang64' 'clangarm64')
+url="https://github.com/Z3Prover/z3"
+msys2_repository_url='https://github.com/Z3Prover/z3'
+license=('spdx:MIT')
+msys2_references=(
+  'anitya: 7812'
+  'archlinux: z3'
+  'cpe: cpe:/a:microsoft:z3'
+)
+depends=(
+  "${MINGW_PACKAGE_PREFIX}-cc-libs"
+  "${MINGW_PACKAGE_PREFIX}-gmp"
+)
+makedepends=(
+  "${MINGW_PACKAGE_PREFIX}-cc"
+  "${MINGW_PACKAGE_PREFIX}-cmake"
+  "${MINGW_PACKAGE_PREFIX}-ninja"
+  "${MINGW_PACKAGE_PREFIX}-python"
+  "${MINGW_PACKAGE_PREFIX}-python-setuptools"
+)
+options=('!strip')
+source=("https://github.com/Z3Prover/z3/archive/z3-${pkgver}.tar.gz"
+        001-mingw-fixes.patch
+        003-fix-dll-exports.patch
+        004-fix-python-bindings-install.patch
+        005-gmp-hash-matches-small-hash.patch)
+sha256sums=('c68c3e5e4810b16126b8cb4c47eee85c1ac3e24a81914c8e371b40de9dd33ac7'
+            'dff9754409a077d0ae49f1bfb2404bd5b318d301273844a80649a9e20e61e2fa'
+            'ce01668afae8e60c32a0d7937d3f8f67a7dc23aa4270913d157e676d061dfe6a'
+            'a1c96b734e71d4cffc5d55f8a9ed5cc823ac87a8fcb6691a84a23a201398a398'
+            '723991592d6da500c63ab83e0a588bcb4182fdee5843c30a70f02d80229e2c83')
+
+apply_patch_with_msg() {
+  for _fname in "$@"
+  do
+    msg2 "Applying ${_fname}"
+    patch -Nbp1 -i "${srcdir}"/${_fname}
+  done
+}
+
+prepare() {
+  mv ${_realname}-${_realname}-${pkgver} ${_realname}-${pkgver} && cd ${_realname}-${pkgver}
+  apply_patch_with_msg \
+    001-mingw-fixes.patch \
+    003-fix-dll-exports.patch \
+    004-fix-python-bindings-install.patch
+
+  # equal values hashed apart, so lar_solver::init_model halved delta forever
+  apply_patch_with_msg \
+    005-gmp-hash-matches-small-hash.patch
+}
+
+build() {
+  declare -a _extra_config
+  if check_option "debug" "n"; then
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Release")
+  else
+    _extra_config+=("-DCMAKE_BUILD_TYPE=Debug")
+  fi
+
+  msg "Build static z3"
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DZ3_BUILD_LIBZ3_SHARED=OFF \
+      -DZ3_BUILD_TEST_EXECUTABLES=OFF \
+      -DZ3_INCLUDE_GIT_HASH=OFF \
+      -DZ3_INCLUDE_GIT_DESCRIBE=OFF \
+      -DZ3_ENABLE_EXAMPLE_TARGETS=OFF \
+      -DPython3_EXECUTABLE=${MINGW_PREFIX}/bin/python.exe \
+      "${_extra_config[@]}" \
+      -S ${_realname}-${pkgver} \
+      -B build-${MSYSTEM}-static
+
+  cmake --build build-${MSYSTEM}-static
+
+  msg "Build shared z3"
+  MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX=" \
+    cmake \
+      -GNinja \
+      -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} \
+      -DZ3_BUILD_LIBZ3_SHARED=ON \
+      -DZ3_BUILD_TEST_EXECUTABLES=OFF \
+      -DZ3_INCLUDE_GIT_HASH=OFF \
+      -DZ3_INCLUDE_GIT_DESCRIBE=OFF \
+      -DZ3_BUILD_PYTHON_BINDINGS=ON \
+      -DZ3_USE_LIB_GMP=ON \
+      -DPython3_EXECUTABLE=${MINGW_PREFIX}/bin/python.exe \
+      "${_extra_config[@]}" \
+      -S ${_realname}-${pkgver} \
+      -B build-${MSYSTEM}-shared
+
+  cmake --build build-${MSYSTEM}-shared
+}
+
+check() {
+  cmake -DZ3_BUILD_TEST_EXECUTABLES=ON -S ${_realname}-${pkgver} -B build-${MSYSTEM}-shared
+  cmake --build build-${MSYSTEM}-shared
+  ctest --test-dir build-${MSYSTEM}-shared
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}-static
+
+  DESTDIR="${pkgdir}" cmake --install build-${MSYSTEM}-shared
+
+  MSYS2_ARG_CONV_EXCL="-p" python -m compileall \
+    -o 0 -o 1 -q -s"${pkgdir}" -p"/" "${pkgdir}${MINGW_PREFIX}/lib/python"*
+
+  install -Dm644 "${srcdir}"/${_realname}-${pkgver}/LICENSE.txt \
+    "${pkgdir}"${MINGW_PREFIX}/share/licenses/${_realname}/LICENSE.txt
+}

@@ -1,0 +1,12 @@
+--- a/src/util/mpz.cpp
++++ b/src/util/mpz.cpp
+@@ -1912,7 +1912,8 @@
+         return static_cast<unsigned>(digits(a)[0]);
+     return string_hash(std::string_view(reinterpret_cast<char*>(digits(a)), sz * sizeof(digit_t)), 17);
+ #else
+-    return mpz_get_si(*a.m_ptr);
++    // |v| like the small case: GMP results are not normalized to small
++    return static_cast<unsigned>(mpz_get_ui(*a.m_ptr));
+ #endif
+ }
+ 
