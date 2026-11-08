@@ -1,0 +1,104 @@
+{
+  "recorded_at_utc": "2026-11-08T15:57:44.561100+00:00",
+  "host": "win11",
+  "environment": "UCRT64",
+  "scope": "PowerShell 7.4.20-6 current source dependency integration with MMI3 3.0.0-4",
+  "packages": {
+    "mingw-w64-ucrt-x86_64-powershell": "7.4.20-6",
+    "mingw-w64-ucrt-x86_64-dotnet-mmi3": "3.0.0-4",
+    "mingw-w64-ucrt-x86_64-dotnet-sdk8-servicing": "8.0.131-5",
+    "mingw-w64-ucrt-x86_64-dotnet-runtime8-servicing": "8.0.31-4"
+  },
+  "source_archives": {
+    "PowerShell v7.4.20": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+    "dotnet-mingw-bootstrap 5ab58f8ba94346c59bc68ab052d8f96f124be323": "24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63"
+  },
+  "build": {
+    "command": "MSYSTEM=UCRT64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+    "exit_code": 0,
+    "LocalAccounts_API_entries_verified": 459,
+    "SDK_CA1846_warnings": 3,
+    "console_warnings": 0,
+    "LocalAccounts_warnings": 0,
+    "compiler_errors": 0,
+    "log": "tests/powershell-mmi/ucrt-package-results-20261108.txt",
+    "diagnostic_logs": [
+      "tests/powershell-mmi/ucrt-sdk-build-20261108.txt",
+      "tests/powershell-mmi/ucrt-console-build-20261108.txt",
+      "tests/powershell-mmi/ucrt-localaccounts-build-20261108.txt"
+    ],
+    "initial_extraction_diagnostics": "The native UCRT64 file.exe printed usage messages during makepkg extraction; extraction, preparation, build and all checks succeeded without changes or retries."
+  },
+  "package_checks_verified": [
+    "complete source distribution file hashes and native/source-owner licenses",
+    "native launcher arguments, child status and source engine/runtime/root",
+    "full SDK type catalog/module discovery/CIM/GetOwner/serialization/JSON/Add-Type/Authenticode/LocalAccounts",
+    "source MMI+CIM+WMI in STA and MTA",
+    "original native child console with Unicode CLIXML and live CIM",
+    "13 in-process MOF/include/offset/lifetime checks",
+    "34 embedded/reference/array/flags/lifetime and real original CIM event-cmdlet checks",
+    "25 in-process native delivery credential/interval/clone/lifetime checks",
+    "six source gallery modules, source NuGet provider, PSReadLine, Unicode archives and ThreadJob/CIM execution"
+  ],
+  "installed_validation": {
+    "install_command": "pacman -U --noconfirm mingw-w64-ucrt-x86_64-powershell-7.4.20-6-any.pkg.tar.zst",
+    "commands": [
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/DeliverySmoke.ps1)\"",
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+      "timeout -k 10 120 /ucrt64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /ucrt64/share/doc/powershell/checks/DeliverySmoke.ps1)\""
+    ],
+    "exit_code": 0,
+    "modes": [
+      "STA",
+      "MTA"
+    ],
+    "MOF_checks_per_mode": 13,
+    "embedded_and_event_checks_per_mode": 34,
+    "delivery_checks_per_mode": 25,
+    "log": "tests/powershell-mmi/ucrt-installed-20261108.txt"
+  },
+  "artifacts": {
+    "package_archive": "mingw-w64-ucrt-x86_64-powershell-7.4.20-6-any.pkg.tar.zst",
+    "package_sha256": "9982371f6cb4ba06abfc53a5dd8fb505d3572c7d43497d2db79793180da202cb",
+    "package_bytes": 20901837,
+    "bundled_MMI_DLL_sha256": "aa6a0c88163a5e41401bead486d08b8ce467f816d297530cfca236a006f99fe7",
+    "MMI_source_archive_sha256": "36d86f68c6c2874104c889585a61bd6dfb817e9e6efb8cee39a092c976db0584",
+    "manifest_file_count": 799,
+    "bundled_application_files": 601,
+    "license_files": 177,
+    "source_package_manifest_sha256": "65d77215d237407d7e53d9be9b3cca1c956ce262f10cc2c28ae1b20e21778b00",
+    "build_exit_code": 0,
+    "desktop_included": false
+  },
+  "not_verified": [
+    "authenticated remote CIM/WSMan",
+    "provider-origin extended semantic callbacks and streamed methods",
+    "complete native ownership/provider compatibility",
+    "remaining SqlClient and Windows.Compatibility gates"
+  ],
+  "desktop": "Recipe omits GraphicalHost/WindowsDesktop in UCRT64; CLANG64 desktop validation is recorded separately.",
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/README.md": "086a58f9c198c45071c92e8efc7232505afeeb54cba2ded4d0b40cab861eea3b",
+    "mingw-w64-powershell/check-package.sh": "b25fe3aaccc8d8e8bf31ddab3c3e27f4c959ed3ae6a9418883ad4417f667a3e7",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/MofSmoke.ps1": "0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b",
+    "mingw-w64-powershell/EmbeddedSmoke.ps1": "133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319",
+    "mingw-w64-powershell/DeliverySmoke.ps1": "eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9",
+    "mingw-w64-powershell/stage-mof-check.patch": "db88b4e544161d1cf326fd34e301fb9ef7ab81ad67d9a84cb344adf7fb62b3dc",
+    "mingw-w64-powershell/PKGBUILD": "17f5a335562fb6396b05d90f2cb3d02d9f5a77309afa53b489254fa159787a48"
+  },
+  "cleanup": {
+    "logical_bytes_removed": 767846835,
+    "removed_root": "/e/codex-dotnet10/pwsh-ucrt.YAYzpE",
+    "installed_packages_retained": true,
+    "recipes_and_evidence_retained": true
+  }
+}
