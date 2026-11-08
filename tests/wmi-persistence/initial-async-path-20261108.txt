@@ -1,0 +1,32 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-wsman.03TMCw\wmi-persistence-clang64\Check.csproj (in 1.05 sec).
+  Check -> E:\codex-dotnet10\mmi-wsman.03TMCw\wmi-persistence-clang64\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:22.53
+PASS exact installed System.Management archive and managed/native asset bytes: 03812e82e09b8d407082e9b3e53f5c0a19b9e05e3c9a5952b3dafd6bd8924895
+System.Exception: STA
+ ---> System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values. (Parameter 'path')
+   at System.Management.ManagementObject.ManagementObjectCTOR(ManagementScope scope, ManagementPath path, ObjectGetOptions options)
+   at System.Management.ManagementObject..ctor(ManagementScope scope, ManagementPath path, ObjectGetOptions options)
+   at PersistenceChecks.RunApartment(ApartmentState apartment) in E:\codex-dotnet10\mmi-wsman.03TMCw\wmi-persistence-clang64\Program.cs:line 88
+   at PersistenceChecks.<>c__DisplayClass4_0.<Main>b__2() in E:\codex-dotnet10\mmi-wsman.03TMCw\wmi-persistence-clang64\Program.cs:line 116
+   --- End of inner exception stack trace ---
+   at PersistenceChecks.Main() in E:\codex-dotnet10\mmi-wsman.03TMCw\wmi-persistence-clang64\Program.cs:line 120

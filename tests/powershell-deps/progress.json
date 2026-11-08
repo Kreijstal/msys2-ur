@@ -1383,7 +1383,6 @@
       "component": "System.Management native helper",
       "status": "source-backend-packaged-and-installed-native-checks-passed",
       "remaining": [
-        "persistent WMI class/instance writes and call-result scenarios",
         "remote domain/explicit credential/delegation/provider interoperability",
         "complete native ownership/ABI and callback race audit",
         "broader full PowerShell application integration"
@@ -1400,8 +1399,10 @@
         "temporary privilege tokens and restored identity",
         "native bounds/error-info ownership",
         "plain net8.0 NuGet managed/native asset selection",
-        "source WMI query inside original source-built PowerShell7.4.20 runspace agrees with native CimCmdlets query"
-      ]
+        "source WMI query inside original source-built PowerShell7.4.20 runspace agrees with native CimCmdlets query",
+        "CLANG64/UCRT64 installed System.Management8.0.0-2:36 persistent repository class/instance/Unicode/UInt32 writes, semisynchronous call results, async Put completion, update/query/delete and unique namespace cleanup checks in STA/MTA; source helper only (tests/wmi-persistence/results-20261108.json)"
+      ],
+      "persistent_write_evidence": "tests/wmi-persistence/results-20261108.json"
     },
     {
       "component": "PowerShell native components",
@@ -36900,6 +36901,21 @@
       "PowerShell_application_rebuild_pending": true,
       "complete": false,
       "binary_published": false
+    },
+    "wmi_persistent_writes": {
+      "evidence": "tests/wmi-persistence/results-20261108.json",
+      "source_package_version": "8.0.0-2",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "checks_per_environment": 36,
+      "apartments": [
+        "STA",
+        "MTA"
+      ],
+      "namespace_cleanup_independently_verified": true,
+      "full_dependency_goal_complete": false
     }
   }
 }

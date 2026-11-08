@@ -1,0 +1,85 @@
+{
+  "recorded_at_utc": "2026-11-08T17:46:05.932877+00:00",
+  "host": "win11",
+  "scope": "Installed System.Management8.0.0-2 source native helper persistent local repository writes and call results",
+  "environments": {
+    "clang64": {
+      "command": "MSYSTEM=CLANG64 MINGW_PREFIX=/clang64 bash tests/wmi-persistence/check.sh NEW_OUTPUT",
+      "package_version": "8.0.0-2",
+      "build_and_runtime_exit_code": 0,
+      "compiler_warnings": 0,
+      "compiler_errors": 0,
+      "checks": 36,
+      "apartments": [
+        "STA",
+        "MTA"
+      ],
+      "log": "tests/wmi-persistence/clang-results-20261108.txt"
+    },
+    "ucrt64": {
+      "command": "MSYSTEM=UCRT64 MINGW_PREFIX=/ucrt64 bash tests/wmi-persistence/check.sh NEW_OUTPUT",
+      "package_version": "8.0.0-2",
+      "build_and_runtime_exit_code": 0,
+      "compiler_warnings": 0,
+      "compiler_errors": 0,
+      "checks": 36,
+      "apartments": [
+        "STA",
+        "MTA"
+      ],
+      "log": "tests/wmi-persistence/ucrt-results-20261108.txt"
+    }
+  },
+  "source_package_changed": false,
+  "independent_framework_path_control": {
+    "command": "powershell.exe -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File FrameworkPathControl.ps1",
+    "exit_code": 0,
+    "ObjectPut_path_is_instance": false,
+    "log": "tests/wmi-persistence/framework-path-control-20261108.txt",
+    "purpose": "Determine original event-path behavior only; not a source consumer dependency or different build target"
+  },
+  "cleanup": {
+    "independent_audit_log": "tests/wmi-persistence/cleanup-audit-20261108.txt",
+    "no_fixture_or_control_namespaces_remain": true,
+    "WinRM_status": "Stopped",
+    "WinRM_startup": "Manual",
+    "WinRM_configuration_changed": false
+  },
+  "initial_fixture_failures": [
+    {
+      "log": "tests/wmi-persistence/initial-async-path-20261108.txt",
+      "cause": "Fixture assumed ObjectPut returns an instance path. Original source WmiEventSink and independent Windows Framework control both return class paths; retained keyed path now reopens persisted instance."
+    },
+    {
+      "logs": [
+        "tests/wmi-persistence/initial-clang-class-check-20261108.txt",
+        "tests/wmi-persistence/initial-ucrt-class-check-20261108.txt"
+      ],
+      "cause": "Fixture used ManagementObject to test absence of a class path; corrected to ManagementClass."
+    }
+  ],
+  "not_verified": [
+    "remote/domain credentials and delegation",
+    "non-static providers",
+    "complete native ownership/ABI and callback race audit",
+    "all remaining PowerShell dependency gates"
+  ],
+  "full_dependency_goal_complete": false,
+  "artifacts": {
+    "clang64": {
+      "archive_sha256": "03812e82e09b8d407082e9b3e53f5c0a19b9e05e3c9a5952b3dafd6bd8924895",
+      "managed_sha256": "b9c4611a5b5d854125f2dd8d29a6180879b1f990b02ac137b765c4e6b9d2384f",
+      "native_sha256": "68819c13ae0c0e8ef5d022f263ac7705ed85c1a317c6c0f00df67fb77b2f2b9f"
+    },
+    "ucrt64": {
+      "archive_sha256": "7ea5f065cedef47310ca98a8f31b88467aebde519a874dc14b4f877c81a961de",
+      "managed_sha256": "09e5a3eeb8f1d45ae6625d4bc4452daca068e5f258aa59d51743c2725a2ef82e",
+      "native_sha256": "8b726103fb7a369dc0be081ff0a8d25b2e52e00f81b9311e8ae48c68810f988a"
+    }
+  },
+  "inputs_sha256": {
+    "tests/wmi-persistence/PersistenceChecks.cs": "d49f632b6cdc227870c988c349087ac67c066cc25027e6dfcd56f5f01b1d9f63",
+    "tests/wmi-persistence/check.sh": "f529b93a212579b49b5232b5d58b121c51e253a942c3844b7dddeae7aa8e4f23",
+    "tests/wmi-persistence/FrameworkPathControl.ps1": "7501d2d24521a14adb20939dbf9a8f5be8af901ff236ba16d7aff0196aad02bd"
+  }
+}
