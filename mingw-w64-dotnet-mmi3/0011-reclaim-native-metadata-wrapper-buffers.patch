@@ -1,0 +1,101 @@
+--- a/Native/MI_QualifierSet.cs
++++ b/Native/MI_QualifierSet.cs
+@@ -13,6 +13,19 @@
+ {
+     internal class MI_QualifierSet : MI_NativeObjectWithFT<MI_QualifierSet.MI_QualifierSetFT>
+     {
++        // These views borrow native class metadata, but own the wrapper buffer.
++        // Reclaim that buffer when temporary metadata views are abandoned.
++        ~MI_QualifierSet()
++        {
++            base.Dispose();
++        }
++
++        public override void Dispose()
++        {
++            base.Dispose();
++            GC.SuppressFinalize(this);
++        }
++
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+         private struct MI_QualifierSetMembers
+         {
+@@ -43,6 +56,7 @@
+                 out index);
+ 
+             qualifierValue = qualifierValueLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -66,6 +80,7 @@
+ 
+             name = nameLocal.Value;
+             qualifierValue = qualifierValueLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+         
+@@ -100,6 +115,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetQualifierCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+--- a/Native/MI_ParameterSet.cs
++++ b/Native/MI_ParameterSet.cs
+@@ -13,6 +13,19 @@
+ {
+     internal class MI_ParameterSet : MI_NativeObjectWithFT<MI_ParameterSet.MI_ParameterSetFT>
+     {
++
++        // These views borrow native class metadata, but own the wrapper buffer.
++        // Reclaim that buffer when temporary metadata views are abandoned.
++        ~MI_ParameterSet()
++        {
++            base.Dispose();
++        }
++
++        public override void Dispose()
++        {
++            base.Dispose();
++            GC.SuppressFinalize(this);
++        }
+ 
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+         private struct MI_ParameterSetMembers
+@@ -48,6 +61,7 @@
+             name = nameLocal.Value;
+             referenceClass = referenceClassLocal.Value;
+             qualifierSet = qualifierSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -71,6 +85,7 @@
+ 
+             referenceClass = referenceClassLocal.Value;
+             qualifierSet = qualifierSetLocal;
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+         
+@@ -107,6 +122,8 @@
+             MI_Result resultLocal = this.ft.GetMethodReturnType(this,
+                 out returnType,
+                 qualifierSet);
++            GC.KeepAlive(qualifierSet);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 
+@@ -116,6 +133,7 @@
+         {
+             MI_Result resultLocal = this.ft.GetParameterCount(this,
+                 out count);
++            GC.KeepAlive(this);
+             return resultLocal;
+         }
+ 

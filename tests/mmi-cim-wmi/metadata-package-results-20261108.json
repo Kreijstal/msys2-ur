@@ -1,0 +1,132 @@
+{
+  "recorded_at_utc": "2026-11-08T16:09:00.130329+00:00",
+  "host": "win11",
+  "scope": "MMI3 3.0.0-5 native qualifier-set and parameter-set wrapper allocation cleanup",
+  "source_commit": "cf32fc695b32c2eae848b693395c09222fe1d2ae",
+  "source_archive_sha256": "acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357",
+  "baseline": {
+    "installed_package_version": "3.0.0-4",
+    "class_defaults_probe_passed": true,
+    "class_defaults_log": "tests/mmi-cim-wmi/metadata-class-defaults-20261108.txt",
+    "wrapper_probe_initial_exit_code": 1,
+    "wrapper_probe_initial_log": "tests/mmi-cim-wmi/metadata-wrapper-baseline-initial-20261108.txt",
+    "final_baseline_command": "bash check-metadata-ownership.sh NEW_OUTPUT /clang64/lib/dotnet/library-packs --baseline",
+    "final_baseline_exit_code": 0,
+    "final_baseline_log": "tests/mmi-cim-wmi/metadata-baseline-results-20261108.txt",
+    "result": "192 abandoned wrappers had no finalizers; native wrapper allocations had no automatic cleanup path. This is a wrapper lifetime reproduction, not a measurement of total process heap usage."
+  },
+  "correction": [
+    "Internal MI_QualifierSet and MI_ParameterSet finalizers release their wrapper buffers using existing idempotent base disposal",
+    "Explicit disposal suppresses finalization",
+    "KeepAlive roots the native view and supplied qualifier output view until native calls return",
+    "Borrowed native class metadata is never deleted by wrapper cleanup"
+  ],
+  "candidate": {
+    "exit_code": 0,
+    "checks": 2071,
+    "log": "tests/mmi-cim-wmi/metadata-candidate-results-20261108.txt"
+  },
+  "environments": {
+    "clang64": {
+      "build_command": "MSYSTEM=CLANG64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+      "build_exit_code": 0,
+      "build_log": "tests/mmi-cim-wmi/metadata-clang-package-20261108.txt",
+      "API_declarations": 512,
+      "MOF_checks": 31,
+      "property_checks": 222,
+      "delivery_checks": 138,
+      "metadata_checks": 2071,
+      "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-dotnet-mmi3-3.0.0-5-any.pkg.tar.zst",
+      "installed_command": "bash check-metadata-ownership.sh NEW_OUTPUT",
+      "installed_exit_code": 0,
+      "installed_metadata_checks": 2071,
+      "installed_log": "tests/mmi-cim-wmi/metadata-clang-installed-20261108.txt",
+      "abandoned_wrappers_finalized_and_released": 192
+    },
+    "ucrt64": {
+      "build_command": "MSYSTEM=UCRT64 bash -lc \"makepkg --cleanbuild --force --noconfirm\"",
+      "build_exit_code": 0,
+      "build_log": "tests/mmi-cim-wmi/metadata-ucrt-package-20261108.txt",
+      "API_declarations": 512,
+      "MOF_checks": 31,
+      "property_checks": 222,
+      "delivery_checks": 138,
+      "metadata_checks": 2071,
+      "install_command": "pacman -U --noconfirm mingw-w64-ucrt-x86_64-dotnet-mmi3-3.0.0-5-any.pkg.tar.zst",
+      "installed_command": "bash check-metadata-ownership.sh NEW_OUTPUT",
+      "installed_exit_code": 0,
+      "installed_metadata_checks": 2071,
+      "installed_log": "tests/mmi-cim-wmi/metadata-ucrt-installed-20261108.txt",
+      "abandoned_wrappers_finalized_and_released": 192
+    }
+  },
+  "artifacts": {
+    "clang64": {
+      "package_archive": "mingw-w64-clang-x86_64-dotnet-mmi3-3.0.0-5-any.pkg.tar.zst",
+      "package_bytes": 126141,
+      "package_sha256": "1733cf8ea15a93b66d135410a15ee09f76019b34dc79ecd19b94880b90f9858a",
+      "source_archive_sha256": "adb8f1b3bb3981344fd1d98897e57cd0528022d6dba25012793e96547c42362c",
+      "implementation_DLL_sha256": "3591b2643a53c70ea026365848b1b04b98fdc0c2368f1a77421fe5436e08cddc",
+      "build_exit_code": 0
+    },
+    "ucrt64": {
+      "package_archive": "mingw-w64-ucrt-x86_64-dotnet-mmi3-3.0.0-5-any.pkg.tar.zst",
+      "package_bytes": 126137,
+      "package_sha256": "e8663dc8dfd4eaabbf14044ad7f20d7dd3d1e9dbb22427f5d72782f0809a231d",
+      "source_archive_sha256": "951e89fe692e4502c5412b1c5cd8954f77b9f230d58020802fbcbf265a117528",
+      "implementation_DLL_sha256": "99f0dab991ddb2db5ae10b18d179575143a79b213ebdbfbc1c85559fca930163",
+      "build_exit_code": 0
+    }
+  },
+  "not_verified": [
+    "full native ownership audit beyond the two metadata view types",
+    "authenticated remote CIM/WSMan",
+    "provider-origin extended callbacks and streamed methods",
+    "remaining SqlClient and Windows.Compatibility compatibility gates"
+  ],
+  "PowerShell_application_rebuild_pending": true,
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-dotnet-mmi3/.SRCINFO": "c2dd431bbf59700485783c17bf8493a1328bdc3c3b0a6749d3d447312a4ee36f",
+    "mingw-w64-dotnet-mmi3/.gitignore": "3f6fd27338cce0784e9236e1ad6b2e92f2bf967bf661aa33c27072d3324ae83d",
+    "mingw-w64-dotnet-mmi3/0001-validate-native-handles.patch": "438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330",
+    "mingw-w64-dotnet-mmi3/0002-accept-empty-operation-callbacks.patch": "7b7b87c67ce839cd84d0b479be7fc80a32b848a78eb988bd649fd00beab4cea6",
+    "mingw-w64-dotnet-mmi3/0003-implement-timeouts-and-xml-serialization.patch": "eab9ca22ad68ad28041aff8c5f294042196854cb63ff046f25606fd111171ad7",
+    "mingw-w64-dotnet-mmi3/0004-native-result-callbacks-and-operation-lifetime.patch": "168583e2346114afad7cbda70ac071cfeec667cc9c07f2da9af1274324d2da14",
+    "mingw-w64-dotnet-mmi3/0005-native-destination-and-proxy-credentials.patch": "6965d2a812106bce05ec63ced882b7f56dc310d29fdf7b80677b17f839bbdb5a",
+    "mingw-w64-dotnet-mmi3/0006-extended-callbacks-and-operation-options-clone.patch": "613faa75a3bfc0e8cac5a28fe94276dbd098aa1d04ff201984a66c03a8d6d6b3",
+    "mingw-w64-dotnet-mmi3/0007-streamed-method-results-and-native-wrapper-ownership.patch": "26c98af1bfeb4bc9484e97199c320762d655ef5d022601e823caaac1dd008a93",
+    "mingw-w64-dotnet-mmi3/0008-mof-includes-offsets-and-ownership.patch": "f79f676a9cd94a3936f12ca61387a9fc205a1e484780105a8ed4280d067d8e8a",
+    "mingw-w64-dotnet-mmi3/0009-own-property-values-and-reference-types.patch": "23296471a29a7264c3f4d24e7f46520b285906eda50a57336643e07c0254e78f",
+    "mingw-w64-dotnet-mmi3/0010-subscription-delivery-credentials-and-options.patch": "ddb1f2ae387e23cae64d272bf3c2f7b801a6dd07a621ddcffea160bdc4229f4f",
+    "mingw-w64-dotnet-mmi3/0011-reclaim-native-metadata-wrapper-buffers.patch": "ce9eec94a8e5abff9f12e5c7907ccf8b2e52e3a5b0e066bc947c10a5c048a23e",
+    "mingw-w64-dotnet-mmi3/DeliveryOptionChecks.cs": "01a9309cc1221311ace4d901235333b59c166ee89d07ed83829ec5edceb9a1ca",
+    "mingw-w64-dotnet-mmi3/EmbeddedValueChecks.cs": "34f15bf046a989d3aa6e407486f5620432db7d061b81d83fd41b144c8b3b4063",
+    "mingw-w64-dotnet-mmi3/ExpectedApi.json": "cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49",
+    "mingw-w64-dotnet-mmi3/Friend.cs": "d24a547c8ff3405e1d17866e62bfd956842d567a9ee1df8736e0450e1042238c",
+    "mingw-w64-dotnet-mmi3/Identity.cs": "728d7c047167bd152f1c362cb4544e43fe6d87a1f576bd8088c19530d77db00c",
+    "mingw-w64-dotnet-mmi3/InspectApi.cs": "4d658e87c67c627487624486ecd6fe7d2f61b08d90b11a3cf402c5adc9b29d8e",
+    "mingw-w64-dotnet-mmi3/MetadataOwnershipChecks.cs": "f56010c42808c986831241915f6bebbf736aa4b4a653f165cb5ead5ae10561c1",
+    "mingw-w64-dotnet-mmi3/MicrosoftShared.pubkey.hex": "8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed",
+    "mingw-w64-dotnet-mmi3/MmiCredentialChecks.cs": "6b8cdfbaade97c0d950c91ae5ff2c9fe31e21a68b2a6488231cb3f35ef6522e6",
+    "mingw-w64-dotnet-mmi3/MmiExtendedCallbackChecks.cs": "30dffb53dbc174b4664459897f4b57b38e85e66f85f83a623c4cc22658219a42",
+    "mingw-w64-dotnet-mmi3/MmiPortChecks.cs": "1d5e52f7cc0f9b25a223ea25b98c11d4da0d77557fa0222a0d014ffc4fc96305",
+    "mingw-w64-dotnet-mmi3/MmiProbe.cs": "818c61cd5354a8df48b4f2d7a1b7ce0efd5e4a501eb00c430e04c683bf1f9f1f",
+    "mingw-w64-dotnet-mmi3/MmiStreamChecks.cs": "9a2fc46d765334582dc84e531fbee9ae9eee69a5277256311caf626dc3eb4c1b",
+    "mingw-w64-dotnet-mmi3/MofChecks.cs": "1b05606a97330b9dff1b19735033aae834774aabe862574953ff8bbd9330abda",
+    "mingw-w64-dotnet-mmi3/NativeDependencies.cs": "d747c78b3dd720222b52c2f55b95c7b3c0e1468ac22bdc66af936328d38beaad",
+    "mingw-w64-dotnet-mmi3/PKGBUILD": "5629cd7d35f040429e854040277277b468868c136454881ca21f07e4d6c439a0",
+    "mingw-w64-dotnet-mmi3/README.md": "be515a2547d2d6070a62c662647d6fab11bcdfb287d2acf881f3383ae031bd0b",
+    "mingw-w64-dotnet-mmi3/check-api.sh": "ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef",
+    "mingw-w64-dotnet-mmi3/check-credential-abi.c": "15db2b46ad99adb211565b916fbf37a98ee8d26cca5040ccc6d6518076bfa120",
+    "mingw-w64-dotnet-mmi3/check-delivery-options.sh": "aab20da21eb96366ea27818248a9a88f58c683d3affe32875b52e3f2bc6e6998",
+    "mingw-w64-dotnet-mmi3/check-embedded-values.sh": "1f96269de1810094c1541bf576271461675490d8dc462203192880d1df550251",
+    "mingw-w64-dotnet-mmi3/check-extended-callbacks.c": "9841df264a70e1a8c6da34c2ae157b47ab4227b0bb49d15fc44a58e1b4af13c0",
+    "mingw-w64-dotnet-mmi3/check-metadata-ownership.sh": "3b9c4a4e337c07fc582da9f1959d6065b6d8a928be920de4125c4af28b37fe70",
+    "mingw-w64-dotnet-mmi3/check-mof.sh": "ff1bbce78326cfd7c09f82baf538e545b693e37b30f52e0c12709d31938db882",
+    "mingw-w64-dotnet-mmi3/check-streamed-results.c": "90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f",
+    "mingw-w64-dotnet-mmi3/check.sh": "720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553",
+    "mingw-w64-dotnet-mmi3/prepare.py": "dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c"
+  }
+}

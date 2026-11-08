@@ -1,5 +1,32 @@
 # MMI / CIM / WMI source ports and checks
 
+## Native metadata-view allocation cleanup (2026-11-08)
+
+MMI3 **3.0.0-5** adds automatic cleanup for internal qualifier-set and
+method-parameter-set wrapper buffers. These views borrow class metadata but
+allocate their own unmanaged structures or pointer cells. The installed
+3.0.0-4 baseline had no finalizers for these types and temporary views were not
+disposed by their callers. The fix releases only the wrapper allocation,
+suppresses finalization after explicit disposal, and keeps view objects alive
+until native calls return. Borrowed native class metadata is preserved.
+
+Clean CLANG64 and UCRT64 `makepkg --cleanbuild --force --noconfirm` builds passed
+all previous native gates, **512 API declarations**, **31 MOF**, **222 property**,
+**138 delivery** and **2,071 metadata ownership checks**. Fresh installed-package
+consumers passed the 2,071 checks again in both environments. The new gate
+observes all **192** abandoned direct/indirect/borrowed views after finalization,
+verifies released allocation fields and intact borrowed memory, checks repeated
+explicit disposal, and traverses real Win32_Process qualifiers/parameters while
+another thread forces compacting GC. It does not measure total heap usage or
+establish the complete native ownership audit.
+
+Run `bash mingw-w64-dotnet-mmi3/check-metadata-ownership.sh NEW_OUTPUT` from this
+tree.
+[Commands, hashes, baseline, candidate and both package/installed logs](metadata-package-results-20261108.json)
+record the evidence. Remote/provider, broader ownership and the other dependency
+gates remain open. PowerShell application rebuilds are in progress; experimental
+binaries remain unpublished.
+
 ## UCRT64 current-revision validation (2026-11-08)
 
 MMI3 **3.0.0-4** also passed a clean UCRT64

@@ -5,7 +5,8 @@ PowerShell 7.4.20. It builds the archived PowerShell/MMI C# revision
 cf32fc695b32c2eae848b693395c09222fe1d2ae (declared upstream version
 2.0.0-preview.1), seven native/ownership patches from dotnet-mmi, an additional
 MOF callback/offset/ownership patch, a property-value/reference/array ownership
-patch, a subscription-delivery credential/options patch, and explicit
+patch, a subscription-delivery credential/options patch, a native metadata-view cleanup
+patch, and explicit
 MMI 3 contract corrections. It does not rebuild or repackage the vendor's MMI 3
 implementation. It is a separate experimental candidate, alongside dotnet-mmi.
 
@@ -73,6 +74,18 @@ Native readback is checked by option name, without an insertion-order assumption
 password/impersonated/certificate credentials, clone lifetime, validation and
 idempotent disposal. These storage tests do not establish remote authentication.
 
+
+Qualifier-set and method-parameter-set views borrow native class metadata but
+own their unmanaged structure/pointer-cell buffers. These two internal wrapper
+types now reclaim abandoned buffers during finalization; explicit disposal
+suppresses that work. Cleanup never deletes the borrowed class metadata. Native
+calls keep the view (and a supplied qualifier output view) alive until they
+return, preventing finalization while a raw structure pointer is in use.
+`check-metadata-ownership.sh` verifies direct, indirect and borrowed view cleanup,
+idempotent disposal, preserved borrowed memory and real Win32_Process metadata
+traversal while another thread repeatedly forces compacting collections. This
+fix covers these metadata wrappers, not the entire native ownership audit.
+
 This is not full PowerShell integration or complete behavioral parity evidence.
 Authenticated remote CIM/WSMan, provider-origin extended callbacks/streaming,
 broader event-provider coverage and a complete native ownership audit remain
@@ -87,6 +100,7 @@ Build in CLANG64 with makepkg --cleanbuild --force --noconfirm. After installati
     bash check-mof.sh NEW_MOF_OUTPUT
     bash check-embedded-values.sh NEW_PROPERTY_OUTPUT
     bash check-delivery-options.sh NEW_DELIVERY_OUTPUT
+    bash check-metadata-ownership.sh NEW_METADATA_OUTPUT
 
 The consumer uses only the installed feed and a fresh cache by default. It needs
 the installed source-built SDK, clang and Roslyn 4.9.2 for the test tooling.
