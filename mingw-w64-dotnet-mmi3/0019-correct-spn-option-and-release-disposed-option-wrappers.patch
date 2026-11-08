@@ -1,0 +1,51 @@
+--- a/Options/WSManSessionOptions.cs
++++ b/Options/WSManSessionOptions.cs
+@@ -365,7 +365,7 @@
+                 UInt32 encodeInt;
+                 UInt32 index;
+                 MI_DestinationOptionsFlags flags;
+-                MI_Result result = this.DestinationOptionsHandleOnDemand.GetNumber("__MI_DESTINATIONOPTIONS_CERT_REVOCATION_CHECK",
++                MI_Result result = this.DestinationOptionsHandleOnDemand.GetNumber("__MI_DESTINATIONOPTIONS_ENCODE_PORT_IN_SPN",
+                                                    out encodeInt,
+                                                    out index,
+                                                    out flags);
+--- a/Options/CimSessionOptions.cs
++++ b/Options/CimSessionOptions.cs
+@@ -322,16 +322,16 @@
+                 return;
+             }
+ 
+-            if (disposing)
+-            {
+-                MI_DestinationOptions tmpHandle = this.DestinationOptionsHandle;
+-                if (tmpHandle != null)
+-                {
+-                    tmpHandle.Delete();
+-                }
+-            }
+-
++            // Dispose must not create a lazy native options object. Mark the
++            // public owner closed before native cleanup, including error paths.
++            MI_DestinationOptions tmpHandle = disposing && _destinationOptionsHandle.IsValueCreated
++                ? _destinationOptionsHandle.Value : null;
+             _disposed = true;
++            if (tmpHandle != null)
++            {
++                try { tmpHandle.Delete(); }
++                finally { tmpHandle.Dispose(); }
++            }
+         }
+ 
+         internal void AssertNotDisposed()
+--- a/Options/Internal/CimOperationOptions.cs
++++ b/Options/Internal/CimOperationOptions.cs
+@@ -840,7 +840,8 @@
+                     MI_OperationOptions tmpHandle = this.OperationOptionsHandle;
+                     if (tmpHandle != null)
+                     {
+-                        tmpHandle.Delete();
++                        try { tmpHandle.Delete(); }
++                        finally { tmpHandle.Dispose(); }
+                     }
+                 }
+             }
