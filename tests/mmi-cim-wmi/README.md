@@ -24,8 +24,10 @@ Run `bash mingw-w64-dotnet-mmi3/check-metadata-ownership.sh NEW_OUTPUT` from thi
 tree.
 [Commands, hashes, baseline, candidate and both package/installed logs](metadata-package-results-20261108.json)
 record the evidence. Remote/provider, broader ownership and the other dependency
-gates remain open. PowerShell application rebuilds are in progress; experimental
-binaries remain unpublished.
+gates remain open. PowerShell 7.4.20-7 now bundles this fix and passes 943
+metadata checks in each STA/MTA mode in both environments; see
+[application integration](../powershell-mmi/metadata-integration-results-20261108.json).
+Experimental binaries remain unpublished.
 
 ## UCRT64 current-revision validation (2026-11-08)
 

@@ -23,7 +23,7 @@ assert len(license['bundled_source_native_owners'])>=70
 print('PASS complete source distribution file hashes and every declared source/native-owner license')
 PY
 ${MINGW_PREFIX}/bin/python.exe "$(cygpath -am "$here/check-launcher.py")" "$(cygpath -am "$prefix")" "$(cygpath -am "$out/launcher")" --dotnet-root "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)"
-smokes=(Smoke CimWmiSmoke ChildSmoke MofSmoke EmbeddedSmoke DeliverySmoke)
+smokes=(Smoke CimWmiSmoke ChildSmoke MofSmoke EmbeddedSmoke DeliverySmoke MetadataSmoke)
 # the desktop smoke ships only with a WindowsDesktop build
 desktop_summary=''
 if [[ -f $fixtures/DesktopSmoke.ps1 ]]; then
@@ -41,4 +41,4 @@ timeout 60 "$prefix/bin/pwsh.exe" -NoLogo -NoProfile -NonInteractive -STA -Execu
  -File "$(cygpath -am "$fixtures/WmiStaProbe.ps1")"
 timeout 180 "$prefix/bin/pwsh.exe" -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass \
  -File "$(cygpath -am "$fixtures/GallerySmoke.ps1")" -Output "$(cygpath -am "$out/gallery")"
-echo "PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/MOF includes+offsets/embedded properties+events/delivery credentials/LocalAccounts/source gallery/native child${desktop_summary} and license closure"
+echo "PASS packaged native launcher/full SDK/STA+MTA MMI+CIM+WMI/MOF includes+offsets/embedded properties+events/delivery credentials/metadata cleanup/LocalAccounts/source gallery/native child${desktop_summary} and license closure"

@@ -3,7 +3,7 @@ _realname=powershell
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=7.4.20
-pkgrel=6
+pkgrel=7
 pkgdesc='Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64' 'ucrt64')
@@ -51,7 +51,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-management>=8.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-markdig>=0.33.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-memory-data>=1.0.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-mmi3>=3.0.0-4"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-mmi3>=3.0.0-5"
              "${MINGW_PACKAGE_PREFIX}-dotnet-msal>=4.61.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-msal-extensions>=4.61.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms>=1.1.2"
@@ -127,20 +127,22 @@ source=('powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerS
         'MofSmoke.ps1'
         'EmbeddedSmoke.ps1'
         'DeliverySmoke.ps1'
+        'MetadataSmoke.ps1'
         'stage-mof-check.patch')
 noextract=('powershell-7.4.20.tar.gz')
 sha256sums=('3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb'
             '24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63'
             '49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5'
             'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
-            '086a58f9c198c45071c92e8efc7232505afeeb54cba2ded4d0b40cab861eea3b'
-            'b25fe3aaccc8d8e8bf31ddab3c3e27f4c959ed3ae6a9418883ad4417f667a3e7'
+            '9a7ff668c92e4ed0f14c4befd065f5934c287a669ed2ed995b489ade8afae305'
+            'd0f21d4a51f8e2a27c631b929458baaa0331328f9b4ea9124e504396bba1d67b'
             '16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1'
             '831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96'
             '0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b'
             '133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319'
             'eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9'
-            'db88b4e544161d1cf326fd34e301fb9ef7ab81ad67d9a84cb344adf7fb62b3dc')
+            '67feeb92fd08dfc170e0170e67127afde7f4f7be1f6dbb6ec4e1d4ba86cf28ca'
+            '6cbaf865e68fa8ed2ceeb10ec81cbeddc8fb291e88d7000b022e29c286073aff')
 if [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]]; then
   depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
   makedepends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")

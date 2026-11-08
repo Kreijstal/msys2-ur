@@ -45,7 +45,7 @@ MTA modes. The source System.Management8.0.0-2 backend secures each service call
 after CLR marshaling, fixing the STA Access denied failure in release1. A
 standalone STA regression is also included. Direct MMI uses a CLR null
 string for a local session and explicitly disposes its native query enumerator.
-Release 6 requires the source MMI3 package 3.0.0-4 and bundles its MOF, property
+Release 7 requires the source MMI3 package 3.0.0-5 and bundles its MOF, property
 ownership and subscription-delivery option fixes. Additional PowerShell fixtures verify that the
 loaded MMI DLL matches the installed source package, then exercises Unicode MOF
 includes, a nonzero input offset, retained results after disposal/compacting GC,
@@ -75,3 +75,8 @@ generator bootstrap and broader GUI behavior remain open. COM, ReadyToRun,
 NativeAOT, debugger/DAC and broader runtime compatibility are incomplete.
 PowerShell7.6/.NET10 is a separate outstanding graph. This package does not
 complete the full dependency-porting goal.
+
+`MetadataSmoke.ps1` traverses live class/property/method/parameter qualifiers
+through original `Get-CimClass` results while forcing compacting GC. It invokes
+CLR getters directly and verifies that temporary metadata-view cleanup preserves
+the borrowed class metadata. This covers the MMI3 3.0.0-5 metadata wrapper fix.

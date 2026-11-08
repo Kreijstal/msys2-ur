@@ -1,5 +1,32 @@
 # PowerShell integration of source MMI3
 
+## Metadata-view cleanup: PowerShell 7.4.20-7 (2026-11-08)
+
+PowerShell **7.4.20-7** bundles **MMI3 3.0.0-5**, including automatic cleanup of
+abandoned qualifier-set and parameter-set wrapper allocations. Clean CLANG64
+and UCRT64 `makepkg --cleanbuild --force --noconfirm` runs passed every original
+source build, provenance/license/API audit and package check. CLANG64 also
+passed the original desktop build and rendering checks.
+
+The new `MetadataSmoke.ps1` runs the original `Get-CimClass` cmdlet and traverses
+real Win32_Process class/property/method/parameter qualifiers, forcing compacting
+GC and checking that the borrowed class metadata remains valid. CLR getters are
+invoked directly to expose exceptions that PowerShell property adaptation could
+otherwise hide. The fixture compares bundled MMI bytes with the installed source
+archive.
+
+After installation, **943 metadata**, **13 MOF**, **34 embedded/event** and
+**25 delivery checks** passed in each of STA and MTA, in both environments.
+[Exact commands, compiler logs, package/installed results and hashes](metadata-integration-results-20261108.json)
+record the evidence. The underlying MMI fix also passed
+[2,071 installed metadata ownership checks](../mmi-cim-wmi/metadata-package-results-20261108.json)
+per environment, including 192 abandoned wrapper allocations and concurrent GC.
+
+Remote CIM authentication, provider-origin extended callbacks/streams, the
+broader native ownership/provider audit, SqlClient and Windows.Compatibility
+remain open. These experimental binaries remain unpublished. Earlier records
+below retain their original revision and validation scope.
+
 ## UCRT64 current-revision integration (2026-11-08)
 
 PowerShell **7.4.20-6** with **MMI3 3.0.0-4** also passed a clean UCRT64

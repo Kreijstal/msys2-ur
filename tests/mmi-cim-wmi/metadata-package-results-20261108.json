@@ -84,7 +84,7 @@
     "provider-origin extended callbacks and streamed methods",
     "remaining SqlClient and Windows.Compatibility compatibility gates"
   ],
-  "PowerShell_application_rebuild_pending": true,
+  "PowerShell_application_rebuild_pending": false,
   "binary_published": false,
   "full_dependency_goal_complete": false,
   "inputs_sha256": {
@@ -128,5 +128,23 @@
     "mingw-w64-dotnet-mmi3/check-streamed-results.c": "90636dbbe02a9512c1c28236748ca70e247dffaee5cd5f026ac97ffda056312f",
     "mingw-w64-dotnet-mmi3/check.sh": "720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553",
     "mingw-w64-dotnet-mmi3/prepare.py": "dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c"
+  },
+  "additional_audit_probe": {
+    "script": "tests/mmi-cim-wmi/metadata-retained-probe.ps1",
+    "scope": "Read a retained property declaration after the managed CimClass owner is collected",
+    "built_in_Windows_MMI_result": "Parent collected; property name ProcessId remained readable",
+    "source_PowerShell_7_4_20_6_bundled_MMI3_3_0_0_4_result": "Parent collected; property name ProcessId remained readable",
+    "logs": [
+      "tests/mmi-cim-wmi/metadata-retained-builtin-20261108.txt",
+      "tests/mmi-cim-wmi/metadata-retained-source-20261108.txt"
+    ],
+    "does_not_prove_unmanaged_class_resource_reclamation": true
+  },
+  "PowerShell_integration_evidence": "tests/powershell-mmi/metadata-integration-results-20261108.json",
+  "shared_task_cleanup": {
+    "removed_root": "/e/codex-dotnet10/mmi-class.6ovBJ4",
+    "logical_bytes_removed": 1640618011,
+    "installed_packages_retained": true,
+    "source_recipes_and_evidence_retained": true
   }
 }
