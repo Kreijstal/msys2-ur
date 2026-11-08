@@ -45,7 +45,7 @@ MTA modes. The source System.Management8.0.0-2 backend secures each service call
 after CLR marshaling, fixing the STA Access denied failure in release1. A
 standalone STA regression is also included. Direct MMI uses a CLR null
 string for a local session and explicitly disposes its native query enumerator.
-Release 11 requires the source MMI3 package 3.0.0-8 and bundles its MOF, property
+Release 12 requires the source MMI3 package 3.0.0-9 and bundles its MOF, property
 ownership and subscription-delivery option fixes. Additional PowerShell fixtures verify that the
 loaded MMI DLL matches the installed source package, then exercises Unicode MOF
 includes, a nonzero input offset, retained results after disposal/compacting GC,
@@ -96,3 +96,10 @@ Release 11 requires SqlClient4.9.1-2, including managed LocalDB API buffer
 negotiation, startup HRESULT propagation, failed-lookup transport routing and
 native LocalDB message formatting without proprietary SNI. Real LocalDB/SQL
 Server, shared-memory/FILESTREAM and broader authentication remain unverified.
+
+Release 12 reclaims abandoned native CIM classes through the shared native
+handle. Retained class metadata views keep that handle alive until they are
+released; borrowed handles do not delete their native class. Explicit disposal
+and native class calls share the corrected ownership path. Dedicated application
+checks exercise native deletion counts, metadata-view lifetime, reentrant GC and
+lazy MOF/XML schema caches inside the installed PowerShell bundle.

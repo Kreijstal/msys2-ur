@@ -1,0 +1,133 @@
+{
+  "recorded_at_utc": "2026-11-08T20:12:34.055557+00:00",
+  "host": "win11",
+  "root": "/e/codex-dotnet10/mmi-class-lifetime.EYEFAj",
+  "environments": {
+    "clang64": {
+      "build_exit_code": 0,
+      "installed_exit_code": 0,
+      "package": "mingw-w64-clang-x86_64-powershell-7.4.20-12-any.pkg.tar.zst",
+      "package_bytes": 20132495,
+      "package_sha256": "35d5324ca596b4d774af998bdbf279866eb1a3ab27d1d4b9f6f78ce975f5e20d",
+      "source_mmi_archive_sha256": "0a62a59f971c5524e3ea2c84cab9c712cff2ea14d8af55b297bd17d18ae24b19",
+      "bundled_mmi_sha256": "41e4256a7f452b40106342d4d9872837266ed59e68480271c6b0028bdca6846e",
+      "source_manifest_sha256": "d235a69084d7d05354acde9d312bf49a4ff227e153e2cd3fec0bec042256e0c9",
+      "compiler_logs": {
+        "console-build.log": {
+          "warnings": 0,
+          "zero_errors": true
+        },
+        "desktop-console-build.log": {
+          "warnings": 1,
+          "zero_errors": true
+        },
+        "graphicalhost-build.log": {
+          "warnings": 0,
+          "zero_errors": true
+        },
+        "localaccounts-build.log": {
+          "warnings": 0,
+          "zero_errors": true
+        },
+        "sdk-build.log": {
+          "warnings": 3,
+          "zero_errors": true
+        }
+      },
+      "class_lifetime_checks_per_mode": 22,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "installed_powerShell_and_source_identity_verified": true,
+      "build_command": "MSYSTEM=CLANG64 bash -lc \"cd powershell-clang64/recipe && makepkg --cleanbuild --force --noconfirm\"",
+      "installed_command": "MINGW_PREFIX=/clang64 bash powershell-inputs/tests/mmi-class-lifetime/check-powershell.sh powershell-installed-clang64",
+      "orchestration_MSYSTEM": "CLANG64",
+      "build_log": "tests/mmi-class-lifetime/powershell-evidence-20261108/powershell-clang64.txt",
+      "installed_log": "tests/mmi-class-lifetime/powershell-evidence-20261108/powershell-installed-clang64.txt",
+      "desktop_included": true
+    },
+    "ucrt64": {
+      "build_exit_code": 0,
+      "installed_exit_code": 0,
+      "package": "mingw-w64-ucrt-x86_64-powershell-7.4.20-12-any.pkg.tar.zst",
+      "package_bytes": 20912375,
+      "package_sha256": "7a3c88043bbfa42affe73fc88b4031d0bf8831babf01bd6129038bf85ae4b062",
+      "source_mmi_archive_sha256": "d4f6dc8b6d4baf6966cd841ad4c61e27fa550c6759a66e748365a35ab5110181",
+      "bundled_mmi_sha256": "07f39edbb6da8bc54b9cdfb27a68a7fab7bc63ddd9b1dfb875f1f3da6035d4ad",
+      "source_manifest_sha256": "fd4fa27ca3d744e2a1fa90900801bd204ccd7cfc13b5afce62986a5571d09a03",
+      "compiler_logs": {
+        "console-build.log": {
+          "warnings": 0,
+          "zero_errors": true
+        },
+        "localaccounts-build.log": {
+          "warnings": 0,
+          "zero_errors": true
+        },
+        "sdk-build.log": {
+          "warnings": 3,
+          "zero_errors": true
+        }
+      },
+      "class_lifetime_checks_per_mode": 22,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "installed_powerShell_and_source_identity_verified": true,
+      "build_command": "MSYSTEM=UCRT64 bash -lc \"cd powershell-ucrt64/recipe && makepkg --cleanbuild --force --noconfirm\"",
+      "installed_command": "MINGW_PREFIX=/ucrt64 bash powershell-inputs/tests/mmi-class-lifetime/check-powershell.sh powershell-installed-ucrt64",
+      "orchestration_MSYSTEM": "CLANG64",
+      "build_log": "tests/mmi-class-lifetime/powershell-evidence-20261108/powershell-ucrt64.txt",
+      "installed_log": "tests/mmi-class-lifetime/powershell-evidence-20261108/powershell-installed-ucrt64.txt",
+      "desktop_included": false
+    }
+  },
+  "scope": "PowerShell 7.4.20-12 integration of shared native CIM class lifetime and finalization",
+  "powershell_package_version": "7.4.20-12",
+  "mmi_package_version": "3.0.0-9",
+  "sqlclient_package_version": "4.9.1-2",
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "WinRM_status": "Stopped",
+  "WinRM_startup": "Manual",
+  "package_checks_passed": [
+    "Full source/compiler/catalog/payload/license inventories and native launcher",
+    "Original SDK, console, LocalAccounts, source modules, CIM/WMI and native children",
+    "MOF 15, embedded/event 34, delivery 25, metadata 943",
+    "Conditional CLANG64 GraphicalHost and desktop rendering"
+  ],
+  "compiler_warning_notes": [
+    "Three CA1846 source-generator warnings per SDK build",
+    "One CLANG64 desktop-console NETSDK1106 warning; remaining invocations have zero warnings"
+  ],
+  "remaining": [
+    "Authenticated remote CIM/WSMan",
+    "Complete native ownership/provider/internal audit, including transient metadata and borrowed-pointer consumption",
+    "Remaining SqlClient and Windows.Compatibility validation"
+  ],
+  "input_sha256": {
+    "mingw-w64-powershell/.SRCINFO": "d300bc01813f28fdf255c0a4ae3a5f4abde5d9c926b07fdd41a7c7d3dfbbf552",
+    "mingw-w64-powershell/.gitignore": "d947cc0cb4fd07a92e7a291b2cae0cc0fe075b6928b4b9bc0a33dca70c63f913",
+    "mingw-w64-powershell/DeliverySmoke.ps1": "eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9",
+    "mingw-w64-powershell/EmbeddedSmoke.ps1": "133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/MetadataSmoke.ps1": "67feeb92fd08dfc170e0170e67127afde7f4f7be1f6dbb6ec4e1d4ba86cf28ca",
+    "mingw-w64-powershell/MofSmoke.ps1": "6ff228c04145cfde5bd850d344220ff5749ec780ee71a6d6803f570c27278b00",
+    "mingw-w64-powershell/PKGBUILD": "d9c94ba071289a6cf66a5621ab7397117a4a4ee61f08d20c49845f8db1f2a2e3",
+    "mingw-w64-powershell/README.md": "820ba0f2480d636a4c234f47d093c58a5dcf0443eeeb8bb7c905d177cc55dd3b",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/check-package.sh": "d0f21d4a51f8e2a27c631b929458baaa0331328f9b4ea9124e504396bba1d67b",
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/make-source.py": "45f474b9694366dcaa5049bdbb8754613185abc0df982d2f5c4d44d3acf9a5ee",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/source-dependency-lock.json": "57ccc43f4b97fa377e497165b7db79f023f5c61d35ee84bd76c612073f7adca8",
+    "mingw-w64-powershell/stage-mof-check.patch": "6cbaf865e68fa8ed2ceeb10ec81cbeddc8fb291e88d7000b022e29c286073aff",
+    "tests/mmi-class-lifetime/PowerShellClassLifetime.ps1": "805649169af1b4ff865b649f6c9e8c9741ef15971ec5f95d6ca6d9c159d365dc",
+    "tests/mmi-class-lifetime/build-powershell-fixture.sh": "6cb5c5f21bd95501dbd8717ab51f0b083cfbfe69dd438a57fe5e7f112b2cd7ef",
+    "tests/mmi-class-lifetime/check-powershell.sh": "a7dafa9c4c99821e6bf21c5b289c3fe368207495f6212bf3182ca3f6096aab7a",
+    "tests/mmi-class-lifetime/check.sh": "06f308098b1171f01da23fefb99e20b2680a9b2917ded3f94f95f277d952c36c"
+  },
+  "cleanup_evidence": "tests/mmi-class-lifetime/cleanup-20261108.json"
+}

@@ -36,3 +36,8 @@ leave queued native-owner finalizers pointing into an unloaded test library.
 
 Full native ownership/provider compatibility and authenticated remote CIM/WSMan
 remain separate open requirements. This regression does not finish that audit.
+
+The real metadata checks retain their descriptors throughout each read. Further
+ownership auditing must also cover transient qualifier/parameter/value wrappers
+and GC between obtaining a native metadata pointer and consuming its contents.
+Those paths are not proved by the retained-view assertions in this gate.
