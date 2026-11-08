@@ -1,7 +1,7 @@
 """Stage the exact SqlClient sources without prebuilt implementation inputs.
 
 The default compile prototype retains upstream's native SNI selection. The
-explicit --managed-sni candidate applies four source patches; its runtime parity
+explicit --managed-sni candidate applies explicit source patches; its runtime parity
 and complete packaging remain unverified.
 """
 from pathlib import Path
@@ -38,21 +38,30 @@ if args.managed_sni:
     overlay = output/'overlays'
     overlay.mkdir()
     # Preserve the pinned original source tree and retain a reviewable patch.
-    port_inputs = [(factory, inputs/'0001-use-managed-sni-on-windows.patch'),
+    port_inputs = [(factory, [inputs/'0001-use-managed-sni-on-windows.patch']),
         (source/'src/Common/src/Interop/Windows/SspiCli/SecuritySafeHandles.cs',
-         inputs/'0003-pass-complete-spns-to-windows-sspi.patch'),
+         [inputs/'0003-pass-complete-spns-to-windows-sspi.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SNIProxy.cs',
-         inputs/'0004-accept-short-custom-named-pipe-paths.patch'),
+         [inputs/'0004-accept-short-custom-named-pipe-paths.patch', inputs/'0006-stop-after-localdb-lookup-failure.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SNIMarsHandle.cs',
-         inputs/'0005-honor-inclusive-smp-send-window.patch')]
+         [inputs/'0005-honor-inclusive-smp-send-window.patch']),
+        (original.parent/'System/Data/SqlClient/SNI/LocalDB.Windows.cs',
+         [inputs/'0007-honor-localdb-start-results-and-buffer-sizes.patch']),
+        (original.parent/'System/Data/SqlClient/LocalDBAPI.Windows.cs',
+         [inputs/'0008-load-localdb-messages-through-managed-sni.patch']),
+        (original.parent/'System/Data/SqlClient/TdsParser.cs',
+         [inputs/'0009-format-localdb-errors-for-managed-sni.patch'])]
     port_overlays = []
-    for path, patch in port_inputs:
+    for path, patches in port_inputs:
         staged = overlay/path.name
         staged.write_text(path.read_text(encoding='utf-8-sig'))
-        subprocess.run(['patch', '--fuzz=0', '-p1', '-i', str(patch)], cwd=overlay, check=True)
+        for patch in patches:
+            subprocess.run(['patch', '--fuzz=0', '-p1', '-i', str(patch)], cwd=overlay, check=True)
+        patch = patches[0]
         port_overlays.append(dict(original_path=path.relative_to(source).as_posix(),
             original_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             patch_name=patch.name, patch_sha256=hashlib.sha256(patch.read_bytes()).hexdigest(),
+            additional_patches=[dict(patch_name=extra.name, patch_sha256=hashlib.sha256(extra.read_bytes()).hexdigest()) for extra in patches[1:]],
             overlay_sha256=hashlib.sha256(staged.read_bytes()).hexdigest()))
     (output/'managed-sni-port.json').write_text(json.dumps(dict(overlays=port_overlays,
         release_and_debug_use_managed_sni=True,

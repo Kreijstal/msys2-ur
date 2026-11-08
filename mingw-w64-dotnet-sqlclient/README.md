@@ -25,7 +25,7 @@ All framework references, actual compiler inputs, resource inputs, implementatio
 reference hashes, wrapper projects, exact overlay sources/patches, removed binary
 inventory, original package documentation and MIT license are recorded/shipped.
 
-Four production overlays preserve the pinned source tree:
+Seven production overlays preserve the pinned source tree:
 
 1. Select the original managed SNI in Release and Debug, without a Debug environment
    switch. The original Release factory selects proprietary `sni.dll`.
@@ -39,6 +39,12 @@ Four production overlays preserve the pinned source tree:
    six send-window stalls/resumes across25 DATA frames, ten fragmented response
    frames, multiple receive-credit ACKs, ordered public-reader rows, GC and DONE.
    See [the MC-SMP header specification](https://learn.microsoft.com/en-us/openspecs/windows_protocols/mc-smp/4ada62f7-33c2-45bb-980c-f566f5a6c11a).
+
+5. Query LocalDB buffer sizes, preserve failed startup HRESULTs, and bound
+   insufficient-buffer retries. Reject empty/invalid native outputs.
+6. Resolve LocalDB's native message formatter through the managed LocalDB loader.
+7. Use LocalDB-specific error messages for both SNI backends. The pipe-parser
+   overlay also stops transport routing after LocalDB lookup failure.
 
 The original142 selected TDS protocol/endpoint/server fixture inputs are built.
 One test-only PlaceholderStream overlay returns partial handshake reads to.NET8
@@ -68,7 +74,7 @@ bash check.sh NEW_OUTPUT NEW_SOURCE
 ```
 
 The source audit derives exact selected compiler inputs from the archive and replays
-all four production patches with zero fuzz. The separate full test audit also checks
+all eight production patches with zero fuzz. The separate full test audit also checks
 all142 original TDS fixture inputs and their one test-stream overlay. Fresh consumers
 must load no proprietary SNI or Framework implementation. No policy, persistent PATH,
 trust-store, registry, service, firewall or database configuration is changed.
@@ -77,8 +83,20 @@ Remaining: LocalDB automatic/named/shared-instance discovery and connections; `l
 shared memory and full native feature parity; real transactional FILESTREAM/database
 interoperability; broader TLS trust/host and remote/domain authentication policies;
 MARS error/cancellation/combined-encryption/full SMP conformance; complete shipping
-PowerShell/compatibility integration and actual runtime servicing. The CLR currently
-reports.NET8.0.0. Packaging and passing fixture tests do not close these requirements.
+PowerShell/compatibility integration and actual runtime servicing. The runtime used by current validation is source-built .NET 8.0.31. Packaging and passing fixture tests do not close these requirements.
 
 Earlier three-overlay source-port evidence is retained in
 [`sqlclient-source-sni-results-20261027.txt`](https://github.com/Kreijstal/dotnet-mingw-bootstrap/tree/master/workflows/powershell-deps/sqlclient-source-sni-results-20261027.txt).
+
+Release 2 corrects LocalDB startup and error routing. It queries the native API
+for its output size before starting, checks each HRESULT, retries bounded buffer
+size changes, rejects invalid/empty successful outputs and preserves native
+error codes. Failed LocalDB lookup stops transport selection. Managed SNI loads
+LocalDBFormatMessage from the LocalDB API library instead of proprietary SNI,
+and both SNI backends now use the LocalDB-specific message path.
+
+The LocalDB ABI gate uses an owned native driver, installed-source consumers and
+public SqlConnection Open/OpenAsync failure paths. It does not load an actual
+LocalDB installation, start a SQL Server engine or change registry/configuration.
+The original no-installation/named/shared-instance/real-engine interoperability
+requirements remain open. Run `bash check-localdb.sh NEW_OUTPUT` after installing.

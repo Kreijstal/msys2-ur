@@ -1,0 +1,60 @@
+--- a/LocalDB.Windows.cs
++++ b/LocalDB.Windows.cs
+@@ -20,7 +20,6 @@
+ 
+         private const string ProcLocalDBStartInstance = "LocalDBStartInstance";
+ 
+-        private const int MAX_LOCAL_DB_CONNECTION_STRING_SIZE = 260;
+ 
+         private IntPtr _startInstanceHandle = IntPtr.Zero;
+ 
+@@ -47,10 +46,45 @@
+ 
+         private string GetConnectionString(string localDbInstance)
+         {
+-            StringBuilder localDBConnectionString = new StringBuilder(MAX_LOCAL_DB_CONNECTION_STRING_SIZE + 1);
+-            int sizeOfbuffer = localDBConnectionString.Capacity;
+-            localDBStartInstanceFunc(localDbInstance, 0, localDBConnectionString, ref sizeOfbuffer);
+-            return localDBConnectionString.ToString();
++            // A null output buffer asks for the required size without starting
++            // the instance. Do not read the output buffer after a failed HRESULT.
++            const int insufficientBuffer = unchecked((int)0x89C50114);
++            int required = 0;
++            int status = localDBStartInstanceFunc(localDbInstance, 0, null, ref required);
++            if (status < 0) return ReportStartError(status);
++            for (int attempt = 0; attempt < 3; attempt++)
++            {
++                if (required <= 0 || required == int.MaxValue)
++                {
++                    SNILoadHandle.SingletonInstance.LastError = new SNIError(SNIProviders.INVALID_PROV, 0, SNICommon.LocalDBBadRuntime, string.Empty);
++                    return null;
++                }
++                StringBuilder connection = new StringBuilder(required + 1);
++                int capacity = connection.Capacity;
++                int used = capacity;
++                status = localDBStartInstanceFunc(localDbInstance, 0, connection, ref used);
++                if (status == insufficientBuffer && used > capacity)
++                {
++                    required = used;
++                    continue;
++                }
++                if (status < 0) return ReportStartError(status);
++                string pipe = connection.ToString();
++                if (string.IsNullOrWhiteSpace(pipe))
++                {
++                    SNILoadHandle.SingletonInstance.LastError = new SNIError(SNIProviders.INVALID_PROV, 0, SNICommon.LocalDBBadRuntime, string.Empty);
++                    return null;
++                }
++                return pipe;
++            }
++            return ReportStartError(insufficientBuffer);
++        }
++
++        private static string ReportStartError(int status)
++        {
++            SNILoadHandle.SingletonInstance.LastError = new SNIError(SNIProviders.INVALID_PROV,
++                unchecked((uint)status), SNICommon.LocalDBErrorCode, string.Empty);
++            return null;
+         }
+ 
+         internal enum LocalDBErrorState

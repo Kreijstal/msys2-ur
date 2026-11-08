@@ -38,17 +38,22 @@ def replay(original, patch, overlay):
     with tempfile.TemporaryDirectory() as temp:
         path = Path(temp)/Path(overlay['original_path']).name
         path.write_text(original.decode('utf-8-sig').replace('\r\n', '\n'))
-        subprocess.run(['patch', '--fuzz=0', '-p1', '-i', str(patch)], cwd=temp,
-                       check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for entry in [dict(patch_name=patch.name, patch_sha256=overlay['patch_sha256'])] + overlay.get('additional_patches', []):
+            selected = inputs/entry['patch_name']
+            assert sha(selected.read_bytes()) == entry['patch_sha256']
+            subprocess.run(['patch', '--fuzz=0', '-p1', '-i', str(selected)], cwd=temp,
+                           check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         assert sha(path.read_bytes()) == overlay['overlay_sha256']
 
 port = json.loads((build/'managed-sni-port.json').read_text())
 assert port['release_and_debug_use_managed_sni'] is True
 assert port['complete_runtime_compatibility_verified'] is False
-assert {p['patch_name'] for p in port['overlays']} == {
+assert {entry['patch_name'] for p in port['overlays'] for entry in [p] + p.get('additional_patches', [])} == {
     '0001-use-managed-sni-on-windows.patch', '0003-pass-complete-spns-to-windows-sspi.patch',
     '0004-accept-short-custom-named-pipe-paths.patch',
-    '0005-honor-inclusive-smp-send-window.patch'}
+    '0005-honor-inclusive-smp-send-window.patch', '0006-stop-after-localdb-lookup-failure.patch',
+    '0007-honor-localdb-start-results-and-buffer-sizes.patch', '0008-load-localdb-messages-through-managed-sni.patch',
+    '0009-format-localdb-errors-for-managed-sni.patch'}
 overlays = {}
 for item in port['overlays']:
     path = source/item['original_path']

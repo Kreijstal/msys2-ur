@@ -1,0 +1,13 @@
+--- a/LocalDBAPI.Windows.cs
++++ b/LocalDBAPI.Windows.cs
+@@ -8,7 +8,9 @@
+ {
+     internal static partial class LocalDBAPI
+     {
+-        private static IntPtr LoadProcAddress() => SafeNativeMethods.GetProcAddress(UserInstanceDLLHandle, "LocalDBFormatMessage");
++        private static IntPtr LoadProcAddress() => TdsParserStateObjectFactory.UseManagedSNI
++            ? System.Data.SqlClient.SNI.LocalDB.GetProcAddress("LocalDBFormatMessage")
++            : SafeNativeMethods.GetProcAddress(UserInstanceDLLHandle, "LocalDBFormatMessage");
+ 
+         private static IntPtr UserInstanceDLLHandle
+         {

@@ -366,13 +366,15 @@
       "source_sni_candidate_evidence": "tests/powershell-deps/sqlclient-source-sni-results-20261027.txt",
       "recipe": "mingw-w64-dotnet-sqlclient",
       "experimental_package_built": true,
-      "package_version": "4.9.1-1",
+      "package_version": "4.9.1-2",
       "public_api_signatures": 1020,
       "windows_original_compiler_inputs": 242,
       "contract_original_compiler_inputs": 3,
-      "production_overlays": 4,
+      "production_overlays": 7,
       "resource_strings": 407,
-      "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt"
+      "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt",
+      "production_patches": 8,
+      "localdb_startup_evidence": "tests/sqlclient-localdb/package-results-20261108.json"
     },
     {
       "id": "System.Diagnostics.DiagnosticSource",
@@ -37049,6 +37051,20 @@
       "product_code_changed": false,
       "native_UTF8_value_conversion_limit_recorded": true,
       "full_dependency_goal_complete": false
+    },
+    "sqlclient_LocalDB_startup_port": {
+      "evidence": "tests/sqlclient-localdb/package-results-20261108.json",
+      "package_version": "4.9.1-2",
+      "clean_build_and_installed_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_LocalDB_ABI_checks_per_environment": 26,
+      "native_failure_baseline_reproduced": true,
+      "PowerShell_application_rebuild_pending": true,
+      "real_database_execution_verified": false,
+      "complete": false,
+      "binary_published": false
     }
   }
 }

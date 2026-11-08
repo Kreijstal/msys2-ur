@@ -18,7 +18,8 @@ for role in ['implementation','contract']:
         assets['source-build/'+role+'/'+path]=(build/role/path).read_bytes()
 for overlay in r['production_overlays']:
     assets['source-build/overlays/'+Path(overlay['original_path']).name]=(build/'overlays'/Path(overlay['original_path']).name).read_bytes()
-    assets['source-build/patches/'+overlay['patch_name']]=(here/overlay['patch_name']).read_bytes()
+    for entry in [overlay] + overlay.get('additional_patches', []):
+        assets['source-build/patches/'+entry['patch_name']]=(here/entry['patch_name']).read_bytes()
 resources={v.get('name'):v.findtext('value') for v in E.parse(source/'src/System.Data.SqlClient/src/Resources/Strings.resx').iter('data')}
 expected=dict(implementation_sha256=hashlib.sha256(assets['runtimes/win/lib/net8.0/'+name+'.dll']).hexdigest(),contract_sha256=hashlib.sha256(assets['lib/net8.0/'+name+'.dll']).hexdigest(),reference_sha256=hashlib.sha256(assets['ref/net8.0/'+name+'.dll']).hexdigest(),resource_name='FxResources.System.Data.SqlClient.SR.resources',resource_strings=resources,metadata_resource_name='System.Data.SqlClient.SqlMetaData.xml',metadata_resource_sha256=hashlib.sha256((source/'src/System.Data.SqlClient/src/Resources/System.Data.SqlClient.SqlMetaData.xml').read_bytes()).hexdigest(),experimental=True,full_runtime_compatibility_verified=False)
 assets['source-build/expected-assets.json']=(json.dumps(expected,indent=2)+'\n').encode()

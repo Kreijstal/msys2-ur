@@ -1,0 +1,11 @@
+--- a/SNIProxy.cs
++++ b/SNIProxy.cs
+@@ -493,7 +493,7 @@
+                 Debug.Assert(!string.IsNullOrWhiteSpace(localDBInstance), "Local DB Instance name cannot be empty.");
+                 localDBConnectionString = LocalDB.GetLocalDBConnectionString(localDBInstance);
+ 
+-                if (fullServerName == null)
++                if (localDBConnectionString == null)
+                 {
+                     // The Last error is set in LocalDB.GetLocalDBConnectionString. We don't need to set Last here.
+                     error = true;
