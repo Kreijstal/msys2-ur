@@ -1,13 +1,14 @@
 pkgbase = mingw-w64-powershell
 	pkgdesc = Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)
 	pkgver = 7.4.20
-	pkgrel = 3
+	pkgrel = 11
 	url = https://github.com/PowerShell/PowerShell
 	arch = any
 	license = spdx:MIT
 	makedepends = mingw-w64-clang-x86_64-cc
 	makedepends = mingw-w64-clang-x86_64-python
 	makedepends = python
+	makedepends = patch
 	makedepends = mingw-w64-clang-x86_64-dotnet-applicationinsights>=2.23.0
 	makedepends = mingw-w64-clang-x86_64-dotnet-asyncinterfaces8>=8.0.0
 	makedepends = mingw-w64-clang-x86_64-dotnet-azure-core>=1.38.0
@@ -47,7 +48,7 @@ pkgbase = mingw-w64-powershell
 	makedepends = mingw-w64-clang-x86_64-dotnet-management>=8.0.0
 	makedepends = mingw-w64-clang-x86_64-dotnet-markdig>=0.33.0
 	makedepends = mingw-w64-clang-x86_64-dotnet-memory-data>=1.0.2
-	makedepends = mingw-w64-clang-x86_64-dotnet-mmi3>=3.0.0
+	makedepends = mingw-w64-clang-x86_64-dotnet-mmi3>=3.0.0-8
 	makedepends = mingw-w64-clang-x86_64-dotnet-msal>=4.61.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-msal-extensions>=4.61.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-netcore-platforms>=1.1.2
@@ -88,7 +89,7 @@ pkgbase = mingw-w64-powershell
 	makedepends = mingw-w64-clang-x86_64-dotnet-servicemodel-primitives>=4.10.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-servicemodel-security>=4.10.3
 	makedepends = mingw-w64-clang-x86_64-dotnet-speech>=8.0.31
-	makedepends = mingw-w64-clang-x86_64-dotnet-sqlclient>=4.9.1
+	makedepends = mingw-w64-clang-x86_64-dotnet-sqlclient>=4.9.1-2
 	makedepends = mingw-w64-clang-x86_64-dotnet-stylecop-analyzers>=1.2.0.beta556
 	makedepends = mingw-w64-clang-x86_64-dotnet-stylecop-analyzers-unstable>=1.2.0.beta556
 	makedepends = mingw-w64-clang-x86_64-dotnet-syndication8>=8.0.31
@@ -124,13 +125,23 @@ pkgbase = mingw-w64-powershell
 	source = check-package.sh
 	source = check-launcher.py
 	source = module-host-audit-source.py
+	source = MofSmoke.ps1
+	source = EmbeddedSmoke.ps1
+	source = DeliverySmoke.ps1
+	source = MetadataSmoke.ps1
+	source = stage-mof-check.patch
 	sha256sums = 3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb
 	sha256sums = 24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63
 	sha256sums = 49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5
 	sha256sums = c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde
-	sha256sums = 5555d903cfe59bc553595d913bdcd608f3285f6cd4f39ea252feeae73f77e0fa
-	sha256sums = 5369d3c899e844a69f7c0f715d9c837b4de29e14718d332784a05833eaa3f345
+	sha256sums = 5dfdd5118b0b4d7115ae5019d65cf7911d462cf734197cd11163c51cc831eb66
+	sha256sums = d0f21d4a51f8e2a27c631b929458baaa0331328f9b4ea9124e504396bba1d67b
 	sha256sums = 16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1
 	sha256sums = 831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96
+	sha256sums = 6ff228c04145cfde5bd850d344220ff5749ec780ee71a6d6803f570c27278b00
+	sha256sums = 133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319
+	sha256sums = eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9
+	sha256sums = 67feeb92fd08dfc170e0170e67127afde7f4f7be1f6dbb6ec4e1d4ba86cf28ca
+	sha256sums = 6cbaf865e68fa8ed2ceeb10ec81cbeddc8fb291e88d7000b022e29c286073aff
 
 pkgname = mingw-w64-clang-x86_64-powershell

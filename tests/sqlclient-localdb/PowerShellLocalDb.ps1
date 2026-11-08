@@ -19,6 +19,9 @@ try {
     if ($actual -cne $expected) { throw 'Bundled SqlClient differs from the installed source archive' }
 }
 finally { $archive.Dispose() }
+"SOURCE_SQLCLIENT $location SHA256 $actual"
+"SOURCE_POWERSHELL $($PSVersionTable.PSVersion) $PSHOME"
+"SOURCE_RUNTIME $([Runtime.InteropServices.RuntimeInformation]::FrameworkDescription)"
 $assembly = [Reflection.Assembly]::LoadFrom([IO.Path]::GetFullPath($Fixture))
 $method = $assembly.GetType('PowerShellLocalDbChecks', $true).GetMethod('Run')
 [object[]] $arguments = @(,[string[]]@('--driver=' + [IO.Path]::GetFullPath($Driver)))

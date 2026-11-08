@@ -21,7 +21,9 @@ inputs, 142 original protocol fixture inputs, 1020 API signatures, 407 resources
 [Package results and evidence](package-results-20261108.json) retain exact hashes,
 commands, initial fixture failures and remaining requirements.
 
-For actual PowerShell bundle integration, build the same assertions as a library:
+For actual PowerShell bundle integration, run `bash tests/sqlclient-localdb/check-powershell.sh NEW_OUTPUT`.
+It builds the same assertions as a library and runs both STA and MTA. To run a
+single mode manually:
 
 ```sh
 bash tests/sqlclient-localdb/build-powershell-fixture.sh NEW_FIXTURE
@@ -34,3 +36,7 @@ and that its bytes match the installed source archive before invoking the checks
 This gate does not prove real SQL Server, actual LocalDB discovery/connections,
 LPC/shared memory, transactional FILESTREAM or full authentication compatibility.
 The package remains experimental and its binaries are held from publication.
+
+The buffer-size query follows Microsoft's [LocalDBStartInstance contract](https://learn.microsoft.com/en-us/sql/relational-databases/express-localdb-instance-apis/localdbstartinstance-function):
+a null output buffer with a size pointer returns the required size without
+starting the instance. The implementation allocates an extra terminating character.

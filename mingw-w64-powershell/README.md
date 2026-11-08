@@ -45,7 +45,7 @@ MTA modes. The source System.Management8.0.0-2 backend secures each service call
 after CLR marshaling, fixing the STA Access denied failure in release1. A
 standalone STA regression is also included. Direct MMI uses a CLR null
 string for a local session and explicitly disposes its native query enumerator.
-Release 10 requires the source MMI3 package 3.0.0-8 and bundles its MOF, property
+Release 11 requires the source MMI3 package 3.0.0-8 and bundles its MOF, property
 ownership and subscription-delivery option fixes. Additional PowerShell fixtures verify that the
 loaded MMI DLL matches the installed source package, then exercises Unicode MOF
 includes, a nonzero input offset, retained results after disposal/compacting GC,
@@ -81,13 +81,18 @@ through original `Get-CimClass` results while forcing compacting GC. It invokes
 CLR getters directly and verifies that temporary metadata-view cleanup preserves
 the borrowed class metadata. This covers the MMI3 3.0.0-5 metadata wrapper fix.
 
-Release 10 bundles the class- and instance-clone rollback fixes: native clone
+Release 11 bundles the class- and instance-clone rollback fixes: native clone
 failure preserves caller-owned handles and releases partial output clones and
 wrapper cells, including outputs after null array slots.
 The MMI recipe verifies the failure path with a native ABI driver; application
 MOF/metadata fixtures verify the bundled implementation and normal live paths.
 
-Release 10 also fixes class-only MOF documents: the native codec's successful
+Release 11 also fixes class-only MOF documents: the native codec's successful
 empty instance array becomes an empty managed result and advances the input
 offset. MofSmoke verifies this in the actual application before reusing the
 deserializer for includes, Unicode instance data and live CIM queries.
+
+Release 11 requires SqlClient4.9.1-2, including managed LocalDB API buffer
+negotiation, startup HRESULT propagation, failed-lookup transport routing and
+native LocalDB message formatting without proprietary SNI. Real LocalDB/SQL
+Server, shared-memory/FILESTREAM and broader authentication remain unverified.
