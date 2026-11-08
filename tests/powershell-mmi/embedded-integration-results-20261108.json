@@ -1,0 +1,145 @@
+{
+  "recorded_at_utc": "2026-11-08T14:58:37.447024+00:00",
+  "host": "win11",
+  "environment": "CLANG64",
+  "root": "/e/codex-dotnet10/powershell-embedded.caSJpz",
+  "scope": "Current PowerShell 7.4.20 integration of source MMI3 3.0.0-3 embedded/reference/array ownership fixes",
+  "packages": {
+    "mingw-w64-clang-x86_64-powershell": "7.4.20-5",
+    "mingw-w64-clang-x86_64-dotnet-mmi3": "3.0.0-3",
+    "mingw-w64-clang-x86_64-dotnet-runtime8-servicing": "8.0.31-4"
+  },
+  "source_archives": {
+    "PowerShell v7.4.20": "3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb",
+    "dotnet-mingw-bootstrap 5ab58f8ba94346c59bc68ab052d8f96f124be323": "24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63"
+  },
+  "initial_build": {
+    "command": "makepkg --cleanbuild --force --noconfirm",
+    "exit_code": 4,
+    "original_SDK_console_LocalAccounts_and_GraphicalHost_builds_passed": true,
+    "LocalAccounts_API_entries_verified": 459,
+    "staged_MOF_checks": 13,
+    "failure": "EmbeddedSmoke Read-Value used Write-Output -NoEnumerate, wrapping a scalar CIM instance in a List<object> and producing a null indexed property argument",
+    "log": "tests/powershell-mmi/embedded-initial-build-20261108.txt"
+  },
+  "fixture_correction": {
+    "change": "Return one scalar or array object with unary comma (return ,$value); copy corrected local fixture into extracted src/ before restaging",
+    "production_compiler_inputs_changed": false,
+    "original_product_build_outputs_reused": true
+  },
+  "final_validation": {
+    "commands": [
+      "makepkg --verifysource --noconfirm",
+      "POWERSHELL_PACKAGE_DIR=\"$srcdir\" POWERSHELL_DESKTOP=1 python3 \"$workflow/stage-package.py\" \"$build\" \"$build/app\" \"$build/licenses\" \"$build/pwsh-launcher.exe\" \"$srcdir/LICENSE.launcher\" \"$build/distribution\"",
+      "bash \"$checks/check-package.sh\" \"$build/distribution\" \"$build/package-check-final\" \"$checks\"",
+      "makepkg --repackage --force --noconfirm"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "source_log": "tests/powershell-mmi/embedded-source-validation-20261108.txt",
+    "package_check_log": "tests/powershell-mmi/embedded-package-check-20261108.txt",
+    "repackage_log": "tests/powershell-mmi/embedded-repackage-20261108.txt"
+  },
+  "verified": [
+    "complete source distribution hashes and declared licenses",
+    "native launcher argument/child/runtime/engine behavior",
+    "full SDK catalog, module discovery, live CIM/GetOwner/serialization, JSON/Add-Type/Authenticode and LocalAccounts",
+    "source MMI/CIM/WMI in STA and MTA",
+    "13 in-process MOF/include/offset/Unicode/lifetime checks",
+    "34 in-process embedded/reference/array/flags/NULL/lifetime and original CIM event-cmdlet checks",
+    "real local DCOM New-CimSession and Register-CimIndicationEvent intrinsic process events",
+    "TargetInstance preserved after unregistration, session removal, outer-event disposal and compacting GC",
+    "source GraphicalHost BAML/Show-Command rasterization",
+    "all six source gallery modules, source NuGet provider, PSReadLine, Unicode archive and ThreadJob/CIM execution"
+  ],
+  "installed_validation": {
+    "install_command": "pacman -U --noconfirm mingw-w64-clang-x86_64-powershell-7.4.20-5-any.pkg.tar.zst",
+    "commands": [
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/MofSmoke.ps1)\"",
+      "timeout -k 10 120 /clang64/bin/pwsh.exe -NoLogo -NoProfile -NonInteractive -MTA -ExecutionPolicy Bypass -File \"$(cygpath -am /clang64/share/doc/powershell/checks/EmbeddedSmoke.ps1)\""
+    ],
+    "exit_code": 0,
+    "MOF_checks_per_mode": 13,
+    "embedded_and_event_checks_per_mode": 34,
+    "loaded_MMI_bytes_match_installed_source_archive": true,
+    "log": "tests/powershell-mmi/embedded-installed-20261108.txt"
+  },
+  "build_diagnostics": {
+    "SDK_CA1846_warnings": 3,
+    "desktop_console_NETSDK1106_warnings": 1,
+    "compiler_errors": 0,
+    "logs": [
+      "tests/powershell-mmi/embedded-sdk-build-20261108.txt",
+      "tests/powershell-mmi/embedded-desktop-build-20261108.txt"
+    ]
+  },
+  "unfinished_MMI_public_method_source_audit": {
+    "method": "Microsoft.Management.Infrastructure.Options.CimSubscriptionDeliveryOptions.AddCredentials",
+    "relative_source_path": "Options/Internal/CimSubscriptionDeliveryOptions.cs",
+    "source_file_sha256": "3c21428cd6a615868f44fc5823c22f167a4cce6fa9febfecbe5e222ca22dea42",
+    "body_excerpt": "public void AddCredentials(string optionName, CimCredential optionValue, UInt32 flags)\n        {\n            if (string.IsNullOrWhiteSpace(optionName) || optionValue == null)\n            {\n                throw new ArgumentNullException(\"optionName\");\n            }\n            if (optionValue == null)\n            {\n                throw new ArgumentNullException(\"optionValue\");\n            }\n            this.AssertNotDisposed();\n\n            // TODO: Implement this\n            //MI_Result result = this._subscriptionDeliveryOptionsHandle.SubscriptionDeliveryOptionsMethods.AddCredentials(optionName, optionValue.GetCredential(), flags);\n            //CimException.ThrowIfMiResultFailure(result);\n        }",
+    "native_credential_call_commented_out": true,
+    "implementation_complete": false,
+    "runtime_credential_behavior_verified": false
+  },
+  "not_verified": [
+    "subscription-delivery credential implementation",
+    "remote CIM/WSMan and explicit authentication",
+    "provider-origin extended semantic callbacks and streamed methods",
+    "broader MMI ownership/MOF/provider behavior",
+    "remaining SqlClient and Windows.Compatibility gates",
+    "UCRT64 build/execution of this revision"
+  ],
+  "artifacts": {
+    "package_archive": "mingw-w64-clang-x86_64-powershell-7.4.20-5-any.pkg.tar.zst",
+    "package_sha256": "a72c119f9d256b3e1605a62eca15db953b64db983fe285af61339a7d1faedfcd",
+    "package_bytes": 20127036,
+    "installed_MMI_DLL_sha256": "874f9651425ba18eee94d95d91b0d905cdc9b8c62ef4107751bfb032c442b403",
+    "MMI_payload_origin": {
+      "sha256": "874f9651425ba18eee94d95d91b0d905cdc9b8c62ef4107751bfb032c442b403",
+      "installed_source_archives": [
+        {
+          "archive": "microsoft.management.infrastructure.3.0.0.nupkg",
+          "asset": "lib/net8.0/Microsoft.Management.Infrastructure.dll"
+        }
+      ]
+    },
+    "MMI_source_owner": {
+      "native_owner": "mingw-w64-clang-x86_64-dotnet-mmi3",
+      "sha256": "7324ebb6ca8317df39033e2c41ad3777ad11340ed3fb4ff1bcc1da528fad490a"
+    },
+    "manifest_file_count": 826,
+    "bundled_application_files": 596,
+    "license_files": 208,
+    "source_package_manifest_sha256": "a377058a28d652fe3035cdef547392edb4efff20fcd05dc147e4c521dd51e8b0",
+    "initial_makepkg_exit_code": 4,
+    "final_package_check_exit_code": 0,
+    "repackage_exit_code": 0,
+    "installed_validation_exit_code": 0
+  },
+  "temporary_build_cleanup": {
+    "removed_root": "/e/codex-dotnet10/powershell-embedded.caSJpz",
+    "logical_bytes_removed": 855156039,
+    "installed_PowerShell_retained": true
+  },
+  "binary_published": false,
+  "full_dependency_goal_complete": false,
+  "inputs_sha256": {
+    "mingw-w64-powershell/launcher.c": "49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5",
+    "mingw-w64-powershell/LICENSE.launcher": "c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde",
+    "mingw-w64-powershell/README.md": "71c6e0a01ecff27e60d5f1438b343b99da179ba071105ac6bcad205f8274a70c",
+    "mingw-w64-powershell/check-package.sh": "3301bd590febcf32494e154bb934a3faaad9f6ae616be4270d867e037ba91ba1",
+    "mingw-w64-powershell/check-launcher.py": "16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1",
+    "mingw-w64-powershell/module-host-audit-source.py": "831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96",
+    "mingw-w64-powershell/MofSmoke.ps1": "0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b",
+    "mingw-w64-powershell/EmbeddedSmoke.ps1": "133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319",
+    "mingw-w64-powershell/stage-mof-check.patch": "249eca9f574e88339dd5b7ef33d8c83dff880fdfb37a610dced46cafe32ce6a3",
+    "mingw-w64-powershell/PKGBUILD": "3623b4c21ce683a5234c7eb2b7e7fcfd354b1f18a3b3e8e393f1a0f984a06ffc"
+  }
+}

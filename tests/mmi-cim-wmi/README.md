@@ -29,9 +29,11 @@ link the [old-package reproduction](embedded-baseline-results-20261108.txt),
 [full package build/check](embedded-package-results-20261108.txt) and
 [installed consumers](embedded-installed-results-20261108.txt).
 
-The package remains experimental and unpublished. PowerShell 7.4.20-4 still
-bundles MMI3 3.0.0-2; it needs a rebuild to pick up this fix. Remote/provider,
-broader MOF/ownership behavior and UCRT64 execution remain open.
+The package remains experimental and unpublished. PowerShell 7.4.20-5 now
+bundles MMI3 3.0.0-3 and passes 13 MOF plus 34 embedded/event-cmdlet checks in
+each of STA and MTA; see [application integration](../powershell-mmi/embedded-integration-results-20261108.json).
+Subscription-delivery credentials, remote/provider, broader MOF/ownership
+behavior and UCRT64 execution remain open.
 
 ## MOF callback and offset port (2026-11-08)
 

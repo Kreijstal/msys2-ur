@@ -45,12 +45,17 @@ MTA modes. The source System.Management8.0.0-2 backend secures each service call
 after CLR marshaling, fixing the STA Access denied failure in release1. A
 standalone STA regression is also included. Direct MMI uses a CLR null
 string for a local session and explicitly disposes its native query enumerator.
-Release 4 requires the source MMI3 package 3.0.0-2 and bundles its MOF callback,
-offset and cleanup fixes. Its additional PowerShell fixture verifies that the
+Release 5 requires the source MMI3 package 3.0.0-3 and bundles its MOF and property
+ownership fixes. Additional PowerShell fixtures verify that the
 loaded MMI DLL matches the installed source package, then exercises Unicode MOF
 includes, a nonzero input offset, retained results after disposal/compacting GC,
 and live CIM cmdlets in the actual application. The fixture parses in-memory MOF;
-it does not register WMI classes or instances. The installed check is:
+it does not register WMI classes or instances. The property fixture checks
+embedded instances/references, array snapshots, live modification flags, empty
+versus NULL arrays and retained values after disposal. It also uses the original
+New-CimSession/Register-CimIndicationEvent cmdlets to verify a real intrinsic
+process event and retained TargetInstance. Only owned child processes and
+temporary subscriptions are used and cleaned up. The installed check is:
 
 ```sh
 bash $MINGW_PREFIX/share/doc/powershell/checks/check-package.sh \

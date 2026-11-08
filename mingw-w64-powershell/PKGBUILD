@@ -3,7 +3,7 @@ _realname=powershell
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=7.4.20
-pkgrel=4
+pkgrel=5
 pkgdesc='Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64' 'ucrt64')
@@ -51,7 +51,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-management>=8.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-markdig>=0.33.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-memory-data>=1.0.2"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-mmi3>=3.0.0-2"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-mmi3>=3.0.0-3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-msal>=4.61.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-msal-extensions>=4.61.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-netcore-platforms>=1.1.2"
@@ -125,18 +125,20 @@ source=('powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerS
         'check-launcher.py'
         'module-host-audit-source.py'
         'MofSmoke.ps1'
+        'EmbeddedSmoke.ps1'
         'stage-mof-check.patch')
 noextract=('powershell-7.4.20.tar.gz')
 sha256sums=('3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb'
             '24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63'
             '49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5'
             'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
-            '93b1b2d9624a8d826027d93a7fd47892fe295f99fea9f44e39ca85ddb9463acb'
-            '5ba39628071d08b7acda89c4412d9ddeb65c5fa9f3128f1730c2db3dedee71e5'
+            '71c6e0a01ecff27e60d5f1438b343b99da179ba071105ac6bcad205f8274a70c'
+            '3301bd590febcf32494e154bb934a3faaad9f6ae616be4270d867e037ba91ba1'
             '16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1'
             '831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96'
             '0cc52d2dfedb9a9925b014cf47991d7c3a0f43f0f9bf1cc8ff990e508cd7e64b'
-            'd0bfc36b0c508d7cb0dd7a7caa2c783aa52ec9f0eb8377ecb2c9ace75261d73f')
+            '133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319'
+            '249eca9f574e88339dd5b7ef33d8c83dff880fdfb37a610dced46cafe32ce6a3')
 if [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]]; then
   depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
   makedepends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")

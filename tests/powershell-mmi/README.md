@@ -1,4 +1,38 @@
-# PowerShell integration of MMI3 3.0.0-2
+# PowerShell integration of source MMI3
+
+## Embedded values and real event cmdlets: PowerShell 7.4.20-5
+
+The current package bundles **MMI3 3.0.0-3**. Its original SDK, console,
+LocalAccounts and GraphicalHost source builds passed. The first package check
+found a fixture bug: `Write-Output -NoEnumerate` wrapped a scalar CIM instance in
+a list. Changing the helper to `return ,$value` fixed it. The corrected fixture
+was copied into the extracted sources, the distribution/manifest regenerated,
+the full package checks rerun, and `makepkg --repackage --force --noconfirm`
+completed successfully. Product compiler inputs were unchanged by this fixture
+correction; the built source outputs were reused.
+
+After installation, **13 MOF checks** and **34 embedded/event checks** passed in
+each of STA and MTA. The latter checks independently owned embedded instances
+and references, array snapshots, current flags, empty versus NULL values and
+lifetime after disposal/GC. It uses the original `New-CimSession` and
+`Register-CimIndicationEvent` cmdlets for a real local DCOM intrinsic process
+event, retaining `TargetInstance` after unregistration, session removal,
+outer-event disposal and compacting GC. Every run compares the bundled MMI DLL
+against the installed source archive.
+
+[Exact commands, hashes, initial failure, final results and remaining scope](embedded-integration-results-20261108.json)
+link the [final package check](embedded-package-check-20261108.txt),
+[repackage](embedded-repackage-20261108.txt) and
+[installed STA/MTA log](embedded-installed-20261108.txt). Run the installed
+`MofSmoke.ps1` and `EmbeddedSmoke.ps1` scripts with `-STA` or `-MTA`, passing
+`-ExecutionPolicy Bypass` only for that test process. They need the installed MMI
+source archive for the byte comparison.
+
+This binary remains unpublished. A source audit confirms that public
+`CimSubscriptionDeliveryOptions.AddCredentials` is still a no-op after validation;
+its native call is commented out. Remote/provider, broader ownership, SqlClient,
+Windows.Compatibility and UCRT64 gates also remain open. The earlier release-4
+record below retains its original scope and hashes.
 
 PowerShell 7.4.20-4 was rebuilt and installed on `win11` in CLANG64. Its bundled
 MMI implementation matches the source archive from MMI3 3.0.0-2, including the
