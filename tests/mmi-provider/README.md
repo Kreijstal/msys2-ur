@@ -58,3 +58,9 @@ mode in both environments after the clone rollback fixes.
 [Current revision evidence](instance-results-20261108.json) includes fresh
 source archive/DLL hashes and an independent namespace/COM/provider-host audit.
 The native cancellation-query limitation remains unchanged.
+
+The **MMI3 3.0.0-8 / PowerShell 7.4.20-10** regression also passed the native
+client, 116 managed checks and 24 original cmdlet checks per STA/MTA mode in
+both environments. [Empty-MOF-fix regression evidence](mof-semantics-results-20261108.json)
+records the source identities and independent cleanup audit; WinRM remained
+stopped with manual startup.

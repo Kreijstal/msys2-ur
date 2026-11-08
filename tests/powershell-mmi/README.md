@@ -1,5 +1,29 @@
 # PowerShell integration of source MMI3
 
+## Empty MOF results: PowerShell 7.4.20-10 (2026-11-08)
+
+**7.4.20-10** bundles **MMI3 3.0.0-8** and verifies successful zero-instance
+results from class-only MOF documents. Both clean CLANG64/UCRT64 builds passed
+all source, API, license and behavior gates, including CLANG64 desktop rendering.
+All compiler invocations have zero errors; the original CA1846 and desktop
+NETSDK1106 warning counts are preserved in the linked compiler logs.
+
+Installed checks passed **15 MOF, 34 embedded/event, 25 delivery, 943 metadata
+and 14 repository-write checks** in each STA/MTA mode, in both environments.
+The bundled MMI bytes match the installed source archives. The dependency gate
+also passed **525 native-codec semantic checks** and **33 MOF checks**, following
+four reproduced baseline failures and independent native-only controls.
+
+[Commands, build/installed logs and input/artifact hashes](mof-semantics-integration-results-20261108.json)
+record this revision. The [real provider regression](../mmi-provider/mof-semantics-results-20261108.json)
+passed 116 managed checks and 24 original Invoke-CimMethod checks per mode in
+each environment. Independent namespace/COM/provider-host cleanup passed; WinRM
+remained stopped with manual startup.
+
+Remote authentication, remaining MOF/provider/ownership behavior, SqlClient and
+Windows.Compatibility stay open. Experimental binaries are unpublished. Earlier
+sections retain their original revision and scope.
+
 ## Instance-clone rollback integration: PowerShell 7.4.20-9 (2026-11-08)
 
 **7.4.20-9** bundles **MMI3 3.0.0-7**, including both clone rollback fixes.

@@ -14,7 +14,9 @@ types, exact scalar/array values, NULL/empty arrays, schema policies, consumed
 lengths, errors and retained results are compared with the actual Windows codec.
 Native rejections of seven numeric empty-array literals are preserved and
 recorded. [Commands, baseline/control/package/installed evidence and hashes](../mmi-mof-semantics/package-results-20261108.json)
-record the scope. PowerShell 7.4.20-10 integration builds are running. Broader
+record the scope. Both PowerShell 7.4.20-10 clean builds and installed
+[STA/MTA application/provider regressions](../powershell-mmi/mof-semantics-integration-results-20261108.json)
+passed. Broader
 MOF/provider/ownership behavior, remote authentication and the other dependency
 gates remain open; experimental binaries remain unpublished.
 

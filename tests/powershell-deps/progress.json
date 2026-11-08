@@ -1350,6 +1350,7 @@
         "PowerShell-required MMI 3.0 full application/behavior compatibility"
       ],
       "verified": [
+        "PowerShell7.4.20-10 bundles MMI3 3.0.0-8; installed15 MOF checks,all property/delivery/metadata/persistence fixtures and116 provider/24 original method-cmdlet checks per mode pass in CLANG64/UCRT64 (tests/powershell-mmi/mof-semantics-integration-results-20261108.json)",
         "MMI3 3.0.0-8: class-only MOF empty instance-result regression corrected;525 native-codec/managed type,encoding,schema-policy/error/offset/lifetime checks and33 MOF checks per CLANG64/UCRT64 environment, with independent native-only controls (tests/mmi-mof-semantics/package-results-20261108.json)",
         "MMI3 3.0.0-7 class/instance clone rollback preserves source handles and cleans partial output clones;430 failure-injection checks per family; PowerShell7.4.20-9 passes installed MOF/property/delivery/metadata and14 original CIM repository-write checks in each STA/MTA mode in CLANG64/UCRT64;116 real provider and24 original Invoke-CimMethod checks per mode also pass (tests/powershell-mmi/instance-clone-integration-results-20261108.json)",
         "Real compiled MI provider: 116 default/DCOM callback/reply/stream/lifetime/fault/cancellation checks per CLANG64/UCRT64 environment; original Invoke-CimMethod passes24 checks in each STA/MTA mode; provider namespace/COM/host cleanup verified (tests/mmi-provider/results-20261108.json)",
@@ -1379,8 +1380,8 @@
         "fresh exact-version3.0.0 installed feed and same-process MMI3/WMI integration",
         "original source PowerShell7.4.20/CimCmdlets local queries/classes/GetOwner/errors/CIM serialization and same-runspace WMI/GC"
       ],
-      "actual_powershell_integration_evidence": "tests/powershell-mmi/instance-clone-integration-results-20261108.json",
-      "provider_PowerShell_integration_evidence": "tests/mmi-provider/instance-results-20261108.json"
+      "actual_powershell_integration_evidence": "tests/powershell-mmi/mof-semantics-integration-results-20261108.json",
+      "provider_PowerShell_integration_evidence": "tests/mmi-provider/mof-semantics-results-20261108.json"
     },
     {
       "component": "System.Management native helper",
@@ -36980,9 +36981,10 @@
       "MOF_checks_per_environment": 33,
       "baseline_native_success_vs_managed_NullReferenceException_reproduced": true,
       "native_only_encoding_controls": 4,
-      "PowerShell_application_rebuild_pending": true,
+      "PowerShell_application_rebuild_pending": false,
       "complete": false,
-      "binary_published": false
+      "binary_published": false,
+      "PowerShell_integration_evidence": "tests/powershell-mmi/mof-semantics-integration-results-20261108.json"
     },
     "runtime_current_forwarders": {
       "evidence": "tests/runtime-servicing/current-forwarder-results-20261108.json",
@@ -36994,6 +36996,46 @@
       "forwarding_checks_per_environment": 6,
       "fresh_source_archive_identity_verified": true,
       "full_dependency_goal_complete": false
+    },
+    "powershell_empty_MOF_integration": {
+      "evidence": "tests/powershell-mmi/mof-semantics-integration-results-20261108.json",
+      "powershell_package_version": "7.4.20-10",
+      "bundled_mmi_package_version": "3.0.0-8",
+      "clean_makepkg_build_and_all_checks_passed": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "installed_MOF_checks_per_mode_per_environment": 15,
+      "installed_embedded_event_checks_per_mode_per_environment": 34,
+      "installed_delivery_checks_per_mode_per_environment": 25,
+      "installed_metadata_checks_per_mode_per_environment": 943,
+      "installed_CIM_repository_write_checks_per_mode_per_environment": 14,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "full_dependency_goal_complete": false,
+      "binary_published": false
+    },
+    "mmi_provider_after_empty_MOF_fix": {
+      "evidence": "tests/mmi-provider/mof-semantics-results-20261108.json",
+      "mmi_package_version": "3.0.0-8",
+      "powershell_package_version": "7.4.20-10",
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "managed_checks_per_environment": 116,
+      "original_InvokeCimMethod_checks_per_mode_per_environment": 24,
+      "independent_namespace_COM_host_cleanup_verified": true,
+      "authenticated_remote_CIM_WSMan_verified": false,
+      "full_dependency_goal_complete": false
+    },
+    "mof_semantics_integration_cleanup": {
+      "evidence": "tests/powershell-mmi/mof-semantics-cleanup-20261108.json",
+      "logical_bytes_removed": 1676078337,
+      "installed_packages_retained": true,
+      "source_recipes_and_evidence_retained": true
     }
   }
 }

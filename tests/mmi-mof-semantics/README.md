@@ -48,3 +48,9 @@ follow Microsoft's [numeric](https://learn.microsoft.com/en-us/windows/win32/wmi
 [string](https://learn.microsoft.com/en-us/windows/win32/wmisdk/strings) and
 [qualifier](https://learn.microsoft.com/en-us/windows/win32/wmisdk/standard-qualifiers)
 documentation; observed codec behavior remains authoritative for parity checks.
+
+[Exact package evidence](package-results-20261108.json) records both reproduced
+baselines, native-only controls and the passing 525 semantic/33 MOF checks per
+environment. [PowerShell 7.4.20-10 integration](../powershell-mmi/mof-semantics-integration-results-20261108.json)
+passed clean builds, all installed fixtures and real provider regressions in
+CLANG64/UCRT64, including 15 MOF checks in each STA/MTA mode.

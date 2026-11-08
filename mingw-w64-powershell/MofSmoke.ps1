@@ -55,6 +55,12 @@ Require ($deserialize.Count -eq 1) 'Internal MOF callback entrypoint is unambigu
 $reader = $create.Invoke($null, [object[]]@())
 $rows = @()
 try {
+    $schema = "class MSYS2_EmptyPowerShellMof { uint32 Id; };`n"
+    [byte[]] $schemaBytes = [Text.Encoding]::Unicode.GetPreamble() + [Text.Encoding]::Unicode.GetBytes($schema)
+    [object[]] $emptyArguments = @($schemaBytes, [uint32]0, $null, $null)
+    $emptyRows = @($deserialize[0].Invoke($reader, $emptyArguments))
+    Require ($emptyRows.Count -eq 0) 'Class-only MOF succeeds with no instances'
+    Require ($emptyArguments[1] -eq $schemaBytes.Length) 'Empty instance result advances the input offset'
     $text = "#pragma include (`"schema-雪.mof`")`ninstance of MSYS2_PowerShellMof { Id=42; Label=`"PowerShell 雪 λ`"; };`n"
     [byte[]] $bytes = @([byte]0xa5) * 5 + [Text.Encoding]::Unicode.GetPreamble() + [Text.Encoding]::Unicode.GetBytes($text)
     [object[]] $arguments = @($bytes, [uint32]5, $null, $include)
