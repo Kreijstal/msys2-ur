@@ -1,0 +1,9 @@
+Injected Int32 in place of MI_Boolean byte: rejected with exit 1
+Traceback (most recent call last):
+  File "/home/kreijstal/git/msys2-ur/tests/mmi-callback-abi/compare.py", line 70, in <module>
+    compare(name, native['typedefs'][name]['qualType'], target)
+    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kreijstal/git/msys2-ur/tests/mmi-callback-abi/compare.py", line 53, in compare
+    assert m['type'] == 'System.Byte' and m['marshal_as'] is None, (name, c, m)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('MI_OperationCallback_Instance', 'MI_Boolean', {'name': 'moreResults', 'type': 'System.Int32', 'marshal_as': None, 'enum_size': None})

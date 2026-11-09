@@ -26,6 +26,12 @@ PowerShell 7.4.20-24 bundle identity/ABI and all409 synchronous assertions per
 STA/MTA mode also pass in both environments.
 [ABI audit, baseline and owned native probes](../mmi-native-abi/README.md).
 
+The installed release18/PowerShell24 assemblies also pass 19 callback signature
+comparisons (14 delegates,74 parameters), actual nine-slot callback storage and
+four Windows system export checks in both environments. No production changes
+were required. Private codec and live provider/database requirements remain open.
+[Callback and export evidence](../mmi-callback-abi/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

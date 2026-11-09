@@ -1,0 +1,342 @@
+{
+  "scope": "PowerShell 7.4.20 / .NET 8.0.31; installed MMI3 3.0.0-18 callback declarations, callback storage and system export availability",
+  "previous_goal_turn_classification": "no progress: user-facing dependency status only",
+  "this_goal_turn_classification": "progress: completed independent callback declaration and export evidence in both environments",
+  "production_code_changed": false,
+  "package_rebuild_required": false,
+  "binary_publication_performed": false,
+  "environments": {
+    "clang64": {
+      "command": "MINGW_PREFIX=/clang64 bash tests/mmi-callback-abi/check.sh clang64-final",
+      "exit_code": 0,
+      "comparison": {
+        "callback_signature_comparisons": 19,
+        "distinct_managed_delegates": 14,
+        "outer_parameters_compared": 74,
+        "comparisons": [
+          {
+            "native": "MI_OperationCallback_PromptUser",
+            "managed": "PromptCallback",
+            "parameters": 5,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, MI_PromptType, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteError",
+            "managed": "ErrorCallback",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, MI_Instance *, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteMessage",
+            "managed": "MessageCallback",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteProgress",
+            "managed": "ProgressCallback",
+            "parameters": 7,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Instance",
+            "managed": "InstanceCallback",
+            "parameters": 8,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Instance *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Indication",
+            "managed": "IndicationCallback",
+            "parameters": 10,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Instance *, const MI_Char *, const MI_Char *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Class",
+            "managed": "InstanceCallback",
+            "parameters": 8,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Class *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_StreamedParameter",
+            "managed": "StreamedCallback",
+            "parameters": 6,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, MI_Type, const MI_Value *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_PromptUser.reply_or_ack",
+            "managed": "ReplyCallback",
+            "parameters": 2,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteError.reply_or_ack",
+            "managed": "ReplyCallback",
+            "parameters": 2,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Instance.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Indication.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Class.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_StreamedParameter.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_ClassObjectNeeded",
+            "managed": "MI_Deserializer_ClassObjectNeededNative",
+            "parameters": 5,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Class **) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_MainFunction",
+            "managed": "MI_MainFunction",
+            "parameters": 1,
+            "calling_convention": "Cdecl",
+            "signature": "MI_Module *(*)(MI_Server *) __attribute__((cdecl))"
+          },
+          {
+            "native": "MI_SessionCallbacks.writeMessage",
+            "managed": "MI_SessionCallbacks_WriteMessageNative",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Application *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_SessionCallbacks.writeError",
+            "managed": "MI_SessionCallbacks_WriteErrorNative",
+            "parameters": 3,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Application *, void *, MI_Instance *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_SessionFT.Close.completion",
+            "managed": "MI_Session_Close_CompletionCallback",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(void *) __attribute__((stdcall))"
+          }
+        ],
+        "callback_storage_bytes": 72,
+        "populated_callback_slots": 8,
+        "system_exports_found": 4,
+        "pinvoke_policies_checked": 6,
+        "declaration_divergences": [],
+        "provider_behavior_verified": false,
+        "private_codec_prototypes_verified": false,
+        "full_dependency_goal_complete": false,
+        "checker_sha256": "ba68fffae494bf57afe82163ff0a30185b773f8539aa807bae650ffbde07816e"
+      },
+      "artifact_identity": {
+        "feed_sha256": "d1a39e6edc9b87ee534782546b55c611d0566e88528948580509570b56323126",
+        "bundled_mmi_sha256": "cc2d9f5a4bacff7096498f378e4d16bf889960bac7b5a76e3c0909cd9916ccca",
+        "source_archive_and_bundle_match": true
+      },
+      "malformed_boolean_signature_rejected": true
+    },
+    "ucrt64": {
+      "command": "MINGW_PREFIX=/ucrt64 bash tests/mmi-callback-abi/check.sh ucrt64-final",
+      "exit_code": 0,
+      "comparison": {
+        "callback_signature_comparisons": 19,
+        "distinct_managed_delegates": 14,
+        "outer_parameters_compared": 74,
+        "comparisons": [
+          {
+            "native": "MI_OperationCallback_PromptUser",
+            "managed": "PromptCallback",
+            "parameters": 5,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, MI_PromptType, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteError",
+            "managed": "ErrorCallback",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, MI_Instance *, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteMessage",
+            "managed": "MessageCallback",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteProgress",
+            "managed": "ProgressCallback",
+            "parameters": 7,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Instance",
+            "managed": "InstanceCallback",
+            "parameters": 8,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Instance *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Indication",
+            "managed": "IndicationCallback",
+            "parameters": 10,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Instance *, const MI_Char *, const MI_Char *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Class",
+            "managed": "InstanceCallback",
+            "parameters": 8,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Class *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_StreamedParameter",
+            "managed": "StreamedCallback",
+            "parameters": 6,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Operation *, void *, const MI_Char *, MI_Type, const MI_Value *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_PromptUser.reply_or_ack",
+            "managed": "ReplyCallback",
+            "parameters": 2,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_WriteError.reply_or_ack",
+            "managed": "ReplyCallback",
+            "parameters": 2,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Instance.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Indication.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_Class.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_OperationCallback_StreamedParameter.reply_or_ack",
+            "managed": "Acknowledge",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_ClassObjectNeeded",
+            "managed": "MI_Deserializer_ClassObjectNeededNative",
+            "parameters": 5,
+            "calling_convention": "StdCall",
+            "signature": "MI_Result (*)(void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Class **) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_MainFunction",
+            "managed": "MI_MainFunction",
+            "parameters": 1,
+            "calling_convention": "Cdecl",
+            "signature": "MI_Module *(*)(MI_Server *) __attribute__((cdecl))"
+          },
+          {
+            "native": "MI_SessionCallbacks.writeMessage",
+            "managed": "MI_SessionCallbacks_WriteMessageNative",
+            "parameters": 4,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Application *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_SessionCallbacks.writeError",
+            "managed": "MI_SessionCallbacks_WriteErrorNative",
+            "parameters": 3,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(MI_Application *, void *, MI_Instance *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_SessionFT.Close.completion",
+            "managed": "MI_Session_Close_CompletionCallback",
+            "parameters": 1,
+            "calling_convention": "StdCall",
+            "signature": "void (*)(void *) __attribute__((stdcall))"
+          }
+        ],
+        "callback_storage_bytes": 72,
+        "populated_callback_slots": 8,
+        "system_exports_found": 4,
+        "pinvoke_policies_checked": 6,
+        "declaration_divergences": [],
+        "provider_behavior_verified": false,
+        "private_codec_prototypes_verified": false,
+        "full_dependency_goal_complete": false,
+        "checker_sha256": "ba68fffae494bf57afe82163ff0a30185b773f8539aa807bae650ffbde07816e"
+      },
+      "artifact_identity": {
+        "feed_sha256": "a84487624662256404bcfd0e698d24a24a25f518146eb302aebb7d260d4522d8",
+        "bundled_mmi_sha256": "548a3faa5088639af0d9bb1b7b5ed46b890ed3eb66571a782b100fff71f3e5de",
+        "source_archive_and_bundle_match": true
+      },
+      "malformed_boolean_signature_rejected": true
+    }
+  },
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "Authenticated remote CIM/WSMan and broader provider behavior",
+    "Private codec table/prototype audit",
+    "Real SQL Server, LocalDB and FILESTREAM integration",
+    "Broader Windows.Compatibility graph behavior"
+  ],
+  "inputs_sha256": {
+    "tests/mmi-callback-abi/InspectCallbacks.cs": "e68c696658202b028f1465ac6a5dda7cfa00758c1136f66f6b52631535130d2e",
+    "tests/mmi-callback-abi/callback-layout.c": "0672dab5ec154bdcf01bcdd09ffb9d2916b739f7fd0af4f6dd9ce9263c0c1348",
+    "tests/mmi-callback-abi/capture.py": "48312f1e4336c9e40fd442fc8358f1281543376bf76b69a321d6a93047f452f0",
+    "tests/mmi-callback-abi/check.sh": "fb039c391f9c1c0f8f010b1aaa164df1b200e15ca6b44a6e2acc8329f3633853",
+    "tests/mmi-callback-abi/compare.py": "ba68fffae494bf57afe82163ff0a30185b773f8539aa807bae650ffbde07816e"
+  }
+}

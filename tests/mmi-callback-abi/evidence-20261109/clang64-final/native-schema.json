@@ -1,0 +1,142 @@
+{
+  "typedefs": {
+    "MI_MainFunction": {
+      "qualType": "MI_Module *(*)(MI_Server *) __attribute__((cdecl))"
+    },
+    "MI_OperationCallback_ResponseType": {
+      "qualType": "enum _MI_OperationCallback_ResponseType"
+    },
+    "MI_OperationCallback_PromptUser": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Char *, MI_PromptType, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_WriteError": {
+      "qualType": "void (*)(MI_Operation *, void *, MI_Instance *, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_WriteMessage": {
+      "qualType": "void (*)(MI_Operation *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_WriteProgress": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_Instance": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Instance *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_StreamedParameter": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Char *, MI_Type, const MI_Value *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_Indication": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Instance *, const MI_Char *, const MI_Char *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_OperationCallback_Class": {
+      "qualType": "void (*)(MI_Operation *, void *, const MI_Class *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))"
+    },
+    "MI_Deserializer_ClassObjectNeeded": {
+      "qualType": "MI_Result (*)(void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Class **) __attribute__((stdcall))"
+    }
+  },
+  "records": {
+    "_MI_OperationCallbacks": [
+      {
+        "name": "callbackContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "promptUser",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Char *, MI_PromptType, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_PromptUser",
+          "typeAliasDeclId": "0x1cc47572550"
+        }
+      },
+      {
+        "name": "writeError",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, MI_Instance *, MI_Result (*)(MI_Operation *, MI_OperationCallback_ResponseType) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_WriteError",
+          "typeAliasDeclId": "0x1cc47572b48"
+        }
+      },
+      {
+        "name": "writeMessage",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_WriteMessage",
+          "typeAliasDeclId": "0x1cc47572fc8"
+        }
+      },
+      {
+        "name": "writeProgress",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_WriteProgress",
+          "typeAliasDeclId": "0x1cc47573630"
+        }
+      },
+      {
+        "name": "instanceResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Instance *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_Instance",
+          "typeAliasDeclId": "0x1cc4757a7b8"
+        }
+      },
+      {
+        "name": "indicationResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Instance *, const MI_Char *, const MI_Char *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_Indication",
+          "typeAliasDeclId": "0x1cc4757b788"
+        }
+      },
+      {
+        "name": "classResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Class *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_Class",
+          "typeAliasDeclId": "0x1cc4757bf68"
+        }
+      },
+      {
+        "name": "streamedParameterResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Char *, MI_Type, const MI_Value *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_StreamedParameter",
+          "typeAliasDeclId": "0x1cc4757ae68"
+        }
+      }
+    ],
+    "_MI_SessionCallbacks": [
+      {
+        "name": "callbackContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "writeMessage",
+        "type": {
+          "qualType": "void (*)(MI_Application *, void *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+        }
+      },
+      {
+        "name": "writeError",
+        "type": {
+          "qualType": "void (*)(MI_Application *, void *, MI_Instance *) __attribute__((stdcall))"
+        }
+      }
+    ],
+    "_MI_SessionFT": [
+      {
+        "name": "Close",
+        "type": {
+          "qualType": "MI_Result (*)(MI_Session *, void *, void (*)(void *) __attribute__((stdcall))) __attribute__((stdcall))"
+        }
+      }
+    ]
+  },
+  "header_sha256": "038bd5a0a8e637e62eef3cb98f909aad7fd264341db24e62a81af85bb227e0e5",
+  "header_owner": "/clang64/include/mi.h is owned by mingw-w64-clang-x86_64-headers 14.0.0.r598.ge3d18511f-1",
+  "compiler": "clang version 23.1.5 (https://github.com/msys2/MINGW-packages efc96badda99c076509ef01986c673d1cd30f725)"
+}

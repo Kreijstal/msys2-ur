@@ -1,6 +1,6 @@
 {
   "scope": "PowerShell 7.4.20 / .NET 8.0.31, CLANG64 and UCRT64",
-  "previous_goal_turn_classification": "progress",
+  "previous_goal_turn_classification": "no progress: dependency status response only",
   "full_dependency_goal_complete": false,
   "verified_direct_dependency_ids": 50,
   "total_direct_dependency_ids": 53,
@@ -28,7 +28,8 @@
       "native_sync_ownership_evidence": "tests/mmi-sync-results/package-results-20261109.json",
       "PowerShell_application_rebuild_pending": false,
       "known_missing_inventory_is_not_a_complete_native_behavior_audit": true,
-      "public_native_ABI_evidence": "tests/mmi-native-abi/package-results-20261109.json"
+      "public_native_ABI_evidence": "tests/mmi-native-abi/package-results-20261109.json",
+      "callback_declaration_and_export_evidence": "tests/mmi-callback-abi/results-20261109.json"
     },
     {
       "id": "System.Data.SqlClient",
@@ -144,13 +145,14 @@
     }
   ],
   "next_safe_implementation_action": {
-    "component": "Remaining private codec/callback/export and provider compatibility audit",
+    "component": "Remaining private codec and provider compatibility audit",
     "work": [
-      "Review private MOF/XML tables, callback signatures and native exports outside the public-table audit",
+      "Review private MOF/XML tables and codec prototypes outside the public-table and callback audits",
       "Run authenticated remote/provider and database integration when authorized settings are available"
     ],
-    "status": "No further confirmed public-table declaration divergence in this scoped audit",
+    "status": "Public table and scoped callback declarations match; four required native exports exist in both environments",
     "implemented": false,
     "full_dependency_goal_complete": false
-  }
+  },
+  "this_goal_turn_classification": "progress: independent callback ABI and system-export audit completed in CLANG64 and UCRT64"
 }
