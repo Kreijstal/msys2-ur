@@ -39,9 +39,10 @@
         "Internal/Operations/CimSyncClassEnumerator.cs",
         "Internal/Operations/CimSyncEnumeratorBase.cs"
       ],
-      "observed_source_flow": "Retrieval allocates indirect wrapper cells. Instance/class enumerators overwrite borrowed wrappers with clones, while MoveNext does not dispose the completion-details wrapper. These native wrapper classes have no allocation finalizer.",
+      "observed_source_flow": "Retrieval allocates indirect wrapper cells. Instance/class enumerators overwrite borrowed wrappers with clones, while MoveNext does not dispose the completion-details wrapper. MI_Instance has no allocation finalizer. MI_Class has a borrowed-cell finalizer, so its cleanup is deferred rather than necessarily permanently leaked.",
       "inference": "Borrowed wrapper cells may be abandoned across synchronous retrievals; trace allocation/disposal and exceptional exits without deleting the borrowed native results",
-      "runtime_verified": false
+      "runtime_verified": false,
+      "review_correction_20261109": "The prior wording incorrectly included MI_Class among wrappers without finalizers; its release-16 source already has one. Instance/completion-details cells still require explicit cleanup."
     }
   ],
   "next_safe_action": "Clone operation-owned synchronous indications regardless of shortened result lifetime; cover clone failure and borrowed wrapper cleanup before packaging",
@@ -51,5 +52,8 @@
     "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/SyncProbe.c": "8b3d4944d22f9f423f9c9a18253ebea69ea18b72a8f4a640e91f32721a7b6476",
     "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/SyncProbe.cs": "0d126f2ea23e7fc987c3a5fd8f50bb206fe57312329cd2b6e03fedcaa7344043",
     "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/check.sh": "0c876b3356dcc859492ad3a56f00f3bf1a42475a664d5d36c8aaacea2935d4ad"
-  }
+  },
+  "resolution_evidence": "tests/mmi-sync-results/package-results-20261109.json",
+  "resolved_package_version": "3.0.0-17",
+  "resolution_scope": "Reproduced shortened source deletion and transient cell cleanup covered by fixed production and private allocation tracing fixtures; broader ownership audit remains open"
 }

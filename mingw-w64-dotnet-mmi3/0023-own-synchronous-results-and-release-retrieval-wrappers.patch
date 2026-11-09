@@ -1,0 +1,430 @@
+--- a/Internal/Operations/CimSyncInstanceEnumerator.cs
++++ b/Internal/Operations/CimSyncInstanceEnumerator.cs
+@@ -43,15 +43,35 @@
+                 out errorMessage,
+                 out errorDetailsHandle);
+ 
+-            if ((instanceHandle != null) && !instanceHandle.IsNull)
++            MI_Instance owned = null;
++            try
+             {
+-                instanceHandle = instanceHandle.Clone();
+-                currentItem = new CimInstance(instanceHandle);
+-                currentItem.SetCimSessionComputerName(this._CimSessionComputerName);
+-                currentItem.SetCimSessionInstanceId(this._CimSessionInstanceID);
++                if (functionResult == MI_Result.MI_RESULT_OK && operationResult == MI_Result.MI_RESULT_OK &&
++                    instanceHandle != null && !instanceHandle.IsNull)
++                {
++                    // Native retrieval results belong to the operation, even
++                    // when the caller requests shortened managed lifetimes.
++                    owned = instanceHandle.Clone();
++                    currentItem = new CimInstance(owned);
++                    owned = null;
++                    currentItem.SetCimSessionComputerName(this._CimSessionComputerName);
++                    currentItem.SetCimSessionInstanceId(this._CimSessionInstanceID);
++                }
++                return functionResult;
+             }
+-
+-            return functionResult;
++            catch
++            {
++                currentItem?.Dispose();
++                currentItem = null;
++                if (owned != null)
++                {
++                    try { owned.Delete(); } finally { owned.Dispose(); }
++                }
++                errorDetailsHandle?.Dispose();
++                errorDetailsHandle = null;
++                throw;
++            }
++            finally { instanceHandle?.Dispose(); }
+         }
+     }
+ }
+--- a/Internal/Operations/CimSyncClassEnumerator.cs
++++ b/Internal/Operations/CimSyncClassEnumerator.cs
+@@ -36,13 +36,33 @@
+                 out errorMessage,
+                 out errorDetailsHandle);
+ 
+-            if ((classHandle != null) && !classHandle.IsNull)
++            MI_Class owned = null;
++            try
+             {
+-                classHandle = classHandle.Clone();
+-                currentItem = new CimClass(classHandle);
++                if (functionResult == MI_Result.MI_RESULT_OK && operationResult == MI_Result.MI_RESULT_OK &&
++                    classHandle != null && !classHandle.IsNull)
++                {
++                    // Native retrieval results belong to the operation, even
++                    // when the caller requests shortened managed lifetimes.
++                    owned = classHandle.Clone();
++                    currentItem = new CimClass(owned);
++                    owned = null;
++                }
++                return functionResult;
+             }
+-
+-            return functionResult;
++            catch
++            {
++                currentItem?.Dispose();
++                currentItem = null;
++                if (owned != null)
++                {
++                    try { owned.Delete(); } finally { owned.Dispose(); }
++                }
++                errorDetailsHandle?.Dispose();
++                errorDetailsHandle = null;
++                throw;
++            }
++            finally { classHandle?.Dispose(); }
+         }
+     }
+ }
+--- a/Internal/Operations/CimSyncIndicationEnumerator.cs
++++ b/Internal/Operations/CimSyncIndicationEnumerator.cs
+@@ -40,16 +40,33 @@
+                 out errorMessage,
+                 out errorDetailsHandle);
+ 
+-            if ((instanceHandle != null) && !instanceHandle.IsNull)
++            MI_Instance owned = null;
++            try
+             {
+-                if (!this.ShortenLifetimeOfResults)
++                if (functionResult == MI_Result.MI_RESULT_OK && operationResult == MI_Result.MI_RESULT_OK &&
++                    instanceHandle != null && !instanceHandle.IsNull)
+                 {
+-                    instanceHandle = instanceHandle.Clone();
++                    // Native retrieval results belong to the operation, even
++                    // when the caller requests shortened managed lifetimes.
++                    owned = instanceHandle.Clone();
++                    currentItem = new CimSubscriptionResult(owned, bookmark, machineID);
++                    owned = null;
+                 }
+-                currentItem = new CimSubscriptionResult(instanceHandle, bookmark, machineID);
++                return functionResult;
+             }
+-
+-            return functionResult;
++            catch
++            {
++                currentItem?.Dispose();
++                currentItem = null;
++                if (owned != null)
++                {
++                    try { owned.Delete(); } finally { owned.Dispose(); }
++                }
++                errorDetailsHandle?.Dispose();
++                errorDetailsHandle = null;
++                throw;
++            }
++            finally { instanceHandle?.Dispose(); }
+         }
+     }
+ }
+--- a/Native/MI_Operation.cs
++++ b/Native/MI_Operation.cs
+@@ -107,21 +107,34 @@
+             )
+         {
+             MI_Instance instanceLocal = MI_Instance.NewIndirectPtr();
+-            MI_String errorMessageLocal = MI_String.NewIndirectPtr();
+-            MI_Instance completionDetailsLocal = MI_Instance.NewIndirectPtr();
+-
+-            MI_Result resultLocal = this.ft.GetInstance(this,
+-                instanceLocal,
+-                out moreResults,
+-                out result,
+-                errorMessageLocal,
+-                completionDetailsLocal);
+-
+-            instance = instanceLocal;
+-            errorMessage = errorMessageLocal.Value;
+-            completionDetails = completionDetailsLocal;
+-            ThrowCallbackError();
+-            return resultLocal;
++            MI_Instance completionDetailsLocal = null;
++            try
++            {
++                completionDetailsLocal = MI_Instance.NewIndirectPtr();
++                MI_String errorMessageLocal = MI_String.NewIndirectPtr();
++
++
++                MI_Result resultLocal = this.ft.GetInstance(this,
++                    instanceLocal,
++                    out moreResults,
++                    out result,
++                    errorMessageLocal,
++                    completionDetailsLocal);
++
++                errorMessage = errorMessageLocal.Value;
++                ThrowCallbackError();
++                instance = instanceLocal;
++                completionDetails = completionDetailsLocal;
++                return resultLocal;
++            }
++            catch
++            {
++                instanceLocal.Dispose();
++                completionDetailsLocal?.Dispose();
++                instance = null;
++                completionDetails = null;
++                throw;
++            }
+         }
+ 
+         internal MI_Result GetIndication(
+@@ -135,27 +148,40 @@
+             )
+         {
+             MI_Instance instanceLocal = MI_Instance.NewIndirectPtr();
+-            MI_String bookmarkLocal = MI_String.NewIndirectPtr();
+-            MI_String machineIDLocal = MI_String.NewIndirectPtr();
+-            MI_String errorMessageLocal = MI_String.NewIndirectPtr();
+-            MI_Instance completionDetailsLocal = MI_Instance.NewIndirectPtr();
+-
+-            MI_Result resultLocal = this.ft.GetIndication(this,
+-                instanceLocal,
+-                bookmarkLocal,
+-                machineIDLocal,
+-                out moreResults,
+-                out result,
+-                errorMessageLocal,
+-                completionDetailsLocal);
+-
+-            instance = instanceLocal;
+-            bookmark = bookmarkLocal.Value;
+-            machineID = machineIDLocal.Value;
+-            errorMessage = errorMessageLocal.Value;
+-            completionDetails = completionDetailsLocal;
+-            ThrowCallbackError();
+-            return resultLocal;
++            MI_Instance completionDetailsLocal = null;
++            try
++            {
++                completionDetailsLocal = MI_Instance.NewIndirectPtr();
++                MI_String bookmarkLocal = MI_String.NewIndirectPtr();
++                MI_String machineIDLocal = MI_String.NewIndirectPtr();
++                MI_String errorMessageLocal = MI_String.NewIndirectPtr();
++
++
++                MI_Result resultLocal = this.ft.GetIndication(this,
++                    instanceLocal,
++                    bookmarkLocal,
++                    machineIDLocal,
++                    out moreResults,
++                    out result,
++                    errorMessageLocal,
++                    completionDetailsLocal);
++
++                bookmark = bookmarkLocal.Value;
++                machineID = machineIDLocal.Value;
++                errorMessage = errorMessageLocal.Value;
++                ThrowCallbackError();
++                instance = instanceLocal;
++                completionDetails = completionDetailsLocal;
++                return resultLocal;
++            }
++            catch
++            {
++                instanceLocal.Dispose();
++                completionDetailsLocal?.Dispose();
++                instance = null;
++                completionDetails = null;
++                throw;
++            }
+         }
+ 
+         internal MI_Result GetClass(
+@@ -167,21 +193,34 @@
+             )
+         {
+             MI_Class classResultLocal = MI_Class.NewIndirectPtr();
+-            MI_String errorMessageLocal = MI_String.NewIndirectPtr();
+-            MI_Instance completionDetailsLocal = MI_Instance.NewIndirectPtr();
+-
+-            MI_Result resultLocal = this.ft.GetClass(this,
+-                classResultLocal,
+-                out moreResults,
+-                out result,
+-                errorMessageLocal,
+-                completionDetailsLocal);
+-
+-            classResult = classResultLocal;
+-            errorMessage = errorMessageLocal.Value;
+-            completionDetails = completionDetailsLocal;
+-            ThrowCallbackError();
+-            return resultLocal;
++            MI_Instance completionDetailsLocal = null;
++            try
++            {
++                completionDetailsLocal = MI_Instance.NewIndirectPtr();
++                MI_String errorMessageLocal = MI_String.NewIndirectPtr();
++
++
++                MI_Result resultLocal = this.ft.GetClass(this,
++                    classResultLocal,
++                    out moreResults,
++                    out result,
++                    errorMessageLocal,
++                    completionDetailsLocal);
++
++                errorMessage = errorMessageLocal.Value;
++                ThrowCallbackError();
++                classResult = classResultLocal;
++                completionDetails = completionDetailsLocal;
++                return resultLocal;
++            }
++            catch
++            {
++                classResultLocal.Dispose();
++                completionDetailsLocal?.Dispose();
++                classResult = null;
++                completionDetails = null;
++                throw;
++            }
+         }
+ 
+         [StructLayout(LayoutKind.Sequential, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+--- a/Internal/Operations/CimSyncEnumeratorBase.cs
++++ b/Internal/Operations/CimSyncEnumeratorBase.cs
+@@ -126,67 +126,79 @@
+ 
+                 this.AssertNotDisposed();
+ 
+-                T currentItem;
++                T currentItem = null;
+                 MI_Result result;
+                 string errorMessage;
+-                MI_Instance errorDetailsHandle;
+-                MI_Result functionResult = NativeMoveNext(
+-                    this.Operation.Handle,
+-                    out currentItem,
+-                    out this._moreResultsAreExpected,
+-                    out result,
+-                    out errorMessage,
+-                    out errorDetailsHandle);
+-
+-                CimException.ThrowIfMiResultFailure(functionResult);
+-                if (!this._moreResultsAreExpected)
+-                {
+-                    this.Operation.IgnoreSubsequentCancellationRequests();
+-                }
+-
+-                lock (this._internalErrorWhileProcessingAsyncCallbackLock)
+-                {
+-                    if (this._internalErrorWhileProcessingAsyncCallback != null)
+-                    {
+-                        throw this._internalErrorWhileProcessingAsyncCallback;
+-                    }
+-                }
+-
+-                CimException cimException = CimException.GetExceptionIfMiResultFailure(result, errorMessage,
+-                                                                                       errorDetailsHandle);
+-                if (cimException != null)
+-                {
+-                    CancellationMode cancellationMode = this.Operation.CancellationMode;
+-                    Debug.Assert(cancellationMode != CancellationMode.SilentlyStopProducingResults,
+-                                 "CancellationMode.SilentlyStopProducingResults is only applicable to IObservable pattern");
+-                    if (cancellationMode == CancellationMode.ThrowOperationCancelledException)
+-                    {
+-                        throw new OperationCanceledException(cimException.Message, cimException);
++                MI_Instance errorDetailsHandle = null;
++                bool transferred = false;
++                try
++                {
++                    MI_Result functionResult = NativeMoveNext(
++                        this.Operation.Handle,
++                        out currentItem,
++                        out this._moreResultsAreExpected,
++                        out result,
++                        out errorMessage,
++                        out errorDetailsHandle);
++
++                    CimException.ThrowIfMiResultFailure(functionResult);
++                    if (!this._moreResultsAreExpected)
++                    {
++                        this.Operation.IgnoreSubsequentCancellationRequests();
++                    }
++
++                    lock (this._internalErrorWhileProcessingAsyncCallbackLock)
++                    {
++                        if (this._internalErrorWhileProcessingAsyncCallback != null)
++                        {
++                            throw this._internalErrorWhileProcessingAsyncCallback;
++                        }
++                    }
++
++                    CimException cimException = CimException.GetExceptionIfMiResultFailure(result, errorMessage,
++                                                                                           errorDetailsHandle);
++                    if (cimException != null)
++                    {
++                        CancellationMode cancellationMode = this.Operation.CancellationMode;
++                        Debug.Assert(cancellationMode != CancellationMode.SilentlyStopProducingResults,
++                                     "CancellationMode.SilentlyStopProducingResults is only applicable to IObservable pattern");
++                        if (cancellationMode == CancellationMode.ThrowOperationCancelledException)
++                        {
++                            throw new OperationCanceledException(cimException.Message, cimException);
++                        }
++                        else
++                        {
++                            throw cimException;
++                        }
++                    }
++
++                    Debug.Assert(result == MI_Result.MI_RESULT_OK, "Exception should be thrown above in case of error");
++                    this.DisposeCurrentItemIfNeeded();
++                    this.Current = currentItem;
++                    transferred = true;
++
++                    bool currentResultsIsValid;
++                    if (currentItem != null)
++                    {
++                        currentResultsIsValid = true;
+                     }
+                     else
+                     {
+-                        throw cimException;
+-                    }
+-                }
+-
+-                Debug.Assert(result == MI_Result.MI_RESULT_OK, "Exception should be thrown above in case of error");
+-                this.DisposeCurrentItemIfNeeded();
+-                this.Current = currentItem;
+-
+-                bool currentResultsIsValid;
+-                if (currentItem != null)
+-                {
+-                    currentResultsIsValid = true;
+-                }
+-                else
+-                {
+-                    // If more results are expected, then we have to treat currentItem=null as a valid result
+-                    currentResultsIsValid = this._moreResultsAreExpected;
+-
+-                    // Native MI API contract is that CurrentItem=null + moreResults=true should only happen 1) as the first result and 2) when CimOperationFlags.ReportOperationStarted was used.
+-                    // Unfortunately operation flags and knowledge whether we have first or subsequent result is not available at this point - we cannot assert the statement above :-(
+-                }
+-                return currentResultsIsValid;
++                        // If more results are expected, then we have to treat currentItem=null as a valid result
++                        currentResultsIsValid = this._moreResultsAreExpected;
++
++                        // Native MI API contract is that CurrentItem=null + moreResults=true should only happen 1) as the first result and 2) when CimOperationFlags.ReportOperationStarted was used.
++                        // Unfortunately operation flags and knowledge whether we have first or subsequent result is not available at this point - we cannot assert the statement above :-(
++                    }
++                    return currentResultsIsValid;
++                }
++                finally
++                {
++                    // The details wrapper owns its pointer cell, not the
++                    // operation-owned error instance. CimException clones it.
++                    errorDetailsHandle?.Dispose();
++                    if (!transferred) (currentItem as IDisposable)?.Dispose();
++                }
+             }
+         }
+ 

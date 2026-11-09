@@ -126,8 +126,8 @@
       "packaged_version": "3.0.0",
       "assembly_version": "1.0.0.0",
       "public_key_token": "31bf3856ad364e35",
-      "actual_source_version": "2.0.0-preview.1 plus twenty-two source patches and explicit MMI3 contract corrections",
-      "package_version": "3.0.0-16",
+      "actual_source_version": "2.0.0-preview.1 plus twenty-three source patches and explicit MMI3 contract corrections",
+      "package_version": "3.0.0-17",
       "delivery_options_evidence": "tests/mmi-cim-wmi/delivery-package-results-20261108.json",
       "property_ownership_evidence": "tests/mmi-cim-wmi/embedded-package-results-20261108.json",
       "mof_port_evidence": "tests/mmi-cim-wmi/mof-package-results-20261108.json",
@@ -145,7 +145,8 @@
       "session_options_and_explicit_disposal_evidence": "tests/mmi-session-options/package-results-20261108.json",
       "native_option_lifetime_evidence": "tests/mmi-option-finalization/package-results-20261108.json",
       "execution_context_evidence": "tests/mmi-execution-context/package-results-20261109.json",
-      "error_ownership_evidence": "tests/mmi-error-ownership/package-results-20261109.json"
+      "error_ownership_evidence": "tests/mmi-error-ownership/package-results-20261109.json",
+      "sync_result_ownership_evidence": "tests/mmi-sync-results/package-results-20261109.json"
     },
     {
       "id": "Microsoft.NETCore.Platforms",
@@ -1434,8 +1435,8 @@
     {
       "component": "PowerShell native components",
       "status": "source-native-package-built-installed-and-current-shipping-checks-passed",
-      "package_version": "7.4.20-22",
-      "evidence": "tests/mmi-error-ownership/powershell-results-20261109.json",
+      "package_version": "7.4.20-23",
+      "evidence": "tests/mmi-sync-results/powershell-results-20261109.json",
       "broader_native_runtime_behavior_complete": false
     },
     {
@@ -37475,11 +37476,11 @@
     "remaining_gate_audit": {
       "evidence": "tests/powershell-deps/remaining-gates-20261109.json",
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "current_safe_next_implementation": "Fix reproduced shortened synchronous indication source deletion and audit transient result wrappers",
+      "current_safe_next_implementation": "Continue broader native/provider audit and authorized live integration; reproduced synchronous ownership defects are fixed",
       "direct_dependency_counts_unchanged": true,
       "full_dependency_goal_complete": false,
       "cleanup_evidence": "tests/powershell-deps/completion-audit-evidence-20261109/cleanup.json",
-      "native_sync_ownership_evidence": "tests/mmi-error-ownership/native-sync-review-20261109.json"
+      "native_sync_ownership_evidence": "tests/mmi-sync-results/package-results-20261109.json"
     },
     "Windows_Compatibility_current_source_closure": {
       "evidence": "tests/powershell-deps/completion-audit-evidence-20261109/artifacts.json",
@@ -37563,6 +37564,40 @@
       "evidence": "tests/mmi-error-ownership/cleanup-20261109.json",
       "remote_logical_bytes_removed": 1681415866,
       "local_staging_bytes_removed": 891198,
+      "installed_packages_retained": true,
+      "full_dependency_goal_complete": false
+    },
+    "mmi_sync_result_ownership": {
+      "evidence": "tests/mmi-sync-results/package-results-20261109.json",
+      "package_version": "3.0.0-17",
+      "checks_per_environment": 409,
+      "baseline_defects": 1,
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "powershell_sync_result_ownership": {
+      "evidence": "tests/mmi-sync-results/powershell-results-20261109.json",
+      "package_version": "7.4.20-23",
+      "mmi_package_version": "3.0.0-17",
+      "sqlclient_package_version": "4.9.1-5",
+      "checks_per_mode": 409,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "synchronous_result_ownership_cleanup": {
+      "evidence": "tests/mmi-sync-results/cleanup-20261109.json",
+      "remote_logical_bytes_removed": 1686322415,
+      "local_staging_bytes_removed": 1003503,
       "installed_packages_retained": true,
       "full_dependency_goal_complete": false
     }

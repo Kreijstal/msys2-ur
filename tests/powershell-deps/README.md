@@ -9,8 +9,14 @@ are separate archival work and do not count as missing current PowerShell depend
 MMI3 3.0.0-16 fixes borrowed error-data deletion during CimException construction;
 92 assertions pass in clean builds, fresh installed consumers and PowerShell
 7.4.20-22 STA/MTA modes in both environments.
-A separate owned native probe reproduces an unresolved shortened synchronous
-indication deletion. [Exception fix and next ownership requirement](../mmi-error-ownership/README.md).
+A separate owned native probe reproduced a shortened synchronous indication
+deletion, now fixed in release 17. [Exception fix and next ownership requirement](../mmi-error-ownership/README.md).
+
+MMI3 3.0.0-17 fixes the reproduced synchronous indication source deletion and
+retrieval-wrapper cleanup. All 409 production assertions pass in both clean
+builds, fresh installed consumers and PowerShell 7.4.20-23 STA/MTA modes; a
+private 452-assertion trace releases all
+198 observed wrapper allocations. [Synchronous ownership evidence](../mmi-sync-results/README.md).
 
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves

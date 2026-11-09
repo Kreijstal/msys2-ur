@@ -70,3 +70,7 @@ See [package results](package-results-20261109.json),
 [PowerShell results](powershell-results-20261109.json),
 [remote input identities](remote-input-identity-20261109.json), and
 [temporary build cleanup](cleanup-20261109.json).
+
+The shortened synchronous-result defect and explicit wrapper cleanup are addressed
+by [MMI3 release 17](../mmi-sync-results/README.md). The release-16 reproduction
+above is retained as historical evidence.

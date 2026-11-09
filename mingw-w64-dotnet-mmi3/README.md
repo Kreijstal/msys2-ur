@@ -181,3 +181,14 @@ retry is removed. `check-error-ownership.sh` uses an independent mi.h peer with
 clone/deletion counters and both public/internal exception constructors; it
 checks that clones are released exactly once and survive disposal of their source.
 This regression does not establish complete provider or remote compatibility.
+
+Release 17 clones operation-owned synchronous indications even when result
+lifetimes are shortened. Instance/class/indication enumerators release borrowed
+wrapper cells, dispose untransferred clones on failure, and leave provider-owned
+native results intact. Retrieval rolls back its wrapper allocations if callback
+error handling throws. MoveNext releases the completion-details wrapper after
+CimException has cloned its native error data. The 409-assertion independent
+native peer covers all three synchronous result kinds, both lifetime modes,
+clone/function/operation/callback failures and null/started notifications.
+Optional wrapper tracing requires a private diagnostic hook absent from the
+production payload. Complete remote/provider behavior remains unverified.
