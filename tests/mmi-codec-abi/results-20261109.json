@@ -1,0 +1,243 @@
+{
+  "scope": "PowerShell 7.4.20 / .NET 8.0.31; installed MMI3 3.0.0-18 private codec and client table ABI",
+  "previous_goal_turn_classification": "progress: callback declaration and export audit committed and pushed",
+  "this_goal_turn_classification": "progress: remaining codec layouts and prototypes independently verified in both environments",
+  "production_code_changed": false,
+  "package_rebuild_required": false,
+  "binary_publication_performed": false,
+  "environments": {
+    "clang64": {
+      "command": "MINGW_PREFIX=/clang64 bash tests/mmi-codec-abi/check.sh clang64",
+      "exit_code": 0,
+      "comparison": {
+        "layouts_compared": [
+          {
+            "native": "_MI_ClientFT_V1",
+            "managed": "MI_SerializationFTHelpers+MI_ClientFT_V1",
+            "size": 80,
+            "fields_compared": 10
+          },
+          {
+            "native": "_MI_ExtendedArray",
+            "managed": "MI_ExtendedArray+MI_ExtendedArrayMembers",
+            "size": 48,
+            "fields_compared": 5
+          },
+          {
+            "native": "_MI_DeserializerCallbacks",
+            "managed": "MI_DeserializerCallbacks+MI_DeserializerCallbacksNative",
+            "size": 120,
+            "fields_compared": 15
+          },
+          {
+            "native": "_MI_DeserializerFT_INTL",
+            "managed": "MI_Deserializer+MI_MOFDeserializerFT",
+            "size": 64,
+            "fields_compared": 3
+          },
+          {
+            "native": "_MI_ExtendedArrayFT",
+            "managed": "MI_ExtendedArray+MI_ExtendedArrayFT",
+            "size": 8,
+            "fields_compared": 1
+          }
+        ],
+        "signature_comparisons": [
+          {
+            "native": "DeserializeClassArray",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_Deserializer+MI_MOFDeserializerFT+MI_Deserializer_DeserializeClassArray_MOF",
+            "parameters": 12,
+            "signature": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, const MI_Char *, const MI_Char *, MI_Uint32 *, MI_ClassA **, MI_Instance **) __attribute__((stdcall))"
+          },
+          {
+            "native": "DeserializeInstanceArray",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_Deserializer+MI_MOFDeserializerFT+MI_Deserializer_DeserializeInstanceArray_MOF",
+            "parameters": 10,
+            "signature": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, MI_Uint32 *, MI_InstanceA **, MI_Instance **) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_ExtendedArray_Delete",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_ExtendedArray+MI_ExtendedArrayFT+MI_ExtendedArray_Delete",
+            "parameters": 1,
+            "signature": "void (*)(MI_ExtendedArray *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_GetIncludedFileBuffer",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_DeserializerCallbacks+GetIncludedFileBuffer",
+            "parameters": 4,
+            "signature": "MI_Result (*)(void *, const MI_Char *, MI_Uint8 **, MI_Uint32 *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_FreeIncludedFileBuffer",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_DeserializerCallbacks+FreeIncludedFileBuffer",
+            "parameters": 2,
+            "signature": "void (*)(void *, MI_Uint8 *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Application_NewSerializer_Mof",
+            "managed": "MI_Application_NewSerializer_Mof",
+            "parameters": 4,
+            "signature": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Serializer *) __attribute__((cdecl))"
+          },
+          {
+            "native": "MI_Application_NewDeserializer_Mof",
+            "managed": "MI_Application_NewDeserializer_Mof",
+            "parameters": 4,
+            "signature": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Deserializer *) __attribute__((cdecl))"
+          }
+        ],
+        "parameters_compared": 37,
+        "xml_serializer_entries_matched": 3,
+        "xml_deserializer_entries_matched": 6,
+        "declaration_divergences": [],
+        "full_provider_behavior_verified": false,
+        "full_dependency_goal_complete": false,
+        "scope_notes": [
+          "Windows x64 ABI; reserved1 UInt64 and IntPtr are both eight bytes",
+          "MI_ClassA/MI_InstanceA pointer parameters use the MI_Array prefix of MI_ExtendedArray",
+          "Unused optional codec callbacks remain null pointers; their unused prototypes are not audited"
+        ],
+        "checker_sha256": "fcbd44b796d3c3c36e0cab91f3aa2302e6e3baa0fc87c29c21fa58e54bc27baf"
+      },
+      "artifact_identity": {
+        "feed_sha256": "d1a39e6edc9b87ee534782546b55c611d0566e88528948580509570b56323126",
+        "bundled_mmi_sha256": "cc2d9f5a4bacff7096498f378e4d16bf889960bac7b5a76e3c0909cd9916ccca",
+        "source_archive_and_bundle_match": true,
+        "installed_packages": [
+          "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-18",
+          "mingw-w64-clang-x86_64-powershell 7.4.20-24",
+          "mingw-w64-clang-x86_64-dotnet-sqlclient 4.9.1-5"
+        ]
+      },
+      "malformed_delete_return_rejected": true
+    },
+    "ucrt64": {
+      "command": "MINGW_PREFIX=/ucrt64 bash tests/mmi-codec-abi/check.sh ucrt64",
+      "exit_code": 0,
+      "comparison": {
+        "layouts_compared": [
+          {
+            "native": "_MI_ClientFT_V1",
+            "managed": "MI_SerializationFTHelpers+MI_ClientFT_V1",
+            "size": 80,
+            "fields_compared": 10
+          },
+          {
+            "native": "_MI_ExtendedArray",
+            "managed": "MI_ExtendedArray+MI_ExtendedArrayMembers",
+            "size": 48,
+            "fields_compared": 5
+          },
+          {
+            "native": "_MI_DeserializerCallbacks",
+            "managed": "MI_DeserializerCallbacks+MI_DeserializerCallbacksNative",
+            "size": 120,
+            "fields_compared": 15
+          },
+          {
+            "native": "_MI_DeserializerFT_INTL",
+            "managed": "MI_Deserializer+MI_MOFDeserializerFT",
+            "size": 64,
+            "fields_compared": 3
+          },
+          {
+            "native": "_MI_ExtendedArrayFT",
+            "managed": "MI_ExtendedArray+MI_ExtendedArrayFT",
+            "size": 8,
+            "fields_compared": 1
+          }
+        ],
+        "signature_comparisons": [
+          {
+            "native": "DeserializeClassArray",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_Deserializer+MI_MOFDeserializerFT+MI_Deserializer_DeserializeClassArray_MOF",
+            "parameters": 12,
+            "signature": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, const MI_Char *, const MI_Char *, MI_Uint32 *, MI_ClassA **, MI_Instance **) __attribute__((stdcall))"
+          },
+          {
+            "native": "DeserializeInstanceArray",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_Deserializer+MI_MOFDeserializerFT+MI_Deserializer_DeserializeInstanceArray_MOF",
+            "parameters": 10,
+            "signature": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, MI_Uint32 *, MI_InstanceA **, MI_Instance **) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_ExtendedArray_Delete",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_ExtendedArray+MI_ExtendedArrayFT+MI_ExtendedArray_Delete",
+            "parameters": 1,
+            "signature": "void (*)(MI_ExtendedArray *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_GetIncludedFileBuffer",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_DeserializerCallbacks+GetIncludedFileBuffer",
+            "parameters": 4,
+            "signature": "MI_Result (*)(void *, const MI_Char *, MI_Uint8 **, MI_Uint32 *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Deserializer_FreeIncludedFileBuffer",
+            "managed": "Microsoft.Management.Infrastructure.Native.MI_DeserializerCallbacks+FreeIncludedFileBuffer",
+            "parameters": 2,
+            "signature": "void (*)(void *, MI_Uint8 *) __attribute__((stdcall))"
+          },
+          {
+            "native": "MI_Application_NewSerializer_Mof",
+            "managed": "MI_Application_NewSerializer_Mof",
+            "parameters": 4,
+            "signature": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Serializer *) __attribute__((cdecl))"
+          },
+          {
+            "native": "MI_Application_NewDeserializer_Mof",
+            "managed": "MI_Application_NewDeserializer_Mof",
+            "parameters": 4,
+            "signature": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Deserializer *) __attribute__((cdecl))"
+          }
+        ],
+        "parameters_compared": 37,
+        "xml_serializer_entries_matched": 3,
+        "xml_deserializer_entries_matched": 6,
+        "declaration_divergences": [],
+        "full_provider_behavior_verified": false,
+        "full_dependency_goal_complete": false,
+        "scope_notes": [
+          "Windows x64 ABI; reserved1 UInt64 and IntPtr are both eight bytes",
+          "MI_ClassA/MI_InstanceA pointer parameters use the MI_Array prefix of MI_ExtendedArray",
+          "Unused optional codec callbacks remain null pointers; their unused prototypes are not audited"
+        ],
+        "checker_sha256": "fcbd44b796d3c3c36e0cab91f3aa2302e6e3baa0fc87c29c21fa58e54bc27baf"
+      },
+      "artifact_identity": {
+        "feed_sha256": "a84487624662256404bcfd0e698d24a24a25f518146eb302aebb7d260d4522d8",
+        "bundled_mmi_sha256": "548a3faa5088639af0d9bb1b7b5ed46b890ed3eb66571a782b100fff71f3e5de",
+        "source_archive_and_bundle_match": true,
+        "installed_packages": [
+          "mingw-w64-ucrt-x86_64-dotnet-mmi3 3.0.0-18",
+          "mingw-w64-ucrt-x86_64-powershell 7.4.20-24",
+          "mingw-w64-ucrt-x86_64-dotnet-sqlclient 4.9.1-5"
+        ]
+      },
+      "malformed_delete_return_rejected": true
+    }
+  },
+  "source_pin": {
+    "repository": "https://github.com/microsoft/PowerShell-DSC-for-Linux",
+    "commit": "14d31e4f6c5266036c935bd7634e0e4b039a43ed",
+    "header_url": "https://raw.githubusercontent.com/microsoft/PowerShell-DSC-for-Linux/14d31e4f6c5266036c935bd7634e0e4b039a43ed/LCM/codec/common/micodec.h",
+    "header_sha256": "ec6d6c138711534365f65d9e4bc34fb0d262b1561326138e614fd48ffc12095c",
+    "license_sha256": "8c31e4289fa49f6af17915d9e827c8cbcd9b2f5208bcfab04b0fbecd7ac0a7d5"
+  },
+  "full_dependency_goal_complete": false,
+  "remaining": [
+    "Authenticated remote CIM/WSMan and broader provider behavior",
+    "Real SQL Server, LocalDB and FILESTREAM integration",
+    "Broader Windows.Compatibility graph behavior"
+  ],
+  "inputs_sha256": {
+    "tests/mmi-codec-abi/InspectCodec.cs": "3135a3e8e442db3ae36a1792c4deb579e4e5f03bf5e9dd754588379943108631",
+    "tests/mmi-codec-abi/capture.py": "2b604f8d61cad90cb15466868355484e6325b74f618634a8d68702b35064e844",
+    "tests/mmi-codec-abi/check.sh": "523edd5fefdafc51b351432e71c9ec637b15a108529f4fcbc94c5ddbd41ff2dc",
+    "tests/mmi-codec-abi/codec-contract.h": "8202e25f1ba1dd0a4c5c10645fd4e965eeadada4b0cf946725fb84a552c3ac1f",
+    "tests/mmi-codec-abi/compare.py": "fcbd44b796d3c3c36e0cab91f3aa2302e6e3baa0fc87c29c21fa58e54bc27baf",
+    "tests/mmi-codec-abi/vendor/license.txt": "8c31e4289fa49f6af17915d9e827c8cbcd9b2f5208bcfab04b0fbecd7ac0a7d5",
+    "tests/mmi-codec-abi/vendor/micodec.h": "ec6d6c138711534365f65d9e4bc34fb0d262b1561326138e614fd48ffc12095c",
+    "tests/mmi-codec-abi/vendor/source.json": "86bfb0395e728b74965dc7830c7f8cb19a9fff2093c6498f15a0191c1c69bcc6"
+  }
+}

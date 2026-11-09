@@ -1,0 +1,9 @@
+Injected MI_Result return in place of native void Delete: rejected with exit 1
+Traceback (most recent call last):
+  File "/home/kreijstal/git/msys2-ur/tests/mmi-codec-abi/compare.py", line 105, in <module>
+    signature(c, native['typedefs'][c]['qualType'], delegates[m])
+    ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/kreijstal/git/msys2-ur/tests/mmi-codec-abi/compare.py", line 90, in signature
+    assert m['return_type'] == expected_return, (name, m)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('MI_ExtendedArray_Delete', {'name': 'Microsoft.Management.Infrastructure.Native.MI_ExtendedArray+MI_ExtendedArrayFT+MI_ExtendedArray_Delete', 'return_type': 'Microsoft.Management.Infrastructure.Native.MI_Result', 'calling_convention': 'StdCall', 'charset': 'Unicode', 'parameters': [{'name': 'self', 'type': 'Microsoft.Management.Infrastructure.Native.MI_NativeObject+DirectPtr', 'marshal_as': None, 'enum_size': None}]})

@@ -1,0 +1,315 @@
+{
+  "records": {
+    "_MI_ClientFT_V1": [
+      {
+        "name": "applicationFT",
+        "type": {
+          "qualType": "const MI_ApplicationFT *"
+        }
+      },
+      {
+        "name": "sessionFT",
+        "type": {
+          "qualType": "const MI_SessionFT *"
+        }
+      },
+      {
+        "name": "operationFT",
+        "type": {
+          "qualType": "const MI_OperationFT *"
+        }
+      },
+      {
+        "name": "hostedProviderFT",
+        "type": {
+          "qualType": "const MI_HostedProviderFT *"
+        }
+      },
+      {
+        "name": "serializerFT",
+        "type": {
+          "qualType": "const MI_SerializerFT *"
+        }
+      },
+      {
+        "name": "deserializerFT",
+        "type": {
+          "qualType": "const MI_DeserializerFT *"
+        }
+      },
+      {
+        "name": "subscribeDeliveryOptionsFT",
+        "type": {
+          "qualType": "const MI_SubscriptionDeliveryOptionsFT *"
+        }
+      },
+      {
+        "name": "destinationOptionsFT",
+        "type": {
+          "qualType": "const MI_DestinationOptionsFT *"
+        }
+      },
+      {
+        "name": "operationOptionsFT",
+        "type": {
+          "qualType": "const MI_OperationOptionsFT *"
+        }
+      },
+      {
+        "name": "utilitiesFT",
+        "type": {
+          "qualType": "const MI_UtilitiesFT *"
+        }
+      }
+    ],
+    "_MI_ExtendedArray": [
+      {
+        "name": "arr",
+        "type": {
+          "desugaredQualType": "struct _MI_Array",
+          "qualType": "MI_Array",
+          "typeAliasDeclId": "0x2646c2d33a8"
+        }
+      },
+      {
+        "name": "reserved1",
+        "type": {
+          "desugaredQualType": "unsigned long long",
+          "qualType": "MI_Uint64",
+          "typeAliasDeclId": "0x2646c2ca4a8"
+        }
+      },
+      {
+        "name": "reserved2",
+        "type": {
+          "desugaredQualType": "long long",
+          "qualType": "ptrdiff_t",
+          "typeAliasDeclId": "0x2646c190048"
+        }
+      },
+      {
+        "name": "reserved3",
+        "type": {
+          "desugaredQualType": "long long",
+          "qualType": "ptrdiff_t",
+          "typeAliasDeclId": "0x2646c190048"
+        }
+      },
+      {
+        "name": "reserved4",
+        "type": {
+          "desugaredQualType": "long long",
+          "qualType": "ptrdiff_t",
+          "typeAliasDeclId": "0x2646c190048"
+        }
+      }
+    ],
+    "_MI_ExtendedArrayFT": [
+      {
+        "name": "Delete",
+        "type": {
+          "desugaredQualType": "void (*)(MI_ExtendedArray *) __attribute__((stdcall))",
+          "qualType": "MI_ExtendedArray_Delete",
+          "typeAliasDeclId": "0x2646c3c9290"
+        }
+      }
+    ],
+    "_MI_DeserializerCallbacks": [
+      {
+        "name": "classObjectNeededContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "classObjectNeeded",
+        "type": {
+          "desugaredQualType": "MI_Result (*)(void *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Class **) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_ClassObjectNeeded",
+          "typeAliasDeclId": "0x2646c348dd8"
+        }
+      },
+      {
+        "name": "includedFileContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "getIncludedFileContent",
+        "type": {
+          "desugaredQualType": "MI_Result (*)(void *, const MI_Char *, MI_Uint8 **, MI_Uint32 *) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_GetIncludedFileBuffer",
+          "typeAliasDeclId": "0x2646c426910"
+        }
+      },
+      {
+        "name": "freeIncludedFileContent",
+        "type": {
+          "desugaredQualType": "void (*)(void *, MI_Uint8 *) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_FreeIncludedFileBuffer",
+          "typeAliasDeclId": "0x2646c426c38"
+        }
+      },
+      {
+        "name": "instanceResultContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "instanceResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Instance *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_Instance",
+          "typeAliasDeclId": "0x2646c3399c8"
+        }
+      },
+      {
+        "name": "classResultContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "classResult",
+        "type": {
+          "desugaredQualType": "void (*)(MI_Operation *, void *, const MI_Class *, MI_Boolean, MI_Result, const MI_Char *, const MI_Instance *, MI_Result (*)(MI_Operation *) __attribute__((stdcall))) __attribute__((stdcall))",
+          "qualType": "MI_OperationCallback_Class",
+          "typeAliasDeclId": "0x2646c33b178"
+        }
+      },
+      {
+        "name": "classObjectNeededOnIdContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "classObjectNeededOnId",
+        "type": {
+          "desugaredQualType": "MI_Result (*)(void *, MI_Uint64, MI_Class **) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_ClassObjectNeededOnId",
+          "typeAliasDeclId": "0x2646c427018"
+        }
+      },
+      {
+        "name": "classObjectAndIdContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "classObjectAndId",
+        "type": {
+          "desugaredQualType": "MI_Result (*)(void *, MI_Uint64, MI_Class *) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_ClassObjectAndId",
+          "typeAliasDeclId": "0x2646c4273f8"
+        }
+      },
+      {
+        "name": "qualifierDeclNeededContext",
+        "type": {
+          "qualType": "void *"
+        }
+      },
+      {
+        "name": "qualifierDeclNeeded",
+        "type": {
+          "desugaredQualType": "MI_Result (*)(void *, MI_QualifierDecl *) __attribute__((stdcall))",
+          "qualType": "MI_Deserializer_QualifierDeclNeeded",
+          "typeAliasDeclId": "0x2646c427790"
+        }
+      }
+    ],
+    "_MI_DeserializerFT_INTL": [
+      {
+        "name": "ft",
+        "type": {
+          "desugaredQualType": "struct _MI_DeserializerFT",
+          "qualType": "MI_DeserializerFT",
+          "typeAliasDeclId": "0x2646c34fcd8"
+        }
+      },
+      {
+        "name": "DeserializeClassArray",
+        "type": {
+          "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, const MI_Char *, const MI_Char *, MI_Uint32 *, MI_ClassA **, MI_Instance **) __attribute__((stdcall))"
+        }
+      },
+      {
+        "name": "DeserializeInstanceArray",
+        "type": {
+          "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_OperationOptions *, MI_DeserializerCallbacks *, MI_Uint8 *, MI_Uint32, MI_ClassA *, MI_Uint32 *, MI_InstanceA **, MI_Instance **) __attribute__((stdcall))"
+        }
+      }
+    ]
+  },
+  "typedefs": {
+    "MI_ExtendedArray_Delete": {
+      "qualType": "void (*)(MI_ExtendedArray *) __attribute__((stdcall))"
+    },
+    "MI_Deserializer_GetIncludedFileBuffer": {
+      "qualType": "MI_Result (*)(void *, const MI_Char *, MI_Uint8 **, MI_Uint32 *) __attribute__((stdcall))"
+    },
+    "MI_Deserializer_FreeIncludedFileBuffer": {
+      "qualType": "void (*)(void *, MI_Uint8 *) __attribute__((stdcall))"
+    }
+  },
+  "functions": {
+    "MI_Application_NewSerializer_Mof": {
+      "type": {
+        "desugaredQualType": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Serializer *)",
+        "qualType": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Serializer *) __attribute__((cdecl))"
+      },
+      "parameters": [
+        {
+          "qualType": "MI_Application *"
+        },
+        {
+          "desugaredQualType": "unsigned int",
+          "qualType": "MI_Uint32",
+          "typeAliasDeclId": "0x2646c2ca3c8"
+        },
+        {
+          "qualType": "MI_Char *"
+        },
+        {
+          "qualType": "MI_Serializer *"
+        }
+      ]
+    },
+    "MI_Application_NewDeserializer_Mof": {
+      "type": {
+        "desugaredQualType": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Deserializer *)",
+        "qualType": "MI_Result (MI_Application *, MI_Uint32, MI_Char *, MI_Deserializer *) __attribute__((cdecl))"
+      },
+      "parameters": [
+        {
+          "qualType": "MI_Application *"
+        },
+        {
+          "desugaredQualType": "unsigned int",
+          "qualType": "MI_Uint32",
+          "typeAliasDeclId": "0x2646c2ca3c8"
+        },
+        {
+          "qualType": "MI_Char *"
+        },
+        {
+          "qualType": "MI_Deserializer *"
+        }
+      ]
+    }
+  },
+  "source": {
+    "repository": "https://github.com/microsoft/PowerShell-DSC-for-Linux",
+    "commit": "14d31e4f6c5266036c935bd7634e0e4b039a43ed",
+    "header_url": "https://raw.githubusercontent.com/microsoft/PowerShell-DSC-for-Linux/14d31e4f6c5266036c935bd7634e0e4b039a43ed/LCM/codec/common/micodec.h",
+    "header_sha256": "ec6d6c138711534365f65d9e4bc34fb0d262b1561326138e614fd48ffc12095c",
+    "license_sha256": "8c31e4289fa49f6af17915d9e827c8cbcd9b2f5208bcfab04b0fbecd7ac0a7d5"
+  },
+  "windows_header_sha256": "038bd5a0a8e637e62eef3cb98f909aad7fd264341db24e62a81af85bb227e0e5",
+  "header_owner": "/clang64/include/mi.h is owned by mingw-w64-clang-x86_64-headers 14.0.0.r598.ge3d18511f-1",
+  "compiler": "clang version 23.1.5 (https://github.com/msys2/MINGW-packages efc96badda99c076509ef01986c673d1cd30f725)"
+}

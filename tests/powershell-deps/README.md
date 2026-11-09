@@ -32,6 +32,13 @@ four Windows system export checks in both environments. No production changes
 were required. Private codec and live provider/database requirements remain open.
 [Callback and export evidence](../mmi-callback-abi/README.md).
 
+The remaining codec/client-table ABI audit also passes in both installed
+environments: five layouts, seven signatures/37 parameters and nine actual XML
+table function addresses. Microsoft's pinned codec header supplies independent
+MOF declarations; no production changes were needed. Live provider/database
+and broader Windows.Compatibility behavior remain unverified.
+[Codec evidence and scope](../mmi-codec-abi/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)
