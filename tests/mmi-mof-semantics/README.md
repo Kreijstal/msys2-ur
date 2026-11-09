@@ -34,9 +34,10 @@ python.exe tests/mmi-mof-semantics/native-empty-control.py NEW_OUTPUT/native-ora
 ```
 
 No schema is registered in the WMI repository and no WinRM configuration changes
-are needed. Embedded/reference MOF, inheritance/method/qualifier combinations,
-additional provider/encoding/resource edge cases, remote authentication and the
-complete native ownership audit remain open. The full dependency goal is not
+are needed. A separate [combined graph check](../mmi-mof-graph/README.md) now covers
+inheritance, method/parameter qualifiers and alias references, including native
+UTF-8 text observations. Additional embedded/provider/encoding/resource edge
+cases, remote authentication and the complete native ownership audit remain open. The full dependency goal is not
 complete and experimental binaries remain unpublished.
 
 The MOF extension ABI is described by Microsoft's

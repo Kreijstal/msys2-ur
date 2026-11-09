@@ -53,6 +53,12 @@ checks pass per environment. Its real stream/commit/rollback gate has not run;
 authorized Windows SQL Server FILESTREAM settings remain required.
 [Harness scope and preparation evidence](../sqlclient-filestream/README.md).
 
+A combined MOF inheritance/qualifier/method/reference graph passes 244 assertions
+in each installed environment, including decoder/source disposal and independent
+native count/offset/text controls. UTF-16LE preserves Unicode; UTF-8 non-ASCII
+text matches the system codec's observed Latin-1 interpretation and is recorded
+as a native limitation. [Graph scope and evidence](../mmi-mof-graph/README.md).
+
 The real database harness now supports Windows authentication and an explicit
 LocalDB mode that requires actual LocalDB engine identity and named-pipe transport
 before creating test databases. Both environments compile and pass 58 offline

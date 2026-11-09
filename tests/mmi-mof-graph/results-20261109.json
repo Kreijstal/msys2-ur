@@ -1,0 +1,129 @@
+{
+  "scope": "Local MOF inheritance/qualifier/method/reference graph on installed MMI3 3.0.0-18, PowerShell 7.4.20 / .NET 8.0.31 dependency validation",
+  "previous_goal_turn_classification": "progress: real SQL Server/LocalDB harness prepared for Windows authentication",
+  "this_goal_turn_classification": "progress: combined local MOF graph checked against independent native codec/text consumers",
+  "production_packages_changed": false,
+  "binary_publication_performed": false,
+  "remote_WSMan_verified": false,
+  "full_dependency_goal_complete": false,
+  "native_UTF8_Unicode_preserved": false,
+  "environments": {
+    "clang64": {
+      "command": "MINGW_PREFIX=/clang64 bash tests/mmi-mof-graph/check.sh clang64-v3",
+      "exit_code": 0,
+      "result": {
+        "passed": true,
+        "assertions": 244,
+        "encoding_cases": 4,
+        "observations": [
+          {
+            "encoding": "utf-16",
+            "bom_bytes": 2,
+            "native_description": "derived \u96ea",
+            "Unicode_preserved": true
+          },
+          {
+            "encoding": "utf-16",
+            "bom_bytes": 0,
+            "native_description": "derived \u96ea",
+            "Unicode_preserved": true
+          },
+          {
+            "encoding": "utf-8",
+            "bom_bytes": 3,
+            "native_description": "derived \u00e9\u009b\u00aa",
+            "Unicode_preserved": false
+          },
+          {
+            "encoding": "utf-8",
+            "bom_bytes": 0,
+            "native_description": "derived \u00e9\u009b\u00aa",
+            "Unicode_preserved": false
+          }
+        ],
+        "native_UTF8_Unicode_preserved": false,
+        "remote_connection_attempted": false,
+        "WMI_repository_modified": false,
+        "assembly": "E:\\codex-dotnet10\\mmi-mof-graph.O7rGiH\\clang64-v3\\bin\\Release\\net8.0\\Microsoft.Management.Infrastructure.dll"
+      },
+      "source_identity": {
+        "archive_sha256": "d1a39e6edc9b87ee534782546b55c611d0566e88528948580509570b56323126",
+        "implementation_sha256": "cc2d9f5a4bacff7096498f378e4d16bf889960bac7b5a76e3c0909cd9916ccca",
+        "exact_installed_source_archive_and_DLL": true
+      },
+      "native_control_command": "/clang64/bin/python.exe tests/mmi-mof-graph/native-text-control.py clang64-v3/native-oracle.dll tests/mmi-mof-graph/MofGraph.cs",
+      "native_control_exit_code": 0,
+      "installed_packages": [
+        "mingw-w64-clang-x86_64-dotnet-mmi3 3.0.0-18",
+        "mingw-w64-clang-x86_64-powershell 7.4.20-25"
+      ]
+    },
+    "ucrt64": {
+      "command": "MINGW_PREFIX=/ucrt64 bash tests/mmi-mof-graph/check.sh ucrt64-final",
+      "exit_code": 0,
+      "result": {
+        "passed": true,
+        "assertions": 244,
+        "encoding_cases": 4,
+        "observations": [
+          {
+            "encoding": "utf-16",
+            "bom_bytes": 2,
+            "native_description": "derived \u96ea",
+            "Unicode_preserved": true
+          },
+          {
+            "encoding": "utf-16",
+            "bom_bytes": 0,
+            "native_description": "derived \u96ea",
+            "Unicode_preserved": true
+          },
+          {
+            "encoding": "utf-8",
+            "bom_bytes": 3,
+            "native_description": "derived \u00e9\u009b\u00aa",
+            "Unicode_preserved": false
+          },
+          {
+            "encoding": "utf-8",
+            "bom_bytes": 0,
+            "native_description": "derived \u00e9\u009b\u00aa",
+            "Unicode_preserved": false
+          }
+        ],
+        "native_UTF8_Unicode_preserved": false,
+        "remote_connection_attempted": false,
+        "WMI_repository_modified": false,
+        "assembly": "E:\\codex-dotnet10\\mmi-mof-graph.O7rGiH\\ucrt64-final\\bin\\Release\\net8.0\\Microsoft.Management.Infrastructure.dll"
+      },
+      "source_identity": {
+        "archive_sha256": "a84487624662256404bcfd0e698d24a24a25f518146eb302aebb7d260d4522d8",
+        "implementation_sha256": "548a3faa5088639af0d9bb1b7b5ed46b890ed3eb66571a782b100fff71f3e5de",
+        "exact_installed_source_archive_and_DLL": true
+      },
+      "native_control_command": "/ucrt64/bin/python.exe tests/mmi-mof-graph/native-text-control.py ucrt64-final/native-oracle.dll tests/mmi-mof-graph/MofGraph.cs",
+      "native_control_exit_code": 0,
+      "installed_packages": [
+        "mingw-w64-ucrt-x86_64-dotnet-mmi3 3.0.0-18",
+        "mingw-w64-ucrt-x86_64-powershell 7.4.20-25"
+      ]
+    }
+  },
+  "initial_fixture_failures": [
+    {
+      "evidence": "clang64-check-initial.log",
+      "cause": "Native codec rejected the string object-path reference; replaced with documented alias and retained original as a negative native/managed parity test."
+    },
+    {
+      "evidence": "clang64-final-initial.log",
+      "cause": "Assumed UTF-8 Unicode preservation; independent native text reads establish the same Latin-1 byte interpretation. Final suite distinguishes UTF-16 Unicode correctness from UTF-8 native parity."
+    }
+  ],
+  "input_sha256": {
+    "MofGraph.cs": "98f04f5c719e591f7d8fb756c976b4658e9a497468d9f1e6bb0c7d3f8d1b1504",
+    "check.sh": "137096793a91f4b325f643275c0c7ec73840000949d8f62617c054c4e6630bdb",
+    "native-graph.c": "da582a299b4f4a3b656edc3772e375a605942d684f0bf9bd2aaa2ea0a0c3ac27",
+    "native-text-control.py": "89e45eeb553067b7400f3c67e07575cf0eb6c408428f7381459330b355dc72db"
+  },
+  "included_native_oracle_sha256": "3006a41d729157ba991b309aba9e5f9451fec6deff188b2e07348344a9d3eef2"
+}
