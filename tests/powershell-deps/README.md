@@ -47,6 +47,12 @@ STA/MTA modes each pass 69 cross-library assertions; all 36 inventoried loaded
 assembly identities match current source packages or the serviced runtime.
 [Serviced runtime selection and integration evidence](../windows-compatibility-integration/README.md).
 
+A dedicated transactional FILESTREAM harness is prepared against installed
+SqlClient 4.9.1-5 in both environments. Compilation and six offline source/settings
+checks pass per environment. Its real stream/commit/rollback gate has not run;
+authorized Windows SQL Server FILESTREAM settings remain required.
+[Harness scope and preparation evidence](../sqlclient-filestream/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

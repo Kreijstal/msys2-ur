@@ -1,6 +1,6 @@
 {
   "scope": "PowerShell 7.4.20 / .NET 8.0.31, CLANG64 and UCRT64",
-  "previous_goal_turn_classification": "progress: codec/client-table ABI audit completed and pushed",
+  "previous_goal_turn_classification": "progress: serviced Windows compatibility selection fixed and deployed",
   "full_dependency_goal_complete": false,
   "verified_direct_dependency_ids": 50,
   "total_direct_dependency_ids": 53,
@@ -57,7 +57,11 @@
       "async_state_publication_race_fixed_and_verified": true,
       "known_missing_implementation_inventory_is_not_a_complete_native_behavior_audit": true,
       "real_LPC_harness": "tests/sqlclient-lpc/check-real.sh",
-      "real_LPC_harness_compiled_only": true
+      "real_LPC_harness_compiled_only": true,
+      "real_FILESTREAM_harness": "tests/sqlclient-filestream/check.sh",
+      "real_FILESTREAM_preparation_evidence": "tests/sqlclient-filestream/build-results-20261109.json",
+      "real_FILESTREAM_harness_compiled_and_offline_validated": true,
+      "real_FILESTREAM_live_gate_executed": false
     },
     {
       "id": "Microsoft.Windows.Compatibility",
@@ -171,5 +175,5 @@
     "implemented": false,
     "full_dependency_goal_complete": false
   },
-  "this_goal_turn_classification": "progress: nine incorrect desktop assembly selections fixed; source libraries and PowerShell rebuilt and installed in both environments"
+  "this_goal_turn_classification": "progress: dedicated transactional FILESTREAM harness implemented and prepared in both environments"
 }
