@@ -1,0 +1,60 @@
+{
+  "version": "6.11.2-3",
+  "operation": "Packaging-only rebuild of pinned published 6.11.2-2 runtime packages",
+  "compiled_Qt_or_Chromium_rebuilt": false,
+  "runtime_payload_byte_identity_verified": true,
+  "environments": {
+    "clang64": {
+      "package": "mingw-w64-clang-x86_64-qt6-webengine-6.11.2-3-any.pkg.tar.zst",
+      "package_sha256": "becff118b9c2a828794aab2ad6822aac52db3d24904cbf07ed85f9740a6fe7e8",
+      "package_bytes": 128157757,
+      "source_archive_sha256": "9cd3de35593d7e31ed3b8fbe650e28d3ca4d601095e9f79425af351863146c55",
+      "retained_payload_files": 368,
+      "removed_debug_files": 9,
+      "uncompressed_debug_bytes_removed": 110866944,
+      "build_exit_code": 0,
+      "artifact_audit_exit_code": 0,
+      "repository_indexes_only_change_this_package": true,
+      "build_command": "MINGW_PACKAGE_PREFIX=mingw-w64-clang-x86_64 makepkg --nodeps --cleanbuild --force --noconfirm --config /tmp/qt6-webengine-clean-release-20261109/clang64-makepkg.conf"
+    },
+    "ucrt64": {
+      "package": "mingw-w64-ucrt-x86_64-qt6-webengine-6.11.2-3-any.pkg.tar.zst",
+      "package_sha256": "315eac60bf1e762dca795143953ff46072c52789c0963c3750e63b6e0198177e",
+      "package_bytes": 128567641,
+      "source_archive_sha256": "3202b9416d342c6905a88ff53fd2a1820728f2edcb31a50d327aeb11f2946a8e",
+      "retained_payload_files": 368,
+      "removed_debug_files": 9,
+      "uncompressed_debug_bytes_removed": 1584342,
+      "build_exit_code": 0,
+      "artifact_audit_exit_code": 0,
+      "repository_indexes_only_change_this_package": true,
+      "build_command": "MINGW_PACKAGE_PREFIX=mingw-w64-ucrt-x86_64 makepkg --nodeps --cleanbuild --force --noconfirm --config /tmp/qt6-webengine-clean-release-20261109/ucrt64-makepkg.conf"
+    }
+  },
+  "initial_validation_corrections": [
+    "makepkg uses symlinks for noextract sources; helper resolves the verified archive before passing it to zstd. Initial prepare failures retained in evidence.",
+    "The audit initially expected !debug in BUILDINFO options. makepkg records configuration defaults there; the corrected audit verifies the hash-bound PKGBUILD overrides and actual absence of every debug companion."
+  ],
+  "publication_status": "validated and installed; upload pending",
+  "input_sha256": {
+    "mingw-w64-qt6-webengine-runtime-repack/PKGBUILD": "0bbf30ce1e33c1170098c3a439f0abeddc0c8af40ccbc137f4e6d69ce3c75b13",
+    "mingw-w64-qt6-webengine-runtime-repack/repack.py": "500ff98717a039714d05ce2915d948db0757c23203d93cff99b3d84cdd877fe9",
+    "tests/qt6-webengine-runtime-repack/audit-package.py": "ff4a63e174c6bcb1887ec1aa43fb05abba06b24cc86d418387300f6c98616f6e"
+  },
+  "installed_verification": {
+    "clang64": {
+      "installed_package": "mingw-w64-clang-x86_64-qt6-webengine 6.11.2-3",
+      "all_installed_payload_hashes_match_audited_archive": true,
+      "debug_files_absent": true,
+      "pacman_Qkk_exit_code": 0,
+      "pacman_Qkk_summary": "mingw-w64-clang-x86_64-qt6-webengine: 421 total files, 0 altered files"
+    },
+    "ucrt64": {
+      "installed_package": "mingw-w64-ucrt-x86_64-qt6-webengine 6.11.2-3",
+      "all_installed_payload_hashes_match_audited_archive": true,
+      "debug_files_absent": true,
+      "pacman_Qkk_exit_code": 0,
+      "pacman_Qkk_summary": "mingw-w64-ucrt-x86_64-qt6-webengine: 421 total files, 0 altered files"
+    }
+  }
+}

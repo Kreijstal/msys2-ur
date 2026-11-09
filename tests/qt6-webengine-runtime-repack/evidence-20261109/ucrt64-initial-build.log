@@ -1,0 +1,30 @@
+==> WARNING: PACKAGER should have the format 'Example Name <email@address.invalid>'
+==> Making package: mingw-w64-qt6-webengine-runtime-repack 6.11.2-3 (Mon Nov  9 14:36:39 2026)
+==> WARNING: Skipping dependency checks.
+==> Retrieving sources...
+  -> Found mingw-w64-ucrt-x86_64-qt6-webengine-6.11.2-2-any.pkg.tar.zst
+  -> Found repack.py
+==> Validating source files with sha256sums...
+    mingw-w64-ucrt-x86_64-qt6-webengine-6.11.2-2-any.pkg.tar.zst ... Passed
+    repack.py ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+==> Starting prepare()...
+Warning : /tmp/qt6-webengine-clean-release-20261109/ucrt64/work/mingw-w64-qt6-webengine-runtime-repack/src/mingw-w64-ucrt-x86_64-qt6-webengine-6.11.2-2-any.pkg.tar.zst is a symbolic link, ignoring
+Traceback (most recent call last):
+  File "/tmp/qt6-webengine-clean-release-20261109/ucrt64/work/mingw-w64-qt6-webengine-runtime-repack/src/repack.py", line 50, in <module>
+    files, metadata, removed = inspect(extract=mode == 'prepare')
+                               ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/qt6-webengine-clean-release-20261109/ucrt64/work/mingw-w64-qt6-webengine-runtime-repack/src/repack.py", line 21, in inspect
+    with tarfile.open(fileobj=process.stdout, mode='r|') as tar:
+         ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/tarfile.py", line 1997, in open
+    t = cls(name, filemode, stream, **kwargs)
+  File "/usr/lib/python3.14/tarfile.py", line 1860, in __init__
+    self.firstmember = self.next()
+                       ~~~~~~~~~^^
+  File "/usr/lib/python3.14/tarfile.py", line 2921, in next
+    raise ReadError("empty file") from None
+tarfile.ReadError: empty file
+==> ERROR: A failure occurred in prepare().
+    Aborting...
