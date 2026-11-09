@@ -6,6 +6,15 @@ Microsoft.Windows.Compatibility have source artifacts but still require broader
 compatibility verification. The historical NETStandard1.x restore reports below
 are separate archival work and do not count as missing current PowerShell dependencies.
 
+A fresh [installed prerequisite audit](installed-prerequisites-20261109.json)
+checks each environment against its own shipped build closure: 100 native
+packages in CLANG64, 99 in UCRT64, and 93 source NuGet archives per environment.
+Versions, archive hashes and recorded native owners all match. These are build
+prerequisites, not additional validated direct dependency IDs. The host still
+has no SQL Server service or installed LocalDB version, and WinRM remains stopped.
+Authorized live provider/database settings are the next external prerequisite;
+full behavior and the three incomplete direct dependencies remain unverified.
+
 MMI3 3.0.0-16 fixes borrowed error-data deletion during CimException construction;
 92 assertions pass in clean builds, fresh installed consumers and PowerShell
 7.4.20-22 STA/MTA modes in both environments.
