@@ -39,6 +39,14 @@ MOF declarations; no production changes were needed. Live provider/database
 and broader Windows.Compatibility behavior remain unverified.
 [Codec evidence and scope](../mmi-codec-abi/README.md).
 
+PowerShell 7.4.20-25 corrects nine serviced dependency selections that previously
+resolved to older desktop bootstrap assemblies. Both environments use the
+rebuilt 8.0.31-2 satellite/configuration packages, explicit runtime assets and
+the rebuilt EventLog message companion. Standalone and original PowerShell
+STA/MTA modes each pass 69 cross-library assertions; all 36 inventoried loaded
+assembly identities match current source packages or the serviced runtime.
+[Serviced runtime selection and integration evidence](../windows-compatibility-integration/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

@@ -29,6 +29,8 @@ internal static class Program
         string token=Convert.ToHexString(assembly.GetName().GetPublicKeyToken()).ToLowerInvariant();
         Require(token=="b03f5f7f11d50a3a", "Wrong public key: "+assembly.FullName);
         Require(assembly.GetName().Version==new Version(8,0,0,0), "Wrong assembly version: "+assembly.FullName);
+        if (type == typeof(ProtectedData) || type == typeof(Package))
+            Require(FileVersionInfo.GetVersionInfo(assembly.Location).FileVersion == "8.0.31.0", "Wrong serviced file version: " + assembly.FullName);
         Require(assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.StartsWith(version+"+runtime-v8.0.31")==true, "Wrong source/version: "+assembly.FullName);
         Require(assembly.GetManifestResourceNames().Contains("FxResources."+assembly.GetName().Name+".SR.resources"), "Resources missing: "+assembly.FullName);
         // Resolve every declared type to detect missing managed dependencies.

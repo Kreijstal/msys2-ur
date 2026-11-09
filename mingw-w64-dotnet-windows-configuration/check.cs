@@ -38,6 +38,9 @@ internal static class Program
             string token=Convert.ToHexString(asm.GetName().GetPublicKeyToken()).ToLowerInvariant();
             Require(token==(lib.GetProperty("key").GetString()=="Microsoft"?"b03f5f7f11d50a3a":"cc7b13ffcd2ddd51"),"Wrong signing identity: "+id);
             Require(asm.GetName().Version==new Version(8,0,0,0),"Wrong assembly version: "+id);
+            if (new[] { "Microsoft.Win32.SystemEvents", "System.Configuration.ConfigurationManager", "System.Diagnostics.EventLog",
+                "System.DirectoryServices", "System.Drawing.Common", "System.Security.Permissions", "System.Windows.Extensions" }.Contains(id))
+                Require(FileVersionInfo.GetVersionInfo(asm.Location).FileVersion == "8.0.31.0", "Wrong serviced file version: " + id);
             string source=id=="System.Drawing.Common"?"winforms":"runtime";
             Require(asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.StartsWith(version+"+"+source+"-v8.0.31")==true,"Wrong source/version: "+id);
             Require(asm.GetManifestResourceNames().Contains("FxResources."+id+".SR.resources"),"Missing resources: "+id);

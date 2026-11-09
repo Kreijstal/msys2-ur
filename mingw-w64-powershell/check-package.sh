@@ -23,7 +23,7 @@ assert len(license['bundled_source_native_owners'])>=70
 print('PASS complete source distribution file hashes and every declared source/native-owner license')
 PY
 ${MINGW_PREFIX}/bin/python.exe "$(cygpath -am "$here/check-launcher.py")" "$(cygpath -am "$prefix")" "$(cygpath -am "$out/launcher")" --dotnet-root "$(cygpath -am ${MINGW_PREFIX}/lib/dotnet)"
-smokes=(Smoke CimWmiSmoke ChildSmoke MofSmoke EmbeddedSmoke DeliverySmoke MetadataSmoke)
+smokes=(Smoke CimWmiSmoke ChildSmoke MofSmoke EmbeddedSmoke DeliverySmoke MetadataSmoke ServicedAssetsSmoke)
 # the desktop smoke ships only with a WindowsDesktop build
 desktop_summary=''
 if [[ -f $fixtures/DesktopSmoke.ps1 ]]; then

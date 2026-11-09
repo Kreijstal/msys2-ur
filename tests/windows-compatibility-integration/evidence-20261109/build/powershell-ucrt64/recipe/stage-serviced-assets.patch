@@ -1,0 +1,51 @@
+--- a/workflows/powershell-full-sdk/build-package.sh
++++ b/workflows/powershell-full-sdk/build-package.sh
+@@ -17,6 +17,7 @@
+ /usr/bin/python3 "$here/audit-native-console.py" "$root" ${MINGW_PREFIX}/lib/dotnet \
+   ${MINGW_PREFIX}/share/doc/dotnet-sdk8-servicing "$root/native-apphost-check"
+ /usr/bin/python3 "$here/stage.py" "$root" "$root/app"
++/usr/bin/python3 "$package/stage-serviced-assets.py" "$root" "$root/app"
+ /usr/bin/python3 "$here/audit-payload.py" "$root" "$root/app"
+ /usr/bin/python3 "$here/collect-package-licenses.py" "$root" "$root/app" "$root/licenses"
+ printf '#define TARGET_RELATIVE L"../lib/powershell/7/pwsh.exe"\n' > "$root/launcher-config.h"
+--- a/workflows/powershell-full-sdk/audit-payload.py
++++ b/workflows/powershell-full-sdk/audit-payload.py
+@@ -22,6 +22,28 @@
+         for relative, digest in record['assets'].items():
+             assert sha(z.read(relative)) == digest, (name, relative)
+             expected['Modules/' + name + '/' + relative] = digest
++for relative, item in stage['serviced_runtime_assets'].items():
++    archive = feed / item['archive']
++    assert sha(archive.read_bytes()) == item['archive_sha256'], archive
++    with zipfile.ZipFile(archive) as z:
++        assert sha(z.read(item['asset'])) == item['sha256']
++    expected[relative] = item['sha256']
++expected[stage['serviced_runtime_manifest']['relative_path']] = stage['serviced_runtime_manifest']['sha256']
++original_manifest = json.loads((source / 'src/powershell-win-core/bin/Release/net8.0/pwsh.deps.json').read_text())
++assert len(original_manifest['targets']) == 1
++original_target = next(iter(original_manifest['targets'].values()))
++for name in {item['library'] for item in stage['serviced_runtime_assets'].values()}:
++    original_target[name]['runtime'] = {}
++    original_target[name].pop('runtimeTargets', None)
++for item in stage['serviced_runtime_assets'].values():
++    assert item['assembly_version'] == '8.0.0.0'
++    if item['is_primary']:
++        assert item['file_version'] == '8.0.31.0'
++    entry = {'assemblyVersion': item['assembly_version']}
++    if item['file_version']:
++        entry['fileVersion'] = item['file_version']
++    original_target[item['library']]['runtime'][item['relative_path']] = entry
++assert json.loads((output / 'pwsh.deps.json').read_text()) == original_manifest
+ actual = {p.relative_to(output).as_posix(): sha(p.read_bytes()) for p in output.rglob('*') if p.is_file()}
+ assert actual == expected, (sorted(set(expected) - set(actual)), sorted(set(actual) - set(expected)))
+ 
+--- a/workflows/powershell-full-sdk/stage-package.py
++++ b/workflows/powershell-full-sdk/stage-package.py
+@@ -28,6 +28,7 @@
+ names=['source-build-inputs.json','localaccounts-source-overlay.json','localaccounts-source-overlay.diff',
+        'full-source-coverage.json']+['graphicalhost-source-audit.json']*desktop+['full-sdk-catalog-audit.json','native-console-source.json']
+ for name in names:shutil.copy2(root/name,doc/name)
++shutil.copy2(root/(app.name+'-serviced-runtime-assets.json'),doc/'serviced-runtime-assets.json')
+ shutil.copy2(root/(app.name+'-payload-audit.json'),doc/'application-source-payload.json')
+ shutil.copy2(root/(app.name+'-license-closure.json'),doc/'license-closure.json')
+ files={p.relative_to(prefix).as_posix():sha(p) for p in prefix.rglob('*') if p.is_file()}

@@ -3,7 +3,7 @@ _realname=powershell
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=7.4.20
-pkgrel=24
+pkgrel=25
 pkgdesc='Original PowerShell console, SDK and modules with experimental source-built Windows dependencies (mingw-w64)'
 arch=('any')
 mingw_arch=('clang64' 'ucrt64')
@@ -23,27 +23,27 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-codedom>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-composition>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-composition-registration>=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-configuration-manager>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-pkcs>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-cryptography-xml>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-csharp-compiler>=4.9.2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-diagnosticsource>=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-accountmanagement>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-directoryservices-protocols>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers>=1.0.0.beta59"
              "${MINGW_PACKAGE_PREFIX}-dotnet-documentation-analyzers-unstable>=1.0.0.beta59"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-drawing-common>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-drawing-common>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-encoding-codepages>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-encodings-web>=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-eventlog>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-extensions-primitives6>=6.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-fileproviders-abstractions6>=6.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-filesystem-globbing6>=6.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-formats-asn1>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-humanizer>=2.14.1"
              "${MINGW_PACKAGE_PREFIX}-dotnet-identitymodel-abstractions>=6.35.0"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-io-packaging>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-io-ports>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-json-more>=2.0.2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-jsonpointer>=5.0.2"
@@ -74,7 +74,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-powershell-markdownrender>=7.2.1"
              "${MINGW_PACKAGE_PREFIX}-dotnet-powershell-pager>=1.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-private-servicemodel>=4.10.3"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-protecteddata>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-reflection-context>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-registry-accesscontrol>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-runtime-caching>=8.0.31"
@@ -84,7 +84,7 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-sdk8-servicing>=8.0.131"
              "${MINGW_PACKAGE_PREFIX}-dotnet-security-accesscontrol6>=6.0.1"
              "${MINGW_PACKAGE_PREFIX}-dotnet-security-extensions>=1.4.0"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-security-permissions>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-servicecontroller>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-duplex>=4.10.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-servicemodel-http>=4.10.3"
@@ -97,12 +97,12 @@ makedepends=("${MINGW_PACKAGE_PREFIX}-cc" "${MINGW_PACKAGE_PREFIX}-python" 'pyth
              "${MINGW_PACKAGE_PREFIX}-dotnet-stylecop-analyzers-unstable>=1.2.0.beta556"
              "${MINGW_PACKAGE_PREFIX}-dotnet-syndication8>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-system-text-json8>=8.0.5"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-systemevents>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-systemevents>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-targeting8-servicing>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-dotnet-threading-accesscontrol>=8.0.0"
              "${MINGW_PACKAGE_PREFIX}-dotnet-web-services-description>=4.10.3"
              "${MINGW_PACKAGE_PREFIX}-dotnet-windows-compatibility>=8.0.31"
-             "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions>=8.0.31"
+             "${MINGW_PACKAGE_PREFIX}-dotnet-windows-extensions>=8.0.31-2"
              "${MINGW_PACKAGE_PREFIX}-dotnet-winhttp-handler>=8.0.31"
              "${MINGW_PACKAGE_PREFIX}-powershell-archive>=1.2.6"
              "${MINGW_PACKAGE_PREFIX}-powershell-native>=700.0.0"
@@ -128,21 +128,29 @@ source=('powershell-7.4.20.tar.gz::https://codeload.github.com/PowerShell/PowerS
         'EmbeddedSmoke.ps1'
         'DeliverySmoke.ps1'
         'MetadataSmoke.ps1'
-        'stage-mof-check.patch')
+        'stage-mof-check.patch'
+        'stage-serviced-assets.patch'
+        'stage-serviced-assets.py'
+        'ServicedAssetInfo.cs'
+        'ServicedAssetsSmoke.ps1')
 noextract=('powershell-7.4.20.tar.gz')
 sha256sums=('3dac352752acd64a0502c1f002ecf65eca177d2919bea3bcefbf8856afedd9eb'
             '24974161228063be2625cb833d8df112e7d4ae3dd60d7acf5d4bdd3ec6984e63'
             '49ba4544fa4f9e6ff4afd69dde4bb2faee4eff6860ec70dfbc033562271abfa5'
             'c6922a5079811b231fdd6dc8cd9ae26bd30f4d729e1eff6396e483aa16872dde'
-            '8a27f30768888c9612206213e38af0403ccfc93180bce001dff260268ee24380'
-            'd0f21d4a51f8e2a27c631b929458baaa0331328f9b4ea9124e504396bba1d67b'
+            'a51a81562a595925c6a0992332c90bc64189833a504762a6d03876c7b4b418fb'
+            'c0f65b3515e4beb2ad6cfb707b01845dd0eb62761b4d58194ec9f30209cb64f6'
             '16b990eec85416dd6273e58d855e8aae06fae1c46b118b7a766d17ae4b0316a1'
             '831a5a7c8c3e57f0cc3a090120f07c7c216f33d149bcc71f8676983e8741ab96'
             '6ff228c04145cfde5bd850d344220ff5749ec780ee71a6d6803f570c27278b00'
             '133ca1aab104e4bb3500e72647cd8a5ffc3f2463905895274a7ff5dc8b9ff319'
             'eab846bd91b852d6e628ef3d02b4a6e0a5ef1f841d7ecfe1bee12ddf9338bae9'
             '67feeb92fd08dfc170e0170e67127afde7f4f7be1f6dbb6ec4e1d4ba86cf28ca'
-            '6cbaf865e68fa8ed2ceeb10ec81cbeddc8fb291e88d7000b022e29c286073aff')
+            'b19206a525cc512c065a910718290a78833fbba41585997141a0d020332839dc'
+            '094954f57734b49b18cd130bf7768c8fd663344db23285109e20d1f6654219b9'
+            '27e0ce9821f444e49447f497250e13052812ec9fb5d4f3aaed0425f5ec88759e'
+            '497a049a72eb5056a88091dbf514877f8d27bdb2336c488f54fcd4dfaafcebbf'
+            'd40541f35e93da47d3b64d0318983b6338ef1a6f7e11c30ba72eda46f42531b4')
 if [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]]; then
   depends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
   makedepends+=("${MINGW_PACKAGE_PREFIX}-dotnet-windowsdesktop-bootstrap>=8.0.0")
@@ -152,6 +160,7 @@ _desktop() { [[ ${MINGW_PACKAGE_PREFIX} == *-clang-* ]] && echo 1 || echo 0; }
 
 prepare() {
   patch --batch -p1 -d "$srcdir/dotnet-mingw-bootstrap-${_workflow_commit}" -i "$srcdir/stage-mof-check.patch"
+  patch --batch -p1 -d "$srcdir/dotnet-mingw-bootstrap-${_workflow_commit}" -i "$srcdir/stage-serviced-assets.patch"
   mkdir "$srcdir/build"
   cp "$srcdir/powershell-7.4.20.tar.gz" "$srcdir/build/"
   tar -xf "$srcdir/powershell-7.4.20.tar.gz" -C "$srcdir/build"

@@ -27,6 +27,11 @@ for f in sorted(winforms.rglob('*')):
         removed.append('winforms/'+str(f.relative_to(winforms)))
         f.unlink()
 (output / 'removed-binaries.json').write_text(json.dumps(removed,indent=2)+'\n')
+# MSBuild resource tasks can reject long, unnormalized relative paths even
+# when the resolved file exists below MAX_PATH. Preserve wildcard suffixes.
+source_roots = [(p, subprocess.check_output(['cygpath', '-am', str(p)], text=True).strip()
+                 if sys.platform.startswith(('cygwin', 'msys')) else str(p))
+                for p in (source, winforms)]
 for library in libraries:
     drawing=library.get('source')=='winforms'
     root = winforms/'src' if drawing else source/'src/libraries'
@@ -42,8 +47,13 @@ for library in libraries:
         upstream.remove(imp)
     project_dir = output / name
     project_dir.mkdir()
-    def relative(path):
-        return os.path.relpath(path, project_dir).replace('\\', '/')
+    def source_path(path):
+        path = Path(path).resolve()
+        for original_root, native_root in source_roots:
+            if path.is_relative_to(original_root):
+                suffix = path.relative_to(original_root).as_posix()
+                return native_root if suffix == '.' else native_root + '/' + suffix
+        raise ValueError('Source path outside the pinned trees: ' + str(path))
     upstream.attrib.pop('Sdk', None)
     for group in upstream.findall('PropertyGroup'):
         for element in list(group):
@@ -60,7 +70,7 @@ for library in libraries:
                     element.set('LogicalName',name+'.'+element.get('Include','').replace('\\','.').replace('/','.'))
                 value = element.get(attribute)
                 if value and not value.startswith('$('):
-                    element.set(attribute, (relative(original.parent)+'/'+value).replace('\\','/'))
+                    element.set(attribute, source_path(original.parent / value.replace('\\', '/')))
     (project_dir/'Library.public.snk').write_bytes(bytes.fromhex((inputs/(key_id+'.pubkey.hex')).read_text()))
     for group in upstream.findall('ItemGroup'):
         # Replace project dependencies with separately packed source libraries.
@@ -73,10 +83,10 @@ for library in libraries:
     props = E.SubElement(project,'PropertyGroup')
     values = {
         'TargetFramework':framework, 'NetCoreAppCurrent':'net8.0', 'NetCoreAppPrevious':'net7.0',
-        'NetCoreAppMinimum':'net6.0', 'NetCurrent':'net8.0','NetPrevious':'net7.0','NetMinimum':'net6.0', 'RepoRoot':relative(winforms)+'/', 'DefaultLanguageSourceExtension':'.cs', 'NetFrameworkMinimum':'net462', 'TargetFrameworkIdentifier':'.NETCoreApp',
+        'NetCoreAppMinimum':'net6.0', 'NetCurrent':'net8.0','NetPrevious':'net7.0','NetMinimum':'net6.0', 'RepoRoot':source_path(winforms)+'/', 'DefaultLanguageSourceExtension':'.cs', 'NetFrameworkMinimum':'net462', 'TargetFrameworkIdentifier':'.NETCoreApp',
         'TargetOS':'windows', 'TargetsWindows':'true', 'TargetArchitecture':'x64',
-        'CommonPath':relative(root)+'/Common/src/', 'LibrariesProjectRoot':relative(root)+'/',
-        'CoreLibSharedDir':relative(root)+'/System.Private.CoreLib/src/',
+        'CommonPath':source_path(root)+'/Common/src/', 'LibrariesProjectRoot':source_path(root)+'/',
+        'CoreLibSharedDir':source_path(root)+'/System.Private.CoreLib/src/',
         'EnableDefaultCompileItems':'false', 'EnableDefaultEmbeddedResourceItems':'false',
         'EnableDefaultNoneItems':'false', 'ImportDirectoryBuildProps':'false', 'ImportDirectoryBuildTargets':'false',
         'AssemblyName':name, 'RootNamespace':name, 'Version':version, 'AssemblyVersion':'8.0.0.0',
@@ -87,19 +97,23 @@ for library in libraries:
         'RepositoryUrl':'https://github.com/dotnet/'+('winforms' if drawing else 'runtime'), 'RepositoryType':'git',
     }
     for key,value in values.items(): E.SubElement(props,key).text=value
+    if name in {'Microsoft.Win32.SystemEvents', 'System.Configuration.ConfigurationManager', 'System.Diagnostics.EventLog',
+                'System.DirectoryServices', 'System.Drawing.Common', 'System.Security.Permissions', 'System.Windows.Extensions'}:
+        # Keep contract identity while allowing serviced app assets to win.
+        E.SubElement(props, 'FileVersion').text = '8.0.31.0'
     E.SubElement(project,'Import', Project='upstream.proj')
     items=E.SubElement(project,'ItemGroup')
     for dep,dep_version in library['dependencies'].items():
         E.SubElement(items,'PackageReference',Include=dep,Version='['+dep_version+']')
     if upstream.findtext('./PropertyGroup/IsPartialFacadeAssembly')=='true':
         for forwards in (root/name/'ref').glob('*.Forwards.cs'):
-            E.SubElement(items,'Compile',Include=relative(forwards))
+            E.SubElement(items,'Compile',Include=source_path(forwards))
     resources=original.parent/'Resources/Strings.resx'
     assert resources.is_file(), name
     logical='FxResources.'+name+'.SR'
-    E.SubElement(items,'Compile',Include=relative(winforms/'src/Common/src/SR.cs' if drawing else root/'Common/src/System/SR.cs'))
+    E.SubElement(items,'Compile',Include=source_path(winforms/'src/Common/src/SR.cs' if drawing else root/'Common/src/System/SR.cs'))
     E.SubElement(items,'Compile',Include='SR.Generated.cs')
-    E.SubElement(items,'EmbeddedResource',Include=relative(resources),LogicalName=logical+'.resources')
+    E.SubElement(items,'EmbeddedResource',Include=source_path(resources),LogicalName=logical+'.resources')
     lines=['namespace System { internal static partial class SR {', 'private static readonly System.Resources.ResourceManager ResourceManager = new System.Resources.ResourceManager('+json.dumps(logical)+',typeof(SR).Assembly);']
     for data in E.parse(resources).iter('data'):
         key=data.get('name')

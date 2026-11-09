@@ -1,6 +1,6 @@
 {
   "scope": "PowerShell 7.4.20 / .NET 8.0.31, CLANG64 and UCRT64",
-  "previous_goal_turn_classification": "progress: callback ABI and export evidence committed and pushed",
+  "previous_goal_turn_classification": "progress: codec/client-table ABI audit completed and pushed",
   "full_dependency_goal_complete": false,
   "verified_direct_dependency_ids": 50,
   "total_direct_dependency_ids": 53,
@@ -68,19 +68,25 @@
       "direct_net8_edges": 35,
       "source_archives_per_environment": 40,
       "consumer_DLLs_per_environment": 67,
-      "current_environment_evidence": "tests/powershell-deps/completion-audit-evidence-20261109/artifacts.json",
+      "current_environment_evidence": "tests/windows-compatibility-integration/results-20261109.json",
       "full_graph_behavior_verified": false,
       "remaining": [
-        "SqlClient native/database implementation and integration requirements",
-        "Broader behavior of the complete graph beyond the tested local consumer"
+        "Real SqlClient database/LocalDB/FILESTREAM integration requirements",
+        "Broader behavior of the complete graph beyond the verified local workflows, including remote/provider compatibility"
       ],
-      "complete": false
+      "complete": false,
+      "cross_library_and_runtime_selection_evidence": "tests/windows-compatibility-integration/results-20261109.json",
+      "local_cross_library_behavior_dependencies": 13,
+      "runtime_dependency_assembly_identities_verified": 36,
+      "serviced_desktop_selection_defect_fixed": true,
+      "powershell_package_version": "7.4.20-25"
     }
   ],
   "tracker_correction": {
     "PowerShell_native_components_are_built_and_installed": true,
     "evidence": "tests/mmi-native-abi/powershell-results-20261109.json",
-    "this_does_not_establish_all_native_runtime_or_provider_behavior": true
+    "this_does_not_establish_all_native_runtime_or_provider_behavior": true,
+    "serviced_runtime_selection_evidence": "tests/windows-compatibility-integration/results-20261109.json"
   },
   "separate_archival_or_future_work": [
     "The historical NETStandard1.x/.NETNative restore gaps are not missing packages for the current PowerShell build",
@@ -143,17 +149,27 @@
       "function_slots": 125,
       "parameters": 551,
       "remaining_declaration_divergences": 0
+    },
+    {
+      "component": "PowerShell serviced Windows compatibility runtime selection",
+      "primary_assemblies": 9,
+      "companion_assemblies": 1,
+      "powershell_package_version": "7.4.20-25",
+      "source_library_recipe_release": "8.0.31-2",
+      "implemented": true,
+      "evidence": "tests/windows-compatibility-integration/results-20261109.json"
     }
   ],
   "next_safe_implementation_action": {
-    "component": "Provider/database integration and Windows.Compatibility behavior",
+    "component": "Remaining real provider/database integration",
     "work": [
       "Run authenticated HTTPS WSMan/provider and real database integration when authorized private settings are available",
-      "Validate remaining Windows.Compatibility consumer behavior against its source dependency graph"
+      "Review remaining concrete native/provider gaps against live integration evidence",
+      "Validate concrete graph behavior outside the current local workflows without treating metadata/load checks as complete behavioral coverage"
     ],
-    "status": "Scoped public table, callback, codec and client-table ABI audits pass; live integration requirements remain open",
+    "status": "Scoped ABI audits and current local cross-library/deployed-source checks pass; external integration requirements remain open",
     "implemented": false,
     "full_dependency_goal_complete": false
   },
-  "this_goal_turn_classification": "progress: remaining codec/client table ABI verified in CLANG64 and UCRT64"
+  "this_goal_turn_classification": "progress: nine incorrect desktop assembly selections fixed; source libraries and PowerShell rebuilt and installed in both environments"
 }

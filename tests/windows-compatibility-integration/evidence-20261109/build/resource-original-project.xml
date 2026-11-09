@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <NetCoreAppCurrent>net8.0</NetCoreAppCurrent>
+    <NetCoreAppPrevious>net7.0</NetCoreAppPrevious>
+    <NetCoreAppMinimum>net6.0</NetCoreAppMinimum>
+    <NetCurrent>net8.0</NetCurrent>
+    <NetPrevious>net7.0</NetPrevious>
+    <NetMinimum>net6.0</NetMinimum>
+    <RepoRoot>../../winforms-8.0.31/</RepoRoot>
+    <DefaultLanguageSourceExtension>.cs</DefaultLanguageSourceExtension>
+    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
+    <TargetFrameworkIdentifier>.NETCoreApp</TargetFrameworkIdentifier>
+    <TargetOS>windows</TargetOS>
+    <TargetsWindows>true</TargetsWindows>
+    <TargetArchitecture>x64</TargetArchitecture>
+    <CommonPath>../../runtime-8.0.31/src/libraries/Common/src/</CommonPath>
+    <LibrariesProjectRoot>../../runtime-8.0.31/src/libraries/</LibrariesProjectRoot>
+    <CoreLibSharedDir>../../runtime-8.0.31/src/libraries/System.Private.CoreLib/src/</CoreLibSharedDir>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+    <AssemblyName>System.Configuration.ConfigurationManager</AssemblyName>
+    <RootNamespace>System.Configuration.ConfigurationManager</RootNamespace>
+    <Version>8.0.1</Version>
+    <AssemblyVersion>8.0.0.0</AssemblyVersion>
+    <InformationalVersion>8.0.1+runtime-v8.0.31</InformationalVersion>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SignAssembly>true</SignAssembly>
+    <PublicSign>true</PublicSign>
+    <AssemblyOriginatorKeyFile>Library.public.snk</AssemblyOriginatorKeyFile>
+    <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <NuGetAudit>false</NuGetAudit>
+    <NoWarn>CS0436;CS0618;SYSLIB0051;SYSLIB0003</NoWarn>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/dotnet/runtime</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <FileVersion>8.0.31.0</FileVersion>
+  </PropertyGroup>
+  <Import Project="upstream.proj" />
+  <ItemGroup>
+    <PackageReference Include="System.Security.Permissions" Version="[8.0.0]" />
+    <PackageReference Include="System.Diagnostics.EventLog" Version="[8.0.2]" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="[8.0.0]" />
+    <Compile Include="../../runtime-8.0.31/src/libraries/Common/src/System/SR.cs" />
+    <Compile Include="SR.Generated.cs" />
+    <EmbeddedResource Include="../../runtime-8.0.31/src/libraries/System.Configuration.ConfigurationManager/src/Resources/Strings.resx" LogicalName="FxResources.System.Configuration.ConfigurationManager.SR.resources" />
+  </ItemGroup>
+</Project>

@@ -71,6 +71,9 @@ for library in libraries:
         'RepositoryUrl':'https://github.com/dotnet/runtime', 'RepositoryType':'git',
     }
     for key,value in values.items(): E.SubElement(props,key).text=value
+    if name in {'System.Security.Cryptography.ProtectedData', 'System.IO.Packaging'}:
+        # The host compares file versions when desktop framework identities tie.
+        E.SubElement(props, 'FileVersion').text = '8.0.31.0'
     E.SubElement(project,'Import', Project='upstream.proj')
     items=E.SubElement(project,'ItemGroup')
     resources=original.parent/'Resources/Strings.resx'

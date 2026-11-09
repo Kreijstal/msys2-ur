@@ -113,3 +113,10 @@ Release 14 corrects named method-qualifier lookup in the bundled MMI library.
 The requested qualifier name now reaches the native qualifier set. Dedicated
 checks compare named lookups with enumeration for an in-memory MOF class and
 Win32_Process metadata, and exercise the original Get-CimClass command in STA/MTA.
+
+The staging adapter keeps the nine Windows compatibility assemblies that overlap
+the desktop framework as explicit app runtime assets with their actual serviced
+file versions. This prevents the desktop framework from selecting its older copies
+when assembly identities match. Source archive hashes, actual PE versions and
+the dependency-manifest change are recorded; a package smoke check requires
+PowerShell to load all nine app-local source assemblies.

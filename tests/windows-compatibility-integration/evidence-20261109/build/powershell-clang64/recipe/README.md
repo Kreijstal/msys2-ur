@@ -1,0 +1,122 @@
+# PowerShell 7.4.20 source package
+
+This package builds the original Windows console and full
+Microsoft.PowerShell.SDK graph from PowerShell tag v7.4.20, commit
+013edf910bbe781f503c27370941ce54d02d3f33, with LocalAccounts and six
+source-built gallery modules. The CLANG64 build also includes the original
+conditional GraphicalHost project and the WindowsDesktop console. UCRT64 has
+no WindowsDesktop runtime, so its console references only Microsoft.NETCore.App
+and has no GraphicalHost. Show-Command and Out-GridView remain as cmdlets, but
+pwsh's GAC fallback then loads Windows PowerShell's .NET Framework GraphicalHost,
+which terminates the process with a TypeLoadException; do not use them there.
+
+Both environments build with the full-SDK workflow of
+https://github.com/Kreijstal/dotnet-mingw-bootstrap at the commit the recipe
+pins (`workflows/powershell-full-sdk`).
+All NuGet restores use the installed source-only feed. No published PowerShell,
+.NET implementation, SDK or reference binaries are downloaded during this build.
+
+The source-built SDK 8.0.131 uses fresh runtime 8.0.31 host/runtime packs and
+targeting 8.0.31-2. Its managed SDK payload is preserved from our audited
+source-bootstrap package, rather than recompiled by this recipe. The original
+SDK CreateAppHost task produces the application executable; a small native
+launcher exposes it as `$MINGW_PREFIX/bin/pwsh.exe`. The launcher selects this prefix's
+source runtime and native library path in the child process. It also supports
+relocation with an explicitly supplied source DOTNET_ROOT. No persistent PATH,
+registry, execution policy, remoting or manifest registration changes are made.
+
+The source workflow records every original compiler input and analyzer, replays
+the original type catalog generator and apphost task, maps every application
+binary to original project outputs or installed source archives, and copies
+complete license files for all bundled package owners. It records the build
+package versions it used under `share/doc/powershell`. Source-only generator host retargeting,
+archive version/public signing setup and the exact LocalAccounts compatibility
+overlay are recorded under `share/doc/powershell`. LocalAccounts keeps every
+original C# file and all 459 audited public/protected API entries. The original
+GraphicalHost project's RunAnalyzers=false setting remains unchanged; the other
+projects retain their source analyzers.
+
+Validation checks Unicode/quoted/empty launcher arguments and child exit status,
+the original full SDK catalog, live local CIM/GetOwner/serialization,
+LocalAccounts enumeration, JSON, Add-Type, Authenticode, six gallery modules,
+native child jobs and (CLANG64) original Show-Command compiled BAML/control rasterization.
+The combined direct MMI/CIM/System.Management WMI fixture runs in both STA and
+MTA modes. The source System.Management8.0.0-2 backend secures each service call
+after CLR marshaling, fixing the STA Access denied failure in release1. A
+standalone STA regression is also included. Direct MMI uses a CLR null
+string for a local session and explicitly disposes its native query enumerator.
+Release 14 requires the source MMI3 package 3.0.0-11 and bundles its MOF, property
+ownership and subscription-delivery option fixes. Additional PowerShell fixtures verify that the
+loaded MMI DLL matches the installed source package, then exercises Unicode MOF
+includes, a nonzero input offset, retained results after disposal/compacting GC,
+and live CIM cmdlets in the actual application. The fixture parses in-memory MOF;
+it does not register WMI classes or instances. The property fixture checks
+embedded instances/references, array snapshots, live modification flags, empty
+versus NULL arrays and retained values after disposal. It also uses the original
+New-CimSession/Register-CimIndicationEvent cmdlets to verify a real intrinsic
+process event and retained TargetInstance. Only owned child processes and
+temporary subscriptions are used and cleaned up. The delivery fixture constructs
+options through the public API and verifies real native credential storage,
+Unicode/SecureString copying, interval values, independent clone lifetime and
+disposal. Its credentials are dummy test data; it performs no remote authentication.
+The installed check is:
+
+```sh
+bash $MINGW_PREFIX/share/doc/powershell/checks/check-package.sh \
+  $MINGW_PREFIX NEW_OUTPUT $MINGW_PREFIX/share/doc/powershell/checks
+```
+
+This remains an experimental port. Local CIM success does not establish MMI3
+authenticated remote/provider/ownership parity. SqlClient database/native,
+LocalDB/shared-memory/FILESTREAM behavior and the full Windows.Compatibility
+graph need further validation. The source desktop framework still has partial
+native WPF coverage and an interim WinForms7 implementation; complete WinForms8
+generator bootstrap and broader GUI behavior remain open. COM, ReadyToRun,
+NativeAOT, debugger/DAC and broader runtime compatibility are incomplete.
+PowerShell7.6/.NET10 is a separate outstanding graph. This package does not
+complete the full dependency-porting goal.
+
+`MetadataSmoke.ps1` traverses live class/property/method/parameter qualifiers
+through original `Get-CimClass` results while forcing compacting GC. It invokes
+CLR getters directly and verifies that temporary metadata-view cleanup preserves
+the borrowed class metadata. This covers the MMI3 3.0.0-5 metadata wrapper fix.
+
+Release 11 bundles the class- and instance-clone rollback fixes: native clone
+failure preserves caller-owned handles and releases partial output clones and
+wrapper cells, including outputs after null array slots.
+The MMI recipe verifies the failure path with a native ABI driver; application
+MOF/metadata fixtures verify the bundled implementation and normal live paths.
+
+Release 11 also fixes class-only MOF documents: the native codec's successful
+empty instance array becomes an empty managed result and advances the input
+offset. MofSmoke verifies this in the actual application before reusing the
+deserializer for includes, Unicode instance data and live CIM queries.
+
+Release 11 requires SqlClient4.9.1-2, including managed LocalDB API buffer
+negotiation, startup HRESULT propagation, failed-lookup transport routing and
+native LocalDB message formatting without proprietary SNI. Real LocalDB/SQL
+Server, shared-memory/FILESTREAM and broader authentication remain unverified.
+
+Release 12 reclaims abandoned native CIM classes through the shared native
+handle. Retained class metadata views keep that handle alive until they are
+released; borrowed handles do not delete their native class. Explicit disposal
+and native class calls share the corrected ownership path. Dedicated application
+checks exercise native deletion counts, metadata-view lifetime, reentrant GC and
+lazy MOF/XML schema caches inside the installed PowerShell bundle.
+
+Release 13 retains native class owners through temporary qualifier, parameter
+and value wrappers. Optimized metadata reads and borrowed Unicode value copies
+remain valid during forced GC. Dedicated installed-application checks disable
+tiered compilation to exercise optimized CLR lifetimes in STA and MTA.
+
+Release 14 corrects named method-qualifier lookup in the bundled MMI library.
+The requested qualifier name now reaches the native qualifier set. Dedicated
+checks compare named lookups with enumeration for an in-memory MOF class and
+Win32_Process metadata, and exercise the original Get-CimClass command in STA/MTA.
+
+The staging adapter keeps the nine Windows compatibility assemblies that overlap
+the desktop framework as explicit app runtime assets with their actual serviced
+file versions. This prevents the desktop framework from selecting its older copies
+when assembly identities match. Source archive hashes, actual PE versions and
+the dependency-manifest change are recorded; a package smoke check requires
+PowerShell to load all nine app-local source assemblies.

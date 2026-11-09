@@ -1436,8 +1436,8 @@
     {
       "component": "PowerShell native components",
       "status": "source-native-package-built-installed-and-current-shipping-checks-passed",
-      "package_version": "7.4.20-24",
-      "evidence": "tests/mmi-native-abi/powershell-results-20261109.json",
+      "package_version": "7.4.20-25",
+      "evidence": "tests/windows-compatibility-integration/results-20261109.json",
       "broader_native_runtime_behavior_complete": false
     },
     {
@@ -37477,7 +37477,7 @@
     "remaining_gate_audit": {
       "evidence": "tests/powershell-deps/remaining-gates-20261109.json",
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "current_safe_next_implementation": "Continue remaining private codec/callback/export and provider audit; public-table ABI differences are fixed",
+      "current_safe_next_implementation": "Run remaining authenticated provider and real database integration with authorized private settings; local ABI and serviced assembly selection checks pass",
       "direct_dependency_counts_unchanged": true,
       "full_dependency_goal_complete": false,
       "cleanup_evidence": "tests/powershell-deps/completion-audit-evidence-20261109/cleanup.json",
@@ -37637,6 +37637,22 @@
       "remote_logical_bytes_removed": 1688083232,
       "local_staging_bytes_removed": 1054377,
       "installed_packages_retained": true,
+      "full_dependency_goal_complete": false
+    },
+    "Windows_Compatibility_serviced_runtime_selection": {
+      "evidence": "tests/windows-compatibility-integration/results-20261109.json",
+      "powershell_package_version": "7.4.20-25",
+      "primary_assemblies_corrected": 9,
+      "assertions_per_mode": 69,
+      "modes": [
+        "standalone",
+        "PowerShell STA",
+        "PowerShell MTA"
+      ],
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
       "full_dependency_goal_complete": false
     }
   }
