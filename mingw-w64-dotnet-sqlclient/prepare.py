@@ -45,6 +45,8 @@ if args.managed_sni:
          [inputs/'0004-accept-short-custom-named-pipe-paths.patch', inputs/'0006-stop-after-localdb-lookup-failure.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SNIMarsHandle.cs',
          [inputs/'0005-honor-inclusive-smp-send-window.patch']),
+        (original.parent/'System/Data/SqlClient/SNI/SSRP.cs',
+         [inputs/'0010-validate-sql-browser-port-responses.patch']),
         (original.parent/'System/Data/SqlClient/SNI/LocalDB.Windows.cs',
          [inputs/'0007-honor-localdb-start-results-and-buffer-sizes.patch']),
         (original.parent/'System/Data/SqlClient/LocalDBAPI.Windows.cs',

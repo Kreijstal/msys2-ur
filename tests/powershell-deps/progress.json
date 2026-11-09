@@ -373,16 +373,17 @@
       "source_sni_candidate_evidence": "tests/powershell-deps/sqlclient-source-sni-results-20261027.txt",
       "recipe": "mingw-w64-dotnet-sqlclient",
       "experimental_package_built": true,
-      "package_version": "4.9.1-2",
+      "package_version": "4.9.1-3",
       "public_api_signatures": 1020,
       "windows_original_compiler_inputs": 242,
       "contract_original_compiler_inputs": 3,
-      "production_overlays": 7,
+      "production_overlays": 8,
       "resource_strings": 407,
       "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt",
-      "production_patches": 8,
+      "production_patches": 9,
       "localdb_startup_evidence": "tests/sqlclient-localdb/package-results-20261108.json",
-      "MARS_cancel_error_TLS_evidence": "tests/sqlclient-mars-cancel/results-20261108.json"
+      "MARS_cancel_error_TLS_evidence": "tests/sqlclient-mars-cancel/results-20261108.json",
+      "SQL_Browser_discovery_evidence": "tests/sqlclient-browser/package-results-20261109.json"
     },
     {
       "id": "System.Diagnostics.DiagnosticSource",
@@ -37429,6 +37430,40 @@
       "evidence": "tests/mmi-execution-context/cleanup-20261109.json",
       "remote_logical_bytes_removed": 1676696756,
       "local_staging_bytes_removed": 855673,
+      "installed_packages_retained": true,
+      "full_dependency_goal_complete": false
+    },
+    "sqlclient_SQL_Browser_discovery": {
+      "evidence": "tests/sqlclient-browser/package-results-20261109.json",
+      "package_version": "4.9.1-3",
+      "checks_per_environment": 94,
+      "baseline_defects": 19,
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "powershell_SQL_Browser_integration": {
+      "evidence": "tests/sqlclient-browser/powershell-results-20261109.json",
+      "package_version": "7.4.20-19",
+      "mmi_package_version": "3.0.0-15",
+      "sqlclient_package_version": "4.9.1-3",
+      "checks_per_mode": 94,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "SQL_Browser_integration_cleanup": {
+      "evidence": "tests/sqlclient-browser/cleanup-20261109.json",
+      "remote_logical_bytes_removed": 1677557947,
+      "local_staging_bytes_removed": 761719,
       "installed_packages_retained": true,
       "full_dependency_goal_complete": false
     }

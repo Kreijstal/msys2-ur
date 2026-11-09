@@ -6,6 +6,10 @@ Microsoft.Windows.Compatibility have source artifacts but still require broader
 compatibility verification. The historical NETStandard1.x restore reports below
 are separate archival work and do not count as missing current PowerShell dependencies.
 
+SqlClient 4.9.1-3 corrects SQL Browser named-instance/DAC reply parsing;
+94 checks pass per installed environment and per PowerShell 7.4.20-19 STA/MTA
+mode. [Evidence and remaining requirements](../sqlclient-browser/README.md).
+
 System.ObjectModel4.3.0 is source-packaged and installed with all five original
 DLL paths, exact original APIs/metadata/dependency scopes and both runtime profiles.
 Each actual candidate passes73 behavioral checks. Clean makepkg, archive audit,

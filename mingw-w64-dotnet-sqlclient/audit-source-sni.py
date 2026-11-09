@@ -53,7 +53,7 @@ assert {entry['patch_name'] for p in port['overlays'] for entry in [p] + p.get('
     '0004-accept-short-custom-named-pipe-paths.patch',
     '0005-honor-inclusive-smp-send-window.patch', '0006-stop-after-localdb-lookup-failure.patch',
     '0007-honor-localdb-start-results-and-buffer-sizes.patch', '0008-load-localdb-messages-through-managed-sni.patch',
-    '0009-format-localdb-errors-for-managed-sni.patch'}
+    '0009-format-localdb-errors-for-managed-sni.patch', '0010-validate-sql-browser-port-responses.patch'}
 overlays = {}
 for item in port['overlays']:
     path = source/item['original_path']

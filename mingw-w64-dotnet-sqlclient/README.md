@@ -25,7 +25,7 @@ All framework references, actual compiler inputs, resource inputs, implementatio
 reference hashes, wrapper projects, exact overlay sources/patches, removed binary
 inventory, original package documentation and MIT license are recorded/shipped.
 
-Seven production overlays preserve the pinned source tree:
+Eight production overlays preserve the pinned source tree:
 
 1. Select the original managed SNI in Release and Debug, without a Debug environment
    switch. The original Release factory selects proprietary `sni.dll`.
@@ -74,7 +74,7 @@ bash check.sh NEW_OUTPUT NEW_SOURCE
 ```
 
 The source audit derives exact selected compiler inputs from the archive and replays
-all eight production patches with zero fuzz. The separate full test audit also checks
+all nine production patches with zero fuzz. The separate full test audit also checks
 all142 original TDS fixture inputs and their one test-stream overlay. Fresh consumers
 must load no proprietary SNI or Framework implementation. No policy, persistent PATH,
 trust-store, registry, service, firewall or database configuration is changed.
@@ -100,3 +100,13 @@ public SqlConnection Open/OpenAsync failure paths. It does not load an actual
 LocalDB installation, start a SQL Server engine or change registry/configuration.
 The original no-installation/named/shared-instance/real-engine interoperability
 requirements remain open. Run `bash check-localdb.sh NEW_OUTPUT` after installing.
+
+Release 3 validates SQL Browser named-instance and DAC port replies. Transport
+keys are matched case-insensitively as keys, duplicate TCP entries and invalid
+numeric ports are rejected, instance replies are bounded to 1024 data bytes,
+and DAC replies must contain exactly six bytes with a nonzero port. Invalid
+responses follow the normal SqlException connection-error path. The loopback
+UDP fixture reserves port 1434 exclusively while running; it does not install
+or start SQL Browser. It tests direct discovery and public named-instance/DAC
+Open/OpenAsync and scalar queries against an independent TDS peer.
+Run `bash check-browser.sh NEW_OUTPUT` after installation.
