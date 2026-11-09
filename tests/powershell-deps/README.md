@@ -53,6 +53,13 @@ checks pass per environment. Its real stream/commit/rollback gate has not run;
 authorized Windows SQL Server FILESTREAM settings remain required.
 [Harness scope and preparation evidence](../sqlclient-filestream/README.md).
 
+The real database harness now supports Windows authentication and an explicit
+LocalDB mode that requires actual LocalDB engine identity and named-pipe transport
+before creating test databases. Both environments compile and pass 58 offline
+source/settings assertions each, including 12 authentication/settings assertions.
+The separate full-server TLS requirements remain intact; no live SQL Server or
+LocalDB gate has run. [Preparation evidence](../sqlclient-realdb/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

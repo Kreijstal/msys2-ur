@@ -6,7 +6,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,13 +17,68 @@ static class Program
     static int checks;
     static readonly List<object> results=new();
     static void Require(bool value,string message){checks++;if(!value)throw new Exception(message);}
-    static SqlConnectionStringBuilder Connection(JsonElement settings,string database,bool encrypt,bool mars=false,bool trust=true)=>new()
+    static bool Flag(JsonElement settings,string name)=>settings.TryGetProperty(name,out var value)&&value.GetBoolean();
+    static bool LocalDB(JsonElement settings)=>Flag(settings,"requireLocalDB");
+    static SqlConnectionStringBuilder Connection(JsonElement settings,string database,bool encrypt,bool mars=false,bool trust=true)
     {
-        DataSource=settings.GetProperty("server").GetString(),InitialCatalog=database,
-        UserID=settings.GetProperty("user").GetString(),Password=settings.GetProperty("password").GetString(),
-        IntegratedSecurity=false,Encrypt=encrypt,TrustServerCertificate=trust,
-        MultipleActiveResultSets=mars,ConnectTimeout=10,Pooling=true,ApplicationName="MSYS2 SqlClient source integration"
-    };
+        string? server=settings.GetProperty("server").GetString();
+        if(string.IsNullOrWhiteSpace(server))throw new ArgumentException("A server is required");
+        bool integrated=Flag(settings,"integratedSecurity"),local=LocalDB(settings);
+        bool localAddress=server.StartsWith(@"(localdb)\",StringComparison.OrdinalIgnoreCase)&&server.Length>10;
+        if(local!=localAddress)throw new ArgumentException("LocalDB requires an explicit LocalDB address and requireLocalDB=true");
+        if(local&&!integrated)throw new ArgumentException("This LocalDB gate requires Windows authentication");
+        if(integrated&&(settings.TryGetProperty("user",out _)||settings.TryGetProperty("password",out _)))
+            throw new ArgumentException("Do not mix Windows authentication and SQL credentials");
+        var connection=new SqlConnectionStringBuilder
+        {
+            DataSource=server,InitialCatalog=database,IntegratedSecurity=integrated,
+            Encrypt=encrypt,TrustServerCertificate=trust,MultipleActiveResultSets=mars,
+            ConnectTimeout=30,Pooling=true,ApplicationName="MSYS2 SqlClient source integration"
+        };
+        if(!integrated)
+        {
+            string? user=settings.GetProperty("user").GetString(),password=settings.GetProperty("password").GetString();
+            if(string.IsNullOrWhiteSpace(user)||string.IsNullOrEmpty(password))throw new ArgumentException("SQL credentials are required");
+            connection.UserID=user;connection.Password=password;
+        }
+        return connection;
+    }
+    static void SelfCheck(string output)
+    {
+        using(var sql=JsonDocument.Parse("""{"server":"tcp:offline.invalid,1433","user":"offline","password":"offline"}"""))
+        {
+            var c=Connection(sql.RootElement,"master",true);
+            Require(!c.IntegratedSecurity&&c.UserID=="offline"&&c.Password=="offline"&&c.Encrypt,"SQL authentication and encrypted mode preserved");
+            c=Connection(sql.RootElement,"master",true,mars:true,trust:false);
+            Require(c.MultipleActiveResultSets&&!c.TrustServerCertificate,"MARS and certificate validation preserved");
+        }
+        using(var windows=JsonDocument.Parse("""{"server":"tcp:offline.invalid,1433","integratedSecurity":true}"""))
+        {
+            var c=Connection(windows.RootElement,"master",true);
+            Require(c.IntegratedSecurity&&c.UserID==""&&c.Password==""&&c.Encrypt,"Windows authentication without credentials");
+        }
+        using(var local=JsonDocument.Parse("""{"server":"(localdb)\\Offline","integratedSecurity":true,"requireLocalDB":true}"""))
+        {
+            var c=Connection(local.RootElement,"master",false);
+            Require(LocalDB(local.RootElement)&&c.IntegratedSecurity&&!c.Encrypt&&c.DataSource==@"(localdb)\Offline","Explicit LocalDB discovery address preserved");
+        }
+        foreach(string invalid in new[]{
+            """{"server":"","user":"u","password":"p"}""",
+            """{"server":"tcp:offline.invalid","integratedSecurity":true,"user":"u"}""",
+            """{"server":"tcp:offline.invalid","integratedSecurity":true,"password":"p"}""",
+            """{"server":"tcp:offline.invalid","integratedSecurity":true,"requireLocalDB":true}""",
+            """{"server":"(localdb)\\Offline","user":"u","password":"p","requireLocalDB":true}""",
+            """{"server":"(localdb)\\Offline","integratedSecurity":true}""",
+            """{"server":"(localdb)\\","integratedSecurity":true,"requireLocalDB":true}""",
+            """{"server":"tcp:offline.invalid","user":"u","password":""}"""})
+        {
+            using var document=JsonDocument.Parse(invalid);bool rejected=false;
+            try{Connection(document.RootElement,"master",false);}catch(ArgumentException){rejected=true;}
+            Require(rejected,"Invalid or ambiguous offline settings rejected");
+        }
+        File.WriteAllText(output,JsonSerializer.Serialize(new{preparation_passed=true,assertions=checks,server_connection_attempted=false,LocalDB_interoperability_verified=false,TLS_interoperability_verified=false},new JsonSerializerOptions{WriteIndented=true}));
+        Console.WriteLine("PASS "+checks+" offline source/settings checks");
+    }
     static object? Scalar(SqlConnection connection,string sql,SqlTransaction? tx=null)
     {
         using var command=new SqlCommand(sql,connection,tx){CommandTimeout=10};return command.ExecuteScalar();
@@ -112,23 +168,35 @@ static class Program
     {
         try
         {
-            using var settings=JsonDocument.Parse(File.ReadAllText(args[0]));var input=settings.RootElement;
+            if(args.Length!=2)throw new ArgumentException("Expected settings path or --self-check, and output path");
             string clientPath=typeof(SqlConnection).Assembly.Location;Require(clientPath.Replace('\\','/').Contains("/runtimes/win/lib/net8.0/System.Data.SqlClient.dll"),"Packaged Windows implementation");
             Require(typeof(SqlConnection).Assembly.GetName().Version==new Version(4,6,1,6),"Source SqlClient identity");
             foreach(ProcessModule module in Process.GetCurrentProcess().Modules)Require(!module.ModuleName.Equals("sni.dll",StringComparison.OrdinalIgnoreCase)&&!module.FileName.Contains(@"\Microsoft.NET\Framework",StringComparison.OrdinalIgnoreCase),"Source managed transport without proprietary SNI or Framework fallback");
-            using var admin=new SqlConnection(Connection(input,"master",encrypt:true).ConnectionString);await admin.OpenAsync();
+            if(args[0]=="--self-check"){SelfCheck(args[1]);return 0;}
+            using var settings=JsonDocument.Parse(File.ReadAllText(args[0]));var input=settings.RootElement;
+            bool local=LocalDB(input);
+            using var admin=new SqlConnection(Connection(input,"master",encrypt:!local).ConnectionString);await admin.OpenAsync();
             string version=Convert.ToString(Scalar(admin,"SELECT @@VERSION"))!;Require(version.Contains("Microsoft SQL Server"),"Actual SQL Server engine");
+            object? localProperty=Scalar(admin,"SELECT SERVERPROPERTY('IsLocalDB')");
+            Require(localProperty is int identity&&identity==(local?1:0),"Actual engine matches requested LocalDB/full-server identity");
+            string transport=Convert.ToString(Scalar(admin,"SELECT net_transport FROM sys.dm_exec_connections WHERE session_id=@@SPID"))!;
+            if(local)Require(transport.Equals("Named pipe",StringComparison.OrdinalIgnoreCase),"LocalDB discovery reaches its named pipe");
             string prefix="CodexSqlClient_"+Guid.NewGuid().ToString("N");
-            foreach(bool encrypt in new[]{false,true})
+            foreach(bool encrypt in local?new[]{false}:new[]{false,true})
             {
                 string database=prefix+(encrypt?"_tls":"_plain");Execute(admin,"CREATE DATABASE ["+database+"]");
                 try{await Exercise(input,database,encrypt);}
                 finally{SqlConnection.ClearAllPools();Execute(admin,"ALTER DATABASE ["+database+"] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE ["+database+"]");}
             }
-            bool untrustedRejected=false;try{using var untrusted=new SqlConnection(Connection(input,"master",encrypt:true,trust:false).ConnectionString);await untrusted.OpenAsync();}catch(SqlException){untrustedRejected=true;}
-            Require(untrustedRejected,"Untrusted test-server certificate rejected");
-            File.WriteAllText(args[1],JsonSerializer.Serialize(new{passed=true,checks,serverVersion=version,clientPath,clientIdentity=typeof(SqlConnection).Assembly.FullName,scenarios=results,LocalDB_shared_memory_FILESTREAM_verified=false},new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine("PASS "+checks+" real database/source SqlClient checks");return 0;
+            bool untrustedRejected=false;
+            if(!local)
+            {
+                try{using var untrusted=new SqlConnection(Connection(input,"master",encrypt:true,trust:false).ConnectionString);await untrusted.OpenAsync();}catch(SqlException){untrustedRejected=true;}
+                Require(untrustedRejected,"Untrusted test-server certificate rejected");
+            }
+            string endpointHash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input.GetProperty("server").GetString()!))).ToLowerInvariant();
+            File.WriteAllText(args[1],JsonSerializer.Serialize(new{passed=true,checks,serverVersion=version,endpoint_sha256=endpointHash,clientPath,clientIdentity=typeof(SqlConnection).Assembly.FullName,scenarios=results,LocalDB_verified=local,TLS_verified=!local&&untrustedRejected,shared_memory_verified=false,FILESTREAM_verified=false,transport},new JsonSerializerOptions{WriteIndented=true}));Console.WriteLine("PASS "+checks+" real database/source SqlClient checks");return 0;
         }
-        catch(Exception error){Console.Error.WriteLine(error);return 1;}
+        catch(Exception error){Console.Error.WriteLine(JsonSerializer.Serialize(new{passed=false,errorType=error.GetType().FullName,sqlNumber=error is SqlException sql?(int?)sql.Number:null}));return 1;}
     }
 }

@@ -1,0 +1,72 @@
+{
+  "scope": "PowerShell 7.4.20 / .NET 8.0.31: real SQL Server and explicit Windows LocalDB harness preparation",
+  "previous_goal_turn_classification": "no progress: clarified existing dependency counts without changing authoritative state",
+  "this_goal_turn_classification": "progress: Windows authentication and explicit LocalDB live path implemented, prepared in both installed environments",
+  "production_packages_changed": false,
+  "live_gate_executed": false,
+  "LocalDB_interoperability_verified": false,
+  "SQL_Server_interoperability_verified": false,
+  "full_dependency_goal_complete": false,
+  "binary_publication_performed": false,
+  "SQL_Server_EULA_accepted": false,
+  "host_inventory": {
+    "services": [
+      {
+        "Name": "WinRM",
+        "State": "Stopped",
+        "StartMode": "Manual"
+      }
+    ],
+    "localdb_installed_versions": []
+  },
+  "environments": {
+    "clang64": {
+      "command": "MINGW_PREFIX=/clang64 SQLCLIENT_REALDB_BUILD_ONLY=1 bash tests/sqlclient-realdb/check.sh clang64-ready",
+      "exit_code": 0,
+      "preparation": {
+        "preparation_passed": true,
+        "assertions": 58,
+        "server_connection_attempted": false,
+        "LocalDB_interoperability_verified": false,
+        "TLS_interoperability_verified": false
+      },
+      "settings_assertions": 12,
+      "source_and_loaded_module_assertions": 46,
+      "source_identity": {
+        "source_archive_sha256": "d65b5d3d783f03b49b29d634afc05afc7501ab2b08fb71e49e84d2b01784e448",
+        "implementation_sha256": "78ce4f7a83af026caa23bbce974c522d9a52e5d47760ffff44bc6669607ef42e",
+        "exact_source_archive_and_runtime_bytes": true
+      },
+      "installed_packages": [
+        "mingw-w64-clang-x86_64-dotnet-sqlclient 4.9.1-5",
+        "mingw-w64-clang-x86_64-powershell 7.4.20-25"
+      ]
+    },
+    "ucrt64": {
+      "command": "MINGW_PREFIX=/ucrt64 SQLCLIENT_REALDB_BUILD_ONLY=1 bash tests/sqlclient-realdb/check.sh ucrt64-ready",
+      "exit_code": 0,
+      "preparation": {
+        "preparation_passed": true,
+        "assertions": 58,
+        "server_connection_attempted": false,
+        "LocalDB_interoperability_verified": false,
+        "TLS_interoperability_verified": false
+      },
+      "settings_assertions": 12,
+      "source_and_loaded_module_assertions": 46,
+      "source_identity": {
+        "source_archive_sha256": "c412901edfbba2943080509f2c2a5e47b2312453048cbd7c3e8cc889d6fa39fc",
+        "implementation_sha256": "87955c1acea2b8ea3e668da90f6107b71936b092eebe871d59a6a4e259e0e6f2",
+        "exact_source_archive_and_runtime_bytes": true
+      },
+      "installed_packages": [
+        "mingw-w64-ucrt-x86_64-dotnet-sqlclient 4.9.1-5",
+        "mingw-w64-ucrt-x86_64-powershell 7.4.20-25"
+      ]
+    }
+  },
+  "input_sha256": {
+    "RealDatabase.cs": "7e1086c7a0d2239725a76e7a090834009f5acf6a68fb80efcabc6b6f43716459",
+    "check.sh": "1f99cb13bc508ae4ac96410404486d86656a9ebc64b84325ed64c75c502abbe3"
+  }
+}
