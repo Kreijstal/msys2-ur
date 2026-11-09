@@ -1,0 +1,79 @@
+--- a/SqlCommand.cs
++++ b/SqlCommand.cs
+@@ -126,8 +126,9 @@
+                 return (_cachedAsyncConnection == activeConnection && _cachedAsyncCloseCount == activeConnection.CloseCount);
+             }
+
+-            internal void ResetAsyncState()
+-            {
++            internal void ResetAsyncState([System.Runtime.CompilerServices.CallerMemberName] string caller=null)
++            {
++                TraceLpc("RESET "+GetHashCode()+" caller="+caller+" end="+_cachedEndMethod);
+                 _cachedAsyncCloseCount = -1;
+                 _cachedAsyncResult = null;
+                 if (_cachedAsyncConnection != null)
+@@ -162,6 +163,7 @@
+                 // Should only be needed for non-MARS, but set anyways.
+                 _cachedAsyncConnection.AsyncCommandInProgress = true;
+                 _cachedEndMethod = endMethod;
++                TraceLpc("SET "+GetHashCode()+" end="+endMethod+" task="+completion.Task.Id);
+             }
+
+             internal void SetAsyncReaderState(SqlDataReader ds, RunBehavior runBehavior, string optionSettings)
+@@ -178,11 +180,15 @@
+         {
+             get
+             {
+-                if (_cachedAsyncState == null)
+-                {
+-                    _cachedAsyncState = new CachedAsyncState();
+-                }
+-                return _cachedAsyncState;
++                CachedAsyncState state = Volatile.Read(ref _cachedAsyncState);
++                if (state == null)
++                {
++                    var created = new CachedAsyncState();
++                    TraceLpc("CREATE "+created.GetHashCode());
++                    System.Threading.Thread.SpinWait(1000000);
++                    state = Interlocked.CompareExchange(ref _cachedAsyncState, created, null) ?? created;
++                }
++                return state;
+             }
+         }
+
+@@ -213,6 +219,8 @@
+         private int _currentlyExecutingBatch;
+
+
++        private static readonly System.Collections.Concurrent.ConcurrentQueue<string> LpcTrace = new System.Collections.Concurrent.ConcurrentQueue<string>();
++        private static void TraceLpc(string value) { LpcTrace.Enqueue(System.Threading.Thread.CurrentThread.ManagedThreadId+" "+value); while(LpcTrace.Count>256)LpcTrace.TryDequeue(out _); }
+         public SqlCommand() : base()
+         {
+             GC.SuppressFinalize(this);
+@@ -1010,8 +1018,10 @@
+             {
+                 throw completionTask.Exception.InnerException;
+             }
++            TraceLpc("END "+cachedAsyncState.GetHashCode()+" end="+cachedAsyncState.EndMethodName+" task="+completionTask.Id);
+             if (cachedAsyncState.EndMethodName == null)
+             {
++                foreach(string line in LpcTrace)Console.Error.WriteLine("LPC_TRACE "+line);
+                 throw ADP.MethodCalledTwice(endMethod);
+             }
+             if (endMethod != cachedAsyncState.EndMethodName)
+@@ -1327,6 +1337,7 @@
+                 // and reset async cache information to allow a second async execute
+                 if (null != _cachedAsyncState)
+                 {
++                    TraceLpc("READSTAGE ERROR "+e);
+                     _cachedAsyncState.ResetAsyncState();
+                 }
+                 ReliablePutStateObject();
+@@ -1614,6 +1625,7 @@
+                 // and reset async cache information to allow a second async execute
+                 if (null != _cachedAsyncState)
+                 {
++                    TraceLpc("READSTAGE ERROR "+e);
+                     _cachedAsyncState.ResetAsyncState();
+                 }
+                 ReliablePutStateObject();

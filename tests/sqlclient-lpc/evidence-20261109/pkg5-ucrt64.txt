@@ -1,0 +1,758 @@
+==> Making package: mingw-w64-dotnet-sqlclient 4.9.1-5 (09 Nov 2026 01:50:13)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Found maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz
+  -> Found extract.py
+  -> Found prepare.py
+  -> Found build.sh
+  -> Found audit-source-sni.py
+  -> Found pack.py
+  -> Found check.sh
+  -> Found verify-consumer.py
+  -> Found prepare-tds.py
+  -> Found CheckApi.cs
+  -> Found CheckAssets.cs
+  -> Found Probe.cs
+  -> Found SourceSniProbe.cs
+  -> Found MarsTdsProbe.cs
+  -> Found MarsWindowProbe.cs
+  -> Found PowerShell.ps1
+  -> Found Microsoft.pubkey.hex
+  -> Found 0001-use-managed-sni-on-windows.patch
+  -> Found 0002-tds-test-peer-return-partial-handshake-reads.patch
+  -> Found 0003-pass-complete-spns-to-windows-sspi.patch
+  -> Found 0004-accept-short-custom-named-pipe-paths.patch
+  -> Found 0005-honor-inclusive-smp-send-window.patch
+  -> Found 0006-stop-after-localdb-lookup-failure.patch
+  -> Found 0007-honor-localdb-start-results-and-buffer-sizes.patch
+  -> Found 0008-load-localdb-messages-through-managed-sni.patch
+  -> Found 0009-format-localdb-errors-for-managed-sni.patch
+  -> Found 0010-validate-sql-browser-port-responses.patch
+  -> Found 0011-add-local-only-lpc-endpoint-routing.patch
+  -> Found 0012-preserve-lpc-tls-target-and-provider-errors.patch
+  -> Found 0013-publish-one-command-async-state-cache.patch
+  -> Found AsyncCacheChecks.cs
+  -> Found check-async-cache.sh
+  -> Found LpcChecks.cs
+  -> Found check-lpc.sh
+  -> Found LPC-REFERENCE-LICENSE.txt
+  -> Found lpc-source-reference.json
+  -> Found BrowserChecks.cs
+  -> Found check-browser.sh
+  -> Found LocalDbChecks.cs
+  -> Found localdb-driver.c
+  -> Found check-localdb.sh
+  -> Found README.md
+==> Validating source files with sha256sums...
+    maintenance-packages-84b081710c66cc560b77d4de38cee493c3a38e9d.tar.gz ... Passed
+    extract.py ... Passed
+    prepare.py ... Passed
+    build.sh ... Passed
+    audit-source-sni.py ... Passed
+    pack.py ... Passed
+    check.sh ... Passed
+    verify-consumer.py ... Passed
+    prepare-tds.py ... Passed
+    CheckApi.cs ... Passed
+    CheckAssets.cs ... Passed
+    Probe.cs ... Passed
+    SourceSniProbe.cs ... Passed
+    MarsTdsProbe.cs ... Passed
+    MarsWindowProbe.cs ... Passed
+    PowerShell.ps1 ... Passed
+    Microsoft.pubkey.hex ... Passed
+    0001-use-managed-sni-on-windows.patch ... Passed
+    0002-tds-test-peer-return-partial-handshake-reads.patch ... Passed
+    0003-pass-complete-spns-to-windows-sspi.patch ... Passed
+    0004-accept-short-custom-named-pipe-paths.patch ... Passed
+    0005-honor-inclusive-smp-send-window.patch ... Passed
+    0006-stop-after-localdb-lookup-failure.patch ... Passed
+    0007-honor-localdb-start-results-and-buffer-sizes.patch ... Passed
+    0008-load-localdb-messages-through-managed-sni.patch ... Passed
+    0009-format-localdb-errors-for-managed-sni.patch ... Passed
+    0010-validate-sql-browser-port-responses.patch ... Passed
+    0011-add-local-only-lpc-endpoint-routing.patch ... Passed
+    0012-preserve-lpc-tls-target-and-provider-errors.patch ... Passed
+    0013-publish-one-command-async-state-cache.patch ... Passed
+    AsyncCacheChecks.cs ... Passed
+    check-async-cache.sh ... Passed
+    LpcChecks.cs ... Passed
+    check-lpc.sh ... Passed
+    LPC-REFERENCE-LICENSE.txt ... Passed
+    lpc-source-reference.json ... Passed
+    BrowserChecks.cs ... Passed
+    check-browser.sh ... Passed
+    LocalDbChecks.cs ... Passed
+    localdb-driver.c ... Passed
+    check-localdb.sh ... Passed
+    README.md ... Passed
+==> Removing existing $srcdir/ directory...
+==> Extracting sources...
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+Usage: E:\msys64\ucrt64\bin\file.exe [-bcCdEiklNnprsSvzZ0] [--apple] [--extension] [--mime-encoding]
+            [--mime-type] [-e <testname>] [-F <separator>]  [-f <namefile>]
+            [-m <magicfiles>] [-P <parameter=value>] [--exclude-quiet]
+            <file> ...
+       E:\msys64\ucrt64\bin\file.exe -C [-m <magicfiles>]
+       E:\msys64\ucrt64\bin\file.exe [--help]
+==> Starting prepare()...
+PASS complete pinned maintenance-packages source archive hash and extraction
+patching file TdsParserStateObjectFactory.Windows.cs
+patching file SecuritySafeHandles.cs
+patching file SNIProxy.cs
+patching file SNIProxy.cs
+patching file SNIProxy.cs
+patching file SNINpHandle.cs
+patching file SNIMarsHandle.cs
+patching file SSRP.cs
+patching file LocalDB.Windows.cs
+patching file LocalDBAPI.Windows.cs
+patching file SqlCommand.cs
+patching file TdsParser.cs
+==> Starting build()...
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\prepared\implementation\build.csproj (in 124 ms).
+  build -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\prepared\implementation\bin\Release\net8.0-windows\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:20.97
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\prepared\contract\build.csproj (in 194 ms).
+  build -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\prepared\contract\bin\Release\net8.0\System.Data.SqlClient.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.59
+PASS full pinned source/compiler/framework/resource/implementation/reference inventories; experimental runtime parity remains open
+PASS experimental SqlClient package: complete Windows runtime, original generic unsupported facade, reference assembly, 407 original resource strings, metadata, exact overlays/compiler provenance and MIT/BSD-3-Clause notices; full runtime parity remains open
+==> Starting check()...
+patching file PlaceholderStream.cs
+Staged complete pinned TDS utility sources, one explicit .NET 8 test-stream overlay: {'TDS': 95, 'TDS.EndPoint': 33, 'TDS.Servers': 14}
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS.EndPoint\build.csproj (in 117 ms).
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS.Servers\build.csproj (in 118 ms).
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS\build.csproj (in 118 ms).
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj (in 764 ms).
+  build -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.dll
+  build -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS.EndPoint\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.EndPoint.dll
+  build -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\TDS.Servers\bin\Release\net8.0-windows\Microsoft.SqlServer.TDS.Servers.dll
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+  Probe -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\bin\Release\net8.0-windows\Probe.dll
+
+Build succeeded.
+
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(112,31): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(118,40): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(121,20): warning CS0618: 'SqlException' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\SourceSniProbe.cs(164,31): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsTdsProbe.cs(132,41): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(111,9): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(115,28): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\MarsWindowProbe.cs(120,22): warning CS0618: 'SqlDataReader' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\protocol\Probe.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:36.01
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj (in 416 ms).
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(14,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(19,25): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(20,21): warning CS0618: 'SqlConnectionStringBuilder' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(21,34): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(24,20): warning CS0618: 'SqlCommand' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,24): warning CS0618: 'SqlDataRecord' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,42): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Probe.cs(26,78): warning CS0618: 'SqlMetaData' is obsolete: 'Use the Microsoft.SqlServer.Server package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\values\Check.csproj]
+    8 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.97
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\Check.csproj (in 407 ms).
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\Check.csproj]
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+
+E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\CheckAssets.cs(19,29): warning CS0618: 'SqlConnection' is obsolete: 'Use the Microsoft.Data.SqlClient package instead.' [E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\Check.csproj]
+    1 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.15
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+System.IO.IOException: The read operation failed, see inner exception.
+ ---> System.Security.Authentication.AuthenticationException: Cannot determine the frame size or a corrupted frame was received.
+   at System.Net.Security.SslStream.GetFrameSize(ReadOnlySpan`1 buffer)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.Read(Byte[] buffer, Int32 offset, Int32 count)
+   at Microsoft.SqlServer.TDS.TDSPacketHeader.Inflate(Stream source) in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSPacketHeader.cs:line 190
+   at Microsoft.SqlServer.TDS.TDSStream.ReadNextHeader() in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSStream.cs:line 227
+   at Microsoft.SqlServer.TDS.TDSMessage._InflateDataStream(TDSStream stream) in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSMessage.cs:line 171
+   at Microsoft.SqlServer.TDS.TDSMessage.InflateClientRequest(TDSStream stream) in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS\TDSMessage.cs:line 93
+   at Microsoft.SqlServer.TDS.EndPoint.TDSServerParser.Run() in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerParser.cs:line 61
+   at Microsoft.SqlServer.TDS.EndPoint.TDSServerEndPointConnection.ProcessData(Stream rawStream) in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerEndPointConnection.cs:line 40
+   at Microsoft.SqlServer.TDS.EndPoint.ServerEndPointConnection._ConnectionHandler() in E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\source\src\System.Data.SqlClient\tests\Tools\TDS\TDS.EndPoint\TDSServerEndPointConnection.cs:line 179
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=False/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=False/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=False/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=False/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+PASS Release SNI upstream peer pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=Required/encrypt=False/trust=True/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+PASS untrusted owned certificate rejected with TrustServerCertificate=false
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=False/SSPI=False Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True: sync/async rows, schema, DONE; encryption=FALSE
+TDSServerEndPoint pipe=True/short=True/TLS=NotSupported/encrypt=False/trust=False/SSPI=True Connection Closed
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Is Server Socket Bound: True Testing connectivity to the endpoint created for the server.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Endpoint test successful.
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Listener Thread Started
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS Windows integrated login: upstream native SSPI context authenticates current user; marker=NTML
+PASS Release SNI upstream peer pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True: sync/async rows, schema, DONE; encryption=TRUE
+TDSServerEndPoint pipe=True/short=True/TLS=On/encrypt=True/trust=True/SSPI=True Connection Closed
+PASS independent SMP peer: 2 query sessions, three batches, fragmented headers/payloads and 3 FINs
+PASS public Release SqlClient MARS: simultaneous readers, interleaved rows, compacting GC, independent DONE and session reuse
+PASS MC-SMP inclusive WNDW boundary: 25 query DATA frames, 6 verified sender stalls/resumes,10 response frames and 2 client ACK window grants
+PASS public SqlClient MARS large-batch send/receive flow control, fragmented TDS/SMP, ordered async rows, compacting GC and DONE
+PASS recorded native module paths; no sni.dll or Framework implementation
+PASS Release source-managed SNI: original upstream TDS peer, TLS/certificate policies, Windows SSPI; no sni.dll
+PASS SqlClient source identities, exported types, connection strings, command/parameter clones and typed SQL records
+PASS experimental source SqlClient exact selected runtime/hash/identity, Release managed SNI, all original resource strings and metadata XML; location=E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\assets\bin\Release\net8.0-windows\runtimes\win\lib\net8.0\System.Data.SqlClient.dll
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\api\Check.csproj (in 201 ms).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check\api\bin\Release\net8.0\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.37
+PASS: System.Data.SqlClient implements all 1020 upstream public/protected type/member signatures
+PASS actual source PowerShell with installed SqlClient Windows asset: exact package bytes, owned original TDS peer scalar/reader/schema/DONE, no proprietary SNI or Framework implementation
+PASS fresh source-only NuGet package, exact reference/generic/Windows runtime asset selections and all consumer payload bytes
+PASS experimental installed-source SqlClient package: exact assets/resources/API,18 transport/TLS/SSPI scenarios, basic MARS/inclusive flow control and actual source PowerShell; full native/database parity remains open
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-localdb\Check.csproj (in 540 ms).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-localdb\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:08.83
+PASS exact source feed archive and implementation bytes; archive SHA256 c412901edfbba2943080509f2c2a5e47b2312453048cbd7c3e8cc889d6fa39fc
+PUBLIC_LOCALDB_ERROR -2147467259
+PASS 26 LocalDB native ABI/HRESULT/buffer/Unicode/routing/public-error checks
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-browser\Check.csproj (in 1.15 sec).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-browser\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:12.47
+PASS exact source feed archive and implementation bytes; archive SHA256 c412901edfbba2943080509f2c2a5e47b2312453048cbd7c3e8cc889d6fa39fc
+PASS discovered query dac=False mixed=True async=False
+PASS discovered query dac=False mixed=True async=True
+PASS discovered query dac=True mixed=False async=False
+PASS discovered query dac=True mixed=False async=True
+PASS SQL Browser checks=94 defects=0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-lpc\Check.csproj (in 675 ms).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-lpc\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.43
+PASS exact source feed archive and implementation bytes; archive SHA256 c412901edfbba2943080509f2c2a5e47b2312453048cbd7c3e8cc889d6fa39fc
+PASS LPC SQLLocal query async=False tls=False
+PASS LPC SQLLocal query async=False tls=True
+PASS LPC SQLLocal query async=True tls=False
+PASS LPC SQLLocal query async=True tls=True
+PEER LPC termination IOException
+PASS LPC untrusted certificate rejected
+PASS LPC checks=144 defects=0
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-async-cache\Check.csproj (in 961 ms).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\pkg5-ucrt64\recipe\src\check-async-cache\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:09.48
+PASS exact source feed archive and implementation bytes; archive SHA256 c412901edfbba2943080509f2c2a5e47b2312453048cbd7c3e8cc889d6fa39fc
+PASS async-cache checks=1024 splits=0 lost=0
+PASS exact pinned archive, complete original compiler inputs, recorded production overlays, 142 upstream TDS utility inputs/one test-stream overlay, and tested Release DLL bytes: {'implementation': 242, 'contract': 3}
+==> Starting package()...
+==> Tidying install...
+  -> Removing libtool files...
+  -> Purging unwanted files...
+  -> Compressing man and info pages...
+==> Checking for packaging issues...
+==> Creating package "mingw-w64-ucrt-x86_64-dotnet-sqlclient"...
+  -> Generating .PKGINFO file...
+  -> Generating .BUILDINFO file...
+  -> Generating .MTREE file...
+  -> Compressing package...
+==> Finished making: mingw-w64-dotnet-sqlclient 4.9.1-5 (09 Nov 2026 01:55:04)

@@ -1,0 +1,81 @@
+--- a/SNINpHandle.cs
++++ b/SNINpHandle.cs
+@@ -21,6 +21,7 @@
+         private const int MAX_PIPE_INSTANCES = 255;
+ 
+         private readonly string _targetServer;
++        private readonly SNIProviders _provider;
+         private readonly object _callbackObject;
+ 
+         private Stream _stream;
+@@ -35,9 +36,11 @@
+         private int _bufferSize = TdsEnums.DEFAULT_LOGIN_PACKET_SIZE;
+         private readonly Guid _connectionId = Guid.NewGuid();
+ 
+-        public SNINpHandle(string serverName, string pipeName, long timerExpire, object callbackObject)
+-        {
+-            _targetServer = serverName;
++        public SNINpHandle(string serverName, string pipeName, long timerExpire, object callbackObject,
++            string targetServer = null, SNIProviders provider = SNIProviders.NP_PROV)
++        {
++            _targetServer = targetServer ?? serverName;
++            _provider = provider;
+             _callbackObject = callbackObject;
+ 
+             try
+@@ -63,20 +66,20 @@
+             }
+             catch (TimeoutException te)
+             {
+-                SNICommon.ReportSNIError(SNIProviders.NP_PROV, SNICommon.ConnOpenFailedError, te);
++                SNICommon.ReportSNIError(_provider, SNICommon.ConnOpenFailedError, te);
+                 _status = TdsEnums.SNI_ERROR;
+                 return;
+             }
+             catch (IOException ioe)
+             {
+-                SNICommon.ReportSNIError(SNIProviders.NP_PROV, SNICommon.ConnOpenFailedError, ioe);
++                SNICommon.ReportSNIError(_provider, SNICommon.ConnOpenFailedError, ioe);
+                 _status = TdsEnums.SNI_ERROR;
+                 return;
+             }
+ 
+             if (!_pipeStream.IsConnected || !_pipeStream.CanWrite || !_pipeStream.CanRead)
+             {
+-                SNICommon.ReportSNIError(SNIProviders.NP_PROV, 0, SNICommon.ConnOpenFailedError, string.Empty);
++                SNICommon.ReportSNIError(_provider, 0, SNICommon.ConnOpenFailedError, string.Empty);
+                 _status = TdsEnums.SNI_ERROR;
+                 return;
+             }
+@@ -235,11 +238,11 @@
+             }
+             catch (AuthenticationException aue)
+             {
+-                return SNICommon.ReportSNIError(SNIProviders.NP_PROV, SNICommon.InternalExceptionError, aue);
++                return SNICommon.ReportSNIError(_provider, SNICommon.InternalExceptionError, aue);
+             }
+             catch (InvalidOperationException ioe)
+             {
+-                return SNICommon.ReportSNIError(SNIProviders.NP_PROV, SNICommon.InternalExceptionError, ioe);
++                return SNICommon.ReportSNIError(_provider, SNICommon.InternalExceptionError, ioe);
+             }
+ 
+             _stream = _sslStream;
+@@ -289,7 +292,7 @@
+             {
+                 packet.Release();
+             }
+-            return SNICommon.ReportSNIError(SNIProviders.NP_PROV, SNICommon.InternalExceptionError, sniException);
++            return SNICommon.ReportSNIError(_provider, SNICommon.InternalExceptionError, sniException);
+         }
+ 
+         private uint ReportErrorAndReleasePacket(SNIPacket packet, uint nativeError, uint sniError, string errorMessage)
+@@ -298,7 +301,7 @@
+             {
+                 packet.Release();
+             }
+-            return SNICommon.ReportSNIError(SNIProviders.NP_PROV, nativeError, sniError, errorMessage);
++            return SNICommon.ReportSNIError(_provider, nativeError, sniError, errorMessage);
+         }
+ 
+ #if DEBUG

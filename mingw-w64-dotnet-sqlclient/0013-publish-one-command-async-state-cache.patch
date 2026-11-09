@@ -1,0 +1,21 @@
+--- a/SqlCommand.cs
++++ b/SqlCommand.cs
+@@ -178,11 +178,13 @@
+         {
+             get
+             {
+-                if (_cachedAsyncState == null)
+-                {
+-                    _cachedAsyncState = new CachedAsyncState();
+-                }
+-                return _cachedAsyncState;
++                CachedAsyncState state = Volatile.Read(ref _cachedAsyncState);
++                if (state == null)
++                {
++                    var created = new CachedAsyncState();
++                    state = Interlocked.CompareExchange(ref _cachedAsyncState, created, null) ?? created;
++                }
++                return state;
+             }
+         }
+ 

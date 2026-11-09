@@ -42,7 +42,9 @@ if args.managed_sni:
         (source/'src/Common/src/Interop/Windows/SspiCli/SecuritySafeHandles.cs',
          [inputs/'0003-pass-complete-spns-to-windows-sspi.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SNIProxy.cs',
-         [inputs/'0004-accept-short-custom-named-pipe-paths.patch', inputs/'0006-stop-after-localdb-lookup-failure.patch']),
+         [inputs/'0004-accept-short-custom-named-pipe-paths.patch', inputs/'0006-stop-after-localdb-lookup-failure.patch', inputs/'0011-add-local-only-lpc-endpoint-routing.patch']),
+        (original.parent/'System/Data/SqlClient/SNI/SNINpHandle.cs',
+         [inputs/'0012-preserve-lpc-tls-target-and-provider-errors.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SNIMarsHandle.cs',
          [inputs/'0005-honor-inclusive-smp-send-window.patch']),
         (original.parent/'System/Data/SqlClient/SNI/SSRP.cs',
@@ -51,6 +53,8 @@ if args.managed_sni:
          [inputs/'0007-honor-localdb-start-results-and-buffer-sizes.patch']),
         (original.parent/'System/Data/SqlClient/LocalDBAPI.Windows.cs',
          [inputs/'0008-load-localdb-messages-through-managed-sni.patch']),
+        (original.parent/'System/Data/SqlClient/SqlCommand.cs',
+         [inputs/'0013-publish-one-command-async-state-cache.patch']),
         (original.parent/'System/Data/SqlClient/TdsParser.cs',
          [inputs/'0009-format-localdb-errors-for-managed-sni.patch'])]
     port_overlays = []

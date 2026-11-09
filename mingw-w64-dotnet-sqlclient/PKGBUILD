@@ -3,13 +3,13 @@ _realname=dotnet-sqlclient
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=4.9.1
-pkgrel=3
+pkgrel=5
 _commit=84b081710c66cc560b77d4de38cee493c3a38e9d
 pkgdesc='Experimental complete Windows SqlClient source port with managed SNI; full native compatibility unverified'
 arch=('any')
 mingw_arch=('clang64' 'ucrt64')
 url='https://github.com/dotnet/maintenance-packages'
-license=('spdx:MIT')
+license=('spdx:MIT' 'spdx:BSD-3-Clause')
 depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131-2" 'python' 'patch')
 checkdepends=("${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-powershell-module-test-host>=7.4.20-3")
@@ -41,6 +41,15 @@ source=("maintenance-packages-$_commit.tar.gz::https://codeload.github.com/dotne
  0008-load-localdb-messages-through-managed-sni.patch
  0009-format-localdb-errors-for-managed-sni.patch
  0010-validate-sql-browser-port-responses.patch
+ 0011-add-local-only-lpc-endpoint-routing.patch
+ 0012-preserve-lpc-tls-target-and-provider-errors.patch
+ 0013-publish-one-command-async-state-cache.patch
+ AsyncCacheChecks.cs
+ check-async-cache.sh
+ LpcChecks.cs
+ check-lpc.sh
+ LPC-REFERENCE-LICENSE.txt
+ lpc-source-reference.json
  BrowserChecks.cs
  check-browser.sh
  LocalDbChecks.cs
@@ -51,10 +60,10 @@ source=("maintenance-packages-$_commit.tar.gz::https://codeload.github.com/dotne
 noextract=("maintenance-packages-$_commit.tar.gz")
 sha256sums=('f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6'
  'c901d8c36f368bc5a46d5c9067e27de6d67a41c83a20cb1516c129b9502f7b69'
- 'e5f2c5476e6eb667d1caccc91d9be808870dc18bf91041392569a701f25662cf'
+ '135659d8265c8970b712fb2ce13894eb3471b37f7e910ab98babb771a7299a68'
  '74fa090f97b2884d1c4e7d3a4282963278d7e082342473422caa07b283ef9495'
- '904142686b2323da63998528637a3a0bf8580538c068416e3904dd3fc3ad1787'
- '39e55da136687afcc7167c6043c3c2e71a55c077d1172dd08c19c024ff60bda2'
+ '919abd0700e036fdf7a8b589eae9c6234a21d9efef2f0d03caca5f601ca1417d'
+ '739480ea73520ffb705db5213e5964ace7d98f503eef15f6f2de29c160bda6c4'
  '125d0848f155ce2e66ac637ff226daa1c09e29affee9b2f27044babb9e354c12'
  'dbf6ca728aebf1cf9a82bbae23a7096492378020b270685e592abf5ca00d239c'
  '93a7ae3de5b3148e1e46308eb6dc78a00ca634a3b73a7d97ccc43c006df5a509'
@@ -76,12 +85,21 @@ sha256sums=('f5b1bd0cf8b2c6e232ff866a4f3b069c30c48f37820c10c81691de211d4ba3c6'
  'ffc678bb8b75177d3fef968a89166bf402b8f69e3446a276e32b463d9551c529'
  '346c988a55ae7ba82a00aa29a0e2be77260a7561ff59d2b1d177d7a67943611e'
  '0ee728822aa3ff2264ba915735841bc4b87b3a3c27c894a5c955f70943347b63'
+ 'd3d1f643d7b0b0bc1f2302df80ff185a170386b8c50456b3946db1b7e2028dac'
+ '1b63e8ed12c87131445fdda5238b4a0e998eb0206915a8026af0ec51cf206eef'
+ 'b9df8645642baf2888c236fb140d194b269adf2b1328c3c75b6cc6afb086d860'
+ 'dd6a0e92d3faee9155b8faded5b781c4fef5e83973866397ee25e520b1b51d0e'
+ 'e5dc66e26cfaa7124a966dc02da60842bfb518c75c3c1c733ffc8a5ea45cfe44'
+ '7b8e94e002bbe7be882399b2afff4cdec781e97a3360372c6f27f7b086bdd353'
+ '7168ca77696882c6c26d1f08caf5bae797f23f77d48ec91c1f3a8e7af23ff426'
+ '7d0793489653bfe020de7ea32047bad266f5e2e204ba12025d5300f39555addc'
+ 'bf0fb82b601f54d16dec36727103813d93276ac9b7e5eec7c581bfb4c38dc8fe'
  'ae0b086a873c58565cb68b3e0484a356984ec3e2b41460b5eb2193a86cd21498'
  '0c3c6b2f3cf66f43cc68827293635613f51125d9b32472ec78478d99a5661b61'
  '1c9cfe5e396d261ce23e8175fd2316b86cf6bd25399b1d728603a287be19eb34'
  '6db8bb638de7d685ce4d9034ca3ac7ecd8604eeabc9af47a829e11bddc993a74'
  'f9941911da0da7496eb0964e9404538a16a30eace046d2b637b4e1e1229a8bf2'
- 'c2c66685aff0b9c5c6abc0c4ac2936d02e95b86df965c0b42e49cd4c238545af')
+ '22583e032b064a331ae9d7a24b41eb51c7390fbdaaa0d94196193bc2364325bf')
 prepare() {
  /usr/bin/python3 "$srcdir/extract.py" "$srcdir/maintenance-packages-$_commit.tar.gz" "$srcdir/source"
  /usr/bin/python3 "$srcdir/prepare.py" "$srcdir/source" "$srcdir/prepared" --managed-sni
@@ -95,11 +113,15 @@ check() {
  bash "$srcdir/check.sh" "$srcdir/check" "$srcdir/source" "$srcdir/feed"
  bash "$srcdir/check-localdb.sh" "$srcdir/check-localdb" "$srcdir/feed"
  bash "$srcdir/check-browser.sh" "$srcdir/check-browser" "$srcdir/feed"
+ bash "$srcdir/check-lpc.sh" "$srcdir/check-lpc" "$srcdir/feed"
+ bash "$srcdir/check-async-cache.sh" "$srcdir/check-async-cache" "$srcdir/feed"
  /usr/bin/python3 "$srcdir/audit-source-sni.py" "$srcdir/source" "$srcdir/prepared" "$srcdir/check/protocol" "$srcdir/maintenance-packages-$_commit.tar.gz"
 }
 package() {
  install -Dm644 "$srcdir/feed/system.data.sqlclient.$pkgver.nupkg" "$pkgdir$MINGW_PREFIX/lib/dotnet/library-packs/system.data.sqlclient.$pkgver.nupkg"
  install -Dm644 "$srcdir/source/LICENSE" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LICENSE"
+ install -Dm644 "$srcdir/LPC-REFERENCE-LICENSE.txt" "$pkgdir$MINGW_PREFIX/share/licenses/$_realname/LPC-REFERENCE-LICENSE.txt"
+ install -Dm644 "$srcdir/lpc-source-reference.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/lpc-source-reference.json"
  install -Dm644 "$srcdir/README.md" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/README.md"
  install -m644 "$srcdir/prepared/source-inventory.json" "$srcdir/prepared/source-sni-audit.json" "$srcdir/prepared/managed-sni-port.json" "$srcdir/check/protocol/tds-source-inventory.json" "$pkgdir$MINGW_PREFIX/share/doc/$_realname/"
 }

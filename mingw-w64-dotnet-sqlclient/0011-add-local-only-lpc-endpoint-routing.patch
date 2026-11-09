@@ -1,0 +1,101 @@
+--- a/SNIProxy.cs
++++ b/SNIProxy.cs
+@@ -279,6 +279,7 @@
+                     sniHandle = CreateTcpHandle(details, timerExpire, callbackObject, parallel);
+                     break;
+                 case DataSource.Protocol.NP:
++                case DataSource.Protocol.LPC:
+                     sniHandle = CreateNpHandle(details, timerExpire, callbackObject, parallel);
+                     break;
+                 default:
+@@ -410,12 +411,15 @@
+         /// <returns>SNINpHandle</returns>
+         private SNINpHandle CreateNpHandle(DataSource details, long timerExpire, object callbackObject, bool parallel)
+         {
++            bool local = details.ConnectionProtocol == DataSource.Protocol.LPC;
++            SNIProviders provider = local ? SNIProviders.SM_PROV : SNIProviders.NP_PROV;
+             if (parallel)
+             {
+-                SNICommon.ReportSNIError(SNIProviders.NP_PROV, 0, SNICommon.MultiSubnetFailoverWithNonTcpProtocol, string.Empty);
++                SNICommon.ReportSNIError(provider, 0, SNICommon.MultiSubnetFailoverWithNonTcpProtocol, string.Empty);
+                 return null;
+             }
+-            return new SNINpHandle(details.PipeHostName, details.PipeName, timerExpire, callbackObject);
++            return new SNINpHandle(details.PipeHostName, details.PipeName, timerExpire, callbackObject,
++                targetServer: local ? details.ServerName : null, provider: provider);
+         }
+ 
+         /// <summary>
+@@ -517,7 +521,7 @@
+         private const string NamedPipeInstanceNameHeader = "mssql$";
+         private const string DefaultPipeName = "sql\\query";
+ 
+-        internal enum Protocol { TCP, NP, None, Admin };
++        internal enum Protocol { TCP, NP, None, Admin, LPC };
+ 
+         internal Protocol ConnectionProtocol = Protocol.None;
+ 
+@@ -574,6 +578,8 @@
+                     ReportSNIError(SNIProviders.NP_PROV);
+                 else if (ConnectionProtocol == DataSource.Protocol.TCP)
+                     ReportSNIError(SNIProviders.TCP_PROV);
++                else if (ConnectionProtocol == DataSource.Protocol.LPC)
++                    ReportSNIError(SNIProviders.SM_PROV);
+             }
+         }
+ 
+@@ -595,6 +601,9 @@
+                         break;
+                     case TdsEnums.NP:
+                         ConnectionProtocol = DataSource.Protocol.NP;
++                        break;
++                    case "lpc":
++                        ConnectionProtocol = DataSource.Protocol.LPC;
+                         break;
+                     case TdsEnums.ADMIN:
+                         ConnectionProtocol = DataSource.Protocol.Admin;
+@@ -644,6 +653,9 @@
+                 return null;
+             }
+ 
++            if (details.ConnectionProtocol == Protocol.LPC)
++                return details.InferLocalConnectionDetails() ? details : null;
++
+             if (details.InferNamedPipesInformation())
+             {
+                 return details;
+@@ -660,6 +672,34 @@
+             }
+ 
+             return null;
++        }
++
++        // Endpoint selection adapted from Microsoft go-mssqldb, commit
++        // 6c346b78c201e490ca2585f0987ddd8f6b4f06a3/sharedmemory.
++        // See LPC-REFERENCE-LICENSE.txt for its BSD-3-Clause notices.
++        private bool InferLocalConnectionDetails()
++        {
++            string[] parts = _dataSourceAfterTrimmingProtocol.Split(BackSlashSeparator);
++            string host = parts[0].Trim();
++            string instance = parts.Length == 2 ? parts[1].Trim() : null;
++            IPAddress address;
++            bool validHost = host == "." || host == "(local)" || host == "localhost" ||
++                string.Equals(host, Environment.MachineName, StringComparison.OrdinalIgnoreCase) ||
++                (IPAddress.TryParse(host, out address) && IPAddress.IsLoopback(address));
++            if (!validHost || parts.Length > 2 || _dataSourceAfterTrimmingProtocol.IndexOf(',') >= 0 ||
++                (parts.Length == 2 && (string.IsNullOrEmpty(instance) || instance == "." || instance == ".." ||
++                 instance.IndexOfAny(new[] { '/', ':', '\0' }) >= 0)))
++            {
++                ReportSNIError(SNIProviders.SM_PROV);
++                return false;
++            }
++            ServerName = host == "." || host == "(local)" ? Environment.MachineName : host;
++            if (ServerName.Length > 2 && ServerName[0] == '[' && ServerName[ServerName.Length - 1] == ']')
++                ServerName = ServerName.Substring(1, ServerName.Length - 2);
++            InstanceName = instance;
++            PipeHostName = ".";
++            PipeName = @"SQLLocal\" + (instance ?? "MSSQLSERVER");
++            return true;
+         }
+ 
+         private void InferLocalServerName()

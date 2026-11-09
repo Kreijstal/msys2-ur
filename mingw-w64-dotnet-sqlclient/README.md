@@ -25,7 +25,7 @@ All framework references, actual compiler inputs, resource inputs, implementatio
 reference hashes, wrapper projects, exact overlay sources/patches, removed binary
 inventory, original package documentation and MIT license are recorded/shipped.
 
-Eight production overlays preserve the pinned source tree:
+Ten production overlays preserve the pinned source tree:
 
 1. Select the original managed SNI in Release and Debug, without a Debug environment
    switch. The original Release factory selects proprietary `sni.dll`.
@@ -45,6 +45,13 @@ Eight production overlays preserve the pinned source tree:
 6. Resolve LocalDB's native message formatter through the managed LocalDB loader.
 7. Use LocalDB-specific error messages for both SNI backends. The pipe-parser
    overlay also stops transport routing after LocalDB lookup failure.
+
+8. Validate SQL Browser port response sizes, case-insensitive protocol keys,
+   numeric ports and duplicate fields.
+9. Add explicit local-only LPC/SQLLocal routing, retaining TLS target names and
+   Shared Memory Provider errors through the pipe implementation.
+10. Atomically publish the command async-state cache shared by command-start
+    and write-completion paths.
 
 The original142 selected TDS protocol/endpoint/server fixture inputs are built.
 One test-only PlaceholderStream overlay returns partial handshake reads to.NET8
@@ -74,7 +81,7 @@ bash check.sh NEW_OUTPUT NEW_SOURCE
 ```
 
 The source audit derives exact selected compiler inputs from the archive and replays
-all nine production patches with zero fuzz. The separate full test audit also checks
+all twelve production patches with zero fuzz. The separate full test audit also checks
 all142 original TDS fixture inputs and their one test-stream overlay. Fresh consumers
 must load no proprietary SNI or Framework implementation. No policy, persistent PATH,
 trust-store, registry, service, firewall or database configuration is changed.
@@ -110,3 +117,28 @@ UDP fixture reserves port 1434 exclusively while running; it does not install
 or start SQL Browser. It tests direct discovery and public named-instance/DAC
 Open/OpenAsync and scalar queries against an independent TDS peer.
 Run `bash check-browser.sh NEW_OUTPUT` after installation.
+
+Release 4 adds explicit local-only `lpc:` routing to the SQLLocal instance
+endpoint, following Microsoft go-mssqldb commit
+`6c346b78c201e490ca2585f0987ddd8f6b4f06a3`. It accepts local aliases, machine name
+and loopback IP addresses, rejects remote hosts/ports/invalid instance paths,
+and skips SQL Browser. Pipe I/O retains the caller's TLS target name and reports
+Shared Memory Provider errors. Normal TCP/NP selection is unchanged.
+The source reference and BSD-3-Clause notices are included with the MIT source
+license in the NuGet and native packages.
+
+`bash check-lpc.sh NEW_OUTPUT` exercises an owned uniquely named SQLLocal pipe,
+public sync/async plaintext and TLS queries, untrusted-certificate rejection,
+parser restrictions and provider errors. It starts no SQL Server engine and
+changes no SQL/Windows service or registry settings. These fixtures do not prove
+actual server interoperability. The separate read-only real-server gate must
+observe `net_transport = Shared memory`; LocalDB, FILESTREAM and broader native
+compatibility remain open.
+
+Release 5 atomically publishes one SqlCommand async-state cache. The internal
+async-start and write-completion paths can initialize this cache concurrently;
+two independent caches lose reader/End-method state and can produce a false
+EndExecuteReader-called-twice error on fast local transport. The regression
+checks 1024 paired starts, shared identity and retention of both actors' state.
+This does not make public concurrent execution of a SqlCommand supported.
+Run `bash check-async-cache.sh NEW_OUTPUT` after installation.

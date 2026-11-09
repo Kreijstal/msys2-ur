@@ -1,0 +1,38 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Check.csproj (in 2.26 sec).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:40.40
+PASS exact source feed archive and implementation bytes; archive SHA256 7a1b0030d4baa70b4c30b341f5e60715b14960aa362a3e9ee109d17b37448dd8
+PASS LPC SQLLocal query async=False tls=False
+PASS LPC SQLLocal query async=False tls=True
+System.Exception: public LPC query: System.InvalidOperationException: The method 'EndExecuteReader' cannot be called more than once for the same execution.
+   at System.Data.SqlClient.SqlCommand.VerifyEndExecuteState(Task completionTask, String endMethod)
+   at System.Data.SqlClient.SqlCommand.InternalEndExecuteReader(IAsyncResult asyncResult, String endMethod)
+   at System.Data.SqlClient.SqlCommand.EndExecuteReaderInternal(IAsyncResult asyncResult)
+   at System.Data.SqlClient.SqlCommand.EndExecuteReader(IAsyncResult asyncResult)
+   at System.Threading.Tasks.TaskFactory`1.FromAsyncCoreLogic(IAsyncResult iar, Func`2 endFunction, Action`1 endAction, Task`1 promise, Boolean requiresSynchronization)
+--- End of stack trace from previous location ---
+   at LpcChecks.Query(Boolean asynchronous, Boolean tls, Boolean trust, Boolean baseline) in E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Program.cs:line 148
+   at LpcChecks.Require(Boolean value, String message) in E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Program.cs:line 22
+   at LpcChecks.Query(Boolean asynchronous, Boolean tls, Boolean trust, Boolean baseline) in E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Program.cs:line 163
+   at LpcChecks.Execute(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Program.cs:line 215
+   at LpcChecks.Run(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\installed-ucrt64\Program.cs:line 200

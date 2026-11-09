@@ -1,0 +1,54 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Check.csproj (in 490 ms).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:07.38
+PASS exact source feed archive and implementation bytes; archive SHA256 9709ba94bc92e533f3d001f87bdf17f6b19deddd4fc42b3d6c9c3dd91fbcfe48
+PASS LPC SQLLocal query async=False tls=False
+PASS LPC SQLLocal query async=False tls=True
+PASS LPC SQLLocal query async=True tls=False
+PASS LPC SQLLocal query async=True tls=True
+PEER LPC error System.IO.IOException: The read operation failed, see inner exception.
+ ---> System.Security.Authentication.AuthenticationException: Cannot determine the frame size or a corrupted frame was received.
+   at System.Net.Security.SslStream.GetFrameSize(ReadOnlySpan`1 buffer)
+   at System.Net.Security.SslStream.EnsureFullTlsFrameAsync[TIOAdapter](CancellationToken cancellationToken, Int32 estimatedSize)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Security.SslStream.ReadAsyncInternal[TIOAdapter](Memory`1 buffer, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at System.IO.Stream.ReadAtLeastAsyncCore(Memory`1 buffer, Int32 minimumBytes, Boolean throwOnEndOfStream, CancellationToken cancellationToken)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at LpcChecks.ReadPacket(Stream stream) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 79
+   at LpcChecks.<>c__DisplayClass15_0.<<Query>b__1>d.MoveNext() in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 129
+System.ObjectDisposedException: Cannot access a closed pipe.
+   at System.IO.Pipes.PipeStream.CheckWriteOperations()
+   at System.IO.Pipes.PipeStream.Flush()
+   at LpcChecks.HandshakeStream.Flush() in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 49
+   at System.Net.Security.AuthenticatedStream.Dispose(Boolean disposing)
+   at System.Net.Security.SslStream.Dispose(Boolean disposing)
+   at System.IO.Stream.Close()
+   at System.IO.Stream.Dispose()
+   at LpcChecks.<>c__DisplayClass15_0.<<Query>b__1>d.MoveNext() in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 138
+--- End of stack trace from previous location ---
+   at LpcChecks.Query(Boolean asynchronous, Boolean tls, Boolean trust, Boolean baseline) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 158
+   at LpcChecks.Execute(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 216
+   at LpcChecks.Run(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-final3\Program.cs:line 198

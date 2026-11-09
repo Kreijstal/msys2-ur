@@ -7,9 +7,14 @@ compatibility verification. The historical NETStandard1.x restore reports below
 are separate archival work and do not count as missing current PowerShell dependencies.
 
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
-missing SqlClient LPC implementation from live-server validation and preserves
+implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)
-categorizes MMI guards and pins a Microsoft LPC implementation reference.
+categorizes MMI guards and pins the Microsoft LPC implementation reference.
+SqlClient 4.9.1-5 passes 144 LPC checks and 1024 async-cache publication checks
+per installed environment; its read-only real-server harness is compiled, with
+actual SQL Server transport confirmation still pending. PowerShell 7.4.20-21 also
+passes both sets of checks in each installed STA/MTA mode in both environments.
+[Port and bundled integration evidence](../sqlclient-lpc/README.md).
 
 SqlClient 4.9.1-3 corrects SQL Browser named-instance/DAC reply parsing;
 94 checks pass per installed environment and per PowerShell 7.4.20-19 STA/MTA

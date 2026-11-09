@@ -19,7 +19,11 @@ sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
 mmi_inputs = json.loads((repo/'tests/mmi-execution-context/package-results-20261109.json').read_text())
 for relative, digest in mmi_inputs['input_sha256'].items():
     assert sha(repo/relative) == digest, relative
-sql_inputs = json.loads((repo/'tests/sqlclient-browser/package-results-20261109.json').read_text())
+sql_record = repo/'tests/sqlclient-lpc/package-results-20261109.json'
+if not sql_record.exists():
+    sql_record = repo/'tests/sqlclient-browser/package-results-20261109.json'
+sql_inputs = json.loads(sql_record.read_text())
+assert all(v['build_exit_code'] == v['installed_exit_code'] == 0 for v in sql_inputs['environments'].values())
 for relative, digest in sql_inputs['input_sha256'].items():
     assert sha(repo/relative) == digest, relative
 mmi_audit = json.loads((repo/'tests/mmi-execution-context/source-audit-20261109.json').read_text())
@@ -69,7 +73,8 @@ with tempfile.TemporaryDirectory(prefix='powershell-remaining-source-') as scrat
                source_sha256={p.relative_to(stage).as_posix(): sha(p) for p in sources},
                public_non_null_session_callback_not_exposed=True,
                scope='Textual guarded-path inventory; does not prove full reachability, ownership, exceptions or remote compatibility')
-    sql_audit = json.loads((repo/'tests/sqlclient-browser/evidence-20261109/clang64-source-sni-audit.json').read_text())
+    sql_audit_path = sql_inputs.get('source_audit_files', {}).get('clang64', 'tests/sqlclient-browser/evidence-20261109/clang64-source-sni-audit.json')
+    sql_audit = json.loads((repo/sql_audit_path).read_text())
     entry = next(e for e in sql_audit['production_overlays'] if e['original_path'].endswith('/SNI/SNIProxy.cs'))
     original = sql_original/entry['original_path']
     assert sha(original) == entry['original_sha256']
@@ -83,8 +88,14 @@ with tempfile.TemporaryDirectory(prefix='powershell-remaining-source-') as scrat
     assert sha(overlay) == entry['overlay_sha256']
     text = overlay.read_text()
     protocol = re.search(r'internal enum Protocol\s*\{([^}]+)\}', text).group(1)
-    assert [s.strip() for s in protocol.split(',')] == ['TCP', 'NP', 'None', 'Admin']
-    assert 'case "lpc"' not in text and 'case TdsEnums.LPC' not in text
+    protocols = [s.strip() for s in protocol.split(',')]
+    if sql_inputs.get('LPC_endpoint_routing_implemented', False):
+        assert protocols == ['TCP', 'NP', 'None', 'Admin', 'LPC']
+        assert 'case "lpc"' in text and 'InferLocalConnectionDetails()' in text
+        assert 'PipeHostName = ".";' in text and 'SQLLocal' in text
+    else:
+        assert protocols == ['TCP', 'NP', 'None', 'Admin']
+        assert 'case "lpc"' not in text and 'case TdsEnums.LPC' not in text
     factory = next(e for e in sql_audit['production_overlays'] if e['original_path'].endswith('/TdsParserStateObjectFactory.Windows.cs'))
     factory_original = sql_original/factory['original_path']
     assert sha(factory_original) == factory['original_sha256']
@@ -96,9 +107,9 @@ with tempfile.TemporaryDirectory(prefix='powershell-remaining-source-') as scrat
                    check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert sha(factory_stage) == factory['overlay_sha256']
     assert 'public static bool UseManagedSNI { get; } = true;' in factory_stage.read_text()
-    sql = dict(compiled_SNIProxy_sha256=sha(overlay), protocols=['TCP', 'NP', 'None', 'Admin'],
-               lpc_backend_implemented=False, proprietary_SNI_binary_fallback_enabled=False,
-               source_evidence='tests/sqlclient-browser/evidence-20261109/clang64-source-sni-audit.json')
+    sql = dict(compiled_SNIProxy_sha256=sha(overlay), protocols=protocols,
+               lpc_backend_implemented='LPC' in protocols, proprietary_SNI_binary_fallback_enabled=False,
+               source_evidence=sql_audit_path)
 commit = subprocess.check_output(['git', '-C', str(go), 'rev-parse', 'HEAD'], text=True).strip()
 assert commit == '6c346b78c201e490ca2585f0987ddd8f6b4f06a3'
 files = ['sharedmemory/sharedmemory_windows.go', 'internal/np/namedpipe_windows.go',
@@ -109,13 +120,13 @@ reference = dict(repository='https://github.com/microsoft/go-mssqldb', commit=co
                  files={f: sha(go/f) for f in files},
                  target='Local-only SQLLocal instance endpoint; no SQL Browser lookup; existing named-pipe stream machinery',
                  upstream_live_test='SELECT net_transport FROM sys.dm_exec_connections WHERE session_id = @@SPID must return Shared memory',
-                 upstream_test_executed_here=False, port_implemented_here=False,
+                 upstream_test_executed_here=False, port_implemented_here=sql['lpc_backend_implemented'],
                  license='BSD-3-Clause; retain notices if adapting the source')
 record = dict(scope='PowerShell7.4.20/.NET8.0.31 current source and remaining gates',
               audit_tool_sha256=sha(Path(__file__)),
               audit_command='python3 tests/powershell-deps/audit-remaining-source.py MMI_PRISTINE SQL_PRISTINE GO_MSSQLDB NEW_JSON',
-              mmi_package_version='3.0.0-15', sqlclient_package_version='4.9.1-3',
+              mmi_package_version='3.0.0-15', sqlclient_package_version=sql_inputs['package_version'],
               mmi=mmi, sqlclient=sql, lpc_source_reference=reference,
               full_dependency_goal_complete=False)
 output.write_text(json.dumps(record, indent=2)+'\n')
-print('PASS current source inventory: 152 MMI inputs, 12 categorized guards; SqlClient LPC absent; pinned Microsoft LPC reference')
+print('PASS current source inventory: 152 MMI inputs, 12 categorized guards; SqlClient LPC '+('present' if sql['lpc_backend_implemented'] else 'absent')+'; pinned Microsoft LPC reference')

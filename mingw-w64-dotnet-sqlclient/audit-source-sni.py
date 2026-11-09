@@ -53,7 +53,8 @@ assert {entry['patch_name'] for p in port['overlays'] for entry in [p] + p.get('
     '0004-accept-short-custom-named-pipe-paths.patch',
     '0005-honor-inclusive-smp-send-window.patch', '0006-stop-after-localdb-lookup-failure.patch',
     '0007-honor-localdb-start-results-and-buffer-sizes.patch', '0008-load-localdb-messages-through-managed-sni.patch',
-    '0009-format-localdb-errors-for-managed-sni.patch', '0010-validate-sql-browser-port-responses.patch'}
+    '0009-format-localdb-errors-for-managed-sni.patch', '0010-validate-sql-browser-port-responses.patch', '0011-add-local-only-lpc-endpoint-routing.patch',
+    '0012-preserve-lpc-tls-target-and-provider-errors.patch', '0013-publish-one-command-async-state-cache.patch'}
 overlays = {}
 for item in port['overlays']:
     path = source/item['original_path']
@@ -208,5 +209,5 @@ consumer = next(p for p in consumers if p.read_bytes()==implementation.read_byte
 result['tested_implementation_sha256'] = sha(implementation.read_bytes())
 result['tested_consumer_asset'] = consumer.relative_to(peer).as_posix()
 (build/'source-sni-audit.json').write_text(json.dumps(result, indent=2)+'\n')
-print('PASS exact pinned archive, complete original compiler inputs, four production overlays, 142 upstream TDS utility inputs/one test-stream overlay, and tested Release DLL bytes:',
+print('PASS exact pinned archive, complete original compiler inputs, recorded production overlays, 142 upstream TDS utility inputs/one test-stream overlay, and tested Release DLL bytes:',
       {role: result[role]['original_selected_sources'] for role in ('implementation', 'contract')})

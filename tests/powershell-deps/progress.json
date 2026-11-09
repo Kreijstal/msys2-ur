@@ -373,17 +373,18 @@
       "source_sni_candidate_evidence": "tests/powershell-deps/sqlclient-source-sni-results-20261027.txt",
       "recipe": "mingw-w64-dotnet-sqlclient",
       "experimental_package_built": true,
-      "package_version": "4.9.1-3",
+      "package_version": "4.9.1-5",
       "public_api_signatures": 1020,
       "windows_original_compiler_inputs": 242,
       "contract_original_compiler_inputs": 3,
-      "production_overlays": 8,
+      "production_overlays": 10,
       "resource_strings": 407,
       "package_evidence": "tests/powershell-deps/sqlclient-package-results-20261027.txt",
-      "production_patches": 9,
+      "production_patches": 12,
       "localdb_startup_evidence": "tests/sqlclient-localdb/package-results-20261108.json",
       "MARS_cancel_error_TLS_evidence": "tests/sqlclient-mars-cancel/results-20261108.json",
-      "SQL_Browser_discovery_evidence": "tests/sqlclient-browser/package-results-20261109.json"
+      "SQL_Browser_discovery_evidence": "tests/sqlclient-browser/package-results-20261109.json",
+      "LPC_port_evidence": "tests/sqlclient-lpc/package-results-20261109.json"
     },
     {
       "id": "System.Diagnostics.DiagnosticSource",
@@ -1432,8 +1433,8 @@
     {
       "component": "PowerShell native components",
       "status": "source-native-package-built-installed-and-current-shipping-checks-passed",
-      "package_version": "7.4.20-19",
-      "evidence": "tests/sqlclient-browser/powershell-results-20261109.json",
+      "package_version": "7.4.20-21",
+      "evidence": "tests/sqlclient-lpc/powershell-results-20261109.json",
       "broader_native_runtime_behavior_complete": false
     },
     {
@@ -37473,7 +37474,7 @@
     "remaining_gate_audit": {
       "evidence": "tests/powershell-deps/remaining-gates-20261109.json",
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "current_safe_next_implementation": "Port explicit local-only SqlClient LPC transport using pinned Microsoft go-mssqldb source",
+      "current_safe_next_implementation": "LPC routing and async-cache fixes verified in packaged PowerShell; continue native/provider behavior audit and authorized real-server integration",
       "direct_dependency_counts_unchanged": true,
       "full_dependency_goal_complete": false,
       "cleanup_evidence": "tests/powershell-deps/completion-audit-evidence-20261109/cleanup.json"
@@ -37489,6 +37490,44 @@
       "consumer_DLLs": 67,
       "SqlClient_package_version": "4.9.1-3",
       "installed_and_current_portable_runners_passed": true,
+      "full_dependency_goal_complete": false
+    },
+    "sqlclient_LPC_port": {
+      "evidence": "tests/sqlclient-lpc/package-results-20261109.json",
+      "package_version": "4.9.1-5",
+      "checks_per_environment": 144,
+      "baseline_defects": 30,
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "real_server_harness_compiled_only": true,
+      "real_SQL_Server_transport_verified": false,
+      "full_dependency_goal_complete": false,
+      "async_cache_checks_per_environment": 1024
+    },
+    "powershell_LPC_integration": {
+      "evidence": "tests/sqlclient-lpc/powershell-results-20261109.json",
+      "package_version": "7.4.20-21",
+      "mmi_package_version": "3.0.0-15",
+      "sqlclient_package_version": "4.9.1-5",
+      "checks_per_mode": 144,
+      "async_cache_checks_per_mode": 1024,
+      "modes": [
+        "STA",
+        "MTA"
+      ],
+      "environments": [
+        "CLANG64",
+        "UCRT64"
+      ],
+      "full_dependency_goal_complete": false
+    },
+    "LPC_integration_cleanup": {
+      "evidence": "tests/sqlclient-lpc/cleanup-20261109.json",
+      "remote_logical_bytes_removed": 3458626755,
+      "local_staging_bytes_removed": 891086,
+      "installed_packages_retained": true,
       "full_dependency_goal_complete": false
     }
   }

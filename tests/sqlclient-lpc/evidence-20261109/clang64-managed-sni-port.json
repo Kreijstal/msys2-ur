@@ -1,0 +1,95 @@
+{
+  "overlays": [
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/TdsParserStateObjectFactory.Windows.cs",
+      "original_sha256": "d94a2c8a9071b55070fdc60fcf17dd6e6d30caa481ca722f19d54310f712c037",
+      "patch_name": "0001-use-managed-sni-on-windows.patch",
+      "patch_sha256": "e04edd0e37056c8d97284e8413956d59c33df7fe43f8e708e6c46c943c0e0727",
+      "additional_patches": [],
+      "overlay_sha256": "8d4950ff3736e29c4a13350722ace0e23544a84c86e6be3df3b8d4288bfe42cb"
+    },
+    {
+      "original_path": "src/Common/src/Interop/Windows/SspiCli/SecuritySafeHandles.cs",
+      "original_sha256": "70c67ae1b7b2567c24e03ba7e5172cae96ef896f3e4f5af914adef41c71f0e2f",
+      "patch_name": "0003-pass-complete-spns-to-windows-sspi.patch",
+      "patch_sha256": "c3b03f226ae516ca5f0375af069855fa54aa5439e8ef2818d04822643077e21f",
+      "additional_patches": [],
+      "overlay_sha256": "6bb91344d4462e82a6e7036757388c8bd45ccb24201ad09cf36f465538292d04"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SNIProxy.cs",
+      "original_sha256": "28fe4cec4804872f57b42406a26c6d906f121f1f43beb6d465a8d6bf8bad0647",
+      "patch_name": "0004-accept-short-custom-named-pipe-paths.patch",
+      "patch_sha256": "9d234bc7b25f2d6b734ea959681082adf3f2d41af0971119d8eb68a7383a9614",
+      "additional_patches": [
+        {
+          "patch_name": "0006-stop-after-localdb-lookup-failure.patch",
+          "patch_sha256": "0f9b0a6e4f36bdb7ae625b3e1ab99e3ce23bb305c32974ec9ab8e63a74b38d3a"
+        },
+        {
+          "patch_name": "0011-add-local-only-lpc-endpoint-routing.patch",
+          "patch_sha256": "d3d1f643d7b0b0bc1f2302df80ff185a170386b8c50456b3946db1b7e2028dac"
+        }
+      ],
+      "overlay_sha256": "cc8c3e902e6c37fbb61821ee6128669e9573c521f10034a5f8b08ee4f0845615"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SNINpHandle.cs",
+      "original_sha256": "54719e2a4eec59438a9caeca69b08d3fa86b796a6e5cf566f909f9cfb494887b",
+      "patch_name": "0012-preserve-lpc-tls-target-and-provider-errors.patch",
+      "patch_sha256": "1b63e8ed12c87131445fdda5238b4a0e998eb0206915a8026af0ec51cf206eef",
+      "additional_patches": [],
+      "overlay_sha256": "6dfea17af1108cc2be8c2d296b14a3cac1d205406d3a9d9764e82dda2aaf0057"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SNIMarsHandle.cs",
+      "original_sha256": "47982b033618aa5505da8922ff41fbc3e1fb4df7b07da8d3cc9096305d17945d",
+      "patch_name": "0005-honor-inclusive-smp-send-window.patch",
+      "patch_sha256": "57ebaf32f50d4245e985e3de80ccc5e71f3188ece1b91bfcffff98d5db42c192",
+      "additional_patches": [],
+      "overlay_sha256": "32042a9526c4ee3ffe12da8f7d83e899be02f14c1280f5f89249f024d21617dd"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/SSRP.cs",
+      "original_sha256": "234d1531c69d5e1b5ef149769af5b698ccdbb25a81a54b74fb7fed2f9f7af45b",
+      "patch_name": "0010-validate-sql-browser-port-responses.patch",
+      "patch_sha256": "0ee728822aa3ff2264ba915735841bc4b87b3a3c27c894a5c955f70943347b63",
+      "additional_patches": [],
+      "overlay_sha256": "4afa711f2f91ab385ceedbcce3274e1c4172331736374fe014469a35f9354b34"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SNI/LocalDB.Windows.cs",
+      "original_sha256": "62dd3a4367484d3671a1135f4cb337d26e11232468f75fc8f19b560e828ae499",
+      "patch_name": "0007-honor-localdb-start-results-and-buffer-sizes.patch",
+      "patch_sha256": "e187e27b05dab1a1ad2fb8537f287155c30e4216c686f4137cc6f60cbfa5ed4e",
+      "additional_patches": [],
+      "overlay_sha256": "f4167b84264879217e4147a667a09df58e5ea2fff65a074e944ad741527d218a"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/LocalDBAPI.Windows.cs",
+      "original_sha256": "a1aef006aae3aaa1c20818e5a3a370ed614fd2d6a3533e658b079d235f9b44cd",
+      "patch_name": "0008-load-localdb-messages-through-managed-sni.patch",
+      "patch_sha256": "ffc678bb8b75177d3fef968a89166bf402b8f69e3446a276e32b463d9551c529",
+      "additional_patches": [],
+      "overlay_sha256": "4ed3d164c3346b91c55cf368f5fa8250d43049fe33476449db68b97cf73d7df8"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/SqlCommand.cs",
+      "original_sha256": "2ac03b0885a9880ce1d4e2698fd7b21309bc625dc7d726b53a650e8a7e71146d",
+      "patch_name": "0013-publish-one-command-async-state-cache.patch",
+      "patch_sha256": "b9df8645642baf2888c236fb140d194b269adf2b1328c3c75b6cc6afb086d860",
+      "additional_patches": [],
+      "overlay_sha256": "31b41b6feb45dc3cc75cb1c8efddeb002dbd40756c3565537cd55ed9f37b8620"
+    },
+    {
+      "original_path": "src/System.Data.SqlClient/src/System/Data/SqlClient/TdsParser.cs",
+      "original_sha256": "3ee7769ca5037c54527093afd304804637d2668ed6901cd9eb403c762db68cdc",
+      "patch_name": "0009-format-localdb-errors-for-managed-sni.patch",
+      "patch_sha256": "346c988a55ae7ba82a00aa29a0e2be77260a7561ff59d2b1d177d7a67943611e",
+      "additional_patches": [],
+      "overlay_sha256": "59981798aa9866c119362ec4e900ae1aedac30b469fc6946c405756a48f9a4f4"
+    }
+  ],
+  "release_and_debug_use_managed_sni": true,
+  "complete_runtime_compatibility_verified": false
+}

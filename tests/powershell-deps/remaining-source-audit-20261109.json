@@ -1,9 +1,9 @@
 {
   "scope": "PowerShell7.4.20/.NET8.0.31 current source and remaining gates",
-  "audit_tool_sha256": "f571ed79d87daa5a5b895028acb496b67ec9b3f2c73c3d9d5366820343172138",
+  "audit_tool_sha256": "2f302f09212381fa2897ff60207b938e1b1eec0c33f7761820d65878b2f1c69a",
   "audit_command": "python3 tests/powershell-deps/audit-remaining-source.py MMI_PRISTINE SQL_PRISTINE GO_MSSQLDB NEW_JSON",
   "mmi_package_version": "3.0.0-15",
-  "sqlclient_package_version": "4.9.1-3",
+  "sqlclient_package_version": "4.9.1-5",
   "mmi": {
     "compiled_CSharp_files": 152,
     "not_implemented_markers": [
@@ -242,16 +242,17 @@
     "scope": "Textual guarded-path inventory; does not prove full reachability, ownership, exceptions or remote compatibility"
   },
   "sqlclient": {
-    "compiled_SNIProxy_sha256": "a34480018f9d44473befa41ee105dd867bbee5e2ae6b8feb39d5ae2dc1bb768e",
+    "compiled_SNIProxy_sha256": "cc8c3e902e6c37fbb61821ee6128669e9573c521f10034a5f8b08ee4f0845615",
     "protocols": [
       "TCP",
       "NP",
       "None",
-      "Admin"
+      "Admin",
+      "LPC"
     ],
-    "lpc_backend_implemented": false,
+    "lpc_backend_implemented": true,
     "proprietary_SNI_binary_fallback_enabled": false,
-    "source_evidence": "tests/sqlclient-browser/evidence-20261109/clang64-source-sni-audit.json"
+    "source_evidence": "tests/sqlclient-lpc/evidence-20261109/clang64-source-sni-audit.json"
   },
   "lpc_source_reference": {
     "repository": "https://github.com/microsoft/go-mssqldb",
@@ -265,7 +266,7 @@
     "target": "Local-only SQLLocal instance endpoint; no SQL Browser lookup; existing named-pipe stream machinery",
     "upstream_live_test": "SELECT net_transport FROM sys.dm_exec_connections WHERE session_id = @@SPID must return Shared memory",
     "upstream_test_executed_here": false,
-    "port_implemented_here": false,
+    "port_implemented_here": true,
     "license": "BSD-3-Clause; retain notices if adapting the source"
   },
   "full_dependency_goal_complete": false

@@ -1,0 +1,47 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Check.csproj (in 1.19 sec).
+  Check -> E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\bin\Release\net8.0-windows\Check.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:11.17
+PASS exact source feed archive and implementation bytes; archive SHA256 9709ba94bc92e533f3d001f87bdf17f6b19deddd4fc42b3d6c9c3dd91fbcfe48
+System.Exception: public LPC invalid transport/provider mapping: System.ArgumentException: Connecting to a SQL Server instance using the MultiSubnetFailover connection option is only supported when using the TCP protocol.
+   at System.Data.SqlClient.TdsParser.ProcessSNIError(TdsParserStateObject stateObj)
+   at System.Data.SqlClient.SNI.TdsParserStateObjectManaged.CreatePhysicalSNIHandle(String serverName, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Byte[]& instanceName, Byte[]& spnBuffer, Boolean flushCache, Boolean async, Boolean parallel, Boolean isIntegratedSecurity)
+   at System.Data.SqlClient.TdsParser.Connect(ServerInfo serverInfo, SqlInternalConnectionTds connHandler, Boolean ignoreSniOpenTimeout, Int64 timerExpire, Boolean encrypt, Boolean trustServerCert, Boolean integratedSecurity, Boolean withFailover)
+   at System.Data.SqlClient.SqlInternalConnectionTds.AttemptOneLogin(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean ignoreSniOpenTimeout, TimeoutTimer timeout, Boolean withFailover)
+   at System.Data.SqlClient.SqlInternalConnectionTds.LoginNoFailover(ServerInfo serverInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString connectionOptions, SqlCredential credential, TimeoutTimer timeout)
+   at System.Data.SqlClient.SqlInternalConnectionTds.OpenLoginEnlist(TimeoutTimer timeout, SqlConnectionString connectionOptions, SqlCredential credential, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance)
+   at System.Data.SqlClient.SqlInternalConnectionTds..ctor(DbConnectionPoolIdentity identity, SqlConnectionString connectionOptions, SqlCredential credential, Object providerInfo, String newPassword, SecureString newSecurePassword, Boolean redirectedUserInstance, SqlConnectionString userConnectionOptions, SessionData reconnectSessionData, Boolean applyTransientFaultHandling, String accessToken)
+   at System.Data.SqlClient.SqlConnectionFactory.CreateConnection(DbConnectionOptions options, DbConnectionPoolKey poolKey, Object poolGroupProviderInfo, DbConnectionPool pool, DbConnection owningConnection, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionFactory.CreateNonPooledConnection(DbConnection owningConnection, DbConnectionPoolGroup poolGroup, DbConnectionOptions userOptions)
+   at System.Data.ProviderBase.DbConnectionFactory.<>c__DisplayClass40_0.<TryGetConnection>b__1(Task`1 _)
+   at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+   at System.Threading.Tasks.Task.<>c.<.cctor>b__281_0(Object obj)
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+--- End of stack trace from previous location ---
+   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot, Thread threadPoolThread)
+--- End of stack trace from previous location ---
+   at LpcChecks.BadConnection(String server, Boolean parallel, Boolean baseline) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Program.cs:line 161
+   at LpcChecks.Require(Boolean value, String message) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Program.cs:line 22
+   at LpcChecks.BadConnection(String server, Boolean parallel, Boolean baseline) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Program.cs:line 164
+   at LpcChecks.Execute(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Program.cs:line 180
+   at LpcChecks.Run(String[] args) in E:\codex-dotnet10\sqlclient-lpc.WF237M\candidate-check\Program.cs:line 169

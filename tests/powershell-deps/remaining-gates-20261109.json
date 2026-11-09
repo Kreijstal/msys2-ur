@@ -26,15 +26,13 @@
     },
     {
       "id": "System.Data.SqlClient",
-      "package_version": "4.9.1-3",
+      "package_version": "4.9.1-5",
       "artifact_exists": true,
       "public_contract_declarations_verified": 1020,
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "local_behavior_evidence": "tests/sqlclient-browser/package-results-20261109.json",
-      "PowerShell_local_integration_evidence": "tests/sqlclient-browser/powershell-results-20261109.json",
-      "known_missing_implementation": [
-        "Managed SNI has no explicit LPC protocol or SQLLocal shared-memory endpoint selection"
-      ],
+      "local_behavior_evidence": "tests/sqlclient-lpc/package-results-20261109.json",
+      "PowerShell_local_integration_evidence": "tests/sqlclient-lpc/powershell-results-20261109.json",
+      "known_missing_implementation": [],
       "missing_evidence": [
         "Real SQL Server engine transactions, parameters, bulk copy, MARS, errors, cancellation and recovery",
         "Actual Windows LocalDB discovery and connections",
@@ -46,7 +44,12 @@
       "harness_preparation_evidence": "tests/sqlclient-realdb/build-results-20261108.json",
       "existing_real_database_harness_does_not_cover_LPC_or_FILESTREAM": true,
       "SQL_Server_EULA_accepted": false,
-      "complete": false
+      "complete": false,
+      "LPC_endpoint_routing_implemented_and_fixture_verified": true,
+      "async_state_publication_race_fixed_and_verified": true,
+      "known_missing_implementation_inventory_is_not_a_complete_native_behavior_audit": true,
+      "real_LPC_harness": "tests/sqlclient-lpc/check-real.sh",
+      "real_LPC_harness_compiled_only": true
     },
     {
       "id": "Microsoft.Windows.Compatibility",
@@ -68,7 +71,7 @@
   ],
   "tracker_correction": {
     "PowerShell_native_components_are_built_and_installed": true,
-    "evidence": "tests/sqlclient-browser/powershell-results-20261109.json",
+    "evidence": "tests/sqlclient-lpc/powershell-results-20261109.json",
     "this_does_not_establish_all_native_runtime_or_provider_behavior": true
   },
   "separate_archival_or_future_work": [
@@ -85,10 +88,19 @@
       "Validate public sync/async queries against an independent owned SQLLocal endpoint",
       "Add a real Windows SQL Server transport-identity check requiring net_transport=Shared memory before claiming server interoperability"
     ],
-    "implemented": false,
+    "implemented": true,
     "source_reference_upstream_live_test_executed_here": false,
-    "TCP_or_normal_named_pipe_fallback_does_not_prove_LPC_support": true
+    "TCP_or_normal_named_pipe_fallback_does_not_prove_LPC_support": true,
+    "status": "Implemented and local fixture verified; actual SQL Server transport confirmation remains pending",
+    "evidence": "tests/sqlclient-lpc/package-results-20261109.json",
+    "async_state_publication_regression_checks": 1024,
+    "PowerShell_integration_evidence": "tests/sqlclient-lpc/powershell-results-20261109.json"
   },
   "binary_publication": "Experimental MMI3, SqlClient and PowerShell artifacts remain held",
-  "external_input_question_pending": true
+  "external_input_question_pending": true,
+  "next_validation_actions": [
+    "Run prepared read-only real LPC transport gate against an authorized local Windows SQL Server",
+    "Run prepared real database and authenticated HTTPS WSMan gates when authorized private settings are provided",
+    "Continue the broader native ownership/provider compatibility audit; known-gap inventory does not establish completion"
+  ]
 }
