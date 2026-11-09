@@ -1,0 +1,1528 @@
+{
+  "scope": "Windows x64 public MI function-table layout and outer call-shape audit",
+  "table_count": 12,
+  "function_slots": 125,
+  "parameter_count": 551,
+  "boolean_u1_parameters": 12,
+  "callback_pointer_parameters_signature_not_audited": 3,
+  "exact_return_declarations": 125,
+  "recorded_divergences": [],
+  "tables": [
+    {
+      "name": "MI_ApplicationFT",
+      "size": 88,
+      "fields": [
+        {
+          "name": "Close",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewSession",
+          "offset": 8,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "layout_class_pointer",
+            "indirect_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewHostedProvider",
+          "offset": 16,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "opaque_pointer",
+            "indirect_native_pointer",
+            "opaque_pointer"
+          ]
+        },
+        {
+          "name": "NewInstance",
+          "offset": 24,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "NewDestinationOptions",
+          "offset": 32,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewOperationOptions",
+          "offset": 40,
+          "parameters": 3,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "boolean_u1",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewSubscriptionDeliveryOptions",
+          "offset": 48,
+          "parameters": 3,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewSerializer",
+          "offset": 56,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewDeserializer",
+          "offset": 64,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "NewInstanceFromClass",
+          "offset": 72,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "NewClass",
+          "offset": 80,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "indirect_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_ClassFT",
+      "size": 112,
+      "fields": [
+        {
+          "name": "GetClassName",
+          "offset": 0,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetNameSpace",
+          "offset": 8,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetServerName",
+          "offset": 16,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetElementCount",
+          "offset": 24,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetElement",
+          "offset": 32,
+          "parameters": 9,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "boolean_u1",
+            "out_scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetElementAt",
+          "offset": 40,
+          "parameters": 9,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "boolean_u1",
+            "out_scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetClassQualifierSet",
+          "offset": 48,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetMethodCount",
+          "offset": 56,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetMethodAt",
+          "offset": 64,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetMethod",
+          "offset": 72,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetParentClassName",
+          "offset": 80,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetParentClass",
+          "offset": 88,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "Delete",
+          "offset": 96,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "Clone",
+          "offset": 104,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_DeserializerFT",
+      "size": 48,
+      "fields": [
+        {
+          "name": "Close",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "DeserializeClass",
+          "offset": 8,
+          "parameters": 12,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "opaque_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "callback_pointer_only",
+            "opaque_pointer",
+            "out_scalar_32",
+            "indirect_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "Class_GetClassName",
+          "offset": 16,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "opaque_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "out_scalar_32",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "Class_GetParentClassName",
+          "offset": 24,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "opaque_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "out_scalar_32",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "DeserializeInstance",
+          "offset": 32,
+          "parameters": 11,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "opaque_pointer",
+            "scalar_32",
+            "pointer_array",
+            "scalar_32",
+            "callback_pointer_only",
+            "opaque_pointer",
+            "out_scalar_32",
+            "indirect_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "Instance_GetClassName",
+          "offset": 40,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "opaque_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "out_scalar_32",
+            "indirect_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_DestinationOptionsFT",
+      "size": 120,
+      "fields": [
+        {
+          "name": "Delete",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "SetString",
+          "offset": 8,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetNumber",
+          "offset": 16,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "AddCredentials",
+          "offset": 24,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetString",
+          "offset": 32,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetNumber",
+          "offset": 40,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionCount",
+          "offset": 48,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionAt",
+          "offset": 56,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOption",
+          "offset": 64,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsCount",
+          "offset": 72,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsAt",
+          "offset": 80,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsPasswordAt",
+          "offset": 88,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "Clone",
+          "offset": 96,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "SetInterval",
+          "offset": 104,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetInterval",
+          "offset": 112,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_InstanceFT",
+      "size": 144,
+      "fields": [
+        {
+          "name": "Clone",
+          "offset": 0,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "Destruct",
+          "offset": 8,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "Delete",
+          "offset": 16,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "IsA",
+          "offset": 24,
+          "parameters": 3,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer",
+            "boolean_u1"
+          ]
+        },
+        {
+          "name": "GetClassName",
+          "offset": 32,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "SetNameSpace",
+          "offset": 40,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetNameSpace",
+          "offset": 48,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetElementCount",
+          "offset": 56,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "AddElement",
+          "offset": 64,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetElement",
+          "offset": 72,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetElementAt",
+          "offset": 80,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetElement",
+          "offset": 88,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetElementAt",
+          "offset": 96,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "ClearElement",
+          "offset": 104,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "ClearElementAt",
+          "offset": 112,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetServerName",
+          "offset": 120,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "SetServerName",
+          "offset": 128,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer"
+          ]
+        },
+        {
+          "name": "GetClass",
+          "offset": 136,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_OperationFT",
+      "size": 48,
+      "fields": [
+        {
+          "name": "Close",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "Cancel",
+          "offset": 8,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetSession",
+          "offset": 16,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetInstance",
+          "offset": 24,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer",
+            "boolean_u1",
+            "out_scalar_32",
+            "utf16_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "GetIndication",
+          "offset": 32,
+          "parameters": 8,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "boolean_u1",
+            "out_scalar_32",
+            "utf16_pointer",
+            "indirect_native_pointer"
+          ]
+        },
+        {
+          "name": "GetClass",
+          "offset": 40,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "indirect_native_pointer",
+            "boolean_u1",
+            "out_scalar_32",
+            "utf16_pointer",
+            "indirect_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_OperationOptionsFT",
+      "size": 104,
+      "fields": [
+        {
+          "name": "Delete",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "SetString",
+          "offset": 8,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetNumber",
+          "offset": 16,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetCustomOption",
+          "offset": 24,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "boolean_u1",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetString",
+          "offset": 32,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetNumber",
+          "offset": 40,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionCount",
+          "offset": 48,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionAt",
+          "offset": 56,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOption",
+          "offset": 64,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetEnabledChannels",
+          "offset": 72,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "Clone",
+          "offset": 80,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "SetInterval",
+          "offset": 88,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "GetInterval",
+          "offset": 96,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_ParameterSetFT",
+      "size": 32,
+      "fields": [
+        {
+          "name": "GetMethodReturnType",
+          "offset": 0,
+          "parameters": 3,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetParameterCount",
+          "offset": 8,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetParameterAt",
+          "offset": 16,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "out_scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetParameter",
+          "offset": 24,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_QualifierSetFT",
+      "size": 24,
+      "fields": [
+        {
+          "name": "GetQualifierCount",
+          "offset": 0,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetQualifierAt",
+          "offset": 8,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetQualifier",
+          "offset": 16,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_SerializerFT",
+      "size": 24,
+      "fields": [
+        {
+          "name": "Close",
+          "offset": 0,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "SerializeClass",
+          "offset": 8,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "SerializeInstance",
+          "offset": 16,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "scalar_32",
+            "out_scalar_32"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_SessionFT",
+      "size": 120,
+      "fields": [
+        {
+          "name": "Close",
+          "offset": 0,
+          "parameters": 3,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "opaque_pointer",
+            "callback_pointer_only"
+          ]
+        },
+        {
+          "name": "GetApplication",
+          "offset": 8,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetInstance",
+          "offset": 16,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "ModifyInstance",
+          "offset": 24,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "CreateInstance",
+          "offset": 32,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "DeleteInstance",
+          "offset": 40,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "Invoke",
+          "offset": 48,
+          "parameters": 10,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "EnumerateInstances",
+          "offset": 56,
+          "parameters": 8,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "boolean_u1",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "QueryInstances",
+          "offset": 64,
+          "parameters": 8,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "AssociatorInstances",
+          "offset": 72,
+          "parameters": 12,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "boolean_u1",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "ReferenceInstances",
+          "offset": 80,
+          "parameters": 10,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "boolean_u1",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "Subscribe",
+          "offset": 88,
+          "parameters": 9,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetClass",
+          "offset": 96,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "EnumerateClasses",
+          "offset": 104,
+          "parameters": 8,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "boolean_u1",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "TestConnection",
+          "offset": 112,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "opaque_pointer",
+            "direct_native_pointer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "MI_SubscriptionDeliveryOptionsFT",
+      "size": 136,
+      "fields": [
+        {
+          "name": "SetString",
+          "offset": 0,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetNumber",
+          "offset": 8,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetDateTime",
+          "offset": 16,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "SetInterval",
+          "offset": 24,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "AddCredentials",
+          "offset": 32,
+          "parameters": 4,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "scalar_32"
+          ]
+        },
+        {
+          "name": "Delete",
+          "offset": 40,
+          "parameters": 1,
+          "parameter_shapes": [
+            "direct_native_pointer"
+          ]
+        },
+        {
+          "name": "GetString",
+          "offset": 48,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetNumber",
+          "offset": 56,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetDateTime",
+          "offset": 64,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetInterval",
+          "offset": 72,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionCount",
+          "offset": 80,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOptionAt",
+          "offset": 88,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetOption",
+          "offset": 96,
+          "parameters": 6,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "utf16_pointer",
+            "direct_native_pointer",
+            "out_scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsCount",
+          "offset": 104,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsAt",
+          "offset": 112,
+          "parameters": 5,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "ref_struct",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "GetCredentialsPasswordAt",
+          "offset": 120,
+          "parameters": 7,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "scalar_32",
+            "utf16_pointer",
+            "utf16_pointer",
+            "scalar_32",
+            "out_scalar_32",
+            "out_scalar_32"
+          ]
+        },
+        {
+          "name": "Clone",
+          "offset": 128,
+          "parameters": 2,
+          "parameter_shapes": [
+            "direct_native_pointer",
+            "direct_native_pointer"
+          ]
+        }
+      ]
+    }
+  ],
+  "structures_compared": 8,
+  "new_class_owned_probe": {
+    "captured_delete_status": 1,
+    "exception_type": null,
+    "exception_detail": null,
+    "native_calls": 1,
+    "expected_declaration": "23f801fb830",
+    "observed_declaration": "23f801fb830",
+    "uses_real_provider": false
+  },
+  "excluded_private_tables": [
+    "MI_ExtendedArrayFT",
+    "MI_MOFDeserializerFT"
+  ],
+  "additional_excluded_helper": "MI_SerializationFTHelpers.MI_ClientFT_V1",
+  "full_native_behavior_verified": false,
+  "full_dependency_goal_complete": false,
+  "audit_tool_sha256": "3dcaa1e25d469a8cb048068bb0cceb3f82d2e409e100c73ba11537d33d6eb685"
+}

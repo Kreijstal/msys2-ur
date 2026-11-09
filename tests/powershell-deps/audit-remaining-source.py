@@ -16,7 +16,9 @@ repo = Path(__file__).resolve().parents[2]
 mmi_original, sql_original, go, output = map(Path, sys.argv[1:])
 assert not output.exists(), output
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
-mmi_record = repo/'tests/mmi-sync-results/package-results-20261109.json'
+mmi_record = repo/'tests/mmi-native-abi/package-results-20261109.json'
+if not mmi_record.exists():
+    mmi_record = repo/'tests/mmi-sync-results/package-results-20261109.json'
 if not mmi_record.exists():
     mmi_record = repo/'tests/mmi-error-ownership/package-results-20261109.json'
 if not mmi_record.exists():

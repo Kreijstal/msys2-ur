@@ -1,0 +1,1240 @@
+{
+  "header": "/clang64/include/mi.h",
+  "header_sha256": "038bd5a0a8e637e62eef3cb98f909aad7fd264341db24e62a81af85bb227e0e5",
+  "header_owner": "/clang64/include/mi.h is owned by mingw-w64-clang-x86_64-headers 14.0.0.r598.ge3d18511f-1",
+  "compiler": "clang version 23.1.5 (https://github.com/msys2/MINGW-packages efc96badda99c076509ef01986c673d1cd30f725)",
+  "records": {
+    "_MI_ServerFT": {
+      "fields": [
+        {
+          "name": "GetVersion",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetSystemName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Char **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_FilterFT": {
+      "fields": [
+        {
+          "name": "Evaluate",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Filter *, const MI_Instance *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetExpression",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Filter *, const MI_Char **, const MI_Char **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_PropertySetFT": {
+      "fields": [
+        {
+          "name": "GetElementCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_PropertySet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ContainsElement",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_PropertySet *, const MI_Char *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "AddElement",
+          "type": {
+            "qualType": "MI_Result (*)(MI_PropertySet *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElementAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_PropertySet *, MI_Uint32, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clear",
+          "type": {
+            "qualType": "MI_Result (*)(MI_PropertySet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Destruct",
+          "type": {
+            "qualType": "MI_Result (*)(MI_PropertySet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "MI_Result (*)(MI_PropertySet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_PropertySet *, MI_PropertySet **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_ProviderFT": {
+      "fields": [
+        {
+          "name": "Load",
+          "type": {
+            "desugaredQualType": "void (*)(void **, MI_Module_Self *, MI_Context *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_Load",
+            "typeAliasDeclId": "0x1f8939642c0"
+          }
+        },
+        {
+          "name": "Unload",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_Unload",
+            "typeAliasDeclId": "0x1f8939645e8"
+          }
+        },
+        {
+          "name": "GetInstance",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_PropertySet *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_GetInstance",
+            "typeAliasDeclId": "0x1f893964b98"
+          }
+        },
+        {
+          "name": "EnumerateInstances",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_PropertySet *, MI_Boolean, const MI_Filter *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_EnumerateInstances",
+            "typeAliasDeclId": "0x1f89396dc40"
+          }
+        },
+        {
+          "name": "CreateInstance",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_CreateInstance",
+            "typeAliasDeclId": "0x1f89396e160"
+          }
+        },
+        {
+          "name": "ModifyInstance",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_PropertySet *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_ModifyInstance",
+            "typeAliasDeclId": "0x1f89396e570"
+          }
+        },
+        {
+          "name": "DeleteInstance",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_DeleteInstance",
+            "typeAliasDeclId": "0x1f89396e8f0"
+          }
+        },
+        {
+          "name": "AssociatorInstances",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_Char *, const MI_Char *, const MI_Char *, const MI_PropertySet *, MI_Boolean, const MI_Filter *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_AssociatorInstances",
+            "typeAliasDeclId": "0x1f89396f1c0"
+          }
+        },
+        {
+          "name": "ReferenceInstances",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_Char *, const MI_PropertySet *, MI_Boolean, const MI_Filter *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_ReferenceInstances",
+            "typeAliasDeclId": "0x1f89396f950"
+          }
+        },
+        {
+          "name": "EnableIndications",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_EnableIndications",
+            "typeAliasDeclId": "0x1f8939677d8"
+          }
+        },
+        {
+          "name": "DisableIndications",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_DisableIndications",
+            "typeAliasDeclId": "0x1f893967ac8"
+          }
+        },
+        {
+          "name": "Subscribe",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Filter *, const MI_Char *, MI_Uint64, void **) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_Subscribe",
+            "typeAliasDeclId": "0x1f8939681a8"
+          }
+        },
+        {
+          "name": "Unsubscribe",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, MI_Uint64, void *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_Unsubscribe",
+            "typeAliasDeclId": "0x1f893968748"
+          }
+        },
+        {
+          "name": "Invoke",
+          "type": {
+            "desugaredQualType": "void (*)(void *, MI_Context *, const MI_Char *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_Instance *) __attribute__((stdcall))",
+            "qualType": "MI_ProviderFT_Invoke",
+            "typeAliasDeclId": "0x1f893968be8"
+          }
+        }
+      ]
+    },
+    "_MI_InstanceFT": {
+      "fields": [
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Destruct",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "IsA",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, const MI_ClassDecl *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetClassName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetNameSpace",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNameSpace",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElementCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "AddElement",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, const MI_Char *, const MI_Value *, MI_Type, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetElement",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, const MI_Char *, const MI_Value *, MI_Type, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetElementAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, MI_Uint32, const MI_Value *, MI_Type, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElement",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, const MI_Char *, MI_Value *, MI_Type *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElementAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, MI_Uint32, const MI_Char **, MI_Value *, MI_Type *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ClearElement",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ClearElementAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetServerName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetServerName",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetClass",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Instance *, MI_Class **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_InstanceExFT": {
+      "fields": [
+        {
+          "name": "parent",
+          "type": {
+            "desugaredQualType": "struct _MI_InstanceFT",
+            "qualType": "MI_InstanceFT",
+            "typeAliasDeclId": "0x1f8939226d8"
+          }
+        },
+        {
+          "name": "Normalize",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Instance **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_ContextFT": {
+      "fields": [
+        {
+          "name": "PostResult",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Result) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "PostInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "PostIndication",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Instance *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ConstructInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_ClassDecl *, MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ConstructParameters",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_MethodDecl *, MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_ClassDecl *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewDynamicInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, MI_Uint32, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewParameters",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_MethodDecl *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Canceled",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Context *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetLocale",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Context *, MI_LocaleType, MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "RegisterCancel",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_CancelCallback, void *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "RequestUnload",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "RefuseUnload",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetLocalSession",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Context *, MI_Session *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetStringOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetStringOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNumberOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCustomOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, MI_Type *, MI_Value *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCustomOptionCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCustomOptionAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Uint32, const MI_Char **, MI_Type *, MI_Value *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "WriteMessage",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Uint32, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "WriteProgress",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "WriteStreamParameter",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, const MI_Value *, MI_Type, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "WriteCimError",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Instance *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "PromptUser",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, MI_PromptType, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ShouldProcess",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, const MI_Char *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ShouldContinue",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Char *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "PostError",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Uint32, const MI_Char *, const MI_Char *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "PostCimError",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, const MI_Instance *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "WriteError",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Context *, MI_Uint32, const MI_Char *, const MI_Char *, MI_Boolean *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_QualifierSetFT": {
+      "fields": [
+        {
+          "name": "GetQualifierCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_QualifierSet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetQualifierAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_QualifierSet *, MI_Uint32, const MI_Char **, MI_Type *, MI_Uint32 *, MI_Value *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetQualifier",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_QualifierSet *, const MI_Char *, MI_Type *, MI_Uint32 *, MI_Value *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_ParameterSetFT": {
+      "fields": [
+        {
+          "name": "GetMethodReturnType",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_ParameterSet *, MI_Type *, MI_QualifierSet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetParameterCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_ParameterSet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetParameterAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_ParameterSet *, MI_Uint32, const MI_Char **, MI_Type *, MI_Char **, MI_QualifierSet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetParameter",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_ParameterSet *, const MI_Char *, MI_Type *, MI_Char **, MI_QualifierSet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_ClassFT": {
+      "fields": [
+        {
+          "name": "GetClassName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNameSpace",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetServerName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElementCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElement",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char *, MI_Value *, MI_Boolean *, MI_Type *, MI_Char **, MI_QualifierSet *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetElementAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Uint32, const MI_Char **, MI_Value *, MI_Boolean *, MI_Type *, MI_Char **, MI_QualifierSet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetClassQualifierSet",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_QualifierSet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetMethodCount",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetMethodAt",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Uint32, const MI_Char **, MI_QualifierSet *, MI_ParameterSet *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetMethod",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char *, MI_QualifierSet *, MI_ParameterSet *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetParentClassName",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, const MI_Char **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetParentClass",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Class **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Class *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_Class *, MI_Class **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_SubscriptionDeliveryOptionsFT": {
+      "fields": [
+        {
+          "name": "SetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, const MI_Char *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetDateTime",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, const MI_Datetime *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, const MI_Interval *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "AddCredentials",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, const MI_UserCredentials *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, const MI_Char **, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, MI_Uint32 *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetDateTime",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, MI_Datetime *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, MI_Interval *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, MI_Uint32, const MI_Char **, MI_Value *, MI_Type *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, const MI_Char *, MI_Value *, MI_Type *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, MI_Uint32, const MI_Char **, MI_UserCredentials *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsPasswordAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_SubscriptionDeliveryOptions *, MI_Uint32, const MI_Char **, MI_Char *, MI_Uint32, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_SubscriptionDeliveryOptions *, MI_SubscriptionDeliveryOptions *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_SerializerFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Serializer *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SerializeClass",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Serializer *, MI_Uint32, const MI_Class *, MI_Uint8 *, MI_Uint32, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SerializeInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Serializer *, MI_Uint32, const MI_Instance *, MI_Uint8 *, MI_Uint32, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_DeserializerFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "DeserializeClass",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_Uint8 *, MI_Uint32, MI_Class *, const MI_Char *, const MI_Char *, MI_Deserializer_ClassObjectNeeded, void *, MI_Uint32 *, MI_Class **, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Class_GetClassName",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint8 *, MI_Uint32, MI_Char *, MI_Uint32 *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Class_GetParentClassName",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint8 *, MI_Uint32, MI_Char *, MI_Uint32 *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "DeserializeInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint32, MI_Uint8 *, MI_Uint32, MI_Class **, MI_Uint32, MI_Deserializer_ClassObjectNeeded, void *, MI_Uint32 *, MI_Instance **, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Instance_GetClassName",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Deserializer *, MI_Uint8 *, MI_Uint32, MI_Char *, MI_Uint32 *, MI_Instance **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_ApplicationFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewSession",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, const MI_Char *, const MI_Char *, MI_DestinationOptions *, MI_SessionCallbacks *, MI_Instance **, MI_Session *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewHostedProvider",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, const MI_Char *, const MI_Char *, MI_MainFunction, MI_Instance **, MI_HostedProvider *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, const MI_Char *, const MI_ClassDecl *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewDestinationOptions",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, MI_DestinationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewOperationOptions",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, MI_Boolean, MI_OperationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewSubscriptionDeliveryOptions",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, MI_SubscriptionDeliveryType, MI_SubscriptionDeliveryOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewSerializer",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, MI_Uint32, MI_Char *, MI_Serializer *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewDeserializer",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, MI_Uint32, MI_Char *, MI_Deserializer *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewInstanceFromClass",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, const MI_Char *, const MI_Class *, MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "NewClass",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Application *, const MI_ClassDecl *, const MI_Char *, const MI_Char *, MI_Class **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_HostedProviderFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_HostedProvider *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetApplication",
+          "type": {
+            "qualType": "MI_Result (*)(MI_HostedProvider *, MI_Application *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_SessionFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Session *, void *, void (*)(void *) __attribute__((stdcall))) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetApplication",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Session *, MI_Application *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetInstance",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ModifyInstance",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "CreateInstance",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "DeleteInstance",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Invoke",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, const MI_Char *, const MI_Instance *, const MI_Instance *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "EnumerateInstances",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, MI_Boolean, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "QueryInstances",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, const MI_Char *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "AssociatorInstances",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, const MI_Char *, const MI_Char *, const MI_Char *, const MI_Char *, MI_Boolean, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "ReferenceInstances",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Instance *, const MI_Char *, const MI_Char *, MI_Boolean, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Subscribe",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, const MI_Char *, const MI_SubscriptionDeliveryOptions *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetClass",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "EnumerateClasses",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationOptions *, const MI_Char *, const MI_Char *, MI_Boolean, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "TestConnection",
+          "type": {
+            "qualType": "void (*)(MI_Session *, MI_Uint32, MI_OperationCallbacks *, MI_Operation *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_OperationFT": {
+      "fields": [
+        {
+          "name": "Close",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Cancel",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *, MI_CancellationReason) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetSession",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *, MI_Session *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetInstance",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *, const MI_Instance **, MI_Boolean *, MI_Result *, const MI_Char **, const MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetIndication",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *, const MI_Instance **, const MI_Char **, const MI_Char **, MI_Boolean *, MI_Result *, const MI_Char **, const MI_Instance **) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetClass",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Operation *, const MI_Class **, MI_Boolean *, MI_Result *, const MI_Char **, const MI_Instance **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_DestinationOptionsFT": {
+      "fields": [
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "void (*)(MI_DestinationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, const MI_Char *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "AddCredentials",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, const MI_UserCredentials *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, const MI_Char **, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, MI_Uint32 *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, MI_Uint32, const MI_Char **, MI_Value *, MI_Type *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, MI_Value *, MI_Type *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, MI_Uint32, const MI_Char **, MI_UserCredentials *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetCredentialsPasswordAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, MI_Uint32, const MI_Char **, MI_Char *, MI_Uint32, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_DestinationOptions *, MI_DestinationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, const MI_Interval *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_DestinationOptions *, const MI_Char *, MI_Interval *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_OperationOptionsFT": {
+      "fields": [
+        {
+          "name": "Delete",
+          "type": {
+            "qualType": "void (*)(MI_OperationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, const MI_Char *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Uint32, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetCustomOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Type, const MI_Value *, MI_Boolean, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetString",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, const MI_Char **, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetNumber",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Uint32 *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionCount",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOptionAt",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, MI_Uint32, const MI_Char **, MI_Value *, MI_Type *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetOption",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Value *, MI_Type *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetEnabledChannels",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Uint32 *, MI_Uint32, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "Clone",
+          "type": {
+            "qualType": "MI_Result (*)(const MI_OperationOptions *, MI_OperationOptions *) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "SetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, const MI_Interval *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "GetInterval",
+          "type": {
+            "qualType": "MI_Result (*)(MI_OperationOptions *, const MI_Char *, MI_Interval *, MI_Uint32 *, MI_Uint32 *) __attribute__((stdcall))"
+          }
+        }
+      ]
+    },
+    "_MI_UtilitiesFT": {
+      "fields": [
+        {
+          "name": "MapErrorToMiErrorCategory",
+          "type": {
+            "qualType": "MI_ErrorCategory (*)(MI_Char *, MI_Uint32) __attribute__((stdcall))"
+          }
+        },
+        {
+          "name": "CimErrorFromErrorCode",
+          "type": {
+            "qualType": "MI_Result (*)(MI_Uint32, const MI_Char *, const MI_Char *, MI_Instance **) __attribute__((stdcall))"
+          }
+        }
+      ]
+    }
+  }
+}

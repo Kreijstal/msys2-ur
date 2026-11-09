@@ -7,12 +7,12 @@
   "requirements": [
     {
       "id": "Microsoft.Management.Infrastructure",
-      "package_version": "3.0.0-17",
+      "package_version": "3.0.0-18",
       "artifact_exists": true,
       "public_contract_declarations_verified": 512,
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "local_behavior_evidence": "tests/mmi-sync-results/package-results-20261109.json",
-      "PowerShell_local_integration_evidence": "tests/mmi-sync-results/powershell-results-20261109.json",
+      "local_behavior_evidence": "tests/mmi-native-abi/package-results-20261109.json",
+      "PowerShell_local_integration_evidence": "tests/mmi-native-abi/powershell-results-20261109.json",
       "missing_evidence": [
         "Authenticated remote CIM/WSMan, including explicit credentials and provider behavior",
         "Complete native ownership and behavior audit beyond the verified paths",
@@ -27,7 +27,8 @@
       "known_missing_implementation": [],
       "native_sync_ownership_evidence": "tests/mmi-sync-results/package-results-20261109.json",
       "PowerShell_application_rebuild_pending": false,
-      "known_missing_inventory_is_not_a_complete_native_behavior_audit": true
+      "known_missing_inventory_is_not_a_complete_native_behavior_audit": true,
+      "public_native_ABI_evidence": "tests/mmi-native-abi/package-results-20261109.json"
     },
     {
       "id": "System.Data.SqlClient",
@@ -76,7 +77,7 @@
   ],
   "tracker_correction": {
     "PowerShell_native_components_are_built_and_installed": true,
-    "evidence": "tests/mmi-sync-results/powershell-results-20261109.json",
+    "evidence": "tests/mmi-native-abi/powershell-results-20261109.json",
     "this_does_not_establish_all_native_runtime_or_provider_behavior": true
   },
   "separate_archival_or_future_work": [
@@ -130,15 +131,25 @@
       "PowerShell_integration_evidence": "tests/mmi-sync-results/powershell-results-20261109.json",
       "diagnostic_wrapper_allocations": 198,
       "diagnostic_unreleased_wrappers": 0
+    },
+    {
+      "component": "Native NewClass pointer and subscription Delete return bindings",
+      "package_version": "3.0.0-18",
+      "implemented": true,
+      "evidence": "tests/mmi-native-abi/package-results-20261109.json",
+      "PowerShell_integration_evidence": "tests/mmi-native-abi/powershell-results-20261109.json",
+      "function_slots": 125,
+      "parameters": 551,
+      "remaining_declaration_divergences": 0
     }
   ],
   "next_safe_implementation_action": {
-    "component": "Broader MMI native/provider compatibility audit",
+    "component": "Remaining private codec/callback/export and provider compatibility audit",
     "work": [
-      "Review remaining native entrypoints and ownership against pinned mi.h ABI contracts",
+      "Review private MOF/XML tables, callback signatures and native exports outside the public-table audit",
       "Run authenticated remote/provider and database integration when authorized settings are available"
     ],
-    "status": "No additional confirmed code defect identified by this synchronous-result audit",
+    "status": "No further confirmed public-table declaration divergence in this scoped audit",
     "implemented": false,
     "full_dependency_goal_complete": false
   }

@@ -3,7 +3,7 @@ _realname=dotnet-mmi3
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=3.0.0
-pkgrel=17
+pkgrel=18
 _nugetver=3.0.0
 pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
 arch=('any')
@@ -17,7 +17,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
-        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch 0016-retain-owners-of-borrowed-metadata.patch 0017-use-requested-method-qualifier-name.patch 0018-retain-instance-during-property-count.patch 0019-correct-spn-option-and-release-disposed-option-wrappers.patch 0020-own-native-option-lifetime-and-clone-rollback.patch 0021-restore-async-callback-and-cancellation-context.patch 0022-preserve-borrowed-exception-error-data.patch 0023-own-synchronous-results-and-release-retrieval-wrappers.patch SyncResultChecks.cs check-sync-results.c check-sync-results.sh ErrorOwnershipChecks.cs check-error-ownership.c check-error-ownership.sh ExecutionContextChecks.cs check-execution-context.c check-execution-context.sh OptionFinalizationChecks.cs check-option-finalization.c check-option-finalization.sh SessionOptionChecks.cs check-session-options-native.c check-session-options.sh InstanceCallLifetime.cs check-instance-call-lifetime.c check-instance-call-lifetime.sh QualifierLookupChecks.cs check-qualifier-lookup.sh TransientMetadataChecks.cs check-transient-metadata.c check-transient-metadata.sh ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch 0016-retain-owners-of-borrowed-metadata.patch 0017-use-requested-method-qualifier-name.patch 0018-retain-instance-during-property-count.patch 0019-correct-spn-option-and-release-disposed-option-wrappers.patch 0020-own-native-option-lifetime-and-clone-rollback.patch 0021-restore-async-callback-and-cancellation-context.patch 0022-preserve-borrowed-exception-error-data.patch 0023-own-synchronous-results-and-release-retrieval-wrappers.patch 0024-align-class-declaration-and-delete-abi.patch NativeAbiChecks.cs check-native-abi.c check-native-abi.sh capture-native-abi.py generate-native-abi.py compare-native-abi.py SyncResultChecks.cs check-sync-results.c check-sync-results.sh ErrorOwnershipChecks.cs check-error-ownership.c check-error-ownership.sh ExecutionContextChecks.cs check-execution-context.c check-execution-context.sh OptionFinalizationChecks.cs check-option-finalization.c check-option-finalization.sh SessionOptionChecks.cs check-session-options-native.c check-session-options.sh InstanceCallLifetime.cs check-instance-call-lifetime.c check-instance-call-lifetime.sh QualifierLookupChecks.cs check-qualifier-lookup.sh TransientMetadataChecks.cs check-transient-metadata.c check-transient-metadata.sh ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
 sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c'
             '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
@@ -43,6 +43,13 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '53b4db3867a3501c14fee292ecb08e7a5f415d96ff5ac08074d14f04fc91ff7c'
             '0879abe76a7768869d0bac098f0b67bb3113d072c64877c70ea79f4ff36fa845'
             '80bb58c9006939e962188a4e47f8973b528fe558bce79b3fd82f8a3349c6f9de'
+            '6826388b9823440e710e90f19956d9f1294597982d20d0f03d42a773d77392bc'
+            '86ce1350bdd77f984c35f88acc59ecaaa22099cde17b14f6948e7681a71700b6'
+            '3eeebd763243c43163387471cdaac1da3f985018d892da9e01c1938ed1442d1e'
+            'd638979ea05703967c4671373a1481e23eb209844e3835078a669587a5aa1b54'
+            '593f9777bacb3ea84a81ce7c6e6bb32484c5e6a87da54b01a410c14398fcb29a'
+            '2563a48ff59b0baf5b0656c7bc7c998451092f3f0cd6472f810cb26323fdb3c1'
+            '3dcaa1e25d469a8cb048068bb0cceb3f82d2e409e100c73ba11537d33d6eb685'
             '82abcb2616ca92769497832f2e8053ba303e2b5fe4ef6d794c150e50565bda92'
             '1b640fa32ac7b183602f5967f22555a60a110f7876dd9093563d698b83ccd7ed'
             'd065ac87427ae68cd2ae5033451cb6ecaec79c3cfb76ceef52f4274f85a144ca'
@@ -102,7 +109,7 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
             '720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553'
             'ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef'
-            'e95e62cd33145d12cf48d0762cd5b58220e8c85f3544fa23fceea75848a2d47e')
+            '022542fc173a45e6ac6f801d12e6717642f379381ddd92e013824a7731ca5a13')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -144,6 +151,7 @@ check() {
   bash "$srcdir/check-execution-context.sh" "$srcdir/check-execution-context" "$srcdir/feed"
   bash "$srcdir/check-error-ownership.sh" "$srcdir/check-error-ownership" "$srcdir/feed"
   bash "$srcdir/check-sync-results.sh" "$srcdir/check-sync-results" "$srcdir/feed"
+  bash "$srcdir/check-native-abi.sh" "$srcdir/check-native-abi" "$srcdir/feed"
 }
 
 package() {

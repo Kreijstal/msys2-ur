@@ -192,3 +192,12 @@ native peer covers all three synchronous result kinds, both lifetime modes,
 clone/function/operation/callback failures and null/started notifications.
 Optional wrapper tracing requires a private diagnostic hook absent from the
 production payload. Complete remote/provider behavior remains unverified.
+
+Release 18 aligns two native declarations with mi.h: NewClass receives the
+unwrapped class-declaration pointer, and the subscription-delivery Delete delegate
+returns MI_Result. The existing managed Delete wrapper continues discarding the
+status. A native owned peer confirms pointer identity and status capture; no
+real provider is involved. The ABI gate compares 12 public function tables,
+125 slots,551 outer parameter shapes,12 U1 boolean parameters and eight structure
+layouts against compiler-derived native declarations. Private MOF/XML tables,
+callback signature semantics and full provider behavior remain outside this audit.

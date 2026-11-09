@@ -18,6 +18,14 @@ builds, fresh installed consumers and PowerShell 7.4.20-23 STA/MTA modes; a
 private 452-assertion trace releases all
 198 observed wrapper allocations. [Synchronous ownership evidence](../mmi-sync-results/README.md).
 
+MMI3 3.0.0-18 corrects the dormant NewClass native-pointer binding and captures
+the subscription Delete native status while retaining the existing void wrapper.
+Both installed environments match 12 public function tables/125 slots/551 outer
+parameter shapes,12 U1 booleans and eight layouts, with zero declaration differences.
+PowerShell 7.4.20-24 bundle identity/ABI and all409 synchronous assertions per
+STA/MTA mode also pass in both environments.
+[ABI audit, baseline and owned native probes](../mmi-native-abi/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

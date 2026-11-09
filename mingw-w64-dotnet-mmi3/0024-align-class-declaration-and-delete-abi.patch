@@ -1,0 +1,22 @@
+--- a/Native/MI_Application.cs
++++ b/Native/MI_Application.cs
+@@ -424,7 +424,7 @@
+             [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+             internal delegate MI_Result MI_Application_NewClass(
+                 DirectPtr application,
+-                MI_ClassDecl classDecl,
++                MI_ClassDecl.DirectPtr classDecl,
+                 string namespaceName,
+                 string serverName,
+                 [In, Out] MI_Class.IndirectPtr classObject
+--- a/Native/MI_SubscriptionDeliveryOptions.cs
++++ b/Native/MI_SubscriptionDeliveryOptions.cs
+@@ -365,7 +365,7 @@
+                 );
+ 
+             [UnmanagedFunctionPointer(MI_PlatformSpecific.MiCallConvention, CharSet = MI_PlatformSpecific.AppropriateCharSet)]
+-            internal delegate void MI_SubscriptionDeliveryOptions_Delete(
++            internal delegate MI_Result MI_SubscriptionDeliveryOptions_Delete(
+                 DirectPtr self
+                 );
+ 
