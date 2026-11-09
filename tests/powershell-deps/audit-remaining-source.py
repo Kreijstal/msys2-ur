@@ -16,7 +16,10 @@ repo = Path(__file__).resolve().parents[2]
 mmi_original, sql_original, go, output = map(Path, sys.argv[1:])
 assert not output.exists(), output
 sha = lambda p: hashlib.sha256(p.read_bytes()).hexdigest()
-mmi_inputs = json.loads((repo/'tests/mmi-execution-context/package-results-20261109.json').read_text())
+mmi_record = repo/'tests/mmi-error-ownership/package-results-20261109.json'
+if not mmi_record.exists():
+    mmi_record = repo/'tests/mmi-execution-context/package-results-20261109.json'
+mmi_inputs = json.loads(mmi_record.read_text())
 for relative, digest in mmi_inputs['input_sha256'].items():
     assert sha(repo/relative) == digest, relative
 sql_record = repo/'tests/sqlclient-lpc/package-results-20261109.json'
@@ -26,8 +29,8 @@ sql_inputs = json.loads(sql_record.read_text())
 assert all(v['build_exit_code'] == v['installed_exit_code'] == 0 for v in sql_inputs['environments'].values())
 for relative, digest in sql_inputs['input_sha256'].items():
     assert sha(repo/relative) == digest, relative
-mmi_audit = json.loads((repo/'tests/mmi-execution-context/source-audit-20261109.json').read_text())
-assert len(mmi_audit['patches']) == 21
+mmi_audit = json.loads((repo/mmi_inputs['source_audit']).read_text())
+assert [entry['name'] for entry in mmi_audit['patches']] == [p.name for p in sorted((repo/'mingw-w64-dotnet-mmi3').glob('[0-9][0-9][0-9][0-9]-*.patch'))]
 for entry in mmi_audit['patches']:
     assert entry['zero_fuzz_exit_code'] == 0
     assert sha(repo/'mingw-w64-dotnet-mmi3'/entry['name']) == entry['sha256']
@@ -125,7 +128,7 @@ reference = dict(repository='https://github.com/microsoft/go-mssqldb', commit=co
 record = dict(scope='PowerShell7.4.20/.NET8.0.31 current source and remaining gates',
               audit_tool_sha256=sha(Path(__file__)),
               audit_command='python3 tests/powershell-deps/audit-remaining-source.py MMI_PRISTINE SQL_PRISTINE GO_MSSQLDB NEW_JSON',
-              mmi_package_version='3.0.0-15', sqlclient_package_version=sql_inputs['package_version'],
+              mmi_package_version=mmi_inputs['package_version'], sqlclient_package_version=sql_inputs['package_version'],
               mmi=mmi, sqlclient=sql, lpc_source_reference=reference,
               full_dependency_goal_complete=False)
 output.write_text(json.dumps(record, indent=2)+'\n')

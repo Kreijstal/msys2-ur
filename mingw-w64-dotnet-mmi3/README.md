@@ -171,3 +171,13 @@ including array-valued qualifiers and missing-name results:
     bash check-qualifier-lookup.sh NEW_QUALIFIER_OUTPUT
 
 No WMI repository schemas or service settings are changed by this metadata test.
+
+Release 16 preserves borrowed error instances while constructing CimException.
+Missing, NULL, empty and non-string Message properties use the existing native
+error-code fallback; they no longer delete the caller/provider error before
+creating independently owned ErrorData. An empty native error-details wrapper is
+handled as absent details. The redundant, unimplemented native-error conversion
+retry is removed. `check-error-ownership.sh` uses an independent mi.h peer with
+clone/deletion counters and both public/internal exception constructors; it
+checks that clones are released exactly once and survive disposal of their source.
+This regression does not establish complete provider or remote compatibility.

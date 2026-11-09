@@ -3,7 +3,7 @@ _realname=dotnet-mmi3
 pkgbase=mingw-w64-${_realname}
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}")
 pkgver=3.0.0
-pkgrel=15
+pkgrel=16
 _nugetver=3.0.0
 pkgdesc='Experimental Windows .NET 8 source port targeting the MMI 3.0 contract'
 arch=('any')
@@ -17,7 +17,7 @@ depends=("${MINGW_PACKAGE_PREFIX}-dotnet-runtime>=8.0.131")
 makedepends=("${MINGW_PACKAGE_PREFIX}-dotnet-sdk>=8.0.131" "${MINGW_PACKAGE_PREFIX}-clang" "${MINGW_PACKAGE_PREFIX}-dotnet-codeanalysis-csharp>=4.9.2" "${MINGW_PACKAGE_PREFIX}-dotnet-targeting-pack>=8.0.131-2" 'python' 'patch')
 options=('!strip' '!lto')
 source=("mmi-${_commit}.tar.gz::https://codeload.github.com/PowerShell/MMI/tar.gz/${_commit}"
-        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch 0016-retain-owners-of-borrowed-metadata.patch 0017-use-requested-method-qualifier-name.patch 0018-retain-instance-during-property-count.patch 0019-correct-spn-option-and-release-disposed-option-wrappers.patch 0020-own-native-option-lifetime-and-clone-rollback.patch 0021-restore-async-callback-and-cancellation-context.patch ExecutionContextChecks.cs check-execution-context.c check-execution-context.sh OptionFinalizationChecks.cs check-option-finalization.c check-option-finalization.sh SessionOptionChecks.cs check-session-options-native.c check-session-options.sh InstanceCallLifetime.cs check-instance-call-lifetime.c check-instance-call-lifetime.sh QualifierLookupChecks.cs check-qualifier-lookup.sh TransientMetadataChecks.cs check-transient-metadata.c check-transient-metadata.sh ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
+        prepare.py 0001-validate-native-handles.patch 0002-accept-empty-operation-callbacks.patch 0003-implement-timeouts-and-xml-serialization.patch 0004-native-result-callbacks-and-operation-lifetime.patch 0005-native-destination-and-proxy-credentials.patch 0006-extended-callbacks-and-operation-options-clone.patch 0007-streamed-method-results-and-native-wrapper-ownership.patch 0008-mof-includes-offsets-and-ownership.patch 0009-own-property-values-and-reference-types.patch 0010-subscription-delivery-credentials-and-options.patch 0011-reclaim-native-metadata-wrapper-buffers.patch 0012-preserve-class-sources-on-clone-failure.patch 0013-preserve-instance-sources-on-clone-failure.patch 0014-handle-empty-mof-instance-results.patch 0015-reclaim-owned-native-classes-after-gc.patch 0016-retain-owners-of-borrowed-metadata.patch 0017-use-requested-method-qualifier-name.patch 0018-retain-instance-during-property-count.patch 0019-correct-spn-option-and-release-disposed-option-wrappers.patch 0020-own-native-option-lifetime-and-clone-rollback.patch 0021-restore-async-callback-and-cancellation-context.patch 0022-preserve-borrowed-exception-error-data.patch ErrorOwnershipChecks.cs check-error-ownership.c check-error-ownership.sh ExecutionContextChecks.cs check-execution-context.c check-execution-context.sh OptionFinalizationChecks.cs check-option-finalization.c check-option-finalization.sh SessionOptionChecks.cs check-session-options-native.c check-session-options.sh InstanceCallLifetime.cs check-instance-call-lifetime.c check-instance-call-lifetime.sh QualifierLookupChecks.cs check-qualifier-lookup.sh TransientMetadataChecks.cs check-transient-metadata.c check-transient-metadata.sh ClassLifetimeChecks.cs check-class-lifetime.c check-class-lifetime.sh MofSemantics.cs native-oracle.c check-mof-semantics.sh InstanceCloneRollbackChecks.cs check-instance-clone-rollback.c check-instance-clone-rollback.sh ClassCloneRollbackChecks.cs check-class-clone-rollback.c check-class-clone-rollback.sh MetadataOwnershipChecks.cs check-metadata-ownership.sh DeliveryOptionChecks.cs check-delivery-options.sh EmbeddedValueChecks.cs check-embedded-values.sh MofChecks.cs check-mof.sh MmiStreamChecks.cs check-streamed-results.c MmiExtendedCallbackChecks.cs check-extended-callbacks.c MmiCredentialChecks.cs check-credential-abi.c MmiProbe.cs MmiPortChecks.cs NativeDependencies.cs Identity.cs Friend.cs MicrosoftShared.pubkey.hex InspectApi.cs ExpectedApi.json check.sh check-api.sh README.md)
 sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'dcf521d34d60fa35b8817b398cff73b748e35023025f18e160cbadaea2af7a6c'
             '438056bf498257fb99db9187fe3ace6e8c5f402c605b7d4082b7c8b77a6a9330'
@@ -41,6 +41,10 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             '4beca3d10213f34bf8e0339189f8bd4e54a4f29995c42928666fb15a3d78b8cf'
             'be5ba3064aa9321e92ae0a1ef49adccf7a550a345adfa2b5a63f846946eb8156'
             '53b4db3867a3501c14fee292ecb08e7a5f415d96ff5ac08074d14f04fc91ff7c'
+            '0879abe76a7768869d0bac098f0b67bb3113d072c64877c70ea79f4ff36fa845'
+            '77e433d3934d8fe28e27e3f69f12c3daaec96d5979434db7acffaad58b1472e8'
+            '416dabc350b3b9e451ab8b9581d5cbf84e69aa1094084c5a3e527091419b39c9'
+            '6005957d6ff05e9f122d250a1b9d210a69ce077099a627ac6b9bbe92d4eeade6'
             '2d665bb7bd4eaf72dbf084c52c68efca7ba12e9f8437c909b1b092e7459cac02'
             '38874525fb13cbb2e6c5cc873f0ae9c16c4e021049f13b14ff5c19b801765b65'
             '0e7a45f154e60ea04fdbe68eb6c8a61cc811ff8badf115af0b098d8ee0e83e17'
@@ -94,7 +98,7 @@ sha256sums=('acef7ee0e811d3b3c6c0885d34cd4e0f8d28dc4518c1d5550044be1522cdf357'
             'cda19360b674393af7823a6f59d3013e5358a089caea2bfdf9a639a92c7f6b49'
             '720e4f191b3c075c489d783871524de225578510765144a3cd6f5c3c7e5c4553'
             'ab8bee416c8502a6fe087a1a69e54cf9f8326eab6f650ad76f5f06e20e7910ef'
-            'be14eeecaa25e9fd111c7ac0f5c38e9162904ab3f2d9474b1cb8d037e41631cd')
+            '6a4b42682e46f68a7a9efcebf81ca2f87ac141ff6936b15f48865ec703fab19e')
 
 _env() {
   export PATH="$MINGW_PREFIX/bin:/usr/bin:$PATH"
@@ -134,6 +138,7 @@ check() {
   bash "$srcdir/check-session-options.sh" "$srcdir/check-session-options" "$srcdir/feed"
   bash "$srcdir/check-option-finalization.sh" "$srcdir/check-option-finalization" "$srcdir/feed"
   bash "$srcdir/check-execution-context.sh" "$srcdir/check-execution-context" "$srcdir/feed"
+  bash "$srcdir/check-error-ownership.sh" "$srcdir/check-error-ownership" "$srcdir/feed"
 }
 
 package() {

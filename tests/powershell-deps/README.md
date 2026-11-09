@@ -6,6 +6,12 @@ Microsoft.Windows.Compatibility have source artifacts but still require broader
 compatibility verification. The historical NETStandard1.x restore reports below
 are separate archival work and do not count as missing current PowerShell dependencies.
 
+MMI3 3.0.0-16 fixes borrowed error-data deletion during CimException construction;
+92 assertions pass in clean builds, fresh installed consumers and PowerShell
+7.4.20-22 STA/MTA modes in both environments.
+A separate owned native probe reproduces an unresolved shortened synchronous
+indication deletion. [Exception fix and next ownership requirement](../mmi-error-ownership/README.md).
+
 The [current remaining-gate audit](remaining-gates-20261109.json) distinguishes
 implemented SqlClient LPC routing from pending real-server validation and preserves
 the unfinished native/provider requirements. Its [source inventory](remaining-source-audit-20261109.json)

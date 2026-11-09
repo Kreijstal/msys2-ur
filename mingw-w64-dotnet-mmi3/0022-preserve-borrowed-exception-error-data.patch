@@ -1,0 +1,50 @@
+--- a/CimException.cs
++++ b/CimException.cs
+@@ -41,7 +41,7 @@
+         {
+             this.NativeErrorCode = errorCode.ToNativeErrorCode();
+ 
+-            if (errorDetailsHandle != null)
++            if (errorDetailsHandle != null && !errorDetailsHandle.IsNull)
+             {
+                 this._errorData = new CimInstance(errorDetailsHandle.Clone());
+             }
+@@ -59,7 +59,7 @@
+ 
+         static private string GetExceptionMessage(MI_Instance errorDetailsHandle)
+         {
+-            if (errorDetailsHandle != null)
++            if (errorDetailsHandle != null && !errorDetailsHandle.IsNull)
+             {
+                 using var temporaryErrorData = new CimInstance(errorDetailsHandle.Clone());
+                 string cimErrorMessage;
+@@ -83,25 +83,10 @@
+                 return result;
+             }
+ 
+-            // if the above failed, then use MI_Utilities_CimErrorFromErrorCode to get a good CIM_Error
+-
+-            // TODO: Add GetCimErrorFromMiResult to MI API
+-            //Native.ApplicationMethods.GetCimErrorFromMiResult(errorCode, errorMessage, out errorDetailsHandle);
+-            try
+-            {
+-                result = GetExceptionMessage(errorDetailsHandle);
+-                if (!string.IsNullOrEmpty(result))
+-                {
+-                    return result;
+-                }
+-            }
+-            finally
+-            {
+-                if (errorDetailsHandle != null)
+-                {
+-                    errorDetailsHandle.Delete();
+-                }
+-            }
++            // errorDetailsHandle is borrowed from the caller or MI operation.
++            // Only the temporary clone used above is ours to delete. There is
++            // no MI error-code conversion API that would create an owned error
++            // here, so keep the borrowed handle intact for ErrorData cloning.
+ 
+             // if everything fails, then return a non-localized errorCode
+             return errorCode.ToString();

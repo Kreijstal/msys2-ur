@@ -1,0 +1,55 @@
+{
+  "scope": "Source review and independent native-ABI reproduction of shortened synchronous indication deletion",
+  "mmi_package_version": "3.0.0-16",
+  "source_sha256": {
+    "Native/MI_NativeObject.cs": "dd1e8eebd38af5de787bea31a9fa2111595f220fc76837af152ccee0cd3eb79e",
+    "Native/MI_Operation.cs": "53cf986f502e899539daa215b9d42cb99aaa660b0b66ac320b7aeee79d406eb7",
+    "Internal/Operations/CimSyncInstanceEnumerator.cs": "6406328bf6d8e41fd8f61a9e9fc7d7e9490e13e513337c90fca24e9f366fafe3",
+    "Internal/Operations/CimSyncClassEnumerator.cs": "fb7fba9f886aae7f719191b5c7c47014066ac38e88606215bc576dd6e91f4afe",
+    "Internal/Operations/CimSyncIndicationEnumerator.cs": "b4c0e6734a7fe9545761afb596c84dfad0668629c24059fdf1d201ff792ab7d6",
+    "Internal/Operations/CimSyncEnumeratorBase.cs": "f2faf458b777797015d5a329f087071f9f2a2b9b2c875cb8b50124cb46ecf60d",
+    "CimSubscriptionResult.cs": "1194daaa92a462492c1536a532632198b2498e45131af29d8f46c35ea9b1ccd0",
+    "CimInstance.cs": "25170504ea8ecad4f76aa64fa648bd8da91344cb6f52c36bc69169cd5fb5b977"
+  },
+  "primary_native_contract": "https://github.com/MicrosoftDocs/sdk-api/blob/docs/sdk-api-src/content/mi/nf-mi-mi_operation_getindication.md",
+  "native_contract_checked_20261109": true,
+  "findings": [
+    {
+      "path": "Internal/Operations/CimSyncIndicationEnumerator.cs",
+      "condition": "ShortenLifetimeOfResults is true",
+      "observed_source_flow": "NativeMoveNext skips Clone and passes the operation-owned indication to CimSubscriptionResult; disposal reaches CimInstance.Dispose and MI_Instance.Delete",
+      "inference": "Shortened synchronous subscriptions may delete the operation-owned instance; reproduce with independent native deletion counters before modifying the path",
+      "runtime_verified": true,
+      "evidence": "tests/mmi-error-ownership/evidence-20261109/sync-probe.txt",
+      "source_deletions": {
+        "normal_lifetime": 0,
+        "shortened_lifetime": 1
+      },
+      "clones": {
+        "normal_lifetime": 1,
+        "shortened_lifetime": 0
+      },
+      "tested_environment": "CLANG64",
+      "probe_exit_code": 0
+    },
+    {
+      "paths": [
+        "Native/MI_Operation.cs",
+        "Internal/Operations/CimSyncInstanceEnumerator.cs",
+        "Internal/Operations/CimSyncClassEnumerator.cs",
+        "Internal/Operations/CimSyncEnumeratorBase.cs"
+      ],
+      "observed_source_flow": "Retrieval allocates indirect wrapper cells. Instance/class enumerators overwrite borrowed wrappers with clones, while MoveNext does not dispose the completion-details wrapper. These native wrapper classes have no allocation finalizer.",
+      "inference": "Borrowed wrapper cells may be abandoned across synchronous retrievals; trace allocation/disposal and exceptional exits without deleting the borrowed native results",
+      "runtime_verified": false
+    }
+  ],
+  "next_safe_action": "Clone operation-owned synchronous indications regardless of shortened result lifetime; cover clone failure and borrowed wrapper cleanup before packaging",
+  "full_dependency_goal_complete": false,
+  "probe_source_sha256": {
+    "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/MicrosoftShared.pubkey.hex": "8411f29cc43951595bacd05a9ba7c73628bb7d77b508fa3486916ade5fd0e0ed",
+    "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/SyncProbe.c": "8b3d4944d22f9f423f9c9a18253ebea69ea18b72a8f4a640e91f32721a7b6476",
+    "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/SyncProbe.cs": "0d126f2ea23e7fc987c3a5fd8f50bb206fe57312329cd2b6e03fedcaa7344043",
+    "tests/mmi-error-ownership/evidence-20261109/sync-probe-source/check.sh": "0c876b3356dcc859492ad3a56f00f3bf1a42475a664d5d36c8aaacea2935d4ad"
+  }
+}

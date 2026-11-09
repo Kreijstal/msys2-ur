@@ -7,12 +7,12 @@
   "requirements": [
     {
       "id": "Microsoft.Management.Infrastructure",
-      "package_version": "3.0.0-15",
+      "package_version": "3.0.0-16",
       "artifact_exists": true,
       "public_contract_declarations_verified": 512,
       "source_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-      "local_behavior_evidence": "tests/mmi-execution-context/package-results-20261109.json",
-      "PowerShell_local_integration_evidence": "tests/mmi-execution-context/powershell-results-20261109.json",
+      "local_behavior_evidence": "tests/mmi-error-ownership/package-results-20261109.json",
+      "PowerShell_local_integration_evidence": "tests/mmi-error-ownership/powershell-results-20261109.json",
       "missing_evidence": [
         "Authenticated remote CIM/WSMan, including explicit credentials and provider behavior",
         "Complete native ownership and behavior audit beyond the verified paths",
@@ -22,7 +22,12 @@
       "prepared_live_harness": "tests/mmi-wsman/check.sh",
       "harness_preparation_evidence": "tests/mmi-wsman/build-results-20261108.json",
       "NotImplementedException_marker_count_is_not_a_missing_public_feature_count": true,
-      "complete": false
+      "complete": false,
+      "borrowed_error_data_preserved_and_fixture_verified": true,
+      "known_missing_implementation": [
+        "Shortened synchronous indication results delete an operation-owned native instance without cloning"
+      ],
+      "native_sync_ownership_evidence": "tests/mmi-error-ownership/native-sync-review-20261109.json"
     },
     {
       "id": "System.Data.SqlClient",
@@ -71,36 +76,56 @@
   ],
   "tracker_correction": {
     "PowerShell_native_components_are_built_and_installed": true,
-    "evidence": "tests/sqlclient-lpc/powershell-results-20261109.json",
+    "evidence": "tests/mmi-error-ownership/powershell-results-20261109.json",
     "this_does_not_establish_all_native_runtime_or_provider_behavior": true
   },
   "separate_archival_or_future_work": [
     "The historical NETStandard1.x/.NETNative restore gaps are not missing packages for the current PowerShell build",
     "PowerShell7.6/.NET10 has its own recorded dependency graph and remains separate future work"
   ],
-  "next_safe_implementation_action": {
-    "component": "System.Data.SqlClient managed SNI LPC transport",
-    "source_reference": "https://github.com/microsoft/go-mssqldb/tree/6c346b78c201e490ca2585f0987ddd8f6b4f06a3/sharedmemory",
-    "source_pin_and_license_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
-    "work": [
-      "Port explicit local-only LPC parsing and SQLLocal instance endpoint selection from the pinned Microsoft source",
-      "Preserve explicit transport routing, local-host restrictions, timeout/resource handling and SSPI target construction",
-      "Validate public sync/async queries against an independent owned SQLLocal endpoint",
-      "Add a real Windows SQL Server transport-identity check requiring net_transport=Shared memory before claiming server interoperability"
-    ],
-    "implemented": true,
-    "source_reference_upstream_live_test_executed_here": false,
-    "TCP_or_normal_named_pipe_fallback_does_not_prove_LPC_support": true,
-    "status": "Implemented and local fixture verified; actual SQL Server transport confirmation remains pending",
-    "evidence": "tests/sqlclient-lpc/package-results-20261109.json",
-    "async_state_publication_regression_checks": 1024,
-    "PowerShell_integration_evidence": "tests/sqlclient-lpc/powershell-results-20261109.json"
-  },
   "binary_publication": "Experimental MMI3, SqlClient and PowerShell artifacts remain held",
   "external_input_question_pending": true,
   "next_validation_actions": [
     "Run prepared read-only real LPC transport gate against an authorized local Windows SQL Server",
     "Run prepared real database and authenticated HTTPS WSMan gates when authorized private settings are provided",
     "Continue the broader native ownership/provider compatibility audit; known-gap inventory does not establish completion"
-  ]
+  ],
+  "completed_implementation_actions": [
+    {
+      "component": "System.Data.SqlClient managed SNI LPC transport",
+      "source_reference": "https://github.com/microsoft/go-mssqldb/tree/6c346b78c201e490ca2585f0987ddd8f6b4f06a3/sharedmemory",
+      "source_pin_and_license_inventory": "tests/powershell-deps/remaining-source-audit-20261109.json",
+      "work": [
+        "Port explicit local-only LPC parsing and SQLLocal instance endpoint selection from the pinned Microsoft source",
+        "Preserve explicit transport routing, local-host restrictions, timeout/resource handling and SSPI target construction",
+        "Validate public sync/async queries against an independent owned SQLLocal endpoint",
+        "Add a real Windows SQL Server transport-identity check requiring net_transport=Shared memory before claiming server interoperability"
+      ],
+      "implemented": true,
+      "source_reference_upstream_live_test_executed_here": false,
+      "TCP_or_normal_named_pipe_fallback_does_not_prove_LPC_support": true,
+      "status": "Implemented and local fixture verified; actual SQL Server transport confirmation remains pending",
+      "evidence": "tests/sqlclient-lpc/package-results-20261109.json",
+      "async_state_publication_regression_checks": 1024,
+      "PowerShell_integration_evidence": "tests/sqlclient-lpc/powershell-results-20261109.json"
+    },
+    {
+      "component": "CimException borrowed error data",
+      "package_version": "3.0.0-16",
+      "evidence": "tests/mmi-error-ownership/package-results-20261109.json",
+      "PowerShell_integration_evidence": "tests/mmi-error-ownership/powershell-results-20261109.json",
+      "implemented": true
+    }
+  ],
+  "next_safe_implementation_action": {
+    "component": "MMI synchronous indication and result-wrapper ownership",
+    "evidence": "tests/mmi-error-ownership/native-sync-review-20261109.json",
+    "work": [
+      "Clone borrowed synchronous indications even with ShortenLifetimeOfResults",
+      "Preserve provider-owned sources on result disposal and clone failure",
+      "Audit and release transient instance/class/completion-details wrapper cells without deleting borrowed native results"
+    ],
+    "implemented": false,
+    "source_delete_defect_reproduced": true
+  }
 }

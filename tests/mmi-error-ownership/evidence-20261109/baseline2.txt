@@ -1,0 +1,29 @@
+
+Welcome to .NET 8.0!
+---------------------
+SDK Version: 8.0.131
+
+----------------
+Write your first app: https://aka.ms/dotnet-hello-world
+Find out what's new: https://aka.ms/dotnet-whats-new
+Explore documentation: https://aka.ms/dotnet-docs
+Report issues and find source on GitHub: https://github.com/dotnet/core
+Use 'dotnet --help' to see available commands or visit: https://aka.ms/dotnet-cli
+--------------------------------------------------------------------------------------
+MSBuild version 17.8.49+7806cbf7b for .NET
+
+  Determining projects to restore...
+  Restored E:\codex-dotnet10\mmi-error-ownership.KNdRea\baseline2\Check.csproj (in 410 ms).
+  Check -> E:\codex-dotnet10\mmi-error-ownership.KNdRea\baseline2\bin\Release\net8.0\System.Management.Automation.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:06.48
+PASS exact source feed archive and implementation bytes; archive SHA256 90c30659227e42a78975d365e8423d49324337abb7bd48cbc1b73eda20697300
+REPRODUCED borrowed error deletion mode=0 internal=False
+System.Exception: Baseline loses exception construction after deleting borrowed source
+   at ErrorOwnershipChecks.Require(Boolean value, String message) in E:\codex-dotnet10\mmi-error-ownership.KNdRea\baseline2\Program.cs:line 13
+   at ErrorOwnershipChecks.Case(Reset reset, Count count, UInt32 mode, Boolean internalConstructor, Boolean baseline) in E:\codex-dotnet10\mmi-error-ownership.KNdRea\baseline2\Program.cs:line 26
+   at ErrorOwnershipChecks.Run(String[] args) in E:\codex-dotnet10\mmi-error-ownership.KNdRea\baseline2\Program.cs:line 51
