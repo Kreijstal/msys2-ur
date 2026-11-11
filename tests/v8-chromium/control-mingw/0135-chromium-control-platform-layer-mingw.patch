@@ -1,0 +1,600 @@
+--- a/src/3rdparty/chromium/components/variations/service/BUILD.gn
++++ b/src/3rdparty/chromium/components/variations/service/BUILD.gn
+@@ -78,14 +78,6 @@
+     "//services/network/public/cpp",
+     "//ui/base",
+   ]
+-  if (is_qtwebengine) {
+-    sources -= [
+-      "variations_field_trial_creator.cc",
+-      "variations_field_trial_creator.h",
+-      "variations_service.cc",
+-      "variations_service.h",
+-    ]
+-  }
+ }
+ 
+ source_set("unit_tests") {
+--- a/src/3rdparty/chromium/components/viz/service/display_embedder/output_surface_provider_impl.cc
++++ b/src/3rdparty/chromium/components/viz/service/display_embedder/output_surface_provider_impl.cc
+@@ -100,12 +100,8 @@
+ #endif
+ 
+   if (!gpu_compositing) {
+-#if BUILDFLAG(IS_QTWEBENGINE)
+-    return CreateSoftwareOutputSurface(renderer_settings);
+-#else
+     return std::make_unique<SoftwareOutputSurface>(
+         CreateSoftwareOutputDeviceForPlatform(surface_handle, display_client));
+-#endif
+   } else {
+     DCHECK(gpu_dependency);
+ 
+--- a/src/3rdparty/chromium/components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc
++++ b/src/3rdparty/chromium/components/viz/service/display_embedder/skia_output_surface_impl_on_gpu.cc
+@@ -1969,15 +1969,11 @@
+ 
+ bool SkiaOutputSurfaceImplOnGpu::InitializeForGL() {
+   if (dependency_->IsOffscreen()) {
+-#if BUILDFLAG(IS_QTWEBENGINE)
+-    output_device_ = CreateOutputDevice();
+-#else
+     output_device_ = std::make_unique<SkiaOutputDeviceOffscreen>(
+         context_state_, gfx::SurfaceOrigin::kTopLeft,
+         renderer_settings_.requires_alpha_channel,
+         shared_gpu_deps_->memory_tracker(),
+         GetDidSwapBuffersCompleteCallback());
+-#endif
+   } else {
+     scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
+     presenter_ = presenter.get();
+@@ -2061,10 +2057,6 @@
+ 
+ #if BUILDFLAG(ENABLE_VULKAN)
+ bool SkiaOutputSurfaceImplOnGpu::InitializeForVulkan() {
+-#if BUILDFLAG(IS_QTWEBENGINE)
+-  output_device_ = CreateOutputDevice();
+-  return true;
+-#endif
+   if (dependency_->IsOffscreen()) {
+     output_device_ = std::make_unique<SkiaOutputDeviceOffscreen>(
+         context_state_, gfx::SurfaceOrigin::kBottomLeft,
+@@ -2150,15 +2142,11 @@
+ bool SkiaOutputSurfaceImplOnGpu::InitializeForDawn() {
+ #if BUILDFLAG(SKIA_USE_DAWN)
+   if (dependency_->IsOffscreen()) {
+-#if BUILDFLAG(IS_QTWEBENGINE)
+-    output_device_ = CreateOutputDevice();
+-#else
+     output_device_ = std::make_unique<SkiaOutputDeviceOffscreen>(
+         context_state_, gfx::SurfaceOrigin::kBottomLeft,
+         renderer_settings_.requires_alpha_channel,
+         shared_gpu_deps_->memory_tracker(),
+         GetDidSwapBuffersCompleteCallback());
+-#endif
+     return true;
+   }
+ 
+--- a/src/3rdparty/chromium/content/browser/BUILD.gn
++++ b/src/3rdparty/chromium/content/browser/BUILD.gn
+@@ -3648,7 +3648,7 @@
+     deps += [ "//ui/base/ime/win" ]
+   }
+ 
+-  if (use_aura && !is_qtwebengine) {
++  if (use_aura) {
+     deps += [
+       "//ui/aura",
+       "//ui/aura_extra",
+@@ -3854,8 +3854,6 @@
+       sources -= [
+         "renderer_host/legacy_render_widget_host_win.cc",
+         "renderer_host/legacy_render_widget_host_win.h",
+-        "renderer_host/virtual_keyboard_controller_win.cc",
+-        "renderer_host/virtual_keyboard_controller_win.h"
+       ]
+     }
+     if (is_mac) {
+@@ -3895,11 +3893,6 @@
+         "//components/remote_cocoa/common:mojo",
+        ]
+     }
+-    if (use_aura) {
+-      sources += [
+-        "media/desktop_media_window_registry_aura.cc",
+-      ]
+-    }
+   }
+ }
+ 
+--- a/src/3rdparty/chromium/content/browser/renderer_host/render_widget_host_view_aura.cc
++++ b/src/3rdparty/chromium/content/browser/renderer_host/render_widget_host_view_aura.cc
+@@ -110,11 +110,50 @@
+ #if BUILDFLAG(IS_WIN)
+ #include "base/time/time.h"
+ #include "components/stylus_handwriting/win/features.h"
++#if BUILDFLAG(IS_MSVC)
+ #include "content/browser/renderer_host/input/stylus_handwriting_controller_win.h"
++#else
++namespace content {
++// The TSF handwriting controller needs WRL; MinGW has no shell handwriting.
++class StylusHandwritingControllerWin {
++ public:
++  static void Initialize() {}
++  static bool IsHandwritingAPIAvailable() { return false; }
++  static StylusHandwritingControllerWin* GetInstance() { return nullptr; }
++  template <typename... Args>
++  void OnStartStylusWriting(Args&&...) {}
++  void OnFocusHandled(ui::TextInputClient&) {}
++  void OnFocusFailed(ui::TextInputClient&) {}
++};
++}  // namespace content
++#endif
++#if BUILDFLAG(IS_MSVC)
+ #include "content/browser/renderer_host/legacy_render_widget_host_win.h"
++#else
++namespace content {
++// The legacy child HWND is an ATL window; without it the view uses the host
++// window, as when Create() fails.
++class LegacyRenderWidgetHostHWND {
++ public:
++  static LegacyRenderWidgetHostHWND* Create(HWND, RenderWidgetHostViewAura*) {
++    return nullptr;
++  }
++  void Destroy() {}
++  HWND hwnd() { return nullptr; }
++  void UpdateParent(HWND) {}
++  IAccessible* window_accessible() { return nullptr; }
++  void Show() {}
++  void Hide() {}
++  void SetBounds(const gfx::Rect&) {}
++};
++}  // namespace content
++#endif
++#if BUILDFLAG(IS_MSVC)
++// Native Windows accessibility is ATL-based.
+ #include "ui/accessibility/platform/ax_fragment_root_win.h"
+ #include "ui/accessibility/platform/browser_accessibility_manager_win.h"
+ #include "ui/accessibility/platform/browser_accessibility_win.h"
++#endif
+ #include "ui/base/ime/virtual_keyboard_controller.h"
+ #include "ui/base/ime/virtual_keyboard_controller_observer.h"
+ #include "ui/base/ime/win/tsf_input_scope.h"
+@@ -339,12 +378,15 @@
+   // We want to set input scope once after the window is created
+   // and before any focus change happens. We want to set it only
+   // once for each hwnd.
++#if BUILDFLAG(IS_MSVC)
++  // MinGW's ui/base/ime/win has no TSF input scope.
+   if (window_->GetHost() && GetInputMethod()) {
+     InputScope input_scope = ShouldDoLearning() ? IS_DEFAULT : IS_PRIVATE;
+     ui::tsf_inputscope::SetInputScope(
+         RenderWidgetHostViewAura::GetHostWindowHWND(), input_scope);
+   }
+ #endif
++#endif
+ }
+ 
+ void RenderWidgetHostViewAura::InitAsPopup(
+@@ -474,11 +516,13 @@
+   if (!window_host)
+     return static_cast<gfx::NativeViewAccessible>(NULL);
+ 
++#if BUILDFLAG(IS_MSVC)
+   ui::BrowserAccessibilityManager* manager =
+       host()->GetOrCreateRootBrowserAccessibilityManager();
+   if (manager)
+     return ToBrowserAccessibilityWin(manager->GetBrowserAccessibilityRoot())
+         ->GetCOM();
++#endif
+ 
+ #elif BUILDFLAG(IS_LINUX)
+   ui::BrowserAccessibilityManager* manager =
+@@ -2067,6 +2111,7 @@
+     const gfx::Range& range,
+     const std::u16string& active_composition_text,
+     bool is_composition_committed) {
++#if BUILDFLAG(IS_MSVC)
+   ui::BrowserAccessibilityManager* manager =
+       host()->GetRootBrowserAccessibilityManager();
+   if (manager) {
+@@ -2079,6 +2124,7 @@
+                                       is_composition_committed);
+     }
+   }
++#endif
+ }
+ #endif
+ 
+@@ -2104,9 +2150,11 @@
+ 
+ #if BUILDFLAG(IS_WIN)
+ void RenderWidgetHostViewAura::NotifyOnFrameFocusChanged() {
++#if BUILDFLAG(IS_MSVC)
+   if (GetInputMethod()) {
+     GetInputMethod()->OnUrlChanged();
+   }
++#endif
+ }
+ #endif
+ 
+@@ -2481,7 +2529,8 @@
+ void RenderWidgetHostViewAura::OnTouchEvent(ui::TouchEvent* event) {
+   last_pointer_type_ = event->pointer_details().pointer_type;
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
++  // Needs ShellHandwriting.h.
+   if (stylus_handwriting::win::IsStylusHandwritingWinEnabled() &&
+       last_pointer_type_ == ui::EventPointerType::kPen &&
+       event->type() == ui::EventType::kTouchPressed) {
+--- a/src/3rdparty/chromium/content/common/BUILD.gn
++++ b/src/3rdparty/chromium/content/common/BUILD.gn
+@@ -379,9 +379,6 @@
+     deps += [ "//ui/wm" ]
+   }
+ 
+-  if (is_qtwebengine) {
+-     sources -= [ "cursors/webcursor_aura.cc" ]
+-  }
+ 
+   if (is_linux || is_chromeos) {
+     sources += [
+--- a/src/3rdparty/chromium/content/common/font_list_win.cc
++++ b/src/3rdparty/chromium/content/common/font_list_win.cc
+@@ -19,7 +19,6 @@
+ 
+ namespace content {
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
+ base::Value::List GetFontList_SlowBlocking() {
+   TRACE_EVENT0("fonts", "GetFontList_SlowBlocking");
+ 
+@@ -70,6 +69,5 @@
+   std::sort(font_list.begin(), font_list.end());
+   return font_list;
+ }
+-#endif  // !BUILDFLAG(IS_QTWEBENGINE)
+ 
+ }  // namespace content
+--- a/src/3rdparty/chromium/content/public/browser/ax_inspect_factory.cc
++++ b/src/3rdparty/chromium/content/public/browser/ax_inspect_factory.cc
+@@ -23,7 +23,8 @@
+ }
+ 
+ // TODO(crbug.com/336611337): Add iOS-specific AXInspectorFactory logic.
+-#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT) || BUILDFLAG(IS_IOS)
++#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT) || BUILDFLAG(IS_IOS) || \
++    BUILDFLAG(IS_QTWEBENGINE)
+ 
+ // static
+ ui::AXApiType::Type AXInspectFactory::DefaultPlatformFormatterType() {
+--- a/src/3rdparty/chromium/content/shell/browser/shell_platform_data_aura.cc
++++ b/src/3rdparty/chromium/content/shell/browser/shell_platform_data_aura.cc
+@@ -26,12 +26,34 @@
+ 
+ #if BUILDFLAG(IS_OZONE)
+ #include "ui/aura/screen_ozone.h"
++#elif BUILDFLAG(IS_WIN)
++#include "ui/display/win/screen_win.h"
+ #endif
+ 
+ namespace content {
+ 
+ namespace {
+ 
++#if !BUILDFLAG(IS_OZONE) && BUILDFLAG(IS_WIN)
++// Without views there is no DesktopScreenWin; this is its aura-only core.
++class ShellScreenWin : public display::win::ScreenWin {
++ public:
++  ShellScreenWin() { display::Screen::SetScreenInstance(this); }
++  ~ShellScreenWin() override { display::Screen::SetScreenInstance(nullptr); }
++
++  HWND GetHWNDFromNativeWindow(gfx::NativeWindow window) const override {
++    aura::WindowTreeHost* host = window->GetHost();
++    return host ? host->GetAcceleratedWidget() : nullptr;
++  }
++
++  gfx::NativeWindow GetNativeWindowFromHWND(HWND hwnd) const override {
++    aura::WindowTreeHost* host =
++        aura::WindowTreeHost::GetForAcceleratedWidget(hwnd);
++    return host ? host->window() : gfx::NativeWindow();
++  }
++};
++#endif
++
+ class FillLayout : public aura::LayoutManager {
+  public:
+   explicit FillLayout(aura::Window* root)
+@@ -84,6 +106,10 @@
+   if (!display::Screen::HasScreen()) {
+     screen_ = std::make_unique<aura::ScreenOzone>();
+   }
++#elif BUILDFLAG(IS_WIN)
++  if (!display::Screen::HasScreen()) {
++    screen_ = std::make_unique<ShellScreenWin>();
++  }
+ #endif  // BUILDFLAG(IS_OZONE)
+ 
+   ui::PlatformWindowInitProperties properties;
+--- a/src/3rdparty/chromium/content/shell/browser/shell_platform_data_aura.h
++++ b/src/3rdparty/chromium/content/shell/browser/shell_platform_data_aura.h
+@@ -23,6 +23,10 @@
+ namespace aura {
+ class ScreenOzone;
+ }
++#elif BUILDFLAG(IS_WIN)
++namespace display {
++class Screen;
++}
+ #endif
+ 
+ namespace gfx {
+@@ -48,6 +52,8 @@
+  private:
+ #if BUILDFLAG(IS_OZONE)
+   std::unique_ptr<aura::ScreenOzone> screen_;
++#elif BUILDFLAG(IS_WIN)
++  std::unique_ptr<display::Screen> screen_;
+ #endif
+ 
+   std::unique_ptr<aura::WindowTreeHost> host_;
+--- a/src/3rdparty/chromium/gpu/vulkan/init/vulkan_factory.cc
++++ b/src/3rdparty/chromium/gpu/vulkan/init/vulkan_factory.cc
+@@ -27,7 +27,6 @@
+ 
+ namespace gpu {
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
+ std::unique_ptr<VulkanImplementation> CreateVulkanImplementation(
+     bool use_swiftshader,
+     bool allow_protected_memory) {
+@@ -60,6 +59,5 @@
+ #endif
+ #endif
+ }
+-#endif  // !BUILDFLAG(IS_QTWEBENGINE)
+ 
+ }  // namespace gpu
+--- a/src/3rdparty/chromium/ui/accessibility/platform/browser_accessibility.cc
++++ b/src/3rdparty/chromium/ui/accessibility/platform/browser_accessibility.cc
+@@ -49,7 +49,7 @@
+ constexpr int kDumpBrowserAccessibilityLeakNumObjects = 10000000;
+ #endif
+ 
+-#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT)
++#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT) || BUILDFLAG(IS_QTWEBENGINE)
+ // static
+ std::unique_ptr<BrowserAccessibility> BrowserAccessibility::Create(
+     BrowserAccessibilityManager* manager,
+--- a/src/3rdparty/chromium/ui/accessibility/platform/browser_accessibility_manager.cc
++++ b/src/3rdparty/chromium/ui/accessibility/platform/browser_accessibility_manager.cc
+@@ -101,7 +101,7 @@
+       end_offset(-1),
+       active_request_id(-1) {}
+ 
+-#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT)
++#if !BUILDFLAG(HAS_PLATFORM_ACCESSIBILITY_SUPPORT) || BUILDFLAG(IS_QTWEBENGINE)
+ // static
+ BrowserAccessibilityManager* BrowserAccessibilityManager::Create(
+     const AXTreeUpdate& initial_tree,
+--- a/src/3rdparty/chromium/ui/aura/BUILD.gn
++++ b/src/3rdparty/chromium/ui/aura/BUILD.gn
+@@ -157,9 +157,7 @@
+     sources -= [ "input_state_lookup.cc" ]
+   }
+ 
+-  if (is_win && !is_qtwebengine) {
+-    sources -= [ "input_state_lookup.cc" ]
+-
++  if (is_win) {
+     deps += [
+       "//ipc",
+       "//ui/platform_window/win",
+--- a/src/3rdparty/chromium/ui/aura/env.cc
++++ b/src/3rdparty/chromium/ui/aura/env.cc
+@@ -238,7 +238,7 @@
+     : env_controller_(std::make_unique<EnvInputStateController>(this)),
+       gesture_recognizer_(std::make_unique<ui::GestureRecognizerImpl>()),
+       input_state_lookup_(InputStateLookup::Create()) {
+-#if BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_QTWEBENGINE)
++#if BUILDFLAG(IS_WIN)
+   cursor_factory_ = std::make_unique<ui::WinCursorFactory>();
+ #endif
+ }
+--- a/src/3rdparty/chromium/ui/aura/window_tree_host_platform.cc
++++ b/src/3rdparty/chromium/ui/aura/window_tree_host_platform.cc
+@@ -237,7 +237,7 @@
+ #if BUILDFLAG(IS_OZONE)
+   return ui::OzonePlatform::GetInstance()->CreatePlatformWindow(
+       this, std::move(properties));
+-#elif BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_QTWEBENGINE)
++#elif BUILDFLAG(IS_WIN)
+   return std::make_unique<ui::WinWindow>(this, properties.bounds);
+ #else
+   NOTIMPLEMENTED();
+--- a/src/3rdparty/chromium/ui/base/BUILD.gn
++++ b/src/3rdparty/chromium/ui/base/BUILD.gn
+@@ -451,7 +451,7 @@
+       ]
+     }
+ 
+-    if (!is_qtwebengine) {
++    if (!is_qtwebengine || is_win) {
+       if (is_win) {
+         sources += [ "pointer/pointer_device_win.cc" ]
+       } else if (is_android) {
+@@ -600,7 +600,8 @@
+     public_deps += [ "//ui/base/glib" ]
+   }
+ 
+-  if (is_chromeos || (use_aura && is_linux) || is_fuchsia) {
++  if (is_chromeos || (use_aura && is_linux) || is_fuchsia ||
++      (is_qtwebengine && is_win)) {
+     sources += [
+       "dragdrop/os_exchange_data_provider_non_backed.cc",
+       "dragdrop/os_exchange_data_provider_non_backed.h",
+@@ -665,7 +666,7 @@
+   }
+ 
+   if (is_qtwebengine) {
+-    if (toolkit_views || use_aura) {
++    if ((toolkit_views || use_aura) && !is_win) {
+       sources -= [
+         "dragdrop/os_exchange_data_provider_factory.cc",
+         "dragdrop/os_exchange_data_provider_factory.h",
+@@ -689,10 +690,6 @@
+         "dragdrop/drag_source_win.h",
+         "dragdrop/os_exchange_data_provider_win.cc",
+         "dragdrop/os_exchange_data_provider_win.h",
+-        "resource/resource_bundle_win.cc",
+-        "resource/resource_bundle_win.h",
+-        "win/win_cursor_factory.cc",
+-        "win/win_cursor_factory.h",
+       ]
+     }
+ 
+--- a/src/3rdparty/chromium/ui/base/clipboard/clipboard_non_backed.cc
++++ b/src/3rdparty/chromium/ui/base/clipboard/clipboard_non_backed.cc
+@@ -973,4 +973,12 @@
+   return *internal_clipboards_.at(buffer);
+ }
+ 
++#if BUILDFLAG(IS_QTWEBENGINE) && BUILDFLAG(IS_WIN)
++// QtWebEngineCore normally provides this.
++// static
++Clipboard* Clipboard::Create() {
++  return new ClipboardNonBacked;
++}
++#endif
++
+ }  // namespace ui
+--- a/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_factory.cc
++++ b/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_factory.cc
+@@ -12,13 +12,15 @@
+ #include "ui/base/dragdrop/os_exchange_data_provider_non_backed.h"
+ #elif BUILDFLAG(IS_APPLE)
+ #include "ui/base/dragdrop/os_exchange_data_provider_builder_mac.h"
++#elif BUILDFLAG(IS_WIN) && BUILDFLAG(IS_QTWEBENGINE)
++#include "ui/base/dragdrop/os_exchange_data_provider_non_backed.h"
+ #elif BUILDFLAG(IS_WIN)
+ #include "ui/base/dragdrop/os_exchange_data_provider_win.h"
+ #endif
+ 
+ namespace ui {
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || BUILDFLAG(IS_WIN)
+ // static
+ std::unique_ptr<OSExchangeDataProvider>
+ OSExchangeDataProviderFactory::CreateProvider() {
+@@ -34,6 +36,9 @@
+   return std::make_unique<OSExchangeDataProviderNonBacked>();
+ #elif BUILDFLAG(IS_APPLE)
+   return BuildOSExchangeDataProviderMac();
++#elif BUILDFLAG(IS_WIN) && BUILDFLAG(IS_QTWEBENGINE)
++  // Qt's tree drops the OLE provider.
++  return std::make_unique<OSExchangeDataProviderNonBacked>();
+ #elif BUILDFLAG(IS_WIN)
+   return std::make_unique<OSExchangeDataProviderWin>();
+ #elif BUILDFLAG(IS_FUCHSIA)
+--- a/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_non_backed.cc
++++ b/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_non_backed.cc
+@@ -224,6 +224,32 @@
+   return !file_contents_filename_.empty();
+ }
+ 
++#if BUILDFLAG(IS_WIN)
++bool OSExchangeDataProviderNonBacked::HasVirtualFilenames() const {
++  return false;
++}
++
++std::optional<std::vector<FileInfo>>
++OSExchangeDataProviderNonBacked::GetVirtualFilenames() const {
++  return std::nullopt;
++}
++
++void OSExchangeDataProviderNonBacked::GetVirtualFilesAsTempFiles(
++    base::OnceCallback<
++        void(const std::vector<std::pair<base::FilePath, base::FilePath>>&)>
++        callback) const {
++  std::move(callback).Run({});
++}
++
++void OSExchangeDataProviderNonBacked::SetVirtualFileContentsForTesting(
++    const std::vector<std::pair<base::FilePath, std::string>>&
++        filenames_and_contents,
++    DWORD tymed) {}
++
++void OSExchangeDataProviderNonBacked::SetDownloadFileInfo(
++    DownloadFileInfo* download) {}
++#endif
++
+ void OSExchangeDataProviderNonBacked::SetHtml(const std::u16string& html,
+                                               const GURL& base_url) {
+   formats_ |= OSExchangeData::HTML;
+--- a/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_non_backed.h
++++ b/src/3rdparty/chromium/ui/base/dragdrop/os_exchange_data_provider_non_backed.h
+@@ -69,6 +69,20 @@
+                        const std::string& file_contents) override;
+   std::optional<FileContentsInfo> GetFileContents() const override;
+   bool HasFileContents() const override;
++#if BUILDFLAG(IS_WIN)
++  // No virtual files without the OLE provider.
++  bool HasVirtualFilenames() const override;
++  std::optional<std::vector<FileInfo>> GetVirtualFilenames() const override;
++  void GetVirtualFilesAsTempFiles(
++      base::OnceCallback<
++          void(const std::vector<std::pair<base::FilePath, base::FilePath>>&)>
++          callback) const override;
++  void SetVirtualFileContentsForTesting(
++      const std::vector<std::pair<base::FilePath, std::string>>&
++          filenames_and_contents,
++      DWORD tymed) override;
++  void SetDownloadFileInfo(DownloadFileInfo* download) override;
++#endif
+ 
+   void SetHtml(const std::u16string& html, const GURL& base_url) override;
+   std::optional<HtmlInfo> GetHtml() const override;
+--- a/src/3rdparty/chromium/ui/base/resource/resource_bundle.cc
++++ b/src/3rdparty/chromium/ui/base/resource/resource_bundle.cc
+@@ -400,7 +400,7 @@
+   locale_resources_data_.push_back(std::move(data_pack));
+ }
+ 
+-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_ANDROID)
+ // static
+ bool ResourceBundle::LocaleDataPakExists(std::string_view locale,
+                                          Gender gender) {
+@@ -505,7 +505,7 @@
+ }
+ #endif
+ 
+-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_ANDROID)
+ std::string ResourceBundle::LoadLocaleResources(const std::string& pref_locale,
+                                                 bool crash_on_failure) {
+   DCHECK_EQ(locale_resources_data_.size(), 0u) << "locale.pak already loaded";
+--- a/src/3rdparty/chromium/ui/platform_window/BUILD.gn
++++ b/src/3rdparty/chromium/ui/platform_window/BUILD.gn
+@@ -60,7 +60,7 @@
+ 
+ group("platform_impls") {
+   public_deps = [ "//ui/platform_window/stub" ]
+-  if (is_win && !is_qtwebengine) {
++  if (is_win) {
+     public_deps += [ "//ui/platform_window/win" ]
+   }
+ }
+--- a/src/3rdparty/chromium/ui/touch_selection/BUILD.gn
++++ b/src/3rdparty/chromium/ui/touch_selection/BUILD.gn
+@@ -41,7 +41,7 @@
+     "//ui/gfx/geometry",
+   ]
+ 
+-  if (use_aura && toolkit_views) {
++  if (use_aura && (toolkit_views || is_qtwebengine)) {
+     deps += [
+       "//cc/paint",
+       "//skia",

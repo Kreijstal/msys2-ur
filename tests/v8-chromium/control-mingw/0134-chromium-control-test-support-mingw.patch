@@ -1,0 +1,1085 @@
+--- a/src/3rdparty/chromium/build/config/win/BUILD.gn
++++ b/src/3rdparty/chromium/build/config/win/BUILD.gn
+@@ -684,7 +684,8 @@
+ 
+ config("windowed") {
+   if (is_mingw) {
+-    ldflags = [ "-Wl,--subsystem,windows:$subsystem_version_suffix"]
++    # Chromium's windowed entry points are wWinMain
++    ldflags = [ "-Wl,--subsystem,windows:$subsystem_version_suffix", "-municode" ]
+   } else {
+     ldflags = [ "/SUBSYSTEM:WINDOWS,$subsystem_version_suffix" ]
+   }
+--- a/src/3rdparty/chromium/build/toolchain/gcc_link_wrapper.py
++++ b/src/3rdparty/chromium/build/toolchain/gcc_link_wrapper.py
+@@ -57,6 +57,9 @@
+   # Work-around for gold being slow-by-default. http://crbug.com/632230
+   fast_env = dict(os.environ)
+   fast_env['LC_ALL'] = 'C'
++  # MSVC-style libs ("foo.lib") reach GNU ld as -lfoo.lib on MinGW.
++  args.command = [a[:-4] if a.startswith('-l') and a.endswith('.lib') else a
++                  for a in args.command]
+   result = wrapper_utils.RunLinkWithOptionalMapFile(args.command, env=fast_env,
+                                                     map_file=args.map_file)
+   if result != 0:
+--- a/src/3rdparty/chromium/cc/test/fake_raster_buffer_provider.cc
++++ b/src/3rdparty/chromium/cc/test/fake_raster_buffer_provider.cc
+@@ -6,6 +6,7 @@
+ 
+ #include <utility>
+ 
++#include "cc/raster/raster_buffer.h"
+ #include "cc/resources/resource_pool.h"
+ #include "gpu/command_buffer/client/client_shared_image.h"
+ 
+--- a/src/3rdparty/chromium/cc/test/fake_tile_manager_client.cc
++++ b/src/3rdparty/chromium/cc/test/fake_tile_manager_client.cc
+@@ -4,6 +4,7 @@
+ 
+ #include "cc/test/fake_tile_manager_client.h"
+ 
++#include "cc/tiles/eviction_tile_priority_queue.h"
+ #include "cc/tiles/tiles_with_resource_iterator.h"
+ 
+ namespace cc {
+--- a/src/3rdparty/chromium/components/browsing_data/core/BUILD.gn
++++ b/src/3rdparty/chromium/components/browsing_data/core/BUILD.gn
+@@ -49,6 +49,26 @@
+     "//ui/base",
+   ]
+ 
++  if (is_qtwebengine) {
++    # Qt trims autofill, password and history; nothing here needs these counters
++    sources -= [
++      "counters/autofill_counter.cc",
++      "counters/autofill_counter.h",
++      "counters/history_counter.cc",
++      "counters/history_counter.h",
++      "counters/passwords_counter.cc",
++      "counters/passwords_counter.h",
++      "history_notice_utils.cc",
++      "history_notice_utils.h",
++    ]
++    deps -= [
++      "//components/autofill/core/browser",
++      "//components/history/core/browser",
++      "//components/password_manager/core/browser",
++      "//components/password_manager/core/browser/features:password_features",
++    ]
++  }
++
+   configs += [ "//build/config/compiler:wexit_time_destructors" ]
+ }
+ 
+--- a/src/3rdparty/chromium/components/browsing_data/core/browsing_data_utils.cc
++++ b/src/3rdparty/chromium/components/browsing_data/core/browsing_data_utils.cc
+@@ -15,15 +15,18 @@
+ #include "base/strings/string_util.h"
+ #include "base/strings/utf_string_conversions.h"
+ #include "base/time/time.h"
++#if !defined(TOOLKIT_QT)  // Qt's trimmed autofill/password/history
+ #include "components/browsing_data/core/counters/autofill_counter.h"
+ #include "components/browsing_data/core/counters/history_counter.h"
+ #include "components/browsing_data/core/counters/passwords_counter.h"
++#endif
+ #include "components/browsing_data/core/features.h"
+ #include "components/browsing_data/core/pref_names.h"
+ #include "components/prefs/pref_service.h"
+ #include "components/strings/grit/components_strings.h"
+ #include "ui/base/l10n/l10n_util.h"
+ 
++#if !defined(TOOLKIT_QT)  // Qt's trimmed autofill/password/history
+ namespace {
+ // Creates a string like "for a.com, b.com, and 4 more" for the password
+ // counter.
+@@ -106,6 +109,7 @@
+       IDS_DEL_BROWSING_HISTORY_COUNTER_SINGLE_DOMAIN_TEXT, last_visited_domain);
+ }
+ }  // namespace
++#endif
+ 
+ namespace browsing_data {
+ 
+@@ -213,6 +217,7 @@
+   UMA_HISTOGRAM_ENUMERATION("Privacy.DeleteBrowsingData.Action", cbd_action);
+ }
+ 
++#if !defined(TOOLKIT_QT)  // Qt's trimmed autofill/password/history
+ std::u16string GetCounterTextFromResult(
+     const BrowsingDataCounter::Result* result) {
+   std::string pref_name = result->source()->GetPrefName();
+@@ -401,6 +406,7 @@
+ 
+   NOTREACHED();
+ }
++#endif
+ 
+ const char* GetTimePeriodPreferenceName(
+     ClearBrowsingDataTab clear_browsing_data_tab) {
+--- a/src/3rdparty/chromium/components/custom_handlers/test_protocol_handler_registry_delegate.cc
++++ b/src/3rdparty/chromium/components/custom_handlers/test_protocol_handler_registry_delegate.cc
+@@ -36,6 +36,7 @@
+   return registered_protocols_.find(protocol) != registered_protocols_.end();
+ }
+ 
++#if !BUILDFLAG(IS_QTWEBENGINE)
+ void TestProtocolHandlerRegistryDelegate::RegisterWithOSAsDefaultClient(
+     const std::string& protocol,
+     DefaultClientCallback callback) {
+@@ -59,6 +60,7 @@
+ bool TestProtocolHandlerRegistryDelegate::ShouldRemoveHandlersNotInOS() {
+   return true;
+ }
++#endif
+ 
+ bool TestProtocolHandlerRegistryDelegate::IsFakeRegisteredWithOS(
+     const std::string& protocol) {
+--- a/src/3rdparty/chromium/components/custom_handlers/test_protocol_handler_registry_delegate.h
++++ b/src/3rdparty/chromium/components/custom_handlers/test_protocol_handler_registry_delegate.h
+@@ -29,11 +29,13 @@
+   void RegisterExternalHandler(const std::string& protocol) override;
+   void DeregisterExternalHandler(const std::string& protocol) override;
+   bool IsExternalHandlerRegistered(const std::string& protocol) override;
++#if !BUILDFLAG(IS_QTWEBENGINE)
+   void RegisterWithOSAsDefaultClient(const std::string& protocol,
+                                      DefaultClientCallback callback) override;
+   void CheckDefaultClientWithOS(const std::string& protocol,
+                                 DefaultClientCallback callback) override;
+   bool ShouldRemoveHandlersNotInOS() override;
++#endif
+ 
+   bool IsFakeRegistered(const std::string& protocol);
+   bool IsFakeRegisteredWithOS(const std::string& protocol);
+--- a/src/3rdparty/chromium/components/permissions/BUILD.gn
++++ b/src/3rdparty/chromium/components/permissions/BUILD.gn
+@@ -24,6 +24,10 @@
+ }
+ 
+ source_set("permissions") {
++  if (is_qtwebengine) {
++    # the API Qt's trimmed permission_util.h hides from its own consumers
++    defines = [ "PERMISSIONS_FULL_API" ]
++  }
+   sources = [
+     "bluetooth_delegate_impl.cc",
+     "bluetooth_delegate_impl.h",
+--- a/src/3rdparty/chromium/components/permissions/permission_util.cc
++++ b/src/3rdparty/chromium/components/permissions/permission_util.cc
+@@ -655,7 +655,7 @@
+   }
+ }
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+ bool PermissionUtil::HasUserGesture(PermissionPrompt::Delegate* delegate) {
+   const std::vector<std::unique_ptr<permissions::PermissionRequest>>& requests =
+       delegate->Requests();
+--- a/src/3rdparty/chromium/components/permissions/permission_util.h
++++ b/src/3rdparty/chromium/components/permissions/permission_util.h
+@@ -10,7 +10,7 @@
+ #include "build/build_config.h"
+ #include "components/content_settings/core/common/content_settings.h"
+ #include "components/content_settings/core/common/content_settings_types.h"
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+ #include "components/permissions/permission_decision.h"
+ #include "components/permissions/permission_prompt.h"
+ #include "components/permissions/permission_uma_util.h"
+@@ -64,7 +64,7 @@
+   // Returns the permission string for the given permission.
+   static std::string GetPermissionString(ContentSettingsType);
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+   // Returns the request type uma value for the given permissions.
+   static RequestTypeForUma GetUmaValueForRequests(
+       const std::vector<std::unique_ptr<PermissionRequest>>& requests);
+@@ -103,7 +103,7 @@
+   // acceptance data)
+   static bool IsLowPriorityPermissionRequest(const PermissionRequest* request);
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+   // Check whether the given permission request could prompt a secondary UI, it
+   // means:
+   // - The request is initiated from a permission element.
+@@ -156,7 +156,7 @@
+   static ContentSetting PermissionStatusToContentSetting(
+       blink::mojom::PermissionStatus status);
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+   // Helper method to convert PermissionDecision to PermissionStatus.
+   static content::PermissionStatus PermissionDecisionToPermissionStatus(
+       PermissionDecision decision);
+@@ -197,7 +197,7 @@
+                                  const GURL& requesting_origin,
+                                  const GURL& embedding_origin);
+ 
+-#if !BUILDFLAG(IS_QTWEBENGINE)
++#if !BUILDFLAG(IS_QTWEBENGINE) || defined(PERMISSIONS_FULL_API)
+   // Returns `true` if at least one of the `delegate->Requests()` was requested
+   // with a user gesture.
+   static bool HasUserGesture(PermissionPrompt::Delegate* delegate);
+--- a/src/3rdparty/chromium/components/update_client/background_downloader_win.cc
++++ b/src/3rdparty/chromium/components/update_client/background_downloader_win.cc
+@@ -8,7 +8,11 @@
+ 
+ #include <windows.h>
+ 
++#if defined(__MINGW32__)
++#include <shlobj.h>  // mingw-w64 has no shlobj_core.h
++#else
+ #include <shlobj_core.h>
++#endif
+ #include <stddef.h>
+ #include <stdint.h>
+ #include <winerror.h>
+--- a/src/3rdparty/chromium/content/browser/media/session/mock_media_session_player_observer.cc
++++ b/src/3rdparty/chromium/content/browser/media/session/mock_media_session_player_observer.cc
+@@ -31,7 +31,8 @@
+   players_[player_id].is_playing_ = false;
+ }
+ 
+-void MockMediaSessionPlayerObserver::OnResume(int player_id) {
++void MockMediaSessionPlayerObserver::OnResume(int player_id,
++                                              bool triggered_by_user) {
+   EXPECT_GE(player_id, 0);
+   EXPECT_GT(players_.size(), static_cast<size_t>(player_id));
+ 
+--- a/src/3rdparty/chromium/content/browser/media/session/mock_media_session_player_observer.h
++++ b/src/3rdparty/chromium/content/browser/media/session/mock_media_session_player_observer.h
+@@ -31,7 +31,7 @@
+ 
+   // Implements MediaSessionPlayerObserver.
+   void OnSuspend(int player_id) override;
+-  void OnResume(int player_id) override;
++  void OnResume(int player_id, bool triggered_by_user) override;
+   void OnSeekForward(int player_id, base::TimeDelta seek_time) override;
+   void OnSeekBackward(int player_id, base::TimeDelta seek_time) override;
+   void OnSeekTo(int player_id, base::TimeDelta seek_time) override;
+--- a/src/3rdparty/chromium/content/public/test/content_test_suite_base.cc
++++ b/src/3rdparty/chromium/content/public/test/content_test_suite_base.cc
+@@ -38,7 +38,8 @@
+ #include "ui/base/resource/resource_bundle_android.h"
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN)
++// MinGW builds have no ATL, so no AXPlatformNodeWin
++#if BUILDFLAG(IS_WIN) && !defined(__MINGW32__)
+ #include <tuple>
+ 
+ #include "ui/accessibility/platform/ax_platform_node_win.h"
+@@ -83,7 +84,7 @@
+     // Dear reader: If your test is failing here, it is because the test is
+     // either leaking UX objects (e.g., Views, Widgets, etc) or is using
+     // accessibility APIs that are leaking AXPlatformNode instances.
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_WIN) && !defined(__MINGW32__)
+     auto [instance_count, dormant_count, live_count, ghost_count] =
+         ui::AXPlatformNodeWin::ResetCountsForTesting();
+     EXPECT_EQ(ghost_count, 0U)
+--- a/src/3rdparty/chromium/content/public/test/mock_navigation_handle.h
++++ b/src/3rdparty/chromium/content/public/test/mock_navigation_handle.h
+@@ -170,9 +170,10 @@
+   const net::HttpResponseHeaders* GetResponseHeaders() override {
+     return response_headers_.get();
+   }
+-  MOCK_METHOD1(
+-      SetLCPPNavigationHint,
+-      void(const blink::mojom::LCPCriticalPathPredictorNavigationTimeHint&));
++  MOCK_METHOD(void,
++              SetLCPPNavigationHint,
++              (blink::mojom::LCPCriticalPathPredictorNavigationTimeHintPtr),
++              (override));
+   MOCK_METHOD0(
+       GetLCPPNavigationHint,
+       const blink::mojom::LCPCriticalPathPredictorNavigationTimeHintPtr&());
+--- a/src/3rdparty/chromium/content/public/test/mock_render_process_host.cc
++++ b/src/3rdparty/chromium/content/public/test/mock_render_process_host.cc
+@@ -631,6 +631,7 @@
+   return RenderProcessHostImpl::FilterURL(this, empty_allowed, url);
+ }
+ 
++#if BUILDFLAG(ENABLE_WEBRTC)
+ void MockRenderProcessHost::EnableAudioDebugRecordings(
+     const base::FilePath& file) {}
+ 
+@@ -642,6 +643,7 @@
+                                     WebRtcRtpPacketCallback packet_callback) {
+   return base::NullCallback();
+ }
++#endif
+ 
+ bool MockRenderProcessHost::OnMessageReceived(const IPC::Message& msg) {
+   IPC::Listener* listener = listeners_.Lookup(msg.routing_id());
+--- a/src/3rdparty/chromium/content/public/test/mock_render_process_host.h
++++ b/src/3rdparty/chromium/content/public/test/mock_render_process_host.h
+@@ -149,12 +149,14 @@
+   IPC::ChannelProxy* GetChannel() override;
+   base::TimeDelta GetChildProcessIdleTime() override;
+   FilterURLResult FilterURL(bool empty_allowed, GURL* url) override;
++#if BUILDFLAG(ENABLE_WEBRTC)
+   void EnableAudioDebugRecordings(const base::FilePath& file) override;
+   void DisableAudioDebugRecordings() override;
+   WebRtcStopRtpDumpCallback StartRtpDump(
+       bool incoming,
+       bool outgoing,
+       WebRtcRtpPacketCallback packet_callback) override;
++#endif
+   void BindReceiver(mojo::GenericPendingReceiver receiver) override;
+   std::unique_ptr<base::PersistentMemoryAllocator> TakeMetricsAllocator()
+       override;
+--- a/src/3rdparty/chromium/content/public/test/mock_web_contents_observer.h
++++ b/src/3rdparty/chromium/content/public/test/mock_web_contents_observer.h
+@@ -121,6 +121,7 @@
+               ResourceLoadComplete,
+               (RenderFrameHost* render_frame_host,
+                const GlobalRequestID& request_id,
++               const GURL& original_url,
+                const blink::mojom::ResourceLoadInfo& resource_load_info),
+               (override));
+   MOCK_METHOD(void,
+--- a/src/3rdparty/chromium/content/public/test/network_service_test_helper.cc
++++ b/src/3rdparty/chromium/content/public/test/network_service_test_helper.cc
+@@ -810,6 +810,14 @@
+     std::move(callback).Run(enabled);
+   }
+ 
++  void HasRawHeadersAccess(uint32_t process_id,
++                           const GURL& url,
++                           HasRawHeadersAccessCallback callback) override {
++    std::move(callback).Run(
++        network::NetworkService::GetNetworkServiceForTesting()
++            ->HasRawHeadersAccess(static_cast<int32_t>(process_id), url));
++  }
++
+  private:
+   void OnMemoryPressure(
+       base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level) {
+--- a/src/3rdparty/chromium/content/public/test/render_view_test.cc
++++ b/src/3rdparty/chromium/content/public/test/render_view_test.cc
+@@ -426,7 +426,7 @@
+   content_client_.reset(CreateContentClient());
+   SetContentClient(content_client_.get());
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+   // This needs to happen sometime before PlatformInitialize.
+   // This isn't actually necessary for most tests: most tests are able to
+   // connect to their browser process which runs the real proxy host. However,
+@@ -558,7 +558,7 @@
+   // (http://crbug.com/21508).
+   base::RunLoop().RunUntilIdle();
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+   ClearDWriteFontProxySenderForTesting();
+ #endif
+ 
+--- a/src/3rdparty/chromium/content/shell/BUILD.gn
++++ b/src/3rdparty/chromium/content/shell/BUILD.gn
+@@ -782,7 +782,11 @@
+ 
+       # Increase the initial stack size. The default is 1MB, this is 8MB.
+       # This matches the chrome.exe.
+-      ldflags = [ "/STACK:0x800000" ]
++      if (is_mingw) {
++        ldflags = [ "-Wl,--stack,0x800000" ]
++      } else {
++        ldflags = [ "/STACK:0x800000" ]
++      }
+     }
+ 
+     if (is_win) {
+--- a/src/3rdparty/chromium/content/shell/browser/shell.cc
++++ b/src/3rdparty/chromium/content/shell/browser/shell.cc
+@@ -125,12 +125,14 @@
+     raw_web_contents->SyncRendererPrefs();
+   }
+ 
++#if BUILDFLAG(ENABLE_WEBRTC)
+   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
+   if (command_line->HasSwitch(switches::kForceWebRtcIPHandlingPolicy)) {
+     raw_web_contents->GetMutableRendererPrefs()->webrtc_ip_handling_policy =
+         blink::ToWebRTCIPHandlingPolicy(command_line->GetSwitchValueASCII(
+             switches::kForceWebRtcIPHandlingPolicy));
+   }
++#endif
+ 
+   g_platform->SetContents(shell);
+   g_platform->DidCreateOrAttachWebContents(shell, raw_web_contents);
+--- a/src/3rdparty/chromium/content/shell/browser/shell_content_browser_client.cc
++++ b/src/3rdparty/chromium/content/shell/browser/shell_content_browser_client.cc
+@@ -137,7 +137,7 @@
+ #include "content/shell/browser/bluetooth/shell_bluetooth_delegate_impl_client.h"
+ #endif
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+ #include "media/mojo/mojom/media_foundation_preferences.mojom.h"
+ #include "media/mojo/services/media_foundation_preferences.h"
+ #endif  // BUILDFLAG(IS_WIN)
+@@ -242,7 +242,7 @@
+                                                        std::move(receiver));
+ }
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+ void BindMediaFoundationPreferences(
+     content::RenderFrameHost* frame_host,
+     mojo::PendingReceiver<media::mojom::MediaFoundationPreferences> receiver) {
+@@ -674,7 +674,7 @@
+       ->GetBinders()
+       .ExposeInterfacesToRenderFrame(map);
+   map->Add<network_hints::mojom::NetworkHintsHandler>(&BindNetworkHintsHandler);
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+   map->Add<media::mojom::MediaFoundationPreferences>(
+       &BindMediaFoundationPreferences);
+ #endif  // BUILDFLAG(IS_WIN)
+@@ -907,7 +907,8 @@
+   // No need to callback if there were no dictionaries.
+ }
+ 
+-bool ShellContentBrowserClient::HasErrorPage(int http_status_code) {
++bool ShellContentBrowserClient::HasErrorPage(int http_status_code,
++                                             WebContents* web_contents) {
+   return http_status_code >= 400 && http_status_code < 600;
+ }
+ 
+--- a/src/3rdparty/chromium/content/shell/browser/shell_content_browser_client.h
++++ b/src/3rdparty/chromium/content/shell/browser/shell_content_browser_client.h
+@@ -176,7 +176,7 @@
+   void BindBrowserControlInterface(mojo::ScopedMessagePipeHandle pipe) override;
+   void GetHyphenationDictionary(
+       base::OnceCallback<void(const base::FilePath&)>) override;
+-  bool HasErrorPage(int http_status_code) override;
++  bool HasErrorPage(int http_status_code, WebContents* web_contents) override;
+   void OnWebContentsCreated(WebContents* web_contents) override;
+ 
+   // Turns on features via permissions policy for Isolated App
+--- a/src/3rdparty/chromium/content/shell/browser/shell_plugin_service_filter.cc
++++ b/src/3rdparty/chromium/content/shell/browser/shell_plugin_service_filter.cc
+@@ -13,6 +13,8 @@
+ ShellPluginServiceFilter::~ShellPluginServiceFilter() = default;
+ 
+ bool ShellPluginServiceFilter::IsPluginAvailable(
++    int render_process_id,
++    int render_frame_id,
+     content::BrowserContext* browser_context,
+     const WebPluginInfo& plugin) {
+   return plugin.name == u"Blink Test Plugin" ||
+--- a/src/3rdparty/chromium/content/shell/browser/shell_plugin_service_filter.h
++++ b/src/3rdparty/chromium/content/shell/browser/shell_plugin_service_filter.h
+@@ -19,7 +19,9 @@
+   ~ShellPluginServiceFilter() override;
+ 
+   // PluginServiceFilter implementation.
+-  bool IsPluginAvailable(content::BrowserContext* browser_context,
++  bool IsPluginAvailable(int render_process_id,
++                         int render_frame_id,
++                         content::BrowserContext* browser_context,
+                          const WebPluginInfo& plugin) override;
+ 
+   bool CanLoadPlugin(int render_process_id,
+--- a/src/3rdparty/chromium/content/shell/browser/shell_web_contents_view_delegate_aura.cc
++++ b/src/3rdparty/chromium/content/shell/browser/shell_web_contents_view_delegate_aura.cc
+@@ -4,6 +4,8 @@
+ 
+ #include <memory>
+ 
++#include "content/public/browser/web_contents_view_delegate.h"
++
+ namespace content {
+ class WebContents;
+ class WebContentsViewDelegate;
+--- a/src/3rdparty/chromium/content/test/BUILD.gn
++++ b/src/3rdparty/chromium/content/test/BUILD.gn
+@@ -689,11 +689,13 @@
+       "//testing/android/native_test:native_browser_test_support",
+       "//ui/android",
+     ]
+-  } else {
++  } else if (enable_screen_capture) {
+     sources += [
+       "../public/test/mock_captured_surface_controller.cc",
+       "../public/test/mock_captured_surface_controller.h",
+     ]
++  }
++  if (!is_android) {
+ 
+     if (!is_fuchsia) {
+       sources += [
+@@ -704,7 +706,8 @@
+       public_deps += [ "//components/soda:test_support" ]
+     }
+ 
+-    if (is_win) {
++    # stylus handwriting is not built for MinGW
++    if (is_win && !is_mingw) {
+       sources += [
+         "../browser/renderer_host/input/mock_tfhandwriting.cc",
+         "../browser/renderer_host/input/mock_tfhandwriting.h",
+--- a/src/3rdparty/chromium/content/test/navigation_simulator_impl.cc
++++ b/src/3rdparty/chromium/content/test/navigation_simulator_impl.cc
+@@ -1377,7 +1377,7 @@
+               : blink::mojom::NavigationInitiatorActivationAndAdStatus::
+                     kDidNotStartWithTransientActivation,
+           false /* is_container_initiated */,
+-          net::StorageAccessApiStatus::kNone, false /* has_rel_opener */);
++          false /* has_rel_opener */);
+   auto common_params = blink::CreateCommonNavigationParams();
+   common_params->navigation_start =
+       navigation_start_.is_null() ? base::TimeTicks::Now() : navigation_start_;
+--- a/src/3rdparty/chromium/content/test/test_render_frame_host.cc
++++ b/src/3rdparty/chromium/content/test/test_render_frame_host.cc
+@@ -466,7 +466,7 @@
+           blink::mojom::NavigationInitiatorActivationAndAdStatus::
+               kDidNotStartWithTransientActivation,
+           false /* is_container_initiated */,
+-          net::StorageAccessApiStatus::kNone, false /* has_rel_opener */);
++          false /* has_rel_opener */);
+   auto common_params = blink::CreateCommonNavigationParams();
+   common_params->url = url;
+   common_params->initiator_origin = GetLastCommittedOrigin();
+--- a/src/3rdparty/chromium/content/web_test/browser/web_test_control_host.cc
++++ b/src/3rdparty/chromium/content/web_test/browser/web_test_control_host.cc
+@@ -1136,7 +1136,7 @@
+ void WebTestControlHost::DidStartNavigation(
+     NavigationHandle* navigation_handle) {
+   if (lcpp_hint_) {
+-    navigation_handle->SetLCPPNavigationHint(lcpp_hint_.value());
++    navigation_handle->SetLCPPNavigationHint(lcpp_hint_->Clone());
+   }
+ }
+ 
+--- a/src/3rdparty/chromium/gpu/command_buffer/service/BUILD.gn
++++ b/src/3rdparty/chromium/gpu/command_buffer/service/BUILD.gn
+@@ -102,10 +102,12 @@
+   config("service_win_linker_flags") {
+     # This is in a separate config so the flags can be applied to dependents.
+     # ldflags in GN aren't automatically inherited.
+-    ldflags = [
+-      # Linking with OneCore.lib causes the following dlls to load.
+-      "/DELAYLOAD:api-ms-win-core-handle-l1-1-0.dll",
+-    ]
++    if (is_msvc) {
++      ldflags = [
++        # Linking with OneCore.lib causes the following dlls to load.
++        "/DELAYLOAD:api-ms-win-core-handle-l1-1-0.dll",
++      ]
++    }
+   }
+ }
+ 
+--- a/src/3rdparty/chromium/media/base/BUILD.gn
++++ b/src/3rdparty/chromium/media/base/BUILD.gn
+@@ -588,7 +588,8 @@
+     "//url",
+   ]
+ 
+-  if (is_win) {
++  # its D3D and Media Foundation mocks need WRL and SDK headers MinGW lacks
++  if (is_win && !is_mingw) {
+     public_deps += [ "//media/base/win:test_support" ]
+   }
+ }
+--- a/src/3rdparty/chromium/net/BUILD.gn
++++ b/src/3rdparty/chromium/net/BUILD.gn
+@@ -2288,7 +2288,8 @@
+     "url_request/url_request_test_util.h",
+   ]
+ 
+-  if (is_win) {
++  # WRL-based; MinGW has no wrl/implements.h
++  if (is_win && !is_mingw) {
+     sources += [
+       "test/win/fake_network_cost_manager.cc",
+       "test/win/fake_network_cost_manager.h",
+--- a/src/3rdparty/chromium/printing/BUILD.gn
++++ b/src/3rdparty/chromium/printing/BUILD.gn
+@@ -186,7 +186,11 @@
+       "emf_win.h",
+     ]
+ 
+-    libs = [ "xpsprint.lib" ]
++    # mingw-w64 has no xpsprint import library; StartXpsPrintJob is resolved
++    # at runtime
++    if (!is_mingw) {
++      libs = [ "xpsprint.lib" ]
++    }
+   }
+ }
+ 
+--- a/src/3rdparty/chromium/services/device/public/cpp/test/scoped_geolocation_overrider.cc
++++ b/src/3rdparty/chromium/services/device/public/cpp/test/scoped_geolocation_overrider.cc
+@@ -83,6 +83,7 @@
+ 
+   // mojom::Geolocation implementation:
+   void QueryNextPosition(QueryNextPositionCallback callback) override;
++  void QueryCachedPosition(QueryCachedPositionCallback callback) override;
+   void SetHighAccuracyHint(bool high_accuracy) override;
+   const GURL& url() { return url_; }
+ 
+@@ -320,6 +321,18 @@
+   RunPositionCallbackIfNeeded();
+ }
+ 
++void ScopedGeolocationOverrider::FakeGeolocation::QueryCachedPosition(
++    QueryCachedPositionCallback callback) {
++  const mojom::GeopositionResult* result = context_->GetGeoposition();
++  if (result && result->is_position()) {
++    std::move(callback).Run(result->Clone());
++    return;
++  }
++  std::move(callback).Run(
++      mojom::GeopositionResult::NewError(mojom::GeopositionError::New(
++          mojom::GeopositionErrorCode::kPositionUnavailable, "", "")));
++}
++
+ void ScopedGeolocationOverrider::FakeGeolocation::SetHighAccuracyHint(
+     bool high_accuracy) {}
+ 
+--- a/src/3rdparty/chromium/services/device/public/cpp/test/scoped_pressure_manager_overrider.h
++++ b/src/3rdparty/chromium/services/device/public/cpp/test/scoped_pressure_manager_overrider.h
+@@ -49,12 +49,11 @@
+       const base::UnguessableToken& token,
+       mojom::PressureSource source,
+       RemoveVirtualPressureSourceCallback callback) override {}
+-  void UpdateVirtualPressureSourceData(
++  void UpdateVirtualPressureSourceState(
+       const base::UnguessableToken& token,
+       mojom::PressureSource source,
+       mojom::PressureState state,
+-      double own_contribution_estimate,
+-      UpdateVirtualPressureSourceDataCallback callback) override {}
++      UpdateVirtualPressureSourceStateCallback callback) override {}
+ 
+   bool is_supported_ = true;
+   mojo::ReceiverSet<mojom::PressureManager> manager_receivers_;
+--- a/src/3rdparty/chromium/services/network/test/test_network_context.h
++++ b/src/3rdparty/chromium/services/network/test/test_network_context.h
+@@ -199,7 +199,6 @@
+   void CreateWebSocket(
+       const GURL& url,
+       const std::vector<std::string>& requested_protocols,
+-      const net::SiteForCookies& site_for_cookies,
+       net::StorageAccessApiStatus storage_access_api_status,
+       const net::IsolationInfo& isolation_info,
+       std::vector<mojom::HttpHeaderPtr> additional_headers,
+--- a/src/3rdparty/chromium/services/network/test/test_utils.cc
++++ b/src/3rdparty/chromium/services/network/test/test_utils.cc
+@@ -9,6 +9,7 @@
+ #include "net/http/http_util.h"
+ #include "net/proxy_resolution/proxy_config_with_annotation.h"
+ #include "services/network/public/cpp/resource_request.h"
++#include "services/network/public/mojom/device_bound_sessions.mojom.h"
+ #include "services/network/public/mojom/http_raw_headers.mojom.h"
+ #include "services/network/public/mojom/network_context.mojom.h"
+ #include "services/network/public/mojom/url_response_head.mojom.h"
+--- a/src/3rdparty/chromium/storage/browser/test/test_file_system_backend.cc
++++ b/src/3rdparty/chromium/storage/browser/test/test_file_system_backend.cc
+@@ -103,6 +103,9 @@
+   }
+ 
+   // FileUpdateObserver overrides.
++  void AddRef() const override {}
++  void Release() const override {}
++  void Disable() override {}
+   void OnStartUpdate(const FileSystemURL& url) override {}
+   void OnUpdate(const FileSystemURL& url, int64_t delta) override {
+     usage_ += delta;
+--- a/src/3rdparty/chromium/third_party/blink/public/BUILD.gn
++++ b/src/3rdparty/chromium/third_party/blink/public/BUILD.gn
+@@ -44,9 +44,12 @@
+     "//third_party/blink/renderer/core/exported:test_support",
+     "//third_party/blink/renderer/modules/exported:test_support",
+     "//third_party/blink/renderer/modules/mediastream:test_support",
+-    "//third_party/blink/renderer/modules/peerconnection:test_support",
+     "//third_party/blink/renderer/platform:test_support",
+   ]
++  if (enable_webrtc) {
++    public_deps +=
++        [ "//third_party/blink/renderer/modules/peerconnection:test_support" ]
++  }
+ }
+ 
+ group("all_blink") {
+--- a/src/3rdparty/chromium/third_party/blink/public/test/mojom/compute_pressure/web_pressure_manager_automation.test-mojom
++++ b/src/3rdparty/chromium/third_party/blink/public/test/mojom/compute_pressure/web_pressure_manager_automation.test-mojom
+@@ -13,7 +13,7 @@
+   kSourceTypeAlreadyOverridden,
+ };
+ 
+-enum UpdateVirtualPressureSourceDataResult {
++enum UpdateVirtualPressureSourceStateResult {
+   kSuccess,
+   kSourceTypeNotOverridden,
+ };
+@@ -34,10 +34,9 @@
+   // Removes a previously created virtual pressure source.
+   RemoveVirtualPressureSource(device.mojom.PressureSource source) => ();
+ 
+-  // Sends a state and estimate update for a given virtual pressure source.
+-  UpdateVirtualPressureSourceData(
++  // Sends a state update for a given virtual pressure source.
++  UpdateVirtualPressureSourceState(
+       device.mojom.PressureSource source,
+-      device.mojom.PressureState state,
+-      double own_contribution_estimate) =>
+-      (UpdateVirtualPressureSourceDataResult result);
++      device.mojom.PressureState state) =>
++      (UpdateVirtualPressureSourceStateResult result);
+ };
+--- a/src/3rdparty/chromium/third_party/blink/renderer/modules/peerconnection/test_webrtc_stats_report_obtainer.cc
++++ b/src/3rdparty/chromium/third_party/blink/renderer/modules/peerconnection/test_webrtc_stats_report_obtainer.cc
+@@ -7,6 +7,7 @@
+ #include "base/functional/bind.h"
+ #include "base/functional/callback.h"
+ #include "third_party/blink/renderer/platform/peerconnection/rtc_stats.h"
++#include "third_party/blink/renderer/platform/wtf/cross_thread_copier_base.h"
+ #include "third_party/blink/renderer/platform/wtf/cross_thread_functional.h"
+ 
+ namespace blink {
+@@ -18,7 +19,7 @@
+ RTCStatsReportCallback
+ TestWebRTCStatsReportObtainer::GetStatsCallbackWrapper() {
+   return CrossThreadBindOnce(&TestWebRTCStatsReportObtainer::OnStatsDelivered,
+-                             base::RetainedRef(this));
++                             WrapRefCounted(this));
+ }
+ 
+ RTCStatsReportPlatform* TestWebRTCStatsReportObtainer::report() const {
+--- /dev/null
++++ b/src/3rdparty/chromium/third_party/crashpad/crashpad/compat/win/dbghelp.h
+@@ -0,0 +1,80 @@
++// Copyright 2026 The Crashpad Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#ifndef CRASHPAD_COMPAT_WIN_DBGHELP_H_
++#define CRASHPAD_COMPAT_WIN_DBGHELP_H_
++
++#ifdef _MSC_VER
++// include_next <dbghelp.h>
++#include <../um/dbghelp.h>
++#else
++#include_next <dbghelp.h>
++
++#include <stdint.h>
++
++// mingw-w64 stops at MINIDUMP_MISC_INFO_2; these match compat/non_win.
++struct __attribute__((packed, aligned(4))) XSTATE_CONFIG_FEATURE_MSC_INFO {
++  uint32_t SizeOfInfo;
++  uint32_t ContextSize;
++  uint64_t EnabledFeatures;
++  XSTATE_FEATURE Features[MAXIMUM_XSTATE_FEATURES];
++};
++#ifndef MINIDUMP_MISC3_PROCESS_INTEGRITY
++#define MINIDUMP_MISC3_PROCESS_INTEGRITY 0x00000010
++#endif
++#ifndef MINIDUMP_MISC3_PROCESS_EXECUTE_FLAGS
++#define MINIDUMP_MISC3_PROCESS_EXECUTE_FLAGS 0x00000020
++#endif
++#ifndef MINIDUMP_MISC3_TIMEZONE
++#define MINIDUMP_MISC3_TIMEZONE 0x00000040
++#endif
++#ifndef MINIDUMP_MISC3_PROTECTED_PROCESS
++#define MINIDUMP_MISC3_PROTECTED_PROCESS 0x00000080
++#endif
++#ifndef MINIDUMP_MISC4_BUILDSTRING
++#define MINIDUMP_MISC4_BUILDSTRING 0x00000100
++#endif
++#ifndef MINIDUMP_MISC5_PROCESS_COOKIE
++#define MINIDUMP_MISC5_PROCESS_COOKIE 0x00000200
++#endif
++struct __attribute__((packed, aligned(4))) MINIDUMP_MISC_INFO_3
++    : public MINIDUMP_MISC_INFO_2 {
++  uint32_t ProcessIntegrityLevel;
++  uint32_t ProcessExecuteFlags;
++  uint32_t ProtectedProcess;
++  uint32_t TimeZoneId;
++  TIME_ZONE_INFORMATION TimeZone;
++};
++struct __attribute__((packed, aligned(4))) MINIDUMP_MISC_INFO_4
++    : public MINIDUMP_MISC_INFO_3 {
++  WCHAR BuildString[260];
++  WCHAR DbgBldStr[40];
++};
++struct __attribute__((packed, aligned(4))) MINIDUMP_MISC_INFO_5
++    : public MINIDUMP_MISC_INFO_4 {
++  XSTATE_CONFIG_FEATURE_MSC_INFO XStateData;
++  uint32_t ProcessCookie;
++};
++typedef MINIDUMP_MISC_INFO_5 MINIDUMP_MISC_INFO_N;
++struct __attribute__((packed, aligned(4))) MINIDUMP_THREAD_NAME {
++  uint32_t ThreadId;
++  RVA64 RvaOfThreadName;
++};
++struct __attribute__((packed, aligned(4))) MINIDUMP_THREAD_NAME_LIST {
++  uint32_t NumberOfThreadNames;
++  struct MINIDUMP_THREAD_NAME ThreadNames[0];
++};
++#endif  // _MSC_VER
++
++#endif  // CRASHPAD_COMPAT_WIN_DBGHELP_H_
+--- a/src/3rdparty/chromium/third_party/crashpad/crashpad/snapshot/win/pe_image_reader.cc
++++ b/src/3rdparty/chromium/third_party/crashpad/crashpad/snapshot/win/pe_image_reader.cc
+@@ -425,8 +425,9 @@
+   }
+ 
+   if (nt_headers.FileHeader.SizeOfOptionalHeader <
+-          offsetof(decltype(nt_headers.OptionalHeader), DataDirectory[index]) +
+-              sizeof(nt_headers.OptionalHeader.DataDirectory[index]) ||
++          // GCC's offsetof needs a constant member designator
++          offsetof(decltype(nt_headers.OptionalHeader), DataDirectory) +
++              (index + 1) * sizeof(nt_headers.OptionalHeader.DataDirectory[0]) ||
+       nt_headers.OptionalHeader.NumberOfRvaAndSizes <= index) {
+     return false;
+   }
+--- a/src/3rdparty/chromium/third_party/crashpad/crashpad/util/BUILD.gn
++++ b/src/3rdparty/chromium/third_party/crashpad/crashpad/util/BUILD.gn
+@@ -561,6 +561,8 @@
+       } else {
+         sources += [ "misc/capture_context_win_arm64.asm" ]
+       }
++    } else {
++      sources += [ "misc/capture_context_win_mingw.cc" ]
+     }
+   }
+ 
+@@ -622,6 +624,13 @@
+   }
+ 
+   if (crashpad_is_win) {
++    if (is_mingw) {
++      libs = [
++        "user32",
++        "version",
++        "winhttp",
++      ]
++    } else {
+     libs = [
+       "user32.lib",
+ 
+@@ -631,6 +640,7 @@
+ 
+       "winhttp.lib",
+     ]
++    }
+ 
+ 
+     if (current_cpu == "x86") {
+--- /dev/null
++++ b/src/3rdparty/chromium/third_party/crashpad/crashpad/util/misc/capture_context_win_mingw.cc
+@@ -0,0 +1,25 @@
++// Copyright 2026 The Crashpad Authors
++//
++// Licensed under the Apache License, Version 2.0 (the "License");
++// you may not use this file except in compliance with the License.
++// You may obtain a copy of the License at
++//
++//     http://www.apache.org/licenses/LICENSE-2.0
++//
++// Unless required by applicable law or agreed to in writing, software
++// distributed under the License is distributed on an "AS IS" BASIS,
++// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++// See the License for the specific language governing permissions and
++// limitations under the License.
++
++#include "util/misc/capture_context.h"
++
++namespace crashpad {
++
++// The MASM version cannot be assembled by GNU as; on x64 RtlCaptureContext
++// saves the full integer and XMM state.
++__attribute__((noinline)) void CaptureContext(NativeCPUContext* cpu_context) {
++  RtlCaptureContext(cpu_context);
++}
++
++}  // namespace crashpad
+--- a/src/3rdparty/chromium/third_party/protobuf/python/google/protobuf/internal/api_implementation.py
++++ b/src/3rdparty/chromium/third_party/protobuf/python/google/protobuf/internal/api_implementation.py
+@@ -45,7 +45,7 @@
+     if not mod:
+       raise ImportError(mod_name + ' import succeeded but was None')
+     return True
+-  except ImportError:
++  except (ImportError, AttributeError):  # a mismatched system upb
+     return False
+ 
+ 
+--- a/src/3rdparty/chromium/third_party/win_virtual_display/controller/BUILD.gn
++++ b/src/3rdparty/chromium/third_party/win_virtual_display/controller/BUILD.gn
+@@ -2,6 +2,11 @@
+ # Use of this source code is governed by a BSD - style license that can be
+ # found in the LICENSE file.
+ 
++# the SDK swdevice.h for MinGW; the API is in cfgmgr32
++config("mingw_swdevice") {
++  include_dirs = [ "mingw" ]
++}
++
+ static_library("controller") {
+   testonly = true
+   deps = [
+@@ -17,6 +22,10 @@
+     "ntdll.lib",
+     "onecore.lib",
+   ]
++  if (is_mingw) {
++    public_configs = [ ":mingw_swdevice" ]
++    libs += [ "cfgmgr32" ]
++  }
+ }
+ 
+ executable("display_driver_controller_executable") {
+--- /dev/null
++++ b/src/3rdparty/chromium/third_party/win_virtual_display/controller/mingw/swdevice.h
+@@ -0,0 +1,82 @@
++// Copyright 2026 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++// The software-device API from the Windows SDK; mingw-w64 has the cfgmgr32
++// exports but no header.
++
++#ifndef THIRD_PARTY_WIN_VIRTUAL_DISPLAY_CONTROLLER_MINGW_SWDEVICE_H_
++#define THIRD_PARTY_WIN_VIRTUAL_DISPLAY_CONTROLLER_MINGW_SWDEVICE_H_
++
++#include <windows.h>
++#include <devpropdef.h>
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++// devpropdef.h in mingw-w64 stops at DEVPROPKEY.
++typedef enum _DEVPROPSTORE {
++  DEVPROP_STORE_SYSTEM,
++  DEVPROP_STORE_USER
++} DEVPROPSTORE, *PDEVPROPSTORE;
++
++typedef struct _DEVPROPCOMPKEY {
++  DEVPROPKEY Key;
++  DEVPROPSTORE Store;
++  PCWSTR LocaleName;
++} DEVPROPCOMPKEY, *PDEVPROPCOMPKEY;
++
++typedef struct _DEVPROPERTY {
++  DEVPROPCOMPKEY CompKey;
++  DEVPROPTYPE Type;
++  ULONG BufferSize;
++  PVOID Buffer;
++} DEVPROPERTY, *PDEVPROPERTY;
++
++typedef enum _SW_DEVICE_CAPABILITIES {
++  SWDeviceCapabilitiesNone = 0x00000000,
++  SWDeviceCapabilitiesRemovable = 0x00000001,
++  SWDeviceCapabilitiesSilentInstall = 0x00000002,
++  SWDeviceCapabilitiesNoDisplayInUI = 0x00000004,
++  SWDeviceCapabilitiesDriverRequired = 0x00000008
++} SW_DEVICE_CAPABILITIES;
++
++typedef struct _SW_DEVICE_CREATE_INFO {
++  ULONG cbSize;
++  PCWSTR pszInstanceId;
++  PCZZWSTR pszzHardwareIds;
++  PCZZWSTR pszzCompatibleIds;
++  const GUID* pContainerId;
++  ULONG CapabilityFlags;
++  PCWSTR pszDeviceDescription;
++  PCWSTR pszDeviceLocation;
++  const SECURITY_DESCRIPTOR* pSecurityDescriptor;
++} SW_DEVICE_CREATE_INFO, *PSW_DEVICE_CREATE_INFO;
++
++DECLARE_HANDLE(HSWDEVICE);
++typedef HSWDEVICE* PHSWDEVICE;
++
++typedef VOID(WINAPI* SW_DEVICE_CREATE_CALLBACK)(HSWDEVICE hSwDevice,
++                                                HRESULT CreateResult,
++                                                PVOID pContext,
++                                                PCWSTR pszDeviceInstanceId);
++
++HRESULT WINAPI SwDeviceCreate(PCWSTR pszEnumeratorName,
++                              PCWSTR pszParentDeviceInstance,
++                              const SW_DEVICE_CREATE_INFO* pCreateInfo,
++                              ULONG cPropertyCount,
++                              const DEVPROPERTY* pProperties,
++                              SW_DEVICE_CREATE_CALLBACK pCallback,
++                              PVOID pContext,
++                              PHSWDEVICE phSwDevice);
++VOID WINAPI SwDeviceClose(HSWDEVICE hSwDevice);
++HRESULT WINAPI SwDevicePropertySet(HSWDEVICE hSwDevice,
++                                   ULONG cPropertyCount,
++                                   const DEVPROPERTY* pProperties);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif  // THIRD_PARTY_WIN_VIRTUAL_DISPLAY_CONTROLLER_MINGW_SWDEVICE_H_
+--- a/src/3rdparty/chromium/ui/base/clipboard/test/test_clipboard.cc
++++ b/src/3rdparty/chromium/ui/base/clipboard/test/test_clipboard.cc
+@@ -333,7 +333,7 @@
+ 
+ void TestClipboard::WriteText(std::string_view text) {
+   GetDefaultStore().data[ClipboardFormatType::PlainTextType()] = text;
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_QTWEBENGINE)
+   // Create a dummy entry.
+   GetDefaultStore().data[ClipboardFormatType::PlainTextAType()];
+ #endif
+--- a/src/3rdparty/chromium/ui/base/ime/dummy_input_method.cc
++++ b/src/3rdparty/chromium/ui/base/ime/dummy_input_method.cc
+@@ -23,7 +23,7 @@
+ void DummyInputMethod::OnBlur() {
+ }
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+ bool DummyInputMethod::OnUntranslatedIMEMessage(const CHROME_MSG event,
+                                                 NativeEventResult* result) {
+   return false;
+--- a/src/3rdparty/chromium/ui/base/ime/dummy_input_method.h
++++ b/src/3rdparty/chromium/ui/base/ime/dummy_input_method.h
+@@ -27,7 +27,7 @@
+   void OnFocus() override;
+   void OnBlur() override;
+ 
+-#if BUILDFLAG(IS_WIN)
++#if BUILDFLAG(IS_MSVC)
+   bool OnUntranslatedIMEMessage(const CHROME_MSG event,
+                                 NativeEventResult* result) override;
+   void OnInputLocaleChanged() override;
+--- a/src/3rdparty/chromium/ui/display/test/display_matchers.cc
++++ b/src/3rdparty/chromium/ui/display/test/display_matchers.cc
+@@ -8,7 +8,7 @@
+ 
+ namespace {
+ 
+-const float kEpsilon = 0.0001f;
++const float kRefreshRateEpsilon = 0.0001f;
+ 
+ // Matcher to check DisplayMode size and refresh rate.
+ class DisplayModeMatcher
+@@ -20,7 +20,7 @@
+   bool MatchAndExplain(const DisplayMode& mode,
+                        testing::MatchResultListener* listener) const override {
+     return mode.size() == size_ &&
+-           std::fabs(mode.refresh_rate() - refresh_rate_) < kEpsilon;
++           std::fabs(mode.refresh_rate() - refresh_rate_) < kRefreshRateEpsilon;
+   }
+ 
+   void DescribeTo(std::ostream* os) const override {

@@ -63,6 +63,19 @@ Patch 0132 restricts GoogleTest's `/wd4800` compiler option to MSVC; GCC builds
 retain the same GoogleTest sources and definitions.
 Patch 0133 supplies the documented roaming-profile flag missing from older
 MinGW headers, retaining Chromium's existing policy profile classification.
+Patch 0134 adapts the restored 140 test support to Qt's backported
+interfaces and builds it with GCC: MinGW header gaps, MSVC-only libraries,
+flags, ATL and WRL kept to MSVC, WebRTC and screen capture off as configured,
+`-municode` for windowed entry points, and `-lfoo.lib` rewritten by the link
+wrapper. Patch 0135 restores Chromium's own Windows platform layer, which
+QtWebEngineCore normally replaces: aura views, `WinWindow`, the cursor
+factory, a `ScreenWin` for the aura-only shell, resources, fonts and the
+upstream viz output devices. Where the Windows implementation needs ATL, OLE
+or Qt-changed headers it uses Chromium's generic one: in-memory clipboard and
+drag data, non-platform accessibility.
+
+Build with `NODEJS_EXECUTABLE` set, as Qt's ninja wrapper does, and run the
+shells with `/ucrt64/bin` on `PATH`.
 
 The helper preserves existing Qt security backports and MinGW port changes.
 `control-inputs.json` records every restored archive or individual file.

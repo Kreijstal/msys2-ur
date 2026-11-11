@@ -37,6 +37,16 @@
       "origin": "Local compatibility definition for missing MinGW userenv.h profile flag, preserving profile classification.",
       "reference": "https://microsoft.github.io/windows-docs-rs/doc/windows/Win32/System/GroupPolicy/constant.PT_ROAMING_PREEXISTING.html",
       "reference_value": 8
+    },
+    {
+      "file": "0134-chromium-control-test-support-mingw.patch",
+      "sha256": "8145c263ab7783afea9761a97a3a9018e5cfa476845f4ff3537170cf1e4d4997",
+      "origin": "Local fixes so content_shell builds in Qt's tree with GCC: test support adapted to Qt's backported interfaces, MinGW header gaps (crashpad minidump types, swdevice, DEVPROPERTY), MSVC-only libs/flags/ATL/WRL kept to MSVC, WebRTC and screen capture off, -municode windowed entry, -lfoo.lib rewritten by the link wrapper, protobuf tolerating a mismatched system upb."
+    },
+    {
+      "file": "0135-chromium-control-platform-layer-mingw.patch",
+      "sha256": "c2e6256beb0d27337d4cca268b51057cf0badb06d0ddfb711d7dc86db736da0d",
+      "origin": "Restores Chromium's own Windows platform layer that QtWebEngineCore normally replaces: aura content views, WinWindow, WinCursorFactory, a ScreenWin for the aura-only shell, resource bundle, pointer devices, font list, Vulkan factory, upstream viz output devices and variations. ATL/OLE/Qt-header pieces use Chromium's generic implementations (non-backed clipboard and drag data, non-platform accessibility)."
     }
   ]
 }
