@@ -43,6 +43,21 @@ def perfetto_branch(original):
                           import_line + '\nimport("//v8/system_v8/args.gni")', 1)
 
 
+def blink_branch(original):
+    # Blink's public headers include cppgc unconditionally (nogncheck). Bundled
+    # V8 is reachable from the source root; the installed SDK is not.
+    anchor = '    "//v8:v8_headers",\n  ]\n}\n'
+    if original.count(anchor) != 1:
+        raise ValueError("cannot locate blink_headers' V8 dependency")
+    result = original.replace(anchor, anchor[:-2] + '''
+  if (use_system_v8) {
+    public_deps += [ "//v8:v8_headers" ]
+  }
+}
+''', 1)
+    return 'import("//v8/system_v8/args.gni")\n' + result
+
+
 def apply(chromium):
     chromium = Path(chromium).resolve()
     v8 = chromium / "v8"
@@ -84,6 +99,8 @@ def apply(chromium):
     targets = (Path(__file__).parent / "system_v8_targets.gni").read_text()
     perfetto = chromium / "third_party/perfetto/BUILD.gn"
     perfetto_result = perfetto_branch(perfetto.read_text())
+    blink = chromium / "third_party/blink/public/BUILD.gn"
+    blink_result = blink_branch(blink.read_text()) if blink.exists() else None
     result = 'import("system_v8/args.gni")\n' + preamble + "if (use_system_v8) {\n"
     # GN imports have isolated scopes. Inline this maintained fragment so the
     # check reads V8's resolved local values, including automatic cppgc flags.
@@ -105,6 +122,8 @@ def apply(chromium):
             break
     build.write_text(result)
     perfetto.write_text(perfetto_result)
+    if blink_result is not None:
+        blink.write_text(blink_result)
 
 
 if __name__ == "__main__":

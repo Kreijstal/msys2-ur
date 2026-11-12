@@ -443,7 +443,7 @@
        sources -= [
          "dragdrop/os_exchange_data_provider_factory.cc",
          "dragdrop/os_exchange_data_provider_factory.h",
-@@ -689,10 +690,6 @@
+@@ -689,17 +690,15 @@
          "dragdrop/drag_source_win.h",
          "dragdrop/os_exchange_data_provider_win.cc",
          "dragdrop/os_exchange_data_provider_win.h",
@@ -453,6 +453,19 @@
 -        "win/win_cursor_factory.h",
        ]
      }
+ 
+-    sources -= [
+-      "pointer/touch_ui_controller.cc",
+-      "pointer/touch_ui_controller.h",
+-    ]
++    if (!is_win) {
++      sources -= [
++        "pointer/touch_ui_controller.cc",
++        "pointer/touch_ui_controller.h",
++      ]
++    }
+   }
+ }
  
 --- a/src/3rdparty/chromium/ui/base/clipboard/clipboard_non_backed.cc
 +++ b/src/3rdparty/chromium/ui/base/clipboard/clipboard_non_backed.cc

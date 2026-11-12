@@ -69,8 +69,8 @@ flags, ATL and WRL kept to MSVC, WebRTC and screen capture off as configured,
 `-municode` for windowed entry points, and `-lfoo.lib` rewritten by the link
 wrapper. Patch 0135 restores Chromium's own Windows platform layer, which
 QtWebEngineCore normally replaces: aura views, `WinWindow`, the cursor
-factory, a `ScreenWin` for the aura-only shell, resources, fonts and the
-upstream viz output devices. Where the Windows implementation needs ATL, OLE
+factory, a `ScreenWin` for the aura-only shell, the touch UI controller,
+resources, fonts and the upstream viz output devices. Where the Windows implementation needs ATL, OLE
 or Qt-changed headers it uses Chromium's generic one: in-memory clipboard and
 drag data, non-platform accessibility.
 
@@ -87,8 +87,13 @@ from base64 before their byte checksum is verified.
 
 Then configure a fresh system-V8 output with the same ABI settings, apply the
 integration and make bundled `v8/include`, `v8/src` and equivalent generated
-implementation inputs inaccessible. Retain the GN metadata. Build the system
-consumer with compilation database export and retained linker response files:
+implementation inputs inaccessible. Retain the GN metadata. Two inputs stay
+available. Blink's DevTools protocol build reads V8's `js_protocol.pdl` and its
+stable `js_protocol-1.*.json` baselines; take them from the producer's V8
+source archive. `third_party/node` must be a real directory: Node resolves a
+junction to its target, which puts TypeScript's libraries outside the source
+root. Build the system consumer with compilation database export and retained
+linker response files:
 
 ```sh
 gn gen out/system --export-compile-commands
@@ -117,6 +122,12 @@ renderer to load the package's actual V8 DLL. The tracing check requires the
 native Python `websocket-client` module. Record the resolved GN flags,
 compiler/link evidence and these results; passing fixture tests alone is
 insufficient.
+
+`evidence-20261112/` records this acceptance for the Qt 6.11.2 control against
+`mingw-w64-ucrt-x86_64-v8` 14.0.365.10-1: both GN argument files, the audit,
+both web test results, GC trace event counts and each renderer's loaded
+modules. Both renderers of the system shell load the package's `libv8.dll`
+(identical SHA-256).
 
 `-k0` lets independent build actions finish when a source fails, collecting
 compiler errors for a repair batch. Acceptance still requires a successful

@@ -43,6 +43,9 @@ consumer graph. The bundled branch keeps the original runtime target.
 The gate also compares Perfetto's public headers and tracks them as GN
 regeneration inputs. It ignores line endings and the SDK's specific registry
 export-linkage fix; other header differences fail generation.
+Blink's public headers include cppgc headers unconditionally. Bundled V8
+reaches them through the source root, so in system mode `blink_headers`
+re-exports `//v8:v8_headers`. The bundled graph is unchanged.
 The `perfetto/test/` testonly helper target is outside this runtime ABI check.
 Its headers are restored separately for the `content_shell` harness.
 Consumer-specific context snapshots remain consumer-generated. This initial
