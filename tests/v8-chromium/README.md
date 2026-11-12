@@ -75,7 +75,9 @@ or Qt-changed headers it uses Chromium's generic one: in-memory clipboard and
 drag data, non-platform accessibility.
 
 Build with `NODEJS_EXECUTABLE` set, as Qt's ninja wrapper does, and run the
-shells with `/ucrt64/bin` on `PATH`.
+shells with `/ucrt64/bin` on `PATH`. Run GN and ninja only in a UCRT64 login
+shell. Elsewhere pkgconf reports `ucrt64/bin/../include` paths, so a
+regeneration changes every pkg-config consumer's flags and rebuilds them.
 
 The helper preserves existing Qt security backports and MinGW port changes.
 `control-inputs.json` records every restored archive or individual file.
