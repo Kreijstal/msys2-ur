@@ -3,8 +3,8 @@
 _realname=qt6-webengine
 pkgbase=mingw-w64-${_realname}-thirdparty
 pkgname=("${MINGW_PACKAGE_PREFIX}-${_realname}-thirdparty")
-pkgver=6.11.1
-pkgrel=1
+pkgver=6.11.2
+pkgrel=2
 pkgdesc='Private third-party static archives for Qt6 WebEngine (mingw-w64)'
 arch=(any)
 mingw_arch=('ucrt64' 'clang64')
@@ -87,15 +87,24 @@ source=("https://download.qt.io/official_releases/qt/${pkgver%.*}/${pkgver}/subm
         0201-gn-mingw-fixes.patch
         0202-gn-short-long-target-ninja-paths.patch
         0113-chromium-mingw-followup.patch
-        0114-chromium-abseil-policy-functions-mingw.patch
-        0115-chromium-crashpad-mingw-arm64-object.patch
-        0116-chromium-delegated-ink-mingw.patch
-        0117-chromium-thirdparty-build-fixes.patch
+        0119-chromium-histogram-script-path.patch
+        0120-chromium-crashpad-mingw-arm64-object.patch
         0121-chromium-nasm-native-paths.patch
-        0122-chromium-shim-headers-subst-root.patch
-        0123-chromium-xnnpack-long-targets.patch
-        thirdparty-extra-targets.list)
-sha256sums=('679c66ccc6c158fc215e9c58ef160331ecd29974232e345c05161889f8667083'
+        0122-chromium-delegated-ink-mingw.patch
+        0123-chromium-dawn-tint-msvc-flags.patch
+        0124-chromium-abseil-policy-functions-mingw.patch
+        0125-chromium-d3d12-video-device-mingw.patch
+        0126-chromium-mingw-link-followup.patch
+        0116-chromium-system-flatc-tool.patch
+        0117-chromium-system-protobuf-libs.patch
+        0118-chromium-system-jsoncpp-lib.patch
+        0127-chromium-shim-headers-subst-root.patch
+        0128-chromium-xnnpack-long-targets.patch
+        0130-chromium-no-protected-memory-mingw.patch
+        thirdparty-extra-targets.list
+        QtWebEngineNinjaGraph.py
+        QtRepairWebEngineNinja.py)
+sha256sums=('6101c1aa00ff933d1b65ee5d167f76e8d71b9ac5b378b0111277723ebda7c163'
             'c59e77c033c1f58f048b81e16a5f9a47f459e4e302b0da9125f73b20f9ff1dff'
             '16221ed5a9414f5c965cd8a5efa6d9ccd2aec88b3d5ef5f8e811546ae7a39927'
             'c9e9ff822ba4c7e76624b655e78a3018989fef9b667b2cc246fe34e1f594976b'
@@ -110,7 +119,7 @@ sha256sums=('679c66ccc6c158fc215e9c58ef160331ecd29974232e345c05161889f8667083'
             '478c1c99a02f075ead86ab93b02e34220b1e4b7a48965aab7ecc21b5b62a6199'
             'bdea737aab8ae9a5de35a09b625bd5cd7916e48634407f14a81c44f8f311c4ea'
             'f9317cb7e0563e84d2d949ad2145e5919a2198cae478a6e23f64522fe74dd6cb'
-            '710e337227b8c94bb14896b85156e9f39e3611aae4c9cb72528d78e5b8df6302'
+            '2b076a478341aa3341e03c21587e8f3ec6ccebb33753bb8002fb8cba74b08ca1'
             '4c374d67ee2bea7ab695282a8dd124fe87b0e6436da155e07278cc291c2bbb96'
             '0f5e7b7550b7c01df1e19691cc97631e4823902391eb052a7bd26ac11c69496b'
             '1bacf19c987285dd103603ed701f574ea7f1aead9e842e75891801dddad181c9'
@@ -122,18 +131,27 @@ sha256sums=('679c66ccc6c158fc215e9c58ef160331ecd29974232e345c05161889f8667083'
             '746cda436f132b6bd0950333690ea720326763a59ba1c579a205deb73887d691'
             '511c6b3e059ae086e18c43885793119be5e5d14d6037464c8bcd22f46d63c281'
             '263759790b3c3d7a6fcd2332b38226d7b244dff8ab8410fd471a3f5f7b096db3'
-            '2476e5b9605e576370d1e278a5a4bd076f6d6ade26e9aac81a4568b6e99c2810'
+            'f826ee5636ed1cd24c39989236e942959bb3b3e45e7f007eaef54e5f50b88a25'
             '2b346ec92699b20458f3df5733f8792ef75ea824d24782ded211c0ac0258a249'
             'a05bb6488f02e89899a55873f6982c3cfc8e9ecbf9154ab722738d55cd5c8acb'
             'f63a316686ab895a892feee12379fbbc26497bc6b3f141d86f69c6bf06173780'
-            '58b53bb8e67a42b25c4dc906e3bd7a03384cc9622b65b804c07ead8e6460462a'
+            '1424fd1dbf826d0e3c993ad177acb3a23965bf26cd6877dc0c07e1ec6e4cb478'
             'a75c7fe64a861a71ea8c21aa41c6fa89c4e393cebc2af8cc3716f357a6ff794c'
-            '098583d991c892281c285cc1f2437595b8f0746bd92f0ecd34e91d3da3e708d9'
-            '6da73206b7e3a87ce109a4f45602b9438293ae3ff2162077b8122da047c8b983'
             'a22ba841a451f6bf31c0018228987d439eda4028de36571a66cda74c0e9fe3c3'
+            '098583d991c892281c285cc1f2437595b8f0746bd92f0ecd34e91d3da3e708d9'
+            'fdd461633de4116b20b51d3271f0467e97ffe9fa2550e4e385b653e483e24729'
+            '58b53bb8e67a42b25c4dc906e3bd7a03384cc9622b65b804c07ead8e6460462a'
+            'fcdb3e8692154d408f53625fbaabfa23051be4f1c38eca5c921e3bdeb57d3588'
+            'b5fb929bf6ab66c29982a3d6794d12bcad7a5e3988547fa90e37fc9635856263'
+            '27c5e5633cbd44bdc67f959da9626a3f747336acdacbcef525e4e7c9d874de6e'
+            '85d4e32c37184cf81ce7bd709d7e5664371c00500c7399f5aa52cfaa414c72bb'
+            'ec1a322985326ac80d19b36c34ba95a4794d7623ae6c6780f937e56f130e4405'
             'cc3baeafa575be49127df49ffb331119f3475c638ff209f435be2f554aa992f1'
             'ac9b5459e253ed3ae1682eadd724d0e97245780a2b6e221c6df7971b249800eb'
-            '5aa1cb50799d5c960373c871cc54523d8a793116da11fd99b7adfb049de902a8')
+            '11c26bdfeeae82f75d3718ff4bcb4c7078021de8b2ffc0a77c77ca066439db48'
+            '5aa1cb50799d5c960373c871cc54523d8a793116da11fd99b7adfb049de902a8'
+            '7f299556a4a2c018221edf3dc5f7429746c0515d0cb09131ad4662a26442e2d0'
+            '83da9ac2e55eb17be5e83518cc1500ef6734569ba5207c307b6c4f42e43542f7')
 
 
 apply_patch_with_msg() {
@@ -219,14 +237,26 @@ prepare() {
     0111-chromium-third-party-others.patch \
     0201-gn-mingw-fixes.patch \
     0202-gn-short-long-target-ninja-paths.patch \
-    0113-chromium-mingw-followup.patch \
-    0114-chromium-abseil-policy-functions-mingw.patch \
-    0115-chromium-crashpad-mingw-arm64-object.patch \
-    0116-chromium-delegated-ink-mingw.patch \
-    0117-chromium-thirdparty-build-fixes.patch \
+    0113-chromium-mingw-followup.patch
+
+  apply_patch_with_msg \
+    0119-chromium-histogram-script-path.patch \
+    0120-chromium-crashpad-mingw-arm64-object.patch \
     0121-chromium-nasm-native-paths.patch \
-    0122-chromium-shim-headers-subst-root.patch \
-    0123-chromium-xnnpack-long-targets.patch
+    0122-chromium-delegated-ink-mingw.patch \
+    0123-chromium-dawn-tint-msvc-flags.patch \
+    0124-chromium-abseil-policy-functions-mingw.patch \
+    0125-chromium-d3d12-video-device-mingw.patch \
+    0126-chromium-mingw-link-followup.patch \
+    0116-chromium-system-flatc-tool.patch \
+    0117-chromium-system-protobuf-libs.patch \
+    0118-chromium-system-jsoncpp-lib.patch \
+    0130-chromium-no-protected-memory-mingw.patch
+
+  # Targets only this package builds.
+  apply_patch_with_msg \
+    0127-chromium-shim-headers-subst-root.patch \
+    0128-chromium-xnnpack-long-targets.patch
 }
 
 build() {
@@ -291,6 +321,15 @@ build() {
   local _ninja_dir_mixed="$(cygpath -m "${_ninja_dir_real}")"
   export CHROMIUM_SOURCE_TREE_ROOT="$(cygpath -m "${srcdir}/${_pkgfn}/src/3rdparty/chromium")"
   [[ -f "${_ninja_dir}/QtWebEngineCore_archives.rsp" ]]
+
+  # The generated graph does not order mojom actions behind the sibling
+  # metadata they read, nor compiles behind the generated headers they include.
+  # Without this, build_ninja_batch() drops whole 64-target batches into its
+  # serial one-ninja-per-target fallback, and each of those reloads the entire
+  # manifest set.  Must run before the first compile.
+  python "${srcdir}/QtRepairWebEngineNinja.py" \
+    "${_subst_drive}/build-${MSYSTEM}/src/core/RelWithDebInfo/AMD64"
+
   local _private_dir="${srcdir}/qtwebengine-thirdparty-private"
   local _private_bin="${_private_dir}/bin"
   local _ar="${AR:-ar}"
@@ -300,7 +339,17 @@ build() {
 
   # What this package is responsible for *building*. Everything else in the
   # link lists belongs to the consumer.
+  #
+  # blink/renderer is the single most expensive component in the tree and is
+  # what pushed this job past the 6h CI ceiling, so it is handed to the
+  # consumer. The carve-out has to stay inside the third-party scope: widening
+  # it to all of /obj/ pulls in content/, which depends on blink/renderer and
+  # so drags it back in transitively -- costing the first-party code without
+  # saving Blink. blink/common and blink/public stay here; they sit *below*
+  # Chromium, not above it. Generated Blink headers also stay, via
+  # thirdparty-extra-targets.list, because the consumer rsyncs gen/*.h.
   local _private_obj_re='/obj/(.*third_party|net/third_party|skia)/'
+  local _consumer_obj_re='/obj/third_party/blink/renderer/'
 
   response_file_to_lines "${_ninja_dir}/QtWebEngineCore_archives.rsp" \
     | grep -E '\.a$' \
@@ -312,9 +361,11 @@ build() {
     > "${_private_dir}/all-objects.list"
 
   grep -E "${_private_obj_re}" "${_private_dir}/all-archives.list" \
+    | grep -Ev "${_consumer_obj_re}" \
     | sed "s#^${_ninja_dir_mixed}/##" \
     > "${_private_dir}/thirdparty-archive-targets.list"
   grep -E "${_private_obj_re}" "${_private_dir}/all-objects.list" \
+    | grep -Ev "${_consumer_obj_re}" \
     | sed "s#^${_ninja_dir_mixed}/##" \
     > "${_private_dir}/thirdparty-object-targets.list"
 
@@ -330,6 +381,25 @@ build() {
     install -Dm644 "${_pkgfn}/src/3rdparty/chromium/build/precompile.h" \
       "${_ninja_dir}/${_pch_target%.gch}"
   done < "${_private_dir}/thirdparty-pch-targets.list"
+
+  # Mojom splits message-id headers into their own __generate_message_ids
+  # target.  This package never compiles the generated .cc that includes them,
+  # so it only generates the ones some third-party target happens to pull in --
+  # and the consumer, which does compile those .cc files, has no edge left to
+  # regenerate the rest.  Generate all of them here; they are cheap python
+  # actions and the *.h already ships.
+  # Test-only mojoms are listed by `-t targets all` but their inputs are not in
+  # this build graph, so every batch containing one aborts and falls back to one
+  # ninja per target -- 337 no-op invocations at ~7s each, 40 min of a 341 min
+  # run.  The consumer never compiles them either; drop them up front.
+  ninja -C "${_ninja_dir}" -t targets all \
+    | sed -n 's/: [^ ]*$//p' \
+    | grep -E -- '-shared-message-ids\.h$' \
+    | grep -v -- '\.test-mojom-' \
+    | sort -u \
+    > "${_private_dir}/thirdparty-message-id-targets.list"
+  build_ninja_targets_from_list "${_ninja_dir}" \
+    "${_private_dir}/thirdparty-message-id-targets.list"
 
   build_ninja_targets_from_list "${_ninja_dir}" \
     "${_private_dir}/thirdparty-extra-targets.list"
@@ -457,10 +527,21 @@ package_qt6-webengine-thirdparty() {
   install -d "${_private_chromium_dst}"
   install -Dm644 "${_private_chromium_src}/build/config/qtwebengine_private_paths.gni" \
     "${_private_chromium_dst}/build/config/qtwebengine_private_paths.gni"
+  # Generated sources are not only headers. The WebUI toolchain consumes
+  # .json/.js/.ts out of gen/ (tsconfig_library.json, lit.js, protocol.json),
+  # and dropping them here left the consumer with an empty directory skeleton
+  # -- '*/' ships the dirs, '*' then excluded every file in them.
   rsync -a \
     --include='*/' \
     --include='*.h' \
     --include='*.grd' \
+    --include='*.grdp' \
+    --include='*.html' \
+    --include='*.css' \
+    --include='*.json' \
+    --include='*.js' \
+    --include='*.ts' \
+    --include='*.pdl' \
     --include='third_party/devtools-frontend/***' \
     --exclude='*' \
     "${srcdir}/build-${MSYSTEM}/src/core/RelWithDebInfo/AMD64/gen/" \
@@ -486,6 +567,8 @@ package_qt6-webengine-thirdparty() {
     --include='*.c' --include='*.cc' --include='*.cpp' --include='*.cxx' \
     --include='*.h' --include='*.hh' --include='*.hxx' --include='*.hpp' --include='*.inc' \
     --include='*.py' --include='*.pydeps' \
+    --include='*.d.ts' \
+    --include='*.conf' --include='*.asciipb' \
     --include='*.json' --include='*.json5' --include='*.csv' --include='*.gperf' --include='*.mojom' --include='*.pdl' --include='*.pidl' --include='*.proto' \
     --include='*.css' --include='*.html' --include='*.js' --include='*.flac' --include='*.wav' \
     --include='*.grd' --include='*.grdp' --include='*.pak' \
@@ -538,10 +621,6 @@ package_qt6-webengine-thirdparty() {
     "${_private_chromium_dst}/third_party/d3/src/d3.min.js"
   install -Dm644 "${_private_chromium_src}/third_party/d3/src/d3.d.ts" \
     "${_private_chromium_dst}/third_party/d3/src/d3.d.ts"
-  rm -rf "${_private_chromium_dst}/third_party/flatbuffers/src/include/flatbuffers"
-  install -d "${_private_chromium_dst}/third_party/flatbuffers/src/include"
-  cp -a "${MINGW_PREFIX}/include/flatbuffers" \
-    "${_private_chromium_dst}/third_party/flatbuffers/src/include/"
   cp -a "${_private_chromium_src}/third_party/polymer/v3_0" \
     "${_private_chromium_dst}/third_party/polymer/"
   cp -a "${_private_chromium_src}/third_party/lit/v3_0" \
