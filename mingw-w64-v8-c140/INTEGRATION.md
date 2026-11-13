@@ -7,8 +7,13 @@ when its source version and resolved engine configuration match the SDK.
 It does not claim compatibility across different V8 revisions or ABIs.
 
 ```sh
-python "${MINGW_PREFIX}/share/v8-c140/integration/apply.py" /path/to/chromium
+python "${MINGW_PREFIX}/share/v8-c140/integration/apply.py" --hide-bundled /path/to/chromium
 ```
+
+`--hide-bundled` then deletes V8's sources and headers from the tree, keeping
+only GN files and the DevTools protocol schema Blink reads. Chromium includes
+`v8/include` from its source root, so packages must use it: otherwise code
+compiles against the bundled headers while linking the SDK's DLL.
 
 `apply.py` retains the bundled implementation inside the false branch and adds
 `use_system_v8` (default false). It inlines the maintained GN fragment because

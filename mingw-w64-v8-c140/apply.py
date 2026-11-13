@@ -126,8 +126,32 @@ def apply(chromium):
         blink.write_text(blink_result)
 
 
+def hide_bundled(chromium):
+    """Remove bundled V8 sources and headers, keeping only what GN reads.
+
+    Consumers must compile against the SDK's headers: Chromium sources include
+    v8/include from the source root, which would otherwise win.
+    """
+    v8 = Path(chromium).resolve() / "v8"
+    for path in sorted(v8.rglob("*"), reverse=True):
+        relative = path.relative_to(v8).as_posix()
+        if path.is_dir():
+            if not any(path.iterdir()):
+                path.rmdir()
+            continue
+        keep = (path.suffix in (".gn", ".gni") or relative.startswith("system_v8/")
+                # Blink's DevTools protocol build reads V8's schema and baselines.
+                or (relative.startswith("include/js_protocol")))
+        if not keep:
+            path.unlink()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("chromium", type=Path)
+    parser.add_argument("--hide-bundled", action="store_true",
+                        help="also remove bundled V8 sources and headers")
     args = parser.parse_args()
     apply(args.chromium)
+    if args.hide_bundled:
+        hide_bundled(args.chromium)

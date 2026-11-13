@@ -127,6 +127,22 @@ group("implementation_only") {
         self.assertIn("libv8-c140.dll", ninja)
         self.assertIn("libv8_libperfetto-c140.dll", ninja)
 
+    def test_hidden_bundled_engine_still_generates(self):
+        for relative in ("include/v8.h", "include/js_protocol.pdl", "src/api/api.cc"):
+            (self.root / "v8" / relative).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / "v8" / relative).write_text("x\n")
+        self.installer.hide_bundled(self.root)
+        remaining = sorted(p.relative_to(self.root / "v8").as_posix()
+                           for p in (self.root / "v8").rglob("*") if p.is_file())
+        self.assertNotIn("include/v8.h", remaining)
+        self.assertNotIn("include/v8-version.h", remaining)
+        self.assertNotIn("src/api/api.cc", remaining)
+        self.assertIn("include/js_protocol.pdl", remaining)
+        self.assertTrue(all(p.endswith((".gn", ".gni")) or p.startswith(("system_v8/", "include/js_protocol"))
+                            for p in remaining), remaining)
+        result = self.generate()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
     def test_bundled_branch_still_generates_without_sdk(self):
         (self.root / "BUILD.gn").write_text('group("all") { deps = [ "//v8:v8_snapshot", "//third_party/perfetto:libperfetto" ] }\n')
         result = subprocess.run(["gn", "gen", "out-bundled"], cwd=self.root, text=True,
