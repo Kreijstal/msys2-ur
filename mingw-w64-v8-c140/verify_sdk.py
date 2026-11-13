@@ -44,7 +44,7 @@ def verify_perfetto_headers(sdk_include, consumer_include):
 def verify(manifest_path, expected, check_hashes=False):
     manifest_path = Path(manifest_path).resolve()
     manifest = read(manifest_path)
-    if manifest.get("schema") != 1:
+    if manifest.get("schema") != 2:
         raise ValueError("unsupported V8 SDK manifest schema")
     prefix = manifest_path.parent.parent.parent
     sdk_path = (prefix / manifest["sdk"]).resolve()
@@ -87,19 +87,23 @@ def verify(manifest_path, expected, check_hashes=False):
                 actual_hash = hashlib.file_digest(stream, "sha256").hexdigest()
             if actual_hash != wanted_hash:
                 raise ValueError(f"V8 SDK checksum mismatch: {relative}")
-    required = [f"lib/lib{name}.dll.a" for name in ("v8", "v8_libbase", "v8_libplatform")]
-    required += [f"bin/lib{name}.dll" for name in ("v8", "v8_libbase", "v8_libplatform")]
-    required += ["lib/libv8_monolith.a", "share/v8/static-include/perfetto_build_flags.h"]
+    # Paths come from the manifest; its slot keeps each Chromium generation apart.
+    share = f"share/v8-{manifest['slot']}"
+    names = ["v8", "v8_libbase", "v8_libplatform"]
     if actual_flags.get("v8_use_perfetto"):
-        required += ["lib/libv8_libperfetto.dll.a", "bin/libv8_libperfetto.dll"]
-        for group, relative in (("libraries", "lib/libv8_libperfetto.dll.a"),
-                                ("dlls", "bin/libv8_libperfetto.dll")):
-            if manifest[group].get("v8_libperfetto") != relative:
-                raise ValueError("V8 SDK is missing its shared Perfetto runtime interface")
-    required += [f"bin/{name}.exe" for name in ("d8", "torque", "torque-language-server", "mksnapshot")]
-    required += ["share/v8/chromium-sdk/v8/include/v8.h",
-                 "share/v8/chromium-sdk/v8/include/cppgc/heap.h",
-                 "share/v8/chromium-sdk/v8/src/heap/base/stack.h"]
+        names.append("v8_libperfetto")
+    for group in ("libraries", "dlls"):
+        missing = [name for name in names if name not in manifest[group]]
+        if missing:
+            raise ValueError(f"V8 SDK {group} missing: {', '.join(missing)}")
+    tools = [name for name in ("d8", "torque", "torque-language-server", "mksnapshot")
+             if name not in manifest["tools"]]
+    if tools:
+        raise ValueError(f"V8 SDK tools missing: {', '.join(tools)}")
+    required = [f"lib/v8-{manifest['slot']}/libv8_monolith.a",
+                f"{share}/static-include/perfetto_build_flags.h"]
+    required += [f"{manifest['sdk']}/{relative}" for relative in
+                 ("v8/include/v8.h", "v8/include/cppgc/heap.h", "v8/src/heap/base/stack.h")]
     for relative in required:
         if relative not in manifest["sha256"]:
             raise ValueError(f"V8 SDK payload missing from manifest: {relative}")
@@ -132,14 +136,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest")
     parser.add_argument("--pkg-config", default="pkg-config")
+    parser.add_argument("--module", default="v8-c140")
     parser.add_argument("--expected", required=True, type=Path)
     parser.add_argument("--check-hashes", action="store_true")
     args = parser.parse_args()
     manifest = args.manifest
     if not manifest:
-        manifest = subprocess.check_output([args.pkg_config, "--variable=manifest", "v8"], text=True).strip()
+        manifest = subprocess.check_output([args.pkg_config, "--variable=manifest", args.module], text=True).strip()
         if not manifest:
-            raise ValueError("pkg-config v8 does not expose a Chromium SDK manifest")
+            raise ValueError(f"pkg-config {args.module} does not expose a Chromium SDK manifest")
     expected = read(args.expected)
     active_runtime = os.environ.get("MSYSTEM", "").lower()
     if active_runtime and active_runtime != expected["runtime"]:

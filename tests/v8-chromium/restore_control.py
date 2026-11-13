@@ -10,7 +10,7 @@ import shutil
 import sys
 import urllib.request
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "mingw-w64-v8"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "mingw-w64-v8-c140"))
 from archive_identity import verify
 
 

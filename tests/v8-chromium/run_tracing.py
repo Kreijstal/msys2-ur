@@ -121,16 +121,17 @@ def exercise(executable, name, evidence, manifest):
                 if not renderer_modules:
                     raise ValueError(f"{name}: no renderer process")
                 if manifest:
-                    wanted = manifest["sha256"]["bin/libv8.dll"]
+                    wanted = manifest["sha256"][manifest["dlls"]["v8"]]
+                    v8_dll = Path(manifest["dlls"]["v8"]).name.lower()
                     for pid, modules in renderer_modules.items():
-                        dll = modules.get("libv8.dll")
-                        if not dll or Path(dll.replace("\\", "/")).resolve().as_posix().casefold() != (executable.parent / "libv8.dll").resolve().as_posix().casefold():
+                        dll = modules.get(v8_dll)
+                        if not dll or Path(dll.replace("\\", "/")).resolve().as_posix().casefold() != (executable.parent / v8_dll).resolve().as_posix().casefold():
                             raise ValueError(f"{name}: renderer {pid} loaded the wrong V8 DLL: {dll}")
                         with Path(dll.replace("\\", "/")).open("rb") as stream:
                             if hashlib.file_digest(stream, "sha256").hexdigest() != wanted:
                                 raise ValueError("loaded V8 DLL differs from package manifest")
                 else:
-                    if any("libv8.dll" in modules for modules in renderer_modules.values()):
+                    if any(module.startswith("libv8") for modules in renderer_modules.values() for module in modules):
                         raise ValueError("bundled control unexpectedly loaded an external V8 DLL")
                 browser.call("Tracing.end")
                 completion = browser.wait("Tracing.tracingComplete")

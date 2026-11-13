@@ -2,13 +2,15 @@
 # Contributor: Raed Rizqie <raed.rizqie@gmail.com>
 
 _realname=v8
-pkgbase=mingw-w64-${_realname}
-pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}"
+# Chromium generation this engine serves; names its DLLs and directories.
+_slot=c140
+pkgbase=mingw-w64-${_realname}-${_slot}
+pkgname="${MINGW_PACKAGE_PREFIX}-${_realname}-${_slot}"
 pkgver=14.0.365.10
 _v8_revision=b7ed978e41b4bac7802b206404d0e2f3d09f31ac
 _srcname=v8-${_v8_revision}
 pkgrel=1
-pkgdesc="Fast and modern Javascript engine (mingw-w64)"
+pkgdesc="V8 for Chromium 140 consumers: Chromium, Electron and Qt WebEngine (mingw-w64)"
 arch=('any')
 # Preserve the content hashes recorded in the SDK manifest.
 options=('!strip')
@@ -68,6 +70,12 @@ source=("https://download.qt.io/official_releases/qt/6.11/${_qtver}/submodules/$
         "024-export-startup-blob.patch"
         "025-chromium-abseil-compat.patch"
         "026-perfetto-category-registry-linkage.patch"
+        "027-component-output-suffix.patch"
+        "028-electron-microtask-policy-per-context.patch"
+        "apply.py"
+        "verify_sdk.py"
+        "system_v8_targets.gni"
+        "INTEGRATION.md"
         "icu.gn"
         "zlib.gn"
         "sdk.py"
@@ -118,9 +126,15 @@ sha256sums=('6101c1aa00ff933d1b65ee5d167f76e8d71b9ac5b378b0111277723ebda7c163'
             'd51676c66f6571865cb47e8ded0cbcfc6548e7f12513d1ba451abc6fce9a75dd'
             '3e4fcedd85cfa3fe3a61c3cbf222aef8a1863239c33b34a0f9ba6fa4bf4fd650'
             '2befd9d3203939d145e173030bccc7426383fca66a5eb104f1ec69549ffff99b'
+            '4c1453996fede1b6c69412a1e2b86afb4ca45e362f4d097bcd3b88deaa2790f5'
+            '4f35bf04f1ea75363280bac260e8b0d612302dab8a5cb9b61c2867e1935050ed'
+            '231d0168d239e2a47137fd0579814e925ea468464ea9a75d3ffd66158ff9dff0'
+            'b5de56167d5bd4839c60957a23e3c628828f27f213cd0d5cc4636b958e457c64'
+            'eda9c82594f2f482fb379b5b6788685c53df043f70640106a83a7f8828caee8b'
+            '6f3db571602e054111dda19d0fc8e2e7569c0192a0cfe50872c077d7e2f6bb39'
             'e1bc88af48143f29f5805b8ac5d77addef1b09318d1f5f127a9281872c00303b'
             '7e1e39a3dc69632f7bf9182c92405186ce709aca921cf0abefadb6fa8b825510'
-            'f7422541021acab72f40c3f1dcc55957ae15bf04dbde1b250347f0851eaf3671'
+            'f634597f0f5cd63262c94045b60d163c6c4640dba7805b6523abe7019f687184'
             '890b4feecf1301a70215582623f22d66b8c29038b10305af94675792f87b0983'
             '01f012e082156955403634eaa0d89e0b4edfcbcdf2f20bce7a5ae347aa1c0032'
             '134de82cbdd93f3298288082e541622cc4a22c5f73ac51c534caebbe3c8cc031'
@@ -142,6 +156,7 @@ prepare() {
   cd "${srcdir}"/build
   patch -p1 -i "${srcdir}"/001-add-mingw-toolchain.patch
   patch -p1 -i "${srcdir}/021-standalone-qt-args.patch"
+  patch -p1 -i "${srcdir}/027-component-output-suffix.patch"
   python "${srcdir}"/build/util/lastchange.py -o "${srcdir}"/build/util/LASTCHANGE
   echo "build_with_chromium = false" > "${srcdir}/build/config/gclient_args.gni"
 
@@ -177,7 +192,8 @@ prepare() {
     022-perfetto-protobuf-generators.patch \
     023-gn-stamp-files.patch \
     024-export-startup-blob.patch \
-    026-perfetto-category-registry-linkage.patch
+    026-perfetto-category-registry-linkage.patch \
+    028-electron-microtask-policy-per-context.patch
 
 
 }
@@ -219,7 +235,7 @@ build() {
     _gn_args="${_gn_args/is_official_build=true/is_official_build=false}"
   fi
 
-  gn gen out/shared --threads=1 --fail-on-unused-args --args="${_gn_args} is_component_build=true"
+  gn gen out/shared --threads=1 --fail-on-unused-args --args="${_gn_args} is_component_build=true component_output_suffix=\"-${_slot}\""
   ninja -j"${V8_BUILD_JOBS:-4}" -C out/shared v8 d8 torque torque-language-server mksnapshot v8_generate_features_json v8_sdk_config
   gn args out/shared --list --json > out/shared/resolved-args.json
   gn desc out/shared //:v8 --format=json > out/shared/interface.json
@@ -238,6 +254,9 @@ package() {
   cd "${srcdir}/${_srcname}"
   python "${srcdir}/sdk.py" install --source . --shared out/shared --static out/static \
     --dest "$(cygpath -m "${pkgdir}${MINGW_PREFIX}")" --version "${pkgver}" \
-    --revision "${_v8_revision}" --runtime ucrt64 --vendor-sha256 "${sha256sums[0]}"
-  install -Dm644 LICENSE* -t "${pkgdir}${MINGW_PREFIX}/share/licenses/v8"
+    --revision "${_v8_revision}" --runtime ucrt64 --vendor-sha256 "${sha256sums[0]}" --slot "${_slot}"
+  install -Dm644 LICENSE* -t "${pkgdir}${MINGW_PREFIX}/share/licenses/${_realname}-${_slot}"
+  # Consumer GN integration for this SDK: Chromium, Electron and Qt WebEngine.
+  install -Dm644 "${srcdir}"/{apply.py,verify_sdk.py,system_v8_targets.gni,INTEGRATION.md} \
+    -t "${pkgdir}${MINGW_PREFIX}/share/v8-${_slot}/integration"
 }

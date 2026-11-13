@@ -6,8 +6,8 @@ Run the configuration gate tests without building the engine:
 python tests/v8-chromium/test_sdk.py -v
 python tests/v8-chromium/test_gn_gate.py -v
 python tests/v8-chromium/test_link_evidence.py -v
-gn format --dry-run chromium-patches/v8/system_v8_targets.gni
-bash -n mingw-w64-v8/PKGBUILD
+gn format --dry-run mingw-w64-v8-c140/system_v8_targets.gni
+bash -n mingw-w64-v8-c140/PKGBUILD
 ```
 
 The GN tests use clearly identified temporary fixtures, not binary validation.
@@ -102,14 +102,14 @@ gn gen out/system --export-compile-commands
 ninja -C out/system -d keeprsp -k0 content_shell
 python tests/v8-chromium/audit_build.py --chromium /path/to/chromium \
   --out /path/to/chromium/out/system \
-  --manifest E:/msys64/ucrt64/share/v8/build-manifest.json
+  --manifest E:/msys64/ucrt64/share/v8-c140/build-manifest.json
 python tests/v8-chromium/run_shell.py \
   --bundled /path/to/out/bundled/content_shell.exe \
   --system /path/to/out/system/content_shell.exe --evidence /path/to/evidence
 python tests/v8-chromium/run_tracing.py \
   --bundled /path/to/out/bundled/content_shell.exe \
   --system /path/to/out/system/content_shell.exe \
-  --manifest E:/msys64/ucrt64/share/v8/build-manifest.json \
+  --manifest E:/msys64/ucrt64/share/v8-c140/build-manifest.json \
   --evidence /path/to/evidence
 ```
 

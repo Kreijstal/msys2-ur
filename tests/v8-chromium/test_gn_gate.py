@@ -27,7 +27,7 @@ class GNGate(unittest.TestCase):
         (self.root / "v8/include").mkdir(parents=True)
         (self.root / "build").mkdir()
         self.flags = re.findall(r'^\+      (\w+) = \1$',
-                                (ROOT / "mingw-w64-v8/018-sdk-interface.patch").read_text(), re.M)
+                                (ROOT / "mingw-w64-v8-c140/018-sdk-interface.patch").read_text(), re.M)
         values = {key: False for key in self.flags}
         values.update(target_os="win", target_cpu="x64", v8_target_cpu="x64", v8_use_perfetto=True)
         self.fixture.manifest["private_defines"] = ["NDEBUG"]
@@ -83,7 +83,7 @@ group("implementation_only") {
         perfetto = self.root / "third_party/perfetto"
         for directory in ("gn", "src/tracing/core"):
             (perfetto / directory).mkdir(parents=True)
-        shutil.copytree(self.fixture.prefix / "share/v8/chromium-sdk/v8/third_party/perfetto/include",
+        shutil.copytree(self.fixture.prefix / "share/v8-c140/chromium-sdk/v8/third_party/perfetto/include",
                         perfetto / "include")
         (perfetto / "gn/perfetto.gni").write_text('# Tracing graph fixture only.\n')
         (perfetto / "gn/BUILD.gn").write_text('config("public_config") {}\n')
@@ -103,7 +103,7 @@ group("implementation_only") {
   # TODO(altimin): fixture of the following unrelated target.
 ''')
         (self.root / "BUILD.gn").write_text('group("all") { deps = [ "//v8:v8", "//v8:cppgc", "//v8:d8", "//third_party/perfetto:libperfetto" ] }\n')
-        spec = importlib.util.spec_from_file_location("apply_system_v8", ROOT / "chromium-patches/v8/apply.py")
+        spec = importlib.util.spec_from_file_location("apply_system_v8", ROOT / "mingw-w64-v8-c140/apply.py")
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         self.installer = module
@@ -124,8 +124,8 @@ group("implementation_only") {
         self.assertNotIn("forbidden-bundled-engine.cc", ninja)
         self.assertNotIn("forbidden-early-engine.cc", ninja)
         self.assertNotIn("forbidden-bundled-tracing.cc", ninja)
-        self.assertIn("libv8.dll", ninja)
-        self.assertIn("libv8_libperfetto.dll", ninja)
+        self.assertIn("libv8-c140.dll", ninja)
+        self.assertIn("libv8_libperfetto-c140.dll", ninja)
 
     def test_bundled_branch_still_generates_without_sdk(self):
         (self.root / "BUILD.gn").write_text('group("all") { deps = [ "//v8:v8_snapshot", "//third_party/perfetto:libperfetto" ] }\n')
@@ -198,7 +198,7 @@ group("implementation_only") {
 
     def test_gn_allows_registry_export_linkage_adjustment(self):
         relative = "perfetto/tracing/internal/track_event_macros.h"
-        sdk_relative = "share/v8/chromium-sdk/v8/third_party/perfetto/include/" + relative
+        sdk_relative = "share/v8-c140/chromium-sdk/v8/third_party/perfetto/include/" + relative
         sdk = self.fixture.prefix / sdk_relative
         sdk.parent.mkdir(parents=True, exist_ok=True)
         sdk.write_text("attrs extern const ::perfetto::internal::TrackEventCategoryRegistry  \\\n")

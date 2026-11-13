@@ -1,22 +1,26 @@
-# Chromium-matched V8 for UCRT64
+# V8 for Chromium 140 consumers (UCRT64)
 
-This recipe replaces the ordinary `mingw-w64-ucrt-x86_64-v8` package with
-V8 **14.0.365.10**, matching Chromium **140.0.7339.225** in Qt WebEngine
-**6.11.2**. It uses the V8 sources from Qt's checksum-pinned source archive,
+`mingw-w64-ucrt-x86_64-v8-c140` is V8 **14.0.365.10**, the engine shared by
+the Chromium 140 generation: Chromium **140.0.7339**, Electron **38** and Qt
+WebEngine **6.11.2**. It uses the V8 sources from Qt's checksum-pinned source archive,
 including Qt's security backports. The original V8 DEPS revision is
 `b7ed978e41b4bac7802b206404d0e2f3d09f31ac`; Qt's Chromium revision is
 `5170777d28bee1ce92cc693a0dbf2ad01492e5cf`.
 
-The initial target is native Windows x64, GCC and the UCRT64 runtime. A newer
-installed V8 requires an explicit downgrade; this recipe does not use an epoch
-or a misleading version number to force that downgrade.
+The initial target is native Windows x64, GCC and the UCRT64 runtime. The
+`c140` slot names its DLLs and directories, so it installs beside the
+distribution's newer `v8` package. Patch 027 adds GN's
+`component_output_suffix`, which appends `-c140` to every component DLL.
+Patch 028 is Electron 38's only V8 change: a per-context microtask policy. It
+adds virtual methods to `v8::MicrotaskQueue`, so every consumer compiles
+against these headers; the SDK gate enforces that.
 
 ## Build
 
 In an MSYS2 UCRT64 shell:
 
 ```sh
-cd mingw-w64-v8
+cd mingw-w64-v8-c140
 makepkg-mingw -s
 ```
 
@@ -51,28 +55,30 @@ unstable compressed archive bytes, not to their contents.
 
 ## Installed interface
 
-* `bin/libv8.dll`, `libv8_libbase.dll`, `libv8_libplatform.dll`, their import
-  libraries, and runtime components built for tracing.
-* `lib/libv8_monolith.a`, built with the same engine feature configuration.
-* `d8`, `torque`, `torque-language-server` and `mksnapshot` from this source.
-* Existing public headers under `include`, plus private and generated headers
-  under `share/v8/chromium-sdk`.
-* `share/v8/build-manifest.json`, including resolved flags, public/private
-  definitions, source identities and payload checksums.
-* `share/v8/snapshot_blob.bin`, generated alongside the embedded snapshot by
-  the same upstream `mksnapshot` invocation.
-* pkg-config modules `v8`, `v8_libbase`, `v8_libplatform`, `cppgc`, and
-  `v8_monolith`. The modules expose `sdkdir`, `manifest`, `d8`, `torque`, and
+* `bin/libv8-c140.dll`, `libv8_libbase-c140.dll`, `libv8_libplatform-c140.dll`
+  and the tracing runtime `libv8_libperfetto-c140.dll`.
+* Their import libraries and `libv8_monolith.a` under `lib/v8-c140`, built
+  with the same engine feature configuration.
+* `d8`, `torque`, `torque-language-server` and `mksnapshot` under
+  `lib/v8-c140/bin`.
+* Public headers under `include/v8-c140`, plus private and generated headers
+  under `share/v8-c140/chromium-sdk`.
+* `share/v8-c140/build-manifest.json`, including the slot, resolved flags,
+  public/private definitions, source identities and payload checksums.
+* `share/v8-c140/snapshot_blob.bin`, generated alongside the embedded snapshot
+  by the same upstream `mksnapshot` invocation.
+* pkg-config modules `v8-c140`, `v8_libbase-c140`, `v8_libplatform-c140`,
+  `cppgc-c140` and `v8_monolith-c140`. The modules expose `sdkdir`, `manifest`, `d8`, `torque`, and
   `mksnapshot` and `snapshot_blob` variables.
 
-cppgc and heap-base implementations live in **libv8.dll**. `cppgc.pc` links
+cppgc and heap-base implementations live in **libv8-c140.dll**. `cppgc-c140.pc` links
 that real implementation. The package does not build a second collector DLL
 with duplicate GC globals. Shared consumers get Windows import definitions;
-`v8_monolith.pc` omits them. Automatic package stripping is disabled so payload
+`v8_monolith-c140.pc` omits them. Automatic package stripping is disabled so payload
 hashes remain valid after installation.
 The monolithic module selects its separately generated non-component Perfetto
-header under `share/v8/static-include`; shared clients keep the DLL configuration.
+header under `share/v8-c140/static-include`; shared clients keep the DLL configuration.
 
-See [the integration](../chromium-patches/v8/README.md) and
+See [the integration](INTEGRATION.md) and
 [acceptance checks](../tests/v8-chromium/README.md). Binary publication requires
 the installed-SDK and bundled/system `content_shell` checks to pass.

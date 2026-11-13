@@ -7,7 +7,7 @@ when its source version and resolved engine configuration match the SDK.
 It does not claim compatibility across different V8 revisions or ABIs.
 
 ```sh
-python chromium-patches/v8/apply.py /path/to/chromium
+python "${MINGW_PREFIX}/share/v8-c140/integration/apply.py" /path/to/chromium
 ```
 
 `apply.py` retains the bundled implementation inside the false branch and adds
@@ -23,8 +23,8 @@ the producer, plus:
 ```gn
 use_system_v8 = true
 system_v8_runtime = "ucrt64"
-# Optional; otherwise pkg-config --variable=manifest v8 discovers it.
-system_v8_manifest = "E:/msys64/ucrt64/share/v8/build-manifest.json"
+# Optional; otherwise pkg-config --variable=manifest v8-c140 discovers it.
+system_v8_manifest = "E:/msys64/ucrt64/share/v8-c140/build-manifest.json"
 ```
 
 `gn gen` compares the exact version/revision, runtime, resolved V8/cppgc

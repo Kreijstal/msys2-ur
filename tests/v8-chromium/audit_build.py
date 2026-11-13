@@ -91,12 +91,13 @@ def main():
     if not retained:
         raise ValueError("content_shell linker command has no retained response file")
     if not command_uses_sdk and not link_evidence:
-        raise ValueError("content_shell link does not use the installed libv8.dll.a")
+        raise ValueError(f"content_shell link does not use the installed {wanted_import.name}")
     # The initial acceptance build is non-component so this imports V8 directly.
     pe = subprocess.check_output([args.objdump, "-p", str(executable)], text=True)
     imports = re.findall(r"DLL Name:\s*(\S+)", pe)
-    if "libv8.dll" not in [name.lower() for name in imports]:
-        raise ValueError("content_shell.exe does not import the packaged libv8.dll")
+    v8_dll = Path(manifest["dlls"]["v8"]).name
+    if v8_dll.lower() not in [name.lower() for name in imports]:
+        raise ValueError(f"content_shell.exe does not import the packaged {v8_dll}")
     for name, relative in manifest["dlls"].items():
         deployed = out / Path(relative).name
         if not deployed.is_file():

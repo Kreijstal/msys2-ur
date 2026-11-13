@@ -1,0 +1,47 @@
+--- a/config/BUILDCONFIG.gn
++++ b/config/BUILDCONFIG.gn
+@@ -186,6 +186,12 @@
+       is_debug && current_os != "ios" && current_os != "watchos"
+ }
+ 
++declare_args() {
++  # Appended to component library names, so components built from different
++  # Chromium versions can be installed side by side.
++  component_output_suffix = ""
++}
++
+ assert(!(is_debug && is_official_build), "Can't do official debug builds")
+ assert(!(current_os == "ios" && is_component_build),
+        "Can't use component build on iOS")
+@@ -837,7 +843,10 @@
+       _output_name = string_replace(_output_name, "//", "")
+       _output_name = string_replace(_output_name, "/", "_")
+       _output_name = string_replace(_output_name, ":", "_")
++    } else {
++      _output_name = invoker.output_name
+     }
++    _output_name += component_output_suffix
+   } else if (defined(invoker.static_component_type)) {
+     assert(invoker.static_component_type == "static_library" ||
+            invoker.static_component_type == "source_set")
+@@ -849,6 +858,9 @@
+   } else {
+     _component_mode = "static_library"
+   }
++  if (!defined(_output_name) && defined(invoker.output_name)) {
++    _output_name = invoker.output_name
++  }
+   target(_component_mode, target_name) {
+     if (defined(_output_name)) {
+       output_name = _output_name
+@@ -859,7 +871,9 @@
+       output_extension = "cr.so"
+     }
+     forward_variables_from(invoker, TESTONLY_AND_VISIBILITY)
+-    forward_variables_from(invoker, "*", TESTONLY_AND_VISIBILITY)
++    forward_variables_from(invoker,
++                           "*",
++                           TESTONLY_AND_VISIBILITY + [ "output_name" ])
+   }
+ }
+ 
